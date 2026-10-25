@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Adrian Blackshire and Claude">
+<title>Labyrinth of Roots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500;700&family=Uncial+Antiqua&display=swap">
+<style>
+/* Layout: a single torchlit journal column that grows as you play, with a character sheet pinned beside it (above it on phones). */
+:root {
+  --bg: #0e1210;
+  --panel: #151b17;
+  --panel-2: #1b231e;
+  --line: #2b352e;
+  --ink: #e7dec9;
+  --muted: #9b9a87;
+  --ember: #d9503a;
+  --verdigris: #79ab92;
+  --gold: #cfa850;
+  --ruby: #d9433b;
+  --sapphire: #5b8ad1;
+  --emerald: #47a771;
+  --glow: rgba(0,0,0,0);
+  --display: "Uncial Antiqua", "Luminari", "Papyrus", Georgia, serif;
+  --body: "Alegreya", "Iowan Old Style", Georgia, serif;
+  --label: "Alegreya Sans SC", "Gill Sans", "Trebuchet MS", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+html { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  min-height: 100%;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 96px;
+}
+.atmos {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(120% 70% at 50% -10%, var(--glow), transparent 70%);
+  transition: background 2.4s ease;
+}
+body[data-light="dusk"]  { --glow: rgba(126, 72, 160, .32); }
+body[data-light="dark"]  { --glow: rgba(0, 0, 0, 0); }
+body[data-light="torch"] { --glow: rgba(214, 140, 52, .22); }
+body[data-light="gems"]  { --glow: rgba(217, 67, 59, .30); }
+body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
+body[data-light="dark"] .story { filter: brightness(.86); }
+.story { transition: filter 2s ease; }
+
+/* ---------- hero ---------- */
+.hero {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  padding-block: 64px 40px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center;
+}
+.eyebrow {
+  font-family: var(--label); font-weight: 700; letter-spacing: .14em;
+  font-size: .8rem; color: var(--verdigris); margin: 0 0 12px;
+}
+.hero h1 {
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(2.6rem, 7vw, 5rem); line-height: 1.02; margin: 0;
+  text-wrap: balance; color: var(--ink);
+  text-shadow: 0 0 40px rgba(217, 80, 58, .25);
+}
+.hero .credit { font-family: var(--label); font-weight: 700; letter-spacing: .12em; font-size: .9rem; color: var(--gold); margin: 14px 0 0; }
+.hero p.lede { max-width: 52ch; color: var(--muted); margin: 18px 0 0; }
+.howto { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; max-width: 52ch; font-size: 1rem; }
+.howto li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; }
+.howto li::before { content: "ᚱ"; color: var(--gold); }
+.hero .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.spiral { width: clamp(120px, 20vw, 220px); height: auto; opacity: .9; }
+.spiral path { fill: none; stroke: var(--verdigris); stroke-width: 1.4; stroke-linecap: round; }
+.spiral .rune { fill: none; stroke: var(--gold); stroke-width: 1.4; }
+
+/* ---------- main layout ---------- */
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 56px; align-items: start;
+}
+.story { min-width: 0; max-width: 40rem; }
+
+/* ---------- character sheet ---------- */
+.sheet {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 18px 18px 20px;
+  display: grid; gap: 16px;
+}
+.sheet h2 {
+  font-family: var(--display); font-weight: 400; font-size: 1.35rem; margin: 0; line-height: 1.1;
+}
+.sheet .sub { font-family: var(--label); font-size: .78rem; letter-spacing: .1em; color: var(--muted); }
+.vitals { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; }
+.hpbar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
+.hpbar span { display: block; height: 100%; background: var(--ember); transition: width .5s ease; }
+.stat-label { font-family: var(--label); font-size: .78rem; letter-spacing: .1em; color: var(--muted); }
+.stat-val { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+.abilities { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.abilities div { background: var(--panel-2); border-radius: 4px; padding: 6px 0 4px; }
+.abilities b { display: block; font-variant-numeric: tabular-nums; }
+.abilities small { font-family: var(--label); letter-spacing: .08em; color: var(--muted); font-size: .7rem; }
+.inv { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.inv li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
+.inv svg { width: 26px; height: 26px; }
+.inv .name { font-weight: 700; line-height: 1.25; display: block; }
+.inv .desc { color: var(--muted); font-size: .88rem; line-height: 1.4; display: block; }
+.inv li.new { animation: gain 1.6s ease; }
+.inv .empty { color: var(--muted); font-style: italic; font-size: .95rem; display: block; }
+@keyframes gain { 0% { background: rgba(207,168,80,.25); } 100% { background: transparent; } }
+.gems { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px; }
+.gems i { width: 8px; height: 8px; transform: rotate(45deg); display: inline-block; }
+.gems i:nth-child(1) { background: var(--ruby); }
+.gems i:nth-child(2) { background: var(--sapphire); }
+.gems i:nth-child(3) { background: var(--emerald); }
+.spent .gems i { opacity: .3; }
+.sheet .reset { justify-self: start; }
+
+/* ---------- story elements ---------- */
+.part-head { margin: 56px 0 18px; display: grid; gap: 4px; scroll-margin-top: 24px; }
+.part-head:first-child { margin-top: 8px; }
+.part-head .num { font-family: var(--label); font-weight: 700; letter-spacing: .16em; font-size: .8rem; color: var(--gold); }
+.part-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 4.5vw, 2.5rem); margin: 0; line-height: 1.1; text-wrap: balance; }
+.story p { margin: 0 0 1em; }
+.story p.voice { font-style: italic; color: #f0d6c4; border-left: 2px solid var(--ember); padding-left: 14px; }
+.story p.voice.spirit { color: #f3c9bd; }
+.story .mech {
+  font-family: var(--label); font-size: .92rem; letter-spacing: .04em;
+  color: var(--verdigris); margin: 0 0 1em; display: flex; gap: 10px; align-items: baseline;
+}
+.story .mech::before { content: "ᚱ"; font-family: var(--body); color: var(--gold); }
+.story .mech.hurt { color: #e68a76; }
+.story .mech.hurt::before { content: "✕"; color: var(--ember); }
+.story .mech.loot { color: var(--gold); }
+.story .mech.loot::before { content: "✦"; }
+.fade { animation: rise .6s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 22px; scroll-margin-top: 24px; }
+button {
+  font: inherit; cursor: pointer; color: var(--ink);
+  background: var(--panel-2); border: 1px solid #3c4a40; border-radius: 4px;
+  padding: 10px 16px; font-family: var(--body); font-size: 1.02rem; line-height: 1.3;
+  transition: background .15s, border-color .15s, transform .1s;
+  text-align: left;
+}
+button:hover:not(:disabled) { background: #233029; border-color: var(--verdigris); }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button.primary { background: #3a1a15; border-color: var(--ember); }
+button.primary:hover:not(:disabled) { background: #4c211a; border-color: #ef6a52; }
+button.ghost { background: transparent; }
+button:disabled { cursor: default; opacity: .38; }
+button.chosen:disabled { opacity: 1; border-color: var(--gold); background: transparent; color: var(--gold); }
+button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08em; color: var(--muted); margin-left: 6px; }
+
+/* dice card */
+.roll {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 6px;
+  padding: 14px 16px; margin: 6px 0 22px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; align-items: center;
+  scroll-margin-top: 24px;
+}
+.roll .dice { grid-row: span 3; display: flex; gap: 6px; }
+.die { width: 58px; height: 58px; position: relative; }
+.die svg { width: 100%; height: 100%; }
+.die svg polygon, .die svg path { fill: none; stroke: var(--muted); stroke-width: 2; stroke-linejoin: round; }
+.die svg polygon.face { fill: var(--panel-2); }
+.die span {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--label); font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums;
+  padding-top: 4px;
+}
+.die.enemy svg polygon, .die.enemy svg path { stroke: #a46a60; }
+.die.dropped { opacity: .35; }
+.die.spin svg { animation: wobble .12s linear infinite; }
+@keyframes wobble { 0% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } 100% { transform: rotate(-8deg); } }
+.die.crit svg polygon, .die.crit svg path { stroke: var(--gold); }
+.die.crit span { color: var(--gold); }
+.die.fumble svg polygon, .die.fumble svg path { stroke: var(--ember); }
+.roll .what { font-family: var(--label); font-weight: 700; letter-spacing: .08em; font-size: .95rem; }
+.roll .meta { font-family: var(--label); font-size: .82rem; letter-spacing: .06em; color: var(--muted); }
+.roll .meta .adv { color: var(--verdigris); }
+.roll .meta .dis { color: #e68a76; }
+.roll .out { font-variant-numeric: tabular-nums; min-height: 1.6em; }
+.roll .out b.ok { color: var(--verdigris); }
+.roll .out b.bad { color: #e68a76; }
+.roll .ctrl { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 2; }
+.roll .ctrl:empty { display: none; }
+
+/* book shelf */
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin: 6px 0 22px; }
+.shelf button { display: grid; gap: 4px; padding: 12px 14px; height: 100%; align-content: start; }
+.shelf button b { font-weight: 700; }
+.shelf button small { color: var(--muted); font-size: .88rem; line-height: 1.35; }
+.shelf button.taken { border-color: var(--gold); background: #2a2414; }
+.shelf button.taken b { color: var(--gold); }
+
+/* ending */
+.tbc {
+  margin: 40px 0 0; padding: 28px 24px; border: 1px solid #5c4d27; border-radius: 6px;
+  background: linear-gradient(180deg, rgba(207,168,80,.10), rgba(207,168,80,0) 70%), var(--panel);
+  display: grid; gap: 12px;
+}
+.tbc .big { font-family: var(--display); font-size: clamp(1.9rem, 5vw, 2.6rem); line-height: 1.1; color: var(--gold); margin: 0; }
+.tbc ul { margin: 0; padding-left: 1.2em; }
+.tbc .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.resume { color: var(--muted); font-size: .95rem; margin-top: 14px; }
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding-block: 36px 24px; }
+  .spiral { display: none; }
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .sheet {
+    order: -1; top: env(safe-area-inset-top, 0px); z-index: 5;
+    padding: 10px 12px; gap: 8px; border-radius: 0 0 6px 6px;
+    grid-template-columns: minmax(0, 1fr);
+    background: rgba(21, 27, 23, .96);
+    backdrop-filter: blur(4px);
+  }
+  .sheet h2, .sheet .sub, .abilities, .inv .desc, .sheet .reset { display: none; }
+  .vitals { grid-template-columns: repeat(6, auto); justify-content: start; gap: 4px 8px; }
+  .vitals .stat-val { margin-right: 10px; }
+  .vitals .hpbar { order: 1; }
+  .inv { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .inv li { grid-template-columns: 18px auto; gap: 5px; align-items: center; }
+  .inv svg { width: 18px; height: 18px; }
+  .inv .name { font-size: .88rem; font-weight: 500; }
+  .part-head, .choices, .roll { scroll-margin-top: 110px; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+}
+@media (max-width: 480px) {
+  body { font-size: 1.05rem; }
+  .die { width: 48px; height: 48px; }
+  .roll { padding: 12px; gap: 6px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade, .inv li.new { animation: none; }
+  .die.spin svg { animation: none; }
+  .atmos, .story { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="atmos" aria-hidden="true"></div>
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">An adventure in six parts · d20</p>
+    <h1>Labyrinth of Roots</h1>
+    <p class="credit">Created by: Adrian Blackshire and Claude</p>
+    <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
+    <ul class="howto">
+      <li>Read each scene, then pick what you do next.</li>
+      <li>When a check comes up, click to roll the d20. Your bonus is added, and you need to meet or beat the number shown.</li>
+      <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser.</li>
+    </ul>
+    <div class="actions" id="startActions">
+      <button class="primary" id="beginBtn" type="button">Begin the descent</button>
+    </div>
+    <p class="resume" id="resumeNote" hidden></p>
+  </div>
+  <svg class="spiral" viewBox="0 0 200 200" aria-hidden="true"><path id="spiralPath"></path><path class="rune" d="M100 22 v24 M92 30 l8 -8 l8 8 M100 154 v24 M92 170 l8 8 l8 -8"></path></svg>
+</header>
+
+<main class="wrap">
+  <article class="story" id="story" aria-live="polite"></article>
+
+  <aside class="sheet" id="sheet" aria-label="Character sheet">
+    <div>
+      <h2>The Wanderer</h2>
+      <div class="sub">Level 3 adventurer</div>
+    </div>
+    <div class="vitals">
+      <span class="stat-label">HP</span>
+      <span class="stat-val" id="hpVal">24 / 24</span>
+      <div class="hpbar" style="grid-column: 1 / -1"><span id="hpBar" style="width:100%"></span></div>
+      <span class="stat-label">Armor class</span>
+      <span class="stat-val" id="acVal">13</span>
+      <span class="stat-label">Purse</span>
+      <span class="stat-val" id="coinVal">12 gp</span>
+    </div>
+    <div class="abilities">
+      <div><b>+3</b><small>STR</small></div>
+      <div><b>+2</b><small>DEX</small></div>
+      <div><b>+2</b><small>WIS</small></div>
+      <div><b>+1</b><small>INT</small></div>
+    </div>
+    <div>
+      <div class="stat-label" style="margin-bottom:8px">Carrying</div>
+      <ul class="inv" id="inv"></ul>
+    </div>
+    <button class="ghost reset" id="resetBtn" type="button">Start over</button>
+  </aside>
+</main>
+
+<script>
+(() => {
+  const KEY = "labyrinth-of-roots-v1";
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (id) => document.getElementById(id);
+  const story = $("story");
+  const wait = (ms) => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+  const d = (n) => 1 + Math.floor(Math.random() * n);
+
+  // ---------- spiral ornament ----------
+  (() => {
+    let p = "";
+    for (let t = 0; t <= Math.PI * 9; t += 0.08) {
+      const r = 4 + t * 2.6;
+      const x = 100 + r * Math.cos(t), y = 100 + r * Math.sin(t);
+      p += (p ? " L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+    }
+    $("spiralPath").setAttribute("d", p);
+  })();
+
+  // ---------- state ----------
+  const fresh = () => ({
+    part: 0, hp: 24, maxHp: 24, coins: 12,
+    blessing: false, torch: false, axe: false, shield: false,
+    gemsSpent: false, slain: false, books: [], dis: false, adv: false
+  });
+  let S = fresh();
+
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); return v && typeof v.part === "number" ? v : null; } catch (e) { return null; } }
+  function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
+
+  // ---------- sheet ----------
+  const ICONS = {
+    torch: '<svg viewBox="0 0 26 26"><path d="M13 3c3 3 3 6 0 9c-3-3-3-6 0-9z" fill="#d68c34"/><rect x="11.5" y="12" width="3" height="11" rx="1" fill="#7a5a3a"/></svg>',
+    axe: '<svg viewBox="0 0 26 26"><rect x="12" y="3" width="2.4" height="21" rx="1" fill="#8a7a62"/><path d="M14 5c6 0 9 3 9 7s-3 7-9 7z" fill="#b9c0c4"/><path d="M12 7c-4 0-7 2-7 5s3 5 7 5z" fill="#9ea6aa"/><circle cx="17.5" cy="9" r="1.3" fill="#d9433b"/><circle cx="19" cy="12" r="1.3" fill="#5b8ad1"/><circle cx="17.5" cy="15" r="1.3" fill="#47a771"/></svg>',
+    shield: '<svg viewBox="0 0 26 26"><path d="M4 8c3-4 15-4 18 0c0 8-4 13-9 15c-5-2-9-7-9-15z" fill="#8f979b"/><path d="M9 12l3 2l-2 3M16 11l-2 3l3 2" stroke="#4d5457" stroke-width="1.2" fill="none"/></svg>',
+    book: '<svg viewBox="0 0 26 26"><rect x="5" y="4" width="16" height="19" rx="1.5" fill="#6b4a2f"/><rect x="7" y="4" width="2" height="19" fill="#4a3220"/><path d="M14 9l2 3l-2 3l-2-3z" fill="#cfa850"/></svg>',
+    blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
+  };
+  let lastItems = new Set();
+  function renderSheet() {
+    $("hpVal").textContent = S.hp + " / " + S.maxHp;
+    $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
+    $("acVal").textContent = 13 + (S.shield ? 1 : 0);
+    $("coinVal").textContent = S.coins + " gp";
+    const items = [];
+    if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
+    if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
+    if (S.axe) items.push(["axe", "axe", "Vaelric's Axe <span class='gems'><i></i><i></i><i></i></span>",
+      S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft."]);
+    if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
+    S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
+    const ul = $("inv");
+    ul.innerHTML = "";
+    if (!items.length) { ul.innerHTML = '<li><span></span><span class="empty">A pack, some bread, a belt knife.</span></li>'; }
+    const now = new Set();
+    items.forEach(([key, icon, name, desc]) => {
+      now.add(key);
+      const li = document.createElement("li");
+      if (!lastItems.has(key) && lastItems.size + 1 > 0 && started) li.className = "new";
+      if (key === "axe" && S.gemsSpent) li.classList.add("spent");
+      li.innerHTML = ICONS[icon] + '<span><span class="name">' + name + '</span><span class="desc">' + desc + "</span></span>";
+      ul.appendChild(li);
+    });
+    lastItems = now;
+  }
+
+  // ---------- story helpers ----------
+  let scrollNext = false;
+  function add(node) {
+    node.classList.add("fade");
+    story.appendChild(node);
+    if (scrollNext) {
+      scrollNext = false;
+      requestAnimationFrame(() => {
+        const r = node.getBoundingClientRect();
+        if (r.top > innerHeight * 0.7 || r.top < 0) node.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      });
+    }
+    return node;
+  }
+  function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+  async function say(html, cls) { add(el("p", cls || "", html)); await wait(220); }
+  const voice = (html) => say(html, "voice spirit");
+  const mech = (html, kind) => say(html, "mech" + (kind ? " " + kind : ""));
+  function heading(num, title) {
+    const h = el("div", "part-head", '<span class="num">Part ' + num + '</span><h2>' + title + "</h2>");
+    scrollNext = true;
+    add(h);
+  }
+  function light(v) { document.body.dataset.light = v; }
+
+  function choose(opts) {
+    return new Promise(resolve => {
+      const box = el("div", "choices");
+      opts.filter(o => o.show !== false).forEach((o, i) => {
+        const b = el("button", i === 0 && !o.plain ? "primary" : "", o.label + (o.tag ? '<span class="tag">' + o.tag + "</span>" : ""));
+        b.type = "button";
+        b.onclick = () => {
+          box.querySelectorAll("button").forEach(x => x.disabled = true);
+          b.classList.add("chosen");
+          scrollNext = true;
+          resolve(o.key);
+        };
+        box.appendChild(b);
+      });
+      add(box);
+    });
+  }
+  const go = (label) => choose([{ key: 1, label }]);
+
+  const D20 = '<svg viewBox="0 0 60 60" aria-hidden="true"><polygon class="face" points="30,3 54,16 54,44 30,57 6,44 6,16"/><polygon points="30,14 46,40 14,40"/><path d="M30 3 L30 14 M54 16 L46 40 M6 16 L14 40 M30 57 L46 40 M30 57 L14 40 M54 44 L46 40 M6 44 L14 40 M30 3 L46 40 M30 3 L14 40"/></svg>';
+  function dieEl(enemy) { const w = el("div", "die" + (enemy ? " enemy" : ""), D20 + "<span>20</span>"); return w; }
+  async function spin(die, final) {
+    die.classList.remove("crit", "fumble", "dropped");
+    die.classList.add("spin");
+    const span = die.querySelector("span");
+    const t0 = performance.now();
+    if (!reduced) while (performance.now() - t0 < 650) { span.textContent = d(20); await new Promise(r => setTimeout(r, 50)); }
+    span.textContent = final;
+    die.classList.remove("spin");
+    if (final === 20) die.classList.add("crit");
+    if (final === 1) die.classList.add("fumble");
+  }
+  const sign = (m) => (m >= 0 ? "+ " + m : "− " + Math.abs(m));
+  const fmt = (m) => (m >= 0 ? "+" + m : "−" + Math.abs(m));
+
+  // A player check against a DC or AC. Returns { ok, kept, total }.
+  function check({ label, mod, dc, target = "DC", adv = false, dis = false, cta = "Roll d20" }) {
+    if (adv && dis) { adv = dis = false; }
+    return new Promise(resolve => {
+      const card = el("div", "roll");
+      const dice = el("div", "dice");
+      const n = adv || dis ? 2 : 1;
+      const dies = Array.from({ length: n }, () => dieEl(false));
+      dies.forEach(x => dice.appendChild(x));
+      const metaBits = ["d20 " + fmt(mod), target + " " + dc];
+      if (adv) metaBits.push('<span class="adv">advantage</span>');
+      if (dis) metaBits.push('<span class="dis">disadvantage</span>');
+      const out = el("div", "out", "&nbsp;");
+      const ctrl = el("div", "ctrl");
+      card.append(dice, el("div", "what", label), el("div", "meta", metaBits.join(" · ")), out, ctrl);
+      const rollBtn = el("button", "primary", cta); rollBtn.type = "button";
+      ctrl.appendChild(rollBtn);
+      scrollNext = true;
+      add(card);
+
+      async function doRoll() {
+        ctrl.innerHTML = "";
+        out.innerHTML = "&nbsp;";
+        const vals = dies.map(() => d(20));
+        await Promise.all(dies.map((x, i) => spin(x, vals[i])));
+        let ki = 0;
+        if (n === 2) { ki = adv ? (vals[0] >= vals[1] ? 0 : 1) : (vals[0] <= vals[1] ? 0 : 1); dies[1 - ki].classList.add("dropped"); }
+        const kept = vals[ki], total = kept + mod;
+        const ok = kept === 20 || (kept !== 1 && total >= dc);
+        const flair = kept === 20 ? " Natural 20!" : kept === 1 ? " Natural 1." : "";
+        out.innerHTML = kept + " " + sign(mod) + " = <b>" + total + "</b> vs " + target + " " + dc + " · <b class='" + (ok ? "ok" : "bad") + "'>" + (ok ? "Success" : "Failure") + "</b>" + flair;
+        if (!ok && S.blessing) {
+          const re = el("button", "primary", "Call on the strangers' blessing and reroll"); re.type = "button";
+          const acc = el("button", "", "Accept the result"); acc.type = "button";
+          re.onclick = () => { S.blessing = false; renderSheet(); doRoll(); };
+          acc.onclick = () => { ctrl.innerHTML = ""; scrollNext = true; resolve({ ok, kept, total }); };
+          ctrl.append(re, acc);
+        } else {
+          scrollNext = true;
+          await wait(350);
+          resolve({ ok, kept, total });
+        }
+      }
+      rollBtn.onclick = doRoll;
+    });
+  }
+
+  // A contest: both sides roll, higher wins (ties go to you).
+  function contest({ label, mod, foe, foeMod, cta }) {
+    return new Promise(resolve => {
+      const card = el("div", "roll");
+      const dice = el("div", "dice");
+      const mine = dieEl(false), theirs = dieEl(true);
+      dice.append(mine, theirs);
+      const out = el("div", "out", "&nbsp;");
+      const ctrl = el("div", "ctrl");
+      card.append(dice, el("div", "what", label), el("div", "meta", "You d20 " + fmt(mod) + " · " + foe + " d20 " + fmt(foeMod) + " · ties go to you"), out, ctrl);
+      const b = el("button", "primary", cta); b.type = "button"; ctrl.appendChild(b);
+      scrollNext = true;
+      add(card);
+      async function doRoll() {
+        ctrl.innerHTML = "";
+        const a = d(20), z = d(20);
+        await Promise.all([spin(mine, a), spin(theirs, z)]);
+        const ok = a + mod >= z + foeMod;
+        out.innerHTML = "You <b>" + (a + mod) + "</b> vs " + foe + " <b>" + (z + foeMod) + "</b> · <b class='" + (ok ? "ok" : "bad") + "'>" + (ok ? "You win" : foe + " wins") + "</b>";
+        if (!ok && S.blessing) {
+          const re = el("button", "primary", "Call on the strangers' blessing and reroll"); re.type = "button";
+          const acc = el("button", "", "Accept the result"); acc.type = "button";
+          re.onclick = () => { S.blessing = false; renderSheet(); doRoll(); };
+          acc.onclick = () => { ctrl.innerHTML = ""; scrollNext = true; resolve(ok); };
+          ctrl.append(re, acc);
+        } else { scrollNext = true; await wait(350); resolve(ok); }
+      }
+      b.onclick = doRoll;
+    });
+  }
+
+  // An enemy attack you react to.
+  function enemyAttack({ label, foe, bonus, dis = false, cta }) {
+    return new Promise(resolve => {
+      const ac = 13 + (S.shield ? 1 : 0);
+      const card = el("div", "roll");
+      const dice = el("div", "dice");
+      const n = dis ? 2 : 1;
+      const dies = Array.from({ length: n }, () => dieEl(true));
+      dies.forEach(x => dice.appendChild(x));
+      const out = el("div", "out", "&nbsp;");
+      const ctrl = el("div", "ctrl");
+      card.append(dice, el("div", "what", label), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "")), out, ctrl);
+      const b = el("button", "primary", cta); b.type = "button"; ctrl.appendChild(b);
+      scrollNext = true;
+      add(card);
+      b.onclick = async () => {
+        ctrl.innerHTML = "";
+        const vals = dies.map(() => d(20));
+        await Promise.all(dies.map((x, i) => spin(x, vals[i])));
+        let ki = 0;
+        if (n === 2) { ki = vals[0] <= vals[1] ? 0 : 1; dies[1 - ki].classList.add("dropped"); }
+        const kept = vals[ki];
+        const hit = kept === 20 || (kept !== 1 && kept + bonus >= ac);
+        out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
+        scrollNext = true;
+        await wait(350);
+        resolve(hit);
+      };
+    });
+  }
+
+  async function hurt(count, sides, type, why) {
+    let total = 0; const rolls = [];
+    for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
+    S.hp -= total;
+    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + total + ".";
+    let saved = false;
+    if (S.hp <= 0) { S.hp = 1; saved = true; }
+    renderSheet();
+    await mech(txt, "hurt");
+    if (saved) {
+      if (S.axe) await voice('"Not yet," Vaelric hisses from the blade. "I told you. You will not perish here." Red warmth floods your chest, and you stay on your feet with 1 HP.');
+      else await say("Your vision swims and your knees buckle, but something stubborn in you refuses to fall. You stay standing with 1 HP.");
+    }
+    return total;
+  }
+
+  async function damageRoll(count, sides, bonus, label) {
+    let total = bonus; const rolls = [];
+    for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
+    await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + ".");
+    return total;
+  }
+
+  // ---------- the six parts ----------
+  const BOOKS = [
+    { name: "Tome of Rootbinding", desc: "Entangle: roots seize every creature in a 20-ft square." },
+    { name: "Scroll of Moonfire", desc: "A beam of silver flame, 2d10 radiant damage." },
+    { name: "Codex of Whispering Bark", desc: "Speak with plants once per day." },
+    { name: "Scroll of Misty Step", desc: "Vanish in silver mist and reappear 30 ft away." },
+    { name: "The Thornwall Grimoire", desc: "Raise a wall of thorns 60 ft long." },
+    { name: "Warden's Journal", desc: "Vaelric's own notes. Advantage on checks about the old wardens." }
+  ];
+
+  async function partPathway() {
+    heading("I", "The Pathway");
+    light("dusk");
+    await say("For two days you have walked the ceremonial pathway, pausing only to eat a few bites from your pack. The labyrinth waits somewhere below. On the road, two hooded strangers step into your path.");
+    await say("\"Turn back,\" one says. \"Nothing that goes down there comes back up.\"", "voice");
+    const c = await choose([
+      { key: "coins", label: "Smile and press three coins into their palms" },
+      { key: "past", label: "Brush past them in silence" }
+    ]);
+    if (c === "coins") {
+      S.coins -= 3;
+      await say("You smile, press three coins into their palms, and walk on.");
+      await say("As you pass, the taller one murmurs something under the hood: \"Then may the old roots remember you.\"", "voice");
+      S.blessing = true; renderSheet();
+      await mech("You gain the Strangers' Blessing: once, you may reroll a failed check.", "loot");
+    } else {
+      await say("You walk on without a word. Behind you, one of them laughs softly, and the sound follows you down the road longer than it should.");
+    }
+    await say("You descend level after level until the outer gate of the labyrinth rises before you. Its stone face is covered in druidic carvings: spirals, antlered figures, and runes that seem to shift when you look away. A chill settles in your gut. Perhaps the strangers knew something after all.");
+    const g = await choose([
+      { key: "on", label: "Step through the gate" },
+      { key: "study", label: "Study the carvings first", plain: true }
+    ]);
+    if (g === "study") {
+      await say("You trace the grooves with your fingers. Among the spirals, one rune keeps returning: an axe laid across the trunk of a tree. Every time you find it, it seems to point a little further down.");
+    }
+    await say("The sun sinks, washing the stone in violet, and then the light is gone. Darkness, total and absolute.");
+    light("dark");
+    await wait(400);
+    await mech("Something is moving in the dark. Make a Perception check.");
+    const p = await check({ label: "Perception check", mod: 2, dc: 13 });
+    if (p.ok) {
+      await say("A dry rustle behind you, like leaves where no leaves should grow. You spin around just as something unfolds to its full height. It's a vine horror, nearly eight feet tall, and its thick, thorned limbs are made for tearing flesh. One lashes at you, and you jerk your head aside as it whistles past your ear.");
+    } else {
+      await say("You never hear it coming. Behind you, something unfolds to its full height. It's a vine horror, nearly eight feet tall, and its thick, thorned limbs are made for tearing flesh. One lashes past your ear.");
+    }
+    const f = await choose([
+      { key: "fight", label: "Roll initiative" },
+      { key: "run", label: "Run", plain: true }
+    ]);
+    if (f === "fight") {
+      const i = await check({ label: "Initiative", mod: 2, dc: 12, target: "vs vine horror", cta: "Roll initiative" });
+      if (i.ok) {
+        await say("You're faster. Your belt knife flashes and opens a long gash in one of its limbs. Sap like black blood spills out, and the thing reels back with a sound like a tree splitting in a storm.");
+        await say("It's barely hurt. A knife won't finish this. While it recoils, you turn and run.");
+      } else {
+        await say("It's faster. A thorned limb wraps your shoulder and rips free, tearing cloth and skin.");
+        await hurt(1, 6, "piercing", "Thorns rake your shoulder.");
+        await say("No knife in the world will stop this thing. You tear loose and run.");
+      }
+    } else {
+      const r = await check({ label: "Dexterity check", mod: 2, dc: 11, cta: "Roll to escape" });
+      if (!r.ok) await hurt(1, 4, "piercing", "A thorned limb catches your calf as you bolt.");
+      else await say("You're gone before the second limb comes down.");
+    }
+    await say("You flee into the corridors and turn blindly left, then right, then left again, until the rustling behind you fades. You've lost it, for now.");
+    await say("In the pitch black, you need a cloth, a stick, and your flint.");
+    let lit = false, tries = 0;
+    while (!lit) {
+      const s = await check({ label: "Survival check", mod: 2, dc: 10, cta: tries ? "Strike the flint again" : "Strike the flint" });
+      if (s.ok) lit = true;
+      else {
+        tries++;
+        await hurt(1, 1, "slashing", "The sparks die on damp cloth, and the flint splits your knuckle.");
+        await say("Somewhere far off, leaves rustle. Try again.");
+      }
+    }
+    S.torch = true; renderSheet();
+    await say("Sparks catch, and the torch flares to life.");
+    light("torch");
+    await mech("Torch added to your pack.", "loot");
+    await say("Then you see where you are. Thick white webbing fills the corridor from floor to ceiling. Skeletons hang in the strands like flies, dozens of them, some still in rusted armor and clutching their weapons.");
+    await go("Press into the webs");
+  }
+
+  async function partWebs() {
+    heading("II", "The Webs");
+    light("torch");
+    await say("The smell of death and decay fills your nose and throat. A warm wind brushes your skin, though there should be no wind down here. Then something hairy and jointed reaches out of the dark toward you.");
+    await say("Your torch sputters. Your heart sinks.");
+    const c = await choose([
+      { key: "duck", label: "Drop low and smother the flame" },
+      { key: "thrust", label: "Thrust the torch at it", plain: true }
+    ]);
+    let adv = false;
+    if (c === "thrust") {
+      await say("You jab the sputtering torch at the leg. It flinches back from the heat, and the flame gutters down to a dull ember. You've bought yourself a heartbeat.");
+      await mech("You have advantage on the Dexterity check.");
+      adv = true;
+    }
+    const r = await check({ label: "Dexterity check", mod: 2, dc: 12, adv });
+    if (!r.ok) {
+      await say("You're too slow. The leg closes around your arm, and something sharp sinks in before you rip yourself free.");
+      await hurt(1, 6, "poison", "A burning bite.");
+      await say("Gasping, you drop into a crouch and smother what's left of the flame. Down by the floor, you spot a gap beneath the webbing where the strands are loose enough to crawl through.");
+    } else {
+      await say("You drop into a crouch, smother the flame, and spot a gap beneath the webbing where the strands are loose enough to crawl through.");
+    }
+    light("dark");
+    await say("You slip under them on your belly, silk brushing your neck, and keep crawling until the passage opens.");
+    await say("On the far side you strike your flint once more, and this time the torch catches on the first try.");
+    light("torch");
+    await go("Stand up and look around");
+  }
+
+  async function partChamber() {
+    heading("III", "The Hollow Chamber");
+    light("torch");
+    await say("You emerge into a round room that feels less built than grown. The walls curve up like the inside of a great hollowed tree, ridged with bark and knotted roots that twist into the ceiling. Thorny bushes sprout from cracks in the floor, their leaves pale from never seeing sunlight. Webbing stretches from root to root, sagging under its own weight. At the center stands the dead trunk itself, split open down the middle like a doorway.");
+    await say("You need a weapon.");
+    await go("Search the room");
+    await say("You find a skeleton slumped against the roots, still in dented plate armor. Across its lap lies a two-handed steel axe, its haft set with gems of ruby, sapphire, and emerald that glitter even in the dark.");
+    await go("Lean down and lift the axe");
+    S.axe = true; renderSheet();
+    await say("Power floods up your arms.");
+    await mech("New power: once per encounter, the gems flare and the axe deals extra radiant damage, burning away webbing within 10 feet.", "loot");
+    await voice("\"You will not perish here. Listen, and I will guide you through this catastrophe.\"");
+    const c = await choose([
+      { key: "look", label: "Look over the rest of the skeleton", tag: "Investigation" },
+      { key: "leave", label: "Leave the dead in peace", plain: true }
+    ]);
+    if (c === "look") {
+      const r = await check({ label: "Investigation check", mod: 1, dc: 12 });
+      if (r.ok) {
+        S.shield = true; renderSheet();
+        await say("The straps of its breastplate have rotted through, and the pauldron on its left shoulder comes loose in your hand. It's a curved slab of steel, dented but solid, about the size of a small shield. You loop the old leather strap around your forearm.");
+        await mech("Improvised shield: +1 AC, and it unlocks Shield Slam.", "loot");
+      } else {
+        await say("The armor has fused with rust and root. You tug at the plates, but nothing comes loose, and you leave the old warrior as you found them.");
+      }
+    } else {
+      await say("You bow your head to the bones and step back.");
+    }
+    await go("Swing the axe before the hollow tree");
+    light("gems");
+    await say("The trunk answers. A red glow pulses from deep inside it, and you stumble back a step. A ghost rises out of the light, and it has the same shape as the skeleton at your feet. Its face is gaunt and its eyes burn, and it hovers over you with a presence so heavy that sweat runs down your forehead. Your knees hit the floor.");
+    await voice("\"I am Vaelric, last warden of this place. My axe has chosen you. Carry it where I could not. Ryytaa the Ender nests beyond. Kill her, take what I guarded, and walk out into the light.\"");
+    await say("The ghost raises a hand, and the back of the tree splits open, revealing a tunnel.");
+    light("torch");
+    await go("Enter the tunnel");
+  }
+
+  async function partNest() {
+    heading("IV", "The Nest");
+    light("torch");
+    S.gemsSpent = false; renderSheet();
+    await say("The tunnel ends in a cavern draped in webs, and the floor is littered with egg sacs as big as barrels. Clicking echoes from every direction. Four giant spiders drop from the ceiling on silk lines, and behind them Ryytaa the Ender unfolds, the brood mother herself, as big as a cart, with venom dripping from her fangs.");
+    const init = await check({ label: "Initiative", mod: 2, dc: 14, target: "vs the brood", cta: "Roll initiative" });
+    await say(init.ok ? "You're ready before their feet touch stone." : "They move before you can raise the axe.");
+
+    // Round 1
+    await mech("Round 1");
+    await say("The first spider lands right in front of you, its eight eyes shining red in the axe's glow. Its abdomen clenches, its fangs spread wide, and a wet, gurgling sound rises from its throat. It's about to spray venom straight at your face.");
+    const sv = await check({ label: "Dexterity saving throw", mod: 2, dc: 13, cta: "Roll the save" });
+    let dis = false;
+    if (sv.ok) {
+      await say("You throw yourself sideways, and the venom spatters across the stone where your head just was, hissing as it eats into the rock.");
+    } else {
+      await say("It catches you across the cheek.");
+      await hurt(1, 6, "poison", "The venom burns like acid.");
+      await mech("You have disadvantage on your next attack.", "hurt");
+      dis = true;
+    }
+    if (!S.shield) {
+      await say("As you roll, your hand lands on a curved piece of plate half buried in the webs. You snatch it up just as the spider spits again, and the venom splashes off the steel.");
+      S.shield = true; renderSheet();
+      await mech("You gain the improvised shield: +1 AC, and it unlocks Shield Slam.", "loot");
+    }
+
+    // Round 2
+    await mech("Round 2");
+    await say("You come up swinging.");
+    let hit = false, first = true;
+    while (!hit) {
+      const a = await check({ label: "Axe attack", mod: 5, dc: 12, target: "AC", dis: first && dis, cta: first ? "Swing the axe" : "Swing again" });
+      first = false;
+      if (a.ok) hit = true;
+      else {
+        await say("The spider skitters back and your axe bites stone, throwing sparks. It darts in and sinks its fangs into your forearm.");
+        await hurt(1, 4, "piercing", "A quick bite.");
+      }
+    }
+    await say("The axe bites into the spider's leg and takes it off, and the spider shrieks and backs away. Two more spiders scuttle down the walls to flank you.");
+    const r2 = await choose([
+      { key: "attack", label: "Attack the nearest flanker" },
+      { key: "brace", label: "Brace your shield", tag: "attacker has disadvantage" }
+    ]);
+    if (r2 === "attack") {
+      const a = await check({ label: "Axe attack", mod: 5, dc: 12, target: "AC", cta: "Swing the axe" });
+      if (a.ok) {
+        await say("You catch the closer one mid-leap. It tumbles off the wall in two pieces.");
+      } else {
+        await say("You miss, and the other flanker drops onto your back.");
+        await hurt(1, 6, "piercing", "Fangs between your shoulder blades.");
+      }
+    } else {
+      await say("You plant your feet and raise the pauldron as the nearest flanker lunges.");
+      const h = await enemyAttack({ label: "Spider bite", foe: "Spider", bonus: 4, dis: true, cta: "Brace!" });
+      if (h) await hurt(1, 6, "piercing", "It finds the gap under the steel.");
+      else await say("Its fangs screech off the steel, and it drops back to the floor, stunned and clicking.");
+    }
+
+    // Round 3
+    await mech("Round 3");
+    await say("The wounded spider rears up for another spray, but you're already moving.");
+    await go("Slam the axe down and wake the gems");
+    S.gemsSpent = true; renderSheet();
+    light("gems");
+    await damageRoll(2, 8, 0, "Radiant burst");
+    await say("You slam the axe down and the gems burst with red light. The webs around you curl into ash, leaving the spiders nowhere to hide. The wounded one crumples, smoking.");
+
+    // Round 4
+    await mech("Round 4");
+    await say("Now Ryytaa the Ender moves. The floor shakes as she charges, her fangs as long as daggers.");
+    await go("Step into her and drive the shield into her face");
+    const won = await contest({ label: "Shield Slam · Strength contest", mod: 3, foe: "Ryytaa", foeMod: 4, cta: "Slam!" });
+    let advFinal = false;
+    if (won) {
+      await say("As she rears back to strike, you step into her and drive the shield into her face with all your weight behind it. The steel rings like a bell, and she staggers.");
+      await mech("Ryytaa is stunned until the end of your next turn. You have advantage on your next attack.");
+      advFinal = true;
+    } else {
+      await say("You drive the shield into her face, but she's too heavy to stop. She shoves through the blow, and one fang rakes along your side.");
+      await hurt(2, 6, "piercing", "Ryytaa's fang tears your side.");
+      await say("Still, the steel rang hard against her skull. She's shaking her head, slow to recover.");
+    }
+    await voice("\"Now,\" Vaelric whispers from the axe.");
+    let down = false; first = true;
+    while (!down) {
+      const a = await check({ label: "Killing blow", mod: 5, dc: 14, target: "AC", adv: first && advFinal, cta: first ? "Bring the axe down with both hands" : "Strike again" });
+      first = false;
+      if (a.ok) down = true;
+      else {
+        await say("She twists aside at the last instant and the blade shears through silk instead of flesh.");
+        await voice("\"Steady. Again.\"");
+      }
+    }
+    await damageRoll(2, 12, 3, "Axe damage");
+    S.slain = true; renderSheet();
+    await say("The gems blaze so brightly that the whole nest is lit like noon. When Ryytaa the Ender falls, the egg sacs shrivel, the last spiders flee into the cracks in the walls, and the clicking dies.");
+    await say("The shield stays strapped to your arm, scarred by venom and dented in the shape of a spider's face.");
+    light("torch");
+    S.gemsSpent = false; renderSheet();
+    await go("Go deeper, past the nest");
+  }
+
+  async function partLibrary() {
+    heading("V", "The Library of Roots");
+    light("torch");
+    await say("Past the nest, a door of living wood opens at your touch. Inside, shelves carved into the roots hold rows of spellbooks bound in leather and bark, and a few still hum with magic.");
+    await voice("\"Take what you can carry. Knowledge is the only treasure that grows.\"");
+    if (S.books.length === 0) {
+      const card = el("div", "roll");
+      const dice = el("div", "dice");
+      const die = el("div", "die", D20 + "<span>3</span>");
+      dice.appendChild(die);
+      const out = el("div", "out", "&nbsp;");
+      const ctrl = el("div", "ctrl");
+      const b = el("button", "primary", "Roll 1d3"); b.type = "button"; ctrl.appendChild(b);
+      card.append(dice, el("div", "what", "How many can you carry?"), el("div", "meta", "1d3 spellbooks or scrolls"), out, ctrl);
+      scrollNext = true;
+      add(card);
+      const n = await new Promise(res => {
+        b.onclick = async () => {
+          ctrl.innerHTML = "";
+          const v = d(3);
+          die.classList.add("spin");
+          const span = die.querySelector("span");
+          const t0 = performance.now();
+          if (!reduced) while (performance.now() - t0 < 600) { span.textContent = d(3); await new Promise(r => setTimeout(r, 60)); }
+          span.textContent = v; die.classList.remove("spin");
+          out.innerHTML = "<b class='ok'>" + v + "</b> " + (v === 1 ? "book fits" : "books fit") + " in your pack.";
+          scrollNext = true;
+          res(v);
+        };
+      });
+      await say("Choose " + (n === 1 ? "one" : n === 2 ? "two" : "three") + " from the shelves.");
+      const shelf = el("div", "shelf");
+      const picked = [];
+      await new Promise(res => {
+        BOOKS.forEach(bk => {
+          const btn = el("button", "", "<b>" + bk.name + "</b><small>" + bk.desc + "</small>");
+          btn.type = "button";
+          btn.onclick = () => {
+            if (btn.classList.contains("taken")) return;
+            btn.classList.add("taken");
+            picked.push(bk.name);
+            S.books = picked.slice(); renderSheet();
+            if (picked.length >= n) {
+              shelf.querySelectorAll("button").forEach(x => { if (!x.classList.contains("taken")) x.disabled = true; else x.style.pointerEvents = "none"; });
+              scrollNext = true;
+              res();
+            }
+          };
+          shelf.appendChild(btn);
+        });
+        add(shelf);
+      });
+      await mech("Added to your pack: " + picked.join(", ") + ".", "loot");
+    }
+    await say("At the back of the library, a spiral stair climbs toward a crack of white light.");
+    await go("Climb the stair");
+  }
+
+  async function partDesert() {
+    heading("VI", "The Desert");
+    await say("You climb for what feels like hours, until you push through a stone slab and the heat hits you like a wall.");
+    light("sun");
+    await say("Sand stretches to every horizon, rippling gold beneath a blazing sun. The labyrinth is behind you.");
+    await voice("The axe whispers one last time: \"Now the real journey begins.\"");
+    await wait(300);
+    const carried = [];
+    if (S.axe) carried.push("Vaelric's Axe, its three gems quiet in the sunlight");
+    if (S.shield) carried.push("The pauldron shield, dented in the shape of a spider's face");
+    S.books.forEach(b => carried.push(b));
+    if (S.blessing) carried.push("The strangers' blessing, still unspent");
+    const box = el("section", "tbc",
+      '<p class="eyebrow" style="margin:0">Part VII</p>' +
+      '<p class="big">To be continued…</p>' +
+      "<p style='margin:0'>The desert has not been written yet. You step out of the labyrinth with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold, carrying:</p>" +
+      "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
+      "<p style='margin:0;color:var(--muted)'>Whatever waits out on that sand is still to come.</p>" +
+      '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
+    scrollNext = true;
+    add(box);
+    $("againBtn").onclick = () => restart();
+  }
+
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert"];
+
+  let started = false;
+  async function play(fromPart) {
+    started = true;
+    for (let i = fromPart; i < PARTS.length; i++) {
+      S.part = i; save();
+      await PARTS[i]();
+    }
+    S.part = PARTS.length - 1; save();
+  }
+
+  function begin(resumeState) {
+    S = resumeState || fresh();
+    story.innerHTML = "";
+    lastItems = new Set();
+    $("startActions").hidden = true;
+    $("resumeNote").hidden = true;
+    renderSheet();
+    play(S.part);
+  }
+  let resetArmed = false;
+  function restart() {
+    clearSave();
+    resetArmed = false;
+    $("resetBtn").textContent = "Start over";
+    begin(null);
+  }
+  $("resetBtn").onclick = () => {
+    if (!started) return;
+    if (!resetArmed) { resetArmed = true; $("resetBtn").textContent = "Tap again to restart"; setTimeout(() => { resetArmed = false; $("resetBtn").textContent = "Start over"; }, 3000); return; }
+    restart();
+  };
+
+  // ---------- boot ----------
+  light("dusk");
+  renderSheet();
+  const saved = load();
+  $("beginBtn").onclick = () => { clearSave(); begin(null); };
+  if (saved && saved.part > 0) {
+    const c = el("button", "", "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
+    c.type = "button";
+    c.onclick = () => begin(saved);
+    $("startActions").appendChild(c);
+    $("beginBtn").textContent = "Begin a new descent";
+  }
+})();
+</script>
+</body>
+</html>
