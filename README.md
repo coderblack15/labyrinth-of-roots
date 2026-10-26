@@ -22,6 +22,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 
 ## What's in the game
 
+- **A landing page** that sets the mood before you play. *Enter the Labyrinth* and *Play Now* take you straight to the start of the game.
 - **Choices** at key moments, such as paying the hooded strangers, fighting or fleeing the vine horror, and bracing your shield against the spiders.
 - **Clickable d20 rolls** for every check: Perception, Survival, Dexterity checks, Investigation (DC 12), the Dexterity save (DC 13), attack rolls, and the Shield Slam Strength contest against Ryytaa. Success and failure each lead to their own text.
 - **A character sheet** that tracks HP, armor class, gold, and inventory: the torch, Vaelric's axe (its gem power works once per encounter), the pauldron shield, and the spellbooks you choose in the Library of Roots.
