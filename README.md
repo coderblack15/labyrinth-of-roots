@@ -6,7 +6,7 @@
 
 Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.
 
-Labyrinth of Roots is a choose-and-roll dark fantasy adventure in six parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert.
+Labyrinth of Roots is a choose-and-roll dark fantasy adventure in ten parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist.
 
 ## How to play
 
@@ -34,7 +34,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 | File | What it is |
 | --- | --- |
 | `index.html` | The playable game |
-| `STORY.md` | The full game master script for all six parts |
+| `STORY.md` | The full game master script for all ten parts |
 
 ## Status
 

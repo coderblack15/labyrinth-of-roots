@@ -461,7 +461,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in six parts · d20</p>
+    <p class="eyebrow">An adventure in ten parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -564,7 +564,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const fresh = () => ({
     part: 0, hp: 24, maxHp: 24, coins: 12,
     blessing: false, torch: false, axe: false, shield: false,
-    gemsSpent: false, slain: false, books: [], dis: false, adv: false
+    gemsSpent: false, slain: false, books: [], dis: false, adv: false,
+    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: ""
   });
   let S = fresh();
 
@@ -578,6 +579,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     axe: '<svg viewBox="0 0 26 26"><rect x="12" y="3" width="2.4" height="21" rx="1" fill="#8a7a62"/><path d="M14 5c6 0 9 3 9 7s-3 7-9 7z" fill="#b9c0c4"/><path d="M12 7c-4 0-7 2-7 5s3 5 7 5z" fill="#9ea6aa"/><circle cx="17.5" cy="9" r="1.3" fill="#d9433b"/><circle cx="19" cy="12" r="1.3" fill="#5b8ad1"/><circle cx="17.5" cy="15" r="1.3" fill="#47a771"/></svg>',
     shield: '<svg viewBox="0 0 26 26"><path d="M4 8c3-4 15-4 18 0c0 8-4 13-9 15c-5-2-9-7-9-15z" fill="#8f979b"/><path d="M9 12l3 2l-2 3M16 11l-2 3l3 2" stroke="#4d5457" stroke-width="1.2" fill="none"/></svg>',
     book: '<svg viewBox="0 0 26 26"><rect x="5" y="4" width="16" height="19" rx="1.5" fill="#6b4a2f"/><rect x="7" y="4" width="2" height="19" fill="#4a3220"/><path d="M14 9l2 3l-2 3l-2-3z" fill="#cfa850"/></svg>',
+    token: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="#5a5f62"/><path d="M9 17v-6a1.3 1.3 0 0 1 2.6 0v-2a1.3 1.3 0 0 1 2.6 0v2a1.3 1.3 0 0 1 2.6 0v6z" fill="#2c3133"/><circle cx="13" cy="14" r="1.6" fill="#5a5f62"/></svg>',
+    vial: '<svg viewBox="0 0 26 26"><rect x="10.5" y="3" width="5" height="4" rx="1" fill="#7a5a3a"/><path d="M11 7h4v4l4 8a3 3 0 0 1-3 4h-6a3 3 0 0 1-3-4l4-8z" fill="#8a5fb8"/></svg>',
+    ember: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="14" rx="6" ry="8" fill="#1d1a18"/><path d="M10 12c2 1 4 3 6 1M10 16c2 1 4 0 6 2" stroke="#d9503a" stroke-width="1.4" fill="none"/></svg>',
     blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
   };
   let lastItems = new Set();
@@ -592,6 +596,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.axe) items.push(["axe", "axe", "Vaelric's Axe <span class='gems'><i></i><i></i><i></i></span>",
       S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft."]);
     if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
+    if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
+    if (S.token) items.push(["token", "token", "Hollow Hand Token", "The crew will vouch for whoever wears it."]);
+    if (S.smoke) items.push(["vial", "vial", "Smokebloom Vial", "Shatter it for a 20-ft cloud of violet smoke."]);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     const ul = $("inv");
     ul.innerHTML = "";
@@ -800,7 +807,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     return total;
   }
 
-  // ---------- the six parts ----------
+  // ---------- the labyrinth ----------
   const BOOKS = [
     { name: "Tome of Rootbinding", desc: "Entangle: roots seize every creature in a 20-ft square." },
     { name: "Scroll of Moonfire", desc: "A beam of silver flame, 2d10 radiant damage." },
@@ -820,7 +827,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       { key: "past", label: "Brush past them in silence" }
     ]);
     if (c === "coins") {
-      S.coins -= 3;
+      S.coins -= 3; S.paid = true;
       await say("You smile, press three coins into their palms, and walk on.");
       await say("As you pass, the taller one murmurs something under the hood: \"Then may the old roots remember you.\"", "voice");
       S.blessing = true; renderSheet();
@@ -1120,26 +1127,499 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     light("sun");
     await say("Sand stretches to every horizon, rippling gold beneath a blazing sun. The labyrinth is behind you.");
     await voice("The axe whispers one last time: \"Now the real journey begins.\"");
+    await go("Step out onto the sand");
+  }
+
+  // ---------- the desert ----------
+  const hasBook = (name) => S.books.includes(name);
+  const paidToll = () => S.paid ?? S.coins < 12;
+
+  // Out in the open sand by day, every failed check also costs 1 HP to the heat.
+  async function sunCheck(opts) {
+    const r = await check(opts);
+    if (!r.ok) await hurt(1, 1, "fire", "The sun beats down on you.");
+    return r;
+  }
+
+  async function heal(count, sides, why) {
+    let total = 0;
+    for (let i = 0; i < count; i++) total += d(sides);
+    const before = S.hp;
+    S.hp = Math.min(S.maxHp, S.hp + total);
+    renderSheet();
+    await mech(why + " Restore " + count + "d" + sides + " HP: " + total + (S.hp - before < total ? " (you're back to full)" : "") + ".", "loot");
+  }
+
+  async function gold(count, sides, why) {
+    let total = 0;
+    for (let i = 0; i < count; i++) total += d(sides);
+    S.coins += total; renderSheet();
+    await mech(why + " Gain " + count + "d" + sides + " gold: " + total + ".", "loot");
+  }
+
+  async function partSands() {
+    heading("VII", "The Burning Sands");
+    light("sun");
+    S.gemsSpent = false; renderSheet();
+    await say("The slab grinds shut behind you, and when you turn, there is nothing there but a ripple of sand. No stair, no crack of light. The labyrinth has let you go and closed its door.");
+    await say("The sun sits directly overhead, white and merciless. Within minutes your lips crack and the steel of the axe is too hot to touch bare-handed. You wrap the haft in a strip torn from your cloak. Somewhere out here there must be water, or shade, or people.");
+    await mech("The desert sun is its own enemy. Out in the open sand by day, every check you fail costs 1 more HP to the heat.");
+    const s = await sunCheck({ label: "Survival check", mod: 2, dc: 12, cta: "Read the dunes" });
+    if (s.ok) {
+      await say("You read the dunes the way you once read the corridors. The wind has piled the sand higher on one side, and far off a line of black specks drifts across the sky. Birds, and birds mean water.");
+    } else {
+      await say("You walk until your shadow stretches long in front of you, then admit you have been walking in a circle.");
+      await hurt(1, 4, "fire", "The heat wrings you dry.");
+      await say("Just before dusk, the birds find you instead, circling low over a ridge to the east.");
+    }
+    light("dusk");
+    await say("Over the ridge lies a ruined well, ringed by broken pillars of sandstone carved with the same spirals you saw on the labyrinth gate. Someone has strung canvas between two of the pillars for shade. A cookfire smolders. Four figures sit around it, and two of them wear hoods you have seen before.");
+    await say("The taller stranger lowers her hood. She is younger than you expected, with a scar through one eyebrow and a gold coin hanging from a cord around her neck.");
+    if (paidToll()) {
+      await say("One of <i>your</i> coins.");
+      await say("\"Well,\" she says, grinning. \"Nothing that goes down there comes back up. I owe the others a drink.\" She tosses you a waterskin.", "voice");
+      await heal(1, 6, "Cool, sweet water.");
+    } else {
+      await say("\"The rude one,\" she says. \"Still alive. That's a first.\" She doesn't offer water.", "voice");
+      const p = await check({ label: "Persuasion check", mod: 1, dc: 11, cta: "Talk your way to a drink" });
+      if (p.ok) {
+        await say("You tell her what's buried under her feet and what you killed down there. Halfway through, she stops smirking and passes you the waterskin.");
+      } else {
+        const fee = Math.min(2, S.coins);
+        S.coins -= fee; renderSheet();
+        await say("She listens to the whole speech, then holds out her palm. \"Water costs coin out here.\"");
+        await mech("You pay " + fee + " gold.");
+      }
+      await heal(1, 6, "Cool, sweet water.");
+    }
+    await go("Sit down by the fire");
+  }
+
+  async function partHands() {
+    heading("VIII", "The Hollow Hands");
+    light("torch");
+    await say("Her name is Sable, and the four of them call themselves the Hollow Hands. They are thieves, and not apologetic about it.");
+    await say("<b>Sable</b> leads them: a talker and a planner who wears that coin like a trophy. <b>Grell</b>, the shorter stranger from the road, is broad and silent and picks his teeth with a lockpick. <b>Ysolde</b> is an alchemist with stained fingers and a bandolier of corked glass vials that clink when she moves. <b>Tobbin</b> is barely more than a boy. He never stops fidgeting with a deck of cards, and he watches your axe the whole time.");
+    await say("As night falls and the cold comes in, Sable tells you why they stood on that road.");
+    await say("\"Every few years someone goes into the labyrinth. Nobody comes out. We wait by the old well anyway, because the stories say that one day someone will, carrying the warden's axe.\" She nods at the gems. \"And there it is.\"", "voice");
+    light("gems");
+    await say("Then Vaelric speaks, and for the first time the others can hear him. The gems pulse red, and the fire bends toward the blade.");
+    await voice("\"Ask her what she wants with it.\"");
+    light("torch");
+    await say("Sable doesn't flinch. \"Three days east is Sulmara, the Glass City. The Magistrate who rules it keeps a vault under his palace that nobody has ever broken. In that vault is a seed the size of your fist, black as coal and warm to the touch. They call it the Ember Root.\"", "voice");
+    await voice("\"My heartwood,\" Vaelric says, and his voice is very quiet. \"They cut it from the great tree while I still lived. Without it, the labyrinth rots. Without it, I cannot rest.\"");
+    await say("\"The vault door is warded,\" Sable goes on. \"Old warden magic. Only a warden's blade can open it. We've got the plan, the maps, and the people. We've been missing the key for six years.\" She holds out her hand. \"Come with us. Equal share of everything else in that vault, and the seed is yours.\"", "voice");
+    let adv = false;
+    if (hasBook("Warden's Journal")) {
+      await say("You flip open the Warden's Journal by the firelight. In Vaelric's cramped hand: <i>the ward on the Magistrate's door answers to my blade alone. His grandfather took the heartwood. His family has kept it since.</i>");
+      await mech("The journal backs up her story. You have advantage on the Insight check.");
+      adv = true;
+    }
+    const r = await check({ label: "Insight check", mod: 2, dc: 13, adv, cta: "Read Sable" });
+    S.saw = r.ok;
+    if (r.ok) {
+      await say("She's telling the truth about the vault and the seed. But when she says \"equal share,\" her eyes flick to Tobbin, and Tobbin looks away. Somebody in this crew has their own plan.");
+    } else {
+      await say("She has a gambler's face, warm and unreadable. Whatever she's holding back, you can't see it.");
+    }
+    const c = await choose([
+      { key: "join", label: "Take her hand and join the Hollow Hands" },
+      { key: "decline", label: "Tell her you walk alone", plain: true }
+    ]);
+    S.crew = c;
+    save();
+  }
+
+  // The Warden Golem at the vault door. Needs three hits.
+  async function golemFight({ crew = false, alarm = false } = {}) {
+    S.gemsSpent = false; renderSheet();
+    await say("At the end of the stair stands a round door of black iron covered in the same druidic spirals as the labyrinth gate. In front of it waits the Warden Golem, nine feet of sandstone and bronze with a lantern of green fire for a heart. It was made to stop anyone who isn't a warden.");
+    await voice("\"It knows me. It does not know you. Make it know you.\"");
+    const opts = [
+      { key: "fight", label: "Raise the axe and fight" },
+      { key: "gems", label: "Wake the gems first", show: S.axe && !S.gemsSpent },
+      { key: "talk", label: "Speak Vaelric's name to it", tag: "Arcana", plain: true }
+    ];
+    const c = await choose(opts);
+    let skip = false;
+    if (c === "talk") {
+      const journal = hasBook("Warden's Journal");
+      if (journal) await mech("The Warden's Journal has the old words. You have advantage.");
+      const a = await check({ label: "Arcana check", mod: 1, dc: 15, adv: journal, cta: "Speak the warden's name" });
+      if (a.ok) {
+        await say("\"Vaelric,\" you say, and then the rest of the words from the old tongue. The green lantern in its chest gutters and turns red. Slowly, grinding, the golem kneels and bows its head to the axe.");
+        return;
+      }
+      await say("The words come out wrong. The lantern flares a furious green, and the golem steps forward.");
+    }
+    if (c === "gems") {
+      S.gemsSpent = true; renderSheet();
+      light("gems");
+      await say("The gems blaze, and the golem's green lantern flares red in answer. It hesitates, half recognizing its master's light.");
+      await mech("The golem loses its next turn.");
+      skip = true;
+    }
+    await mech("The Warden Golem: AC 15, three hits to bring it down." + (crew ? " Sable dances in front of it to draw its eye, so your first swing has advantage, and Grell has your back." : ""));
+    let hits = 0, adv = crew, guard = crew, first = true;
+    if (alarm) {
+      await mech("It saw you coming. The golem acts first.", "hurt");
+      const sv = await check({ label: "Dexterity saving throw", mod: 2, dc: 13, cta: "Dodge the fist" });
+      if (!sv.ok) await hurt(1, 8, "bludgeoning", "A stone fist slams into you.");
+      else await say("The fist cracks the glass step where you stood.");
+    }
+    while (hits < 3) {
+      const a = await check({ label: "Axe attack", mod: 5, dc: 15, target: "AC", adv, cta: first ? "Swing the axe" : "Swing again" });
+      adv = false; first = false;
+      if (a.ok) {
+        hits++;
+        if (hits === 1) await say("The axe bites into sandstone and a chunk of its shoulder falls away." + (crew ? " Ysolde lobs a vial after it, and acid hisses into the crack." : ""));
+        else if (hits === 2) await say("Bronze screams. One of its arms hangs useless, and the lantern in its chest flickers.");
+        else break;
+      } else {
+        await say("The blade skids off bronze plate.");
+      }
+      if (skip) { skip = false; await say("The golem stands frozen, its lantern flickering between green and red."); continue; }
+      const sv = await check({ label: "Dexterity saving throw", mod: 2, dc: 13, cta: "Dodge the fist" });
+      if (sv.ok) await say("You duck, and the stone fist whistles over your head.");
+      else if (guard) { guard = false; await say("The fist comes down on you, and Grell shoulders you out of the way and takes it himself. He grunts and stays standing."); }
+      else await hurt(1, 8, "bludgeoning", "A stone fist slams into you.");
+    }
+    light("gems");
+    await say("Your last swing splits its chest open. The green lantern goes out, and the Warden Golem topples down the glass stair in a slide of sand and bronze.");
+    light("torch");
+  }
+
+  async function openVault() {
+    light("gems");
+    await say("You touch the axe to the door, and the spirals light up one by one like a fuse. The door swings open on a round chamber of gold coins, jeweled cups, and silk, and on a pedestal in the middle, under a dome of glass, a black seed glowing like a coal.");
+  }
+
+  // The way out of the vault, with the crew at your side.
+  async function escape() {
+    const tried = new Set();
+    while (true) {
+      const c = await choose([
+        { key: "smoke", label: "Shatter the Smokebloom vial and run", tag: "Stealth", show: S.smoke && !tried.has("smoke") },
+        { key: "roots", label: hasBook("Tome of Rootbinding") ? "Read from the Tome of Rootbinding" : "Read from the Thornwall Grimoire", show: hasBook("Tome of Rootbinding") || hasBook("The Thornwall Grimoire") },
+        { key: "tobbin", label: "Talk Tobbin down", tag: "Persuasion", show: !tried.has("tobbin") },
+        { key: "fight", label: "Fight your way to the stair", plain: true }
+      ]);
+      tried.add(c);
+      if (c === "smoke") {
+        S.smoke = false; renderSheet();
+        await say("The vial bursts against the floor, and thick violet smoke rolls through the vault.");
+        const s = await check({ label: "Stealth check", mod: 2, dc: 12, cta: "Slip through the smoke" });
+        if (!s.ok) await hurt(1, 6, "piercing", "A blind spear-thrust finds you in the smoke.");
+        await say("You grab the seed and herd the crew up the glass stair while the guards cough and stab at shadows.");
+        return;
+      }
+      if (c === "roots") {
+        await say("You read the words, and the vault floor heaves. " + (hasBook("Tome of Rootbinding") ? "Roots as thick as your arm" : "A wall of thorns") + " tears up through the stone and seals the doorway between you and the guards. You grab the seed, and the crew climbs out through the hole in the dome above.");
+        return;
+      }
+      if (c === "tobbin") {
+        await say("\"Tobbin. Who fed you when you were starving in the gutters of Sulmara? Was it him?\"");
+        const p = await check({ label: "Persuasion check", mod: 1, dc: 15, cta: "Reach him" });
+        if (p.ok) {
+          S.tobbin = true;
+          await say("Tobbin's jaw works. Then he swings the crossbow up and puts a bolt through the chain of the great lantern over the Magistrate's head. It crashes down in a shower of glass and burning oil, and in the chaos Tobbin runs with you.");
+          return;
+        }
+        await say("He shakes his head and fires.");
+        await hurt(1, 8, "piercing", "The bolt takes you in the shoulder.");
+        continue;
+      }
+      await say("You put your head down and go for the stair.");
+      let gemAdv = false;
+      if (S.axe && !S.gemsSpent) {
+        S.gemsSpent = true; renderSheet(); light("gems");
+        await say("The gems flare, and the vault fills with red light. The guards throw their arms over their eyes.");
+        gemAdv = true;
+      }
+      for (let i = 0; i < 3; i++) {
+        const a = await check({ label: "Axe attack " + (i + 1) + " of 3", mod: 5, dc: 13, target: "AC", adv: gemAdv && i === 0, cta: "Cut a path" });
+        if (a.ok) await say(["The first guard goes down with his shield split in half.", "You shoulder the second guard into the gold.", "The last guard drops his spear and runs."][i]);
+        else await hurt(1, 6, "slashing", "A blade gets through.");
+      }
+      await say("You snatch the seed as you pass the pedestal, and the crew pounds up the stair behind you.");
+      return;
+    }
+  }
+
+  async function heist() {
+    heading("IX", "The Heist");
+    light("torch");
+    await say("Sable spits in her palm and shakes your hand. Grell pins a small iron badge to your collar: an open hand with a hole through the middle.");
+    S.token = true; renderSheet();
+    await mech("New item: the Hollow Hand token. Any member of the crew will vouch for whoever wears it.", "loot");
+
+    await mech("The road east");
+    light("dusk");
+    await say("Three days of walking at night and sleeping in the shade of dunes by day. On the second night a ridge collapses under Ysolde and drops her into the burrow of a glass scorpion, its body clear as crystal and its stinger glowing faintly blue.");
+    S.gemsSpent = false; renderSheet();
+    await check({ label: "Initiative", mod: 2, dc: 12, target: "vs glass scorpion", cta: "Roll initiative" });
+    let hits = 0, adv = false;
+    const g = await choose([
+      { key: "swing", label: "Leap down and swing" },
+      { key: "gems", label: "Wake the gems", show: S.axe }
+    ]);
+    if (g === "gems") {
+      S.gemsSpent = true; renderSheet(); light("gems");
+      await say("Red light floods the burrow, and the scorpion's crystal body turns it into a prism. Rainbows splash across the sand, and the scorpion reels, blinded.");
+      await mech("Your next attack has advantage.");
+      adv = true;
+    }
+    while (hits < 2) {
+      const a = await check({ label: "Axe attack", mod: 5, dc: 13, target: "AC", adv, cta: hits ? "Finish it" : "Swing the axe" });
+      adv = false;
+      if (a.ok) { hits++; await say(hits === 1 ? "Crystal shatters, and one claw drops to the sand." : "The axe splits it down the middle, and the blue glow in its stinger fades."); }
+      else await hurt(1, 6, "poison", "The stinger catches you.");
+    }
+    light("dusk");
+    await say("Ysolde climbs out shaking and presses a vial of violet glass into your hand. \"I pay my debts.\"");
+    S.smoke = true; renderSheet();
+    await mech("New item: one Smokebloom vial. Shatter it to fill a 20-foot area with thick violet smoke.", "loot");
+
+    await mech("Sulmara");
+    light("sun");
+    await say("On the third dawn the Glass City rises out of the haze. Its towers are fused sand, green and amber and clear, and they throw the sunrise across the dunes in a hundred colors. At its heart stands the Magistrate's palace, and somewhere under it, the vault.");
+    await say("The crew holes up in the back room of a spice shop. Sable unrolls the map. \"The Magistrate holds a masked feast tonight for the merchant lords. A palace full of guests means a palace full of strangers, and nobody looks twice at five more. We go in three ways. Pick yours.\"", "voice");
+    const role = await choose([
+      { key: "mask", label: "The Mask", tag: "the front door, with Sable" },
+      { key: "shadow", label: "The Shadow", tag: "the rooftops, with Grell" },
+      { key: "muscle", label: "The Muscle", tag: "the tunnels, with Tobbin" }
+    ]);
+    light("torch");
+    let alarm = false;
+    if (role === "mask") {
+      await say("Silk robes, a gilded mask shaped like a hawk, and the axe wrapped in velvet as a \"gift for the Magistrate.\" At the gate, a guard wants to unwrap it.");
+      const dc = await check({ label: "Deception check", mod: 1, dc: 13, cta: "Lie to the guard" });
+      if (dc.ok) await say("You sigh, explain that it's cursed and only the Magistrate may touch it, and the guard backs away like it might bite.");
+      else { alarm = true; await say("He unwraps it, and Vaelric glares out of the gems. The guard goes pale and waves you through anyway, but now someone has seen the axe."); }
+      await say("Inside, you find the steward, a nervous man with a ring of keys at his belt.");
+      const how = await choose([
+        { key: "lift", label: "Lift the keys yourself", tag: "Sleight of Hand" },
+        { key: "charm", label: "Get him drunk so Sable can lift them", tag: "Persuasion" }
+      ]);
+      const k = how === "lift"
+        ? await check({ label: "Sleight of Hand check", mod: 2, dc: 14, cta: "Reach for the keys" })
+        : await check({ label: "Persuasion check", mod: 1, dc: 12, cta: "Pour another round" });
+      if (k.ok) await say("The key-ring slides off his belt without a sound.");
+      else { alarm = true; await say("He feels the tug and turns, and Sable has to knock him out cold behind a pillar. You have the keys, but someone will find him soon."); }
+    } else if (role === "shadow") {
+      async function shadowRoofs() {
+        await say("The rooftops of Sulmara are smooth glass, still warm from the day and slick as ice.");
+        const a = await check({ label: "Acrobatics check", mod: 2, dc: 13, cta: "Cross the rooftops" });
+        if (a.ok) { await say("You run the ridgelines like you were born on them."); return; }
+        await say("You slide, catch the edge by your fingertips, and Grell hauls you up, but the shield bangs against the glass.");
+        await hurt(1, 4, "bludgeoning", "You slam into the roof.");
+        const s = await check({ label: "Stealth check", mod: 2, dc: 12, cta: "Freeze and hope" });
+        if (s.ok) await say("You lie flat. Below, a guard looks around, shrugs, and goes back to his post.");
+        else { alarm = true; await say("A guard below looks up and starts shouting."); }
+      }
+      if (hasBook("Scroll of Misty Step")) {
+        const m = await choose([
+          { key: "mist", label: "Read the Scroll of Misty Step" },
+          { key: "climb", label: "Take the rooftops the hard way", plain: true }
+        ]);
+        if (m === "mist") {
+          await say("Silver mist curls around you and Grell, and when it clears you're crouched on the palace dome with the whole city glittering below.");
+        } else await shadowRoofs();
+      } else await shadowRoofs();
+      await say("Grell cuts a circle in the dome with a diamond-tipped tool, and you lower yourselves on silk rope straight down to the vault stair.");
+    } else {
+      await say("The tunnels stink of grease and smoke. Two guards play dice by the kitchen door and stand when they see you. Tobbin flashes a smile and his card deck, and asks if they want a real game.");
+      const m = await choose([
+        { key: "scare", label: "Make them fold", tag: "Intimidation" },
+        { key: "slam", label: "Shield Slam them both", show: S.shield },
+        { key: "fight", label: "Take them down", plain: true }
+      ]);
+      if (m === "scare") {
+        const i = await check({ label: "Intimidation check", mod: 3, dc: 12, cta: "Loom" });
+        if (i.ok) await say("You let the axe catch the lamplight. Both guards decide this isn't worth their pay and sit very still while Tobbin ties them up.");
+        else { alarm = true; await say("One of them bolts down the tunnel, yelling. Tobbin swears."); }
+      } else if (m === "slam") {
+        const w = await contest({ label: "Shield Slam · Strength contest", mod: 3, foe: "Guard", foeMod: 1, cta: "Slam!" });
+        if (w) await say("You drive the shield into the first guard, and he flies back into the second. They go down in a heap and stay down.");
+        else { await hurt(1, 4, "bludgeoning", "The guard braces and shoves back."); await say("You and Tobbin wrestle them down, but not quietly."); alarm = true; }
+      } else {
+        for (let i = 0; i < 2; i++) {
+          const a = await check({ label: "Attack", mod: 5, dc: 12, target: "AC", cta: i ? "The second guard" : "The first guard" });
+          if (!a.ok) await hurt(1, 4, "slashing", "A short sword nicks you.");
+          await say(i ? "The second guard goes down." : "The first guard goes down.");
+        }
+      }
+      await say("Tobbin seems a little too comfortable down here. He knows which doors are locked, and he never once looks at the map.");
+    }
+
+    await mech("The vault");
+    await say("Whichever way they came, the crew meets you at the bottom of a long glass stair.");
+    await golemFight({ crew: true, alarm });
+    await openVault();
+
+    light("torch");
+    await say("Before you can reach the seed, a crossbow bolt cracks into the pedestal an inch from your hand. Tobbin stands in the doorway with his cards gone and a loaded crossbow in his hands. Behind him march a dozen palace guards, and the Magistrate himself, fat and smiling under a mask of beaten gold.");
+    await say("\"The boy's been mine for a year,\" the Magistrate says. \"I've wanted that axe since before he was born. Thank you for bringing it to my door.\"", "voice");
+    await say("Sable's face goes hard. \"Tobbin. We raised you.\" Tobbin won't look at her.", "voice");
+    if (S.saw) {
+      await mech("You saw this coming at the fire. You act before anyone else.");
+      const f = await choose([
+        { key: "seed", label: "Snatch the seed" },
+        { key: "shield", label: "Put the shield between Tobbin and Sable", show: S.shield }
+      ]);
+      if (f === "seed") await say("Your hand closes around the Ember Root before the Magistrate finishes smiling. It's warm, and it beats like a heart.");
+      else await say("You step in front of Sable, and the bolt Tobbin was about to fire would have to go through steel first. He lowers it an inch.");
+    }
+    await escape();
+    light("dusk");
+    await say("When the glass doors of the palace finally shatter behind you, the crew is running across the rooftops into the night, pockets full of gold, and the Ember Root is warm in your fist.");
+    S.ember = true; renderSheet();
+    await gold(3, 10, "Your share of the vault.");
+    await go("Run for the dunes");
+  }
+
+  async function lone() {
+    heading("IX", "The Lone Road");
+    light("dusk");
+    await say("\"Suit yourself,\" Sable says, and the crew lets you walk. Before you go, she calls after you. \"If you change your mind, you'll find us at the sign of the empty hand.\"", "voice");
+    await mech("The sandstorm");
+    light("sun");
+    await say("On the second day the sky turns brown and the wind rises into a howling wall of sand.");
+    const s = await sunCheck({ label: "Survival check", mod: 2, dc: 14, cta: "Find shelter" });
+    if (s.ok) await say("You dig in behind a dune and wrap your face, and the storm passes over.");
+    else await hurt(2, 4, "slashing", "The storm scours you raw.");
+    await say("When it clears, the storm has uncovered something: the top of a buried sandstone arch, carved with spirals.");
+    let adv = false;
+    if (hasBook("Codex of Whispering Bark")) {
+      await say("You open the Codex of Whispering Bark and lay a hand on the dead roots in the arch. They whisper of the old warden road, and of a fat man in a gold mask who pays thieves to rob himself.");
+      await mech("You have advantage on your next check in Sulmara.");
+      adv = true;
+    }
+
+    await mech("Sulmara");
+    await say("The Glass City shimmers on the horizon on the third dawn. At the gate a guard sees the axe and the shield, and within the hour you're standing in the palace in front of the Magistrate himself, fat and smiling under a mask of beaten gold.");
+    await say("\"A traveler with a warden's axe, walking out of the desert,\" he says. \"I have a problem, and you look like the answer. A gang calling themselves the Hollow Hands means to rob my vault tonight. Guard it, and I'll pay you fifty gold. Catch them, and I'll pay you a hundred.\"", "voice");
+    await voice("\"He is the one who keeps my heartwood. Say yes. Get close to the vault.\"");
+    const i = await check({ label: "Insight check", mod: 2, dc: 12, adv, cta: "Read the Magistrate" });
+    S.saw = i.ok;
+    if (i.ok) await say("He already knows exactly how the thieves plan to get in. Someone in the crew is feeding him. He doesn't want to stop the heist at all. He wants the thieves to bring him the one thing that opens that door.");
+    else await say("He smiles like a man who has never lost a bet. You take his coin.");
+
+    await mech("The night of the feast");
+    light("torch");
+    await say("You stand guard at the bottom of the long glass stair, before a round door of black iron covered in druidic spirals. The Warden Golem stands silent beside it, nine feet of sandstone and bronze with a lantern of green fire for a heart.");
+    await say("At midnight, the Hollow Hands come down the stair: Sable in a hawk mask, Grell on a rope from the dome above, Tobbin up from the tunnels. When Sable sees you, her face falls. \"Ah,\" she says. \"So that's who he hired.\"");
+    await say("Then Tobbin levels a crossbow at her back, and the Magistrate and a dozen guards fill the stair behind him. \"Well done,\" the Magistrate says to you. \"Now take her.\"", "voice");
+    const c = await choose([
+      { key: "magistrate", label: "Do the job you were paid for" },
+      { key: "crew", label: "Throw your shield up in front of Sable" },
+      { key: "self", label: "Slip past them all to the door", tag: "Stealth", plain: true }
+    ]);
+    S.side = c;
+    if (c === "magistrate") {
+      await say("Sable and Grell don't fight back hard. Maybe they're too surprised.");
+      for (const who of ["Sable", "Grell"]) {
+        const a = await check({ label: "Attack to subdue " + who, mod: 5, dc: 13, target: "AC", cta: "Take " + who + " down" });
+        if (!a.ok) await hurt(1, 4, "slashing", who + "'s knife finds you before you pin " + (who === "Sable" ? "her" : "him") + ".");
+        await say(who === "Sable" ? "You pin Sable to the glass, and the guards drag her away." : "Grell goes down under your shield, and four guards sit on him.");
+      }
+      S.coins += 100; renderSheet();
+      await mech("The Magistrate pays you 100 gold.", "loot");
+      await say("\"And now,\" he says, \"the axe.\" When you don't move, he snaps his fingers. The green lantern in the golem's chest blazes, and it lumbers to life.", "voice");
+      await golemFight();
+      await say("When the golem falls, the Magistrate flees up the stair, and there's no one left between you and the door.");
+      await openVault();
+      await say("You take the seed. It's warm, and it beats like a heart.");
+    } else if (c === "crew") {
+      if (S.shield) await say("The bolt rings off the pauldron an inch from Sable's spine.");
+      else await say("You knock the crossbow aside with the haft of the axe, and the bolt shatters against the wall.");
+      await say("\"Change of plans,\" you tell her. Sable laughs, a little wildly, and draws her knives.");
+      const w = await contest({ label: "Shield Slam · Strength contest", mod: 3, foe: "Tobbin", foeMod: 1, cta: "Slam!" });
+      if (w) await say("You slam into Tobbin and he tumbles down the stair into the front rank of guards.");
+      else { await hurt(1, 6, "piercing", "Tobbin reloads and fires point-blank."); await say("Grell barrels into him from behind, and Tobbin goes down."); }
+      await say("Sable and Grell hold the stairway while you touch the axe to the door.");
+      await openVault();
+      await escape();
+      S.token = true;
+      await say("Outside, Sable tears the iron badge off Tobbin's dropped coat and pins it to yours.");
+      renderSheet();
+      await mech("New item: the Hollow Hand token.", "loot");
+      await gold(2, 10, "Gold scooped from the vault on the way out.");
+    } else {
+      await say("While the guards and the thieves crash together on the stair, you slide along the wall toward the door.");
+      const st = await check({ label: "Stealth check", mod: 2, dc: 15, cta: "Slip past" });
+      if (!st.ok) await hurt(1, 8, "piercing", "Tobbin sees you and fires.");
+      await openVault();
+      await say("You snatch the Ember Root from its pedestal and run, and behind you two kinds of people start shouting your name.");
+      await mech("The Magistrate and the Hollow Hands will both be hunting you.", "hurt");
+    }
+    S.ember = true; renderSheet();
+    light("dusk");
+    await go("Run for the dunes");
+  }
+
+  async function partJob() {
+    if (S.crew === "join") await heist();
+    else await lone();
+  }
+
+  async function partEmber() {
+    heading("X", "The Ember Root");
+    light("dusk");
+    S.ember = true; renderSheet();
+    await say("You stop running on a dune outside the city, where the glass towers are only a glow against the night. The seed is warm in your hand, and it beats softly, like a heart.");
+    light("gems");
+    await say("Vaelric's ghost rises out of the axe, clearer now than he has been since the hollow tree. His face isn't gaunt anymore. He looks like a man, not a corpse.");
+    await voice("\"You did what I could not. Now plant it where the great tree fell, and the labyrinth will heal. Or keep it, and it will grow in you instead.\"");
+    await mech("Whoever carries the Ember Root regains 1 HP at every sunrise and may cast one druidic spell a day from any book they carry, with no roll.");
+    const c = await choose([
+      { key: "return", label: "Return the seed to the labyrinth" },
+      { key: "keep", label: "Keep it", plain: true }
+    ]);
+    S.ending = c;
+    if (c === "return") {
+      await say("You walk back west to the well and the spiral arch, and you bury the seed in the sand where the labyrinth lies below. Roots burst up through the dunes, green for the first time in a hundred years.");
+      S.ember = false; renderSheet();
+      await voice("\"Rest well, warden,\" he says, and you realize he means you.");
+      await say("The gems on the axe go dark, but the blade stays sharp, and you know the labyrinth will open for you whenever you return.");
+      await mech("Vaelric is at peace. You are the Warden of the Labyrinth now: once a day, you may ask the roots for directions.", "loot");
+    } else {
+      await say("You close your fist. The warmth runs up your arm and into your chest, and something takes root under your ribs.");
+      S.maxHp += 4; S.hp = Math.min(S.maxHp, S.hp + 4); renderSheet();
+      await voice("Vaelric doesn't argue. \"Then carry us both,\" he says, and sinks back into the axe.");
+      await mech("The Ember Root's power is yours for good, and your maximum HP rises by 4. Vaelric stays bound to the axe, a voice that grows quieter every day.", "loot");
+    }
+    light("sun");
+    const friends = S.crew === "join" || S.side === "crew";
+    if (friends) {
+      await say("Sable finds you at sunrise, sitting on the dune, with Grell and Ysolde behind her" + (S.tobbin ? ", and Tobbin trailing a few steps back, not quite meeting anyone's eyes" : "") + ".");
+      if (paidToll()) await say("She pulls the cord over her head and tosses you the coin. Then two more. \"Your toll, back. You earned it.\"");
+      await say("\"The road out is long,\" she says. \"We've got another job in the Salt Marshes. Interested?\"", "voice");
+    }
+    await say("The axe is quiet. The sand is gold, and the sun is rising.");
     await wait(300);
     const carried = [];
-    if (S.axe) carried.push("Vaelric's Axe, its three gems quiet in the sunlight");
+    if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
     if (S.shield) carried.push("The pauldron shield, dented in the shape of a spider's face");
+    if (S.ember) carried.push("The Ember Root, rooted under your ribs");
+    if (S.token) carried.push("The Hollow Hand token");
+    if (S.smoke) carried.push("One Smokebloom vial");
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part VII</p>' +
+      '<p class="eyebrow" style="margin:0">Part XI</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>The desert has not been written yet. You step out of the labyrinth with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold, carrying:</p>" +
+      "<p style='margin:0'>You leave the Glass City behind with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>Whatever waits out on that sand is still to come.</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (friends ? "The Salt Marshes are waiting." : S.side === "self" ? "Somewhere behind you, two sets of hunters are already on your trail." : "Whatever waits beyond the dunes is still to come.") + "</p>" +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root"];
 
   let started = false;
   async function play(fromPart) {
