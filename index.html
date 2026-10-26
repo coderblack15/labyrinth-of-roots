@@ -62,6 +62,35 @@ body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
 body[data-light="dark"] .story { filter: brightness(.86); }
 .story { transition: filter 2s ease; }
 
+/* ---------- warning overlay ---------- */
+#intro-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(60% 50% at 50% 50%, rgba(217, 80, 58, .12), transparent 70%), rgba(6, 8, 7, .97);
+  transition: opacity .9s ease;
+}
+#intro-overlay.leaving { opacity: 0; pointer-events: none; }
+.intro-box {
+  width: 100%; max-width: 30rem;
+  border: 1px solid var(--ember); border-radius: 4px;
+  background: var(--panel); padding: clamp(28px, 6vw, 44px);
+  box-shadow: 0 0 60px rgba(217, 80, 58, .18);
+  animation: rise 1.2s ease both;
+}
+.intro-box h2 {
+  font-family: var(--land-display); font-weight: 700; letter-spacing: .3em;
+  font-size: clamp(1.8rem, 6vw, 2.4rem); color: var(--ember); margin: 0 0 22px;
+}
+.intro-box p { font-family: var(--land-body); font-weight: 300; font-size: 1.15rem; line-height: 1.6; margin: 0 0 .6em; color: var(--ink); }
+.intro-box p + p { color: var(--ink); font-weight: 500; }
+#enter-btn {
+  margin-top: 26px; font-family: var(--land-display); font-weight: 600; letter-spacing: .3em; font-size: 1.05rem;
+  padding: 14px 34px; background: #3a1a15; border: 1px solid var(--ember); border-radius: 3px; color: var(--ink);
+}
+#enter-btn:hover { background: #4c211a; box-shadow: 0 0 28px rgba(217, 80, 58, .35); }
+body.intro-open { overflow: hidden; }
+
 /* ---------- landing page ---------- */
 .landing { position: relative; z-index: 1; }
 .band { margin-left: calc(-1 * var(--bleed-l)); margin-right: calc(-1 * var(--bleed-r)); }
@@ -326,13 +355,23 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .fade, .inv li.new { animation: none; }
   .die.spin svg { animation: none; }
   .atmos, .story { transition: none; }
-  .warning blockquote { animation: none; }
+  .warning blockquote, .intro-box { animation: none; }
+  #intro-overlay { transition: none; }
 }
 </style>
 </head>
 <body>
 
 <div class="atmos" aria-hidden="true"></div>
+
+<div id="intro-overlay" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <div class="intro-box">
+        <h2 id="intro-title">WARNING</h2>
+        <p>The stories say the labyrinth was sealed.</p>
+        <p>The stories are wrong.</p>
+        <button id="enter-btn" type="button">ENTER</button>
+    </div>
+</div>
 
 <div class="landing">
   <header class="l-hero band">
@@ -502,6 +541,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
     $("rootsPath").setAttribute("d", r.trim());
   })();
+
+  // Warning screen: shown on every visit until the player presses ENTER.
+  document.body.classList.add("intro-open");
+  $("enter-btn").focus({ preventScroll: true });
+  $("enter-btn").addEventListener("click", () => {
+    const o = $("intro-overlay");
+    o.classList.add("leaving");
+    document.body.classList.remove("intro-open");
+    setTimeout(() => { o.hidden = true; }, reduced ? 0 : 900);
+  });
 
   // Landing buttons lead to the game's start.
   function toPlay(e) {

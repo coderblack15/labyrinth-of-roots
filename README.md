@@ -22,6 +22,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 
 ## What's in the game
 
+- **A WARNING screen** that greets every visitor. Press *ENTER* to go in.
 - **A landing page** that sets the mood before you play. *Enter the Labyrinth* and *Play Now* take you straight to the start of the game.
 - **Choices** at key moments, such as paying the hooded strangers, fighting or fleeing the vine horror, and bracing your shield against the spiders.
 - **Clickable d20 rolls** for every check: Perception, Survival, Dexterity checks, Investigation (DC 12), the Dexterity save (DC 13), attack rolls, and the Shield Slam Strength contest against Ryytaa. Success and failure each lead to their own text.
