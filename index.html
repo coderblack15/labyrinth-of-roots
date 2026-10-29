@@ -59,6 +59,7 @@ body[data-light="dark"]  { --glow: rgba(0, 0, 0, 0); }
 body[data-light="torch"] { --glow: rgba(214, 140, 52, .22); }
 body[data-light="gems"]  { --glow: rgba(217, 67, 59, .30); }
 body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
+body[data-light="mire"]  { --glow: rgba(92, 140, 96, .26); }
 body[data-light="dark"] .story { filter: brightness(.86); }
 .story { transition: filter 2s ease; }
 
@@ -461,7 +462,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in ten parts · d20</p>
+    <p class="eyebrow">An adventure in seventeen parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -582,23 +583,35 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     token: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="#5a5f62"/><path d="M9 17v-6a1.3 1.3 0 0 1 2.6 0v-2a1.3 1.3 0 0 1 2.6 0v2a1.3 1.3 0 0 1 2.6 0v6z" fill="#2c3133"/><circle cx="13" cy="14" r="1.6" fill="#5a5f62"/></svg>',
     vial: '<svg viewBox="0 0 26 26"><rect x="10.5" y="3" width="5" height="4" rx="1" fill="#7a5a3a"/><path d="M11 7h4v4l4 8a3 3 0 0 1-3 4h-6a3 3 0 0 1-3-4l4-8z" fill="#8a5fb8"/></svg>',
     ember: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="14" rx="6" ry="8" fill="#1d1a18"/><path d="M10 12c2 1 4 3 6 1M10 16c2 1 4 0 6 2" stroke="#d9503a" stroke-width="1.4" fill="none"/></svg>',
+    writ: '<svg viewBox="0 0 26 26"><rect x="5" y="4" width="16" height="18" rx="1" fill="#d8c79a"/><path d="M8 9h10M8 12h10M8 15h6" stroke="#8a7550" stroke-width="1.2"/><circle cx="17" cy="19" r="2.6" fill="#a8322b"/></svg>',
+    ring: '<svg viewBox="0 0 26 26"><circle cx="13" cy="15" r="7" fill="none" stroke="#9a7bc0" stroke-width="2.4"/><path d="M10 8l3-5l3 5z" fill="#6b4a96"/></svg>',
+    lantern: '<svg viewBox="0 0 26 26"><path d="M10 4h6v3h-6z" fill="#8f979b"/><rect x="8" y="7" width="10" height="13" rx="2" fill="#4d5457"/><path d="M13 10c2 2 2 4 0 6c-2-2-2-4 0-6z" fill="#f0c86e"/><rect x="9" y="20" width="8" height="2" fill="#8f979b"/></svg>',
+    snare: '<svg viewBox="0 0 26 26"><path d="M5 20c6-10 10-10 16 0" stroke="#8a7a62" stroke-width="1.6" fill="none"/><circle cx="13" cy="12" r="4" fill="none" stroke="#b9a27a" stroke-width="1.4"/></svg>',
+    shadow: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="#2a2433"/><path d="M13 5a8 8 0 0 0 0 16a5 8 0 0 1 0-16z" fill="#6b4a96"/></svg>',
     blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
   };
+  const acNow = () => 13 + (S.shield && !S.pitted ? 1 : 0);
   let lastItems = new Set();
   function renderSheet() {
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
-    $("acVal").textContent = 13 + (S.shield ? 1 : 0);
+    $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
     const items = [];
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
     if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
     if (S.axe) items.push(["axe", "axe", "Vaelric's Axe <span class='gems'><i></i><i></i><i></i></span>",
-      S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft."]);
-    if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
+      (S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft.") + (S.dull ? " The blade is pitted by slime." : "")]);
+    if (S.shield && S.pitted) items.push(["shield", "shield", "Pauldron Shield", "Pitted by slug slime. No AC bonus until someone mends it."]);
+    else if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
     if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
     if (S.token) items.push(["token", "token", "Hollow Hand Token", "The crew will vouch for whoever wears it."]);
     if (S.smoke) items.push(["vial", "vial", "Smokebloom Vial", "Shatter it for a 20-ft cloud of violet smoke."]);
+    if (S.writ) items.push(["writ", "writ", "The Blackjackal's Bounty", "A hundred-year-old writ under the royal seal of drowned Carrowmere."]);
+    if (S.ring) items.push(["ring", "ring", "Violet Signet Ring", "A jackal's head in violet stone. In the Hushfen, the shadows will hide you once."]);
+    if (S.lantern) items.push(["lantern", "lantern", "The Lantern Knight's Lamp", "Old steel, and a flame that burns without oil."]);
+    if (S.shadow) items.push(["shadow", "shadow", "Shadowblend", "Once per scene, vanish into shadow. Advantage on Stealth in the dark."]);
+    if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     const ul = $("inv");
     ul.innerHTML = "";
@@ -756,7 +769,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // An enemy attack you react to.
   function enemyAttack({ label, foe, bonus, dis = false, cta }) {
     return new Promise(resolve => {
-      const ac = 13 + (S.shield ? 1 : 0);
+      const ac = acNow();
       const card = el("div", "roll");
       const dice = el("div", "dice");
       const n = dis ? 2 : 1;
@@ -1597,29 +1610,426 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await say("\"The road out is long,\" she says. \"We've got another job in the Salt Marshes. Interested?\"", "voice");
     }
     await say("The axe is quiet. The sand is gold, and the sun is rising.");
+    await go("Follow the coast road to the Salt Marshes");
+  }
+
+  // ---------- the hushfen ----------
+  const vaelricSpeaks = () => S.axe && S.ending !== "return";
+  const fullHeal = async (why) => { S.hp = S.maxHp; renderSheet(); await mech(why + " You're back to full: " + S.hp + " HP.", "loot"); };
+
+  async function partBounty() {
+    heading("XI", "The Blackjackal's Bounty");
+    light("dusk");
+    S.gemsSpent = false; renderSheet();
+    await say("The swamp past the Salt Marshes has a saying attached to it, and every fisherman on the coast knows it: <i>Nothing the Hushfen drowns stays dead.</i> A whole kingdom went under that mire a hundred years ago, and the fishermen say it is still down there, waiting.");
+    await say("However the night in Sulmara ended, Tobbin ran. The Magistrate's men are hunting him, and so is everyone he ever lied to. He took one thing with him when he went: a folded square of yellow vellum that Sable had kept sewn into the lining of her pack for six years.");
+    const friends = S.crew === "join" || S.side === "crew";
+    if (friends) await say("Sable walks beside you as the dunes give way to grey salt flats, and that night, by the fire, she tells you what he took.");
+    else await say("Sable finds you on the coast road where the dunes give way to grey salt flats. She walks up to your fire with her hands open and empty. \"Truce,\" she says. \"The boy robbed us both.\"", "voice");
+    await say("She draws a copy of the vellum in the sand with her knife. It is a bounty writ, sealed in the wax of a kingdom that no longer exists.");
+    await say("\"A hundred years ago there was a kingdom called Carrowmere, where the Hushfen is now. Green fields, a white castle, a king who taxed the roads. And on those roads there was a robber they called the Blackjackal. Nobody saw his face. He wore a black jackal's hide over his head and shoulders, and he could stand in the dark next to you and you'd never know. He robbed the king's tax wagons for twenty years and laughed about it.\"", "voice");
+    await say("\"The king sent his best knight after him. Ser Oswin Harrowgate, the Lantern Knight, they called him, because he carried a lamp on his shield that never went out. Oswin chased the Jackal for a year and finally cornered him on the night of the spring floods, at the edge of the fens, with the whole stolen treasury of Carrowmere loaded on a barge behind him.\"", "voice");
+    await say("She taps the writ. \"Nobody knows what happened next. The floods came that night and never left. The fen swallowed the castle, the fields, the knight, the robber, and every crown of the treasury. Nobody ever collected this bounty. But the writ carries the royal seal of Carrowmere, and the old stories say the seal is the key to the drowned treasury. Tobbin knows it too. And he ran into the Hushfen with it three days ago.\"", "voice");
+    await say("\"The Hushfen lets one walker in at a time,\" she says. \"Two go in, one comes out. Everybody on this coast knows that.\" She hands you a coil of rope. \"Bring back the writ. Bring back the boy if you can. I want to ask him why.\"", "voice");
+    await go("Walk into the Hushfen");
+  }
+
+  async function partMile() {
+    heading("XII", "The Soggy Mile");
+    light("mire");
+    await say("The salt flats turn to reeds, the reeds turn to black water, and then you are in the Hushfen.");
+    await say("You walk for two hours. The ground gives under every step. Mire trees rise out of the water on knotted roots like stilts, their bark grey and soft as wet paper, and long beards of moss hang down from their branches to the water. Things move in that water. Frogs as big as dogs watch you from the logs. Once, a heron taller than you lifts out of the reeds without a sound. Between the hummocks of solid ground lie flat, innocent-looking patches of bright green sand, and every one of them is quicksand.");
+    const p = await check({ label: "Perception check", mod: 2, dc: 6, cta: "Read the mire" });
+    if (p.ok) {
+      await say("You read the mire. You step only on the dark roots and the humps of grass, you smell the sulfur rising off the sinkholes and keep your distance, and you notice the long silver trails across the logs before you put your hand on one. Something big lives out here, and it leaves slime wherever it goes. You give the trails a wide berth and keep walking.");
+      await go("Keep walking");
+      return;
+    }
+    await say("Your boot goes through a skin of green sand and you sink to the knee, then to the hip. By the time you've dragged yourself out by a mire root, you've made a great deal of noise.");
+    await say("Behind you, from the reeds, comes a wet, slow sound like a sack being dragged across stone. Then another. Then more.");
+    await say("Three slugs slide out of the reeds, each one as long as a horse, their grey-green bodies glistening, their eyestalks swiveling toward you. Where they cross the logs, the wood smokes and softens. The slime they leave behind eats armor and flesh alike, and they are coming faster than anything that big should move.");
+    await mech("Each slug falls to one hit (AC 10). Each round they spit dissolving slime: a Dexterity save (DC 12) or 1d6 acid damage. Steel won't last long against this. It's a fight for magic.");
+    let slugs = 3, held = false, codexAdv = 0, axeHits = 0, emberFree = !!S.ember, codexUsed = false, saveAdv = false;
+    const spells = [
+      { book: "Scroll of Moonfire", label: "Read the Scroll of Moonfire" },
+      { book: "Tome of Rootbinding", label: "Read from the Tome of Rootbinding" },
+      { book: "The Thornwall Grimoire", label: "Read from the Thornwall Grimoire" },
+      { book: "Scroll of Misty Step", label: "Read the Scroll of Misty Step" },
+      { book: "Codex of Whispering Bark", label: "Open the Codex of Whispering Bark" }
+    ];
+    while (slugs > 0) {
+      const opts = spells.map(x => ({ key: x.book, label: x.label, tag: emberFree && x.book !== "Codex of Whispering Bark" ? "Ember Root: no roll" : "spell", show: hasBook(x.book) && !(x.book === "Codex of Whispering Bark" && codexUsed) }));
+      opts.push({ key: "gems", label: "Wake the gems", show: S.axe && !S.gemsSpent });
+      opts.push({ key: "axe", label: "Swing the axe", plain: true });
+      const c = await choose(opts);
+      const adv = held || codexAdv > 0;
+      if (c === "axe") {
+        const a = await check({ label: "Axe attack", mod: 5, dc: 10, target: "AC", adv, cta: "Swing the axe" });
+        if (codexAdv > 0) codexAdv--;
+        if (a.ok) {
+          slugs--; axeHits++;
+          await say("The axe splits a slug down its length, and it collapses in a hissing puddle.");
+          if (axeHits === 2 && !S.dull) { S.dull = true; renderSheet(); await mech("The slime has pitted the blade. The axe is dulled for the rest of the Hushfen.", "hurt"); }
+        } else await say("The blade glances off the slick hide, and it smokes where the slime touched it.");
+      } else if (c === "gems") {
+        S.gemsSpent = true; renderSheet();
+        light("gems");
+        await say("The gems flare red. The radiant light dries the slime to a crust, and the nearest slug shrivels like a leaf in a fire. The others recoil, half blind.");
+        slugs--; saveAdv = true;
+        light("mire");
+      } else if (c === "Codex of Whispering Bark") {
+        codexUsed = true;
+        await say("You open the Codex and lay a hand on the nearest mire tree. The bark whispers back: <i>Behind the eyes. They are soft behind the eyes.</i>");
+        codexAdv = 2;
+        await mech("Your next two attacks have advantage.", "loot");
+      } else {
+        let hit = true;
+        if (emberFree) { emberFree = false; await mech("The Ember Root warms under your ribs, and the spell simply works."); }
+        else hit = (await check({ label: "Spell attack · " + c, mod: 4, dc: 10, target: "AC", adv, cta: "Cast" })).ok;
+        if (codexAdv > 0) codexAdv--;
+        if (c === "Scroll of Misty Step") {
+          if (hit) {
+            await say("You vanish in silver mist and reappear on a high root thirty feet away. The slugs turn in circles below, tasting the air. You leave them behind.");
+            slugs = 0; break;
+          }
+          await say("The words come out wrong, and the mist only puffs around your boots.");
+        } else if (!hit) {
+          await say("The spell goes wide and fizzles into the black water.");
+        } else if (c === "Scroll of Moonfire") {
+          const k = Math.min(2, slugs); slugs -= k;
+          await say("A beam of silver flame boils the nearest slug where it lies" + (k === 2 ? ", and the beam runs on long enough to catch the one behind it." : "."));
+        } else if (c === "Tome of Rootbinding") {
+          held = true;
+          await say("The mire roots wrap the slugs and drag them half under the black water. They thrash, but they can't spit.");
+          await mech("The slugs are held: every attack against them has advantage, and they lose their next spit.", "loot");
+        } else if (c === "The Thornwall Grimoire") {
+          const k = Math.min(2, slugs); slugs -= k;
+          await say("A wall of thorns tears up out of the mud between you and the slugs. They crawl into it without slowing, and the thorns shred them" + (k === 2 ? ". Two of them stop moving." : "."));
+        }
+      }
+      if (slugs <= 0) break;
+      if (held) { held = false; await say("The roots hold them for now."); continue; }
+      await say(slugs === 1 ? "The last slug rears and spits." : "The slugs rear and spit.");
+      const sv = await check({ label: "Dexterity saving throw", mod: 2, dc: 12, adv: saveAdv, cta: "Dodge the slime" });
+      saveAdv = false;
+      if (!sv.ok) {
+        await hurt(1, 6, "acid", "The slime hisses through cloth and skin.");
+        if (S.shield && !S.pitted) { S.pitted = true; renderSheet(); await mech("The slime eats through the strap and face of your shield: −1 AC until someone mends it.", "hurt"); }
+      }
+    }
+    await say("When the last slug curls up and goes still, the mire is quiet again.");
+    await go("Catch your breath");
+  }
+
+  async function partLair() {
+    heading("XIII", "The Violet Baron's Lair");
+    light("mire");
+    await say("As you catch your breath, something moves inside the trunk of the biggest mire tree you've seen yet, a hollow giant with a split down its middle like the dead tree where you met Vaelric. Something, or someone, just stepped back into the dark of that split.");
+    await go("Go forward");
+    light("dark");
+    await say("Inside the trunk, steps of black stone lead down. You follow them for a long time, past the roots and the water, until the steps open into a hall, and then another hall, and then a gallery you can't see the end of. It is a fortress, a whole fortress, built under the swamp.");
+    light("torch");
+    await say("And it is <i>clean</i>. The floors are swept. Carpets lie on the flagstones. There are carved chairs, a long table set with silver, tapestries of hunting scenes, and, everywhere, trophies: the skull of a slug three times bigger than the ones you saw, a rusted tax-collector's helmet, a gold Sulmaran mask on a stand, a rack of crossbows polished to a shine.");
+    await say("A robber baron lives here.");
+    await say("A voice whispers right beside your ear, though nobody is there. \"You walk loudly for a guest.\"", "voice");
+    const p = await check({ label: "Perception check", mod: 2, dc: 12, cta: "Find the voice" });
+    let stole = "", clean = false;
+    if (p.ok) {
+      await say("You don't flinch. You watch where the whisper came from, and you see how it moves: shadow sliding into shadow along the wall. Whoever lives here uses the dark the way you use the axe. You copy it. You step back against a tapestry, still your breath, and let the gloom close over you.");
+      S.shadow = true; renderSheet();
+      await mech("New ability: Shadowblend. Once per scene, step into shadow and stay hidden until you move or attack. Stealth in the dark has advantage.", "loot");
+      await say("Cloaked, you slip through the fortress. In a study lined with maps of the swamp, you find three things worth stealing.");
+      const c = await choose([
+        { key: "writ", label: "The yellow vellum on the desk" },
+        { key: "ring", label: "The violet signet ring", plain: true },
+        { key: "lantern", label: "The lantern on the mantel", plain: true }
+      ]);
+      stole = c;
+      const t = await check({ label: "Sleight of Hand check", mod: 3, dc: 10, adv: true, cta: "Lift it" });
+      const what = { writ: "the Blackjackal's bounty writ, its royal seal broken. Tobbin has been here.", ring: "a violet signet ring, carved with a jackal's head.", lantern: "a lantern of old steel, with a flame that burns without oil. Ser Oswin's lamp. The Lantern Knight's." };
+      if (t.ok) {
+        clean = true;
+        S[c] = true; renderSheet();
+        await say("It's in your pack before the shadows notice: " + what[c]);
+      } else {
+        await say("Your hand is on it when a cold voice behind you says, \"Put it down, please. I'm very fond of it.\"", "voice");
+      }
+    } else {
+      await say("You turn toward the voice, and something clicks in the walls. Hidden crossbows. Bolts come at you from every side.");
+      await mech("Dodge until you've lost a quarter of your health (6 HP). Your shield can't cover every side at once.");
+      let lost = 0, n = 0;
+      while (lost < 6) {
+        n++;
+        const dg = await check({ label: "Dodge · volley " + n, mod: 2, dc: 11, cta: "Dodge" });
+        if (dg.ok) await say("You twist and roll, and the bolts crack off the stone around you.");
+        else lost += await hurt(1, 4, "piercing", "A bolt finds you.");
+      }
+      await say("The crossbows stop.");
+    }
+    light("gems");
+    await say("A figure steps out of the dark. He is tall, taller than you, and the shadows hang off him like a cloak until he steps into the lamplight. Then you see his clothes: violet velvet slashed with black silk, a high collar, rings on every finger. His face is lean and pale and amused. Grey runs through his black hair, and his eyes are the color of the water outside.");
+    light("torch");
+    await say("\"Varro Duskwane,\" he says, with a little bow. \"The Violet Baron of the Hushfen, though there's nobody left to call me that but the frogs. My apologies for the welcome. The house defends itself. I've had a great deal of uninvited company lately. Now. Why are you in my home?\"", "voice");
+    if (stole && !clean) await say("He holds out his hand until you give it back.");
+    S.varroCaught = stole && !clean;
+    S.stoleClean = clean;
+    await say("You tell him you're looking for a thief.");
+    await say("Varro grins, and it's not a friendly grin. \"A thief? In a robber's house? You'll have to be more specific.\" Then he leans in. \"A boy with a deck of cards, too clever by half, carrying a paper he couldn't read? He came through here four days ago. He sold me the paper for a boat and a bag of bread, and paddled east, deeper in. Toward the drowned castle. He won't come back.\" He taps the side of his nose. \"Nobody does, from the castle. I'd know. I've been trying for thirteen years.\"", "voice");
+    await go("Ask him what he means");
+  }
+
+  async function partVarro() {
+    heading("XIV", "Thirteen Years in the Fen");
+    light("torch");
+    const p = await check({ label: "Persuasion check", mod: 1, dc: 12, cta: "Ask for his story" });
+    if (!p.ok) {
+      await say("Varro only smiles. \"Another night, perhaps.\" You learn the rest in pieces over the following days, from the tapestries, the trophies, and the servants who are only shadows.");
+    } else {
+      await say("Varro pours two cups of black wine, sits back in his carved chair, and the shadows in the hall lean in to listen.");
+      light("dark");
+      await say("<i>Thirteen years ago, Varro Duskwane was a lord of Sulmara, with a glass tower and a fleet of salt barges and a seat on the merchant council. He was also the only lord on that council who would not pay the Magistrate's bribes.</i>");
+      await say("<i>So the Magistrate took everything. One night his men came with torches and writs of their own. They burned the glass tower until it ran like water, they seized the barges, and they put a price on Varro's head for crimes he never committed. Varro ran with nothing but the clothes on his back, west, then north, then into the one place no Sulmaran soldier would follow.</i>");
+      await say("<i>He walked into the mire to die. He sank to the chest in the green sand, and he was letting it take him, when the shadows of the mire trees reached down and pulled him out. A voice in the dark spoke to him, low and dry and laughing: \"Another robbed man. Good. I could use one.\"</i>");
+      await say("<i>It was the Blackjackal.</i>");
+      light("torch");
+      await say("\"He's still down here,\" Varro says. \"Not alive. Not dead either. Nothing the Hushfen drowns stays dead. He gave me the shadows, the same gift he had, so I could do what he can't anymore: walk in the world above. For thirteen years I've done his errands. I found this fortress, which was his. I've fought the things that live in the fen. I've robbed the Magistrate's salt barges every spring and sent the gold to the people he ruined. And I've tried, eleven times, to reach the drowned castle of Carrowmere, where Ser Oswin Harrowgate still stands guard over the treasury with his lantern burning. Eleven times the knight has turned me back.\"", "voice");
+      await say("He turns his cup in his hands. \"The Jackal wants his treasure. The knight wants his bounty paid. And I want to stop dreaming of both of them.\"", "voice");
+    }
+    await go("Ask about the Mire's secrets");
+    const q = await check({ label: "Persuasion check", mod: 1, dc: 13, cta: "Ask" });
+    if (q.ok) {
+      await say("Varro tells you how to live in the Hushfen: which water you can drink, which moss burns, which green sand is quick and which only looks it. Then he takes you out under the trees at dawn and shows you how he eats.");
+      S.snare = 10;
+    } else {
+      await say("He laughs. \"Learn them the way I did.\" He teaches you the snare anyway, but only the basics.");
+      S.snare = 13;
+    }
+    renderSheet();
+    await mech("New ability: Snare Trap. At any rest, make a Survival check (DC " + S.snare + ") to catch a fen rabbit, a marsh hen, or a fat frog, and cook it to restore 1d6 HP.", "loot");
+    if (S.pitted) { S.pitted = false; renderSheet(); await mech("Varro's shadow servants mend your shield while you sleep. Its +1 AC is back.", "loot"); }
+    if (S.dull) { S.dull = false; renderSheet(); await say("They hone the pits out of the axe, too."); }
+    if (S.stoleClean) await say("About an hour after your talk, Varro notices what you took, and only laughs. \"Keep it. Anyone who can rob me in my own house has earned it.\"");
+    await say("Varro does not let you leave. He never says so. There is always another dinner, another story, another map he wants to show you, and every time you mention the door, a storm comes up over the fen, or the stairs are flooded, or he simply isn't anywhere to be found. You eat well. You sleep in a bed with velvet curtains.");
+    await fullHeal("Two weeks of rest.");
+    await say("Fourteen days after you arrived, Varro wakes you before dawn. He is dressed for travel, and he doesn't smile. \"You should go now,\" he says. \"Today. East, toward the castle, or back to the coast. I don't mind which. But go.\"", "voice");
+    await say("You ask him why. He won't say. He walks you up the black stair and out of the split trunk into the grey morning, and when you turn around to ask again, the split in the tree is closed, and there is only bark.");
+    if (!S.writ) {
+      S.writ = true; renderSheet();
+      await say("An hour later you find the yellow vellum folded in your pack, with a note in violet ink: <i>For the knight. Don't let the boy get there first. V.</i>");
+    }
+    await go("Walk east");
+  }
+
+  async function partGlade() {
+    heading("XV", "The Glade");
+    light("mire");
+    await say("An hour into the walk east, the trees open, and you step into a glade of solid, dry ground. It is full of mushrooms: red caps with white spots, tall white stalks, purple frills on the fallen logs, little glowing blue buttons in the shade. Between them grow wild onions, marsh berries, and watercress. Your stomach growls.");
+    const w = await check({ label: "Awareness check", mod: 1, dc: 14, cta: "Pick a mushroom" });
+    if (w.ok) {
+      await say("You find it, a fat golden mushroom growing in a perfect ring on the oldest stump in the glade. Varro described it once, over dinner. You eat it raw. Warmth floods through your body like the Ember Root's warmth, and your heart beats stronger.");
+      const gain = Math.round(S.maxHp * 0.56);
+      S.maxHp += gain; S.hp = S.maxHp; renderSheet();
+      await mech("Your maximum HP rises by 56%, by " + gain + " to " + S.maxHp + ", and you heal to full.", "loot");
+    } else {
+      await say("You eat a pale blue button from the shade. It tastes of nothing. Then the glade tilts, and something else is looking out through your eyes.");
+      light("dark");
+      await say("For thirty-four minutes, the mushroom drives you. You hunt. You can't stop yourself and you don't want to. You chase down every frog, every marsh hen, every fat rabbit, and every eel in the shallows for a hundred yards around, and you eat them, all of them, with your bare hands.");
+      light("mire");
+      await fullHeal("You've eaten everything for a hundred yards.");
+      await say("When the spore lets go, you're sitting in the mud at the far side of the glade, covered in feathers and fish scales, with no memory of the last half hour. Something is missing from your belt.");
+      let lostTxt;
+      if (S.smoke) { S.smoke = false; lostTxt = "the Smokebloom vial"; }
+      else if (S.torch) { S.torch = false; lostTxt = "your torch"; }
+      else { const g = Math.min(S.coins, d(10)); S.coins -= g; lostTxt = g + " gold"; }
+      renderSheet();
+      await mech("You lost " + lostTxt + ". For the next twelve minutes your head swims: disadvantage on your next check.", "hurt");
+      S.dazed = true;
+    }
+    await go("Keep walking");
+  }
+
+  async function partNight() {
+    heading("XVI", "Sleep or Walk");
+    light("dusk");
+    await say("By the time the light starts to go, you reach a dry hollow under a mire tree, lined with old moss and sheltered from the wind. It is the perfect place to sleep, and you are very tired.");
+    const c = await choose([
+      { key: "camp", label: "Make camp" },
+      { key: "walk", label: "Keep walking", plain: true }
+    ]);
+    if (c === "camp") {
+      if (S.snare) {
+        const t = await check({ label: "Survival check · Snare Trap", mod: 2, dc: S.snare, dis: !!S.dazed, cta: "Set the snare" });
+        S.dazed = false;
+        await say(t.ok ? "Before dark the snare jerks tight around a fat marsh hen. You roast it over a small fire." : "The snare stays empty. You go to sleep hungry.");
+      }
+      light("dark");
+      await say("You dream. In the dream you stand on a flooded road in the rain, and a knight with a burning lantern on his shield fights a man in a jackal's hide. Neither of them can win. They have been fighting for a hundred years. Then both of them stop, turn, and look straight at you.");
+      await say("\"Which of us will you help?\" they ask, in one voice.", "voice");
+      light("dusk");
+      await say("You wake at dawn rested, and certain that something is watching the hollow.");
+      await fullHeal("A long rest.");
+      S.dream = true;
+      await mech("The dream sharpens you: advantage on initiative in the next scene.", "loot");
+    } else {
+      light("dark");
+      await say("You push on into the dark. After an hour you stop feeling tired, and then you stop feeling much of anything. You slip into a kind of trance. The moss on the trees glows and whispers. Faces float up in the water and sink again. You laugh at nothing.");
+      await say("You step off roots without looking, walk straight through a patch of brambles, and fall twice into the black water.");
+      await hurt(1, 4, "bludgeoning", "You're reckless and accident prone.");
+      S.trance = true;
+      await mech("Until you rest, you have disadvantage on Dexterity checks.", "hurt");
+      await say("After what feels like several minutes but might be hours, the hallucinations fade, because something real is ahead: firelight, and voices.");
+    }
+    await go("Follow the firelight");
+  }
+
+  async function gnawkinFight(surprise) {
+    S.gemsSpent = false; renderSheet();
+    let hits = 0, first = true;
+    const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
+    if (book) {
+      const c = await choose([{ key: "spell", label: "Open with the " + book.replace(/^The /, "") }, { key: "axe", label: "Go straight in with the axe", plain: true }]);
+      if (c === "spell") {
+        hits++;
+        await say(book === "Scroll of Moonfire" ? "Silver fire lances through the circle, and the Gnawkin nearest the fire scatter, smoking and squealing." : book === "Tome of Rootbinding" ? "Roots burst up through the clearing and pin four of the Gnawkin to the mud." : "A wall of thorns slams up through the middle of the circle and cuts the Gnawkin in half.");
+        await mech("The spell counts as one hit. " + (3 - hits) + " to go.", "loot");
+      }
+    }
+    while (hits < 3) {
+      const opts = [{ key: "axe", label: "Swing the axe" }];
+      if (S.shield) opts.push({ key: "slam", label: "Shield Slam", plain: true });
+      if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", plain: true });
+      const c = await choose(opts);
+      let adv = surprise && first;
+      if (c === "gems") { S.gemsSpent = true; renderSheet(); light("gems"); await say("The gems flare red and the Gnawkin throw their paws over their eyes."); light("torch"); adv = true; }
+      const a = await check({ label: "Attack " + (hits + 1) + " of 3", mod: 5, dc: 12, target: "AC", adv, dis: !!S.dazed, cta: c === "slam" ? "Slam!" : "Strike" });
+      S.dazed = false; first = false;
+      if (a.ok) {
+        hits++;
+        await say(c === "slam" ? "You drive the shield into the pack and three of them tumble into the fire, shrieking." : c === "gems" ? "Half blind, they can't see the axe coming. Four of them go down." : "The axe sweeps through their spears and snaps them like reeds. Four of them drop their weapons and bolt.");
+      } else await hurt(1, 4, "piercing", "Spears and slingstones find you.");
+    }
+    await say("When the last blow lands, the Gnawkin who can still run, run. The old grey rat is pinned under your boot. He tells you everything about the flooded tunnel, and he swears on his teeth that the Gnawkin will never trouble the shadow man again.");
+    S.mire = "ambush";
+  }
+
+  async function warnVarro() {
+    light("dark");
+    const r = await check({ label: "Dexterity check", mod: 2, dc: 12, dis: !!S.trance, cta: "Run for the lair" });
+    if (!r.ok) await hurt(1, 6, "bludgeoning", "Slingstones crack against your back as you run.");
+    light("torch");
+    await say("You run back the way you came, through the dark and the reeds, and reach the great split tree just before moonrise. You pound on the bark. The tree opens. Varro is standing on the black stair with a crossbow in each hand, and for the first time, he looks surprised.");
+    await say("You tell him about the flooded tunnel. He goes pale, then laughs. \"Thirteen years,\" he says, \"and the first guest I ever let leave comes back to save my life.\"", "voice");
+    await say("Together you hold the tunnel when the Gnawkin come, and by dawn the fen is quiet.");
+    S.ring = true; renderSheet();
+    await mech("Varro is your ally now. He presses his violet signet ring into your hand: show it anywhere in the Hushfen and the shadows will hide you once.", "loot");
+    S.mire = "warn";
+  }
+
+  async function partGnawkin() {
+    heading("XVII", "The Gnawkin Fire");
+    light("torch");
+    await say("In a clearing ahead, a big fire burns, and around it sit at least a dozen creatures. They are rats, but they sit upright like people, as tall as children, with hunched backs and long pink tails and clever little hands. They wear scraps of leather and rusted mail, and they carry short spears and slings. Fourteen of them, you count. The Gnawkin. Varro mentioned them once, and then changed the subject.");
+    const c = await choose([
+      { key: "hide", label: "Stay hidden and listen" },
+      { key: "show", label: "Step into the firelight", plain: true }
+    ]);
+    let pdc = 13, plan = false;
+    if (c === "hide") {
+      const i = await check({ label: "Initiative", mod: 2, dc: 12, adv: !!(S.shadow || S.dream), dis: !!S.dazed, cta: "Roll initiative" });
+      S.dazed = false; S.dream = false;
+      if (i.ok) {
+        await say("You settle into the reeds a few yards from the fire before any of them twitch a whisker. They speak in squeaks and clicks, but some of it is in the common tongue, and you understand enough.");
+        await say("They're planning an attack on <i>\"the lone man, the shadow one.\"</i> A human who lives under the big tree, who steps out of the dark and is gone again before they can bite him. They've been attacking him for weeks. Every time, his crossbows and his shadows have driven them off, and they've lost eleven of their kin. But tonight they've found a new way in: a flooded tunnel under the roots that he doesn't know about. At moonrise they mean to go in all at once and drag him out.");
+        await say("Varro. That's why he sent you away. He knew they were coming, and he didn't want you caught in it.");
+        await mech("They don't know you're here. Use it.");
+        const u = await choose([
+          { key: "ambush", label: "Ambush them" },
+          { key: "warn", label: "Run back and warn Varro", plain: true },
+          { key: "leave", label: "Leave them to it", plain: true }
+        ]);
+        if (u === "ambush") await gnawkinFight(true);
+        else if (u === "warn") await warnVarro();
+        else S.mire = "leave";
+        return finishMire();
+      }
+      await say("A twig snaps under your boot. Fourteen noses lift at once.");
+      pdc = 15;
+    }
+    await say("You step into the firelight with the axe on your shoulder. Fourteen spears point at you. The biggest Gnawkin, an old grey rat with one ear and a necklace of human teeth, stands up. \"A tall one. Lost?\"", "voice");
+    const t = await choose([
+      { key: "talk", label: "Tell them your story", tag: "Persuasion" },
+      { key: "attack", label: "Attack", plain: true }
+    ]);
+    if (t === "attack") { await gnawkinFight(false); return finishMire(); }
+    await say("You tell them about the drowned treasury of Carrowmere, and that you carry the writ that opens it, and that you'll share it with anyone who helps you get there.");
+    const p = await check({ label: "Persuasion check", mod: 1, dc: pdc, dis: !!S.dazed, cta: "Promise them riches" });
+    S.dazed = false;
+    if (p.ok) {
+      await say("The old grey rat's eyes shine. \"Riches. Under the castle. Yesss.\" The Gnawkin lower their spears, and they tell you what they're planning: an attack on the shadow man under the big tree, at moonrise, through a flooded tunnel he doesn't know about. They ask you to come along.");
+      await say("Varro. That's why he sent you away.");
+      const u = await choose([
+        { key: "ambush", label: "Go with them, and turn on them in the tunnel" },
+        { key: "warn", label: "Slip away and warn Varro", plain: true },
+        { key: "leave", label: "Slip away, deeper into the mire", plain: true }
+      ]);
+      if (u === "ambush") await gnawkinFight(true);
+      else if (u === "warn") await warnVarro();
+      else S.mire = "leave";
+      return finishMire();
+    }
+    await say("Your guise is revealed. The old rat sniffs at you, and his whiskers pull back. \"You smell of him. Of the shadow man. Of violet and black wine.\" He squeals, and the spears come up.");
+    const u = await choose([
+      { key: "fight", label: "Fight" },
+      { key: "warn", label: "Run back to warn Varro", plain: true },
+      { key: "leave", label: "Run deeper into the mire", tag: "not your problem", plain: true }
+    ]);
+    if (u === "fight") await gnawkinFight(false);
+    else if (u === "warn") await warnVarro();
+    else {
+      const r = await check({ label: "Dexterity check", mod: 2, dc: 12, dis: !!S.trance, cta: "Run" });
+      if (!r.ok) await hurt(1, 6, "bludgeoning", "Slingstones crack against your back as you run.");
+      S.mire = "leave";
+    }
+    return finishMire();
+  }
+
+  async function finishMire() {
+    if (S.mire === "leave") {
+      light("dark");
+      await say("You leave the fire behind and walk east. Behind you, at moonrise, you hear squealing from far off in the direction of the great tree, and then crossbows, and then silence. You don't know who won. You don't look back.");
+    }
+    light("dusk");
+    await say("However the night ends, dawn finds you on a ridge of black roots at the eastern edge of the Hushfen, looking down at a lake as flat and still as glass. Out in the middle of it, the towers of a white castle rise out of the water, green with moss, their windows dark. All except one. In the highest window of the highest tower, a small, steady flame is burning. A lantern.");
+    await say("Pulled up on the bank below you is a little boat, and in the mud beside it are the footprints of a boy, and a single playing card. The Jack of Spades.");
+    if (vaelricSpeaks()) await voice("\"I knew Oswin Harrowgate,\" Vaelric whispers. \"Long ago. Be careful. He was a good man. That's what makes him dangerous.\"");
     await wait(300);
     const carried = [];
     if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
-    if (S.shield) carried.push("The pauldron shield, dented in the shape of a spider's face");
+    if (S.shield) carried.push("The pauldron shield" + (S.pitted ? ", pitted by slime" : ", dented in the shape of a spider's face"));
     if (S.ember) carried.push("The Ember Root, rooted under your ribs");
+    if (S.writ) carried.push("The Blackjackal's bounty writ");
+    if (S.ring) carried.push("Varro's violet signet ring");
+    if (S.lantern) carried.push("The Lantern Knight's lamp, still burning");
     if (S.token) carried.push("The Hollow Hand token");
     if (S.smoke) carried.push("One Smokebloom vial");
+    if (S.shadow) carried.push("Shadowblend");
+    if (S.snare) carried.push("Snare Trap");
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XI</p>' +
+      '<p class="eyebrow" style="margin:0">Part XVIII</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You leave the Glass City behind with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>You stand at the edge of the drowned lake with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (friends ? "The Salt Marshes are waiting." : S.side === "self" ? "Somewhere behind you, two sets of hunters are already on your trail." : "Whatever waits beyond the dunes is still to come.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (S.mire === "warn" ? "Behind you, the Violet Baron owes you his life." : S.mire === "ambush" ? "Behind you, the Gnawkin fire is cold, and the shadow man will never know why." : "Behind you, somewhere in the mire, the fight under the great tree is over.") + " Ahead, the drowned castle of Carrowmere is waiting.</p>" +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire"];
 
   let started = false;
   async function play(fromPart) {
