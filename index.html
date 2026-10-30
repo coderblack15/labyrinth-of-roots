@@ -60,6 +60,7 @@ body[data-light="torch"] { --glow: rgba(214, 140, 52, .22); }
 body[data-light="gems"]  { --glow: rgba(217, 67, 59, .30); }
 body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
 body[data-light="mire"]  { --glow: rgba(92, 140, 96, .26); }
+body[data-light="lake"]  { --glow: rgba(84, 132, 170, .26); }
 body[data-light="dark"] .story { filter: brightness(.86); }
 .story { transition: filter 2s ease; }
 
@@ -462,7 +463,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in seventeen parts · d20</p>
+    <p class="eyebrow">An adventure in twenty-two parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -609,7 +610,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.smoke) items.push(["vial", "vial", "Smokebloom Vial", "Shatter it for a 20-ft cloud of violet smoke."]);
     if (S.writ) items.push(["writ", "writ", "The Blackjackal's Bounty", "A hundred-year-old writ under the royal seal of drowned Carrowmere."]);
     if (S.ring) items.push(["ring", "ring", "Violet Signet Ring", "A jackal's head in violet stone. In the Hushfen, the shadows will hide you once."]);
-    if (S.lantern) items.push(["lantern", "lantern", "The Lantern Knight's Lamp", "Old steel, and a flame that burns without oil."]);
+    if (S.lantern) items.push(["lantern", "lantern", "The Lantern Knight's Lamp", "Old steel, and a flame that burns without oil. It shows what's hidden."]);
+    if (S.signet) items.push(["signet", "ring", "Royal Signet of Carrowmere", "The last king's seal, heavy and cold."]);
+    if (S.pike) items.push(["pike", "blessing", "The Gravepike's Favor", "The great white pike of the drowned lake swims at your side."]);
     if (S.shadow) items.push(["shadow", "shadow", "Shadowblend", "Once per scene, vanish into shadow. Advantage on Stealth in the dark."]);
     if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
@@ -2002,34 +2005,318 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("However the night ends, dawn finds you on a ridge of black roots at the eastern edge of the Hushfen, looking down at a lake as flat and still as glass. Out in the middle of it, the towers of a white castle rise out of the water, green with moss, their windows dark. All except one. In the highest window of the highest tower, a small, steady flame is burning. A lantern.");
     await say("Pulled up on the bank below you is a little boat, and in the mud beside it are the footprints of a boy, and a single playing card. The Jack of Spades.");
     if (vaelricSpeaks()) await voice("\"I knew Oswin Harrowgate,\" Vaelric whispers. \"Long ago. Be careful. He was a good man. That's what makes him dangerous.\"");
+    await go("Go down to the boat");
+  }
+
+  // ---------- Carrowmere: the drowned castle ----------
+  // A fight that needs a number of hits. Spells and the gems can help.
+  async function hitsFight({ need, ac, sides, type, missWhy, hitLines, foe }) {
+    let hits = 0, gemAdv = false;
+    const back = document.body.dataset.light;
+    S.gemsSpent = false; renderSheet();
+    const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
+    let bookUsed = false;
+    while (hits < need) {
+      const opts = [{ key: "axe", label: "Swing the axe" }];
+      if (book && !bookUsed) opts.push({ key: "spell", label: "Read from the " + book.replace(/^The /, ""), tag: "automatic hit", plain: true });
+      if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "advantage", plain: true });
+      const c = await choose(opts);
+      if (c === "spell") {
+        bookUsed = true; hits++;
+        await say(book === "Scroll of Moonfire" ? "A beam of silver flame lances into " + foe + "." : book === "Tome of Rootbinding" ? "Weed and root rise out of the water and drag at " + foe + "." : "A wall of thorns tears up out of the stone and through " + foe + ".");
+        await mech("The spell counts as one hit. " + (need - hits) + " to go.", "loot");
+        continue;
+      }
+      if (c === "gems") { S.gemsSpent = true; renderSheet(); light("gems"); await say("The gems flare red."); light(back); gemAdv = true; continue; }
+      const a = await check({ label: "Attack " + (hits + 1) + " of " + need, mod: S.dull ? 4 : 5, dc: ac, target: "AC", adv: gemAdv, cta: "Strike" });
+      gemAdv = false;
+      if (a.ok) { await say(hitLines[hits] || hitLines[hitLines.length - 1]); hits++; }
+      else await hurt(1, sides, type, missWhy);
+    }
+  }
+
+  async function partCrossing() {
+    heading("XVIII", "The Crossing");
+    light("lake");
+    S.gemsSpent = false; renderSheet();
+    await say("The boat on the bank is Tobbin's. You know it by the cards: a whole deck of them is scattered across the bottom boards, soaked and swollen. Along one side of the hull, the planks are gouged with a curved row of punctures as wide as your spread hand. Teeth marks.");
+    await say("Tobbin's footprints run away from the boat along the shore, to where a line of flat white stones leads out into the lake a foot under the water: the old causeway to the castle. Halfway out, the stones disappear into the deep. He waded. Something made him get out of the boat.");
+    await say("You push off anyway. The lake is very still, and so clear you can see the drowned fields of Carrowmere far below you: stone walls, a road, the roofs of a village, a church tower with its bell still hanging. Halfway to the castle, the boat rocks, very gently, as something passes underneath it.");
+    await say("It is a pike. It is white with age, and three times as long as the boat. Its eye, when it rolls up to look at you, is the size of a shield. The fishermen on the coast call it the Gravepike, and you had thought it was only a story. It begins to circle.");
+    let c = await choose([
+      { key: "row", label: "Row silently", tag: S.ring ? "the ring will hide you" : "Stealth" },
+      { key: "feed", label: "Feed it", tag: "Survival", plain: true },
+      { key: "fight", label: "Fight it", plain: true }
+    ]);
+    if (c === "row") {
+      let ok = false;
+      if (S.ring) {
+        S.ring = false; renderSheet(); ok = true;
+        await mech("You turn the violet ring on your finger. The shadows of the clouds slide down over the boat and hide you. The ring goes dull: its gift is spent.", "loot");
+      } else ok = (await check({ label: "Stealth check", mod: 2, dc: 13, adv: !!S.shadow, cta: "Lift the oars" })).ok;
+      if (ok) {
+        await say("You lift the oars out of the water and let the boat drift on the faint current, barely breathing. The great white shape loses interest and sinks back toward the drowned village.");
+      } else {
+        await hurt(1, 6, "bludgeoning", "An oar knocks the gunwale. The Gravepike rams the boat and throws you against the bench.");
+        await say("Then it circles again.");
+        c = await choose([{ key: "feed", label: "Feed it", tag: "Survival" }, { key: "fight", label: "Fight it", plain: true }]);
+      }
+    }
+    if (c === "feed") {
+      const f = await check({ label: "Survival check", mod: 2, dc: 11, adv: !!S.snare, cta: S.snare ? "Hook an eel" : "Throw your rations" });
+      if (f.ok) {
+        S.pike = true; renderSheet();
+        await say("You toss " + (S.snare ? "a fat marsh eel" : "your last rations") + " out wide. The Gravepike takes it in one gulp, then turns, and swims alongside you all the way to the castle, like a dog walking you home.");
+        await mech("The Gravepike is your ally. It will come again when you need it.", "loot");
+      } else await hurt(1, 4, "bludgeoning", "It takes the food, and the oar with it, and bumps the boat hard on the way past. You paddle the rest of the way with your hands.");
+    } else if (c === "fight") {
+      await mech("The Gravepike has AC 13. You need three hits. Each miss, it slams the boat: 1d6 damage.");
+      await hitsFight({ need: 3, ac: 13, sides: 6, type: "bludgeoning", missWhy: "The Gravepike slams into the boat.", foe: "the Gravepike",
+        hitLines: ["The axe bites deep behind its gills, and the water clouds.", "You hit it again as it rolls past, and it thrashes the lake white.", "The third blow lands. The Gravepike rolls belly-up and drifts."] });
+      await gold(2, 6, "Something glints in its torn gut: a hundred years of coins it swallowed off the drowned fields.");
+    }
+    await say("The castle rises over you. The lake laps at the windows of the second floor. One of them, a tall window of the great hall's gallery, is open. You tie the boat to a stone gargoyle and climb in.");
+    await go("Climb in");
+  }
+
+  async function partCourt() {
+    heading("XIX", "The Counting House");
+    light("mire");
+    S.gemsSpent = false; renderSheet();
+    await say("Inside, the air is dry. That's the first impossible thing. The second is the sound: a dry, steady scratching, like a hundred mice in the walls.");
+    await say("You've climbed into the castle's counting house, a long hall where the king's tax was tallied. Rows of high desks run its length, and at every desk sits a clerk in a black coat, bent over a ledger, scratching numbers with a quill. They are as pale as fish bellies. Lake water drips steadily from their hair and their sleeves onto the pages, and every one of them is chained to his desk by the ankle. Coins are stacked in towers all around them, and their lips move as they count. None of them has looked up in a hundred years.");
+    await say("At the far end of the hall, at a desk raised above the rest, sits the head clerk. His fingers are black to the knuckle with ink. When you step down from the window, he lifts his head, and the scratching stops all at once.");
+    await voice("\"Master Ansel Fell, Keeper of the King's Count,\" he says. \"Every traveler on the king's roads pays the king's tax. You are on the king's roads. Pay.\"");
+    const free = (S.axe && !S.gemsSpent) || hasBook("Scroll of Moonfire") || S.lantern;
+    const c = await choose([
+      { key: "pay", label: "Pay the tax", tag: "1d6 + 2 gold" },
+      { key: "read", label: "Read the ledgers", tag: "Investigation", plain: true },
+      { key: "break", label: "Break their chains", tag: free ? "no roll" : "Arcana", plain: true }
+    ]);
+    if (c === "pay") {
+      const owed = Math.min(S.coins, d(6) + 2);
+      S.coins -= owed; renderSheet();
+      await mech("You pay " + owed + " gold. Master Fell writes your name in his book, and the clerks go back to counting.", "hurt");
+      await say("While he's in a good mood, you ask him about the night of the floods.");
+      const p = await check({ label: "Persuasion check", mod: 1, dc: 10, cta: "Ask" });
+      if (p.ok) {
+        S.secret = true;
+        await voice("He leans over his desk. \"I wrote the last entry myself,\" he whispers. \"Ser Oswin caught the Blackjackal that night. And the Jackal showed him the treasury barge: every crown on it was taken from the farms by us. By these desks. Oswin swore he'd give it back. The king watched from his tower, and rather than lose a single coin, he ordered the floodgates opened. We were chained to our desks when the water came.\"");
+        await voice("He taps the ledger. \"The vault answers to three things: the king's seal, the knight's light, and the right answer to one question. Whose gold is it? Don't say his.\"");
+        await mech("You know the secret.", "loot");
+      } else await voice("\"The count is private,\" he says, and goes back to his book.");
+    } else if (c === "read") {
+      const r = await check({ label: "Investigation check", mod: 1, dc: 12, cta: "Read the last page" });
+      if (r.ok) {
+        S.secret = true;
+        await say("The last entry is written in a shaking hand, on the night of the spring floods: <i>By order of His Majesty King Aldous Carrow, the floodgates opened. The robber, the knight, and the treasury preserved together. Let no one claim it.</i>");
+        await say("Under it, in the margin, the same hand has scrawled: <i>The vault will ask whose gold it is. God forgive us, it was never his. It was the people's.</i>");
+        await mech("You know the secret.", "loot");
+      } else {
+        await hurt(1, 4, "cold", "A clerk's head snaps up. Cold, wet fingers close on your wrist before you pull free.");
+        await say("\"Tax evader,\" a hundred voices whisper, and you get out of the hall fast.", "voice");
+      }
+    } else {
+      let ok = true;
+      if (S.axe && !S.gemsSpent) { S.gemsSpent = true; renderSheet(); light("gems"); await say("You raise the axe and the gems flare red."); }
+      else if (S.lantern) { light("torch"); await say("You raise the Lantern Knight's lamp."); }
+      else if (hasBook("Scroll of Moonfire")) { light("sun"); await say("You read the Scroll of Moonfire, and silver light pours off the page."); }
+      else ok = (await check({ label: "Arcana check", mod: 1, dc: 13, cta: "Hold up the axe" })).ok;
+      if (ok) {
+        S.secret = true; S.kingFled = true;
+        await say("Light floods the hall, and the chains fall from every ankle at once. The clerks look down at their hands as if seeing them for the first time, then set down their quills, one by one, and fade. Master Fell is the last.");
+        await voice("\"He opened the floodgates on us,\" he says. \"The king. To keep the gold. Whose gold is it, the vault will ask you. Tell it the truth: the people's.\"");
+        await say("Then the door at the end of the hall bangs open, and the drowned king himself, fat and dripping and crowned, stands there screaming. \"MY COUNT! Who stopped my count?\"", "voice");
+        await hurt(1, 6, "psychic", "His scream breaks over you like a wave of cold.");
+        await say("Then he flees through the floor, down toward the vault.");
+        await mech("You know the secret.", "loot");
+      } else {
+        await hurt(1, 6, "cold", "The light gutters. The clerks rise, dragging their chains, and come for you with cold wet hands, and you fight your way to the stair.");
+      }
+      light("mire");
+    }
+    await say("From somewhere above you, a boy is screaming for help.");
+    await go("Follow the screams");
+  }
+
+  async function partJack() {
+    heading("XX", "The Jack of Spades");
+    light("lake");
+    await say("You follow the screams up the stair to a flooded chapel. The water is waist-deep and rising, and in the middle of it, clinging to the stone head of a saint, is Tobbin. He is soaked and blue-lipped and still holding a fistful of playing cards. Wading toward him through the water are three drowned guards of Carrowmere, rusted halberds raised.");
+    if (S.pike) {
+      await say("The chapel's stained-glass window bursts inward, and the Gravepike comes through it in a wave of glass and lake water. It takes the guards down into the dark in two bites, then slides back out the way it came.");
+    } else {
+      S.gemsSpent = false; renderSheet();
+      const c = await choose([
+        { key: "axe", label: "Swing the axe" },
+        { key: "slam", label: "Shield Slam", tag: "no roll", show: !!S.shield, plain: true },
+        { key: "gems", label: "Wake the gems", tag: "no roll", show: !!S.axe, plain: true }
+      ]);
+      if (c === "axe") {
+        const a = await check({ label: "Attack roll", mod: S.dull ? 4 : 5, dc: 11, target: "AC", cta: "Strike" });
+        if (!a.ok) { await hurt(1, 6, "slashing", "A halberd catches you across the arm."); await say("Your second swing lands."); }
+      } else if (c === "gems") { S.gemsSpent = true; renderSheet(); }
+      await say(c === "slam" ? "You drive the shield into them, and they go over like rotten fence posts." : c === "gems" ? "The gems flare red, and the guards burn away like mist." : "The axe goes through all three halberds at once.");
+      await say("The drowned guards crumble into rust and lake water.");
+    }
+    await say("Tobbin slides down off the statue, shivering. Up close he looks very young. He tells you everything, fast, because he's too cold to lie. The Magistrate has owned him since he was nine: a debt his mother died owing. He thought the treasury would buy him free. He sold the writ to Varro because he couldn't read it and Varro offered him a boat.");
+    await say("\"And there's someone in the castle with me. In the shadows. He talks to me. He told me to leave the card on the shore for whoever came after. He says if I bring him a living body, he'll give me all the gold I can carry.\" He looks at you. \"I think he meant you.\"", "voice");
+    light("dark");
+    await say("Behind him, at the edge of the candlelight, a shadow is standing that wasn't there before. It has the long ears and narrow muzzle of a jackal.");
+    const c = await choose([
+      { key: "forgive", label: "Forgive him" },
+      { key: "rob", label: "Rob him", tag: "Intimidation", plain: true },
+      { key: "jackal", label: "Hand him to the Blackjackal", plain: true }
+    ]);
+    S.boy = c;
+    if (c === "forgive") {
+      light("torch");
+      S.tobbin = true;
+      await say("You pull off your cloak and put it around his shoulders. \"Sable wants to ask you why,\" you tell him. \"Come and answer her.\"");
+      await say("Tobbin cries, a little, and then wipes his face and picks up a candle. \"I know how to open locks,\" he says.", "voice");
+      await mech("Tobbin is with you. He'll help you in the treasury.", "loot");
+    } else if (c === "rob") {
+      light("torch");
+      const i = await check({ label: "Intimidation check", mod: 3, dc: 10, cta: "Hold out your hand" });
+      if (i.ok) {
+        await gold(1, 10, "He empties his coat.");
+        S.signet = true; renderSheet();
+        await mech("And a heavy gold signet ring he pried off the king's own desk in the counting house: the Royal Signet of Carrowmere.", "loot");
+        await say("Then he runs into the dark.");
+      } else await say("He throws the cards in your face and is gone down the stair before you can blink.");
+    } else {
+      await say("You step back and let the shadow have him. Tobbin turns around. The shadow drops over his head and shoulders like a hide, and he stands up straighter and smiles with someone else's smile.");
+      await voice("\"Thank you,\" says the Blackjackal, in Tobbin's voice. \"A living body, at last.\"");
+      S.secret = true;
+      await say("He bows, and tells you how the vault was made, and what it will ask you. Then he presses a cold handful of coins into your palm.");
+      await gold(3, 6, "Payment.");
+      await say("He walks into the wall and is gone.");
+      if (vaelricSpeaks()) await voice("\"That,\" Vaelric says quietly, \"was not the warden's way.\"");
+      light("torch");
+    }
+    await go("Climb the tower");
+  }
+
+  async function partKnight() {
+    heading("XXI", "The Lantern Knight");
+    light("torch");
+    await say("The tower stair goes up and up, and the walls run with water. At the top is a round room with a single window, and in the window, the lantern. It's fixed to the face of a great round shield, and the shield is on the arm of a knight.");
+    await say("Ser Oswin Harrowgate is green with lakeweed. Water runs out of the joints of his armor when he moves. Behind the visor there's nothing but dark and two small points of light. He doesn't draw his sword. He doesn't have to: he is standing in the only door down to the vault.");
+    await voice("\"Halt,\" he says. His voice is very tired, and very kind. \"None pass until the bounty on the Blackjackal is paid. I swore it to my king. I have kept that oath a hundred years.\"");
+    const adv = !!S.lantern;
+    if (adv) {
+      await say("Then he sees what you're carrying, and goes very still.");
+      await voice("\"You carry my old light. I lost that lamp in the mire the night the floods came, and I have burned this one in its place ever since.\"");
+      await mech("Advantage on any Persuasion or Deception check with Oswin.", "loot");
+    }
+    let c = await choose([
+      { key: "free", label: "Tell him what the king did", tag: "Persuasion", show: !!S.secret },
+      { key: "claim", label: "Show him the writ and claim the bounty", tag: "Deception", show: !!S.writ, plain: !!S.secret },
+      { key: "fight", label: "Fight him", plain: true }
+    ]);
+    if (c === "free") {
+      const p = await check({ label: "Persuasion check", mod: 1, dc: 8, adv: adv || hasBook("Warden's Journal"), cta: "Tell him" });
+      if (p.ok) {
+        await say("Oswin is quiet for a long time.");
+        await voice("\"I knew,\" he says at last. \"I think I always knew. I just couldn't bear to have drowned for nothing.\"");
+        await say("He takes off his helm, and there's a face inside it for one moment, a tired, decent face.");
+      } else {
+        await say("He turns away from you, and his shoulders shake. But he steps out of the doorway. The truth is the truth.");
+      }
+    } else if (c === "claim") {
+      await say("You hold up the writ and tell him the Blackjackal is dead.");
+      const p = await check({ label: "Deception check", mod: 1, dc: 14, adv, cta: "Lie" });
+      if (p.ok) {
+        await say("He reads the writ for a long time, then marks it with his gauntlet.");
+        await voice("\"Paid,\" he says, and steps out of the doorway.");
+      } else {
+        await voice("\"You lie as badly as he did,\" he says, and raises the shield.");
+        await hurt(1, 8, "slashing", "His sword is out before you see it move.");
+        c = "fight";
+      }
+    }
+    if (c === "fight") {
+      await mech("Ser Oswin has AC 15. You need three hits. Each miss, his sword finds you: 1d8 damage.");
+      await hitsFight({ need: 3, ac: 15, sides: 8, type: "slashing", missWhy: "His old sword finds the gap in your guard.", foe: "the knight",
+        hitLines: ["The axe rings off his helm, and lake water sprays out of the visor.", "You catch him under the shield, and he staggers back a step.", "The third blow lands."] });
+      await voice("Oswin goes down on one knee. \"Well struck,\" he says. \"I am so tired.\"");
+    }
+    await say("However it ends, Oswin unfastens the lantern from his shield and holds it out to you." + (S.lantern ? " You hold up his old lamp, and he lights it from this one, and the two flames burn as one." : ""));
+    S.lantern = true; renderSheet();
+    await voice("\"It shows what's hidden,\" he says. \"Take it down there. I don't want to see it again.\"");
+    await say("Then he sits down by the window and puts his hands on his knees, and, slowly, the two small lights behind his visor go out.");
+    if (vaelricSpeaks()) await voice("\"Rest, old friend,\" Vaelric says. \"You kept your oath longer than any of us.\"");
+    await go("Go down to the vault");
+  }
+
+  async function partTreasury() {
+    heading("XXII", "The Drowned Treasury");
+    light("lake");
+    await say("Below the castle, below the lake, a stair spirals down to a round iron door. It is carved with a crown, a lantern, and a jackal's head.");
+    await say("<b>The first lock: the seal.</b> You press " + (S.signet ? "the king's own signet ring" : "the wax seal on the writ") + " to the crown. The door grinds open. Far above you, something groans: the old floodgates, waking up. Water begins to pour down the stair behind you.");
+    await go("Wade on");
+    await say("<b>The second lock: the light.</b> The next hall is dark and knee-deep and rising. You hold up Oswin's lantern, and the light shows what's hidden: a path of safe stones across a floor full of pits, and a keyhole hidden in the eye of a carved fish.");
+    const helped = S.boy === "forgive";
+    if (helped) await say("Tobbin is already at the fish's eye with a bent pin. \"Hold the light still,\" he says.");
+    const i = await check({ label: "Investigation check", mod: 1, dc: 12, adv: helped || hasBook("Warden's Journal"), cta: "Search" });
+    if (i.ok) await say("You step from stone to stone and turn the hidden key. The next door swings open.");
+    else await hurt(1, 6, "bludgeoning", "You find it, but not before you go through the floor into a pit up to your chest, and haul yourself out as the water climbs.");
+    await say("<b>The third lock: the question.</b> The water is at your chest now. The last door has a jackal's head carved in it, and when you come near, its jaws open and it speaks in a dry, laughing voice.");
+    await voice("\"Whose gold is this?\"");
+    const a = await choose([
+      { key: "king", label: "\"The king's.\"", plain: true },
+      { key: "jackal", label: "\"The Jackal's.\"", plain: true },
+      { key: "people", label: "\"The people's.\"", tag: S.secret ? "you know this" : undefined, plain: true }
+    ]);
+    if (a === "people") {
+      await say("The jaws laugh, and the door swings open, and the water stops rising.");
+    } else {
+      await say("The jaws snap shut. The water roars in over your head.");
+      const s = await check({ label: "Athletics check", mod: 3, dc: 12, cta: "Hold your breath and push" });
+      if (!s.ok) await hurt(2, 4, "bludgeoning", "The flood batters you against the door.");
+      await say("The door gives, and you tumble through on a wave.");
+    }
+    light("sun");
+    await say("The treasury of Carrowmere lies under a dome of air: chests split open and spilling crowns, gold plates, a silver throne made for a child, rubies in heaps like red beans.");
+    await gold(4, 10, "You fill your pack.");
+    if (S.kingFled) await say("King Aldous is here, on his knees in the coins, trying to gather them up with hands that pass right through them. When the lantern light touches him, he crumbles away like wet sand.");
+    light("dark");
+    await say("As you fill your pack, the lantern flickers. The shadows in the vault lean in. And out of them steps the Blackjackal: " + (S.boy === "jackal" ? "Tobbin, smiling his new smile under a black jackal's hide," : "a lean man in a black jackal's hide,") + " with nothing behind his eyes but the dark.");
+    await voice("\"A hundred years,\" he says, \"waiting for someone to put out that lantern.\" He scoops up a single coin, flips it to you, and grins. \"The gold was always meant for the robbed. Do some good with it. As for me, there's a Magistrate in a glass city who has robbed more people than any king. I think I'll pay him a visit.\"");
+    await say("He steps backward into the shadow and is gone.");
+    light("dusk");
+    await say("You climb up out of the vault and out of the castle as the lake finally finishes swallowing it. When you reach the boat, the lantern in the tower window is dark.");
+    if (S.mire === "warn") await say("Varro is waiting for you on the far shore, wrapped in violet and frowning at the water. \"So,\" he says. \"He's free. Then so am I. Sulmara won't know what hit it.\"", "voice");
     await wait(300);
     const carried = [];
     if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
     if (S.shield) carried.push("The pauldron shield" + (S.pitted ? ", pitted by slime" : ", dented in the shape of a spider's face"));
     if (S.ember) carried.push("The Ember Root, rooted under your ribs");
     if (S.writ) carried.push("The Blackjackal's bounty writ");
-    if (S.ring) carried.push("Varro's violet signet ring");
     if (S.lantern) carried.push("The Lantern Knight's lamp, still burning");
+    if (S.signet) carried.push("The Royal Signet of Carrowmere");
+    if (S.ring) carried.push("Varro's violet signet ring");
     if (S.token) carried.push("The Hollow Hand token");
     if (S.smoke) carried.push("One Smokebloom vial");
     if (S.shadow) carried.push("Shadowblend");
     if (S.snare) carried.push("Snare Trap");
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
+    const behind = S.boy === "forgive" ? "Tobbin sits in the bow of the boat, wrapped in your cloak, ready to face Sable." : S.boy === "jackal" ? "Tobbin is gone, and something wearing his face is on its way to Sulmara." : "Somewhere in the fen, Tobbin is running again.";
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XVIII</p>' +
+      '<p class="eyebrow" style="margin:0">Part XXIII</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You stand at the edge of the drowned lake with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>You row away from drowned Carrowmere with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (S.mire === "warn" ? "Behind you, the Violet Baron owes you his life." : S.mire === "ambush" ? "Behind you, the Gnawkin fire is cold, and the shadow man will never know why." : "Behind you, somewhere in the mire, the fight under the great tree is over.") + " Ahead, the drowned castle of Carrowmere is waiting.</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + behind + (S.pike ? " A great white shape follows you to the shore." : "") + " Ahead, the Blackjackal is loose in the world above, and he is going to Sulmara.</p>" +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury"];
 
   let started = false;
   async function play(fromPart) {
