@@ -627,4 +627,85 @@ Nothing else changes. The puddles stay puddles. You walk out past the carter's c
 
 Two days east, the road crests a ridge, and Sulmara glitters in the valley below like broken glass.
 
+## The Glass Assize
+
+*Parts XXIX–XXXIV.*
+
+Sulmara again, the Glass City you robbed in the desert chapter. The old Magistrate vanished from his palace eleven nights ago (the Blackjackal paid him the visit he promised). The High Justiciar, **Hesper Coyle, the Glass Judge**, now rules the city. In three days she'll try you at the Glass Assize for his disappearance, with Tobbin as her star witness. If you're found guilty, the sun-mirror burns you at noon.
+
+### Systems
+
+- **Heat (0–10).** Being seen raises it. Each outing costs 1–2, failed checks and loud mistakes cost more, and Streetwise takes 1 off every outing. A night at the inn brings it down by 3. At 10, the Glass Wardens come: you can run the rooftops (Acrobatics DC 14), fight two wardens, or pay 10 gold. Heat then resets to 5, and the Merchant Lords hear about the chase.
+- **Six turns.** You get two days, each with a morning, afternoon and night. There's more to do than there are turns, so you have to choose.
+- **Disguises** are sold by Feeny, in the inn's cellar. The glazier's leathers get you into the Lens Tower. The debt-collector's chain gets you into the Debtors' Cells. The pilgrim's veil gets you through checkpoints and earns +1 with the Temple jurors.
+- **The jury** is 12 jurors on 4 benches: Glaziers, Merchant Lords, Temple of the Clear Flame and Debtors' Commons. Each bench starts at 1 of 3, and you need 7 of 12 to walk free. The jury meter shows on the sheet during the trial.
+
+### Places
+
+- **Vitreous Library** (by day). Brother Orrin, a blind archivist, reads glass books by touch. Here you can:
+  - **Buy skill books**:
+    - Lockcraft (20 gold)
+    - Jurisprudence (25 gold)
+    - Cardsharp (12 gold)
+    - Streetwise (10 gold)
+    - Glasswright, a crafting skill (22 gold)
+    - Herbcraft, a crafting skill (18 gold)
+  - **Do two readings per visit** (Investigation DC 12):
+    - The Assize Rolls show which bench each argument will move.
+    - The Law of Clear Sight lets you demand the mirror be turned on your accuser.
+    - On Witness Glass makes the mended pane count double with the Glaziers.
+  - **Ask Orrin** for the cipher hint.
+- **The Cracked Lantern inn.** Marrit Quell runs it. You can rest at night (2d6 HP, Heat −3), take a hot bath (2 gold), buy herb bundles, and craft at the bench with Glasswright (shatter flasks, burning lens) or Herbcraft (Draughts of Mending). The job board lists the escort missions. Varro (if you warned him) and Ysolde (if you're friends with the Hollow Hands) visit at night.
+- **The Slag & Siphon bar** (afternoon or night). Each visit allows two activities:
+  - A drinking contest with Old Brannoch, best of 3. Winning pays 15 gold and his niece's vote on the Commons bench.
+  - **High Glass**, a higher/lower card game played for a pot.
+  - Getting Coyle's clerk Ormond Fisk's ciphered ledger: steal it, win it at High Glass, or get him drunk.
+  - Buying cullet from the kilnworkers.
+  - The fixer Saint Ludo, who will bribe a Merchant juror for 20 gold (1 in 6 chance it backfires).
+  - Rumors.
+- **Escort missions**, each three legs long, with a client who has 10 HP:
+  - Brother Orrin to the Temple (by day). Pays a skill book of your choice and +1 with the Temple.
+  - Pell's breathing crate to the harbor (by night). Pays 15 gold, a smuggled skill book and cullet.
+- **Hall of Records** (by night). Get in with Ysolde's key, by picking the lock, or by climbing. Inside is the **shard puzzle**.
+- **Lens Tower** (by day). Inside are the warrant and the **lens puzzle**.
+- **Debtors' Cells.** Tobbin is here. You can win him over with Persuasion, with the ledger (advantage), or by paying his mother's debt (40 gold). If the Blackjackal is wearing Tobbin, you make a deal with him instead: he'll tell the truth if you put out the sun-mirror.
+
+### Puzzles (each has a fallback roll)
+
+1. **Witness pane.** A 3×3 sliding picture. Lockcraft shows the shard numbers. The watchman passes every 20 moves (Heat +1). Fallback: carry the shards out.
+2. **The lens rig.** A 5×5 grid of mirrors. Turn them to steer sunlight onto the warrant's seal. Fallback: a candle, Investigation DC 15. On a failure the evidence burns.
+3. **The Justiciar's cipher.** Two dials (a two-letter Vigenère cipher, key HC). The page decodes live as you turn them. Orrin's hint is that the key is her initials.
+4. **High Glass.** Higher/lower cards with a pot. Cardsharp lets you peek once per game.
+5. **Cross-examination.** Tobbin makes five statements. Hold up the right evidence against each lie: the pane, the ledger or the warrant.
+6. **The sun-mirror rig** in the finale. A 6×6 mirror grid with 16 turns before noon passes. Fallback: smash the rig, and the beam runs wild for the whole fight.
+
+### Tyra Quillon (Adrian's request)
+
+Tyra is a laid-back rogue, named for the crossguard of a sword because her mother was a swordsmith. She collects keys, one from every city, and has 41. You meet her at the inn in Part XXIX.
+
+- **Fondness** runs from 0 to 5. It grows from banter, time together, odd jobs and kindness, and goes down if you're cruel to a debtor.
+- **Morning errands.** Each morning you can keep her at your side, which means she takes down one enemy in each mob fight. Or you can send her out to collect 2 cullet or 2 herb bundles, fence something for 1d6+4 gold, or watch the wardens (Heat −2).
+- **Odd jobs** (one a day, when she's at your side):
+  - Rescue the kilnmaster's cat, Duchess.
+  - Collect Marrit's rent. This is a moral choice.
+  - Lift the Assize shackle key for her collection. It becomes the finale's escape key.
+- **Night talks** happen on the inn roof. On the second night, at fondness 3 or more, "Stay anyway" leads to a kiss and the romance.
+- **In the finale,** if her fondness is at least 1 you can call her in for a 2d6+2 stab. At 3 or more she takes a gavel blow for you. The ending changes with her fondness.
+
+### Story beats
+
+- **XXIX The Glass City.** The posters, getting through the gate, meeting Marrit and Feeny, meeting Tyra, and the map of options.
+- **XXX–XXXI The First and Second Day.** The hub.
+- **XXXII The Taking.** You're arrested before dawn. Your Heat decides how it goes:
+  - Heat 7 or more: the Merchant Lords turn against you.
+  - Heat 3 or less: you can surrender (Temple +1) or run, and running means Marrit's inn gets burned.
+  - Your gear is confiscated as evidence, and Tobbin gets a last chance through the cell wall.
+- **XXXIII The Glass Assize.** Coyle brings three charges (the theft, the palace, the conspiracy), then the witness, then your closing. Jurisprudence gives you one objection.
+- **XXXIV The Sun-Mirror.**
+  - If you're found not guilty, Coyle refuses the verdict. The Law of Clear Sight makes the wardens stand down.
+  - If you're found guilty, you escape the chains with Tyra's key, Tobbin, Varro's thread, a pick, or brute force.
+  - Then you grab your gear (and risk the beam), solve the mirror rig, and fight Coyle: 40 HP, a mirrored mantle that halves and reflects spells until it's cracked, and a glass gavel.
+  - Endings: the Blackjackal takes her (if you made the jackal deal), mercy, or the mirror turns her to glass.
+- **Hook.** Orrin sends a map of a second Sulmara under the sand. The Blackjackal took the Magistrate below. The end card is Part XXXV.
+
 *To be continued.*

@@ -277,6 +277,21 @@ body.intro-open { overflow: hidden; }
 .ring .face { width: 66px; height: 66px; border-radius: 50%; border: 2px solid var(--gold); display: grid; place-items: center; align-content: center; font-family: var(--label); font-size: .78rem; line-height: 1.1; text-align: center; background: var(--panel-2); }
 .lw { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
 .lw .note { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); line-height: 1.35; }
+.lw[hidden], .jury-row[hidden] { display: none; }
+.jury-row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; }
+.part-head.sub { margin: 32px 0 10px; }
+.pgrid.shards button { width: 88px; height: 88px; padding: 0; position: relative; overflow: hidden; }
+.pgrid.shards button svg { width: 100%; height: 100%; display: block; }
+.pgrid.shards button.gap { background: #0b0d10; border-style: dashed; }
+.pgrid.shards button:disabled { opacity: 1; }
+.pgrid.shards .num { position: absolute; right: 4px; bottom: 2px; font-size: .75rem; color: var(--gold); text-shadow: 0 0 3px #000; }
+.pgrid.beam button { font-size: 1.3rem; }
+.pgrid.beam button:disabled { opacity: 1; }
+.pgrid.beam button.lit { background: #3b3018; border-color: var(--gold); color: #ffe7a8; box-shadow: 0 0 10px rgba(240, 200, 110, .35); }
+.cipher-page { font-family: var(--label); letter-spacing: .12em; line-height: 1.6; background: #d8c79a; color: #2b2116; border-radius: 4px; padding: 10px 12px; word-break: break-word; }
+.cards { display: flex; gap: 10px; flex-wrap: wrap; }
+.gcard { display: inline-grid; place-items: center; min-width: 96px; padding: 18px 12px; border: 2px solid var(--gold); border-radius: 8px; background: linear-gradient(160deg, #1d2a33, #12181d); font-family: var(--label); font-weight: 700; font-size: 1.05rem; color: #dfe9ee; }
+.gcard.peek { border-style: dashed; opacity: .75; font-size: .9rem; }
 .huntbar { grid-column: 1 / -1; height: 6px; background: #2a1d1a; border-radius: 3px; overflow: hidden; }
 .huntbar span { display: block; height: 100%; background: linear-gradient(90deg, #6d6a5a, var(--ember)); transition: width .4s; }
 /* enemy meter + combo, shown in the sheet only during a fight */
@@ -554,7 +569,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in twenty-eight parts · d20</p>
+    <p class="eyebrow">An adventure in thirty-four parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -600,6 +615,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <span class="stat-label">The Hunt</span>
       <span class="stat-val" id="lwHunt">0 / 10</span>
       <div class="huntbar"><span id="lwHuntBar" style="width:0%"></span></div>
+    </div>
+    <div class="lw" id="asBox" hidden>
+      <span class="stat-label">Heat</span>
+      <span class="stat-val" id="asHeat">0 / 10</span>
+      <div class="huntbar"><span id="asHeatBar" style="width:0%"></span></div>
+      <span class="stat-label">Time</span>
+      <span class="stat-val" id="asTime">Day 1</span>
+      <span class="jury-row" id="asJuryRow" hidden><span class="stat-label">Jury</span> <span class="stat-val" id="asJury">0 / 12</span></span>
+      <span class="note" id="asJuryNote"></span>
     </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
@@ -686,7 +710,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   let S = fresh();
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; return v; } catch (e) { return null; } }
+  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; return v; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
 
   // ---------- sheet ----------
@@ -710,7 +734,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     sick: '<svg viewBox="0 0 26 26"><path d="M5 18c0-3 3-4 5-4c1-3 5-4 7-2c3 0 4 2 4 4c0 3-3 4-8 4s-8-0-8-2z" fill="#7d7f72"/><circle cx="10" cy="17" r="1.2" fill="#4b4d44"/><circle cx="16" cy="16" r="1.6" fill="#4b4d44"/></svg>',
     blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted ? 1 : 0);
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0);
   let lastItems = new Set();
   function renderSheet() {
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
@@ -735,8 +759,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.shadow) items.push(["shadow", "shadow", "Shadowblend", "Once per scene, vanish into shadow. Advantage on Stealth in the dark."]);
     if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
     lastwellItems(items);
+    assizeItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     renderLastwell();
+    renderAssize();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -3630,8 +3656,1368 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("Nothing else changes. The puddles are still puddles. Nobody sits up. You walk out of Lastwell in the morning past the carter's coat on the road with the ring in it, and you don't take the ring.");
     if (S.axe) await voice("Vaelric is quiet for a long time. Then: \"The wardens would have burned it to the ground. The whole village. I think they would have been right.\"");
     await say("Two days east, the road crests a ridge, and in the valley below, Sulmara glitters like broken glass.");
-    S.lw = false;
+    S.lw = false; renderSheet();
+    await go("Go down to Sulmara");
+  }
+
+  // ---------- Sulmara: The Glass Assize ----------
+  // Two days in the Glass City before the Assize sits: six time slots, a Heat clock, skills and
+  // crafting from the Vitreous Library, the Cracked Lantern inn, the Slag & Siphon bar, escort jobs,
+  // evidence for the trial, a jury of twelve in four factions, and the sun-mirror at noon.
+  const SKILLS = {
+    lock: { name: "Lockcraft", book: "The Quiet Key", cost: 20, desc: "+2 to picking locks and sleight of hand. Shards of witness glass show you their clerks' numbers." },
+    law: { name: "Jurisprudence", book: "A Primer of the Assize", cost: 25, desc: "+2 when you argue before the Assize, and one objection the court must hear." },
+    cards: { name: "Cardsharp", book: "Seventy Ways to Lose at High Glass", cost: 12, desc: "At High Glass, peek at the next card once a game." },
+    street: { name: "Streetwise", book: "A Gutter-Map of Sulmara", cost: 10, desc: "Every outing in the city raises your Heat by 1 less." },
+    glass: { name: "Glasswright", book: "The Glazier's Hand", cost: 22, craft: true, desc: "Crafting: turn 2 cullet into a shatter flask (2d6, no roll), or 3 into a burning lens. Dexterity DC 12." },
+    herb: { name: "Herbcraft", book: "Brother Orrin's Herbal", cost: 18, craft: true, desc: "Crafting: brew a Draught of Mending from a bundle of herbs. Wisdom DC 12." }
+  };
+  const FACTIONS = { G: "Glaziers' Guild", M: "Merchant Lords", T: "Temple of the Clear Flame", D: "Debtors' Commons" };
+  const EVIDENCE = {
+    pane: { name: "The Witness Pane", desc: "Palace glass that saw the night the Magistrate vanished: a warden holding the door for a jackal's shadow, and Coyle's lamp behind him." },
+    ledger: { name: "Coyle's Ledger", desc: "Decoded. She paid the palace door-warden, and she bought Tobbin's mother's debt." },
+    warrant: { name: "The Pre-Dated Warrant", desc: "Your arrest warrant, signed in Coyle's hand the day before the Magistrate vanished." },
+    ledgerRaw: { name: "Coyle's Ledger (ciphered)", desc: "A clerk's ledger in the Justiciar's cipher. You can't read it yet." }
+  };
+  const LORE = {
+    rolls: { name: "The Assize Rolls", desc: "Two hundred years of verdicts. You know what each faction of the jury cares about." },
+    sight: { name: "The Law of Clear Sight", desc: "Any accused may demand the sun-mirror be turned on their accuser." },
+    glass: { name: "On Witness Glass", desc: "The Glaziers swear by what the glass saw. Witness glass you bring to court will count double with them." },
+    key: { name: "Orrin's Cipher Hint", desc: "The Justiciar's clerks key their ciphers to her initials." }
+  };
+  const SLOTS = ["Morning", "Afternoon", "Night"];
+  const hasSkill = (k) => (S.skills || []).includes(k);
+  const hasEv = (k) => (S.ev || []).includes(k);
+  const knows = (k) => (S.know || []).includes(k);
+  const votes = () => S.jury ? S.jury.G + S.jury.M + S.jury.T + S.jury.D : 0;
+
+  function initAssize() {
+    Object.assign(S, {
+      gl: true, heat: 0, day: 1, slot: 0, visits: {}, guise: [], ev: [], know: [], skills: S.skills || [],
+      jury: { G: 1, M: 1, T: 1, D: 1 }, cullet: 0, bundles: 0, flasks: 0, lens: 0, potions: S.potions || 0, elixirs: S.elixirs || 0,
+      chased: 0, wonDrink: false, fixer: false, ansel: false, turned: false, jackalDeal: false, thread: false, ykey: false, trial: false, stripped: false, verdict: "",
+      tyra: S.tyra || { aff: 0, errand: null, helped: false, jobs: [], nights: 0, key: false, love: false }
+    });
+    renderSheet();
+  }
+
+  function renderAssize() {
+    const box = $("asBox");
+    if (!box) return;
+    box.hidden = !S.gl;
+    if (!S.gl) return;
+    $("asHeat").textContent = S.heat + " / 10";
+    $("asHeatBar").style.width = Math.min(100, S.heat * 10) + "%";
+    $("asTime").textContent = S.trial ? "The Assize" : "Day " + S.day + " · " + (SLOTS[S.slot] || "Dawn");
+    const j = $("asJuryRow");
+    j.hidden = !S.trial;
+    if (S.trial) {
+      $("asJury").textContent = votes() + " / 12 for you";
+      $("asJuryNote").textContent = Object.keys(FACTIONS).map(f => FACTIONS[f] + " " + S.jury[f] + "/3").join(" · ") + ". You need 7.";
+    }
+  }
+
+  function assizeItems(items) {
+    (S.skills || []).forEach(k => items.push(["sk-" + k, "book", "Skill: " + SKILLS[k].name, SKILLS[k].desc]));
+    if (S.lw) return;
+    if (S.potions) items.push(["potion", "vial", "Draught of Mending ×" + S.potions, "Drink it to regain 10 HP."]);
+    if (S.elixirs) items.push(["elixir", "vial", "Elixir of Health ×" + S.elixirs, "Drink it to regain 20 HP."]);
+    if (!S.gl) return;
+    const G = { glaz: ["Glazier's Leathers", "Gets you into the Lens Tower without a second look."], chain: ["Debt-Collector's Chain", "Gets you into the Debtors' Cells."], veil: ["Pilgrim's Veil", "Wardens wave pilgrims through. The Temple jurors will see you wore it."] };
+    S.guise.forEach(g => items.push(["g-" + g, "token", G[g][0], G[g][1]]));
+    S.ev.forEach(k => items.push(["ev-" + k, "writ", EVIDENCE[k].name, EVIDENCE[k].desc]));
+    S.know.forEach(k => items.push(["kn-" + k, "clue", LORE[k].name, LORE[k].desc]));
+    if (S.cullet) items.push(["cullet", "caltrop", "Cullet ×" + S.cullet, "Scrap glass from the kilnyards."]);
+    if (S.bundles) items.push(["bundles", "herb", "Herb Bundles ×" + S.bundles, "Willowbark, comfrey and desert sage."]);
+    if (S.flasks) items.push(["flasks", "vial", "Shatter Flask ×" + S.flasks, "Throw it: 2d6 slashing, no roll."]);
+    if (S.lens) items.push(["lens", "clue", "Burning Lens", "Catch the sun and throw it: 3d6 fire, once."]);
+    if (S.thread) items.push(["thread", "ring", "Varro's Violet Thread", "Snap it, and a shadow will hide you once, even at noon."]);
+    if (S.ykey) items.push(["ykey", "token", "Ysolde's Key", "Opens the side door of the Hall of Records."]);
+    if (S.tyra) items.push(["tyra", "blessing", "Tyra Quillon", "A laid-back rogue who collects debts, keys and cats. Fondness " + "♥".repeat(S.tyra.aff) + "♡".repeat(5 - S.tyra.aff) + (S.tyra.errand && S.tyra.errand !== "with" ? ". Out on an errand." : S.tyra.errand === "with" ? ". At your side today." : ".") + (S.tyra.key ? " She has the Assize shackle key." : "")]);
+    if (S.turned) items.push(["turned", "blessing", S.boy === "jackal" ? "The Blackjackal's Word" : "Tobbin's Word", S.boy === "jackal" ? "He'll tell the truth on the stand, if you put out the sun-mirror." : "He'll tell the truth on the stand."]);
+  }
+
+  async function heatUp(n, why) {
+    if (!S.gl || S.trial) return;
+    S.heat = Math.max(0, Math.min(10, S.heat + n)); renderSheet();
+    if (n > 0) await mech(why + " Heat +" + n + ", to " + S.heat + " of 10.", "hurt");
+    else if (n < 0) await mech(why + " Heat " + n + ", to " + S.heat + " of 10.", "loot");
+    if (S.heat >= 10) await wardenChase();
+  }
+  // Going out into the city: Streetwise shaves a point off.
+  const outing = (n, why) => heatUp(Math.max(0, n - (hasSkill("street") ? 1 : 0)), why);
+
+  async function juryShift(f, n, why) {
+    const before = S.jury[f];
+    S.jury[f] = Math.max(0, Math.min(3, S.jury[f] + n)); renderSheet();
+    const real = S.jury[f] - before;
+    if (!real) { await mech(why + " (The " + FACTIONS[f] + " can't move any further.)"); return; }
+    await mech(why + " " + FACTIONS[f] + " " + (real > 0 ? "+" + real : real) + ": " + votes() + " of 12 jurors now lean your way.", real > 0 ? "loot" : "hurt");
+  }
+  // Without the Assize Rolls you don't know which faction an argument will move.
+  const tagF = (fs) => knows("rolls") ? " · moves " + fs.map(f => FACTIONS[f]).join(", ") : "";
+
+  async function learnSkill(k, why) {
+    if (hasSkill(k)) return;
+    S.skills.push(k); renderSheet();
+    await mech(why + " You learn <b>" + SKILLS[k].name + "</b>: " + SKILLS[k].desc, "loot");
+  }
+
+  async function wardenChase() {
+    S.chased++;
+    const back = document.body.dataset.light;
+    light("sun");
+    await say("Light hits you full in the face: a warden's hand-mirror, flashed from a rooftop. Then another, and another, mirror to mirror down the street, faster than anyone can run. Every warden in the district knows where you are.");
+    await say("Two Glass Wardens come around the corner at a jog. Their helms are mirrored all the way round, and you see yourself in them, twice, very small.");
+    const opts = [
+      { key: "run", label: "Run the rooftops", tag: "Acrobatics DC 14" },
+      { key: "fight", label: "Fight them", tag: "two wardens", plain: true }
+    ];
+    if (S.coins >= 10) opts.push({ key: "pay", label: "Pay them to look the other way", tag: "10 gold", plain: true });
+    const c = await choose(opts);
+    if (c === "pay") {
+      S.coins -= 10; renderSheet();
+      await say("The taller one weighs the purse and tilts his helm away from you. \"Sun's in my eyes,\" he says. \"Couldn't see a thing.\"", "voice");
+    } else {
+      let fight = c === "fight";
+      if (!fight) {
+        const r = await check({ label: "Acrobatics check", mod: 2, dc: 14, cta: "Jump" });
+        if (r.ok) await say("You go up a drainpipe, across a glazier's roof that rings under your boots like a bell, and down into a laundry yard. The flashes go on searching three streets over.");
+        else { await hurt(1, 4, "slashing", "A skylight gives way under one boot."); await say("You land in the street in front of them."); fight = true; }
+      }
+      if (fight) {
+        foeStart("Glass Wardens", 2, { unit: "warden|wardens" });
+        let left = 2;
+        left -= await tyraTakes(left);
+        while (left > 0) {
+          const a = await check({ label: "Attack roll", mod: 5, dc: 13, target: "AC", cta: "Strike" });
+          if (a.ok) { const n = Math.min(left, await comboHeads(left - 1)); left -= n; foeHit(n); await say(n > 1 ? "The first warden goes down and you go straight through him into the second." : "A warden's helm cracks and he sits down hard in the street."); }
+          else await hurt(1, 6, "slashing", "A glass-edged baton opens your arm.");
+        }
+        foeEnd();
+        await say("You leave them in the gutter and are gone before the next flash finds the street.");
+      }
+    }
+    S.heat = 5; renderSheet();
+    await mech("You shake them off. Heat falls to 5. Word of it will reach the Assize.", "hurt");
+    light(back);
+  }
+
+  // ---------- puzzles: witness shards, the lens, the cipher, High Glass ----------
+  // The witness pane: a picture in nine shards, one missing. Slide shards into the gap.
+  const PANE_SVG = '<rect width="300" height="300" fill="#141a22"/><circle cx="250" cy="45" r="16" fill="#cfd6dc" opacity=".8"/><circle cx="244" cy="41" r="15" fill="#141a22"/>' +
+    '<rect x="70" y="40" width="160" height="260" fill="#3a3530"/><path d="M95 300V120a55 55 0 0 1 110 0V300z" fill="#0b0d10"/><path d="M95 300V120a55 55 0 0 1 110 0" fill="none" stroke="#cfa850" stroke-width="5"/>' +
+    '<path d="M205 300V140l40 -10V300z" fill="#5a4630"/><circle cx="235" cy="220" r="4" fill="#cfa850"/>' +
+    '<path d="M120 300l8-70c2-14 10-22 22-22s20 8 22 22l8 70z" fill="#1d1f24" opacity=".9"/><path d="M132 212l-10-34l18 24M168 212l10-34l-18 24" fill="#1d1f24"/><path d="M150 236l-14 8h28z" fill="#1d1f24"/>' +
+    '<circle cx="246" cy="170" r="13" fill="#9aa6b0"/><rect x="234" y="182" width="26" height="70" rx="6" fill="#4d5762"/><path d="M234 200h-14v8h14" fill="#9aa6b0"/><path d="M240 168h12" stroke="#141a22" stroke-width="3"/>' +
+    '<path d="M18 300l10-110c2-18 12-26 22-26s20 8 22 26l10 110z" fill="#5b2a5a"/><circle cx="50" cy="150" r="14" fill="#c9a98a"/><path d="M36 196c10 10 18 12 28 0" stroke="#d9e3ea" stroke-width="4" fill="none"/>' +
+    '<rect x="70" y="210" width="10" height="14" rx="2" fill="#f0c86e"/><circle cx="75" cy="217" r="18" fill="#f0c86e" opacity=".18"/>' +
+    '<path d="M0 100l300-20M0 200l300 15M100 0l-10 300M200 0l12 300" stroke="#0b0d10" stroke-width="2" opacity=".5"/>';
+  function shardPuzzle(numbers) {
+    return new Promise(resolve => {
+      const P = puzzleBox("The witness pane", "Palace glass remembers what it saw. This pane was broken into nine shards and one is lost. Slide a shard into the gap until the picture is whole." + (numbers ? " Your Lockcraft eye catches the clerks' numbers scratched on the backs." : "") + " The watchman passes every 20 moves: each pass raises your Heat by 1.");
+      const t = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // t[pos] = tile; 8 is the gap
+      const nb = (p) => [p - 3, p + 3, p % 3 ? p - 1 : -1, p % 3 < 2 ? p + 1 : -1].filter(x => x >= 0 && x < 9);
+      let gap = 8, last = -1;
+      do { for (let i = 0; i < 80; i++) { const o = nb(gap).filter(x => x !== last); const p = o[d(o.length) - 1]; last = gap; t[gap] = t[p]; t[p] = 8; gap = p; } } while (t.every((v, i) => v === i));
+      const grid = el("div", "pgrid shards"); grid.style.gridTemplateColumns = "repeat(3, 88px)";
+      let moves = 0;
+      const btns = t.map((_, p) => { const b = pbtn(""); b.onclick = () => move(p); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const force = pbtn("Wrap the shards and carry them out"); P.ctrl.appendChild(force);
+      function move(p) {
+        if (!nb(p).includes(gap)) return;
+        t[gap] = t[p]; t[p] = 8; gap = p; moves++;
+        draw();
+      }
+      function draw() {
+        btns.forEach((b, p) => {
+          const v = t[p];
+          b.className = v === 8 ? "gap" : "";
+          b.disabled = v !== 8 && !nb(p).includes(gap);
+          b.innerHTML = v === 8 ? "" : '<svg viewBox="' + (v % 3) * 100 + " " + Math.floor(v / 3) * 100 + ' 100 100" aria-hidden="true">' + PANE_SVG + "</svg>" + (numbers ? '<span class="num">' + (v + 1) + "</span>" : "");
+          b.setAttribute("aria-label", v === 8 ? "Gap" : "Shard " + (v + 1) + (b.disabled ? "" : ", next to the gap"));
+        });
+        const right = t.filter((v, i) => v === i && v !== 8).length;
+        P.status.textContent = right + " of 8 shards in place · " + moves + " moves";
+        if (t.every((v, i) => v === i)) {
+          P.end(); btns[8].innerHTML = '<svg viewBox="200 200 100 100" aria-hidden="true">' + PANE_SVG + "</svg>"; btns[8].className = "";
+          P.status.textContent = "The last edge meets, and the pane goes clear as water. It shows you the night it saw. (" + moves + " moves)";
+          setTimeout(() => resolve({ ok: true, moves }), 700);
+        }
+      }
+      force.onclick = () => { P.end(); resolve({ ok: false, moves }); };
+      draw();
+    });
+  }
+
+  // The lens: turn mirrors so the sunbeam reaches the mark.
+  const LENS_TOWER = { rows: [".M..M", "..X..", ".MT.M", "X.M..", ".M..M"], src: [2, 0, 0, 1], from: "Sunlight comes in through the slit on the left of the middle row." };
+  const SUN_MIRROR = { rows: ["......", "......", ".MMX..", ".MM.MX", ".MM..T", "XXM.M."], src: [0, 1, 1, 0], from: "Noon sun falls straight down the second column from the left." };
+  function beamTrace(L, m) {
+    const R = L.rows.length, C = L.rows[0].length;
+    let [r, c, dr, dc] = L.src; const path = []; const seen = new Set();
+    for (let i = 0; i < 200; i++) {
+      if (r < 0 || r >= R || c < 0 || c >= C) return { hit: false, path };
+      const k = r + "," + c + "," + dr + "," + dc; if (seen.has(k)) return { hit: false, path }; seen.add(k);
+      path.push(r * C + c);
+      const ch = L.rows[r][c];
+      if (ch === "X") return { hit: false, path };
+      if (ch === "T") return { hit: true, path };
+      if (ch === "M") { if (m[r * C + c] === "/") [dr, dc] = [-dc, -dr]; else [dr, dc] = [dc, dr]; }
+      r += dr; c += dc;
+    }
+    return { hit: false, path };
+  }
+  function beamPuzzle(L, { title, hint, target, limit = 0, forceLabel }) {
+    return new Promise(resolve => {
+      const R = L.rows.length, C = L.rows[0].length;
+      const P = puzzleBox(title, hint + " " + L.from + " Tap a mirror (╱ or ╲) to turn it. Dark glass (▪) swallows the light." + (limit ? " You have " + limit + " turns before the sun moves on." : ""));
+      const m = {};
+      do { L.rows.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === "M") m[r * C + c] = d(2) === 1 ? "/" : "\\"; })); } while (beamTrace(L, m).hit);
+      const grid = el("div", "pgrid beam"); const sz = C > 5 ? 46 : 52;
+      grid.style.gridTemplateColumns = "repeat(" + C + ", " + sz + "px)";
+      let turns = 0;
+      const cells = [];
+      L.rows.forEach((row, r) => [...row].forEach((ch, c) => {
+        const i = r * C + c, b = pbtn(""); b.style.width = b.style.height = sz + "px";
+        if (ch === "M") b.onclick = () => { m[i] = m[i] === "/" ? "\\" : "/"; turns++; draw(); };
+        else b.disabled = true;
+        grid.appendChild(b); cells[i] = b;
+      }));
+      P.body.appendChild(grid);
+      const force = pbtn(forceLabel); P.ctrl.appendChild(force);
+      function draw() {
+        const { hit, path } = beamTrace(L, m);
+        const lit = new Set(path);
+        L.rows.forEach((row, r) => [...row].forEach((ch, c) => {
+          const i = r * C + c, b = cells[i];
+          b.className = lit.has(i) ? "lit" : "";
+          if (ch === "T") b.classList.add("goal");
+          b.textContent = ch === "M" ? (m[i] === "/" ? "╱" : "╲") : ch === "X" ? "▪" : ch === "T" ? "◎" : lit.has(i) ? "·" : "";
+          b.setAttribute("aria-label", (ch === "M" ? "Mirror, " + (m[i] === "/" ? "leaning right" : "leaning left") : ch === "X" ? "Dark glass" : ch === "T" ? target : "Empty") + (lit.has(i) ? ", in the beam" : "") + ", row " + (r + 1) + " column " + (c + 1));
+        }));
+        P.status.textContent = (hit ? "The beam lands on " + target + "." : "The beam " + (path.length ? "runs " + path.length + " squares and goes astray." : "goes nowhere.")) + " · " + turns + " turn" + (turns === 1 ? "" : "s") + (limit ? " of " + limit : "");
+        if (hit) { P.end(); setTimeout(() => resolve({ ok: true, turns }), 700); return; }
+        if (limit && turns >= limit) { P.end(); P.status.textContent = "The sun slides past the lens. The beam is gone."; setTimeout(() => resolve({ ok: false, turns }), 700); }
+      }
+      force.onclick = () => { P.end(); resolve({ ok: false, turns }); };
+      draw();
+    });
+  }
+
+  // The ledger cipher: two dials. Letters in odd places are shifted by the first, even places by the second.
+  const LEDGER_TEXT = "PAID THE NIGHT WARDEN OF THE PALACE DOOR FORTY CROWNS. BOUGHT THE MARL DEBT. THE BOY WILL SAY WHAT HE IS TOLD.";
+  function cipherPuzzle(hint) {
+    return new Promise(resolve => {
+      const K = [7, 2]; // H, C
+      const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      let n = 0;
+      const enc = LEDGER_TEXT.replace(/[A-Z]/g, ch => A[(A.indexOf(ch) + K[n++ % 2]) % 26]);
+      const P = puzzleBox("The Justiciar's cipher", "The ledger is written in a clerk's cipher with two dials. The first dial shifts the 1st, 3rd, 5th letter and so on; the second shifts the 2nd, 4th, 6th. Turn the dials until the page reads true." + (hint ? " Orrin told you: her clerks key their ciphers to her initials." : ""));
+      const key = [d(26) - 1, d(26) - 1];
+      if (key[0] === K[0] && key[1] === K[1]) key[1] = (key[1] + 5) % 26;
+      const wrap = el("div", "rings");
+      const faces = key.map((_, i) => {
+        const ring = el("div", "ring");
+        const up = pbtn("▲"), face = el("div", "face"), down = pbtn("▼");
+        up.setAttribute("aria-label", "Turn dial " + (i + 1) + " forward"); down.setAttribute("aria-label", "Turn dial " + (i + 1) + " back");
+        up.onclick = () => { key[i] = (key[i] + 1) % 26; turns++; draw(); };
+        down.onclick = () => { key[i] = (key[i] + 25) % 26; turns++; draw(); };
+        ring.append(up, face, down); wrap.appendChild(ring); return face;
+      });
+      const page = el("div", "cipher-page");
+      P.body.append(wrap, page);
+      const force = pbtn("Give up on it"); P.ctrl.appendChild(force);
+      let turns = 0;
+      function draw() {
+        let k = 0;
+        const dec = enc.replace(/[A-Z]/g, ch => A[(A.indexOf(ch) - key[k++ % 2] + 26) % 26]);
+        faces.forEach((f, i) => { f.innerHTML = "<span style='font-size:1.5rem'>" + A[key[i]] + "</span>dial " + (i + 1); });
+        page.textContent = dec;
+        P.status.textContent = turns + " turns of the dials";
+        if (dec === LEDGER_TEXT) { P.end(); P.status.textContent = "The page reads true."; setTimeout(() => resolve({ ok: true, turns }), 900); }
+      }
+      force.onclick = () => { P.end(); resolve({ ok: false, turns }); };
+      draw();
+    });
+  }
+
+  // High Glass: call the next card higher or lower. Ties go to the house.
+  const CARD = (v) => v + (v === 1 ? " · Ash" : v === 11 ? " · Warden" : v === 12 ? " · Judge" : v === 13 ? " · Sun" : "");
+  function highGlass({ stake, need = 0, peek = false, title }) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title || "High Glass", "The dealer turns glass cards from 1 (Ash) to 13 (Sun). Call whether the next card is higher or lower. Ties go to the house." + (need ? " You need " + need + " right in a row." : " Every right call adds " + stake + " gold to the pot. Cash out whenever you like; one wrong call and you lose the pot and your stake.") + (peek ? " Cardsharp: you can peek at the next card once." : ""));
+      let cur = d(13), next = d(13), streak = 0, peeked = false;
+      const show = el("div", "cards");
+      P.body.appendChild(show);
+      const hi = pbtn("Higher", "primary"), lo = pbtn("Lower"), cash = pbtn("Cash out"), pk = pbtn("Peek");
+      P.ctrl.append(hi, lo);
+      if (!need) P.ctrl.appendChild(cash);
+      if (peek) P.ctrl.appendChild(pk);
+      function draw(msg) {
+        show.innerHTML = '<span class="gcard">' + CARD(cur) + "</span>" + (peeked ? '<span class="gcard peek">next: ' + CARD(next) + "</span>" : "");
+        P.status.textContent = msg + " · streak " + streak + (need ? " of " + need : " · pot " + stake * streak + " gold");
+        cash.disabled = streak === 0;
+      }
+      function call(up) {
+        const ok = up ? next > cur : next < cur;
+        const was = cur; cur = next; next = d(13); peeked = false;
+        if (!ok) { P.end(); draw("The dealer turns " + CARD(cur) + " after " + CARD(was) + ". The house wins."); setTimeout(() => resolve({ won: false, streak }), 900); return; }
+        streak++;
+        if (need && streak >= need) { P.end(); draw("Right again."); setTimeout(() => resolve({ won: true, streak }), 700); return; }
+        draw("Right: " + CARD(cur) + ".");
+      }
+      hi.onclick = () => call(true); lo.onclick = () => call(false);
+      cash.onclick = () => { P.end(); resolve({ won: true, streak }); };
+      pk.onclick = () => { peeked = true; pk.disabled = true; draw("You palm the deck's edge and see the next card."); };
+      draw("The first card is " + CARD(cur) + ".");
+    });
+  }
+
+  // ---------- city scenes ----------
+  async function libraryVisit() {
+    light("torch");
+    const first = !S.visits.library;
+    if (first) {
+      await say("The Vitreous Library stands in a square of its own, a dome of green glass so old it has gone the color of pond water. Inside it is cool and very quiet. Every book is glass: thin leaves of it, etched and bound in brass, and when someone turns a page the whole shelf rings softly, like a struck glass of wine.");
+      await say("The archivist is a tall old man in a grey robe with cloth tied over his eyes. Brother Orrin reads by touch, his fingertips moving across the etched glass faster than you could read ink.");
+      await say("\"We sell what we have two of,\" he says, without looking up. \"Skill is the only thing a fool can carry out of here that the wardens can't take back from him at the gate.\"", "voice");
+    } else await say("The green dome. The ringing shelves. Brother Orrin lifts his head when you come in. \"The thief again,\" he says, pleasantly.");
+    S.visits.library = (S.visits.library || 0) + 1;
+    let reads = 0;
+    for (;;) {
+      const opts = [];
+      Object.keys(SKILLS).filter(k => !hasSkill(k)).forEach(k => opts.push({ key: "buy-" + k, label: "Buy " + SKILLS[k].book, tag: SKILLS[k].name + (SKILLS[k].craft ? " (crafting)" : "") + " · " + SKILLS[k].cost + " gold", plain: true, show: S.coins >= SKILLS[k].cost }));
+      if (reads < 2) {
+        const R = [["rolls", "Read the Assize Rolls"], ["sight", "Look up the law on the sun-mirror"], ["glass", "Read On Witness Glass"]];
+        R.filter(([k]) => !knows(k)).forEach(([k, l]) => opts.push({ key: "read-" + k, label: l, tag: "Investigation DC 12 · " + (2 - reads) + " reading" + (reads ? "" : "s") + " left", plain: true }));
+        if (!knows("key") && (hasEv("ledgerRaw") || S.visits.bar)) opts.push({ key: "ask", label: "Ask Orrin about the Justiciar's ciphers", tag: "Persuasion DC 11", plain: true });
+      }
+      if (hasEv("ledgerRaw")) opts.push({ key: "decode", label: "Work on the ciphered ledger here", tag: "puzzle", plain: true });
+      opts.push({ key: "leave", label: "Leave the library", plain: true });
+      if (opts[0].key !== "leave") opts[0].plain = false;
+      const c = await choose(opts);
+      if (c === "leave") break;
+      if (c.startsWith("buy-")) {
+        const k = c.slice(4); S.coins -= SKILLS[k].cost; renderSheet();
+        await say("Orrin finds it by touch on the third shelf, without counting. " + (SKILLS[k].craft ? "It's heavy with diagrams etched so fine you have to tilt the glass to see them." : "You read it at the long table until the light changes."));
+        await learnSkill(k, "You pay " + SKILLS[k].cost + " gold.");
+        continue;
+      }
+      if (c.startsWith("read-")) {
+        const k = c.slice(5); reads++;
+        const r = await check({ label: "Investigation check: " + LORE[k].name, mod: hasBook("Warden's Journal") ? 2 : 1, dc: 12, cta: "Read" });
+        if (!r.ok) { await say("The leaves ring and ring and tell you nothing you can use. The afternoon goes."); continue; }
+        S.know.push(k); renderSheet();
+        if (k === "rolls") await say("Two hundred years of verdicts, etched in glass. The Glaziers believe what glass has seen. The Merchant Lords believe in paper, seals and dates. The Temple of the Clear Flame wants a confession, and loves an honest thief more than a lying lord. The Debtors' Commons hate whoever holds the debt.");
+        if (k === "sight") await say("It's in the oldest rolls, in a hand nobody has used for a century: <i>Any accused standing in the focus may demand that the glass be turned upon the accuser, and the Assize must allow it.</i> Nobody has invoked it in ninety years. Orrin smiles when you read it out loud.");
+        if (k === "glass") await say("<i>Glass that has witnessed a thing holds it until broken, and a broken pane made whole again holds it truer still.</i> The Glaziers' Guild will take a mended pane over any sworn word.");
+        await mech("You learn " + LORE[k].name + ".", "loot");
+        continue;
+      }
+      if (c === "ask") {
+        reads++;
+        const r = await check({ label: "Persuasion check", mod: 1, dc: 11, cta: "Ask" });
+        if (r.ok) { S.know.push("key"); renderSheet(); await say("\"Her clerks are lazy,\" Orrin says. \"They key everything to her initials. H and C. I've told her for years.\"", "voice"); await mech("You learn Orrin's Cipher Hint.", "loot"); }
+        else await say("\"I don't read the Justiciar's mail,\" he says, and turns a page that rings like a warning.", "voice");
+        continue;
+      }
+      if (c === "decode") await decodeLedger();
+    }
+    await outing(1, "You were seen crossing the square.");
+  }
+
+  async function decodeLedger() {
+    const p = await cipherPuzzle(knows("key"));
+    if (p.ok) {
+      S.ev = S.ev.filter(x => x !== "ledgerRaw"); S.ev.push("ledger"); renderSheet();
+      await say("<i>Paid the night warden of the palace door forty crowns. Bought the Marl debt. The boy will say what he is told.</i> Under it, a date: the night the Magistrate vanished. And a signature you will see again tomorrow, on a warrant: <b>H. Coyle</b>.");
+      await mech("New evidence: Coyle's Ledger.", "loot");
+    } else await say("The letters swim. You fold the ledger away to try again later.");
+  }
+
+  async function barVisit() {
+    light("torch");
+    if (!S.visits.bar) {
+      await say("The Slag & Siphon is a cellar under the kilnyards, hot as an oven, full of glassblowers with forearms shiny with old burns. The cups are seconds from the kilns: lopsided, bubbled, every one a different color. Somebody is playing a row of wet glasses with a fingertip, and the sound goes into your teeth.");
+      await say("Behind the bar, a woman with one eyebrow burned off for good pours you something blue. \"First one's free if you're wanted,\" she says. \"Everyone in here is wanted.\"", "voice");
+    } else await say("Back down into the heat of the Slag & Siphon. The barkeep pours you the blue thing without asking.");
+    S.visits.bar = (S.visits.bar || 0) + 1;
+    let acts = 0;
+    while (acts < 2) {
+      const opts = [];
+      if (!S.wonDrink && !S.visits.drink) opts.push({ key: "drink", label: "Take on Old Brannoch at the drinking table", tag: "5 gold stake · 3 rounds" });
+      opts.push({ key: "cards", label: "Play High Glass", tag: S.coins >= 3 ? "pick a stake" : "you need 3 gold", plain: true, show: S.coins >= 3 });
+      if (!hasEv("ledger") && !hasEv("ledgerRaw")) opts.push({ key: "clerk", label: "Find the Justiciar's clerk", tag: "he's drinking alone", plain: true });
+      opts.push({ key: "cullet", label: "Buy cullet from the kilnworkers", tag: "2 gold each", plain: true, show: S.coins >= 2 });
+      if (!S.fixer) opts.push({ key: "fixer", label: "Talk to the fixer in the corner booth", plain: true });
+      opts.push({ key: "rumor", label: "Listen at the bar", tag: "rumors", plain: true, show: !S.visits.rumor });
+      opts.push({ key: "leave", label: "Leave", plain: true });
+      const c = await choose(opts);
+      if (c === "leave") break;
+      acts++;
+      if (c === "drink") await drinkingContest();
+      if (c === "cards") {
+        const s = await choose([3, 5, 10].filter(x => x <= S.coins).map(x => ({ key: x, label: "Stake " + x + " gold", plain: true })));
+        S.coins -= s; renderSheet();
+        const g = await highGlass({ stake: s, peek: hasSkill("cards") });
+        if (g.won) { S.coins += s + s * g.streak; renderSheet(); await mech("You cash out: " + (s + s * g.streak) + " gold.", "loot"); }
+        else await mech("You lose your " + s + " gold stake.", "hurt");
+      }
+      if (c === "clerk") await theClerk();
+      if (c === "cullet") {
+        const n = await choose([1, 2, 3].filter(x => x * 2 <= S.coins).map(x => ({ key: x, label: "Buy " + x, tag: x * 2 + " gold", plain: true })));
+        S.coins -= n * 2; S.cullet += n; renderSheet();
+        await mech("Gain " + n + " cullet: scrap glass, green and amber, sharp at every edge.", "loot");
+        if (!hasSkill("glass")) await say("\"You'll want the Glazier's Hand to make anything of that,\" a kilnworker says. \"The library sells it. Or burn yourself learning.\"", "voice");
+      }
+      if (c === "fixer") await theFixer();
+      if (c === "rumor") {
+        S.visits.rumor = true;
+        await say("You hear that the Magistrate didn't flee. His bed was still warm, and every mirror in his palace had gone black, as if something had breathed on them from the inside.");
+        await say("You hear that the High Justiciar, Hesper Coyle, was at the palace that night, which nobody will say out loud, and that her wardens are paid double this month.");
+        await say("You hear that the Assize hasn't burned anyone with the sun-mirror in eleven years, and that the last one was a woman who owed Coyle money.");
+        if (S.boy === "jackal") await say("And you hear that the Justiciar's witness, the boy Tobbin, has stopped casting a shadow. People say it like a joke.");
+      }
+    }
+    await outing(1, "The kilnyards are full of eyes.");
+  }
+
+  async function drinkingContest() {
+    S.visits.drink = true;
+    if (S.coins < 5) { await say("Old Brannoch looks at your purse and laughs. \"Come back richer.\""); return; }
+    S.coins -= 5; renderSheet();
+    await say("Old Brannoch is the size of a kiln door and has drunk every glassblower in Sulmara under the table at least once. They pour the drink called slag: black, thick, and hot enough to steam. Three cups each. The first to put a cup down unfinished pays.");
+    let me = 0, him = 0;
+    for (let round = 1; round <= 3 && me < 2 && him < 2; round++) {
+      const ok = await contest({ label: "Round " + round + ": Constitution contest", mod: 2, foe: "Brannoch", foeMod: 2 + round, cta: "Drink" });
+      if (ok) { me++; await say(["Brannoch's eyes water.", "Brannoch sways, and grins, and sways again.", "Brannoch puts his cup down very carefully and lies down next to it."][round - 1]); }
+      else { him++; await hurt(1, 4, "poison", "The slag goes down like hot tar."); }
+    }
+    if (me >= 2) {
+      S.wonDrink = true; S.coins += 15; renderSheet();
+      await mech("You win 15 gold.", "loot");
+      await say("When Brannoch can stand again, he hugs you with arms like warm iron. \"My niece Dilly sits on the Assize jury tomorrow,\" he says. \"Commons bench. I'll tell her you're a good one.\"", "voice");
+      await juryShift("D", 1, "Brannoch will vouch for you.");
+    } else await mech("Brannoch wins. You lose your stake, and the room spins until morning.", "hurt");
+  }
+
+  async function theClerk() {
+    await say("Ormond Fisk, clerk to the High Justiciar: ink-stained fingers, a velvet satchel he keeps one hand on, and four empty cups of the blue thing in front of him. He's drinking like a man who has written something he shouldn't have.");
+    const c = await choose([
+      { key: "lift", label: "Lift the ledger from his satchel", tag: "Sleight of Hand DC 15" + (hasSkill("lock") ? " · Lockcraft +2" : "") },
+      { key: "game", label: "Challenge him to High Glass for the satchel", tag: "stake 10 gold · 3 right in a row", plain: true, show: S.coins >= 10 },
+      { key: "talk", label: "Buy him a drink and listen", tag: "3 gold · Persuasion DC 13", plain: true, show: S.coins >= 3 }
+    ]);
+    if (c === "lift") {
+      const r = await check({ label: "Sleight of Hand check", mod: 2 + (hasSkill("lock") ? 2 : 0), dc: 15, cta: "Lift it" });
+      if (r.ok) { await say("You bump his elbow, apologize, and walk away with a ledger bound in grey sharkskin under your shirt."); return gotLedger(); }
+      await say("His hand closes on your wrist. \"Thief!\" he shrieks, and every head in the cellar turns.");
+      await heatUp(3, "The whole bar heard him.");
+      return;
+    }
+    if (c === "game") {
+      S.coins -= 10; renderSheet();
+      await say("\"Ten gold against the satchel,\" you say. Fisk is drunk enough to like that. \"There's nothing in it but sums,\" he says, and puts it on the table.", "voice");
+      const g = await highGlass({ stake: 10, need: 3, peek: hasSkill("cards"), title: "High Glass: the clerk's satchel" });
+      if (g.won) { await say("Fisk stares at the cards, then at the satchel, then at you. He pushes it across the table as if it might bite him."); return gotLedger(); }
+      await say("Fisk sweeps up your gold and clutches the satchel to his chest.");
+      return;
+    }
+    S.coins -= 3; renderSheet();
+    const r = await check({ label: "Persuasion check", mod: 1, dc: 13, cta: "Pour" });
+    if (r.ok) {
+      await say("Two drinks later, he's telling you about his mistress. \"She keys her ciphers to her own initials,\" he whispers. \"H, C. Can you imagine? I'd be flogged.\" Then he falls asleep on the satchel.", "voice");
+      if (!knows("key")) { S.know.push("key"); renderSheet(); await mech("You learn the cipher hint: her initials, H and C.", "loot"); }
+      const t = await check({ label: "Sleight of Hand check: ease it out from under his head", mod: 2 + (hasSkill("lock") ? 2 : 0), dc: 11, cta: "Ease it out" });
+      if (t.ok) return gotLedger();
+      await say("He snorts and hugs the satchel tighter in his sleep.");
+    } else await say("He drinks your drink, and tells you nothing, and leaves.");
+  }
+
+  async function gotLedger() {
+    S.ev.push("ledgerRaw"); renderSheet();
+    await mech("Gain Coyle's Ledger (ciphered).", "loot");
+    const c = await choose([{ key: "now", label: "Try to break the cipher now", tag: "puzzle" }, { key: "later", label: "Save it for later", plain: true }]);
+    if (c === "now") await decodeLedger();
+  }
+
+  async function theFixer() {
+    S.fixer = true;
+    await say("The fixer is called Saint Ludo, for reasons he says are a long story. He has a list of the Assize jurors on a sheet of glass, and he's polishing it.");
+    await say("\"Merchant Lord Tessaly owes me,\" he says. \"Twenty gold and she'll vote the way I ask. Of course, if Coyle hears of it, she'll vote the other way and take two friends with her.\"", "voice");
+    if (S.coins < 20) { await say("You don't have twenty gold. Saint Ludo goes back to polishing."); return; }
+    const c = await choose([{ key: "pay", label: "Pay him", tag: "20 gold · a 1 in 6 chance it backfires" }, { key: "no", label: "Not today", plain: true }]);
+    if (c === "no") return;
+    S.coins -= 20; renderSheet();
+    if (d(6) === 1) { S.fixerBad = true; await say("He takes the gold. Somebody at the next table gets up and leaves quickly."); await juryShift("M", -2, "Coyle heard."); }
+    else await juryShift("M", 1, "Lord Tessaly has been bought.");
+  }
+
+  async function innVisit(night) {
+    light("torch");
+    await say(night ? "Back to the Cracked Lantern. Marrit has kept the lantern in the window cracked again, on purpose: a cracked pane can't witness anything, she says, and the wardens can't read a room through it." : "The Cracked Lantern by day: bread in the oven, a dog under the stairs, the job board by the door.");
+    let bathed = false;
+    for (;;) {
+      const opts = [];
+      if (hasSkill("glass") && S.cullet >= 2) opts.push({ key: "glass", label: "Work glass at the back bench", tag: "Glasswright", plain: true });
+      if (hasSkill("herb") && S.bundles) opts.push({ key: "herb", label: "Brew a Draught of Mending", tag: "Herbcraft · Wisdom DC 12", plain: true });
+      opts.push({ key: "bundle", label: "Buy a herb bundle from Marrit", tag: "4 gold", plain: true, show: S.coins >= 4 });
+      if (!bathed) opts.push({ key: "bath", label: "Take a hot bath", tag: "2 gold · 1d4 HP", plain: true, show: S.coins >= 2 && S.hp < S.maxHp });
+      opts.push({ key: "board", label: "Read the job board", plain: true });
+      if (S.hp < S.maxHp) opts.push(...await healOpts(""));
+      opts.push({ key: "done", label: night ? "Go up to bed" : "Head back out", plain: true });
+      const c = await choose(opts);
+      if (c === "done") break;
+      if (c === "glass") await craftGlass();
+      if (c === "herb") await brew();
+      if (c === "bundle") { S.coins -= 4; S.bundles++; renderSheet(); await mech("Marrit sells you a bundle of willowbark, comfrey and desert sage, tied with string.", "loot"); if (!hasSkill("herb")) await say("\"You'll need someone who knows how to brew it,\" she says. \"Orrin sells his herbal, if you can stand him.\"", "voice"); }
+      if (c === "bath") { bathed = true; S.coins -= 2; renderSheet(); await say("The tub is copper and the water is so hot it's nearly a punishment. Someone has left a rubber duck in it, made of glass."); await heal(1, 4, "The heat goes into your bones."); }
+      if (c === "board") await say("Nailed to the board: <b>WANTED, a strong arm to walk Brother Orrin from the Library to the Temple of the Clear Flame, by day. He pays in books.</b> And under it, in a different hand: <b>Night work. Escort a cargo through the kilnyards to the harbor gate. Ask for Pell. Pays well.</b>");
+      if (c === "moss" || c === "potion" || c === "elixir") await useHeal(c);
+    }
+    if (night) {
+      if (S.mire === "warn" && !S.thread) {
+        await say("There's a man in violet at the end of the bar who wasn't there a moment ago. Varro Duskwane lifts his cup to you. \"Coyle took my tower,\" he says. \"I'd like to watch her lose something.\" He presses a loop of violet thread into your hand. \"Snap it when the mirror's on you. One shadow. Even at noon.\"", "voice");
+        S.thread = true; renderSheet();
+        await mech("Gain Varro's Violet Thread.", "loot");
+      }
+      if ((S.crew === "join" || S.side === "crew") && !S.ykey) {
+        await say("Ysolde of the Hollow Hands finds you on the stair. She doesn't say hello. She puts a brass key in your palm. \"Side door of the Hall of Records,\" she says. \"Sable says we owe you. Don't make it a habit.\"", "voice");
+        S.ykey = true; renderSheet();
+        await mech("Gain Ysolde's Key.", "loot");
+      }
+      await tyraNight();
+      await say("You sleep with the axe under the pillow and wake at every bell.");
+      await heal(2, 6, "A real bed.");
+      await heatUp(-3, "A night off the streets.");
+    }
+  }
+
+  async function craftGlass() {
+    const c = await choose([
+      { key: "flask", label: "Blow a shatter flask", tag: "2 cullet · Dexterity DC 12" },
+      { key: "lens", label: "Grind a burning lens", tag: "3 cullet · Dexterity DC 14", plain: true, show: S.cullet >= 3 && !S.lens },
+      { key: "no", label: "Not now", plain: true }
+    ]);
+    if (c === "no") return;
+    const lens = c === "lens";
+    S.cullet -= lens ? 3 : 2; renderSheet();
+    const r = await check({ label: "Dexterity check (glasswork)", mod: 2, dc: lens ? 14 : 12, cta: lens ? "Grind" : "Blow" });
+    if (r.ok) {
+      if (lens) S.lens++; else S.flasks++;
+      renderSheet();
+      await mech(lens ? "A burning lens, thick as your thumb. In daylight it throws a point of light that blisters wood. (3d6 fire, once)" : "A shatter flask: thin glass packed with cullet and a pinch of kiln salt. Throw it and it bursts like a hornet's nest. (2d6, no roll)", "loot");
+    } else await hurt(1, 4, "fire", "The glass slumps and sticks to your fingers.");
+  }
+
+  async function brew() {
+    S.bundles--; renderSheet();
+    const r = await check({ label: "Wisdom check (herbcraft)", mod: 2, dc: 12, cta: "Brew" });
+    if (r.ok) { S.potions++; renderSheet(); await mech("You brew a Draught of Mending. It's bitter as bark, which Orrin's herbal says means you did it right.", "loot"); }
+    else await say("It boils over and the room smells like a wet dog for an hour.");
+  }
+
+  // An escort job: three legs across the city. The client has HP of their own.
+  async function escort(job) {
+    const client = { hp: 10 };
+    const hurtClient = async (n, why) => { client.hp = Math.max(0, client.hp - n); await mech(why + " " + job.who + " takes " + n + " damage (" + client.hp + " of 10 left).", "hurt"); };
+    await say(job.intro);
+    for (let leg = 0; leg < 3 && client.hp > 0; leg++) {
+      const L = job.legs[leg];
+      await say(L.text);
+      const c = await choose(L.opts.filter(o => o.show !== false));
+      await L.run(c, hurtClient);
+    }
+    if (client.hp <= 0) {
+      await say(job.fail);
+      await heatUp(2, "The wardens will want to know what happened.");
+      return false;
+    }
+    await say(job.win);
+    return true;
+  }
+
+  async function anselEscort() {
+    S.visits.ansel = true;
+    light("sun");
+    const ok = await escort({
+      who: "Orrin",
+      intro: "Brother Orrin takes your elbow with a hand like a bundle of dry sticks. \"Six streets,\" he says. \"I've walked them for forty years. But last week someone pushed me into the canal, and I'd like to know who before I let it happen again.\"",
+      legs: [
+        { text: "The Street of Lenses is packed. A cart of plate glass is crossing in front of you, and a boy is running under it.", opts: [{ key: "a", label: "Pull Orrin back", tag: "Dexterity DC 12" }, { key: "b", label: "Shove through the crowd", tag: "Heat +1", plain: true }],
+          run: async (c, hc) => { if (c === "b") { await outing(1, "People remember being shoved."); return; } const r = await check({ label: "Dexterity check", mod: 2, dc: 12, cta: "Grab him" }); if (r.ok) await say("A pane slides off the cart and bursts on the stones where he was standing."); else await hc(d(6), "A pane slides off the cart and bursts at his feet."); } },
+        { text: "At the bridge, a warden checkpoint. They're checking faces against a poster, and the poster is you.", opts: [{ key: "veil", label: "Walk through as a pilgrim", tag: "Pilgrim's Veil", show: S.guise.includes("veil") }, { key: "lie", label: "\"He's my grandfather. He's ill.\"", tag: "Deception DC 13" }, { key: "around", label: "Go the long way round", tag: "Heat +1", plain: true }],
+          run: async (c, hc) => { if (c === "veil") { await say("They wave a pilgrim and a blind priest through without looking twice."); return; } if (c === "around") { await outing(1, "The long way is the busy way."); return; } const r = await check({ label: "Deception check", mod: 1, dc: 13, cta: "Lie" }); if (r.ok) await say("Orrin coughs, right on cue, magnificently. The warden steps back."); else { await heatUp(2, "A warden looks at you twice."); await say("You walk away fast, before he looks a third time."); } } },
+        { text: "In the alley behind the Temple, two men are waiting with a sack and a length of rope. One of them has wet boots. The canal.", opts: [{ key: "fight", label: "Fight them", tag: "two thugs" }, { key: "flask", label: "Throw a shatter flask", tag: "no roll", show: S.flasks > 0 }, { key: "talk", label: "\"Who paid you?\"", tag: "Intimidation DC 14", plain: true }],
+          run: async (c, hc) => {
+            if (c === "flask") { S.flasks--; renderSheet(); await say("The flask bursts between them in a spray of glittering glass. They run, bleeding and swearing."); }
+            else if (c === "talk") { const r = await check({ label: "Intimidation check", mod: 3, dc: 14, cta: "Loom" }); if (r.ok) { await say("\"Fisk,\" one blurts. \"The Justiciar's clerk. The old man asks too many questions about her books.\" Then they run."); return; } await hc(d(4), "One of them swings the rope at Orrin."); c = "fight"; }
+            if (c === "fight") {
+              foeStart("Canal thugs", 2, { unit: "thug|thugs" }); let left = 2; left -= await tyraTakes(left);
+              while (left > 0) { const a = await check({ label: "Attack roll", mod: 5, dc: 11, target: "AC", cta: "Strike" }); if (a.ok) { const n = Math.min(left, await comboHeads(left - 1)); left -= n; foeHit(n); await say("A thug goes into the wall and stays there."); } else await hc(d(4), "A fist meant for you finds the old man."); }
+              foeEnd();
+            }
+          } }
+      ],
+      fail: "Orrin sits down on the temple steps, bleeding from the scalp, and waves you away. \"I'll find a better arm,\" he says. He doesn't say it unkindly, which is worse.",
+      win: "At the Temple door, Orrin squeezes your arm. \"Forty years,\" he says. \"Nobody ever walked me before. They just pointed.\""
+    });
+    if (!ok) return;
+    S.ansel = true;
+    const free = Object.keys(SKILLS).filter(k => !hasSkill(k));
+    if (free.length) {
+      await say("He presses a glass book into your hands, warm from his robe. \"Pick one,\" he says. \"From the library. I'll have it sent.\"", "voice");
+      const k = await choose(free.map(x => ({ key: x, label: SKILLS[x].book, tag: SKILLS[x].name + (SKILLS[x].craft ? " (crafting)" : ""), plain: true })));
+      await learnSkill(k, "Orrin's payment.");
+    }
+    await juryShift("T", 1, "The Temple's priests saw who walked their archivist to the door.");
+    if (!knows("key")) { S.know.push("key"); renderSheet(); await mech("On the way, Orrin tells you how the Justiciar's clerks key their ciphers: to her initials, H and C.", "loot"); }
+  }
+
+  async function pellEscort() {
+    S.visits.pell = true;
+    light("dark");
+    const ok = await escort({
+      who: "Pell",
+      intro: "Pell Vashti is a small woman in a big coat with a crate on a handcart. The crate is breathing. \"Don't ask,\" she says, \"and I'll pay you double for not asking.\"",
+      legs: [
+        { text: "The kilnyards at night are a maze of furnaces, all of them lit. The heat comes off them in waves you can see.", opts: [{ key: "fast", label: "Cut between the furnaces", tag: "Constitution DC 12" }, { key: "slow", label: "Go around by the slag heaps", tag: "Heat +1", plain: true }],
+          run: async (c, hc) => { if (c === "slow") { await outing(1, "Nightwatchmen on the heaps."); return; } const r = await check({ label: "Constitution check", mod: 2, dc: 12, cta: "Push through" }); if (!r.ok) { await hurt(1, 4, "fire", "The furnace breath scorches you."); await hc(2, "And the cart."); } else await say("You come out the other side steaming, eyebrows intact."); } },
+        { text: "A glassblower's apprentice is sitting on a wall, watching. He has a hand-mirror. He's deciding whether to flash it.", opts: [{ key: "pay", label: "Toss him a coin", tag: "2 gold", show: S.coins >= 2 }, { key: "scare", label: "Stare him down", tag: "Intimidation DC 12", plain: true }],
+          run: async (c, hc) => { if (c === "pay") { S.coins -= 2; renderSheet(); await say("He catches it and turns the mirror face-down on his knee."); return; } const r = await check({ label: "Intimidation check", mod: 3, dc: 12, cta: "Stare" }); if (r.ok) await say("He puts the mirror in his pocket and finds something interesting to look at in the other direction."); else await heatUp(2, "The mirror flashes."); } },
+        { text: "At the harbor gate, the crate starts to scream. Two wardens turn round.", opts: [{ key: "flask", label: "Throw a shatter flask at the lamp", tag: "no roll", show: S.flasks > 0 }, { key: "fight", label: "Fight them", tag: "two wardens" }, { key: "bluff", label: "\"It's a goat.\"", tag: "Deception DC 15", plain: true }],
+          run: async (c, hc) => {
+            if (c === "flask") { S.flasks--; renderSheet(); await say("The lamp goes out in a rain of glass, and in the dark you push the cart through the gate."); return; }
+            if (c === "bluff") { const r = await check({ label: "Deception check", mod: 1, dc: 15, cta: "Bleat" }); if (r.ok) { await say("The wardens look at each other. One of them says, \"That's a goat,\" with great confidence, and they let you through."); return; } c = "fight"; }
+            foeStart("Harbor wardens", 2, { unit: "warden|wardens" }); let left = 2; left -= await tyraTakes(left);
+            while (left > 0) { const a = await check({ label: "Attack roll", mod: 5, dc: 13, target: "AC", cta: "Strike" }); if (a.ok) { const n = Math.min(left, await comboHeads(left - 1)); left -= n; foeHit(n); await say("A warden's helm rings off the gatepost."); } else await hc(d(6), "A baton smashes into the crate, and the crate shrieks."); }
+            foeEnd(); await heatUp(2, "You fought wardens at the harbor gate.");
+          } }
+      ],
+      fail: "The crate cracks open in the road. Whatever was in it is gone over the harbor wall in two long bounds. Pell looks at you, and at the empty crate, and walks away without a word.",
+      win: "On the dock, a ship's boat is waiting. Pell lets the crate down into it, and something inside purrs. She counts out your pay without being asked."
+    });
+    if (!ok) return;
+    S.coins += 15; renderSheet();
+    await mech("Pell pays you 15 gold.", "loot");
+    await say("\"And this,\" she says, \"because I like you.\" It's a little glass book in a waxed pouch: smuggled, by the smell of it.", "voice");
+    const free = Object.keys(SKILLS).filter(k => !hasSkill(k) && ["lock", "glass", "street", "cards"].includes(k));
+    if (free.length) {
+      const k = await choose(free.map(x => ({ key: x, label: SKILLS[x].book, tag: SKILLS[x].name + (SKILLS[x].craft ? " (crafting)" : ""), plain: true })));
+      await learnSkill(k, "Pell's bonus.");
+    }
+    S.cullet += 2; renderSheet();
+    await mech("She also leaves you 2 cullet from the bottom of the cart.", "loot");
+  }
+
+  async function hallVisit() {
+    S.visits.hall = true;
+    light("dark");
+    await say("The Hall of Records is where Sulmara keeps every pane of witness glass the wardens have ever pulled out of a window. The palace panes from the night the Magistrate vanished were brought here, broken, and nobody was allowed to mend them.");
+    const opts = [];
+    if (S.ykey) opts.push({ key: "key", label: "Use Ysolde's key on the side door" });
+    opts.push({ key: "pick", label: "Pick the lock", tag: "Sleight of Hand DC 14" + (hasSkill("lock") ? " · Lockcraft +2" : ""), plain: !!S.ykey });
+    opts.push({ key: "climb", label: "Climb to the clerestory", tag: "Athletics DC 13", plain: true });
+    const c = await choose(opts);
+    if (c === "pick") {
+      const r = await check({ label: "Sleight of Hand check", mod: 2 + (hasSkill("lock") ? 2 : 0), dc: 14, cta: "Pick" });
+      if (!r.ok) { await heatUp(2, "The pick snaps with a ping that carries."); await say("You do it the slow way, with the broken pick and your knife."); }
+    } else if (c === "climb") {
+      const r = await check({ label: "Athletics check", mod: 3, dc: 13, cta: "Climb" });
+      if (!r.ok) await hurt(1, 6, "bludgeoning", "You slip on the glass ledge and land on the way down.");
+    }
+    await say("Inside, rows of shelves, and on every shelf panes of glass in wooden frames, and in every pane, faintly, something moving: a woman brushing her hair, a dog asleep, a man counting coins over and over. On a table at the back, in a velvet tray, nine shards. Eight of them.");
+    const p = await shardPuzzle(hasSkill("lock"));
+    const passes = Math.floor(p.moves / 20);
+    if (passes) await heatUp(passes, "The watchman's lamp went past the windows " + passes + " time" + (passes > 1 ? "s" : "") + ".");
+    if (!p.ok) {
+      await say("You wrap the shards in your cloak and go out the way you came in. Halfway home a shard cuts through the cloth, and through you.");
+      await hurt(1, 4, "slashing", "");
+      await heatUp(2, "You left a trail of glass dust down three streets.");
+      await say("At the inn, by candlelight, it takes you until the bells to fit them into a frame. It holds, barely.");
+    }
+    S.ev.push("pane"); renderSheet();
+    await say("The pane shows the palace door at night. The moon is thin. A Glass Warden is holding the door open, and through it walks a shadow with nobody to cast it: long ears, narrow muzzle. A jackal. And at the very edge of the glass, holding up a lamp so the warden can see, a woman in a judge's robe with a chain of clear glass links across her chest.");
+    await mech("New evidence: The Witness Pane.", "loot");
+    if (vaelricSpeaks()) await voice("\"She let him in,\" Vaelric says. \"She held the lamp.\"");
+  }
+
+  async function towerVisit() {
+    S.visits.tower = true;
+    light("sun");
+    await say("The Lens Tower is where the Justiciar works, high above the Assize court, so that the sun-mirror can be aimed from her own window. Glaziers go in and out all day carrying panes on their backs.");
+    if (S.guise.includes("glaz")) await say("You take a pane on your back like the others and walk in behind them. Nobody looks at a glazier.");
+    else {
+      const r = await check({ label: "Stealth check", mod: 2, dc: 14, cta: "Slip in" });
+      if (!r.ok) await heatUp(2, "A clerk saw you on the stair.");
+    }
+    await say("Her office is clear glass on three sides and very bright. On her desk, weighted with a lump of green glass, is a warrant with your name on it. The ink is fresh. The date has been scraped and written over. Under the new date, the old one has been painted out with something milky that isn't paint: a glazier's resist, that burns away in strong light.");
+    await say("There's a lens rig on the windowsill, a row of hand-mirrors on swivels, for reading fine etching by sunlight. If you can get the sun onto the seal, the resist will burn off and show you what's underneath.");
+    const p = await beamPuzzle(LENS_TOWER, { title: "The lens rig", hint: "Steer the sunlight onto the warrant's seal.", target: "the warrant", forceLabel: "Hold it over a candle instead" });
+    if (p.turns > 12) await heatUp(1, "It took a while. Someone knocked.");
+    if (!p.ok) {
+      const r = await check({ label: "Investigation check", mod: 1, dc: 15, cta: "Hold it to the flame" });
+      if (!r.ok) { await say("The resist bubbles, and the vellum curls, and the old date burns away with it."); await heatUp(2, "The smell of burned vellum follows you down the stair."); return; }
+      await say("You warm it over the candle, slowly, slowly, and the resist goes clear.");
+    }
+    S.ev.push("warrant"); renderSheet();
+    await say("Under the resist, in Coyle's own hand, the warrant's real date: the day <b>before</b> the Magistrate vanished. She had your name on a warrant for his disappearance before he disappeared.");
+    await mech("New evidence: The Pre-Dated Warrant.", "loot");
+  }
+
+  async function cellsVisit() {
+    S.visits.cells = true;
+    light("torch");
+    await say("The Debtors' Cells are under the old customs house, where it's damp: one long corridor of cages, and in every cage someone who owes someone money. Tobbin is in the last one, the only cage with a blanket and a candle. A witness, not a prisoner. But the door is locked.");
+    if (S.guise.includes("chain")) await say("You swing the collector's chain and the turnkey doesn't even look up.");
+    else {
+      const opts = [{ key: "lie", label: "\"I'm here to collect.\"", tag: "Deception DC 15" }];
+      if (S.coins >= 10) opts.push({ key: "bribe", label: "Bribe the turnkey", tag: "10 gold", plain: true });
+      const c = await choose(opts);
+      if (c === "bribe") { S.coins -= 10; renderSheet(); await say("He bites the coin, finds it's gold, and finds something to do at the other end of the corridor."); }
+      else {
+        const r = await check({ label: "Deception check", mod: 1, dc: 15, cta: "Collect" });
+        if (!r.ok) { await heatUp(3, "The turnkey runs for the wardens."); await say("You get one minute at the bars before he comes back with them."); }
+      }
+    }
+    await tobbinTalk(false);
+    await outing(1, "The turnkey will remember a face.");
+  }
+
+  async function tobbinTalk(throughWall) {
+    if (S.turned) return;
+    if (S.boy === "jackal") {
+      await say((throughWall ? "Through the wall of your cell, a voice you know, which isn't Tobbin's at all: " : "Tobbin sits on his bunk and smiles at you with someone else's smile. His candle throws no shadow of him on the wall. ") + "\"Hello, warden's friend,\" says the Blackjackal.");
+      await say("\"I took the Magistrate,\" he says comfortably. \"He's below the city, in the dark, where the robbed can visit him. Coyle opened the door for me so she could have his chair. Now she needs someone to hang it on. I said I'd point at you. I wasn't going to be in the city at noon anyway. I hate that mirror.\"", "voice");
+      const c = await choose([
+        { key: "deal", label: "\"Tell the truth on the stand, and I'll put out the mirror.\"", tag: "Persuasion DC 14" + (hasEv("ledger") ? " · advantage" : "") },
+        { key: "no", label: "Walk away from him", plain: true }
+      ]);
+      if (c === "no") return;
+      const r = await check({ label: "Persuasion check", mod: 1, dc: throughWall ? 16 : 14, adv: hasEv("ledger"), cta: "Make the deal" });
+      if (r.ok) { S.turned = true; S.jackalDeal = true; renderSheet(); await say("He laughs. \"Done. Put out her sun, and I'll tell them everything, and then I'll take something of hers into the dark with me.\""); await mech("The Blackjackal will tell the truth at the Assize. You've promised to put out the sun-mirror.", "loot"); }
+      else await say("\"No,\" he says. \"I don't think you can.\" He blows out the candle, and the dark in the cell gets deeper than the candle explains.");
+      return;
+    }
+    await say((throughWall ? "Through the wall of your cell, very quietly, someone is crying. " : "") + "Tobbin looks thinner than he did at the crossroads" + (S.boy === "forgive" ? ", and your old cloak is folded on the end of his bunk" : "") + ". \"I have to,\" he says, before you've said anything. \"She bought my mother's debt. If I don't say it was you, she sells it on, and my sisters go into the cells for it.\"", "voice");
+    const c = await choose([
+      { key: "talk", label: "Talk him round", tag: "Persuasion DC " + (throughWall ? 17 : 15) + (hasEv("ledger") || S.boy === "forgive" ? " · advantage" : "") },
+      { key: "pay", label: "Offer to pay the debt yourself", tag: "40 gold", plain: true, show: S.coins >= 40 },
+      { key: "no", label: "Leave him", plain: true }
+    ]);
+    if (c === "no") { await say("He turns to the wall."); return; }
+    if (c === "pay") {
+      S.coins -= 40; renderSheet();
+      await say("You count forty gold through the bars. He stares at it. \"That's not even what she paid for it,\" he whispers. \"That's what it's worth.\"");
+    } else {
+      if (hasEv("ledger")) await say("You show him the ledger page: <i>Bought the Marl debt. The boy will say what he is told.</i> His face changes.");
+      const r = await check({ label: "Persuasion check", mod: 1, dc: throughWall ? 17 : 15, adv: hasEv("ledger") || S.boy === "forgive", cta: "Talk" });
+      if (!r.ok) { await say("\"I can't,\" he says. \"You don't know her.\" He blows out the candle."); return; }
+    }
+    S.turned = true; renderSheet();
+    await say("Tobbin wipes his nose on his sleeve. \"All right,\" he says. \"All right. I'll tell them. Somebody should.\"", "voice");
+    await mech("Tobbin will tell the truth at the Assize.", "loot");
+  }
+
+  // ---------- Parts XXIX–XXXIV ----------
+  async function partGlassCity() {
+    heading("XXIX", "The Glass City");
+    light("sun");
+    if (!S.gl) initAssize();
+    S.lw = false; renderSheet();
+    await say("Sulmara again. The towers of fused sand stand up out of the valley, green and amber and clear, and the sun comes off them so hard you have to look at the road. Last time you came here to rob it. You did.");
+    await say("At the city gate the first thing you see is your own face, etched on a pane of glass beside the door: not a good likeness, but the axe is very good. <b>WANTED BY THE ASSIZE. FOR THE THEFT OF THE EMBER ROOT, AND FOR THE DISAPPEARANCE OF HIS EXCELLENCY THE MAGISTRATE.</b>");
+    await say("You didn't do the second one.");
+    await mech("Heat is tracked on your sheet now. Being seen raises it. At 10, the Glass Wardens come for you. A night at the inn brings it down.");
+    const g = await choose([
+      { key: "crowd", label: "Go in with a caravan", tag: "Stealth DC 12" },
+      { key: "wall", label: "Climb the wall where it's broken", tag: "Athletics DC 13", plain: true },
+      { key: "walk", label: "Walk straight through the gate", tag: "Heat +3", plain: true }
+    ]);
+    if (g === "walk") await heatUp(3, "Half the gate turns to look at you.");
+    else {
+      const r = await check(g === "crowd" ? { label: "Stealth check", mod: 2, dc: 12, cta: "Blend in" } : { label: "Athletics check", mod: 3, dc: 13, cta: "Climb" });
+      if (!r.ok) await heatUp(2, g === "crowd" ? "A camel driver points at you and shouts something." : "You knock a glass finial off the wall, and it shatters in the street.");
+    }
+    await say("Inside, the city is quiet in the way a city is quiet when it's frightened. Warden mirrors flash from the rooftops, roof to roof, carrying messages faster than horses. Every window is witness glass, and every window is looking.");
+    await say("A herald in the Assize Square, reading from a pane: the Magistrate vanished from his palace eleven nights ago. In his absence the High Justiciar, <b>Hesper Coyle</b>, holds the city. The Glass Assize will sit in three days to try the one who took him. The witness has already been found: a boy named Tobbin, who swears he saw it done.");
+    if (vaelricSpeaks()) await voice("\"The Blackjackal said he'd pay the Magistrate a visit,\" Vaelric murmurs. \"It seems he did.\"");
+    light("torch");
+    await say("You find a bed where nobody asks: the Cracked Lantern, down a stair off the Street of Lenses, kept by a widow called Marrit Quell, who looks at your face, and at the poster in her own hand, and puts the poster in the stove.");
+    await say("\"I don't love the Justiciar,\" she says. \"She bought my husband's debt and sold it to the kilnyards, and they worked him till he dropped. You'll want clothes. My cousin's in the cellar.\"", "voice");
+    await say("The cousin is called Feeny and has a mouth full of pins. He has three things that will fit you, and he won't say where any of them came from.");
+    const G = [
+      { key: "glaz", label: "Glazier's leathers", tag: "10 gold · walk into the Lens Tower", cost: 10 },
+      { key: "chain", label: "A debt-collector's chain", tag: "12 gold · walk into the Debtors' Cells", cost: 12 },
+      { key: "veil", label: "A pilgrim's veil", tag: "8 gold · checkpoints, and the Temple jurors notice", cost: 8 }
+    ];
+    for (;;) {
+      const opts = G.filter(x => !S.guise.includes(x.key)).map(x => ({ key: x.key, label: "Buy the " + x.label.toLowerCase(), tag: x.tag, plain: true, show: S.coins >= x.cost }));
+      opts.push({ key: "done", label: "That's enough", plain: true });
+      const c = await choose(opts);
+      if (c === "done") break;
+      const x = G.find(y => y.key === c);
+      S.coins -= x.cost; S.guise.push(c); renderSheet();
+      await mech("Gain the " + x.label + ".", "loot");
+    }
+    await say("Marrit pours you something hot and sits down across from you. \"Two days before the Assize,\" she says. \"Coyle's going to burn you with that mirror at noon on the third, and the whole city's going to watch, and most of them will feel better afterwards. If you want to change their minds, you'll need more than a sorry face.\"", "voice");
+    await say("She counts it off on her fingers: the broken palace panes in the <b>Hall of Records</b>, which only open by night. The Justiciar's office up in the <b>Lens Tower</b>, which is all windows and needs the sun. Tobbin, in the <b>Debtors' Cells</b>. Her clerk Ormond Fisk, who drinks every day at the <b>Slag & Siphon</b>. And the <b>Vitreous Library</b>, \"where you can learn to be someone else, for a price.\"", "voice");
+    await meetTyra();
+    await mech("You have two days, morning, afternoon and night: six turns. You can't do everything. Choose.");
+    S.day = 1; S.slot = 0; renderSheet();
+  }
+
+  async function cityDay(day) {
+    S.day = day; renderSheet();
+    while (S.slot < 3) {
+      const night = S.slot === 2;
+      const h = el("div", "part-head sub", '<span class="num">Day ' + day + " · " + SLOTS[S.slot] + "</span>");
+      scrollNext = true; add(h);
+      light(night ? "dark" : "sun");
+      if (S.slot === 0 && !S.tyra.errand) await tyraErrand();
+      const v = S.visits;
+      const opts = [
+        { key: "library", label: "The Vitreous Library", tag: "skill books · research" + (v.library ? " · again" : ""), show: !night },
+        { key: "bar", label: "The Slag & Siphon", tag: "drink · cards · the clerk", show: S.slot > 0 },
+        { key: "tower", label: "The Lens Tower", tag: "needs the sun", show: !night && !v.tower },
+        { key: "hall", label: "The Hall of Records", tag: "only at night", show: night && !v.hall },
+        { key: "cells", label: "The Debtors' Cells", tag: "Tobbin", show: !v.cells },
+        { key: "ansel", label: "Escort Brother Orrin to the Temple", tag: "escort job · pays in a book", show: !night && !v.ansel },
+        { key: "pell", label: "Escort Pell's cargo to the harbor", tag: "escort job · pays gold and a book", show: night && !v.pell },
+        { key: "odd", label: "An odd job with Tyra", tag: "collecting · " + (3 - S.tyra.jobs.length) + " left", show: !v["odd" + day] && S.tyra.jobs.length < 3 && S.tyra.errand === "with" },
+        { key: "inn", label: night ? "Stay in at the Cracked Lantern" : "Spend it at the Cracked Lantern", tag: night ? "rest · craft · Heat −3" : "craft · buy · bathe", plain: true }
+      ];
+      const c = await choose(opts);
+      if (c === "library") await libraryVisit();
+      if (c === "bar") await barVisit();
+      if (c === "tower") await towerVisit();
+      if (c === "hall") await hallVisit();
+      if (c === "cells") await cellsVisit();
+      if (c === "ansel") await anselEscort();
+      if (c === "pell") await pellEscort();
+      if (c === "odd") { v["odd" + day] = true; await oddJob(); }
+      if (c === "inn") await innVisit(night);
+      else if (night) await say("You get back to the Cracked Lantern with the bells ringing for the small hours, and sleep in your boots for what's left of the night.");
+      if (night) await tyraReturns();
+      S.slot++; renderSheet(); save();
+    }
+  }
+
+  async function partDayOne() {
+    heading("XXX", "The First Day");
+    await cityDay(1);
+    S.slot = 0; renderSheet();
+  }
+
+  async function partDayTwo() {
+    heading("XXXI", "The Second Day");
+    if (S.slot >= 3) S.slot = 0;
+    await cityDay(2);
+  }
+
+  async function partTaking() {
+    heading("XXXII", "The Taking");
+    light("dark");
+    S.slot = 3; renderSheet();
+    await say("They come before dawn on the third day, the way Marrit said they would: a ring of hand-mirrors flashing on the rooftops all round the Street of Lenses, and then boots on the stair.");
+    if (S.heat >= 7) {
+      await say("They don't have to search. The whole city has been watching you for two days, and the mirrors walked them straight to your door.");
+      await juryShift("M", -1, "The Merchant Lords heard you ran the city ragged.");
+    } else if (S.heat <= 3) {
+      await say("They kick in three wrong doors first. You could be out the back window and over the roofs before they find the right one.");
+      const c = await choose([
+        { key: "give", label: "Walk down the stair and give yourself up" },
+        { key: "run", label: "Go out the window", tag: "Coyle will burn the inn", plain: true }
+      ]);
+      if (c === "run") {
+        await say("From the next roof over, you watch them drag Marrit into the street. A warden lifts a lamp to the inn's thatch. You come back down.");
+        await juryShift("T", -1, "The Temple heard you ran and let an innkeeper pay for it.");
+      } else {
+        await say("You meet them on the stair with your hands open. The sergeant is so surprised he forgets to hit you.");
+        await juryShift("T", 1, "The Temple of the Clear Flame heard you came quietly.");
+      }
+    } else await say("They find you on the second floor, still pulling your boots on.");
+    if (S.chased) await juryShift("M", -1, "The Merchant Lords heard you fought wardens in the streets.");
+    if (S.guise.includes("veil")) await juryShift("T", 1, "The Temple heard a thief went about the city as a pilgrim, and took it as a kind of penance.");
+    S.stripped = true;
+    await say("They take the axe" + (S.shield ? ", the shield" : "") + " and your pack and lay them on a cloth, one by one, very carefully, the way you'd handle evidence. That's what they are now.");
+    if (S.axe) await voice("As the warden lifts the axe, Vaelric whispers, \"I'll be on the table. Come and get me.\"");
+    renderSheet();
+    await say("Your cell is under the Assize court, so close to the sun-mirror's focus that the ceiling is scorched black in a ring.");
+    await say("Tyra isn't taken. You catch one glimpse of her going over the back wall, coat flapping, and you're glad.");
+    if (S.tyra.aff >= 2) await say("Late in the night, something taps on the grate in your cell ceiling. A pear comes through it, peeled in one curl, and Tyra's voice, very low: \"Noon. Look for me.\"");
+    if (!S.turned) await tobbinTalk(true);
+    await say("You sleep, somehow. When you wake, the light in the cell is already turning white.");
+  }
+
+  async function partAssize() {
+    heading("XXXIII", "The Glass Assize");
+    light("sun");
+    S.trial = true; renderSheet();
+    await say("The Assize court is a bowl of glass steps open to the sky, packed with half the city. In the center, a ring of bare stone scorched white: the focus. Above it, on an iron arm the size of a ship's mast, the sun-mirror, a dish of polished glass forty feet across, angled toward the sky and waiting for noon.");
+    await say("On the highest step sits <b>Hesper Coyle</b>, High Justiciar of Sulmara. She's younger than you expected, and very still, with a chain of clear glass links across her robe that throws little rainbows when she breathes. Behind her, twelve jurors on four benches: the Glaziers' Guild, the Merchant Lords, the Temple of the Clear Flame, and the Debtors' Commons.");
+    await say("\"You will be judged by the glass,\" she says. Her voice is soft and carries to the last step. \"As we all are.\"", "voice");
+    await mech("The jury's lean is on your sheet. You need 7 of 12 jurors to walk out of the focus." + (knows("rolls") ? " You read the Assize Rolls, so you know which arguments move which bench." : " You don't know which bench each argument will move."));
+    let objection = hasSkill("law");
+    const law = hasSkill("law") ? 2 : 0;
+    const used = new Set();
+    // An unrebutted charge costs votes, unless you spend your objection.
+    async function stands(fs, why) {
+      if (objection) {
+        const c = await choose([{ key: "obj", label: "Object!", tag: "Jurisprudence · once" }, { key: "no", label: "Let it stand", plain: true }]);
+        if (c === "obj") { objection = false; await say("You cite the rule, chapter and verse. Coyle's mouth tightens. \"Struck,\" she says."); return; }
+      }
+      for (const f of fs) await juryShift(f, -1, why);
+    }
+    function evOpts(tagFor) {
+      return ["pane", "ledger", "warrant"].filter(k => hasEv(k) && !used.has(k)).map(k => ({ key: "ev-" + k, label: "Show the court " + EVIDENCE[k].name.replace(/^The /, "the "), tag: tagFor[k] || "", plain: true }));
+    }
+
+    // Charge 1: the theft.
+    await say("<b>The first charge:</b> \"That the accused, with others, broke the Magistrate's vault and carried off the Ember Root, an heirloom of his house.\"");
+    const c1 = await choose([
+      { key: "admit", label: "\"I did. And I'd do it again.\"", tag: "confess" + tagF(["T", "M"]) },
+      { key: "argue", label: "\"It was stolen first. His grandfather took it.\"", tag: "Persuasion DC 14" + (law ? " +2" : "") + tagF(["G", "M"]), plain: true },
+      ...evOpts({}),
+      { key: "quiet", label: "Say nothing", plain: true }
+    ]);
+    if (c1 === "admit") { await say("The court goes very quiet. Someone on the Temple bench says, \"Clear flame,\" softly, the way you'd say amen."); await juryShift("T", 1, "The Temple loves a confession."); await juryShift("M", -1, "The Merchant Lords don't love a thief."); }
+    else if (c1 === "argue") {
+      const r = await check({ label: "Persuasion check", mod: 1 + law + (hasBook("Warden's Journal") ? 2 : 0), dc: 14, cta: "Argue" });
+      if (r.ok) { await say("You tell them about the labyrinth, and the warden who died in it, and the tree his heartwood came from. Some of the Glaziers nod. Their guild remembers the old wardens."); await juryShift("G", 1, "The Glaziers remember."); }
+      else await stands(["M"], "Coyle smiles. \"So the accused admits it, and blames a dead man.\"");
+    } else if (c1.startsWith("ev-")) { used.add(c1.slice(3)); await say("Coyle glances at it. \"That has nothing to do with the vault.\""); await juryShift("M", -1, "You wasted the court's time."); }
+    else await stands(["M"], "The charge stands.");
+
+    // Charge 2: the palace.
+    await say("<b>The second charge:</b> \"That on the night of the new moon, the accused entered the Magistrate's palace by the main door, and he was not seen again.\"");
+    const c2 = await choose([
+      ...evOpts({ pane: "witness glass" + tagF(["G", "T"]) }),
+      { key: "alibi", label: "\"I was in a drowned castle a hundred miles away.\"", tag: "Persuasion DC 16" + (law ? " +2" : ""), plain: true },
+      { key: "quiet", label: "Say nothing", plain: true }
+    ]);
+    if (c2 === "ev-pane") {
+      used.add("pane");
+      await say("Two glaziers carry the mended pane down into the focus and hold it up to the sky. Light goes through it, and on the white stone, huge, the palace door appears: the warden holding it, the jackal's shadow going through, and at the edge, a lamp in a hand with a chain of glass links across the wrist.");
+      await say("Every face in the court turns, slowly, to the chain of glass links across Coyle's chest.");
+      await juryShift("G", knows("glass") ? 2 : 1, "The Glaziers believe what glass has seen.");
+      if (knows("glass")) await juryShift("G", 1, "Mended glass, as the old book says, is truer still.");
+      await juryShift("T", 1, "The Temple saw the lamp.");
+    } else if (c2.startsWith("ev-")) { used.add(c2.slice(3)); await stands(["G"], "It doesn't answer the charge."); }
+    else if (c2 === "alibi") {
+      const r = await check({ label: "Persuasion check", mod: 1 + law, dc: 16, cta: "Argue" });
+      if (r.ok) await juryShift("G", 1, "It's such a strange story that one of the Glaziers believes it.");
+      else await stands(["G", "T"], "Nobody believes in drowned castles.");
+    } else await stands(["G", "T"], "The charge stands.");
+
+    // Charge 3: conspiracy.
+    await say("<b>The third charge:</b> \"That the accused conspired with the outlaw called the Blackjackal to murder the Magistrate, and that the Justiciar's warrant for it was lawfully sworn after the deed.\"");
+    if (S.secret) await say("(You did hand a boy to the Blackjackal once. You try not to think about that.)");
+    const c3 = await choose([
+      ...evOpts({ warrant: "seal and date" + tagF(["M", "T"]) }),
+      { key: "deny", label: "\"I've never met the Blackjackal.\"", tag: S.secret || S.boy === "jackal" ? "a lie · Deception DC 15" : "Persuasion DC 15", plain: true },
+      { key: "quiet", label: "Say nothing", plain: true }
+    ]);
+    if (c3 === "ev-warrant") {
+      used.add("warrant");
+      await say("You ask that the warrant be held up to the sun. The resist is already gone. The real date is there for anyone on the Merchant benches to read: the day <b>before</b>.");
+      await say("A Merchant Lord stands up without meaning to. \"She swore it the day before,\" he says, to nobody. \"She knew.\"", "voice");
+      await juryShift("M", 2, "The Merchant Lords believe in dates.");
+      await juryShift("T", 1, "The Temple hates a lie under seal.");
+    } else if (c3.startsWith("ev-")) { used.add(c3.slice(3)); await stands(["M"], "It doesn't answer the charge."); }
+    else if (c3 === "deny") {
+      const lie = S.secret || S.boy === "jackal";
+      const r = await check({ label: (lie ? "Deception" : "Persuasion") + " check", mod: 1 + law, dc: 15, cta: "Deny it" });
+      if (r.ok) await juryShift(lie ? "M" : "T", 1, "They believe you.");
+      else await stands(["M", "T"], "Coyle lets the silence go on until it says everything for her.");
+    } else await stands(["M", "T"], "The charge stands.");
+
+    // The witness.
+    await say("<b>The witness.</b> " + (S.boy === "jackal" ? "Tobbin comes down the glass steps into the court. He walks like someone who's never been in a hurry in his life. At noon nothing casts much shadow, but he casts none at all." : "Tobbin comes down the glass steps in a clean shirt someone has given him, and won't look at you."));
+    if (S.turned) {
+      if (S.boy === "jackal") {
+        await say("He puts his hand on the witness glass and smiles at Coyle. \"I took the Magistrate,\" says the Blackjackal, in Tobbin's mouth, to the whole city. \"She opened the door. She held the lamp. She paid the warden forty crowns. Ask him.\" A warden in the front row takes his helm off and sits down on the step and puts his face in his hands.");
+      } else {
+        await say("He puts his hand on the witness glass, and it shakes. \"I never saw anything,\" he says. \"She told me what to say. She bought my mother's debt, and she said she'd sell my sisters into the cells. I'm sorry.\" The last part is to you.");
+      }
+      await juryShift("D", 2, "The Debtors' Commons know exactly what a bought debt is.");
+      await juryShift("G", 1, "The witness glass didn't cloud. He's telling the truth.");
+    } else {
+      await say("Coyle has him say it, piece by piece. You may answer each piece, with evidence or without.");
+      const lines = [
+        { t: "\"I was in the city that night, on the Street of Lenses.\"", lie: false },
+        { t: "\"I saw the accused go in at the palace door with the axe.\"", lie: "pane", win: ["G", "D"] },
+        { t: "\"The accused robbed the vault. I was there.\"", lie: false },
+        { t: "\"I never met the Justiciar before this week. Nobody's paid me anything.\"", lie: "ledger", win: ["D", "M"] },
+        { t: "\"The accused said the Blackjackal would make them rich.\"", lie: "warrant", win: ["M"] }
+      ];
+      for (const L of lines) {
+        await say(L.t, "voice");
+        const opts = [{ key: "stand", label: "Let it stand", plain: true }];
+        ["pane", "ledger", "warrant"].filter(hasEv).forEach(k => opts.push({ key: k, label: "Hold up " + EVIDENCE[k].name.replace(/^The /, "the "), plain: true }));
+        opts.push({ key: "press", label: "Press him", tag: "Insight DC 14", plain: true });
+        const c = await choose(opts);
+        if (c === "stand") { if (L.lie) await juryShift("D", -1, "It goes unanswered."); continue; }
+        if (c === "press") {
+          const r = await check({ label: "Insight check", mod: 2, dc: 14, cta: "Press" });
+          if (r.ok && L.lie) { await say("He stumbles over it and has to start again."); await juryShift("D", 1, "The Commons saw him stumble."); }
+          else if (r.ok) await say("He doesn't stumble. That part's true.");
+          else await say("He says it again, more smoothly.");
+          continue;
+        }
+        if (c === L.lie) {
+          await say(c === "pane" ? "\"The palace glass saw the door that night,\" you say. \"It didn't see me.\" Tobbin looks at the pane and goes white." : c === "ledger" ? "You read out the ledger: <i>Bought the Marl debt. The boy will say what he is told.</i> Tobbin's name is Tobbin Marl. Everybody in the court knows it." : "\"The warrant for my arrest is dated the day before the Magistrate vanished,\" you say. \"Who told the Justiciar I'd be rich?\" Tobbin opens his mouth and nothing comes out.");
+          for (const f of L.win) await juryShift(f, 1, "Caught in a lie.");
+        } else {
+          await say(L.lie ? "It's the right lie, but the wrong evidence. Coyle doesn't even bother to answer." : "Coyle raises one eyebrow. \"The witness is telling the truth,\" she says, \"and the accused knows it.\"");
+          await juryShift("D", -1, "You're grasping.");
+        }
+      }
+    }
+    // Closing.
+    await say("<b>Your last word.</b> The sun is nearly overhead. The mirror's arm creaks as it turns to follow it.");
+    if (hasEv("ledger") && !used.has("ledger")) {
+      const c = await choose([{ key: "ledger", label: "Read the ledger aloud to the Commons", tag: "forty crowns to the door-warden" + tagF(["D", "M"]) }, { key: "no", label: "Keep it", plain: true }]);
+      if (c === "ledger") { used.add("ledger"); await say("<i>Paid the night warden of the palace door forty crowns.</i> On the Commons bench, a woman says, \"Forty crowns. That's my house.\""); await juryShift("D", 1, "The Commons know whose money it was."); await juryShift("M", 1, "The Merchant Lords hate a bad price."); }
+    }
+    const ev = ["pane", "ledger", "warrant"].filter(hasEv).length + (S.turned ? 1 : 0);
+    const r = await check({ label: "Persuasion check: your closing", mod: 1 + law + ev, dc: 15, cta: "Speak" });
+    if (r.ok) {
+      await say("You don't say you're innocent. You're not. You say that a thief is standing in the focus and a thief is sitting on the top step, and only one of them is about to be burned for it.");
+      const low = Object.keys(FACTIONS).sort((a, b) => S.jury[a] - S.jury[b]).slice(0, 2);
+      for (const f of low) await juryShift(f, 1, "It lands.");
+    } else await say("You say it badly. You can hear yourself saying it badly. The mirror creaks on.");
+    await say("The jurors put their hands on the glass rail in front of their benches, one by one: clear for innocent, a black glove for guilty.");
+    const v = votes();
+    S.verdict = v >= 7 ? "free" : "guilty"; renderSheet();
+    await mech(v + " of 12 clear hands. " + (v >= 7 ? "Not guilty." : "Guilty."), v >= 7 ? "loot" : "hurt");
+  }
+
+  async function partSunMirror() {
+    heading("XXXIV", "The Sun-Mirror");
+    light("sun");
+    S.trial = false; renderSheet();
+    const free = S.verdict === "free";
+    let wardens = 2;
+    if (free) {
+      await say("The court roars. Coyle doesn't move. Then she stands, and the glass chain across her chest flashes, and the court goes quiet again.");
+      await say("\"The glass will judge,\" she says. \"Not a bench of debtors.\" She puts her hand on the brass lever at the top of the steps, the one that turns the mirror, and the great dish groans round on its arm toward the focus. Toward you.", "voice");
+      if (knows("sight")) {
+        await say("\"The Law of Clear Sight,\" you shout, loud enough for the back row. \"Any accused standing in the focus may demand the glass be turned on the accuser. I demand it.\"");
+        await say("It's in the oldest rolls. Half the court knows it. The wardens on the steps look at each other, and then, one by one, they take their hands off their batons.");
+        wardens = 0;
+      }
+    } else {
+      await say("Two wardens chain your wrists to the iron ring in the center of the focus. The stone is already hot through your boots. Above you, the mirror groans round on its arm toward you.");
+      await say("Coyle doesn't look triumphant. She looks bored. \"Noon,\" she says.", "voice");
+      const opts = [];
+      if (S.tyra.key) opts.push({ key: "tyra", label: "Look for Tyra" });
+      if (S.turned) opts.push({ key: "tob", label: S.boy === "jackal" ? "Look for the Blackjackal" : "Look for Tobbin" });
+      if (S.thread) opts.push({ key: "thread", label: "Snap Varro's violet thread", plain: !!opts.length });
+      opts.push({ key: "pick", label: "Work the shackle with a pin", tag: "Sleight of Hand DC 13" + (hasSkill("lock") ? " · Lockcraft +2" : ""), plain: !!opts.length });
+      opts.push({ key: "rip", label: "Rip the ring out of the stone", tag: "Athletics DC 16", plain: true });
+      const c = await choose(opts);
+      if (c === "tyra") await say("She's in the front row of the Commons bench, eating a pear. She stands up, throws something that flashes, and the shackle key from her collection lands at your feet. \"Forty-two,\" she calls. \"I want it back.\"");
+      else if (c === "tob") await say(S.boy === "jackal" ? "The Blackjackal is standing in the only shadow left in the court, under the jurors' bench. He flicks a coin. It hits your shackle, and the shackle opens as if it were never shut." : "Tobbin is there, at the foot of the steps, with a warden's key he lifted on the way out of the witness box. He throws it underhand, badly. You catch it anyway.");
+      else if (c === "thread") { S.thread = false; renderSheet(); await say("The thread snaps, and a shadow drops over you out of a clear sky, violet at the edges. For the space of a breath nobody can see you, and the chains slip off wrists that aren't quite there."); }
+      else {
+        const r = await check(c === "pick" ? { label: "Sleight of Hand check", mod: 2 + (hasSkill("lock") ? 2 : 0), dc: 13, cta: "Pick" } : { label: "Athletics check", mod: 3, dc: 16, cta: "Heave" });
+        if (!r.ok) { await hurt(2, 6, "fire", "The light comes down on you. The first touch of the mirror is like being slapped by the sun."); await say("You rip free with your skin smoking, out of pure stubbornness."); }
+        else await say(c === "pick" ? "The pin turns, the shackle drops, and you're out of the focus before the light is." : "The ring comes out of the stone with a crack like a bone, chain and all.");
+      }
+      await say("The court is screaming. Coyle's hand is on the lever.");
+    }
+    if (wardens) {
+      await say("Two Glass Wardens come down the steps at you.");
+      foeStart("Glass Wardens", 2, { unit: "warden|wardens" });
+      let left = 2;
+      while (left > 0) {
+        const opts = [{ key: "hit", label: "Fight bare-handed", tag: "AC 13" }];
+        if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "takes one down", plain: true });
+        const c = await choose(opts);
+        if (c === "flask") { S.flasks--; renderSheet(); left--; foeHit(1); await say("The flask bursts in a warden's face and he goes down the steps backwards."); continue; }
+        const a = await check({ label: "Attack roll", mod: 4, dc: 13, target: "AC", cta: "Strike" });
+        if (a.ok) { const n = Math.min(left, await comboHeads(left - 1)); left -= n; foeHit(n); await say("You take the baton off a warden and give it back to him, hard."); }
+        else await hurt(1, 6, "bludgeoning", "A baton catches you across the ribs.");
+      }
+      foeEnd();
+    }
+    // The evidence table.
+    await say("Your gear is still laid out on the evidence cloth at the foot of the steps: " + (S.axe ? "the axe, " : "") + (S.shield ? "the shield, " : "") + "your pack.");
+    const g = await choose([
+      { key: "gear", label: "Dive for your gear", tag: "she gets a free shot with the mirror" },
+      { key: "mirror", label: "Go straight for the mirror rig", tag: "fight with a warden's baton", plain: true }
+    ]);
+    let armed = false;
+    if (g === "gear") {
+      const s = await check({ label: "Dexterity save: the beam sweeps the steps", mod: 2, dc: 13, cta: "Dive" });
+      if (!s.ok) await hurt(2, 6, "fire", "The light rakes across you as you roll.");
+      S.stripped = false; armed = true; renderSheet();
+      await say("You come up with " + (S.axe ? "the axe in your hand" : "your knife") + (S.shield ? " and the shield on your arm" : "") + ".");
+      if (S.axe) await voice(vaelricSpeaks() ? "\"There you are,\" Vaelric says." : "The blade hums in your hand, the way it does when it's glad.");
+    }
+    // The mirror rig: turn the beam on her.
+    await say("The sun-mirror is aimed by a lattice of smaller mirrors in the rig beneath it, each one on a swivel. If you can turn them right, the beam goes where you choose: onto the top step, onto Coyle." + (S.jackalDeal ? " And you made a promise about this mirror." : ""));
+    const p = await beamPuzzle(SUN_MIRROR, { title: "The sun-mirror rig", hint: "Steer the noon beam onto Coyle's seat at the top of the steps (◎).", target: "the Justiciar's seat", limit: 16, forceLabel: "Smash the rig with a chair" });
+    const fx = { mantle: true, beam: !p.ok };
+    if (p.ok) {
+      await say("The last mirror swings over, and the beam comes off the focus and walks up the glass steps like something alive, and lands on the top step. On her. The glass chain across her chest goes white, then red, then cracks, link by link, like ice in spring.");
+      fx.mantle = false;
+      if (S.jackalDeal) await say("Then you put your boot through the master lens, and the beam goes out like a snuffed candle, and the whole court is suddenly in ordinary daylight. Somewhere, the Blackjackal laughs.");
+    } else {
+      await say("You smash a chair into the rig. Mirrors go flying, and the beam goes wild, raking the empty steps, the sky, the jurors' benches. It will come round again. It doesn't care who it finds.");
+      if (S.jackalDeal) await say("You break the master lens on the second swing. The beam dies. Somewhere, the Blackjackal laughs.");
+      if (S.jackalDeal) fx.beam = false;
+    }
+    await coyleFight(fx, armed);
+    await assizeEnding();
+  }
+
+  async function coyleFight(fx, armed) {
+    light("sun");
+    S.gemsSpent = false; renderSheet();
+    await say("Coyle comes down the steps herself. She has a gavel of solid glass, long as a mace, and she holds it like someone who has used it before." + (fx.mantle ? " Her chain of glass links glitters across her chest: a mantle of mirrored glass, and anything you throw at it, light or spell, comes back at you." : " What's left of her glass chain hangs off her in red, cracked links."));
+    foeStart("Hesper Coyle, the Glass Judge", 40);
+    const used = {};
+    const ac = () => fx.mantle ? 15 : 13;
+    const atkMod = armed ? (S.dull ? 4 : 5) : 4;
+    const dmg = armed ? (S.axe ? [1, 8, S.dull ? 2 : 3, "Axe"] : [1, 6, 2, "Knife"]) : [1, 6, 2, "Baton"];
+    const crack = async () => { if (fx.mantle) { fx.mantle = false; await mech("Her glass mantle cracks right across. Your spells will reach her now, and she's easier to hit (AC 13).", "loot"); } };
+    const spell = async (n, s, bonus, label) => {
+      if (fx.mantle) {
+        let x = bonus; for (let i = 0; i < n; i++) x += d(s);
+        const half = Math.floor(x / 2);
+        FOE.hp = Math.max(0, FOE.hp - half); renderFoe(); foePop("−" + half);
+        await mech(label + ": the mirrored mantle splits it. She takes " + half + " (" + FOE.hp + " HP left).");
+        await hurt(1, 4, "radiant", "The rest comes back off her chest at you.");
+      } else await foeBurst(n, s, bonus, label);
+    };
+    let round = 0;
+    while (FOE.hp > 0) {
+      round++;
+      const opts = [{ key: "hit", label: armed && S.axe ? "Swing the axe" : armed ? "Slash with the knife" : "Swing the baton", tag: "AC " + ac() }];
+      if (armed && S.shield && fx.mantle) opts.push({ key: "slam", label: "Shield Slam the mantle", tag: "contest · cracks it", plain: true });
+      if (armed && S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant" + (fx.mantle ? " · reflects" : ""), plain: true });
+      if (hasBook("Scroll of Moonfire") && !used.moon && armed) opts.push({ key: "moon", label: "Read the Moonfire scroll", tag: "2d10 radiant" + (fx.mantle ? " · reflects" : ""), plain: true });
+      if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "2d6 · cracks the mantle", plain: true });
+      if (S.lens && armed) opts.push({ key: "lens", label: "Throw the sun with the burning lens", tag: "3d6 fire", plain: true });
+      if (S.tyra.aff >= 1 && !used.tyra) opts.push({ key: "tyra", label: "Call for Tyra", tag: "2d6 + 2, no roll", plain: true });
+      if (S.hp < S.maxHp) opts.push(...await healOpts(" · costs your turn"));
+      const c = await choose(opts);
+      if (c === "tyra") { used.tyra = true; await say("\"Finally,\" says Tyra, from somewhere behind Coyle, and Coyle arches and shrieks, and there's a long knife in the back of her shoulder."); await foeBurst(2, 6, 2, "Tyra's knife"); }
+      else if (c === "moss" || c === "potion" || c === "elixir") await useHeal(c);
+      else if (c === "slam") {
+        const ok = await contest({ label: "Shield Slam", mod: 5, foe: "Coyle", foeMod: 2, cta: "Slam" });
+        if (ok) { await say("You drive the shield into her chest, and the glass links shatter against the steel."); await crack(); }
+        else await say("She turns it on her gavel and you skid past her.");
+      } else if (c === "gems") { S.gemsSpent = true; renderSheet(); light("gems"); await say("The gems flare red."); await spell(2, 6, 0, "The gems"); light("sun"); }
+      else if (c === "moon") { used.moon = true; await say("Silver flame falls out of a clear sky."); await spell(2, 10, 0, "Moonfire"); }
+      else if (c === "flask") { S.flasks--; renderSheet(); await say("The flask bursts against her chest."); await foeBurst(2, 6, 0, "Shatter flask"); await crack(); }
+      else if (c === "lens") { S.lens--; renderSheet(); await say("You catch the noon sun in the lens and throw it at her, a point of white so bright it has a sound."); await foeBurst(3, 6, 0, "Burning lens"); }
+      else {
+        const a = await check({ label: "Attack roll", mod: atkMod, dc: ac(), target: "AC", cta: "Strike" });
+        if (a.ok) {
+          const before = FOE.chain;
+          await foeStrike(dmg[0], dmg[1], dmg[2], dmg[3]);
+          if (before >= 3 && fx.mantle) await crack();
+        } else await say("The glass gavel turns the blow aside.");
+      }
+      if (FOE.hp <= 0) break;
+      if (FOE.hp <= 10 && !fx.low) {
+        fx.low = true;
+        await say("She's bleeding from a dozen small cuts, her own glass. She looks up at the mirror.");
+      }
+      const hit = await enemyAttack({ label: "The glass gavel", foe: "Coyle", bonus: 5, cta: "Brace" });
+      if (hit && S.tyra.aff >= 3 && !used.block) { used.block = true; await say("Tyra is suddenly between you, and the gavel comes down on her raised forearm instead of your skull. She swears, inventively, and doesn't move. \"That's one,\" she says. \"You owe me.\""); }
+      else if (hit) await hurt(1, 8, "bludgeoning", "The gavel comes down like a falling window.");
+      if (fx.beam && round % 2 === 0) {
+        const s = await check({ label: "Dexterity save: the loose beam comes round", mod: 2, dc: 13, cta: "Dodge" });
+        if (!s.ok) await hurt(2, 6, "fire", "The wild beam crosses the steps, and you're on them.");
+        else await say("The beam passes over you so close your hair smokes.");
+      }
+    }
+    foeEnd();
+  }
+
+  async function assizeEnding() {
+    light("dusk");
+    await say("Coyle goes down on the glass steps on one knee, and the gavel rolls away from her, step by step, all the way down to the focus, ringing like a bell each time it lands.");
+    if (S.jackalDeal) {
+      await say("The mirror is dark. For the first time in two hundred years there's a shadow in the Assize court at noon, and it's long, and it has ears.");
+      await say("The Blackjackal steps out of it, wearing Tobbin like a coat, and puts his hand on Coyle's shoulder. \"I promised,\" he says to you, \"to take something of hers into the dark.\" And he takes all of her.", "voice");
+      await say("When the shadow is gone, there's a clear glass chain on the steps, and nobody wearing it. A moment later Tobbin is sitting there too, blinking, his own shadow back at his feet. \"Did I do something?\" he asks.");
+      S.jackalTook = true;
+    } else {
+      const c = await choose([
+        { key: "spare", label: "Chain her in the focus and let the court decide", tag: "mercy" },
+        { key: "mirror", label: "Let the mirror have her", plain: true }
+      ]);
+      S.coyle = c;
+      if (c === "spare") {
+        await say("You drag her down into the focus and put the shackles on her yourself. The court is very quiet. The Debtors' Commons are the first to stand up. Then the Temple. \"Not with the mirror,\" a priest says. \"Not ever again.\"");
+      } else {
+        await say("You step back. She looks at you, and then up, and the mirror finds her. It isn't fast. When it's done there's a woman of clear glass kneeling on the top step, and you can see her heart inside it, stopped.");
+        if (vaelricSpeaks()) await voice("\"The glass judged,\" Vaelric says, without any pleasure at all.");
+      }
+    }
+    if (S.turned && S.boy !== "jackal") await say("Tobbin finds you at the bottom of the steps. He doesn't say anything. He just stands next to you while the city decides what to do with itself.");
+    if (S.tyra.love) await say("Tyra sits down on the step beside you, cradling her bruised arm, and takes your hand without asking, and keeps it. \"I missed my boat,\" she says. \"Obviously.\"");
+    else if (S.tyra.aff >= 2) await say("Tyra sits down on the step beside you and hands you half a pear. \"Not bad,\" she says. \"For a poster.\"");
+    else await say("You look for Tyra in the crowd. You don't see her. There's a pear on the evidence cloth that wasn't there before.");
+    await say("By evening, the Merchant Lords have voted to pay you restitution for wrongful charges, which is very funny, given everything. Nobody laughs except you.");
+    S.coins += 30; renderSheet();
+    await mech("Gain 30 gold from the city treasury.", "loot");
+    await say("And Brother Orrin sends a boy to the Cracked Lantern with a glass page wrapped in a cloth. It's from the oldest rolls, a map etched so fine you have to tilt it to the lamp: Sulmara, and under it, a second Sulmara. Streets, and squares, and a palace, all of it under the sand.");
+    await say("Under the page, in Orrin's square, careful hand: <i>The Blackjackal took the Magistrate below. This is where below is.</i>");
+    S.gl = false; S.stripped = false; renderSheet();
     await endCard();
+  }
+
+  // ---------- Tyra Quillon ----------
+  // A laid-back rogue who helps with odd jobs, errands and collecting. Fondness 0-5 grows with
+  // time spent together and how you answer her; it decides how much she risks for you later.
+  async function fond(n, why) {
+    S.tyra.aff = Math.max(0, Math.min(5, S.tyra.aff + n)); renderSheet();
+    if (n > 0) await mech(why + " Tyra's fondness +" + n + ", to " + S.tyra.aff + " of 5.", "loot");
+    else if (n < 0) await mech(why + " Tyra's fondness " + n + ", to " + S.tyra.aff + " of 5.", "hurt");
+  }
+  async function meetTyra() {
+    await say("There's a woman with her boots up on the next table, peeling a pear with a knife much too long for peeling pears. Dark hair cut short with something sharp, a leather coat with more pockets than coat, and a way of sitting that says she could be across the room before you finished standing.");
+    await say("\"Tyra Quillon,\" she says, without getting up. \"Like the crossguard. My mother made swords.\" She eats a slice of pear off the knife. \"Marrit says you're the one on the posters. The posters don't do you justice. The axe, though, they got right.\"", "voice");
+    await say("\"I do odd jobs. Collecting, mostly: debts, keys, cats, things people left in places they shouldn't have. I'm cheap, I'm good, and I'm bored. Two days till they burn you? That's the most interesting thing that's happened in this city all year.\"", "voice");
+    const c = await choose([
+      { key: "deal", label: "\"Then you're hired.\"" },
+      { key: "joke", label: "\"Are you always this cheerful about people burning?\"", plain: true },
+      { key: "why", label: "\"What's in it for you?\"", plain: true }
+    ]);
+    if (c === "joke") { await say("\"Only on weekdays,\" she says, and grins. It's a good grin. Slightly crooked."); await fond(1, "She likes being answered back."); }
+    else if (c === "why") await say("\"Gold. Fun. Coyle had my cousin flogged for a debt that wasn't his.\" She shrugs. \"Mostly fun.\"");
+    else await say("\"Course I am.\" She swings her boots down. \"I'll be around. I'm always around.\"");
+    await mech("Tyra Quillon is with you. Each morning you can send her on an errand, and you can spend a turn on an odd job with her.", "loot");
+  }
+
+  async function tyraErrand() {
+    const c = await choose([
+      { key: "with", label: "Ask Tyra to stay at your side today", tag: "she fights with you" },
+      { key: "cullet", label: "Send her collecting cullet in the kilnyards", tag: "+2 cullet", plain: true },
+      { key: "herbs", label: "Send her to the Temple gardens", tag: "+2 herb bundles", plain: true },
+      { key: "fence", label: "Have her fence something from your pack", tag: "1d6 + 4 gold", plain: true },
+      { key: "watch", label: "Have her watch the wardens", tag: "Heat −2 tonight", plain: true }
+    ]);
+    S.tyra.errand = c; S.tyra.helped = false; renderSheet();
+    await say({ with: "\"Bodyguard. Fancy,\" Tyra says, and falls into step beside you, hands in her pockets.", cullet: "\"Glass. Got it.\" She's gone before you see which way.", herbs: "\"The priests won't miss it,\" she says. \"Priests never count.\"", fence: "She weighs the trinket you give her on her palm. \"I know a man,\" she says. \"I always know a man.\"", watch: "\"I'll be on the roofs,\" she says. \"Don't look up. You'll give me away.\"" }[c]);
+  }
+
+  async function tyraReturns() {
+    const e = S.tyra.errand;
+    if (!e) return;
+    S.tyra.errand = null;
+    if (e === "with") { await fond(1, "A whole day side by side."); return; }
+    if (e === "cullet") { S.cullet += 2; renderSheet(); await mech("Tyra drops a clinking sack on your bed: 2 cullet.", "loot"); }
+    if (e === "herbs") { S.bundles += 2; renderSheet(); await mech("Tyra comes back smelling of sage, with 2 herb bundles.", "loot"); }
+    if (e === "fence") { const g = d(6) + 4; S.coins += g; renderSheet(); await mech("Tyra's man paid " + g + " gold. She hands you all of it, which surprises you.", "loot"); }
+    if (e === "watch") await heatUp(-2, "Tyra spent the day turning warden mirrors the wrong way.");
+  }
+
+  // In a mob fight, Tyra (if she's with you today) takes one of them down before you've moved.
+  async function tyraTakes(left) {
+    if (!S.tyra || S.tyra.errand !== "with" || S.tyra.helped || left < 1) return 0;
+    S.tyra.helped = true;
+    foeHit(1);
+    await say("Tyra steps out from behind you, lazily, the way you'd step around a puddle, and one of them sits down with her knife in the back of his knee. \"Your turn,\" she says.");
+    return 1;
+  }
+
+  const ODD_JOBS = {
+    cat: "The kilnmaster's cat",
+    rent: "Collecting for Marrit",
+    key: "A key for Tyra's collection"
+  };
+  async function oddJob() {
+    const left = Object.keys(ODD_JOBS).filter(k => !S.tyra.jobs.includes(k));
+    const k = await choose(left.map(x => ({ key: x, label: ODD_JOBS[x], plain: true })));
+    S.tyra.jobs.push(k);
+    if (k === "cat") {
+      light("sun");
+      await say("A kilnmaster's cat has gone up the chimney of a cold furnace and won't come down. The kilnmaster is weeping. The cat is called Duchess, and she is enormous.");
+      const c = await choose([{ key: "climb", label: "Climb up after her", tag: "Athletics DC 13" }, { key: "tyra", label: "Let Tyra try her way", tag: "she has a sardine", plain: true }]);
+      if (c === "climb") {
+        const r = await check({ label: "Athletics check", mod: 3, dc: 13, cta: "Climb" });
+        if (r.ok) await say("You come down black with soot from head to foot, with Duchess draped over your shoulder like a fur stole. Tyra laughs so hard she has to sit down.");
+        else { await hurt(1, 4, "slashing", "Duchess does not want to be rescued."); await say("In the end Tyra waves a sardine at the bottom of the flue, and Duchess comes down on her own, and walks past you both."); }
+      } else await say("Tyra sits cross-legged at the bottom of the flue, holds up a sardine, and says nothing at all for a quarter of an hour. Duchess comes down. Tyra winks at you over the cat's head.");
+      S.coins += 6; S.cullet += 2; renderSheet();
+      await mech("The kilnmaster pays 6 gold and 2 cullet, and kisses both of you on both cheeks.", "loot");
+      await fond(1, "\"You,\" Tyra says, picking soot out of your hair, \"are a lot more fun than the posters.\"");
+    }
+    if (k === "rent") {
+      light("sun");
+      await say("A glass merchant on the Street of Lenses owes Marrit three months' rent on a storeroom. Tyra explains the method on the way: \"I do the knife. You do the standing there being large.\"");
+      await say("The merchant turns out to be a thin man with three children behind the counter and an empty shop. Coyle's wardens took his stock as a fine last week.");
+      const c = await choose([
+        { key: "collect", label: "Collect anyway", tag: "Intimidation DC 12 · 8 gold" },
+        { key: "forgive", label: "Pay Marrit out of your own purse", tag: "8 gold", plain: true, show: S.coins >= 8 },
+        { key: "walk", label: "Tell Marrit he wasn't in", plain: true }
+      ]);
+      if (c === "collect") {
+        const r = await check({ label: "Intimidation check", mod: 3, dc: 12, cta: "Loom" });
+        if (r.ok) { S.coins += 4; renderSheet(); await mech("He pays. Marrit lets you keep half: 4 gold.", "loot"); }
+        else await say("You can't do it. Tyra looks at you sideways and doesn't say anything.");
+        await fond(c === "collect" && r.ok ? -1 : 0, "Tyra's quiet on the walk back.");
+      } else if (c === "forgive") {
+        S.coins -= 8; renderSheet();
+        await say("You count eight gold onto Marrit's bar and tell her it's from the merchant. Marrit looks at you for a long time and says nothing, which from Marrit is a lot.");
+        await fond(2, "Tyra bumps your shoulder with hers. \"Soft,\" she says. She doesn't sound like she minds.");
+        if (S.jury) await juryShift("D", 1, "Word gets round the Commons.");
+      } else { await say("\"He wasn't in,\" you tell Marrit. \"He's never in,\" Marrit says, and shrugs, and pours you a drink."); await fond(1, "Tyra grins."); }
+    }
+    if (k === "key") {
+      light("dark");
+      await say("\"I collect keys,\" Tyra says. \"One from every city. I've got forty-one.\" She shows you: a ring of them on a cord inside her coat, brass and iron and bone. \"For Sulmara I want the big one. The key to the shackles in the middle of the Assize court.\" She looks at you. \"Seems useful. For somebody.\"");
+      await say("The turnkey of the Assize keeps it on his belt and drinks at the Slag & Siphon after his shift. Tyra will spill a drink on him. You lift the key.");
+      const r = await check({ label: "Sleight of Hand check", mod: 2 + (hasSkill("lock") ? 2 : 0), dc: 14, adv: true, cta: "Lift it" });
+      if (r.ok) {
+        S.tyra.key = true; renderSheet();
+        await say("Tyra's drink goes all down his front. While she apologizes, extravagantly, the key comes off his belt and into your sleeve.");
+        await mech("Tyra keeps the Assize shackle key on her ring. She says she'll lend it to you if you're ever wearing them.", "loot");
+        await fond(1, "\"Forty-two,\" she says, delighted.");
+      } else { await say("The turnkey slaps your hand away and leaves, cursing. Tyra sighs. \"Forty-one it is.\""); await heatUp(1, "He'll remember you."); }
+    }
+  }
+
+  async function tyraNight() {
+    const n = S.tyra.nights++;
+    if (n === 0) {
+      await say("Tyra finds you on the inn's flat roof, among Marrit's washing, and sits down beside you with a bottle of something blue. Below, the warden mirrors wink from roof to roof, gossiping.");
+      await say("\"So why come back?\" she asks. \"You robbed the place blind. You could be anywhere. Instead you walked in the front gate of the city that wants to set you on fire.\"", "voice");
+      const c = await choose([
+        { key: "true", label: "\"Because I didn't do it, and someone should say so.\"" },
+        { key: "joke", label: "\"I heard the bread was good.\"", plain: true },
+        { key: "hero", label: "\"Justice demands it.\"", plain: true }
+      ]);
+      if (c === "true") { await say("She looks at you for a while. \"Huh,\" she says. \"That's a better reason than mine for anything.\""); await fond(1, "She believes you."); }
+      else if (c === "joke") { await say("Tyra laughs so suddenly she snorts blue drink up her nose. \"It is good bread,\" she says, when she can talk."); await fond(1, "You made her laugh."); }
+      else await say("\"Justice,\" Tyra says, and yawns, enormously. \"Wake me when you say something true.\"");
+      return;
+    }
+    if (S.tyra.aff < 2) { await say("Tyra's light is out when you come up the stair. On your pillow there's a pear, peeled in one long curl."); return; }
+    await say("The roof again. The last night. Tyra isn't drinking this time. She's turning one of her keys over and over in her fingers.");
+    await say("\"Forty-one cities,\" she says. \"I never stay. You get a key, you get a story, you get out before anyone needs anything from you.\" She doesn't look at you. \"I was going to be gone by the Assize. I had a boat.\"", "voice");
+    const c = await choose([
+      { key: "stay", label: "\"Stay anyway.\"" },
+      { key: "light", label: "\"Then I'd better make it worth watching.\"", plain: true },
+      { key: "go", label: "\"Take the boat. You don't owe me anything.\"", plain: true }
+    ]);
+    if (c === "stay") {
+      if (S.tyra.aff >= 3) {
+        S.tyra.love = true;
+        await say("She puts the key away. Then she kisses you, briefly, like she's checking something, and then not briefly at all. Down in the street a warden's mirror flashes across the roof and moves on, and neither of you notices.");
+        await fond(1, "\"Don't get burned,\" she says into your collar. \"I'd be annoyed.\"");
+      } else { await say("\"Maybe,\" she says. She leans her shoulder against yours and leaves it there."); await fond(1, "She's still here."); }
+    } else if (c === "light") { await say("Tyra grins her crooked grin. \"You'd better,\" she says."); await fond(1, "She likes that."); }
+    else { await say("\"No,\" she says, after a while. \"I don't.\" But she doesn't get up."); }
   }
 
   async function endCard() {
@@ -3647,6 +5033,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.token) carried.push("The Hollow Hand token");
     if (S.smoke) carried.push("One Smokebloom vial");
     if (S.hobb) carried.push("Hobb's Book of Iron Mischief");
+    (S.skills || []).forEach(k => carried.push("Skill: " + SKILLS[k].name));
+    if (S.flasks) carried.push(S.flasks + " shatter flask" + (S.flasks > 1 ? "s" : ""));
+    if (S.lens) carried.push("A burning lens");
+    if (S.tyra) carried.push(S.tyra.love ? "Tyra Quillon, at your side and holding your hand" : "Tyra Quillon's friendship, for what it's worth (" + S.tyra.aff + " of 5)");
     const sc = S.scrolls ? S.scrolls.fire + S.scrolls.poison + S.scrolls.frost : 0;
     if (sc) carried.push(sc + " snare rune scroll" + (sc > 1 ? "s" : ""));
     if (calTotal()) carried.push(calTotal() + " bag" + (calTotal() > 1 ? "s" : "") + " of caltrops");
@@ -3657,19 +5047,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.potions) carried.push(S.potions + " Draught" + (S.potions > 1 ? "s" : "") + " of Mending");
     if (S.elixirs) carried.push(S.elixirs + " Elixir" + (S.elixirs > 1 ? "s" : "") + " of Health");
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XXIX</p>' +
+      '<p class="eyebrow" style="margin:0">Part XXXV</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You come down out of the hills toward Sulmara with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold" + (S.water !== undefined ? ", " + S.water + " skins of clean water" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>You stand in the Assize Square with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold" + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>Behind you, Lastwell's well is full again, and there's nobody left to drink from it. Ahead, the Blackjackal is somewhere in the glass city, and so is the Magistrate.</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (S.jackalTook ? "The sun-mirror is dark, and Hesper Coyle is somewhere in the dark with the Blackjackal." : S.coyle === "spare" ? "Hesper Coyle sits in her own cells, waiting for a court that won't use the mirror." : "On the top step of the Assize, a woman of clear glass kneels in the sun.") + (S.tyra && S.tyra.love ? " Tyra Quillon has missed her boat on purpose." : "") + " Under the sand there is a second Sulmara, and the Magistrate is somewhere in it.</p>" +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror"];
 
   let started = false;
   async function play(fromPart) {
