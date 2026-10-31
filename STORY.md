@@ -528,6 +528,12 @@ You climb up out of the vault and the castle as the lake finally finishes swallo
 
 **Ooze sickness.** You need two drinks a day, and take 1d4 poison damage each morning. Cured by feverfew, by comb honey, or by sweating it out (Medicine DC 15).
 
+**Healing.** Lastwell is short on it, and all of it is found:
+- **Draught of Mending** (regain 10 HP): in Ilse's satchel, on the herbwife's top shelf (on a Medicine success), in Hobb's tool roll, and in Maud's stash.
+- **Elixir of Health** (regain 20 HP): in the reeve's strongbox (if you solve the cellar seal), and in Maud's stash.
+- **Gravemoss poultices**: moss grows only on the old graves in the churchyard, the one ground the Wringer never drank. You get 1 from the herbwife (on a success), 3 in the churchyard at the Belfry, and 2 more if you go back during the Smithy (Hunt +1). Bind one with a Medicine check (DC 10): on a success regain 2d6 HP now and 1d4 more the next morning; on a failure regain 1d4.
+- You're offered these each morning and after every pass of the Wringer. In a fight, using one costs your turn. At exhaustion 5, nothing heals you.
+
 **The Hunt (0–10).** Noise raises it: searching, hammering, the winch, a ringing bell, falling into the ooze. At 10 the Wringer comes, and the Hunt resets to 2 after each pass.
 
 **A pass of the Wringer.** Make a Perception check (DC 13, advantage with the lantern) to hear it coming. If you hear it, you have a few heartbeats to lay up to three rune mines, scatter caltrops, and hide (Stealth DC 15, advantage with Shadowblend) or stand. If you don't hear it, it gets a free attack. It attacks at +6 for 1d8 necrotic damage, and it's unseen, so your attacks have disadvantage until something reveals it. Two hits in a row cost a level of exhaustion. The Wringer has 60 HP. Wounds carry over between passes and it drinks back 4 each morning, but it can't be killed before the finale: at 10 HP it pulls back to drink.

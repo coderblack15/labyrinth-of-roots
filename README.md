@@ -31,6 +31,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 - **Snare rune mines** (fire, poison and frost), each placed with an Arcana roll, that combine and that the Wringer learns to shrug off. You can scribe more scrolls with ooze ink, and forge **caltrops** from scrap iron once you find Hobb's book.
 - **Four puzzles**: the rune-sealed cellar, scribing a rune from memory, crossing the rotten rafters of the spire, and the well-keeper's four-ring lock.
 - **A recovery phase** in the belfry, where a Scroll of Revelation shows you the well-keeper's secret food stash.
+- **Healing** in Lastwell: Draughts of Mending (+10 HP), Elixirs of Health (+20 HP), and gravemoss poultices from the old graves.
 - **Progress saving** in your browser, so you can continue from the last part you reached.
 
 ## Files
