@@ -232,6 +232,8 @@ body.intro-open { overflow: hidden; }
 .gems i:nth-child(3) { background: var(--emerald); }
 .spent .gems i { opacity: .3; }
 .sheet .reset { justify-self: start; }
+.inv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.inv-toggle, .inv-close, .inv-scrim { display: none; }
 
 /* ---------- story elements ---------- */
 .part-head { margin: 56px 0 18px; display: grid; gap: 4px; scroll-margin-top: 24px; }
@@ -361,14 +363,36 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     background: rgba(21, 27, 23, .96);
     backdrop-filter: blur(4px);
   }
-  .sheet h2, .sheet .sub, .abilities, .inv .desc, .sheet .reset { display: none; }
+  .sheet h2, .sheet .sub, .abilities, .sheet .reset { display: none; }
+  .sheet { grid-template-columns: minmax(0, 1fr) auto; align-items: center; backdrop-filter: none; background: var(--panel); }
+  .sheet > div:first-child { display: none; }
+  .sheet > .lw { grid-column: 1 / -1; }
+  .vitals .stat-val { white-space: nowrap; }
+  .inv-toggle { display: inline-flex; align-items: center; gap: 6px; grid-column: 2; grid-row: 1; padding: 6px 12px; font-size: .9rem; }
+  .inv-toggle span { font-variant-numeric: tabular-nums; color: var(--gold); }
+  .inv-toggle.new { animation: gain 1.6s ease; }
+  .inv-close { display: inline-flex; padding: 4px 12px; font-size: .88rem; }
+  .inv-scrim { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 30; }
+  .inv-scrim[hidden] { display: none; }
+  .inv-panel {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
+    max-height: 50vh; max-height: 50dvh; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--panel); border-top: 1px solid var(--gold); border-radius: 12px 12px 0 0;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .45);
+    transform: translateY(100%); visibility: hidden;
+    transition: transform .25s ease, visibility 0s linear .25s;
+  }
+  .sheet.inv-open .inv-panel { transform: none; visibility: visible; transition: transform .25s ease; }
+  .inv-head { position: sticky; top: -12px; background: var(--panel); padding: 4px 0 6px; margin: -4px 0 6px; }
   .vitals { grid-template-columns: repeat(6, auto); justify-content: start; gap: 4px 8px; }
   .vitals .stat-val { margin-right: 10px; }
   .vitals .hpbar { order: 1; }
-  .inv { display: flex; flex-wrap: wrap; gap: 6px 12px; }
-  .inv li { grid-template-columns: 18px auto; gap: 5px; align-items: center; }
-  .inv svg { width: 18px; height: 18px; }
-  .inv .name { font-size: .88rem; font-weight: 500; }
+  .inv { gap: 8px; }
+  .inv li { grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
+  .inv svg { width: 20px; height: 20px; }
+  .inv .name { font-size: .92rem; }
+  .inv .desc { font-size: .82rem; line-height: 1.35; }
   .part-head, .choices, .roll, .puzzle { scroll-margin-top: 110px; }
   .lw { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding-top: 6px; }
   .lw .stat-val { margin-right: 10px; white-space: nowrap; font-size: .95rem; }
@@ -381,7 +405,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .roll { padding: 12px; gap: 6px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade, .inv li.new { animation: none; }
+  .fade, .inv li.new, .inv-toggle.new { animation: none; }
+  .inv-panel, .sheet.inv-open .inv-panel { transition: none; }
   .die.spin svg { animation: none; }
   .atmos, .story { transition: none; }
   .warning blockquote, .intro-box { animation: none; }
@@ -542,8 +567,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <div><b>+2</b><small>WIS</small></div>
       <div><b>+1</b><small>INT</small></div>
     </div>
-    <div>
-      <div class="stat-label" style="margin-bottom:8px">Carrying</div>
+    <button class="ghost inv-toggle" id="invToggle" type="button" aria-expanded="false" aria-controls="invPanel">Items <span id="invCount">0</span></button>
+    <div class="inv-scrim" id="invScrim" hidden></div>
+    <div class="inv-panel" id="invPanel">
+      <div class="inv-head">
+        <div class="stat-label">Carrying</div>
+        <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
+      </div>
       <ul class="inv" id="inv"></ul>
     </div>
     <button class="ghost reset" id="resetBtn" type="button">Start over</button>
@@ -674,8 +704,25 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       li.innerHTML = ICONS[icon] + '<span><span class="name">' + name + '</span><span class="desc">' + desc + "</span></span>";
       ul.appendChild(li);
     });
+    const gained = started && items.some(([key]) => !lastItems.has(key));
     lastItems = now;
+    $("invCount").textContent = items.length;
+    const tog = $("invToggle");
+    if (gained) { tog.classList.remove("new"); void tog.offsetWidth; tog.classList.add("new"); }
   }
+
+  // On phones the item list lives in a bottom sheet behind the Items button.
+  function setInv(open) {
+    $("sheet").classList.toggle("inv-open", open);
+    $("invScrim").hidden = !open;
+    $("invToggle").setAttribute("aria-expanded", open);
+    if (open) $("invClose").focus();
+  }
+  $("invToggle").onclick = () => setInv(!$("sheet").classList.contains("inv-open"));
+  $("invClose").onclick = () => { setInv(false); $("invToggle").focus(); };
+  $("invScrim").onclick = () => setInv(false);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("sheet").classList.contains("inv-open")) { setInv(false); $("invToggle").focus(); } });
+  matchMedia("(max-width: 860px)").addEventListener("change", (e) => { if (!e.matches) setInv(false); });
 
   // ---------- story helpers ----------
   let scrollNext = false;
