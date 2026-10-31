@@ -518,11 +518,11 @@ You climb up out of the vault and the castle as the lake finally finishes swallo
 
 ## Lastwell: The Hunted Village
 
-*Parts XXIII–XXVII pick up on the road east from the lake, toward Sulmara. This chapter is about survival. The player tracks water, food, exhaustion and the Hunt, and is stalked through a dead village by a thing nobody can see.*
+*Parts XXIII–XXVIII pick up on the road east from the lake, toward Sulmara. This chapter is about survival. The player tracks water, food, exhaustion and the Hunt, and is stalked through a dead village by a thing nobody can see.*
 
 ### How Lastwell plays
 
-**Water and food.** The lake has spoiled the rations: the player starts with 2 water and 1 meal. Every morning (the start of Parts XXIV–XXVII), drink 1 water and eat 1 meal. Each one missed adds a level of exhaustion. Eating and drinking both removes one level and restores 1d4 HP. Foul water can be drunk, but needs a Constitution save (DC 12) against ooze sickness. It can be made clean by boiling (needs a torch or the Lantern Knight's lamp; Hunt +1 for the smoke) or by filtering it through charcoal (Survival DC 13; on a failure the water is lost).
+**Water and food.** The lake has spoiled the rations: the player starts with 2 water and 1 meal. Every morning (the start of Parts XXIV, XXV, XXVII and XXVIII), drink 1 water and eat 1 meal. Each one missed adds a level of exhaustion. Eating and drinking both removes one level and restores 1d4 HP. Foul water can be drunk, but needs a Constitution save (DC 12) against ooze sickness. It can be made clean by boiling (needs a torch or the Lantern Knight's lamp; Hunt +1 for the smoke) or by filtering it through charcoal (Survival DC 13; on a failure the water is lost).
 
 **Exhaustion (0–5).** Each level adds to the one before. 1: disadvantage on ability checks. 2: disadvantage on attack rolls. 3: the Wringer has advantage on attacks. 4: HP maximum halved. 5: no healing.
 
@@ -584,7 +584,19 @@ You choose the church for the night, and open the door on a nave that is a grey 
 
 In the cage: **Hobb's Book of Iron Mischief**, *+2 iron* (horseshoe nails), and burned into the cover, the third ring: **the Hand**. *"Fourth, ask the smith, he cut it."* Then the whole grey lake in the nave moves toward the door, a slow wave, as something steps into it from the far end. **A pass of the Wringer.**
 
-## Part 26: The Smithy
+## Part 26: The Belfry
+
+*A recovery phase.* After the pass in the nave, you climb up to the broken belfry. Nobody died this high, so there are no puddles, and the Wringer travels through its puddles: it can't reach you here. *(The Hunt falls to 0.)*
+
+**Rest.** You sleep properly for the first time in days: *regain 2d6 HP*, *exhaustion −1*, and the rain fills the bell again: *+1 water*. *(With Snare Trap: Survival check at your snare DC to catch a crow at dawn, +1 food. The crows eat up high, not down there.)*
+
+**The Scroll of Revelation.** In the candle niche behind the bell, there's a scroll sealed in yellow wax with an open eye. Reading it burns the words off the page, and you see Lastwell as it was, with every hiding place lit from inside. The brightest light is under the churchyard, in the Lastwell family crypt. *Make an Arcana check (DC 13).* On a success you see Old Maud carrying sacks down into the dark weeks ago: she knew it was coming. On a failure you see too much, every hiding person and the grey coming up under each of them: *1d6 psychic*. Either way you know where to dig.
+
+**The secret food stash.** The churchyard is the only ground in Lastwell with no puddles. Behind a plaque carved by an unskilled hand, *MAUD LASTWELL, WELL-KEEPER*, with no date, is a door. *Athletics DC 12* to shift the stone (on a failure it booms: Hunt +2). Behind it is a larder cut into the earth: oats, peas, hams in salt barrels, sealed jugs, salt everywhere and a thick white line of it across the threshold. *+4 food, +2 water.* Maud is there, a puddle on a stool inside a ring of salt she poured around herself. The ring is perfect except in one place, where her heel scuffed through it in her sleep.
+
+Gain **Maud's Salt**: the next time the Wringer comes, pour a ring of it and you hear it coming automatically. *(If you have ooze sickness, the salt pork gives a Constitution save, DC 12, to sweat it out.)*
+
+## Part 27: The Smithy
 
 *Morning upkeep.* Stone walls, an iron door, and the smith a puddle by the anvil, his hammer still in it. Stamped into the anvil's horn: the fourth ring, **the Eye**.
 
@@ -595,7 +607,7 @@ In the cage: **Hobb's Book of Iron Mischief**, *+2 iron* (horseshoe nails), and 
 
 Bar the door. It doesn't use the door: near midnight, the smith's puddle draws itself up into a grey column, leans toward you, and falls away into nothing. It goes where its puddles are. **Two passes**: the first forewarned, the second before dawn. At first light you hear it in the square, pouring itself out into the well, over and over.
 
-## Part 27: The Wringing
+## Part 28: The Wringing
 
 *Morning upkeep.* The lock doesn't keep the Wringer in. It keeps everyone else out of the only place it has to go. **The winch puzzle:** set four rings. Each wrong haul shows how many rings caught (Hunt +2). Or break it: *Athletics DC 16, Hunt +3*, and on a failure *1d6* from a flying shard.
 

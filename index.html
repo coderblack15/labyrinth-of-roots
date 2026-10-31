@@ -490,7 +490,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in twenty-seven parts · d20</p>
+    <p class="eyebrow">An adventure in twenty-eight parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -606,12 +606,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     part: 0, hp: 24, maxHp: 24, coins: 12,
     blessing: false, torch: false, axe: false, shield: false,
     gemsSpent: false, slain: false, books: [], dis: false, adv: false,
-    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: ""
+    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true
   });
   let S = fresh();
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); return v && typeof v.part === "number" ? v : null; } catch (e) { return null; } }
+  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; return v; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
 
   // ---------- sheet ----------
@@ -2387,6 +2387,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (calTotal()) items.push(["cal", "caltrop", "Caltrops", (S.calFine ? S.calFine + " fine bag" + (S.calFine > 1 ? "s" : "") + " (it's slowed, and it bleeds 1d4 on every attack)" : "") + (S.calFine && S.calCrude ? ", " : "") + (S.calCrude ? S.calCrude + " crude bag" + (S.calCrude > 1 ? "s" : "") + " (it's slowed)" : "") + "."]);
     if (S.herbs) items.push(["herbs", "herb", "Feverfew ×" + S.herbs, "Chew a sprig to burn out ooze sickness."]);
     if (S.honey) items.push(["honey", "herb", "Comb Honey", "Cures ooze sickness. Counts as a meal."]);
+    if (S.revelation) items.push(["rev", "scroll", "Scroll of Revelation", "Sealed with an open eye. Read it to see what has been hidden."]);
+    if (S.salt) items.push(["salt", "herb", "Maud's Salt", "Pour a ring of it when the Wringer comes: you'll hear it coming, once."]);
     if (S.clues.length) items.push(["clues", "clue", "The Well-Keeper's Lock", "Rings: " + LOCK.map(r => S.clues.includes(r) ? r : "?").join(" · ")]);
     if (S.sick) items.push(["sick", "sick", "Ooze Sickness", "You need two drinks a day, and the rot costs 1d4 HP each morning."]);
     if (S.wHP < WR_MAX) items.push(["wr", "sick", "The Wringer's Wounds", "It has taken " + (WR_MAX - S.wHP) + " damage. It drinks to heal."]);
@@ -2837,6 +2839,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.gemsSpent = false; renderSheet();
     await say(intro || SIGNS[d(SIGNS.length) - 1]);
     let ready = warned;
+    if (ready === null && S.salt) {
+      S.salt = false; renderSheet(); ready = true;
+      await say("You pour Maud's salt in a ring around your feet. Inside it, nothing stirs. Outside it, a puddle in the lane begins to rise, and you have time.");
+    }
     if (ready === null) {
       if (S.lantern) await say("The Lantern Knight's flame leans sideways in its glass, toward something.");
       ready = (await check({ label: "Perception check: where is it?", mod: 2, dc: 13, adv: !!S.lantern, cta: "Listen" })).ok;
@@ -3112,8 +3118,59 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await wringerPass({ intro: "Something is wading through the nave toward you. You can see the ooze part around legs that aren't there." });
   }
 
+  async function partBelfry() {
+    heading("XXVI", "The Belfry");
+    light("dusk");
+    await say("When the cold finally goes out of the church, you don't wait for it to come back. You go up. Up the bell rope, up through the rafters, up to the broken belfry where the cracked bell lies mouth-up in its nest of fallen timbers. There are no puddles up here. Nobody in Lastwell died this high. And it goes where its puddles are.");
+    await say("For the first time since the milestone, nothing is hunting you.");
+    S.hunt = 0; renderSheet();
+    await mech("The Hunt falls to 0. While you're in the belfry, it can't reach you.", "loot");
+    await go("Rest");
+    light("dark");
+    await say("You sleep sitting up with your back to the bell, and then you sleep properly, lying down, for the first time in days. Rain comes in the night and rings softly on the bronze.");
+    await heal(2, 6, "Real sleep.");
+    if (S.exh > 0) { S.exh--; renderSheet(); await mech("Exhaustion falls to " + S.exh + ".", "loot"); }
+    await findWater(1, "The bell has filled again with rain.");
+    light("dusk");
+    if (S.snare) {
+      await say("At dawn the crows come to the broken roof to sun themselves. They're the only living things in Lastwell besides you and the bees. They eat up here, not down there.");
+      const t = await check({ label: "Survival check · Snare Trap", mod: 2, dc: S.snare, cta: "Set the snare" });
+      if (t.ok) await findFood(1, "You snare a crow and eat it half raw. It tastes of smoke and old rain.");
+      else await say("The crows watch your snare with their heads on one side and don't go near it.");
+    }
+    await say("In the stone niche behind the bell, where the priest kept the candles for ringing the hours, there's a small roll of parchment bound with a black ribbon and sealed in yellow wax: an eye, wide open. A <b>Scroll of Revelation</b>. Somebody hid it up here, where no one would think to look but the bell-ringer.");
+    S.revelation = true; renderSheet();
+    await mech("Gain the Scroll of Revelation. Read it once to see what has been hidden.", "loot");
+    await go("Break the seal and read it");
+    S.revelation = false; renderSheet();
+    light("sun");
+    await say("The words burn off the page as you read them, and the village below you changes. You see Lastwell the way it was: every hiding place lit from inside, like a lantern behind a door. A purse under a floorboard. Letters in a chimney. A knife in a mattress. And one light brighter than the rest, deep under the churchyard, in the Lastwell family crypt.");
+    const a = await check({ label: "Arcana check: hold the vision", mod: 2, dc: 13, cta: "Look closer" });
+    if (a.ok) {
+      await say("You hold it. The light in the crypt shows you a door behind a stone with a name on it, and a larder behind the door, and a woman carrying sacks down in the dark, weeks ago, before the first puddle. Old Maud, the well-keeper. She knew what was coming.");
+    } else {
+      await say("You see too much. You see every hiding place, and then every hiding person: a child under a bed, a man inside a flour bin, a woman in the church with her arms around three others. You see the grey come up through the floor under each of them.");
+      await hurt(1, 6, "psychic", "It goes on for a long time.");
+      await say("When it fades, the light under the churchyard is still there. You know where to dig.");
+    }
+    light("dusk");
+    await go("Go down to the churchyard");
+    await say("The churchyard is the only ground in Lastwell without puddles on it. Everyone here was dead before the Wringer came. The Lastwell crypt is a low stone house half sunk in nettles, and inside, the names run back two hundred years. The newest plaque is carved by an unskilled hand: <b>MAUD LASTWELL, WELL-KEEPER</b>. There's no date on it.");
+    const p = await check({ label: "Athletics check: shift the stone", mod: 3, dc: 12, cta: "Heave" });
+    if (!p.ok) await noise(2, "The stone comes free all at once and booms on the crypt floor.");
+    await say("Behind the plaque is a door, and behind the door is a larder cut into the earth: sacks of oats and dried peas, hams packed in barrels of salt, jugs of water sealed with wax and pitch, and a great crock of salt pork. Salt everywhere. On the shelves, on the floor, poured in a thick white line across the threshold.");
+    await findFood(4, "Food the Wringer couldn't drink.");
+    await findWater(2, "Sealed jugs, clean and cold.");
+    await say("Maud is here. She's sitting on a stool at the back of the larder, inside a ring of salt she poured around herself: her shawl, her apron, her clogs, and the grey. The ring is perfect, except in one place, where her heel scuffed through it in her sleep.");
+    S.salt = true; renderSheet();
+    await mech("Gain Maud's Salt. Pour a ring of it when the Wringer comes and it can't rise from the puddles inside: you'll always hear it coming, once.", "loot");
+    if (S.sick) await say("You eat salt pork until you're sick of it, and some of the ooze-sickness goes out of you with the sweat.");
+    if (S.sick) { const c = await check({ label: "Constitution save: sweat out the sickness", mod: 2, dc: 12, cta: "Rest it off" }); if (c.ok) await cure("The salt draws it out."); }
+    await say("You sit with her for a while. Then you pack what you can carry and go out into the daylight, and you leave the salt line across the door unbroken behind you.");
+  }
+
   async function partSmithy() {
-    heading("XXVI", "The Smithy");
+    heading("XXVII", "The Smithy");
     light("dusk");
     await upkeep();
     await say("The smith's forge is the only building in Lastwell with stone walls, a stone floor and an iron door. The smith is on the floor by the anvil. His hammer is still in the puddle where his hand was.");
@@ -3167,7 +3224,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   async function partWringing() {
-    heading("XXVII", "The Wringing");
+    heading("XXVIII", "The Wringing");
     light("dusk");
     await upkeep();
     await say("The well stands in the square under its little roof. The pouring has stopped. The lid is locked with the four iron rings, but now you know what it does: it doesn't keep the Wringer in. It keeps everyone else out of the only place it has to go.");
@@ -3268,7 +3325,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XXVIII</p>' +
+      '<p class="eyebrow" style="margin:0">Part XXIX</p>' +
       '<p class="big">To be continued…</p>' +
       "<p style='margin:0'>You come down out of the hills toward Sulmara with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold" + (S.water !== undefined ? ", " + S.water + " skins of clean water" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
@@ -3279,8 +3336,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partSmithy, partWringing];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Smithy", "The Wringing"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing"];
 
   let started = false;
   async function play(fromPart) {
