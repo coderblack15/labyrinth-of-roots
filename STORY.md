@@ -642,7 +642,7 @@ Sulmara again, the Glass City you robbed in the desert chapter. The old Magistra
 
 ### Places
 
-- **Vitreous Library** (by day). Brother Ansel, a blind archivist, reads glass books by touch. Here you can:
+- **Vitreous Library** (by day). Brother Orrin, a blind archivist, reads glass books by touch. Here you can:
   - **Buy skill books**:
     - Lockcraft (20 gold)
     - Jurisprudence (25 gold)
@@ -654,7 +654,7 @@ Sulmara again, the Glass City you robbed in the desert chapter. The old Magistra
     - The Assize Rolls show which bench each argument will move.
     - The Law of Clear Sight lets you demand the mirror be turned on your accuser.
     - On Witness Glass makes the mended pane count double with the Glaziers.
-  - **Ask Ansel** for the cipher hint.
+  - **Ask Orrin** for the cipher hint.
 - **The Cracked Lantern inn.** Marrit Quell runs it. You can rest at night (2d6 HP, Heat −3), take a hot bath (2 gold), buy herb bundles, and craft at the bench with Glasswright (shatter flasks, burning lens) or Herbcraft (Draughts of Mending). The job board lists the escort missions. Varro (if you warned him) and Ysolde (if you're friends with the Hollow Hands) visit at night.
 - **The Slag & Siphon bar** (afternoon or night). Each visit allows two activities:
   - A drinking contest with Old Brannoch, best of 3. Winning pays 15 gold and his niece's vote on the Commons bench.
@@ -664,7 +664,7 @@ Sulmara again, the Glass City you robbed in the desert chapter. The old Magistra
   - The fixer Saint Ludo, who will bribe a Merchant juror for 20 gold (1 in 6 chance it backfires).
   - Rumors.
 - **Escort missions**, each three legs long, with a client who has 10 HP:
-  - Brother Ansel to the Temple (by day). Pays a skill book of your choice and +1 with the Temple.
+  - Brother Orrin to the Temple (by day). Pays a skill book of your choice and +1 with the Temple.
   - Pell's breathing crate to the harbor (by night). Pays 15 gold, a smuggled skill book and cullet.
 - **Hall of Records** (by night). Get in with Ysolde's key, by picking the lock, or by climbing. Inside is the **shard puzzle**.
 - **Lens Tower** (by day). Inside are the warrant and the **lens puzzle**.
@@ -674,7 +674,7 @@ Sulmara again, the Glass City you robbed in the desert chapter. The old Magistra
 
 1. **Witness pane.** A 3×3 sliding picture. Lockcraft shows the shard numbers. The watchman passes every 20 moves (Heat +1). Fallback: carry the shards out.
 2. **The lens rig.** A 5×5 grid of mirrors. Turn them to steer sunlight onto the warrant's seal. Fallback: a candle, Investigation DC 15. On a failure the evidence burns.
-3. **The Justiciar's cipher.** Two dials (a two-letter Vigenère cipher, key HC). The page decodes live as you turn them. Ansel's hint is that the key is her initials.
+3. **The Justiciar's cipher.** Two dials (a two-letter Vigenère cipher, key HC). The page decodes live as you turn them. Orrin's hint is that the key is her initials.
 4. **High Glass.** Higher/lower cards with a pot. Cardsharp lets you peek once per game.
 5. **Cross-examination.** Tobbin makes five statements. Hold up the right evidence against each lie: the pane, the ledger or the warrant.
 6. **The sun-mirror rig** in the finale. A 6×6 mirror grid with 16 turns before noon passes. Fallback: smash the rig, and the beam runs wild for the whole fight.
@@ -706,6 +706,6 @@ Tyra is a laid-back rogue, named for the crossguard of a sword because her mothe
   - If you're found guilty, you escape the chains with Tyra's key, Tobbin, Varro's thread, a pick, or brute force.
   - Then you grab your gear (and risk the beam), solve the mirror rig, and fight Coyle: 40 HP, a mirrored mantle that halves and reflects spells until it's cracked, and a glass gavel.
   - Endings: the Blackjackal takes her (if you made the jackal deal), mercy, or the mirror turns her to glass.
-- **Hook.** Ansel sends a map of a second Sulmara under the sand. The Blackjackal took the Magistrate below. The end card is Part XXXV.
+- **Hook.** Orrin sends a map of a second Sulmara under the sand. The Blackjackal took the Magistrate below. The end card is Part XXXV.
 
 *To be continued.*
