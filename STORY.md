@@ -413,4 +413,107 @@ Pulled up on the bank below you is a little boat, and in the mud beside it are t
 
 The axe stirs on your back. (If Vaelric still speaks to you:) *"I knew Oswin Harrowgate,"* he whispers. *"Long ago. Be careful. He was a good man. That's what makes him dangerous."*
 
+## Carrowmere: The Drowned Castle
+
+*Parts XVIII–XXII pick up at the edge of the lake at dawn. The player carries the Blackjackal's writ (Tobbin sold it to Varro, and Varro passed it on). New flags this chapter tracks: whether the Gravepike was fed, whether the player learned the counting house's secret, and what became of Tobbin.*
+
+## Part 18: The Crossing
+
+The boat on the bank is Tobbin's. You know it by the cards: a whole deck of them is scattered across the bottom boards, soaked and swollen. Along one side of the hull, the planks are gouged with a curved row of punctures as wide as your spread hand. Teeth marks. Tobbin's footprints run away from the boat along the shore, to where a line of flat white stones leads out into the lake, a foot under the water: the old causeway to the castle. Halfway out, the stones disappear into the deep.
+
+He waded. Something made him get out of the boat.
+
+You push off anyway. The lake is very still. The water is so clear you can see the drowned fields of Carrowmere far below you: stone walls, a road, the roofs of a village, a church tower with its bell still hanging. Halfway to the castle, the boat rocks, very gently, as something passes underneath it.
+
+It is a pike. It is white with age, and it is three times as long as the boat. Its eye, when it rolls up to look at you, is the size of a shield. The fishermen on the coast have a name for it, the Gravepike, and you had thought it was only a story. It begins to circle.
+
+- **Row silently.** *Make a Stealth check (DC 13). Advantage with Shadowblend. If you carry Varro's violet signet ring, you can spend it here: the shadows hide you and you pass with no roll.*
+  - (On a success:) You lift the oars out of the water and let the boat drift on the faint current, barely breathing. The great white shape loses interest and sinks back toward the drowned village.
+  - (On a failure:) An oar knocks the gunwale. The Gravepike rams the boat. *Take 1d6 bludgeoning damage* as you're thrown against the bench. Then it circles again. *(Choose Feed it or Fight it.)*
+- **Feed it.** *Make a Survival check (DC 11, advantage if you have Snare Trap)* to hook a marsh eel over the side, or to judge where to throw your last rations.
+  - (On a success:) You toss the eel out wide. The Gravepike takes it in one gulp, then turns, and swims alongside you all the way to the castle, like a dog walking you home. *(The Gravepike is now your ally. It will come again when you need it.)*
+  - (On a failure:) It takes the food, and the oar with it, and bumps the boat hard on the way past. *Take 1d4 damage.* You paddle the rest of the way with your hands.
+- **Fight it.** *Make three attack rolls (AC 13).* Each miss means the Gravepike slams the boat: *take 1d6 damage.* Spells work here: *Moonfire, Rootbinding (the lakeweed grabs it),* or *Thornwall* counts as one automatic hit, and the gems give advantage on one swing. When the third hit lands, the Gravepike rolls belly-up and drifts. Something glints in its torn gut: a hundred years of coins it swallowed off the drowned fields. *Gain 2d6 gold.*
+
+The castle rises over you. The lake laps at the windows of the second floor. One of them, a tall window of the great hall's gallery, is open. You tie the boat to a stone gargoyle and climb in.
+
+## Part 19: The Counting House
+
+Inside, the air is dry. That's the first impossible thing. The second is the sound: a dry, steady scratching, like a hundred mice in the walls.
+
+You've climbed into the castle's counting house, a long hall where the king's tax was tallied. Rows of high desks run its length, and at every desk sits a clerk in a black coat, bent over a ledger, scratching numbers with a quill. They are as pale as fish bellies. Lake water drips steadily from their hair and their sleeves onto the pages, and every one of them is chained to his desk by the ankle. Coins are stacked in towers all around them, and their lips move as they count. None of them has looked up in a hundred years.
+
+At the far end of the hall, at a desk raised above the rest, sits the head clerk. His fingers are black to the knuckle with ink. When you step down from the window, he lifts his head, and the scratching stops all at once.
+
+*"Master Ansel Fell, Keeper of the King's Count,"* he says. *"Every traveler on the king's roads pays the king's tax. You are on the king's roads. Pay."*
+
+- **Pay the tax.** *Lose 1d6 + 2 gold* (or everything you have, if that's less). Master Fell writes your name in his book, and the clerks go back to counting. While he's in a good mood, ask him about the night of the floods. *Make a Persuasion check (DC 10).*
+  - (On a success:) He leans over his desk. *"I wrote the last entry myself,"* he whispers. *"Ser Oswin caught the Blackjackal that night. And the Jackal showed him the treasury barge: every crown on it was taken from the farms by us. By these desks. Oswin swore he'd give it back. The king watched from his tower, and rather than lose a single coin, he ordered the floodgates opened. We were chained to our desks when the water came."* He taps the ledger. *"The vault answers to three things: the king's seal, the knight's light, and the right answer to one question. Whose gold is it? Don't say his."* *(You know the secret.)*
+  - (On a failure:) *"The count is private,"* he says, and goes back to his book.
+- **Read the ledgers.** Slip past the clerks and read the last page of the nearest book. *Make an Investigation check (DC 12).*
+  - (On a success:) The last entry, written in a shaking hand, the night of the spring floods: *"By order of His Majesty King Aldous Carrow, the floodgates opened. The robber, the knight, and the treasury preserved together. Let no one claim it."* Under it, in the margin, the same hand has scrawled: *"The vault will ask whose gold it is. God forgive us, it was never his. It was the people's."* *(You know the secret.)*
+  - (On a failure:) A clerk's head snaps up. Cold, wet fingers close on your wrist. *Take 1d4 cold damage* before you pull free. *"Tax evader,"* a hundred voices whisper, and you get out of the hall fast.
+- **Break their chains.** *If the gems are unspent, or you have Moonfire, or you carry the Lantern Knight's lamp, the spell breaks with no roll. Otherwise, hold up the axe and make an Arcana check (DC 13).*
+  - (On a success:) Light floods the hall, and the chains fall from every ankle at once. The clerks look down at their hands as if seeing them for the first time, then set down their quills, one by one, and fade. Master Fell is the last. *"He opened the floodgates on us,"* he says. *"The king. To keep the gold. Whose gold is it, the vault will ask you. Tell it the truth: the people's."* Then the door at the end of the hall bangs open, and the drowned king himself, fat and dripping and crowned, stands there screaming. *"MY COUNT! Who stopped my count?"* *Take 1d6 psychic damage* from the wave of cold that breaks over you. Then he flees through the floor, down toward the vault. *(You know the secret.)*
+  - (On a failure:) The light gutters. The clerks rise, dragging their chains, and come for you with cold wet hands. *Take 1d6 cold damage* as you fight your way to the stair.
+
+From somewhere above you, a boy is screaming for help.
+
+## Part 20: The Jack of Spades
+
+You follow the screams up the stair to a flooded chapel. The water here is waist-deep and rising, and in the middle of it, clinging to the stone head of a saint, is Tobbin. He is soaked and blue-lipped and still holding a fistful of playing cards. Wading toward him through the water are three drowned guards of Carrowmere, rusted halberds raised.
+
+*(If the Gravepike is your ally, the chapel's stained-glass window bursts inward, and the great white fish takes the guards down into the dark in two bites. Skip the fight.)*
+
+**The drowned guards.** *Make one attack roll (AC 11). The gems, a Shield Slam, or any attack spell hits with no roll.* On a hit, the guards crumble into rust and lake water. On a miss, *take 1d6 slashing damage*, then your second swing lands.
+
+Tobbin slides down off the statue, shivering. Up close he looks very young. He tells you everything, fast, because he's too cold to lie. The Magistrate has owned him since he was nine: a debt his mother died owing. He thought the treasury would buy him free. He sold the writ to Varro because he couldn't read it and Varro offered him a boat. And there's someone in the castle with him. *"In the shadows. He talks to me. He told me to leave the card on the shore for whoever came after. He says if I bring him a living body, he'll give me all the gold I can carry."* He looks at you. *"I think he meant you."*
+
+Behind him, at the edge of the candlelight, a shadow is standing that wasn't there before. It has the long ears and narrow muzzle of a jackal.
+
+- **Forgive him.** You pull off your cloak and put it around his shoulders. *"Sable wants to ask you why,"* you tell him. *"Come and answer her."* Tobbin cries, a little, and then wipes his face and picks up a candle. *"I know how to open locks,"* he says. *(Tobbin is with you. He gives advantage on one check in the treasury.)*
+- **Rob him.** He's still a thief who sold you out once. *Make an Intimidation check (DC 10).* (On a success:) He empties his coat: a purse (*gain 1d10 gold*) and a heavy gold signet ring he pried off the king's own desk in the counting house. *(The Royal Signet of Carrowmere opens the vault's first door with no roll.)* Then he runs into the dark. (On a failure:) He throws the cards in your face and is gone down the stair before you can blink.
+- **Hand him to the Blackjackal.** You step back and let the shadow have him. Tobbin turns around. The shadow drops over his head and shoulders like a hide, and he stands up straighter and smiles with someone else's smile. *"Thank you,"* says the Blackjackal, in Tobbin's voice. *"A living body, at last."* He bows and tells you the vault's secret (*you know the secret*), and presses a cold handful of coins into your palm (*gain 3d6 gold*). Then he walks into the wall and is gone. (If Vaelric still speaks to you:) *"That,"* he says quietly, *"was not the warden's way."*
+
+## Part 21: The Lantern Knight
+
+The tower stair goes up and up, and the walls run with water. At the top is a round room with a single window, and in the window, the lantern. It's fixed to the face of a great round shield, and the shield is on the arm of a knight.
+
+Ser Oswin Harrowgate is green with lakeweed. Water runs out of the joints of his armor when he moves. Behind the visor there's nothing but dark and two small points of light. He doesn't draw his sword. He doesn't have to; he is standing in the only door down to the vault.
+
+*"Halt,"* he says. His voice is very tired, and very kind. *"None pass until the bounty on the Blackjackal is paid. I swore it to my king. I have kept that oath a hundred years."*
+
+(If you carry his lamp from Varro's study:) He goes very still. *"You carry my old light. I lost that lamp in the mire the night the floods came, and I have burned this one in its place ever since."* *(Advantage on any Persuasion or Deception check with Oswin.)*
+
+- **Fight him.** *Ser Oswin has AC 15. You need three hits.* Each miss, his sword finds you: *take 1d8 slashing damage.* The gems give advantage on one swing, and Moonfire, Rootbinding, or Thornwall counts as one automatic hit. When the third hit lands, Oswin goes down on one knee. *"Well struck,"* he says. *"I am so tired."*
+- **Claim the bounty.** Show him the writ, and tell him the Blackjackal is dead. *Make a Deception check (DC 14).* (On a success:) He reads the writ for a long time, then marks it with his gauntlet. *"Paid,"* he says, and steps out of the doorway. (On a failure:) *"You lie as badly as he did,"* he says, and raises the shield. *(Take 1d8 damage, then fight him.)*
+- **Free him from his vow.** *(Only if you know the secret.)* Tell him what the king did. *Make a Persuasion check (DC 8, advantage with the Warden's Journal).* (On a success:) Oswin is quiet for a long time. *"I knew,"* he says at last. *"I think I always knew. I just couldn't bear to have drowned for nothing."* He takes off his helm, and there's a face inside it for one moment, a tired, decent face. *(On a failure, he grieves and turns away, but he still steps aside. The truth is the truth.)*
+
+However it ends, Oswin unfastens the lantern from his shield and holds it out to you. *(If you already carry his lamp, he lights it from this one instead, and the two flames burn as one.)* *"It shows what's hidden,"* he says. *"Take it down there. I don't want to see it again."* Then he sits down by the window and puts his hands on his knees, and, slowly, the two small lights behind his visor go out.
+
+(If Vaelric still speaks to you:) *"Rest, old friend,"* he says. *"You kept your oath longer than any of us."*
+
+## Part 22: The Drowned Treasury
+
+Below the castle, below the lake, a stair spirals down to a round iron door. It is carved with a crown, a lantern, and a jackal's head.
+
+**The first lock: the seal.** Press the wax seal on the writ to the crown. *(Or the Royal Signet, if you took it from Tobbin.)* The door grinds open. Far above you, something groans: the old floodgates, waking up. Water begins to pour down the stair behind you.
+
+**The second lock: the light.** The next hall is dark and knee-deep and rising. Hold up Oswin's lantern. The light shows what's hidden: a path of safe stones across a floor full of pit traps, and a keyhole hidden in the eye of a carved fish. *Make an Investigation check (DC 12; advantage with the Warden's Journal or with Tobbin's help).* (On a failure:) You find it, but not before you go through the floor into the pit to your chest. *Take 1d6 damage* hauling yourself out as the water climbs.
+
+**The third lock: the question.** The water is at your chest now. The last door has a jackal's head carved in it, and when you come near, its jaws open and it speaks in a dry, laughing voice. *"Whose gold is this?"*
+
+- *"The king's."* or *"The Jackal's."* — The jaws snap shut. The water roars in over your head. *Make an Athletics check (DC 12)* to hold your breath and force the door. *(On a failure, take 2d4 damage.)* The door gives either way.
+- *"The people's."* — *(This is the right answer. If you know the secret, you know it.)* The jaws laugh, and the door swings open, and the water stops rising.
+
+**The vault.** The treasury of Carrowmere lies under a dome of air: chests split open and spilling crowns, gold plates, a silver throne for a child, rubies in heaps like red beans. *Fill your pack. Gain 4d10 gold.* (If you broke the chains in the counting house, King Aldous is here, on his knees in the coins, trying to gather them up with hands that pass through them. When the lantern light touches him, he crumbles away like wet sand.)
+
+As you fill your pack, the lantern flickers. The shadows in the vault lean in. And out of them steps the Blackjackal: a lean man in a black jackal's hide (or Tobbin, smiling his new smile, if you handed him over) with nothing behind his eyes but the dark.
+
+*"A hundred years,"* he says, *"waiting for someone to put out that lantern."* He scoops up a single coin, flips it to you, and grins. *"The gold was always meant for the robbed. Do some good with it. As for me, there's a Magistrate in a glass city who has robbed more people than any king. I think I'll pay him a visit."*
+
+He steps backward into the shadow and is gone.
+
+You climb up out of the vault and the castle as the lake finally finishes swallowing it. When you reach the boat, the lantern in the tower window is dark. (If you warned Varro, he's waiting for you on the far shore, wrapped in violet and frowning at the water. *"So,"* he says. *"He's free. Then so am I. Sulmara won't know what hit it."*)
+
 *To be continued.*

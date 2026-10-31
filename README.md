@@ -6,7 +6,7 @@
 
 Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.
 
-Labyrinth of Roots is a choose-and-roll dark fantasy adventure in seventeen parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet.
+Labyrinth of Roots is a choose-and-roll dark fantasy adventure in twenty-two parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet, and out across its lake to Carrowmere, the drowned castle, where a knight with a lantern has guarded a stolen treasury for a hundred years.
 
 ## How to play
 
@@ -34,8 +34,8 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 | File | What it is |
 | --- | --- |
 | `index.html` | The playable game |
-| `STORY.md` | The full game master script for all seventeen parts |
+| `STORY.md` | The full game master script for all twenty-two parts |
 
 ## Status
 
-Parts I to XVII are complete. The story ends at the edge of the drowned castle of Carrowmere. Part XVIII is still to come.
+Parts I to XXII are complete. The story ends with the Blackjackal loose in the world and on his way to Sulmara. Part XXIII is still to come.
