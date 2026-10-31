@@ -26,6 +26,8 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 - **A landing page** that sets the mood before you play. *Enter the Labyrinth* and *Play Now* take you straight to the start of the game.
 - **Choices** at key moments, such as paying the hooded strangers, fighting or fleeing the vine horror, and bracing your shield against the spiders.
 - **Clickable d20 rolls** for every check: Perception, Survival, Dexterity checks, Investigation (DC 12), the Dexterity save (DC 13), attack rolls, and the Shield Slam Strength contest against Ryytaa. Success and failure each lead to their own text.
+- **An enemy health meter** on the character sheet in every fight, from Ryytaa the Ender to the Wringer. Mob fights (guards, slugs) count heads instead of HP.
+- **Combat combos**: each hit you land in a row adds +1 to your next attack (up to +2), the second hit deals +2 damage, and the third is a **Rootbreaker** that doubles your damage dice (or cuts through into a second foe in a mob fight) and spends the combo. A miss breaks the chain. Spells and gem bursts that land keep it alive.
 - **A character sheet** that tracks HP, armor class, gold, and inventory: the torch, Vaelric's axe (its gem power works once per encounter), the pauldron shield, and the spellbooks you choose in the Library of Roots.
 - **Survival in Lastwell** (Parts XXIII–XXVIII): water, food, five levels of exhaustion, ooze sickness, and the Hunt clock that brings the unseen Wringer down on you when you make noise.
 - **Snare rune mines** (fire, poison and frost), each placed with an Arcana roll, that combine and that the Wringer learns to shrug off. You can scribe more scrolls with ooze ink, and forge **caltrops** from scrap iron once you find Hobb's book.
