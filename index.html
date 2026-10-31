@@ -253,6 +253,30 @@ body.intro-open { overflow: hidden; }
 .fade { animation: rise .6s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
+.puzzle {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 6px;
+  padding: 14px 16px; margin: 6px 0 22px; display: grid; gap: 12px; scroll-margin-top: 24px;
+}
+.puzzle .what { font-family: var(--label); font-weight: 700; letter-spacing: .08em; font-size: .95rem; }
+.puzzle .hint, .puzzle .status { font-family: var(--label); font-size: .85rem; letter-spacing: .04em; color: var(--muted); line-height: 1.45; }
+.puzzle .status { color: var(--ink); min-height: 1.4em; }
+.puzzle .pctrl { display: flex; flex-wrap: wrap; gap: 10px; }
+.pgrid { display: grid; gap: 6px; justify-content: start; }
+.pgrid button { width: 52px; height: 52px; padding: 0; display: grid; place-items: center; text-align: center; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.pgrid button:disabled { opacity: .7; }
+.pgrid button.on, .pgrid button.flash { background: #3b3018; border-color: var(--gold); color: var(--gold); box-shadow: 0 0 12px rgba(207, 168, 80, .35); }
+.pgrid button.rot { background: #2a1512; border-color: var(--ember); color: var(--ember); }
+.pgrid button.seen { color: var(--ink); background: #1f2a23; }
+.pgrid button.goal { border-style: dashed; border-color: var(--gold); }
+.pgrid button.here { border-color: var(--verdigris); background: #1d3329; box-shadow: 0 0 0 2px var(--verdigris) inset; }
+.rings { display: flex; flex-wrap: wrap; gap: 12px; }
+.ring { display: grid; gap: 6px; justify-items: center; }
+.ring button { padding: 4px 14px; }
+.ring .face { width: 66px; height: 66px; border-radius: 50%; border: 2px solid var(--gold); display: grid; place-items: center; align-content: center; font-family: var(--label); font-size: .78rem; line-height: 1.1; text-align: center; background: var(--panel-2); }
+.lw { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.lw .note { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); line-height: 1.35; }
+.huntbar { grid-column: 1 / -1; height: 6px; background: #2a1d1a; border-radius: 3px; overflow: hidden; }
+.huntbar span { display: block; height: 100%; background: linear-gradient(90deg, #6d6a5a, var(--ember)); transition: width .4s; }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 22px; scroll-margin-top: 24px; }
 button {
   font: inherit; cursor: pointer; color: var(--ink);
@@ -345,7 +369,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .inv li { grid-template-columns: 18px auto; gap: 5px; align-items: center; }
   .inv svg { width: 18px; height: 18px; }
   .inv .name { font-size: .88rem; font-weight: 500; }
-  .part-head, .choices, .roll { scroll-margin-top: 110px; }
+  .part-head, .choices, .roll, .puzzle { scroll-margin-top: 110px; }
+  .lw { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding-top: 6px; }
+  .lw .stat-val { margin-right: 10px; white-space: nowrap; font-size: .95rem; }
+  .lw .note, .lw .huntbar { display: none; }
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
 }
 @media (max-width: 480px) {
@@ -497,6 +524,18 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <span class="stat-label">Purse</span>
       <span class="stat-val" id="coinVal">12 gp</span>
     </div>
+    <div class="lw" id="lwBox" hidden>
+      <span class="stat-label">Water</span>
+      <span class="stat-val" id="lwWater">0</span>
+      <span class="stat-label">Food</span>
+      <span class="stat-val" id="lwFood">0</span>
+      <span class="stat-label">Exhaustion</span>
+      <span class="stat-val" id="lwExh">0 / 5</span>
+      <span class="note" id="lwExhNote"></span>
+      <span class="stat-label">The Hunt</span>
+      <span class="stat-val" id="lwHunt">0 / 10</span>
+      <div class="huntbar"><span id="lwHuntBar" style="width:0%"></span></div>
+    </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
       <div><b>+2</b><small>DEX</small></div>
@@ -589,6 +628,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     lantern: '<svg viewBox="0 0 26 26"><path d="M10 4h6v3h-6z" fill="#8f979b"/><rect x="8" y="7" width="10" height="13" rx="2" fill="#4d5457"/><path d="M13 10c2 2 2 4 0 6c-2-2-2-4 0-6z" fill="#f0c86e"/><rect x="9" y="20" width="8" height="2" fill="#8f979b"/></svg>',
     snare: '<svg viewBox="0 0 26 26"><path d="M5 20c6-10 10-10 16 0" stroke="#8a7a62" stroke-width="1.6" fill="none"/><circle cx="13" cy="12" r="4" fill="none" stroke="#b9a27a" stroke-width="1.4"/></svg>',
     shadow: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="#2a2433"/><path d="M13 5a8 8 0 0 0 0 16a5 8 0 0 1 0-16z" fill="#6b4a96"/></svg>',
+    scroll: '<svg viewBox="0 0 26 26"><rect x="6" y="5" width="14" height="16" rx="1" fill="#d8c79a"/><rect x="4" y="4" width="18" height="3" rx="1.5" fill="#a8946a"/><rect x="4" y="19" width="18" height="3" rx="1.5" fill="#a8946a"/><path d="M13 9v8M10 11l3-2l3 2M10 15l3 2l3-2" stroke="#d9503a" stroke-width="1.3" fill="none"/></svg>',
+    caltrop: '<svg viewBox="0 0 26 26"><path d="M13 13L13 3M13 13L4 19M13 13L22 19M13 13L13 21" stroke="#9ea6aa" stroke-width="2" stroke-linecap="round"/><circle cx="13" cy="13" r="2.2" fill="#6d7377"/></svg>',
+    herb: '<svg viewBox="0 0 26 26"><path d="M13 23V8" stroke="#6b8a5a" stroke-width="1.4"/><path d="M13 12c-4-1-6-4-6-7c4 0 6 3 6 7zM13 16c4-1 6-4 6-7c-4 0-6 3-6 7z" fill="#79ab92"/><circle cx="13" cy="6" r="2" fill="#e6c55a"/></svg>',
+    clue: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="none" stroke="#8f979b" stroke-width="2"/><circle cx="13" cy="13" r="5" fill="none" stroke="#cfa850" stroke-width="1.6"/><path d="M13 4v4M13 18v4M4 13h4M18 13h4" stroke="#8f979b" stroke-width="1.4"/></svg>',
+    sick: '<svg viewBox="0 0 26 26"><path d="M5 18c0-3 3-4 5-4c1-3 5-4 7-2c3 0 4 2 4 4c0 3-3 4-8 4s-8-0-8-2z" fill="#7d7f72"/><circle cx="10" cy="17" r="1.2" fill="#4b4d44"/><circle cx="16" cy="16" r="1.6" fill="#4b4d44"/></svg>',
     blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
   };
   const acNow = () => 13 + (S.shield && !S.pitted ? 1 : 0);
@@ -615,7 +659,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.pike) items.push(["pike", "blessing", "The Gravepike's Favor", "The great white pike of the drowned lake swims at your side."]);
     if (S.shadow) items.push(["shadow", "shadow", "Shadowblend", "Once per scene, vanish into shadow. Advantage on Stealth in the dark."]);
     if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
+    lastwellItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
+    renderLastwell();
     const ul = $("inv");
     ul.innerHTML = "";
     if (!items.length) { ul.innerHTML = '<li><span></span><span class="empty">A pack, some bread, a belt knife.</span></li>'; }
@@ -693,6 +739,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // A player check against a DC or AC. Returns { ok, kept, total }.
   function check({ label, mod, dc, target = "DC", adv = false, dis = false, cta = "Roll d20" }) {
+    if (S.lw && S.exh >= (target === "AC" ? 2 : 1)) dis = true;
     if (adv && dis) { adv = dis = false; }
     return new Promise(resolve => {
       const card = el("div", "roll");
@@ -770,17 +817,18 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   // An enemy attack you react to.
-  function enemyAttack({ label, foe, bonus, dis = false, cta }) {
+  function enemyAttack({ label, foe, bonus, dis = false, adv = false, cta }) {
+    if (adv && dis) adv = dis = false;
     return new Promise(resolve => {
       const ac = acNow();
       const card = el("div", "roll");
       const dice = el("div", "dice");
-      const n = dis ? 2 : 1;
+      const n = dis || adv ? 2 : 1;
       const dies = Array.from({ length: n }, () => dieEl(true));
       dies.forEach(x => dice.appendChild(x));
       const out = el("div", "out", "&nbsp;");
       const ctrl = el("div", "ctrl");
-      card.append(dice, el("div", "what", label), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "")), out, ctrl);
+      card.append(dice, el("div", "what", label), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "") + (adv ? ' · <span class="dis">it has advantage</span>' : "")), out, ctrl);
       const b = el("button", "primary", cta); b.type = "button"; ctrl.appendChild(b);
       scrollNext = true;
       add(card);
@@ -789,7 +837,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         const vals = dies.map(() => d(20));
         await Promise.all(dies.map((x, i) => spin(x, vals[i])));
         let ki = 0;
-        if (n === 2) { ki = vals[0] <= vals[1] ? 0 : 1; dies[1 - ki].classList.add("dropped"); }
+        if (n === 2) { ki = (dis ? vals[0] <= vals[1] : vals[0] >= vals[1]) ? 0 : 1; dies[1 - ki].classList.add("dropped"); }
         const kept = vals[ki];
         const hit = kept === 20 || (kept !== 1 && kept + bonus >= ac);
         out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
@@ -1160,8 +1208,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   async function heal(count, sides, why) {
     let total = 0;
     for (let i = 0; i < count; i++) total += d(sides);
+    if (S.lw && S.exh >= 5) { await mech(why + " But you're too far gone to heal.", "hurt"); return; }
     const before = S.hp;
-    S.hp = Math.min(S.maxHp, S.hp + total);
+    S.hp = Math.min(hpCap(), S.hp + total);
     renderSheet();
     await mech(why + " Restore " + count + "d" + sides + " HP: " + total + (S.hp - before < total ? " (you're back to full)" : "") + ".", "loot");
   }
@@ -2287,6 +2336,918 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     light("dusk");
     await say("You climb up out of the vault and out of the castle as the lake finally finishes swallowing it. When you reach the boat, the lantern in the tower window is dark.");
     if (S.mire === "warn") await say("Varro is waiting for you on the far shore, wrapped in violet and frowning at the water. \"So,\" he says. \"He's free. Then so am I. Sulmara won't know what hit it.\"", "voice");
+    await go("Take the road east");
+  }
+
+  // ---------- Lastwell: thirst, hunger, the Hunt, rune mines, caltrops ----------
+  const WR_MAX = 60;
+  const EXH = ["rested", "disadvantage on ability checks", "disadvantage on attack rolls too", "the Wringer has advantage against you", "your HP maximum is halved", "you can't regain HP"];
+  const MINES = {
+    fire: { name: "Emberbite", type: "fire", dice: [3, 6], effect: "the smoke clings to it, and you can see where it is" },
+    poison: { name: "Blightbloom", type: "poison", dice: [2, 6], effect: "the rot gets into it, so every time it drinks from you, it drinks poison too" },
+    frost: { name: "Rimefang", type: "cold", dice: [2, 8], effect: "ice locks its joints, and it moves slowly" }
+  };
+  const SCRIBE_LEN = { fire: 4, poison: 5, frost: 6 };
+  const LOCK = ["Bell", "Root", "Hand", "Eye"];
+  const RUNES = ["Bell", "Root", "Hand", "Eye", "Crow", "Key"];
+  const GLYPH = { Bell: "ᛒ", Root: "ᚱ", Hand: "ᚺ", Eye: "ᛟ", Crow: "ᚲ", Key: "ᚴ" };
+  const hpCap = () => S.lw && S.exh >= 4 ? Math.ceil(S.maxHp / 2) : S.maxHp;
+  const calTotal = () => (S.calFine || 0) + (S.calCrude || 0);
+  const hasFire = () => S.torch || S.lantern;
+
+  function initLastwell() {
+    Object.assign(S, {
+      lw: true, water: 2, foul: 0, food: 1, exh: 0, hunt: 0, sick: false, herbs: 0, honey: false,
+      scrolls: { fire: 0, poison: 0, frost: 0 }, adapt: { fire: 0, poison: 0, frost: 0 }, blank: 0, ink: 0,
+      iron: 0, calFine: 0, calCrude: 0, hobb: false, soaked: false, clues: [], wHP: WR_MAX, wPois: false, inPass: false, finale: false
+    });
+    renderSheet();
+  }
+
+  function renderLastwell() {
+    const box = $("lwBox");
+    if (!box) return;
+    box.hidden = !S.lw;
+    if (!S.lw) return;
+    $("lwWater").textContent = S.water + " clean" + (S.foul ? " · " + S.foul + " foul" : "");
+    $("lwFood").textContent = S.food + (S.food === 1 ? " meal" : " meals");
+    $("lwExh").textContent = S.exh + " / 5";
+    $("lwExhNote").textContent = S.exh ? EXH.slice(1, S.exh + 1).join("; ") + "." : "No exhaustion.";
+    $("lwHunt").textContent = S.hunt + " / 10";
+    $("lwHuntBar").style.width = Math.min(100, S.hunt * 10) + "%";
+  }
+
+  function lastwellItems(items) {
+    if (!S.lw) return;
+    const sc = S.scrolls;
+    if (sc.fire + sc.poison + sc.frost) items.push(["scrolls", "scroll", "Snare Rune Scrolls", "Emberbite ×" + sc.fire + " (fire), Blightbloom ×" + sc.poison + " (poison), Rimefang ×" + sc.frost + " (frost). Each one lays a mine. Placing it takes an Arcana check, DC 12."]);
+    if (S.blank || S.ink) items.push(["ink", "scroll", "Ilse's Scribing Kit", S.blank + " blank parchment, " + S.ink + " measures of ooze ink."]);
+    if (S.hobb) items.push(["hobb", "book", "Hobb's Book of Iron Mischief", S.soaked ? "Half the pages are soaked through. You can only make crude caltrops." : "Caltrops: 2 iron and a forge per bag."]);
+    if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes."]);
+    if (calTotal()) items.push(["cal", "caltrop", "Caltrops", (S.calFine ? S.calFine + " fine bag" + (S.calFine > 1 ? "s" : "") + " (it's slowed, and it bleeds 1d4 on every attack)" : "") + (S.calFine && S.calCrude ? ", " : "") + (S.calCrude ? S.calCrude + " crude bag" + (S.calCrude > 1 ? "s" : "") + " (it's slowed)" : "") + "."]);
+    if (S.herbs) items.push(["herbs", "herb", "Feverfew ×" + S.herbs, "Chew a sprig to burn out ooze sickness."]);
+    if (S.honey) items.push(["honey", "herb", "Comb Honey", "Cures ooze sickness. Counts as a meal."]);
+    if (S.clues.length) items.push(["clues", "clue", "The Well-Keeper's Lock", "Rings: " + LOCK.map(r => S.clues.includes(r) ? r : "?").join(" · ")]);
+    if (S.sick) items.push(["sick", "sick", "Ooze Sickness", "You need two drinks a day, and the rot costs 1d4 HP each morning."]);
+    if (S.wHP < WR_MAX) items.push(["wr", "sick", "The Wringer's Wounds", "It has taken " + (WR_MAX - S.wHP) + " damage. It drinks to heal."]);
+  }
+
+  async function exhaust(n, why) {
+    const before = S.exh;
+    S.exh = Math.min(5, S.exh + n);
+    if (S.hp > hpCap()) S.hp = hpCap();
+    renderSheet();
+    if (S.exh === before) { await mech(why + " You're already as exhausted as a body can be.", "hurt"); return; }
+    await mech(why + " Exhaustion " + before + " → " + S.exh + ": " + EXH[S.exh] + ".", "hurt");
+  }
+
+  async function noise(n, why) {
+    if (S.inPass || S.finale) return;
+    S.hunt = Math.min(10, S.hunt + n); renderSheet();
+    await mech(why + " The Hunt rises by " + n + ", to " + S.hunt + " of 10.", "hurt");
+    if (S.hunt >= 10) {
+      await say("The flies stop. All of them, all at once, all over the village. In the silence you can hear your own heart. It has found you.");
+      await wringerPass({});
+    }
+  }
+
+  async function sicken(dc, why) {
+    if (S.sick) return;
+    const r = await check({ label: "Constitution save against ooze sickness", mod: 2, dc, cta: "Hold it down" });
+    if (r.ok) { await say("Your gut heaves, and settles."); return; }
+    S.sick = true; renderSheet();
+    await mech(why + " You have ooze sickness: two drinks a day, and the rot costs you 1d4 HP each morning until you burn it out.", "hurt");
+  }
+
+  async function cure(how) {
+    S.sick = false; renderSheet();
+    await mech(how + " The ooze sickness is gone.", "loot");
+  }
+
+  async function findWater(n, why, foul) {
+    if (foul) S.foul += n; else S.water += n;
+    renderSheet();
+    await mech(why + " Gain " + n + " " + (foul ? "foul" : "clean") + " water.", "loot");
+  }
+  async function findFood(n, why) {
+    S.food += n; renderSheet();
+    await mech(why + " Gain " + n + (n === 1 ? " meal." : " meals."), "loot");
+  }
+
+  // Every morning in Lastwell: drink, eat, and pay for what you couldn't.
+  async function upkeep() {
+    await say("<b>Morning.</b> " + (S.sick ? "Your tongue is coated grey and your skin is hot." : "Your mouth is dry before you open your eyes."));
+    S.wHP = Math.min(WR_MAX, S.wHP + 4);
+    const need = S.sick ? 2 : 1;
+    let drank = 0;
+    while (drank < need && (S.water > 0 || S.foul > 0)) {
+      if (S.water > 0) { S.water--; drank++; continue; }
+      const c = await choose([
+        { key: "foul", label: "Drink the foul water", tag: "Constitution save, DC 12" },
+        { key: "no", label: "Go thirsty", plain: true }
+      ]);
+      if (c === "no") break;
+      S.foul--; drank++; renderSheet();
+      await say("It tastes of pennies and old rain. Something in it is the wrong thickness.");
+      await sicken(12, "The water had the village in it.");
+    }
+    let ate = false;
+    if (S.food > 0) { S.food--; ate = true; }
+    else if (S.honey) { S.honey = false; ate = true; await say("You eat the last of the honey with your fingers, wax and all."); if (S.sick) await cure("The honey sits warm in your gut."); }
+    renderSheet();
+    const lack = [];
+    if (drank < need) lack.push("thirst");
+    if (!ate) lack.push("hunger");
+    if (!lack.length) {
+      await mech("You drink and eat. Water " + S.water + (S.foul ? " (+" + S.foul + " foul)" : "") + ", food " + S.food + " left.");
+      if (S.exh > 0) { S.exh--; renderSheet(); await mech("Food and water ease you. Exhaustion falls to " + S.exh + ".", "loot"); }
+      await heal(1, 4, "You slept, a little.");
+    } else {
+      await exhaust(lack.length, "You go without: " + lack.join(" and ") + ".");
+    }
+    if (S.sick) {
+      await hurt(1, 4, "poison", "The ooze in your gut turns over.");
+      const opts = [];
+      if (S.herbs) opts.push({ key: "herb", label: "Chew a sprig of feverfew", tag: S.herbs + " left" });
+      opts.push({ key: "sweat", label: "Sweat it out", tag: "Medicine DC 15", plain: true });
+      opts.push({ key: "bear", label: "Bear it", plain: true });
+      const c = await choose(opts);
+      if (c === "herb") { S.herbs--; await cure("The bitter leaf burns all the way down."); }
+      else if (c === "sweat") {
+        const r = await check({ label: "Medicine check", mod: 2, dc: 15, cta: "Wrap up and sweat" });
+        if (r.ok) await cure("You shake through an hour of fever.");
+        else await say("The fever breaks over you and leaves the sickness where it was.");
+      }
+    }
+  }
+
+  // Foul water can be made clean: boiled, or run through charcoal.
+  async function purify() {
+    while (S.foul > 0) {
+      const opts = [];
+      if (hasFire()) opts.push({ key: "boil", label: "Boil a measure of foul water", tag: "Hunt +1 (smoke)" });
+      opts.push({ key: "filter", label: "Filter a measure through charcoal and cloth", tag: "Survival DC 13", plain: true });
+      opts.push({ key: "stop", label: "Leave it", plain: true });
+      const c = await choose(opts);
+      if (c === "stop") return;
+      S.foul--;
+      if (c === "boil") {
+        await say("You boil it over " + (S.lantern ? "the Lantern Knight's flame" : "your torch") + ". A grey skin forms on top. You lift it off with the knife and it moves on the blade.");
+        S.water++; renderSheet();
+        await mech("1 foul water becomes clean.", "loot");
+        await noise(1, "The smoke goes up into a still sky.");
+      } else {
+        const r = await check({ label: "Survival check", mod: 2, dc: 13, cta: "Filter it" });
+        if (r.ok) { S.water++; renderSheet(); await mech("It runs out clear. 1 foul water becomes clean.", "loot"); }
+        else { renderSheet(); await say("The ooze comes through the cloth as if it wasn't there. You pour it out."); }
+      }
+    }
+  }
+
+  async function gatherInk() {
+    await say("You kneel by a puddle that still has a shawl in it and scoop the grey ooze into Ilse's inkhorn. It is warm. It tries, very weakly, to climb your fingers.");
+    S.ink += 2; renderSheet();
+    await mech("Gain 2 measures of ooze ink.", "loot");
+    await noise(1, "Something in the puddle sighs as you take it.");
+  }
+
+  // ---------- puzzles ----------
+  function puzzleBox(title, hint) {
+    const box = el("div", "puzzle");
+    box.append(el("div", "what", title), el("div", "hint", hint));
+    const body = el("div", "pbody"), status = el("div", "status", "&nbsp;"), ctrl = el("div", "pctrl");
+    box.append(body, status, ctrl);
+    scrollNext = true;
+    add(box);
+    const end = () => box.querySelectorAll("button").forEach(b => b.disabled = true);
+    return { box, body, status, ctrl, end };
+  }
+  function pbtn(label, cls) { const b = el("button", cls || "", label); b.type = "button"; return b; }
+
+  // The rune-sealed cellar: every stone you press flips itself and its neighbors.
+  function cellarPuzzle() {
+    return new Promise(resolve => {
+      const P = puzzleBox("The cellar seal", "Nine rune stones are set in the hatch. Press one and it turns, and so do the stones beside it (up, down, left and right). Light all nine to open the seal. The stones grind as they turn: every 4 presses raises the Hunt by 1.");
+      const on = Array(9).fill(true);
+      const flip = (i) => { const r = Math.floor(i / 3), c = i % 3; [[r, c], [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([y, x]) => { if (y >= 0 && y < 3 && x >= 0 && x < 3) on[y * 3 + x] = !on[y * 3 + x]; }); };
+      do { on.fill(true); const picks = new Set(); while (picks.size < 4) picks.add(d(9) - 1); picks.forEach(flip); } while (on.every(Boolean));
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(3, 52px)";
+      const glyphs = "ᚠᚢᚦᚨᚱᚲᚷᚹᚺ";
+      let presses = 0;
+      const btns = on.map((_, i) => { const b = pbtn(glyphs[i]); b.setAttribute("aria-label", "Rune stone " + (i + 1)); b.onclick = () => { flip(i); presses++; draw(); }; grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const force = pbtn("Pry the hatch instead"); P.ctrl.appendChild(force);
+      function draw() {
+        btns.forEach((b, i) => { b.classList.toggle("on", on[i]); b.setAttribute("aria-pressed", on[i]); });
+        P.status.textContent = on.filter(Boolean).length + " of 9 lit · " + presses + " presses";
+        if (on.every(Boolean)) { P.end(); P.status.textContent = "All nine burn gold. The seal sighs open. (" + presses + " presses)"; setTimeout(() => resolve({ ok: true, presses }), 500); }
+      }
+      force.onclick = () => { P.end(); resolve({ ok: false, presses }); };
+      draw();
+    });
+  }
+
+  // Scribing: watch the strokes, then trace them back from memory.
+  function scribePuzzle(len) {
+    return new Promise(resolve => {
+      const P = puzzleBox("Scribe the rune", "Nine points of a rune. Watch the strokes light up in order, then touch the points in the same order. " + len + " strokes. A wrong stroke spoils the ink.");
+      const seq = []; while (seq.length < len) { const n = d(9) - 1; if (n !== seq[seq.length - 1]) seq.push(n); }
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(3, 52px)";
+      const btns = Array.from({ length: 9 }, (_, i) => { const b = pbtn("•"); b.setAttribute("aria-label", "Point " + (i + 1)); b.disabled = true; grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const show = pbtn("Show me the strokes", "primary"); P.ctrl.appendChild(show);
+      let at = 0;
+      const pause = (ms) => new Promise(r => setTimeout(r, ms));
+      show.onclick = async () => {
+        show.disabled = true; btns.forEach(b => b.disabled = true);
+        P.status.textContent = "Watch.";
+        for (const n of seq) { btns[n].classList.add("flash"); await pause(520); btns[n].classList.remove("flash"); await pause(160); }
+        P.status.textContent = "Now trace it. Stroke 1 of " + len + ".";
+        btns.forEach(b => b.disabled = false);
+      };
+      btns.forEach((b, i) => b.onclick = async () => {
+        if (i !== seq[at]) { b.classList.add("rot"); P.end(); P.status.textContent = "The line smears. The ink curdles on the page."; await pause(500); resolve(false); return; }
+        b.classList.add("flash"); await pause(180); b.classList.remove("flash");
+        at++;
+        if (at === seq.length) { P.end(); btns.forEach(x => x.classList.add("on")); P.status.textContent = "The rune takes. The parchment goes stiff and cold."; await pause(500); resolve(true); }
+        else P.status.textContent = "Stroke " + (at + 1) + " of " + len + ".";
+      });
+    });
+  }
+
+  // The spire: cross the rafters to the cage. Numbers count rotten boards around a board you stand on.
+  function makeBeams() {
+    const R = 5, C = 4;
+    for (;;) {
+      const safe = new Set(["0,0"]);
+      let r = 0, c = 0;
+      while (!(r === R - 1 && c === C - 1)) {
+        const moves = [];
+        if (r < R - 1) moves.push([r + 1, c], [r + 1, c]);
+        if (c < C - 1) moves.push([r, c + 1]);
+        if (c > 0 && r > 0) moves.push([r, c - 1]);
+        [r, c] = moves[d(moves.length) - 1];
+        safe.add(r + "," + c);
+      }
+      const rot = [];
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) rot.push(!safe.has(y + "," + x) && Math.random() < 0.5);
+      if (rot.filter(Boolean).length >= 6) return { R, C, rot, known: Array(R * C).fill(false), stood: Array(R * C).fill(false) };
+    }
+  }
+  function beamsPuzzle(B, lanternUses) {
+    return new Promise(resolve => {
+      const { R, C, rot } = B;
+      const P = puzzleBox("The rafters", "You start at the loft (bottom left). Reach the chain at the top right. Step only up, down, left or right. A number shows how many rotten boards touch the board you stand on, corners included. Tapping a board with the axe haft tells you if it is rotten, but the knock raises the Hunt by 1." + (lanternUses ? " The lantern can show you " + lanternUses + " rotten board" + (lanternUses > 1 ? "s" : "") + "." : ""));
+      const idx = (y, x) => y * C + x;
+      let pos = [0, 0], taps = 0, tapMode = false, lamp = lanternUses;
+      B.stood[0] = true; B.known[0] = true;
+      const count = (y, x) => { let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const yy = y + dy, xx = x + dx; if ((dy || dx) && yy >= 0 && yy < R && xx >= 0 && xx < C && rot[idx(yy, xx)]) n++; } return n; };
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + C + ", 52px)";
+      const cells = [];
+      for (let y = R - 1; y >= 0; y--) for (let x = 0; x < C; x++) {
+        const b = pbtn(""); b.dataset.y = y; b.dataset.x = x; grid.appendChild(b); cells[idx(y, x)] = b;
+        b.onclick = () => click(y, x);
+      }
+      P.body.appendChild(grid);
+      const tap = pbtn("Tap with the haft"), lampBtn = pbtn("Hold up the lantern");
+      P.ctrl.appendChild(tap);
+      if (lamp) P.ctrl.appendChild(lampBtn);
+      tap.onclick = () => { tapMode = !tapMode; tap.classList.toggle("chosen", tapMode); P.status.textContent = tapMode ? "Pick a board next to you to tap." : "Pick a board to step onto."; };
+      lampBtn.onclick = () => {
+        const hidden = rot.map((v, i) => v && !B.known[i] ? i : -1).filter(i => i >= 0);
+        if (hidden.length) { const i = hidden[d(hidden.length) - 1]; B.known[i] = true; }
+        lamp--; if (!lamp) lampBtn.disabled = true;
+        P.status.textContent = "The lantern light picks out a board black with rot.";
+        draw();
+      };
+      const adj = (y, x) => Math.abs(y - pos[0]) + Math.abs(x - pos[1]) === 1;
+      function click(y, x) {
+        if (!adj(y, x)) return;
+        const i = idx(y, x);
+        if (tapMode) {
+          taps++; tapMode = false; tap.classList.remove("chosen");
+          B.known[i] = true;
+          P.status.textContent = rot[i] ? "It answers with a soft, wet thud. Rotten." : "It rings back hard. Sound.";
+          draw(); return;
+        }
+        if (rot[i]) { B.known[i] = true; draw(); cells[i].classList.add("rot"); P.end(); P.status.textContent = "The board gives way under you."; setTimeout(() => resolve({ ok: false, taps }), 600); return; }
+        pos = [y, x]; B.stood[i] = true; B.known[i] = true;
+        if (y === R - 1 && x === C - 1) { draw(); P.end(); P.status.textContent = "You reach the chain."; setTimeout(() => resolve({ ok: true, taps }), 500); return; }
+        P.status.textContent = "You stand on the board. It holds.";
+        draw();
+      }
+      function draw() {
+        for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+          const i = idx(y, x), b = cells[i];
+          b.className = "";
+          if (y === R - 1 && x === C - 1) b.classList.add("goal");
+          if (B.known[i] && rot[i]) { b.classList.add("rot"); b.textContent = "✕"; }
+          else if (B.stood[i]) { b.classList.add("seen"); b.textContent = count(y, x); }
+          else if (B.known[i]) { b.classList.add("seen"); b.textContent = "◦"; }
+          else b.textContent = y === R - 1 && x === C - 1 ? "⛓" : "";
+          if (pos[0] === y && pos[1] === x) b.classList.add("here");
+          b.setAttribute("aria-label", "Board row " + (y + 1) + " column " + (x + 1) + (B.known[i] && rot[i] ? ", rotten" : B.stood[i] ? ", " + count(y, x) + " rotten nearby" : ""));
+        }
+      }
+      draw();
+      P.status.textContent = "Pick a board to step onto.";
+    });
+  }
+
+  // The well-keeper's lock: four rings, six runes each.
+  function winchPuzzle() {
+    return new Promise(resolve => {
+      const P = puzzleBox("The well-keeper's lock", "Four iron rings on the winch, six runes on each: " + RUNES.map(r => GLYPH[r] + " " + r).join(", ") + ". Turn each ring to the right rune and haul. Every wrong haul raises the Hunt by 2, but you'll feel how many rings catch.");
+      const val = [0, 0, 0, 0];
+      const wrap = el("div", "rings");
+      const faces = val.map((_, i) => {
+        const ring = el("div", "ring");
+        const up = pbtn("▲"), face = el("div", "face"), down = pbtn("▼");
+        up.setAttribute("aria-label", "Turn ring " + (i + 1) + " forward"); down.setAttribute("aria-label", "Turn ring " + (i + 1) + " back");
+        up.onclick = () => { val[i] = (val[i] + 1) % 6; draw(); };
+        down.onclick = () => { val[i] = (val[i] + 5) % 6; draw(); };
+        ring.append(up, face, down); wrap.appendChild(ring); return face;
+      });
+      P.body.appendChild(wrap);
+      const haul = pbtn("Haul the winch", "primary"), force = pbtn("Break it with the axe");
+      P.ctrl.append(haul, force);
+      let wrong = 0;
+      function draw() { faces.forEach((f, i) => { f.innerHTML = "<span style='font-size:1.5rem'>" + GLYPH[RUNES[val[i]]] + "</span>" + RUNES[val[i]]; }); }
+      haul.onclick = () => {
+        const n = val.filter((v, i) => RUNES[v] === LOCK[i]).length;
+        if (n === 4) { P.end(); P.status.textContent = "All four rings catch. The winch turns."; setTimeout(() => resolve({ ok: true, wrong }), 500); return; }
+        wrong++;
+        P.status.textContent = n + " of 4 rings catch. The chain screams and stops. (" + wrong + " wrong haul" + (wrong > 1 ? "s" : "") + ")";
+      };
+      force.onclick = () => { P.end(); resolve({ ok: false, wrong }); };
+      draw();
+    });
+  }
+
+  // ---------- scribing and the forge ----------
+  async function scribe() {
+    while (S.blank > 0 && S.ink > 0) {
+      const opts = Object.keys(MINES).map(k => ({ key: k, label: "Scribe " + MINES[k].name, tag: MINES[k].type + " · " + SCRIBE_LEN[k] + " strokes", plain: true }));
+      opts.push({ key: "stop", label: "Put the kit away", plain: true });
+      const k = await choose(opts);
+      if (k === "stop") return;
+      const ok = await scribePuzzle(SCRIBE_LEN[k]);
+      S.ink--;
+      if (ok) { S.blank--; S.scrolls[k]++; renderSheet(); await mech("You scribe a " + MINES[k].name + " scroll. " + S.blank + " blank, " + S.ink + " ink left.", "loot"); }
+      else {
+        renderSheet();
+        await mech("The ink is spoiled. " + S.ink + " ink left.", "hurt");
+        if (d(4) === 1) await hurt(1, 6, "necrotic", "The spoiled ink crawls up your wrist before you can scrape it off.");
+      }
+    }
+    if (!S.blank) await say("You're out of parchment.");
+    else if (!S.ink) await say("You're out of ink. There is plenty more of it in the village.");
+  }
+
+  async function forge() {
+    if (!S.hobb) return;
+    await say("You open Hobb's book on the anvil. Two iron pieces to a bag: heat the iron white, hammer four points from one knot so that however it falls, one point stands up, and quench it in " + (S.soaked ? "something. The page that says what is soaked through." : "brine and ash."));
+    while (S.iron >= 2) {
+      const c = await choose([
+        { key: "make", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · Hunt +2" },
+        { key: "stop", label: "Bank the fire", plain: true }
+      ]);
+      if (c === "stop") return;
+      S.iron -= 2; renderSheet();
+      const r = await check({ label: "Dexterity check (tinkering)", mod: 2, dc: 12, cta: "Hammer" });
+      if (!r.ok) { S.iron++; renderSheet(); await say("The points come out bent, and one knot cracks in the quench. You save a piece of the iron."); }
+      else if (r.total >= 18 && !S.soaked) { S.calFine++; renderSheet(); await mech("Fine caltrops: four needle points, barbed. It's slowed, and it bleeds 1d4 every time it comes at you.", "loot"); }
+      else { S.calCrude++; renderSheet(); await mech("Crude caltrops: they'll slow anything that walks on them.", "loot"); }
+      await noise(2, "The hammer rings across the whole village.");
+    }
+    if (S.iron < 2) await say("You're out of iron.");
+  }
+
+  // ---------- the Wringer ----------
+  const SIGNS = [
+    "Dust lifts off the road in two neat prints, then two more, coming your way. Nothing is making them.",
+    "A door across the lane bows inward, slowly, as if something were leaning on it to listen.",
+    "Your breath turns to smoke. It's not a cold night.",
+    "A puddle in the lane ripples. The ooze in it pulls away from one side, like a dog backing from its master."
+  ];
+
+  async function wDamage(n, why) {
+    const floor = S.finale ? 0 : 10;
+    const before = S.wHP;
+    S.wHP = Math.max(floor, S.wHP - n); renderSheet();
+    await mech(why + " " + n + " damage." + (S.wHP === floor && floor && before - n < floor ? " It won't die. It just pulls back to drink." : ""), "loot");
+  }
+
+  async function placeMines(max, dc) {
+    const laid = [];
+    while (laid.length < max) {
+      const avail = Object.keys(MINES).filter(k => S.scrolls[k] > 0);
+      if (!avail.length) break;
+      const opts = avail.map(k => ({ key: k, label: "Lay " + MINES[k].name, tag: MINES[k].type + " · " + S.scrolls[k] + " left" + (S.adapt[k] ? " · it knows this rune" : ""), plain: true }));
+      opts.push({ key: "done", label: laid.length ? "That's enough mines" : "Save the scrolls", plain: true });
+      const k = await choose(opts);
+      if (k === "done") break;
+      S.scrolls[k]--; renderSheet();
+      const r = await check({ label: "Arcana check: place the " + MINES[k].name + " rune", mod: 2, dc, adv: !!S.snare, cta: "Unroll and trace" });
+      if (r.ok) {
+        laid.push(k);
+        await mech(MINES[k].name + " is armed, ring " + laid.length + " out from you. Mines go off in the order you laid them: " + laid.map(x => MINES[x].name).join(" → ") + ".", "loot");
+      } else if (r.kept === 1 || r.total <= dc - 5) {
+        const [n, s] = MINES[k].dice;
+        await hurt(Math.max(1, n - 1), s, MINES[k].type, "The rune bites the hand that traced it. " + MINES[k].name + " goes off under you.");
+        if (k === "poison") await sicken(11, "You breathed the rot in.");
+      } else {
+        await say("The rune smokes and fizzles out. The scroll crumbles to ash.");
+      }
+    }
+    return laid;
+  }
+
+  async function triggerMines(laid, fx) {
+    for (let i = 0; i < laid.length; i++) {
+      const k = laid[i], prev = laid[i - 1], m = MINES[k], a = S.adapt[k];
+      let dmg = 0; for (let j = 0; j < m.dice[0]; j++) dmg += d(m.dice[1]);
+      let note = "";
+      let effect = a < 2;
+      if (k === "fire" && prev === "frost") { dmg *= 2; note = " The fire hits the ice it's wearing and it shatters: double damage."; }
+      if (k === "fire" && prev === "poison") { let x = d(6) + d(6); dmg += x; note = " The Blightbloom gas around it catches: +" + x + "."; }
+      if (k === "poison" && prev === "fire") { dmg = Math.floor(dmg / 2); effect = false; note = " The Emberbite flames burn the rot away before it can take."; }
+      dmg = Math.floor(dmg / Math.pow(2, a));
+      const lines = {
+        fire: "Ring " + (i + 1) + ": Emberbite. A sheet of flame jumps up out of the ground, and for one breath you see a shape in it, tall and stooped and wet.",
+        poison: "Ring " + (i + 1) + ": Blightbloom. A green cloud blooms in the lane and something coughs inside it, a dry, rattling, human cough.",
+        frost: "Ring " + (i + 1) + ": Rimefang. Ice cracks up out of the dirt in spikes, and frost forms in the air on nothing, on the shape of a long arm."
+      };
+      await say(lines[k] + note);
+      if (a) await say(a === 1 ? "It knows this rune now. It turns half away from it." : "It has learned this rune. It barely flinches.");
+      await wDamage(dmg, m.name + " deals " + m.type + " damage:");
+      if (effect) {
+        if (k === "fire") fx.revealed = true;
+        if (k === "frost") fx.slowed = true;
+        if (k === "poison") S.wPois = true;
+        await mech("Effect: " + m.effect + ".", "loot");
+      }
+      S.adapt[k]++;
+    }
+  }
+
+  async function wringerAttack(fx, label) {
+    const hit = await enemyAttack({ label, foe: "The Wringer", bonus: 6, dis: fx.slowed || fx.cal, adv: S.exh >= 3, cta: "Brace" });
+    if (fx.calFine) await wDamage(d(4), "It comes over your fine caltrops:");
+    if (!hit) { await say("Something brushes your sleeve and closes on air."); return false; }
+    await hurt(1, 8, "necrotic", "Fingers you can't see close on your wrist, and you feel the water go out of you: your lips crack, your eyes go dry, your tongue sticks.");
+    if (S.wPois) await wDamage(d(6), "It drinks the Blightbloom rot in your blood:");
+    return true;
+  }
+
+  async function strike(fx, used) {
+    const opts = [{ key: "axe", label: S.axe ? "Swing the axe" : "Slash with the knife", tag: fx.revealed ? "AC 14" : "AC 14 · unseen: disadvantage" }];
+    if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "shows it · 2d6 radiant", plain: true });
+    if (hasBook("Scroll of Moonfire") && !used.moon) opts.push({ key: "moon", label: "Read the Moonfire scroll", tag: "2d10 radiant, no roll", plain: true });
+    if (hasBook("Tome of Rootbinding") && !used.root) opts.push({ key: "root", label: "Read the Tome of Rootbinding", tag: "it's slowed", plain: true });
+    if (calTotal() && !fx.cal) opts.push({ key: "cal", label: "Scatter caltrops", tag: S.calFine ? "fine: slowed, bleeds 1d4" : "crude: slowed", plain: true });
+    const c = await choose(opts);
+    if (c === "gems") {
+      S.gemsSpent = true; renderSheet(); light("gems");
+      await say("The gems flare red, and in the red light you finally see its outline: long, bent, dripping.");
+      fx.revealed = true;
+      let x = d(6) + d(6); await wDamage(x, "The light burns it:");
+      light("dark"); return;
+    }
+    if (c === "moon") { used.moon = true; fx.revealed = true; let x = d(10) + d(10); await say("Silver flame falls on it and runs down its shape like water."); await wDamage(x, "Moonfire:"); return; }
+    if (c === "root") { used.root = true; fx.slowed = true; await say("Roots split the cobbles and wrap around legs you can't see. They hold."); await mech("It's slowed: its attacks have disadvantage.", "loot"); return; }
+    if (c === "cal") {
+      fx.cal = true;
+      if (S.calFine) { S.calFine--; fx.calFine = true; } else S.calCrude--;
+      renderSheet();
+      await say("You fling the caltrops in a hissing arc across the ground between you. A moment later one of them clicks, and something hisses back.");
+      await mech("It's slowed: its attacks have disadvantage." + (fx.calFine ? " It bleeds 1d4 every time it comes at you." : ""), "loot");
+      return;
+    }
+    const a = await check({ label: "Attack roll", mod: S.dull ? 4 : 5, dc: 14, target: "AC", dis: !fx.revealed, cta: "Strike" });
+    if (a.ok) { let x = d(8) + 3; await say(fx.revealed ? "The blade bites into the shape in the smoke." : "You swing at where the cold is and the blade meets something like a wet sack of sand."); await wDamage(x, "Axe:"); }
+    else await say("The blade hits nothing.");
+  }
+
+  // One pass of the Wringer: notice it, prepare, endure.
+  async function wringerPass({ warned = null, rounds = 2, intro = "" } = {}) {
+    S.inPass = true;
+    const back = document.body.dataset.light;
+    light("dark");
+    S.gemsSpent = false; renderSheet();
+    await say(intro || SIGNS[d(SIGNS.length) - 1]);
+    let ready = warned;
+    if (ready === null) {
+      if (S.lantern) await say("The Lantern Knight's flame leans sideways in its glass, toward something.");
+      ready = (await check({ label: "Perception check: where is it?", mod: 2, dc: 13, adv: !!S.lantern, cta: "Listen" })).ok;
+    }
+    const fx = { revealed: false, slowed: false, cal: false, calFine: false };
+    const used = {};
+    let laid = [], hidden = false, extra = 0;
+    if (ready) {
+      await say("You have a few heartbeats.");
+      for (;;) {
+        const opts = [];
+        const scrolls = S.scrolls.fire + S.scrolls.poison + S.scrolls.frost;
+        if (scrolls && !laid.length) opts.push({ key: "mines", label: "Lay rune mines around you", tag: "up to 3" });
+        if (calTotal() && !fx.cal) opts.push({ key: "cal", label: "Scatter caltrops", plain: true });
+        opts.push({ key: "hide", label: "Hide", tag: "Stealth DC 15" + (S.shadow ? " · advantage" : ""), plain: true });
+        opts.push({ key: "face", label: "Stand and face it", plain: true });
+        const c = await choose(opts);
+        if (c === "mines") { laid = await placeMines(3, 12); continue; }
+        if (c === "cal") {
+          fx.cal = true;
+          if (S.calFine) { S.calFine--; fx.calFine = true; } else S.calCrude--;
+          renderSheet();
+          await mech("You scatter caltrops around you. It's slowed." + (fx.calFine ? " It bleeds 1d4 every time it comes at you." : ""), "loot");
+          continue;
+        }
+        if (c === "hide") {
+          const h = await check({ label: "Stealth check", mod: 2, dc: 15, adv: !!S.shadow, cta: "Hold still" });
+          hidden = h.ok;
+          if (!h.ok) await say("You hold your breath. It still hears your heart.");
+        }
+        break;
+      }
+    } else {
+      await say("You don't hear it until it's already beside you.");
+      extra = 1;
+    }
+    if (laid.length) await triggerMines(laid, fx);
+    if (hidden) {
+      await say("It passes so close that frost grows on your eyelashes. It stops. It sniffs. Then the dust prints go on down the lane, and the flies start again.");
+    } else {
+      for (let r = 0; r < rounds + extra; r++) {
+        let hit;
+        if (r === 0 && extra) hit = await wringerAttack(fx, "It takes you by surprise");
+        else { await strike(fx, used); hit = await wringerAttack(fx, "The Wringer reaches for you"); }
+        if (hit && fx.lastHit) await exhaust(1, "It has wrung you twice. Your hands shake and your sight goes grey at the edges.");
+        fx.lastHit = hit;
+      }
+      await say("Then the cold is gone. Down the lane, a door creaks as something goes in to drink.");
+    }
+    S.hunt = 2; S.inPass = false; renderSheet();
+    light(back);
+  }
+
+  // ---------- Parts XXIII–XXVII ----------
+  async function partPuddles() {
+    heading("XXIII", "The Puddles");
+    light("dusk");
+    if (!S.lw) initLastwell();
+    await say("The road to Sulmara climbs out of the lake country through two days of empty hills. On the first night you open your pack, and the lake has been in it. The bread is green. The dried meat has gone soft and pale and smells sweet. There's one wax-wrapped heel of cheese left, and a skin of lake water.");
+    await mech("Water and food are tracked on your sheet now. Every morning you drink and eat; every morning without costs you a level of exhaustion.");
+    if (S.boy === "forgive") await say("Tobbin left you at the crossroads with your cloak still around his shoulders, to go south and face Sable. You walk on alone.");
+    if (S.mire === "warn") await say("Varro rode ahead to Sulmara on a horse he didn't pay for.");
+    await say("On the second evening, a milestone: <b>LASTWELL ½ MILE</b>. No smoke rises from the chimneys. No dogs bark. A crow sits on the milestone and doesn't fly when you pass.");
+    await go("Walk into the village");
+    await say("The first one is on the road, beside an overturned handcart. A carter's coat, laid flat. Boots, still laced. A hat. And in the middle of them, filling the coat the way water fills a footprint, a puddle of grey ooze the color of dishwater. A wedding ring sits in it. The flies are thick on the cart and on the turnips spilled from it, but none of them land on the puddle.");
+    await say("There are more. In doorways. On a bench outside the smithy. In a baby's cradle on a porch, and you don't look at that one twice. Every one of them is clothes, and grey ooze, and nothing else.");
+    await go("Search the road");
+    await say("In the middle of the square, by the well, there is one puddle that is still warm. A woman's robe of Sulmaran blue, ink-stained at the cuffs. A satchel, the strap still across where her chest would be.");
+    const r = await check({ label: "Investigation check", mod: 1, dc: 10, cta: "Open the satchel" });
+    S.scrolls = { fire: 2, poison: 2, frost: 2 }; S.blank = 3; S.ink = 1; renderSheet();
+    await say("Inside: an inkhorn, a sheaf of blank parchment, and six rolled scrolls with wax seals, red, green and white. A journal. The name inside the cover is <b>Ilse Marrow, rune-scribe, of Sulmara</b>.");
+    await mech("Gain Snare Rune Scrolls: 2 Emberbite (fire), 2 Blightbloom (poison), 2 Rimefang (frost), 3 blank parchment and 1 measure of ink.", "loot");
+    await say("Her last entry is dated four days ago:");
+    await say("<i>\"Sent for to ward the well. The reeve says it went dry at midsummer and Corwen the well-digger went down after the water with a rope and a lamp and came back up three days later. Nobody has seen him since. Now people go to sleep and in the morning they are puddles. They call it the Wringer. It can't be seen, but the snare runes will find anything that walks on them: lay them in rings, outer to inner, and they will go off one after another as it comes. I think it goes back down the well to pour out what it drinks. The well-keeper locked the shaft with a four-ring lock. Old Maud told me the first ring before she went to bed. It is the </i><b>Bell</b><i>, she said, because the bell called them all to church. I'll learn the rest tomorrow.\"</i>");
+    S.clues.push("Bell"); renderSheet();
+    await mech("The well-keeper's lock, ring one: Bell.", "loot");
+    if (r.ok) {
+      await say("Tucked in the back of the journal, in a tighter hand: <i>\"Rimefang before Emberbite: the fire shatters the ice. Never Emberbite before Blightbloom: the fire eats the rot. And never use the same rune on a hunting thing twice if you can help it. They learn.\"</i>");
+      await mech("You learned the mine combinations.", "loot");
+    }
+    await say("Across the square, the door of the inn, <i>the Dry Bucket</i>, hangs open. Someone has scratched words into the inside of it, deep, with fingernails. <b>THE WRINGER. DON'T SLEEP. DON'T SLEEP.</b>");
+    await mech("The Hunt starts now. Noise and time raise it, and when it reaches 10, the Wringer comes.");
+    await noise(3, "You've walked into its village.");
+    let looked = 0;
+    const done = new Set();
+    while (looked < 3) {
+      const opts = [
+        { key: "kitchen", label: "The inn kitchen", tag: "Investigation · Hunt +1" },
+        { key: "cellar", label: "The inn's beer cellar", tag: "Athletics · Hunt +2" },
+        { key: "cooper", label: "The cooper's yard", tag: "iron · Hunt +1" },
+        { key: "herb", label: "The herbwife's cottage", tag: "Medicine · Hunt +1" }
+      ].filter(o => !done.has(o.key)).map((o, i) => ({ ...o, plain: i > 0 }));
+      opts.push({ key: "stop", label: "Find somewhere to wait out the night", plain: true });
+      const c = await choose(opts);
+      if (c === "stop") break;
+      done.add(c); looked++;
+      if (c === "kitchen") {
+        await say("The inn kitchen. The bread in the crock has gone grey, the same grey as the puddles. So have the onions, and the ham on its hook, which has run down the wall in a long slow drip. Whatever drank the people drank the food.");
+        const k = await check({ label: "Investigation check", mod: 1, dc: 13, cta: "Search the shelves" });
+        if (k.ok) await findFood(1, "Behind a loose board: a sealed crock of pickled eggs, the brine still clear.");
+        else { await say("You put your hand on what you think is a cheese, and it gives like a blister."); await sicken(10, "You wiped it on your coat, but not fast enough."); }
+        await noise(1, "Crockery shifts.");
+      } else if (c === "cellar") {
+        await say("Down in the beer cellar the casks are stacked to the ceiling. The ones you can reach are full of grey. The one at the very top of the stack rocks when you tap it, and sloshes clean.");
+        const k = await check({ label: "Athletics check", mod: 3, dc: 13, cta: "Haul it down" });
+        if (k.ok) await findWater(2, "You ease the cask down onto your shoulder. Small beer, flat and sour, and clean.");
+        else await hurt(1, 6, "bludgeoning", "The stack comes down. The cask bursts on the floor and the beer runs into the grey.");
+        await noise(2, "Barrels boom on stone.");
+      } else if (c === "cooper") {
+        await say("The cooper's yard: half-made barrels, an adze in a block, and a pile of iron hoops rusting by the gate. The cooper is on the bench, a leather apron with grey in it.");
+        S.iron += 2; renderSheet();
+        await mech("Gain 2 scrap iron.", "loot");
+        await noise(1, "The hoops clank.");
+      } else {
+        await say("The herbwife's cottage smells of mint, and under it, of something sweet and rotten. Bunches of drying plants hang from the beams. Most have gone grey and soft.");
+        const k = await check({ label: "Medicine check", mod: 2, dc: 12, cta: "Pick what's good" });
+        if (k.ok) { S.herbs += 2; renderSheet(); await mech("Gain 2 sprigs of feverfew. Chew one to burn out ooze sickness.", "loot"); }
+        else await say("You can't tell the good from the turned. You leave it all.");
+        await noise(1, "The floorboards creak.");
+      }
+    }
+    await say("The light goes. You put your back to the wall of the inn's taproom, with the door barred and the window in front of you. You don't sleep. Around midnight you hear the bar on the door creak, slowly, as something on the other side leans its weight on it.");
+    await say("You unroll Ilse's scrolls on your knees. The runes on them are snares: lay one on the floor and it waits, and when something steps on it, it goes off. You have time to lay a few.");
+    await wringerPass({ warned: true, rounds: 2, intro: "The bar on the door splits. The door swings open on an empty doorway. Then the boards of the taproom floor creak, one after another, coming toward you." });
+    await say("At dawn you look at the floor. There are two long grey smears where it stood still, as if it had been dripping.");
+  }
+
+  async function partWell() {
+    heading("XXIV", "The Well and the Bell");
+    light("dusk");
+    await upkeep();
+    await say("Lastwell in daylight is worse. The puddles have skinned over in the sun like old custard. You count forty before you stop counting. The water in your skin won't last, and the only place in Lastwell that ever had water is the well.");
+    let did = new Set();
+    for (;;) {
+      const opts = [
+        { key: "well", label: "Go to the well", tag: "foul water · Hunt +2" },
+        { key: "bell", label: "Climb to the cracked bell", tag: "Athletics DC 14" },
+        { key: "cellar", label: "Open the reeve's rune-sealed cellar", tag: "puzzle" },
+        { key: "goat", label: "Butcher the goat in the pen", tag: "Medicine DC 13" },
+        { key: "hive", label: "Take the honey from the chimney hive", tag: hasFire() || S.scrolls.fire ? "needs fire" : "you have no fire" },
+        { key: "ink", label: "Gather ooze ink", tag: "Hunt +1" },
+        { key: "purify", label: "Make the foul water clean", tag: S.foul ? S.foul + " foul" : "you have none" }
+      ].filter(o => !did.has(o.key) || o.key === "ink" || o.key === "purify").filter(o => o.key !== "purify" || S.foul).filter(o => o.key !== "hive" || hasFire() || S.scrolls.fire)
+        .map(o => ({ ...o, plain: true }));
+      opts.push({ key: "night", label: "Let the night come", tag: "the Wringer will hunt" });
+      const c = await choose(opts);
+      if (c === "night") break;
+      did.add(c);
+      if (c === "well") {
+        await say("The well is in the middle of the square under a little slate roof. Its shaft is capped by an iron lid, chained and locked with four iron rings carved with runes, but the bucket hole in the lid is open, and the rope still runs down through it.");
+        await say("You lower the bucket. It goes down a very long way. When you haul it back up, it is half full of water so thick and grey it holds the shape of the bucket for a moment when you tip it.");
+        await findWater(3, "You fill your spare skins.", true);
+        await noise(2, "The winch shrieks with every turn.");
+      } else if (c === "bell") {
+        await say("The church spire broke in some old storm and the bell came down with it. It's lying mouth-up in the ruin of the belfry, forty feet up the inside of the tower, and it has been filling with rain for years.");
+        const k = await check({ label: "Athletics check", mod: 3, dc: 14, cta: "Climb" });
+        if (k.ok) {
+          await findWater(2, "You drink from the bell like a dog from a bowl, then fill your skin. It tastes of bronze and sky.");
+          await say("Around the lip of the bell, someone has carved a ring of little marks, and one of them is cut deeper than the rest and filled in with red wax: the rune of a <b>Root</b>. Under it, scratched small: <i>\"M. — for the second ring.\"</i>");
+          if (!S.clues.includes("Root")) { S.clues.push("Root"); renderSheet(); }
+          await mech("The well-keeper's lock, ring two: Root.", "loot");
+        } else {
+          await hurt(1, 6, "bludgeoning", "A handhold breaks. You slide down twenty feet of stone and your shoulder hits the bell on the way.");
+          await noise(4, "The cracked bell rings. Once. It's the loudest thing you have ever heard.");
+        }
+      } else if (c === "cellar") {
+        await say("The reeve's house has a cellar hatch in the kitchen floor, and the hatch is sealed with nine stone runes: a ward against rats, and against people who aren't the reeve. Whatever drank the reeve couldn't get in. There may still be food down there.");
+        const p = await cellarPuzzle();
+        if (p.presses >= 4) await noise(Math.floor(p.presses / 4), "The stones ground as they turned.");
+        if (!p.ok) {
+          const k = await check({ label: "Athletics check: pry it open", mod: 3, dc: 16, cta: "Heave" });
+          if (!k.ok) { await hurt(1, 6, "bludgeoning", "The hatch snaps back on your fingers."); await noise(3, "You hammer at it until it gives."); }
+          else await noise(3, "The hatch tears up with a crack like a tree falling.");
+          await say("The ward breaks when the hatch does, and the cold comes into the cellar ahead of you. Half the shelves have gone grey before you reach them.");
+          await findFood(1, "You save a ham.");
+        } else {
+          await say("Down in the dark, the cellar is dry and cool and untouched: hams, cheese in wax, apples in straw, a cask of cider. It's the only clean food in Lastwell, and it's the reeve's, and the reeve is a puddle at the top of the stairs.");
+          await findFood(3, "You pack what you can carry.");
+          await findWater(1, "And a skin of cider.");
+          if (!S.herbs) { S.herbs = 1; renderSheet(); await mech("On a shelf, a jar of dried feverfew. Gain 1 sprig.", "loot"); }
+        }
+      } else if (c === "goat") {
+        await say("In a pen behind the tannery, a goat is lying on its side. Its back half is grey and sunk in, like a melted candle. Its front half looks almost right. It's still breathing.");
+        const k = await check({ label: "Medicine check: what is still good?", mod: 2, dc: 13, cta: "Look closely" });
+        await say("You end it quickly.");
+        if (k.ok) await findFood(2, "You cut only from the shoulders, where the meat is still red and firm.");
+        else { await findFood(2, "You cut what looks good."); await sicken(13, "Some of it wasn't."); }
+        await noise(1, "The goat cries out once.");
+      } else if (c === "hive") {
+        await say("Bees still come and go from a crack in the baker's chimney. There's a hive inside the flue, and bees don't care about the Wringer.");
+        if (!hasFire()) { S.scrolls.fire--; renderSheet(); await mech("You have no other fire. You burn an Emberbite scroll in the hearth to make the smoke.", "hurt"); }
+        else await say("You make smoke in the baker's hearth.");
+        const k = await check({ label: "Dexterity check", mod: 2, dc: 12, cta: "Reach in" });
+        if (!k.ok) await hurt(2, 4, "poison", "The bees come out of the dark in a fist.");
+        S.honey = true; renderSheet();
+        await mech("Gain Comb Honey: it counts as a meal, and it cures ooze sickness.", "loot");
+        if (S.sick) {
+          const e = await choose([{ key: "eat", label: "Eat it now to cure the sickness" }, { key: "keep", label: "Keep it", plain: true }]);
+          if (e === "eat") { S.honey = false; await cure("The honey sits warm in your gut."); }
+        }
+        await noise(1, "Smoke rises from the baker's chimney.");
+      } else if (c === "ink") await gatherInk();
+      else if (c === "purify") await purify();
+    }
+    await say("You choose the church for the night: thick walls, one door. But when you push the door open, the smell stops you on the step. Every family in Lastwell came here to shelter. The nave is a grey lake, knee-deep, wall to wall, with clothes floating in it. Above it, hanging from a beam of the broken spire, a gibbet cage turns slowly on its chain, with something in it.");
+    await say("You sleep on the church step instead, with your back to the door.");
+    await wringerPass({});
+  }
+
+  async function partSpire() {
+    heading("XXV", "The Gibbet Spire");
+    light("dusk");
+    await upkeep();
+    await say("In daylight you can see what's in the cage. A tinker's coat. A tool roll. A book chained to the bars. Below the cage, on the grey surface of the nave, there's a long thin trickle that runs down out of the cage bottom and has been dripping, for days, into the rest.");
+    await say("Ilse's journal has a note about him: <i>\"Hobb the tinker says the Wringer can't climb. He's going to sleep in the old gibbet with his Book of Iron Mischief and his caltrops and laugh at it.\"</i> It got him anyway.");
+    let got = false, soaked = false;
+    const B = makeBeams();
+    let lampUses = S.lantern ? 2 : 0;
+    while (!got) {
+      const opts = [
+        { key: "climb", label: "Climb the bell rope and cross the rafters", tag: "puzzle" },
+        { key: "throw", label: "Throw the axe at the chain from the loft", tag: "AC 17 · the cage falls in the ooze", plain: true }
+      ];
+      if (S.scrolls.frost) opts.push({ key: "ice", label: "Freeze the nave with a Rimefang scroll first", tag: "then throw · keeps the book dry", plain: true });
+      const c = await choose(opts);
+      if (c === "climb") {
+        const k = await check({ label: "Athletics check: climb the rope", mod: 3, dc: 12, cta: "Climb" });
+        if (!k.ok) { await hurt(1, 4, "bludgeoning", "Your hands slip, and you slide down the rope and burn them."); await noise(1, "The bell rope thrums."); continue; }
+        await say("You come up into the dark of the roof. The rafters run out over the nave like the ribs of a boat, and half of them are soft with rot. Far below, the grey lake waits.");
+        for (;;) {
+          const p = await beamsPuzzle(B, lampUses);
+          lampUses = 0;
+          if (p.taps) await noise(p.taps, "Your knocking echoes in the nave.");
+          if (p.ok) { got = true; break; }
+          await hurt(2, 6, "bludgeoning", "The board breaks. You fall through the rafters, hit a beam, and go into the grey up to your chest.");
+          await sicken(13, "It gets in your mouth.");
+          await noise(3, "The splash rolls round the church.");
+          await say("You drag yourself out, shaking, with the ooze sliding off you in sheets, and climb the rope again. You know one more rotten board now.");
+          const k2 = await check({ label: "Athletics check: climb again", mod: 3, dc: 12, cta: "Climb" });
+          if (!k2.ok) await hurt(1, 4, "bludgeoning", "Your slick hands slip on the rope.");
+        }
+        await say("You lie flat on the last beam and haul the cage up on its chain hand over hand, and unlatch it.");
+      } else {
+        let iced = false;
+        if (c === "ice") {
+          S.scrolls.frost--; renderSheet();
+          const a = await check({ label: "Arcana check: freeze the nave", mod: 2, dc: 13, cta: "Read the rune" });
+          if (a.ok) { iced = true; await say("Frost runs out across the grey lake from the doorway in white ferns, and the whole surface goes hard and pale and cracks like a pond in January."); }
+          else await say("The rune flashes and the frost runs a few yards and melts.");
+        }
+        for (;;) {
+          const a = await check({ label: "Thrown axe: the chain", mod: S.dull ? 4 : 5, dc: 17, target: "AC", cta: "Throw" });
+          if (a.ok) break;
+          await noise(2, "The axe clangs off the stone and you have to go and get it.");
+        }
+        await say("The axe parts the chain. The cage drops forty feet" + (iced ? " and smashes on the ice, and skids." : " into the grey with a sound like a body hitting a bed, and slowly starts to sink."));
+        if (!iced) {
+          await say("You wade in after it. The ooze is warm, and it moves when you move.");
+          await sicken(14, "It's up to your waist.");
+          await noise(3, "You have to drag the cage out.");
+          soaked = true;
+        }
+        got = true;
+      }
+    }
+    await say("Inside the cage: a tinker's coat, buttoned, with grey in it. The tool roll. A pouch of horseshoe nails. And the book, chained to the bars by its spine: <b>Hobb's Book of Iron Mischief</b>.");
+    S.hobb = true; S.soaked = soaked; S.iron += 2; renderSheet();
+    await mech("Gain Hobb's Book of Iron Mischief" + (soaked ? ", soaked through" : "") + ", and 2 scrap iron.", "loot");
+    await say("Burned into the inside of the cover is a tinker's mark: the four rings of a lock, and a note. <i>\"Made for Maud Lastwell, well-keeper. Third ring, the </i><b>Hand</b><i>. Fourth, ask the smith, he cut it.\"</i>");
+    if (!S.clues.includes("Hand")) { S.clues.push("Hand"); renderSheet(); }
+    await mech("The well-keeper's lock, ring three: Hand.", "loot");
+    await say("Then the grey lake in the nave starts to move. Not the surface. All of it, toward the door, toward you, a slow wave, as if something has just stepped down into it from the other end.");
+    await wringerPass({ intro: "Something is wading through the nave toward you. You can see the ooze part around legs that aren't there." });
+  }
+
+  async function partSmithy() {
+    heading("XXVI", "The Smithy");
+    light("dusk");
+    await upkeep();
+    await say("The smith's forge is the only building in Lastwell with stone walls, a stone floor and an iron door. The smith is on the floor by the anvil. His hammer is still in the puddle where his hand was.");
+    await say("You'll need iron, and the forge, and the night is coming. Stamped into the horn of the anvil, under the maker's mark, is a little rune with a wax stain in it, the same as the bell's: an <b>Eye</b>.");
+    if (!S.clues.includes("Eye")) { S.clues.push("Eye"); renderSheet(); }
+    await mech("The well-keeper's lock, ring four: Eye.", "loot");
+    let lit = false;
+    const done = new Set();
+    for (;;) {
+      const opts = [];
+      if (!done.has("coffin")) opts.push({ key: "coffin", label: "Pull coffin nails at the undertaker's", tag: "iron +3 · Hunt +2" });
+      if (!done.has("stable")) opts.push({ key: "stable", label: "Take shoes from the horses in the stable", tag: "iron +2 · Wisdom save" });
+      if (!lit) opts.push({ key: "light", label: "Light the forge", tag: (hasFire() ? "torch or lantern" : "burns an Emberbite scroll") + " · Hunt +2" });
+      if (lit && S.hobb && S.iron >= 2) opts.push({ key: "forge", label: "Make caltrops", tag: S.iron + " iron" });
+      if (S.blank && S.ink) opts.push({ key: "scribe", label: "Scribe rune scrolls", tag: S.blank + " parchment, " + S.ink + " ink · puzzle" });
+      opts.push({ key: "ink", label: "Gather ooze ink", tag: "Hunt +1" });
+      if (S.foul && (lit || hasFire())) opts.push({ key: "purify", label: "Boil the foul water", tag: S.foul + " foul" });
+      opts.push({ key: "night", label: "Bar the iron door", tag: "it's coming" });
+      const c = await choose(opts.map((o, i) => ({ ...o, plain: i > 0 })));
+      if (c === "night") break;
+      if (c === "coffin") {
+        done.add(c);
+        await say("The undertaker had three coffins made up and waiting, and three people already in them, from before. They're the only dead in Lastwell who still have faces. You pry the lids up as gently as you can and take the nails.");
+        S.iron += 3; renderSheet();
+        await mech("Gain 3 scrap iron.", "loot");
+        await noise(2, "Nails shriek coming out of oak.");
+      } else if (c === "stable") {
+        done.add(c);
+        await say("The horses are in their stalls. They are puddles from the withers down, and their heads are lying on the straw, and their eyes are open. You have to lift the legs to get to the shoes.");
+        const w = await check({ label: "Wisdom save", mod: 2, dc: 12, cta: "Keep going" });
+        S.iron += 2; renderSheet();
+        await mech("Gain 2 scrap iron.", "loot");
+        if (!w.ok) await exhaust(1, "You make it outside before you're sick, and you don't stop being sick for a long time.");
+      } else if (c === "light") {
+        lit = true;
+        if (!hasFire()) { S.scrolls.fire--; renderSheet(); await mech("You burn an Emberbite scroll to start the coals.", "hurt"); }
+        await say("You work the bellows until the coals go white. Heat fills the room, the first warmth you've felt in Lastwell.");
+        await noise(2, "The bellows roar.");
+      } else if (c === "forge") await forge();
+      else if (c === "scribe") await scribe();
+      else if (c === "ink") await gatherInk();
+      else if (c === "purify") await purify();
+    }
+    await say("You drop the bar across the iron door. You have the forge at your back and the anvil between you and the door. You wait.");
+    await say("It doesn't use the door. Near midnight, the puddle by the anvil, the smith, starts to move. It draws itself up into a column, and the column leans toward you, and you understand: it doesn't need doors. It goes where its puddles are.");
+    await wringerPass({ warned: true, rounds: 2, intro: "The grey column falls away into nothing, and the cold is in the room with you." });
+    if (lit && S.foul) { await say("Before the coals die you set the foul water to boil."); await purify(); }
+    await say("It comes back before dawn. You hear the dripping first.");
+    await wringerPass({});
+    await say("At first light you hear it in the square: a long, steady pouring, like a bucket being emptied into the well, over and over. Ilse was right. It's gone back down to pour out what it drank. And it will come up again tonight.");
+  }
+
+  async function partWringing() {
+    heading("XXVII", "The Wringing");
+    light("dusk");
+    await upkeep();
+    await say("The well stands in the square under its little roof. The pouring has stopped. The lid is locked with the four iron rings, but now you know what it does: it doesn't keep the Wringer in. It keeps everyone else out of the only place it has to go.");
+    await say("Ilse's plan was to open the lock, ring the well with runes, and be standing there when it came up. You don't have a better one.");
+    const known = LOCK.filter(r => S.clues.includes(r)).length;
+    await mech("You know " + known + " of the 4 rings: " + LOCK.map(r => S.clues.includes(r) ? r : "?").join(" · ") + ".");
+    const p = await winchPuzzle();
+    if (p.wrong) await noise(Math.min(7, p.wrong * 2), "The winch screamed across the square.");
+    if (!p.ok) {
+      const k = await check({ label: "Athletics check: break the lock", mod: 3, dc: 16, cta: "Swing" });
+      await noise(3, "Iron on iron, over and over.");
+      if (!k.ok) await hurt(1, 6, "bludgeoning", "A ring snaps and the shard opens your cheek.");
+      await say("The lock comes apart in pieces.");
+    }
+    await say("You heave the lid back. Below, the shaft goes down into the dark, and the stones of it are wet and grey all the way down. It smells like the inside of a mouth.");
+    await say("You have until nightfall. Lay what you have around the well. When it comes up, it will come up through your rings.");
+    if (S.blank && S.ink) { const s = await choose([{ key: "scribe", label: "Scribe more scrolls first", tag: "puzzle" }, { key: "no", label: "No time", plain: true }]); if (s === "scribe") await scribe(); }
+    const laid = await placeMines(4, 11);
+    const fx = { revealed: false, slowed: false, cal: false, calFine: false };
+    if (calTotal()) {
+      const c = await choose([{ key: "yes", label: "Scatter caltrops around the well", tag: S.calFine ? "fine" : "crude" }, { key: "no", label: "Keep them for the fight", plain: true }]);
+      if (c === "yes") { fx.cal = true; if (S.calFine) { S.calFine--; fx.calFine = true; } else S.calCrude--; renderSheet(); await mech("Caltrops ring the well. It will be slowed." + (fx.calFine ? " And it will bleed." : ""), "loot"); }
+    }
+    const bait = await choose([
+      { key: "blood", label: "Bait it with your blood", tag: "take 1d4" },
+      { key: "water", label: "Bait it with your last clean water", tag: S.water ? "lose all clean water" : "you have none", plain: true },
+      { key: "none", label: "Just wait", plain: true }
+    ].filter(o => o.key !== "water" || S.water));
+    let surprise = false;
+    if (bait === "blood") { await hurt(1, 4, "slashing", "You open your palm with the belt knife and let it drip down the shaft."); }
+    else if (bait === "water") { S.water = 0; renderSheet(); await say("You pour your water down the well. You hear it land a long way below. Something down there stops pouring and starts to climb."); }
+    else surprise = true;
+    S.finale = true;
+    S.gemsSpent = false; renderSheet();
+    light("dark");
+    await say("Night. The flies stop. Something comes up out of the well hand over hand, wet and unhurried, and stands on the lip of it.");
+    if (surprise) await say("You weren't watching the right side of the well.");
+    await triggerMines(laid, fx);
+    if (surprise) await wringerAttack(fx, "It's on you before the last rune fades");
+    const used = {};
+    let round = 0;
+    while (S.wHP > 0) {
+      round++;
+      if (S.wHP <= 20) {
+        await say("It's staggering. It's leaking. It's right at the lip of the well.");
+        const c = await choose([
+          { key: "shove", label: S.shield ? "Shield Slam it into the well" : "Shove it into the well", tag: "contest" },
+          { key: "fight", label: "Keep fighting", plain: true }
+        ]);
+        if (c === "shove") {
+          const ok = await contest({ label: S.shield ? "Shield Slam" : "Athletics contest", mod: S.shield ? 5 : 3, foe: "The Wringer", foeMod: fx.slowed ? 1 : 4, cta: "Drive forward" });
+          if (ok) { S.wHP = 0; renderSheet(); break; }
+          await say("It plants itself and doesn't go.");
+          await wringerAttack(fx, "It wraps itself around you");
+          continue;
+        }
+      }
+      await strike(fx, used);
+      if (S.wHP <= 0) break;
+      const hit = await wringerAttack(fx, "The Wringer reaches for you");
+      if (hit && round % 2 === 0) await exhaust(1, "Every time it touches you, a little more of you goes.");
+      if (round === 3 && !fx.revealed) await say("You still can't see it. Only frost, and dripping, and the cold of it.");
+    }
+    S.finale = false;
+    light("dusk");
+    await say("And then, at last, you see it.");
+    await say("It is a man, or the shape of one: tall and stooped, wrapped in skin the color of a drowned thumb, hanging loose on it like a wet sack. It has no eyes. Its arms are too long, and along the insides of them, from wrist to armpit, there are mouths, small and round and puckered, opening and closing like the gills of a fish. On a cord around its neck there's a well-digger's lamp.");
+    await say("Corwen. Who went down after the water, and found something down there that was thirstier than he was.");
+    await say("It goes down into the well slowly, like a man going down a ladder, and you hear it hit the bottom, and then you hear the water: everything it drank out of Lastwell, pouring out of it at once, a roaring flood rising up the shaft, and then stopping, and lapping, just below the lip.");
+    await say("You lower the bucket. It comes up full and clear and cold, and you drink until you are sick, and then drink again.");
+    S.water = Math.max(S.water, 6); S.foul = 0; S.exh = Math.max(0, S.exh - 2); renderSheet();
+    await mech("You fill every skin you have with clean water, and the worst of the exhaustion lifts.", "loot");
+    await say("Nothing else changes. The puddles are still puddles. Nobody sits up. You walk out of Lastwell in the morning past the carter's coat on the road with the ring in it, and you don't take the ring.");
+    if (S.axe) await voice("Vaelric is quiet for a long time. Then: \"The wardens would have burned it to the ground. The whole village. I think they would have been right.\"");
+    await say("Two days east, the road crests a ridge, and in the valley below, Sulmara glitters like broken glass.");
+    S.lw = false;
+    await endCard();
+  }
+
+  async function endCard() {
     await wait(300);
     const carried = [];
     if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
@@ -2298,25 +3259,28 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.ring) carried.push("Varro's violet signet ring");
     if (S.token) carried.push("The Hollow Hand token");
     if (S.smoke) carried.push("One Smokebloom vial");
+    if (S.hobb) carried.push("Hobb's Book of Iron Mischief");
+    const sc = S.scrolls ? S.scrolls.fire + S.scrolls.poison + S.scrolls.frost : 0;
+    if (sc) carried.push(sc + " snare rune scroll" + (sc > 1 ? "s" : ""));
+    if (calTotal()) carried.push(calTotal() + " bag" + (calTotal() > 1 ? "s" : "") + " of caltrops");
     if (S.shadow) carried.push("Shadowblend");
     if (S.snare) carried.push("Snare Trap");
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
-    const behind = S.boy === "forgive" ? "Tobbin sits in the bow of the boat, wrapped in your cloak, ready to face Sable." : S.boy === "jackal" ? "Tobbin is gone, and something wearing his face is on its way to Sulmara." : "Somewhere in the fen, Tobbin is running again.";
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XXIII</p>' +
+      '<p class="eyebrow" style="margin:0">Part XXVIII</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You row away from drowned Carrowmere with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold" + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>You come down out of the hills toward Sulmara with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold" + (S.water !== undefined ? ", " + S.water + " skins of clean water" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + behind + (S.pike ? " A great white shape follows you to the shore." : "") + " Ahead, the Blackjackal is loose in the world above, and he is going to Sulmara.</p>" +
+      "<p style='margin:0;color:var(--muted)'>Behind you, Lastwell's well is full again, and there's nobody left to drink from it. Ahead, the Blackjackal is somewhere in the glass city, and so is the Magistrate.</p>" +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partSmithy, partWringing];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Smithy", "The Wringing"];
 
   let started = false;
   async function play(fromPart) {

@@ -6,7 +6,7 @@
 
 Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.
 
-Labyrinth of Roots is a choose-and-roll dark fantasy adventure in twenty-two parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet, and out across its lake to Carrowmere, the drowned castle, where a knight with a lantern has guarded a stolen treasury for a hundred years.
+Labyrinth of Roots is a choose-and-roll dark fantasy adventure in twenty-seven parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet, and out across its lake to Carrowmere, the drowned castle, where a knight with a lantern has guarded a stolen treasury for a hundred years, and down the road to Lastwell, a dead village where something you can't see drinks people dry, and hunts you while you scrape together water, food, rune mines and caltrops to survive it.
 
 ## How to play
 
@@ -27,6 +27,9 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 - **Choices** at key moments, such as paying the hooded strangers, fighting or fleeing the vine horror, and bracing your shield against the spiders.
 - **Clickable d20 rolls** for every check: Perception, Survival, Dexterity checks, Investigation (DC 12), the Dexterity save (DC 13), attack rolls, and the Shield Slam Strength contest against Ryytaa. Success and failure each lead to their own text.
 - **A character sheet** that tracks HP, armor class, gold, and inventory: the torch, Vaelric's axe (its gem power works once per encounter), the pauldron shield, and the spellbooks you choose in the Library of Roots.
+- **Survival in Lastwell** (Parts XXIII–XXVII): water, food, five levels of exhaustion, ooze sickness, and the Hunt clock that brings the unseen Wringer down on you when you make noise.
+- **Snare rune mines** (fire, poison and frost), each placed with an Arcana roll, that combine and that the Wringer learns to shrug off. You can scribe more scrolls with ooze ink, and forge **caltrops** from scrap iron once you find Hobb's book.
+- **Four puzzles**: the rune-sealed cellar, scribing a rune from memory, crossing the rotten rafters of the spire, and the well-keeper's four-ring lock.
 - **Progress saving** in your browser, so you can continue from the last part you reached.
 
 ## Files
@@ -34,8 +37,8 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 | File | What it is |
 | --- | --- |
 | `index.html` | The playable game |
-| `STORY.md` | The full game master script for all twenty-two parts |
+| `STORY.md` | The full game master script for all twenty-seven parts |
 
 ## Status
 
-Parts I to XXII are complete. The story ends with the Blackjackal loose in the world and on his way to Sulmara. Part XXIII is still to come.
+Parts I to XXVII are complete. The story ends on the ridge above Sulmara, where the Blackjackal and the Magistrate are waiting. Part XXVIII is still to come.
