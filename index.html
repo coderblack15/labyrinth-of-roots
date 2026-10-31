@@ -279,6 +279,33 @@ body.intro-open { overflow: hidden; }
 .lw .note { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); line-height: 1.35; }
 .huntbar { grid-column: 1 / -1; height: 6px; background: #2a1d1a; border-radius: 3px; overflow: hidden; }
 .huntbar span { display: block; height: 100%; background: linear-gradient(90deg, #6d6a5a, var(--ember)); transition: width .4s; }
+/* enemy meter + combo, shown in the sheet only during a fight */
+.foe { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; position: relative; }
+.foe[hidden] { display: none; }
+.foe-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.foe-name { font-family: var(--label); font-weight: 700; letter-spacing: .08em; color: #e68a76; font-size: .9rem; line-height: 1.2; }
+.foebar { position: relative; height: 10px; background: #241614; border: 1px solid #4a2a24; border-radius: 4px; overflow: hidden; }
+.foebar span { position: absolute; inset: 0 auto 0 0; height: 100%; }
+.foebar .lag { background: #e9c98a; transition: width .7s ease .35s; }
+.foebar .now { background: linear-gradient(90deg, #8f2a22, var(--ruby)); transition: width .25s ease; }
+.foebar .ticks { inset: 0; width: 100%; background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--seg, 1) - 2px), var(--panel) calc(100% / var(--seg, 1) - 2px) calc(100% / var(--seg, 1))); }
+.foe.hit .foebar { animation: jolt .3s ease; }
+@keyframes jolt { 0%, 100% { transform: none; } 25% { transform: translateX(-3px); } 60% { transform: translateX(2px); } }
+.foe-top .stat-val { margin-left: auto; }
+.foe-pop { font-family: var(--label); font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; pointer-events: none; animation: pop 1.1s ease forwards; }
+.foe-pop.rb { color: #ffd27a; font-size: 1.15rem; }
+@keyframes pop { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
+.combo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pips { display: inline-flex; gap: 4px; }
+.pips i { width: 10px; height: 10px; transform: rotate(45deg); border: 1px solid var(--gold); display: inline-block; background: transparent; transition: background .2s; }
+.pips i.on { background: var(--gold); }
+.pips i.on:nth-child(3), .combo.ready .pips i:nth-child(3) { box-shadow: 0 0 8px rgba(255, 210, 122, .7); }
+.combo.ready .pips i:nth-child(3) { border-color: #ffd27a; }
+.combo-note { font-family: var(--label); font-size: .78rem; letter-spacing: .05em; color: var(--muted); }
+.combo.ready .combo-note { color: var(--gold); }
+.roll .meta .combo-tag { color: var(--gold); }
+.story .mech.combo { color: #ffd27a; }
+.story .mech.combo::before { content: "◆"; color: var(--gold); }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 22px; scroll-margin-top: 24px; }
 button {
   font: inherit; cursor: pointer; color: var(--ink);
@@ -400,10 +427,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .inv svg { width: 20px; height: 20px; }
   .inv .name { font-size: .92rem; }
   .inv .desc { font-size: .82rem; line-height: 1.35; }
-  .part-head, .choices, .roll, .puzzle { scroll-margin-top: 110px; }
+  .part-head, .choices, .roll, .puzzle { scroll-margin-top: calc(var(--sheet-h, 100px) + 10px); }
   .lw { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding-top: 6px; }
   .lw .stat-val { margin-right: 10px; white-space: nowrap; font-size: .95rem; }
   .lw .note, .lw .huntbar { display: none; }
+  .foe { padding-top: 6px; gap: 4px; }
+  .foe-name { font-size: .82rem; }
+  .foebar { height: 8px; }
+  .combo .combo-note { font-size: .74rem; }
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
 }
 @media (max-width: 480px) {
@@ -412,7 +443,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .roll { padding: 12px; gap: 6px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade, .inv li.new, .inv-toggle.new { animation: none; }
+  .fade, .inv li.new, .inv-toggle.new, .foe.hit .foebar, .foe-pop { animation: none; }
+  .foebar .lag, .foebar .now { transition: none; }
   .inv-panel, .sheet.inv-open .inv-panel { transition: none; }
   .die.spin svg { animation: none; }
   .atmos, .story { transition: none; }
@@ -530,6 +562,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Read each scene, then pick what you do next.</li>
       <li>When a check comes up, click to roll the d20. Your bonus is added, and you need to meet or beat the number shown.</li>
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser.</li>
+      <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
     </ul>
     <div class="actions" id="startActions">
       <button class="primary" id="beginBtn" type="button">Begin the descent</button>
@@ -567,6 +600,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <span class="stat-label">The Hunt</span>
       <span class="stat-val" id="lwHunt">0 / 10</span>
       <div class="huntbar"><span id="lwHuntBar" style="width:0%"></span></div>
+    </div>
+    <div class="foe" id="foeBox" hidden>
+      <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
+      <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
+      <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
     </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
@@ -699,6 +737,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     lastwellItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     renderLastwell();
+    sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
     if (!items.length) { ul.innerHTML = '<li><span></span><span class="empty">A pack, some bread, a belt knife.</span></li>'; }
@@ -795,13 +834,20 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function check({ label, mod, dc, target = "DC", adv = false, dis = false, cta = "Roll d20" }) {
     if (S.lw && S.exh >= (target === "AC" ? 2 : 1)) dis = true;
     if (adv && dis) { adv = dis = false; }
-    return new Promise(resolve => {
+    const atk = FOE.on && target === "AC";
+    const cb = atk ? Math.min(2, FOE.chain) : 0;
+    mod += cb;
+    return new Promise(done => {
+      const resolve = (r) => {
+        if (atk) { FOE.chain = r.ok ? Math.min(3, FOE.chain + 1) : 0; renderFoe(); }
+        done(r);
+      };
       const card = el("div", "roll");
       const dice = el("div", "dice");
       const n = adv || dis ? 2 : 1;
       const dies = Array.from({ length: n }, () => dieEl(false));
       dies.forEach(x => dice.appendChild(x));
-      const metaBits = ["d20 " + fmt(mod), target + " " + dc];
+      const metaBits = ["d20 " + fmt(mod) + (cb ? ' <span class="combo-tag">(combo +' + cb + ")</span>" : ""), target + " " + dc];
       if (adv) metaBits.push('<span class="adv">advantage</span>');
       if (dis) metaBits.push('<span class="dis">disadvantage</span>');
       const out = el("div", "out", "&nbsp;");
@@ -923,6 +969,110 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
     await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + ".");
     return total;
+  }
+
+
+  // ---------- enemy meter and combos ----------
+  // While a foe is on the meter, attack rolls build a combo: each hit in a row adds +1 to your next
+  // attack (max +2), the second hit in a row deals +2 damage, and the third is a Rootbreaker
+  // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
+  // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
+  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0 };
+  function foeStart(name, max, { hp = max, unit = "" } = {}) {
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0 });
+    renderFoe(true);
+  }
+  function foeEnd() { FOE.on = false; FOE.chain = 0; renderFoe(); }
+  function renderFoe(instant) {
+    const box = $("foeBox");
+    if (!box) return;
+    box.hidden = !FOE.on;
+    sheetH();
+    if (!FOE.on) return;
+    const pct = Math.max(0, FOE.hp / FOE.max * 100) + "%";
+    $("foeName").textContent = FOE.name;
+    const u = FOE.unit.split("|"), unit = FOE.hp === 1 ? u[0] : u[u.length - 1];
+    $("foeVal").textContent = FOE.unit ? FOE.hp + " " + unit + " left" : FOE.hp + " / " + FOE.max + " HP";
+    const bar = $("foeBar"), lag = $("foeLag");
+    if (instant) { bar.style.transition = lag.style.transition = "none"; void bar.offsetWidth; }
+    bar.style.width = pct; lag.style.width = pct;
+    if (instant) { void bar.offsetWidth; bar.style.transition = lag.style.transition = ""; }
+    $("foeTicks").style.setProperty("--seg", FOE.unit ? FOE.max : 1);
+    $("foeTicks").hidden = !FOE.unit;
+    const m = $("foeMeter");
+    m.setAttribute("aria-valuemin", 0); m.setAttribute("aria-valuemax", FOE.max); m.setAttribute("aria-valuenow", FOE.hp);
+    m.setAttribute("aria-label", FOE.name + (FOE.unit ? ": " + FOE.hp + " " + unit + " left" : " health"));
+    const c = FOE.chain;
+    $("comboPips").querySelectorAll("i").forEach((p, i) => p.classList.toggle("on", i < c));
+    $("comboBox").classList.toggle("ready", c >= 2);
+    $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : "+2 to hit · next hit is a Rootbreaker";
+  }
+  // On phones the sheet is a sticky top bar, so scroll targets need to clear its real height.
+  function sheetH() { const sh = $("sheet"); if (sh) document.documentElement.style.setProperty("--sheet-h", sh.offsetHeight + "px"); }
+  function foePop(text, rb) {
+    const box = $("foeBox");
+    if (!box || box.hidden) return;
+    box.classList.remove("hit"); void box.offsetWidth; box.classList.add("hit");
+    box.querySelectorAll(".foe-pop").forEach(x => x.remove());
+    const p = el("span", "foe-pop" + (rb ? " rb" : ""), text);
+    $("foeVal").before(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+  // Take n off the meter (HP or heads).
+  function foeHit(n) {
+    if (!FOE.on) return;
+    FOE.hp = Math.max(0, FOE.hp - n);
+    renderFoe();
+    foePop("−" + n);
+  }
+  function foeSet(hp) { if (!FOE.on) return; const n = FOE.hp - hp; FOE.hp = Math.max(0, hp); renderFoe(); if (n > 0) foePop("−" + n); }
+  // A landed spell or gem burst keeps the combo alive (but never fires the Rootbreaker itself).
+  function comboKeep() { if (FOE.on) { FOE.chain = Math.min(2, FOE.chain + 1); renderFoe(); } }
+  // Called once a hit lands: returns 1, 2 or 3 (3 = Rootbreaker, which spends the combo).
+  function comboLanded() {
+    const k = FOE.chain;
+    if (k >= 3) FOE.chain = 0;
+    renderFoe();
+    return k;
+  }
+  // Roll weapon damage with the combo bonus for the hit that just landed.
+  async function comboDamage(count, sides, bonus, label) {
+    const k = FOE.on ? comboLanded() : 1;
+    const rb = k >= 3;
+    const n = rb ? count * 2 : count;
+    const rolls = []; let total = bonus;
+    for (let i = 0; i < n; i++) { const r = d(sides); rolls.push(r); total += r; }
+    const extra = k === 2 ? 2 : rb ? 4 : 0;
+    total += extra;
+    if (rb) await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo");
+    let txt = label + ": " + n + "d" + sides + (bonus ? " + " + bonus : "") + (extra ? " + " + extra + " combo" : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + (extra ? " + " + extra : "") + " = " + total + ".";
+    return { total, txt, rb };
+  }
+  // Strike the foe on the meter. Returns the damage dealt.
+  async function foeStrike(count, sides, bonus, label) {
+    const { total, txt, rb } = await comboDamage(count, sides, bonus, label);
+    FOE.hp = Math.max(0, FOE.hp - total);
+    renderFoe();
+    foePop("−" + total, rb);
+    await mech(txt + " " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."));
+    return total;
+  }
+  // A spell or burst that lands automatically: damage, and the combo carries on.
+  async function foeBurst(count, sides, bonus, label) {
+    let total = bonus; const rolls = [];
+    for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
+    FOE.hp = Math.max(0, FOE.hp - total);
+    comboKeep(); foePop("−" + total);
+    await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + ". " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down.") + " Your combo holds.", "loot");
+    return total;
+  }
+  // For head-count fights: a landed Rootbreaker takes down one extra.
+  async function comboHeads(spare = 0) {
+    const k = comboLanded();
+    if (k < 3) return 1;
+    if (spare > 0) { await mech("Rootbreaker! Three hits in a row, and the blow carries through into a second one.", "combo"); return 2; }
+    await mech("Rootbreaker! Three hits in a row, and the blow lands with everything you have.", "combo");
+    return 1;
   }
 
   // ---------- the labyrinth ----------
@@ -1085,6 +1235,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const init = await check({ label: "Initiative", mod: 2, dc: 14, target: "vs the brood", cta: "Roll initiative" });
     await say(init.ok ? "You're ready before their feet touch stone." : "They move before you can raise the axe.");
 
+    foeStart("Ryytaa the Ender", 24);
+    await mech("Ryytaa the Ender waits at the back of the nest while her brood comes at you. Every hit you land in a row builds your combo, and she has 24 HP.");
     // Round 1
     await mech("Round 1");
     await say("The first spider lands right in front of you, its eight eyes shining red in the axe's glow. Its abdomen clenches, its fangs spread wide, and a wet, gurgling sound rises from its throat. It's about to spray venom straight at your face.");
@@ -1144,6 +1296,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.gemsSpent = true; renderSheet();
     light("gems");
     await damageRoll(2, 8, 0, "Radiant burst");
+    comboKeep();
     await say("You slam the axe down and the gems burst with red light. The webs around you curl into ash, leaving the spiders nowhere to hide. The wounded one crumples, smoking.");
 
     // Round 4
@@ -1162,18 +1315,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await say("Still, the steel rang hard against her skull. She's shaking her head, slow to recover.");
     }
     await voice("\"Now,\" Vaelric whispers from the axe.");
-    let down = false; first = true;
-    while (!down) {
+    first = true;
+    while (FOE.hp > 0) {
       const a = await check({ label: "Killing blow", mod: 5, dc: 14, target: "AC", adv: first && advFinal, cta: first ? "Bring the axe down with both hands" : "Strike again" });
       first = false;
-      if (a.ok) down = true;
-      else {
+      if (a.ok) {
+        await foeStrike(2, 12, 3, "Axe damage");
+        if (FOE.hp > 0) await say("The axe bites deep into her carapace, and black ichor sprays across the webs. She screams and rears up again, still standing.");
+      } else {
         await say("She twists aside at the last instant and the blade shears through silk instead of flesh.");
         await voice("\"Steady. Again.\"");
       }
     }
-    await damageRoll(2, 12, 3, "Axe damage");
-    S.slain = true; renderSheet();
+    S.slain = true; foeEnd(); renderSheet();
     await say("The gems blaze so brightly that the whole nest is lit like noon. When Ryytaa the Ender falls, the egg sacs shrivel, the last spiders flee into the cracks in the walls, and the clicking dies.");
     await say("The shield stays strapped to your arm, scarred by venom and dented in the shape of a spider's face.");
     light("torch");
@@ -1378,7 +1532,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await mech("The golem loses its next turn.");
       skip = true;
     }
-    await mech("The Warden Golem: AC 15, three hits to bring it down." + (crew ? " Sable dances in front of it to draw its eye, so your first swing has advantage, and Grell has your back." : ""));
+    foeStart("The Warden Golem", 26);
+    await mech("The Warden Golem: AC 15, 26 HP." + (crew ? " Sable dances in front of it to draw its eye, so your first swing has advantage, and Grell has your back." : ""));
     let hits = 0, adv = crew, guard = crew, first = true;
     if (alarm) {
       await mech("It saw you coming. The golem acts first.", "hurt");
@@ -1386,14 +1541,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (!sv.ok) await hurt(1, 8, "bludgeoning", "A stone fist slams into you.");
       else await say("The fist cracks the glass step where you stood.");
     }
-    while (hits < 3) {
+    while (FOE.hp > 0) {
       const a = await check({ label: "Axe attack", mod: 5, dc: 15, target: "AC", adv, cta: first ? "Swing the axe" : "Swing again" });
       adv = false; first = false;
       if (a.ok) {
         hits++;
+        await foeStrike(1, 8, 3, "Axe damage");
+        if (FOE.hp <= 0) break;
         if (hits === 1) await say("The axe bites into sandstone and a chunk of its shoulder falls away." + (crew ? " Ysolde lobs a vial after it, and acid hisses into the crack." : ""));
         else if (hits === 2) await say("Bronze screams. One of its arms hangs useless, and the lantern in its chest flickers.");
-        else break;
+        else await say("A crack runs up its chest from hip to collar. Sand pours out of it like an hourglass, and still it keeps coming.");
       } else {
         await say("The blade skids off bronze plate.");
       }
@@ -1404,6 +1561,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       else await hurt(1, 8, "bludgeoning", "A stone fist slams into you.");
     }
     light("gems");
+    foeEnd();
     await say("Your last swing splits its chest open. The green lantern goes out, and the Warden Golem topples down the glass stair in a slide of sand and bronze.");
     light("torch");
   }
@@ -1455,11 +1613,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         await say("The gems flare, and the vault fills with red light. The guards throw their arms over their eyes.");
         gemAdv = true;
       }
+      foeStart("Palace guards", 3, { unit: "between you and the stair" });
       for (let i = 0; i < 3; i++) {
         const a = await check({ label: "Axe attack " + (i + 1) + " of 3", mod: 5, dc: 13, target: "AC", adv: gemAdv && i === 0, cta: "Cut a path" });
-        if (a.ok) await say(["The first guard goes down with his shield split in half.", "You shoulder the second guard into the gold.", "The last guard drops his spear and runs."][i]);
-        else await hurt(1, 6, "slashing", "A blade gets through.");
+        if (a.ok) { await comboHeads(); await say(["The first guard goes down with his shield split in half.", "You shoulder the second guard into the gold.", "The last guard drops his spear and runs."][i]); }
+        else { await hurt(1, 6, "slashing", "A blade gets through."); await say("You shove past him anyway."); }
+        foeHit(1);
       }
+      foeEnd();
       await say("You snatch the seed as you pass the pedestal, and the crew pounds up the stair behind you.");
       return;
     }
@@ -1488,12 +1649,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await mech("Your next attack has advantage.");
       adv = true;
     }
-    while (hits < 2) {
+    foeStart("Glass scorpion", 14);
+    while (FOE.hp > 0) {
       const a = await check({ label: "Axe attack", mod: 5, dc: 13, target: "AC", adv, cta: hits ? "Finish it" : "Swing the axe" });
       adv = false;
-      if (a.ok) { hits++; await say(hits === 1 ? "Crystal shatters, and one claw drops to the sand." : "The axe splits it down the middle, and the blue glow in its stinger fades."); }
+      if (a.ok) { hits++; await foeStrike(1, 8, 3, "Axe damage"); await say(FOE.hp > 0 ? "Crystal shatters, and one claw drops to the sand." : "The axe splits it down the middle, and the blue glow in its stinger fades."); }
       else await hurt(1, 6, "poison", "The stinger catches you.");
     }
+    foeEnd();
     light("dusk");
     await say("Ysolde climbs out shaking and presses a vial of violet glass into your hand. \"I pay my debts.\"");
     S.smoke = true; renderSheet();
@@ -1562,11 +1725,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         if (w) await say("You drive the shield into the first guard, and he flies back into the second. They go down in a heap and stay down.");
         else { await hurt(1, 4, "bludgeoning", "The guard braces and shoves back."); await say("You and Tobbin wrestle them down, but not quietly."); alarm = true; }
       } else {
+        foeStart("Kitchen guards", 2, { unit: "standing" });
         for (let i = 0; i < 2; i++) {
           const a = await check({ label: "Attack", mod: 5, dc: 12, target: "AC", cta: i ? "The second guard" : "The first guard" });
           if (!a.ok) await hurt(1, 4, "slashing", "A short sword nicks you.");
+          else await comboHeads();
+          foeHit(1);
           await say(i ? "The second guard goes down." : "The first guard goes down.");
         }
+        foeEnd();
       }
       await say("Tobbin seems a little too comfortable down here. He knows which doors are locked, and he never once looks at the map.");
     }
@@ -1637,11 +1804,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.side = c;
     if (c === "magistrate") {
       await say("Sable and Grell don't fight back hard. Maybe they're too surprised.");
+      foeStart("Sable and Grell", 2, { unit: "standing" });
       for (const who of ["Sable", "Grell"]) {
         const a = await check({ label: "Attack to subdue " + who, mod: 5, dc: 13, target: "AC", cta: "Take " + who + " down" });
         if (!a.ok) await hurt(1, 4, "slashing", who + "'s knife finds you before you pin " + (who === "Sable" ? "her" : "him") + ".");
+        else await comboHeads();
+        foeHit(1);
         await say(who === "Sable" ? "You pin Sable to the glass, and the guards drag her away." : "Grell goes down under your shield, and four guards sit on him.");
       }
+      foeEnd();
       S.coins += 100; renderSheet();
       await mech("The Magistrate pays you 100 gold.", "loot");
       await say("\"And now,\" he says, \"the axe.\" When you don't move, he snaps his fingers. The green lantern in the golem's chest blazes, and it lumbers to life.", "voice");
@@ -1756,6 +1927,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("Three slugs slide out of the reeds, each one as long as a horse, their grey-green bodies glistening, their eyestalks swiveling toward you. Where they cross the logs, the wood smokes and softens. The slime they leave behind eats armor and flesh alike, and they are coming faster than anything that big should move.");
     await mech("Each slug falls to one hit (AC 10). Each round they spit dissolving slime: a Dexterity save (DC 12) or 1d6 acid damage. Steel won't last long against this. It's a fight for magic.");
     let slugs = 3, held = false, codexAdv = 0, axeHits = 0, emberFree = !!S.ember, codexUsed = false, saveAdv = false;
+    foeStart("Mire slugs", 3, { unit: "slug|slugs" });
     const spells = [
       { book: "Scroll of Moonfire", label: "Read the Scroll of Moonfire" },
       { book: "Tome of Rootbinding", label: "Read from the Tome of Rootbinding" },
@@ -1773,15 +1945,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         const a = await check({ label: "Axe attack", mod: 5, dc: 10, target: "AC", adv, cta: "Swing the axe" });
         if (codexAdv > 0) codexAdv--;
         if (a.ok) {
-          slugs--; axeHits++;
-          await say("The axe splits a slug down its length, and it collapses in a hissing puddle.");
+          const k = await comboHeads(slugs - 1);
+          slugs -= k; axeHits++; foeSet(slugs);
+          await say(k === 2 ? "The axe splits a slug down its length and buries itself in the one behind it. Both collapse in hissing puddles." : "The axe splits a slug down its length, and it collapses in a hissing puddle.");
           if (axeHits === 2 && !S.dull) { S.dull = true; renderSheet(); await mech("The slime has pitted the blade. The axe is dulled for the rest of the Hushfen.", "hurt"); }
         } else await say("The blade glances off the slick hide, and it smokes where the slime touched it.");
       } else if (c === "gems") {
         S.gemsSpent = true; renderSheet();
         light("gems");
         await say("The gems flare red. The radiant light dries the slime to a crust, and the nearest slug shrivels like a leaf in a fire. The others recoil, half blind.");
-        slugs--; saveAdv = true;
+        slugs--; saveAdv = true; foeSet(slugs); comboKeep();
         light("mire");
       } else if (c === "Codex of Whispering Bark") {
         codexUsed = true;
@@ -1790,7 +1963,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         await mech("Your next two attacks have advantage.", "loot");
       } else {
         let hit = true;
-        if (emberFree) { emberFree = false; await mech("The Ember Root warms under your ribs, and the spell simply works."); }
+        if (emberFree) { emberFree = false; await mech("The Ember Root warms under your ribs, and the spell simply works."); if (c !== "Scroll of Misty Step") comboKeep(); }
         else hit = (await check({ label: "Spell attack · " + c, mod: 4, dc: 10, target: "AC", adv, cta: "Cast" })).ok;
         if (codexAdv > 0) codexAdv--;
         if (c === "Scroll of Misty Step") {
@@ -1802,14 +1975,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         } else if (!hit) {
           await say("The spell goes wide and fizzles into the black water.");
         } else if (c === "Scroll of Moonfire") {
-          const k = Math.min(2, slugs); slugs -= k;
+          const k = Math.min(2, slugs); slugs -= k; foeSet(slugs);
           await say("A beam of silver flame boils the nearest slug where it lies" + (k === 2 ? ", and the beam runs on long enough to catch the one behind it." : "."));
         } else if (c === "Tome of Rootbinding") {
           held = true;
           await say("The mire roots wrap the slugs and drag them half under the black water. They thrash, but they can't spit.");
           await mech("The slugs are held: every attack against them has advantage, and they lose their next spit.", "loot");
         } else if (c === "The Thornwall Grimoire") {
-          const k = Math.min(2, slugs); slugs -= k;
+          const k = Math.min(2, slugs); slugs -= k; foeSet(slugs);
           await say("A wall of thorns tears up out of the mud between you and the slugs. They crawl into it without slowing, and the thorns shred them" + (k === 2 ? ". Two of them stop moving." : "."));
         }
       }
@@ -1823,6 +1996,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         if (S.shield && !S.pitted) { S.pitted = true; renderSheet(); await mech("The slime eats through the strap and face of your shield: −1 AC until someone mends it.", "hurt"); }
       }
     }
+    foeEnd();
     await say("When the last slug curls up and goes still, the mire is quiet again.");
     await go("Catch your breath");
   }
@@ -1990,30 +2164,32 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   async function gnawkinFight(surprise) {
     S.gemsSpent = false; renderSheet();
-    let hits = 0, first = true;
+    let first = true;
+    foeStart("The Gnawkin pack", 24);
+    await mech("The Gnawkin pack has AC 12 and 24 HP between them. When they're down to nothing, the rest will break and run.");
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     if (book) {
       const c = await choose([{ key: "spell", label: "Open with the " + book.replace(/^The /, "") }, { key: "axe", label: "Go straight in with the axe", plain: true }]);
       if (c === "spell") {
-        hits++;
         await say(book === "Scroll of Moonfire" ? "Silver fire lances through the circle, and the Gnawkin nearest the fire scatter, smoking and squealing." : book === "Tome of Rootbinding" ? "Roots burst up through the clearing and pin four of the Gnawkin to the mud." : "A wall of thorns slams up through the middle of the circle and cuts the Gnawkin in half.");
-        await mech("The spell counts as one hit. " + (3 - hits) + " to go.", "loot");
+        await foeBurst(2, 6, 3, "The spell lands");
       }
     }
-    while (hits < 3) {
+    while (FOE.hp > 0) {
       const opts = [{ key: "axe", label: "Swing the axe" }];
       if (S.shield) opts.push({ key: "slam", label: "Shield Slam", plain: true });
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", plain: true });
       const c = await choose(opts);
       let adv = surprise && first;
       if (c === "gems") { S.gemsSpent = true; renderSheet(); light("gems"); await say("The gems flare red and the Gnawkin throw their paws over their eyes."); light("torch"); adv = true; }
-      const a = await check({ label: "Attack " + (hits + 1) + " of 3", mod: 5, dc: 12, target: "AC", adv, dis: !!S.dazed, cta: c === "slam" ? "Slam!" : "Strike" });
+      const a = await check({ label: c === "slam" ? "Shield Slam" : "Axe attack", mod: 5, dc: 12, target: "AC", adv, dis: !!S.dazed, cta: c === "slam" ? "Slam!" : "Strike" });
       S.dazed = false; first = false;
       if (a.ok) {
-        hits++;
+        await foeStrike(1, c === "slam" ? 6 : 8, 3, c === "slam" ? "Slam damage" : "Axe damage");
         await say(c === "slam" ? "You drive the shield into the pack and three of them tumble into the fire, shrieking." : c === "gems" ? "Half blind, they can't see the axe coming. Four of them go down." : "The axe sweeps through their spears and snaps them like reeds. Four of them drop their weapons and bolt.");
       } else await hurt(1, 4, "piercing", "Spears and slingstones find you.");
     }
+    foeEnd();
     await say("When the last blow lands, the Gnawkin who can still run, run. The old grey rat is pinned under your boot. He tells you everything about the flooded tunnel, and he swears on his teeth that the Gnawkin will never trouble the shadow man again.");
     S.mire = "ambush";
   }
@@ -2113,29 +2289,35 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // ---------- Carrowmere: the drowned castle ----------
   // A fight that needs a number of hits. Spells and the gems can help.
-  async function hitsFight({ need, ac, sides, type, missWhy, hitLines, foe }) {
+  async function hitsFight({ need, ac, sides, type, missWhy, hitLines, foe, name }) {
     let hits = 0, gemAdv = false;
+    foeStart(name, need * 9);
     const back = document.body.dataset.light;
     S.gemsSpent = false; renderSheet();
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     let bookUsed = false;
-    while (hits < need) {
+    while (FOE.hp > 0) {
       const opts = [{ key: "axe", label: "Swing the axe" }];
-      if (book && !bookUsed) opts.push({ key: "spell", label: "Read from the " + book.replace(/^The /, ""), tag: "automatic hit", plain: true });
+      if (book && !bookUsed) opts.push({ key: "spell", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "advantage", plain: true });
       const c = await choose(opts);
       if (c === "spell") {
         bookUsed = true; hits++;
         await say(book === "Scroll of Moonfire" ? "A beam of silver flame lances into " + foe + "." : book === "Tome of Rootbinding" ? "Weed and root rise out of the water and drag at " + foe + "." : "A wall of thorns tears up out of the stone and through " + foe + ".");
-        await mech("The spell counts as one hit. " + (need - hits) + " to go.", "loot");
+        await foeBurst(2, 8, 0, "The spell lands");
         continue;
       }
       if (c === "gems") { S.gemsSpent = true; renderSheet(); light("gems"); await say("The gems flare red."); light(back); gemAdv = true; continue; }
-      const a = await check({ label: "Attack " + (hits + 1) + " of " + need, mod: S.dull ? 4 : 5, dc: ac, target: "AC", adv: gemAdv, cta: "Strike" });
+      const a = await check({ label: "Axe attack", mod: S.dull ? 4 : 5, dc: ac, target: "AC", adv: gemAdv, cta: "Strike" });
       gemAdv = false;
-      if (a.ok) { await say(hitLines[hits] || hitLines[hitLines.length - 1]); hits++; }
+      if (a.ok) {
+        await foeStrike(1, 8, S.dull ? 2 : 3, "Axe damage" + (S.dull ? " (dulled)" : ""));
+        await say(FOE.hp > 0 ? hitLines[Math.min(hits, hitLines.length - 2)] : hitLines[hitLines.length - 1]);
+        hits++;
+      }
       else await hurt(1, sides, type, missWhy);
     }
+    foeEnd();
   }
 
   async function partCrossing() {
@@ -2173,8 +2355,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         await mech("The Gravepike is your ally. It will come again when you need it.", "loot");
       } else await hurt(1, 4, "bludgeoning", "It takes the food, and the oar with it, and bumps the boat hard on the way past. You paddle the rest of the way with your hands.");
     } else if (c === "fight") {
-      await mech("The Gravepike has AC 13. You need three hits. Each miss, it slams the boat: 1d6 damage.");
-      await hitsFight({ need: 3, ac: 13, sides: 6, type: "bludgeoning", missWhy: "The Gravepike slams into the boat.", foe: "the Gravepike",
+      await mech("The Gravepike has AC 13 and 27 HP. Each miss, it slams the boat: 1d6 damage.");
+      await hitsFight({ need: 3, ac: 13, sides: 6, type: "bludgeoning", missWhy: "The Gravepike slams into the boat.", foe: "the Gravepike", name: "The Gravepike",
         hitLines: ["The axe bites deep behind its gills, and the water clouds.", "You hit it again as it rolls past, and it thrashes the lake white.", "The third blow lands. The Gravepike rolls belly-up and drifts."] });
       await gold(2, 6, "Something glints in its torn gut: a hundred years of coins it swallowed off the drowned fields.");
     }
@@ -2339,8 +2521,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       }
     }
     if (c === "fight") {
-      await mech("Ser Oswin has AC 15. You need three hits. Each miss, his sword finds you: 1d8 damage.");
-      await hitsFight({ need: 3, ac: 15, sides: 8, type: "slashing", missWhy: "His old sword finds the gap in your guard.", foe: "the knight",
+      await mech("Ser Oswin has AC 15 and 27 HP. Each miss, his sword finds you: 1d8 damage.");
+      await hitsFight({ need: 3, ac: 15, sides: 8, type: "slashing", missWhy: "His old sword finds the gap in your guard.", foe: "the knight", name: "Ser Oswin, the Lantern Knight",
         hitLines: ["The axe rings off his helm, and lake water sprays out of the visor.", "You catch him under the shield, and he staggers back a step.", "The third blow lands."] });
       await voice("Oswin goes down on one knee. \"Well struck,\" he says. \"I am so tired.\"");
     }
@@ -2841,6 +3023,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const floor = S.finale ? 0 : 10;
     const before = S.wHP;
     S.wHP = Math.max(floor, S.wHP - n); renderSheet();
+    if (FOE.on && FOE.name.startsWith("The Wringer")) { FOE.hp = S.wHP; renderFoe(); foePop("−" + (before - S.wHP)); }
     await mech(why + " " + n + " damage." + (S.wHP === floor && floor && before - n < floor ? " It won't die. It just pulls back to drink." : ""), "loot");
   }
 
@@ -2888,7 +3071,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (a) await say(a === 1 ? "It knows this rune now. It turns half away from it." : "It has learned this rune. It barely flinches.");
       await wDamage(dmg, m.name + " deals " + m.type + " damage:");
       if (effect) {
-        if (k === "fire") fx.revealed = true;
+        if (k === "fire") { fx.revealed = true; wName(fx); }
         if (k === "frost") fx.slowed = true;
         if (k === "poison") S.wPois = true;
         await mech("Effect: " + m.effect + ".", "loot");
@@ -2897,6 +3080,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
   }
 
+  function wMeter(fx) { foeStart("The Wringer", WR_MAX, { hp: S.wHP }); wName(fx); }
+  function wName(fx) { if (FOE.on) { FOE.name = fx.revealed ? "The Wringer" : "The Wringer (unseen)"; renderFoe(); } }
   async function wringerAttack(fx, label) {
     const hit = await enemyAttack({ label, foe: "The Wringer", bonus: 6, dis: fx.slowed || fx.cal, adv: S.exh >= 3, cta: "Brace" });
     if (fx.calFine) await wDamage(d(4), "It comes over your fine caltrops:");
@@ -2918,11 +3103,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (c === "gems") {
       S.gemsSpent = true; renderSheet(); light("gems");
       await say("The gems flare red, and in the red light you finally see its outline: long, bent, dripping.");
-      fx.revealed = true;
+      fx.revealed = true; wName(fx); comboKeep();
       let x = d(6) + d(6); await wDamage(x, "The light burns it:");
       light("dark"); return;
     }
-    if (c === "moon") { used.moon = true; fx.revealed = true; let x = d(10) + d(10); await say("Silver flame falls on it and runs down its shape like water."); await wDamage(x, "Moonfire:"); return; }
+    if (c === "moon") { used.moon = true; fx.revealed = true; wName(fx); comboKeep(); let x = d(10) + d(10); await say("Silver flame falls on it and runs down its shape like water."); await wDamage(x, "Moonfire:"); return; }
     if (c === "root") { used.root = true; fx.slowed = true; await say("Roots split the cobbles and wrap around legs you can't see. They hold."); await mech("It's slowed: its attacks have disadvantage.", "loot"); return; }
     if (c === "cal") {
       fx.cal = true;
@@ -2933,7 +3118,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       return;
     }
     const a = await check({ label: "Attack roll", mod: S.dull ? 4 : 5, dc: 14, target: "AC", dis: !fx.revealed, cta: "Strike" });
-    if (a.ok) { let x = d(8) + 3; await say(fx.revealed ? "The blade bites into the shape in the smoke." : "You swing at where the cold is and the blade meets something like a wet sack of sand."); await wDamage(x, "Axe:"); }
+    if (a.ok) {
+      const { total, txt } = await comboDamage(1, 8, S.dull ? 2 : 3, S.axe ? "Axe" : "Knife");
+      await say(fx.revealed ? "The blade bites into the shape in the smoke." : "You swing at where the cold is and the blade meets something like a wet sack of sand.");
+      await mech(txt);
+      await wDamage(total, "It takes");
+    }
     else await say("The blade hits nothing.");
   }
 
@@ -2985,6 +3175,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await say("You don't hear it until it's already beside you.");
       extra = 1;
     }
+    wMeter(fx);
     if (laid.length) await triggerMines(laid, fx);
     if (hidden) {
       await say("It passes so close that frost grows on your eyelashes. It stops. It sniffs. Then the dust prints go on down the lane, and the flies start again.");
@@ -2998,6 +3189,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       }
       await say("Then the cold is gone. Down the lane, a door creaks as something goes in to drink.");
     }
+    foeEnd();
     S.hunt = 2; S.inPass = false; renderSheet();
     light(back);
     await offerMoss();
@@ -3398,6 +3590,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     light("dark");
     await say("Night. The flies stop. Something comes up out of the well hand over hand, wet and unhurried, and stands on the lip of it.");
     if (surprise) await say("You weren't watching the right side of the well.");
+    wMeter(fx);
     await triggerMines(laid, fx);
     if (surprise) await wringerAttack(fx, "It's on you before the last rune fades");
     const used = {};
@@ -3412,7 +3605,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         ]);
         if (c === "shove") {
           const ok = await contest({ label: S.shield ? "Shield Slam" : "Athletics contest", mod: S.shield ? 5 : 3, foe: "The Wringer", foeMod: fx.slowed ? 1 : 4, cta: "Drive forward" });
-          if (ok) { S.wHP = 0; renderSheet(); break; }
+          if (ok) { S.wHP = 0; foeSet(0); renderSheet(); break; }
           await say("It plants itself and doesn't go.");
           await wringerAttack(fx, "It wraps itself around you");
           continue;
@@ -3425,6 +3618,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (round === 3 && !fx.revealed) await say("You still can't see it. Only frost, and dripping, and the cold of it.");
     }
     S.finale = false;
+    foeEnd();
     light("dusk");
     await say("And then, at last, you see it.");
     await say("It is a man, or the shape of one: tall and stooped, wrapped in skin the color of a drowned thumb, hanging loose on it like a wet sack. It has no eyes. Its arms are too long, and along the insides of them, from wrist to armpit, there are mouths, small and round and puckered, opening and closing like the gills of a fish. On a cord around its neck there's a well-digger's lamp.");
@@ -3491,6 +3685,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S = resumeState || fresh();
     story.innerHTML = "";
     lastItems = new Set();
+    foeEnd();
     $("startActions").hidden = true;
     $("resumeNote").hidden = true;
     renderSheet();
