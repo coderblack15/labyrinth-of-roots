@@ -2357,7 +2357,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   function initLastwell() {
     Object.assign(S, {
-      lw: true, water: 2, foul: 0, food: 1, exh: 0, hunt: 0, sick: false, herbs: 0, honey: false,
+      lw: true, water: 2, foul: 0, food: 1, exh: 0, hunt: 0, sick: false, herbs: 0, honey: false, moss: 0, mossBound: false, potions: S.potions || 0, elixirs: S.elixirs || 0,
       scrolls: { fire: 0, poison: 0, frost: 0 }, adapt: { fire: 0, poison: 0, frost: 0 }, blank: 0, ink: 0,
       iron: 0, calFine: 0, calCrude: 0, hobb: false, soaked: false, clues: [], wHP: WR_MAX, wPois: false, inPass: false, finale: false
     });
@@ -2385,6 +2385,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.hobb) items.push(["hobb", "book", "Hobb's Book of Iron Mischief", S.soaked ? "Half the pages are soaked through. You can only make crude caltrops." : "Caltrops: 2 iron and a forge per bag."]);
     if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes."]);
     if (calTotal()) items.push(["cal", "caltrop", "Caltrops", (S.calFine ? S.calFine + " fine bag" + (S.calFine > 1 ? "s" : "") + " (it's slowed, and it bleeds 1d4 on every attack)" : "") + (S.calFine && S.calCrude ? ", " : "") + (S.calCrude ? S.calCrude + " crude bag" + (S.calCrude > 1 ? "s" : "") + " (it's slowed)" : "") + "."]);
+    if (S.potions) items.push(["potion", "vial", "Draught of Mending ×" + S.potions, "Drink it to regain 10 HP."]);
+    if (S.elixirs) items.push(["elixir", "vial", "Elixir of Health ×" + S.elixirs, "Drink it to regain 20 HP."]);
+    if (S.moss) items.push(["moss", "herb", "Gravemoss Poultice ×" + S.moss, "Bind one to heal 2d6 now, and 1d4 more the next morning."]);
     if (S.herbs) items.push(["herbs", "herb", "Feverfew ×" + S.herbs, "Chew a sprig to burn out ooze sickness."]);
     if (S.honey) items.push(["honey", "herb", "Comb Honey", "Cures ooze sickness. Counts as a meal."]);
     if (S.revelation) items.push(["rev", "scroll", "Scroll of Revelation", "Sealed with an open eye. Read it to see what has been hidden."]);
@@ -2437,6 +2440,48 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   // Every morning in Lastwell: drink, eat, and pay for what you couldn't.
+  // Gravemoss: the one thing in Lastwell that heals. It only grows on the old graves.
+  async function bindMoss() {
+    S.moss--; renderSheet();
+    const r = await check({ label: "Medicine check: bind the poultice", mod: 2, dc: 10, cta: "Bind it" });
+    if (r.ok) {
+      await heal(2, 6, "You pack the gravemoss into your wounds and bind it tight. It's cold, then warm, and it draws the grey out of them.");
+      S.mossBound = true; renderSheet();
+      await mech("While it stays bound, you'll regain 1d4 more HP tomorrow morning.", "loot");
+    } else await heal(1, 4, "You bind it badly, and most of the moss crumbles away.");
+  }
+  async function drink(kind) {
+    const elixir = kind === "elixir";
+    if (elixir) S.elixirs--; else S.potions--;
+    renderSheet();
+    if (S.lw && S.exh >= 5) { await mech("You drink the " + (elixir ? "Elixir of Health" : "Draught of Mending") + ", but you're too far gone to heal.", "hurt"); return; }
+    const n = elixir ? 20 : 10, before = S.hp;
+    S.hp = Math.min(S.lw ? hpCap() : S.maxHp, S.hp + n); renderSheet();
+    await mech((elixir ? "The elixir is thick and red and tastes of iron and clover. Warmth runs out to your fingertips." : "The draught is bitter as bark. Your wounds pull closed.") + " Regain " + n + " HP" + (S.hp - before < n ? " (you're back to full)" : "") + ".", "loot");
+  }
+  // Every quiet moment in Lastwell: a chance to patch yourself up.
+  async function healOpts(tagTurn) {
+    const o = [];
+    if (S.potions) o.push({ key: "potion", label: "Drink a Draught of Mending", tag: "+10 HP · " + S.potions + " left" + tagTurn, plain: true });
+    if (S.elixirs) o.push({ key: "elixir", label: "Drink an Elixir of Health", tag: "+20 HP · " + S.elixirs + " left" + tagTurn, plain: true });
+    if (S.moss) o.push({ key: "moss", label: "Bind a gravemoss poultice", tag: S.moss + " left · Medicine DC 10" + tagTurn, plain: true });
+    return o;
+  }
+  async function useHeal(c) {
+    if (c === "moss") await bindMoss();
+    else if (c === "potion" || c === "elixir") await drink(c);
+  }
+  async function offerMoss() {
+    while (S.lw && S.hp < hpCap()) {
+      const o = await healOpts("");
+      if (!o.length) return;
+      o.push({ key: "no", label: S.hp < hpCap() / 3 ? "Save them" : "Save them for worse", plain: true });
+      const c = await choose(o);
+      if (c === "no") return;
+      await useHeal(c);
+    }
+  }
+
   async function upkeep() {
     await say("<b>Morning.</b> " + (S.sick ? "Your tongue is coated grey and your skin is hot." : "Your mouth is dry before you open your eyes."));
     S.wHP = Math.min(WR_MAX, S.wHP + 4);
@@ -2481,6 +2526,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         else await say("The fever breaks over you and leaves the sickness where it was.");
       }
     }
+  }
+
+  async function morningMoss() {
+    if (S.mossBound) { S.mossBound = false; await heal(1, 4, "The poultice has worked through the night."); }
+    await offerMoss();
   }
 
   // Foul water can be made clean: boiled, or run through charcoal.
@@ -2808,7 +2858,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (hasBook("Scroll of Moonfire") && !used.moon) opts.push({ key: "moon", label: "Read the Moonfire scroll", tag: "2d10 radiant, no roll", plain: true });
     if (hasBook("Tome of Rootbinding") && !used.root) opts.push({ key: "root", label: "Read the Tome of Rootbinding", tag: "it's slowed", plain: true });
     if (calTotal() && !fx.cal) opts.push({ key: "cal", label: "Scatter caltrops", tag: S.calFine ? "fine: slowed, bleeds 1d4" : "crude: slowed", plain: true });
+    if (S.hp < hpCap()) opts.push(...await healOpts(" · costs your turn"));
     const c = await choose(opts);
+    if (c === "moss" || c === "potion" || c === "elixir") { await useHeal(c); return; }
     if (c === "gems") {
       S.gemsSpent = true; renderSheet(); light("gems");
       await say("The gems flare red, and in the red light you finally see its outline: long, bent, dripping.");
@@ -2894,6 +2946,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
     S.hunt = 2; S.inPass = false; renderSheet();
     light(back);
+    await offerMoss();
   }
 
   // ---------- Parts XXIII–XXVII ----------
@@ -2915,6 +2968,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.scrolls = { fire: 2, poison: 2, frost: 2 }; S.blank = 3; S.ink = 1; renderSheet();
     await say("Inside: an inkhorn, a sheaf of blank parchment, and six rolled scrolls with wax seals, red, green and white. A journal. The name inside the cover is <b>Ilse Marrow, rune-scribe, of Sulmara</b>.");
     await mech("Gain Snare Rune Scrolls: 2 Emberbite (fire), 2 Blightbloom (poison), 2 Rimefang (frost), 3 blank parchment and 1 measure of ink.", "loot");
+    await say("Tucked into a pocket of the satchel, wrapped in a stocking so it wouldn't break: a stoppered vial of brown liquid with a Sulmaran apothecary's seal. She never got the chance to drink it.");
+    S.potions++; renderSheet();
+    await mech("Gain a Draught of Mending (regain 10 HP). It's on your sheet.", "loot");
     await say("Her last entry is dated four days ago:");
     await say("<i>\"Sent for to ward the well. The reeve says it went dry at midsummer and Corwen the well-digger went down after the water with a rope and a lamp and came back up three days later. Nobody has seen him since. Now people go to sleep and in the morning they are puddles. They call it the Wringer. It can't be seen, but the snare runes will find anything that walks on them: lay them in rings, outer to inner, and they will go off one after another as it comes. I think it goes back down the well to pour out what it drinks. The well-keeper locked the shaft with a four-ring lock. Old Maud told me the first ring before she went to bed. It is the </i><b>Bell</b><i>, she said, because the bell called them all to church. I'll learn the rest tomorrow.\"</i>");
     S.clues.push("Bell"); renderSheet();
@@ -2959,7 +3015,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       } else {
         await say("The herbwife's cottage smells of mint, and under it, of something sweet and rotten. Bunches of drying plants hang from the beams. Most have gone grey and soft.");
         const k = await check({ label: "Medicine check", mod: 2, dc: 12, cta: "Pick what's good" });
-        if (k.ok) { S.herbs += 2; renderSheet(); await mech("Gain 2 sprigs of feverfew. Chew one to burn out ooze sickness.", "loot"); }
+        if (k.ok) {
+          S.herbs += 2; S.moss++; renderSheet();
+          await mech("Gain 2 sprigs of feverfew. Chew one to burn out ooze sickness.", "loot");
+          await mech("And a twist of dried gravemoss, labeled in a careful hand: <i>for wounds, from the old graves only</i>. Gain 1 gravemoss poultice.", "loot");
+          S.potions++; renderSheet();
+          await mech("On the herbwife's top shelf, behind the jars, one vial she was saving: a Draught of Mending. Gain 1.", "loot");
+        }
         else await say("You can't tell the good from the turned. You leave it all.");
         await noise(1, "The floorboards creak.");
       }
@@ -2974,6 +3036,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heading("XXIV", "The Well and the Bell");
     light("dusk");
     await upkeep();
+    await morningMoss();
     await say("Lastwell in daylight is worse. The puddles have skinned over in the sun like old custard. You count forty before you stop counting. The water in your skin won't last, and the only place in Lastwell that ever had water is the well.");
     let did = new Set();
     for (;;) {
@@ -3023,6 +3086,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
           await findFood(3, "You pack what you can carry.");
           await findWater(1, "And a skin of cider.");
           if (!S.herbs) { S.herbs = 1; renderSheet(); await mech("On a shelf, a jar of dried feverfew. Gain 1 sprig.", "loot"); }
+          S.elixirs++; renderSheet();
+          await mech("In the reeve's strongbox, under the tax rolls, wrapped in velvet: an Elixir of Health (regain 20 HP). He was saving it for himself.", "loot");
         }
       } else if (c === "goat") {
         await say("In a pen behind the tannery, a goat is lying on its side. Its back half is grey and sunk in, like a melted candle. Its front half looks almost right. It's still breathing.");
@@ -3056,6 +3121,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heading("XXV", "The Gibbet Spire");
     light("dusk");
     await upkeep();
+    await morningMoss();
     await say("In daylight you can see what's in the cage. A tinker's coat. A tool roll. A book chained to the bars. Below the cage, on the grey surface of the nave, there's a long thin trickle that runs down out of the cage bottom and has been dripping, for days, into the rest.");
     await say("Ilse's journal has a note about him: <i>\"Hobb the tinker says the Wringer can't climb. He's going to sleep in the old gibbet with his Book of Iron Mischief and his caltrops and laugh at it.\"</i> It got him anyway.");
     let got = false, soaked = false;
@@ -3111,6 +3177,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("Inside the cage: a tinker's coat, buttoned, with grey in it. The tool roll. A pouch of horseshoe nails. And the book, chained to the bars by its spine: <b>Hobb's Book of Iron Mischief</b>.");
     S.hobb = true; S.soaked = soaked; S.iron += 2; renderSheet();
     await mech("Gain Hobb's Book of Iron Mischief" + (soaked ? ", soaked through" : "") + ", and 2 scrap iron.", "loot");
+    S.potions++; renderSheet();
+    await mech("In the tool roll, between the files: a Draught of Mending Hobb never drank. Gain 1.", "loot");
     await say("Burned into the inside of the cover is a tinker's mark: the four rings of a lock, and a note. <i>\"Made for Maud Lastwell, well-keeper. Third ring, the </i><b>Hand</b><i>. Fourth, ask the smith, he cut it.\"</i>");
     if (!S.clues.includes("Hand")) { S.clues.push("Hand"); renderSheet(); }
     await mech("The well-keeper's lock, ring three: Hand.", "loot");
@@ -3156,10 +3224,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     light("dusk");
     await go("Go down to the churchyard");
     await say("The churchyard is the only ground in Lastwell without puddles on it. Everyone here was dead before the Wringer came. The Lastwell crypt is a low stone house half sunk in nettles, and inside, the names run back two hundred years. The newest plaque is carved by an unskilled hand: <b>MAUD LASTWELL, WELL-KEEPER</b>. There's no date on it.");
+    await say("It's also the only place in Lastwell where anything green grows. Thick dark moss covers the old graves, and nowhere else: not on the walls, not on the roofs. The herbwife's label said it. <i>For wounds, from the old graves only.</i> Whatever is in the ground here, the Wringer never drank it.");
+    S.moss += 3; renderSheet();
+    await mech("Gain 3 gravemoss poultices. Bind one to heal 2d6 now, and 1d4 more the next morning.", "loot");
     const p = await check({ label: "Athletics check: shift the stone", mod: 3, dc: 12, cta: "Heave" });
     if (!p.ok) await noise(2, "The stone comes free all at once and booms on the crypt floor.");
     await say("Behind the plaque is a door, and behind the door is a larder cut into the earth: sacks of oats and dried peas, hams packed in barrels of salt, jugs of water sealed with wax and pitch, and a great crock of salt pork. Salt everywhere. On the shelves, on the floor, poured in a thick white line across the threshold.");
     await findFood(4, "Food the Wringer couldn't drink.");
+    S.elixirs++; S.potions++; renderSheet();
+    await mech("On the shelf by the door, where she could reach it in the dark: an Elixir of Health and a Draught of Mending. Gain both.", "loot");
     await findWater(2, "Sealed jugs, clean and cold.");
     await say("Maud is here. She's sitting on a stool at the back of the larder, inside a ring of salt she poured around herself: her shawl, her apron, her clogs, and the grey. The ring is perfect, except in one place, where her heel scuffed through it in her sleep.");
     S.salt = true; renderSheet();
@@ -3173,6 +3246,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heading("XXVII", "The Smithy");
     light("dusk");
     await upkeep();
+    await morningMoss();
     await say("The smith's forge is the only building in Lastwell with stone walls, a stone floor and an iron door. The smith is on the floor by the anvil. His hammer is still in the puddle where his hand was.");
     await say("You'll need iron, and the forge, and the night is coming. Stamped into the horn of the anvil, under the maker's mark, is a little rune with a wax stain in it, the same as the bell's: an <b>Eye</b>.");
     if (!S.clues.includes("Eye")) { S.clues.push("Eye"); renderSheet(); }
@@ -3182,6 +3256,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     for (;;) {
       const opts = [];
       if (!done.has("coffin")) opts.push({ key: "coffin", label: "Pull coffin nails at the undertaker's", tag: "iron +3 · Hunt +2" });
+      if (!done.has("moss")) opts.push({ key: "moss", label: "Go back to the churchyard for gravemoss", tag: "+2 poultices · Hunt +1" });
       if (!done.has("stable")) opts.push({ key: "stable", label: "Take shoes from the horses in the stable", tag: "iron +2 · Wisdom save" });
       if (!lit) opts.push({ key: "light", label: "Light the forge", tag: (hasFire() ? "torch or lantern" : "burns an Emberbite scroll") + " · Hunt +2" });
       if (lit && S.hobb && S.iron >= 2) opts.push({ key: "forge", label: "Make caltrops", tag: S.iron + " iron" });
@@ -3197,6 +3272,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         S.iron += 3; renderSheet();
         await mech("Gain 3 scrap iron.", "loot");
         await noise(2, "Nails shriek coming out of oak.");
+      } else if (c === "moss") {
+        done.add(c);
+        await say("You cut moss from the oldest graves, the ones whose names have worn away, and try not to think about why it grows so well.");
+        S.moss += 2; renderSheet();
+        await mech("Gain 2 gravemoss poultices.", "loot");
+        await noise(1, "The churchyard gate squeals.");
       } else if (c === "stable") {
         done.add(c);
         await say("The horses are in their stalls. They are puddles from the withers down, and their heads are lying on the straw, and their eyes are open. You have to lift the legs to get to the shoes.");
@@ -3227,6 +3308,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heading("XXVIII", "The Wringing");
     light("dusk");
     await upkeep();
+    await morningMoss();
     await say("The well stands in the square under its little roof. The pouring has stopped. The lid is locked with the four iron rings, but now you know what it does: it doesn't keep the Wringer in. It keeps everyone else out of the only place it has to go.");
     await say("Ilse's plan was to open the lock, ring the well with runes, and be standing there when it came up. You don't have a better one.");
     const known = LOCK.filter(r => S.clues.includes(r)).length;
@@ -3324,6 +3406,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.snare) carried.push("Snare Trap");
     S.books.forEach(b => carried.push(b));
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
+    if (S.potions) carried.push(S.potions + " Draught" + (S.potions > 1 ? "s" : "") + " of Mending");
+    if (S.elixirs) carried.push(S.elixirs + " Elixir" + (S.elixirs > 1 ? "s" : "") + " of Health");
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">Part XXIX</p>' +
       '<p class="big">To be continued…</p>' +
