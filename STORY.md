@@ -516,4 +516,97 @@ He steps backward into the shadow and is gone.
 
 You climb up out of the vault and the castle as the lake finally finishes swallowing it. When you reach the boat, the lantern in the tower window is dark. (If you warned Varro, he's waiting for you on the far shore, wrapped in violet and frowning at the water. *"So,"* he says. *"He's free. Then so am I. Sulmara won't know what hit it."*)
 
+## Lastwell: The Hunted Village
+
+*Parts XXIII–XXVII pick up on the road east from the lake, toward Sulmara. This chapter is about survival. The player tracks water, food, exhaustion and the Hunt, and is stalked through a dead village by a thing nobody can see.*
+
+### How Lastwell plays
+
+**Water and food.** The lake has spoiled the rations: the player starts with 2 water and 1 meal. Every morning (the start of Parts XXIV–XXVII), drink 1 water and eat 1 meal. Each one missed adds a level of exhaustion. Eating and drinking both removes one level and restores 1d4 HP. Foul water can be drunk, but needs a Constitution save (DC 12) against ooze sickness. It can be made clean by boiling (needs a torch or the Lantern Knight's lamp; Hunt +1 for the smoke) or by filtering it through charcoal (Survival DC 13; on a failure the water is lost).
+
+**Exhaustion (0–5).** Each level adds to the one before. 1: disadvantage on ability checks. 2: disadvantage on attack rolls. 3: the Wringer has advantage on attacks. 4: HP maximum halved. 5: no healing.
+
+**Ooze sickness.** You need two drinks a day, and take 1d4 poison damage each morning. Cured by feverfew, by comb honey, or by sweating it out (Medicine DC 15).
+
+**The Hunt (0–10).** Noise raises it: searching, hammering, the winch, a ringing bell, falling into the ooze. At 10 the Wringer comes, and the Hunt resets to 2 after each pass.
+
+**A pass of the Wringer.** Make a Perception check (DC 13, advantage with the lantern) to hear it coming. If you hear it, you have a few heartbeats to lay up to three rune mines, scatter caltrops, and hide (Stealth DC 15, advantage with Shadowblend) or stand. If you don't hear it, it gets a free attack. It attacks at +6 for 1d8 necrotic damage, and it's unseen, so your attacks have disadvantage until something reveals it. Two hits in a row cost a level of exhaustion. The Wringer has 60 HP. Wounds carry over between passes and it drinks back 4 each morning, but it can't be killed before the finale: at 10 HP it pulls back to drink.
+
+**Snare rune mines.** Ilse Marrow's scrolls: **Emberbite** (fire, 3d6: reveals it), **Blightbloom** (poison, 2d6: it takes 1d6 every time it wrings you, for the rest of the chapter), **Rimefang** (cold, 2d8: slows it, so its attacks have disadvantage). Each placement is an Arcana check (DC 12, advantage with Snare Trap). On a failure the scroll fizzles. On a natural 1, or a miss by 5 or more, the mine goes off on you. Mines are laid in rings and go off in order, outer to inner:
+- Rimefang then Emberbite: the ice shatters, and the fire does double damage.
+- Blightbloom then Emberbite: the gas catches, for +2d6.
+- Emberbite then Blightbloom: the fire burns the rot away, so the poison does half damage and has no effect.
+- **It learns.** Each repeat of a rune does half damage, and from the third use it ignores that rune's effect.
+
+**Scribing more scrolls.** Each scroll takes 1 blank parchment and 1 measure of ooze ink (scraped from the puddles, 2 measures each time, Hunt +1). Scribing is a memory puzzle: watch the rune's strokes, then trace them back. Emberbite has 4 strokes, Blightbloom 5, Rimefang 6. A wrong stroke spoils the ink, and sometimes the ink bites (1d6 necrotic).
+
+**Caltrops.** These need *Hobb's Book of Iron Mischief*, 2 scrap iron per bag, and a lit forge. Make a Dexterity check (DC 12). A total of 18 or more makes **fine** caltrops: it's slowed, and it takes 1d4 every time it attacks. Otherwise they're **crude** and only slow it. If the book was soaked in the ooze, you can only make crude ones. Each batch raises the Hunt by 2.
+
+**The well-keeper's lock.** Four rings, six runes each. The answer, Bell · Root · Hand · Eye, is scattered across the village. Every wrong haul tells you how many rings caught, and raises the Hunt by 2.
+
+## Part 23: The Puddles
+
+The road east climbs through two days of empty hills. On the first night you open your pack, and the lake has been in it: the bread is green, the dried meat soft and sweet-smelling. One heel of cheese and a skin of lake water are left. *(Water 2, food 1.)*
+
+On the second evening, a milestone: LASTWELL ½ MILE. There's no smoke and no dogs. The first villager is on the road by an overturned handcart: a carter's coat laid flat, boots still laced, and in the middle of them a puddle of grey ooze the color of dishwater, with a wedding ring in it. The flies won't land on it. There are more in doorways, on benches, in a cradle on a porch.
+
+By the well in the square lies a puddle that is still warm, in a rune-scribe's blue robe. Her satchel holds **six Snare Rune scrolls** (2 Emberbite, 2 Blightbloom, 2 Rimefang), 3 blank parchment, an inkhorn and a journal. She was **Ilse Marrow of Sulmara**. Her last entry: the well went dry at midsummer, and Corwen the well-digger went down after the water and came back up three days later. Now people sleep and wake as puddles. She thinks the thing goes back down the well to pour out what it drinks. The well-keeper, Old Maud, locked the well with four rings, and told Ilse the first: **the Bell**. *(Investigation DC 10: a note in the back gives the mine combinations.)*
+
+On the inside of the inn door, scratched with fingernails: **THE WRINGER. DON'T SLEEP. DON'T SLEEP.** *(The Hunt starts at 3.)*
+
+**Scavenge.** Choose up to three:
+- **The inn kitchen** (Hunt +1). All the food has gone grey. *Investigation DC 13:* a sealed crock of pickled eggs, *+1 food*. On a failure you touch a "cheese" that gives like a blister, and make a *Constitution save (DC 10)* against ooze sickness.
+- **The beer cellar** (Hunt +2). *Athletics DC 13:* the one clean cask at the top of the stack, *+2 water*. On a failure the stack comes down: *1d6.*
+- **The cooper's yard** (Hunt +1). Iron hoops: *+2 iron.*
+- **The herbwife's cottage** (Hunt +1). *Medicine DC 12:* *2 sprigs of feverfew.*
+
+At midnight, in the barred taproom, the bar on the door creaks as something leans on it. **First pass**, forewarned: you have time to lay mines.
+
+## Part 24: The Well and the Bell
+
+*Morning upkeep.* The puddles have skinned over in the sun. Choose any number of the following, and pay the Hunt for each:
+- **The well** (Hunt +2). Capped with an iron lid and the four-ring lock, but the bucket hole is open. *+3 foul water,* so thick it holds the bucket's shape.
+- **The cracked bell.** It fell mouth-up in the broken belfry and has filled with rain. *Athletics DC 14:* *+2 water*, and around its lip, sealed in red wax, the second ring: **the Root**. On a failure, *1d6* and the bell rings: *Hunt +4.*
+- **The reeve's cellar.** *Puzzle:* nine rune stones; each press turns a stone and its neighbors. Light all nine (every 4 presses, Hunt +1). Solved: *+3 food, +1 water* (cider), and feverfew if you have none. Or pry it open: *Athletics DC 16, Hunt +3*, the ward breaks and the cold gets in first: *+1 food.*
+- **The goat.** Half wrung, still breathing. *Medicine DC 13* to cut only the good meat: *+2 food.* On a failure you still get the food, but make a *Constitution save (DC 13)* against ooze sickness.
+- **The chimney hive.** Needs fire: a torch or the lantern, or burn an Emberbite scroll. *Dexterity DC 12* or *2d4 poison* from stings. Gain **comb honey**, which counts as a meal and cures ooze sickness.
+- **Gather ooze ink** (Hunt +1), and **purify** any foul water.
+
+You choose the church for the night, and open the door on a nave that is a grey lake, knee-deep, where every family sheltered. Hanging from the broken spire on a chain is a gibbet cage with something in it. You sleep on the step. **A pass of the Wringer.**
+
+## Part 25: The Gibbet Spire
+
+*Morning upkeep.* In the cage: a tinker's coat, a tool roll, and a book chained to the bars, over a thin grey drip that has run down out of the cage into the nave for days. Ilse's journal: *"Hobb the tinker says the Wringer can't climb."* It reached him anyway.
+
+- **Climb the bell rope and cross the rafters.** *Athletics DC 12* for the rope, then the **rafters puzzle**: a 4 × 5 grid of beams. Step one board at a time. Each board you stand on shows how many rotten boards touch it. Tapping a board with the axe haft tells you if it's rotten (Hunt +1 per tap), and the lantern shows two rotten boards. A rotten board drops you into the nave: *2d6*, a *Constitution save (DC 13)* against ooze sickness, *Hunt +3*, then climb again. The board you fell through is now known.
+- **Throw the axe at the chain** from the loft (*attack vs AC 17*; Hunt +2 per miss). The cage falls into the ooze and you wade after it (*Constitution DC 14*, *Hunt +3*). The book is **soaked**: crude caltrops only.
+- **Freeze the nave first** with a Rimefang scroll (*Arcana DC 13*), then throw. The cage lands on ice and the book stays dry.
+
+In the cage: **Hobb's Book of Iron Mischief**, *+2 iron* (horseshoe nails), and burned into the cover, the third ring: **the Hand**. *"Fourth, ask the smith, he cut it."* Then the whole grey lake in the nave moves toward the door, a slow wave, as something steps into it from the far end. **A pass of the Wringer.**
+
+## Part 26: The Smithy
+
+*Morning upkeep.* Stone walls, an iron door, and the smith a puddle by the anvil, his hammer still in it. Stamped into the anvil's horn: the fourth ring, **the Eye**.
+
+- **Coffin nails** at the undertaker's (Hunt +2). The only dead in Lastwell who still have faces. *+3 iron.*
+- **Horseshoes** from the stable. The horses are puddles from the withers down, with their heads on the straw. *+2 iron*; *Wisdom save (DC 12)* or gain a level of exhaustion.
+- **Light the forge** (Hunt +2). Needs a torch or the lantern, or burn an Emberbite scroll.
+- **Make caltrops**, **scribe scrolls**, **gather ink**, **boil water.**
+
+Bar the door. It doesn't use the door: near midnight, the smith's puddle draws itself up into a grey column, leans toward you, and falls away into nothing. It goes where its puddles are. **Two passes**: the first forewarned, the second before dawn. At first light you hear it in the square, pouring itself out into the well, over and over.
+
+## Part 27: The Wringing
+
+*Morning upkeep.* The lock doesn't keep the Wringer in. It keeps everyone else out of the only place it has to go. **The winch puzzle:** set four rings. Each wrong haul shows how many rings caught (Hunt +2). Or break it: *Athletics DC 16, Hunt +3*, and on a failure *1d6* from a flying shard.
+
+Ring the well with up to **four mines** (Arcana DC 11: you have time), scatter caltrops, and bait it: your blood (*1d4*), your last clean water, or nothing (then it comes up on the side you weren't watching, and gets a free attack).
+
+At nightfall it climbs out of the well and through your rings. Then fight until it falls. Below 20 HP it's staggering at the lip of the well: **Shield Slam** (+5) or **shove** it (+3), contested against its +4 (+1 if slowed), to throw it down.
+
+Then you see it: a tall, stooped man in skin like a wet sack, eyeless, with arms too long and lined from wrist to armpit with small round mouths that open and close like gills. A well-digger's lamp hangs on a cord at its neck. **Corwen.** It goes down the shaft like a man down a ladder, and everything it drank out of Lastwell pours out of it in a roaring flood that rises up the shaft and stops just below the lip. The water is clean and cold. You drink until you're sick. *(Water to 6, foul water gone, exhaustion −2.)*
+
+Nothing else changes. The puddles stay puddles. You walk out past the carter's coat and you don't take the ring. (If Vaelric still speaks to you:) *"The wardens would have burned it to the ground. The whole village. I think they would have been right."*
+
+Two days east, the road crests a ridge, and Sulmara glitters in the valley below like broken glass.
+
 *To be continued.*
