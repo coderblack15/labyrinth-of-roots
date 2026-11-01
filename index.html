@@ -411,6 +411,45 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 .resume { color: var(--muted); font-size: .95rem; margin-top: 14px; }
 
+/* ---------- journal ---------- */
+.inv-head .head-btns { display: flex; gap: 8px; align-items: center; }
+.j-open { padding: 4px 12px; font-size: .88rem; font-family: var(--label); letter-spacing: .08em; }
+.j-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.j-grid div { background: var(--panel-2); border-radius: 4px; padding: 8px 10px 6px; display: grid; gap: 2px; }
+.j-grid b { font-variant-numeric: lining-nums tabular-nums; font-size: 1.15rem; line-height: 1.2; }
+.j-grid small { font-family: var(--label); letter-spacing: .08em; color: var(--muted); font-size: .74rem; line-height: 1.3; }
+.j-list { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.45; }
+.j-list b { color: var(--ink); font-weight: 700; }
+.chap-sum {
+  margin: 34px 0 10px; padding: 18px 18px 16px; border: 1px solid #5c4d27; border-radius: 6px;
+  background: linear-gradient(180deg, rgba(207,168,80,.08), rgba(207,168,80,0) 70%), var(--panel);
+  display: grid; gap: 12px; scroll-margin-top: 24px;
+}
+.chap-sum .num { font-family: var(--label); font-weight: 700; letter-spacing: .16em; font-size: .8rem; color: var(--gold); }
+.chap-sum h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 2px 0 0; line-height: 1.15; }
+.journal {
+  width: min(640px, calc(100vw - 32px)); max-height: min(86vh, 900px); max-height: min(86dvh, 900px);
+  padding: 0; border: 1px solid var(--gold); border-radius: 8px;
+  background: var(--panel); color: var(--ink); font-family: var(--body);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .6); overscroll-behavior: contain;
+}
+.journal::backdrop { background: rgba(0, 0, 0, .55); }
+.journal .j-head {
+  position: sticky; top: 0; z-index: 1; background: var(--panel); border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px;
+}
+.journal .j-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; line-height: 1.1; }
+.journal .j-head button { padding: 4px 12px; font-size: .88rem; }
+.journal .j-body { padding: 16px 18px 20px; display: grid; gap: 18px; }
+.journal h3 { font-family: var(--label); font-weight: 700; letter-spacing: .12em; font-size: .82rem; color: var(--gold); margin: 0 0 8px; }
+.journal .j-sub { margin: -4px 0 10px; color: var(--muted); font-size: .92rem; }
+.journal .j-empty { color: var(--muted); font-style: italic; margin: 0; }
+.journal table { width: 100%; border-collapse: collapse; font-size: .92rem; font-variant-numeric: lining-nums tabular-nums; }
+.journal th { font-family: var(--label); font-weight: 400; letter-spacing: .08em; font-size: .74rem; color: var(--muted); text-align: right; padding: 0 0 4px 8px; }
+.journal td { text-align: right; padding: 5px 0 5px 8px; border-top: 1px solid var(--line); }
+.journal th:first-child, .journal td:first-child { text-align: left; padding-left: 0; }
+.journal .j-note { margin: 0; color: var(--muted); font-size: .82rem; }
+
 @media (max-width: 860px) {
   .hero { grid-template-columns: minmax(0, 1fr); padding-block: 36px 24px; }
   .spiral { display: none; }
@@ -439,6 +478,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .inv-toggle span { font-variant-numeric: tabular-nums; color: var(--gold); }
   .inv-toggle.new { animation: gain 1.6s ease; }
   .inv-close { display: inline-flex; padding: 4px 12px; font-size: .88rem; }
+  .journal .j-head { padding: 12px 14px; }
+  .journal .j-body { padding: 14px 14px 18px; }
+  .journal td.opt, .journal th.opt { display: none; }
   .inv-scrim { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 30; }
   .inv-scrim[hidden] { display: none; }
   .inv-panel {
@@ -595,6 +637,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Read each scene, then pick what you do next.</li>
       <li>When a check comes up, click to roll the d20. Your bonus is added, and you need to meet or beat the number shown.</li>
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser.</li>
+      <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
     </ul>
     <div class="actions" id="startActions">
@@ -675,13 +718,21 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     <div class="inv-panel" id="invPanel">
       <div class="inv-head">
         <div class="stat-label">Carrying</div>
-        <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
+        <div class="head-btns">
+          <button class="ghost j-open" id="jOpenBtn" type="button">Journal</button>
+          <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
+        </div>
       </div>
       <ul class="inv" id="inv"></ul>
     </div>
     <button class="ghost reset" id="resetBtn" type="button">Start over</button>
   </aside>
 </main>
+
+<dialog class="journal" id="journal" aria-labelledby="jTitle">
+  <div class="j-head"><h2 id="jTitle">Journal</h2><button class="ghost" id="jClose" type="button">Close</button></div>
+  <div class="j-body" id="jBody"></div>
+</dialog>
 
 <script>
 (() => {
@@ -747,6 +798,199 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; return v; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
 
+  // ---------- anonymous stats (public site only) ----------
+  // GoatCounter counts visits without cookies or anything personal. It only runs on the public
+  // GitHub Pages site, and only once GOATCOUNTER_CODE is filled in. The private Claude link and a
+  // copy opened from disk never load it, so there everything below is a no-op.
+  const GOATCOUNTER_CODE = ""; // the code you picked at goatcounter.com, e.g. "labyrinthofroots"
+  const STATS_HOSTS = ["coderblack15.github.io"];
+  const statsOn = /^[a-z0-9-]+$/.test(GOATCOUNTER_CODE) && STATS_HOSTS.includes(location.hostname);
+  const statQueue = [];
+  function statFlush() {
+    const gc = window.goatcounter;
+    if (!gc || typeof gc.count !== "function") return;
+    while (statQueue.length) { try { gc.count(statQueue.shift()); } catch (e) {} }
+  }
+  function stat(path, title) {
+    if (!statsOn) return;
+    statQueue.push({ path, title: title || path, event: true });
+    statFlush();
+  }
+  if (statsOn) {
+    const sc = document.createElement("script");
+    sc.async = true; sc.src = "https://gc.zgo.at/count.js";
+    sc.dataset.goatcounter = "https://" + GOATCOUNTER_CODE + ".goatcounter.com/count";
+    sc.onload = statFlush;
+    document.head.appendChild(sc);
+  }
+
+  // ---------- playthrough journal ----------
+  // A record of each journey, kept in this browser apart from the save, so a Bloom death (which
+  // rewinds the save) still counts. Gold is tracked as purse + bank, so a deposit isn't "spent".
+  const JKEY = "labyrinth-of-roots-journal-v1";
+  const CHAPTERS = [
+    ["The Labyrinth of Roots", "labyrinth", 0, 5], ["The Burning Sands", "desert", 6, 9], ["The Hushfen", "hushfen", 10, 16],
+    ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
+    ["The Corrach Three", "corrach", 34, 40]
+  ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
+  const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra"]);
+  const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
+  const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
+    items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
+  function jLoad() {
+    try { const v = JSON.parse(localStorage.getItem(JKEY) || "null"); if (v && v.v === 1 && Array.isArray(v.past)) return v; } catch (e) {}
+    return { v: 1, run: null, past: [] };
+  }
+  let J = jLoad(), jLive = false, jBase = 0;
+  function jSave() { try { localStorage.setItem(JKEY, JSON.stringify(J)); } catch (e) {} }
+  const wealth = () => (S.coins || 0) + (S.bank && S.bank.bal || 0);
+  function jArchive() {
+    const r = J.run;
+    if (!r) return;
+    if (r.ms > 0 || r.furthest > 0) {
+      J.past.unshift({ start: r.start, ms: r.ms, deaths: r.deaths, earned: r.earned, items: Object.keys(r.items).length,
+        bounties: r.bounties.length, maps: r.maps.length, furthest: r.furthest, end: r.end || "left" });
+      J.past.length = Math.min(J.past.length, 60);
+    }
+    J.run = null;
+  }
+  // Called from begin(): a new descent starts a fresh journey; Continue picks up the current one.
+  function jStart(isNew) {
+    if (isNew) { jArchive(); J.run = newRun(0); stat("journey-start", "A new descent"); }
+    else {
+      if (!J.run) J.run = newRun(S.part, "This journey began before the journal did, so it only counts from Part " + roman(S.part + 1) + ".");
+      stat("journey-continue", "Continue a journey");
+    }
+    jLive = true; jBase = wealth(); jTick = Date.now();
+    jSave();
+  }
+  // Called from renderSheet(): gold changes and anything new in your pack.
+  function jSheet(items) {
+    if (!jLive || !J.run) return;
+    const r = J.run, w = wealth(), dw = w - jBase;
+    if (dw > 0) r.earned += dw; else if (dw < 0) r.lost -= dw;
+    jBase = w;
+    items.forEach(([key, , name]) => {
+      if (NOT_ITEMS.has(key) || r.items[key]) return;
+      r.items[key] = { name: name.replace(/<[^>]*>/g, "").trim(), part: S.part };
+    });
+    jSave();
+  }
+  function jSnap(ch) { const r = J.run, m = { ch, items: Object.keys(r.items), bounties: r.bounties.length, maps: r.maps.length, done: false }; COUNTS.forEach(k => m[k] = r[k]); return m; }
+  function jPart(i) {
+    if (!J.run) return;
+    const r = J.run, ch = chapterAt(i);
+    if (i > r.furthest) r.furthest = i;
+    if (!r.mark || r.mark.ch !== ch) r.mark = jSnap(ch);
+    jSave();
+    stat("part-" + (i + 1), "Part " + roman(i + 1) + ": " + NAMES[i]);
+  }
+  function jCheckpoint() { if (J.run) { J.run.ck = { earned: J.run.earned, lost: J.run.lost }; jSave(); } }
+  // A Bloom death rewinds the save to the last rest: rewind the gold tally with it, but keep the death.
+  function jRewind() {
+    if (!J.run) return;
+    if (J.run.ck) Object.assign(J.run, J.run.ck);
+    J.run.deaths++; jBase = wealth(); jSave();
+    stat("bloom-death", "Died of the Bloom in Part " + roman(S.part + 1));
+  }
+  const jCount = (k) => { if (J.run) { J.run[k]++; jSave(); } };
+  function jBounty(name) { if (J.run && !J.run.bounties.includes(name)) { J.run.bounties.push(name); jSave(); } }
+  function jMap(name) { if (J.run && !J.run.maps.includes(name)) { J.run.maps.push(name); jSave(); } }
+
+  // Time played: counts while the page is open and someone has touched it in the last five minutes.
+  let jTick = Date.now(), jInput = Date.now();
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(t => addEventListener(t, () => { jInput = Date.now(); }, { passive: true }));
+  setInterval(() => {
+    const now = Date.now(), dt = Math.min(now - jTick, 6000);
+    jTick = now;
+    if (!jLive || !J.run || document.hidden || now - jInput > 300000) return;
+    J.run.ms += dt; jSave();
+  }, 5000);
+  document.addEventListener("visibilitychange", () => { jTick = Date.now(); if (document.hidden) jSave(); });
+
+  function roman(n) {
+    let out = "";
+    [[40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]].forEach(([v, r]) => { while (n >= v) { out += r; n -= v; } });
+    return out;
+  }
+  function dur(ms) {
+    const m = Math.floor(ms / 60000);
+    if (m < 1) return "under a minute";
+    if (m < 60) return m + " min";
+    return Math.floor(m / 60) + " h " + (m % 60) + " min";
+  }
+  const esc = (t) => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const tiles = (rows) => '<div class="j-grid">' + rows.map(([v, l]) => "<div><b>" + v + "</b><small>" + l + "</small></div>").join("") + "</div>";
+  const listLine = (label, arr) => arr.length ? '<p class="j-list"><b>' + label + ":</b> " + arr.map(esc).join(", ") + ".</p>" : "";
+
+  // End of a chapter: the difference between now and the snapshot taken when the chapter began.
+  async function jChapterDone(i) {
+    const r = J.run, ch = chapterAt(i), C = CHAPTERS[ch];
+    if (!r || i !== C.to || !r.mark || r.mark.ch !== ch || r.mark.done) return;
+    const m = r.mark;
+    const sum = { name: C.name };
+    COUNTS.forEach(k => sum[k] = r[k] - m[k]);
+    sum.items = Object.keys(r.items).filter(k => !m.items.includes(k)).map(k => r.items[k].name);
+    sum.bounties = r.bounties.slice(m.bounties);
+    sum.maps = r.maps.slice(m.maps);
+    m.done = true;
+    r.chapters = r.chapters.filter(c => c.name !== C.name).concat([sum]);
+    if (ch === CHAPTERS.length - 1) { r.end = "finished"; stat("journey-finished", "Finished the journey"); }
+    jSave();
+    stat("chapter-done-" + C.slug, "Finished " + C.name);
+    const box = el("section", "chap-sum",
+      '<div><span class="num">Chapter complete</span><h3>' + C.name + "</h3></div>" +
+      tiles([[dur(sum.ms), "time"], [sum.deaths, sum.deaths === 1 ? "death" : "deaths"], [sum.close, "close calls"], [sum.fights, sum.fights === 1 ? "fight" : "fights"],
+        [sum.earned, "gold found"], [sum.lost, "gold spent or lost"], [sum.items.length, sum.items.length === 1 ? "item found" : "items found"]]) +
+      listLine("Found", sum.items) + listLine("Bounties claimed", sum.bounties) + listLine("Treasure dug up", sum.maps));
+    scrollNext = true;
+    add(box);
+    await wait(400);
+  }
+
+  function jRender() {
+    const r = J.run, body = $("jBody");
+    let h = "";
+    if (r) {
+      const found = Object.values(r.items).map(x => x.name);
+      h += "<section><h3>This journey</h3>" +
+        '<p class="j-sub">Begun ' + new Date(r.start).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) +
+        " · furthest: Part " + roman(r.furthest + 1) + ", " + NAMES[r.furthest] + (r.end === "finished" ? " · finished" : "") + "</p>" +
+        tiles([[dur(r.ms), "time played"], [r.deaths, "deaths"], [r.close, "close calls"], [r.fights, "fights"], [r.earned, "gold found"],
+          [r.lost, "gold spent or lost"], [found.length, "items found"], [r.bounties.length, "bounties"], [r.maps.length, "treasure maps"]]) +
+        '<div style="display:grid;gap:6px;margin-top:10px">' + listLine("Items", found) + listLine("Bounties claimed", r.bounties) + listLine("Treasure dug up", r.maps) + "</div>" +
+        (r.note ? '<p class="j-note" style="margin-top:8px">' + esc(r.note) + "</p>" : "") + "</section>";
+      h += "<section><h3>Chapters</h3>" + (r.chapters.length
+        ? '<table><thead><tr><th>Chapter</th><th>Time</th><th>Deaths</th><th>Gold</th><th class="opt">Items</th></tr></thead><tbody>' +
+          r.chapters.map(c => "<tr><td>" + esc(c.name) + "</td><td>" + dur(c.ms) + "</td><td>" + c.deaths + "</td><td>+" + c.earned + '</td><td class="opt">' + c.items.length + "</td></tr>").join("") + "</tbody></table>"
+        : '<p class="j-empty">No chapter finished yet on this journey. You get a summary at the end of each one.</p>') + "</section>";
+    } else h += '<section><p class="j-empty">You haven\'t begun a journey yet. Your journal starts when you go down.</p></section>';
+    const all = J.past.concat(r ? [{ ms: r.ms, deaths: r.deaths, earned: r.earned, end: r.end }] : []);
+    if (all.length) {
+      const sum = (k) => all.reduce((a, x) => a + (x[k] || 0), 0);
+      h += "<section><h3>All journeys</h3>" + tiles([[all.length, "begun"], [all.filter(x => x.end === "finished").length, "finished"],
+        [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
+    }
+    if (J.past.length) {
+      h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
+        J.past.slice(0, 8).map(x => "<tr><td>" + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + "</td><td>" +
+          (x.end === "finished" ? "Finished" : "Part " + roman(x.furthest + 1)) + "</td><td>" + dur(x.ms) + '</td><td class="opt">' + x.deaths + "</td></tr>").join("") +
+        "</tbody></table></section>";
+    }
+    h += '<p class="j-note">Your journal is kept only in this browser. Close calls are times the axe (or the shell ring) held you up at 1 HP.</p>';
+    body.innerHTML = h;
+  }
+  function jOpen() {
+    jRender();
+    const dlg = $("journal");
+    if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute("open", "");
+    $("jClose").focus();
+  }
+  $("jClose").onclick = () => { const dlg = $("journal"); if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); };
+  $("journal").addEventListener("click", (e) => { if (e.target === $("journal")) $("jClose").click(); });
+  $("jOpenBtn").onclick = () => jOpen();
+
   // ---------- sheet ----------
   const ICONS = {
     torch: '<svg viewBox="0 0 26 26"><path d="M13 3c3 3 3 6 0 9c-3-3-3-6 0-9z" fill="#d68c34"/><rect x="11.5" y="12" width="3" height="11" rx="1" fill="#7a5a3a"/></svg>',
@@ -804,6 +1048,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     assizeItems(items);
     heskItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
+    jSheet(items);
     renderLastwell();
     renderAssize();
     renderHesk();
@@ -1033,6 +1278,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         else { S.hp = 0; renderSheet(); await mech(txt, "hurt"); throw FALLEN; }
       } else { S.hp = 1; saved = true; }
     }
+    if (saved) jCount("close");
     renderSheet();
     await mech(txt, "hurt");
     if (saved === "ring") await say("The world goes black, and then the grey shell ring on your finger cracks clean through with a sound like a seed splitting, and you're breathing again, on your knees, with 1 HP. <i>Wake, and wake again.</i>");
@@ -1059,6 +1305,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0 };
   function foeStart(name, max, { hp = max, unit = "" } = {}) {
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0 });
+    jCount("fights");
     renderFoe(true);
   }
   function foeEnd() { FOE.on = false; FOE.chain = 0; renderFoe(); }
@@ -2593,6 +2840,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (p.ok) {
         await say("He reads the writ for a long time, then marks it with his gauntlet.");
         await voice("\"Paid,\" he says, and steps out of the doorway.");
+        jBounty("The Blackjackal's bounty, paid by Ser Oswin");
       } else {
         await voice("\"You lie as badly as he did,\" he says, and raises the shield.");
         await hurt(1, 8, "slashing", "His sword is out before you see it move.");
@@ -5624,6 +5872,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   async function payBounty(k, coin, why) {
     S.bounty.done.push(k);
+    jBounty(BOUNTIES[k].name);
     if (coin) {
       if (S.bank.open && coin >= 20) { S.bank.bal += coin; renderSheet(); await mech(why + " Rook writes you a Coffer-House draft: " + coin + " gold paid into your account (" + S.bank.bal + " gold on deposit).", "loot"); }
       else { S.coins += coin; renderSheet(); await mech(why + " Gain " + coin + " gold.", "loot"); }
@@ -5806,6 +6055,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.coins += pay; renderSheet();
     await say("When it's over there are " + heads + " Hesk lying in the road with their eyes open, and the drone from the mountain hasn't changed at all.");
     await mech("Rook pays the gate's bounty at dawn: " + pay + " gold.", "loot");
+    jBounty("The Ashgate gate's bounty");
     if (!S.hides.includes("poison") && !S.cloak.poison && d(2) === 1) {
       S.hides.push("poison"); renderSheet();
       await say("One of the dead is a spore-hound: long and low and blind, with a pelt like grey moss. A miner skins it for you for a copper.");
@@ -6215,6 +6465,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const r = await digPuzzle(M, { digs: k === "cache" ? 4 : 4, riddle });
     if (!r.ok) { await say(k === "cache" ? "Nothing. The sand runs back into every hole you dig." : "Nothing. You'll have to come back."); return false; }
     S.dug.push(k); renderSheet();
+    jMap(M.name);
     if (k === "slag") {
       S.coins += 30; renderSheet();
       await say("A leather purse gone hard as wood, and inside it thirty gold in old Ashgate coin and a wedding ring.");
@@ -6494,6 +6745,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("Back in Ashgate, the salt dust lies still on the tables of the Pit Pony for the first time in four days.");
     if (S.bank.open) await mech("Your Coffer-House account holds " + S.bank.bal + " gold. Merrow will release it to you any time you pass through the Three.");
     S.hk = false; renderSheet();
+    await jChapterDone(PARTS.length - 1);
     await endCard();
   }
 
@@ -6539,10 +6791,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       "<p style='margin:0'>You stand in the square at Ashgate with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
       "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + (S.deaths ? " The Bloom killed you " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + ", and Vellum Rest brought you back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + " On the deep stair under the mountain, the footprints go down toward a gold light: the second Sulmara, and the Magistrate somewhere in it.</p>" +
-      '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button></div>');
+      '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>');
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
+    $("endJournalBtn").onclick = () => jOpen();
   }
 
   const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum];
@@ -6551,21 +6804,23 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
   let CHECK = null;
-  function checkpoint() { CHECK = JSON.stringify(S); save(); }
+  function checkpoint() { CHECK = JSON.stringify(S); save(); jCheckpoint(); }
   async function play(fromPart) {
     started = true;
     for (let i = fromPart; i < PARTS.length; i++) {
-      S.part = i; checkpoint();
+      S.part = i; checkpoint(); jPart(i);
       for (;;) {
         try { await PARTS[i](); break; }
-        catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); await fallen(); checkpoint(); }
+        catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
+      await jChapterDone(i);
     }
     S.part = PARTS.length - 1; save();
   }
 
   function begin(resumeState) {
     S = resumeState || fresh();
+    jStart(!resumeState);
     story.innerHTML = "";
     lastItems = new Set();
     foeEnd();
@@ -6599,6 +6854,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     c.onclick = () => begin(saved);
     $("startActions").appendChild(c);
     $("beginBtn").textContent = "Begin a new descent";
+  }
+  if (J.run || J.past.length) {
+    const jb = el("button", "ghost", "Your journal");
+    jb.type = "button";
+    jb.onclick = () => jOpen();
+    $("startActions").appendChild(jb);
   }
 })();
 </script>
