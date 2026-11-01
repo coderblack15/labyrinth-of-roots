@@ -3723,7 +3723,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     cards: { name: "Cardsharp", book: "Seventy Ways to Lose at High Glass", cost: 12, desc: "At High Glass, peek at the next card once a game." },
     street: { name: "Streetwise", book: "A Gutter-Map of Sulmara", cost: 10, desc: "Every outing in the city raises your Heat by 1 less." },
     glass: { name: "Glasswright", book: "The Glazier's Hand", cost: 22, craft: true, desc: "Crafting: turn 2 cullet into a shatter flask (2d6, no roll), or 3 into a burning lens. Dexterity DC 12." },
-    herb: { name: "Herbcraft", book: "Brother Orrin's Herbal", cost: 18, craft: true, desc: "Crafting: brew a Draught of Mending from a bundle of herbs. Wisdom DC 12." }
+    herb: { name: "Herbcraft", book: "Brother Orrin's Herbal", cost: 18, craft: true, desc: "Crafting: brew a Draught of Mending from a bundle of herbs. Wisdom DC 12." },
+    mend: { name: "Field Mending", book: "Sister Wren's Field Book", cost: 15, desc: "First aid. Twice a fight, bind your wounds for 1d8 + 2 HP, and after every fight you win, patch yourself up for 1d6. The Bloom doesn't halve it." }
   };
   const FACTIONS = { G: "Glaziers' Guild", M: "Merchant Lords", T: "Temple of the Clear Flame", D: "Debtors' Commons" };
   const EVIDENCE = {
@@ -5204,6 +5205,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("You wake on a straw pallet in a whitewashed room that smells of vinegar and smoke. Sister Wren is sitting beside you, doing nothing, which is how you know it was close.");
     await say("\"They brought you in on a door,\" she says. \"You weren't breathing. I burned the Bloom back as far as it would go, which isn't out. Somebody went through your purse while you were lying in the road.\"" + (gift ? " She puts a stoppered horn in your hand. \"And take this. I'd rather not do it twice.\"" : ""), "voice");
     await mech("You died. You wake at Vellum Rest with full HP and the Bloom at stage " + S.bloom + ". You lost " + lost + " gold from your purse" + (S.bank.open ? " (your Coffer-House account is untouched)" : "") + ". The part begins again from your last rest. Deaths so far: " + S.deaths + ".", "hurt");
+    if (!(S.skills || []).includes("mend")) await say("\"And come and see me when you're up,\" Wren adds. \"Ten gold and an afternoon, and I'll teach you to bind your own cuts. Cheaper than this.\"", "voice");
     await go("Get up");
   }
 
@@ -5240,6 +5242,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (S.potions) opts.push({ key: "potion", label: "Drink a Draught of Mending", tag: "+" + (S.bloom >= 2 ? 5 : 10) + " HP · costs your turn", plain: true });
       if (S.elixirs) opts.push({ key: "elixir", label: "Drink an Elixir of Health", tag: "+" + (S.bloom >= 2 ? 10 : 20) + " HP · costs your turn", plain: true });
       if (S.tea && S.bloom) opts.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1 · costs your turn", plain: true });
+      if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
+      opts.push({ key: "evade", label: "Evade", tag: EVADE + "% to slip every attack this round · costs your turn", plain: true });
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       const c = await choose(opts);
       if (c === "atk") {
@@ -5290,19 +5294,41 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         else await say("Your voice cracks on the note. The blade hums on, unbothered.");
       } else if (c === "potion" || c === "elixir") await drink(c);
       else if (c === "tea") { S.tea--; await bloomDown(1, "The tea is scalding and bitter as sweat."); }
+      else if (c === "mend") {
+        st.used.mend = (st.used.mend || 0) + 1;
+        const n = d(8) + 2, before = S.hp;
+        S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
+        await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
+        await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
+      } else if (c === "evade") {
+        st.evade = true;
+        await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
+      }
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0) break;
       if (st.stilled) { st.stilled = false; await say(F.hesk ? "They stand frozen for a breath, listening to something they last heard as children." : "It hesitates."); continue; }
       if (F.turn && (await F.turn(st)) === "done") continue;
       const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
       for (let i = 0; i < swings; i++) await foeSwing(F, st);
+      st.evade = false;
     }
     foeEnd();
     light(back);
+    if (hasSkill("mend") && S.hp < S.maxHp) {
+      const n = d(6), before = S.hp;
+      S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
+      await mech("Field Mending: when it's over, you clean and bind your cuts. Regain " + (S.hp - before) + " HP.", "loot");
+    }
   }
+  // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
+  const EVADE = 65;
   async function foeSwing(F, st, o = {}) {
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0);
+    if (st.evade) {
+      if (d(100) <= EVADE) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + EVADE + "%).", "loot"); return; }
+      await mech("You read it wrong. (Evade failed: " + EVADE + "%.)", "hurt");
+    }
     if (st.split > 0) {
       st.split--;
       if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return; }
@@ -6016,6 +6042,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         { key: "lesson", label: S.song >= 3 ? "Sit and sing with Ninefold" : "A song lesson with Ninefold", tag: S.song >= 3 ? "you're fluent" : "song " + S.song + " → " + (S.song + 1), show: !lesson && S.song < 3 },
         { key: "treat", label: "Let Wren burn the Bloom back", tag: "Bloom −1 · " + price + " gold", plain: true, show: S.bloom > 0 && S.coins >= price && !S.hv["treat" + S.hd] },
         { key: "tea", label: "Buy saltroot tea", tag: price + " gold a cup", plain: true, show: S.coins >= price },
+        { key: "mend", label: "Ask Wren to teach you field mending", tag: "first aid · " + (S.wrenCold ? 20 : 10) + " gold", plain: true, show: !hasSkill("mend") && S.coins >= (S.wrenCold ? 20 : 10) },
         { key: "mask", label: "Give Wren saltroot for a mask", tag: S.saltroot + " of 3 saltroot", plain: true, show: !hasGear("mask") && S.hv.maskAsk && S.saltroot >= 3 },
         { key: "askmask", label: "Ask Wren how she keeps from catching it", plain: true, show: !S.hv.maskAsk },
         { key: "shell", label: "Give Ninefold back his sleep-shell", plain: true, show: S.shell && !hasGear("drum") },
@@ -6027,6 +6054,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (c === "lesson") { lesson = true; await songLesson(); }
       if (c === "treat") { S.coins -= price; S.hv["treat" + S.hd] = true; renderSheet(); await say("Wren lays a poultice of hot salt and vinegar on the white patches and holds it there while you swear."); await bloomDown(1, "The salt draws it out like a splinter."); }
       if (c === "tea") { S.coins -= price; S.tea++; renderSheet(); await mech("You buy a cup of saltroot tea, corked in a clay bottle.", "loot"); }
+      if (c === "mend") {
+        S.coins -= S.wrenCold ? 20 : 10; if (!S.skills) S.skills = []; renderSheet();
+        await say("Wren spends an afternoon on you with a pile of rags and a bucket of vinegar. She makes you bind her arm, then your own leg, then her arm again, one-handed, until you can do it with your eyes shut. \"Pressure first,\" she says, every time. \"Then the knot. You'll be no use to me dead.\"", "voice");
+        await learnSkill("mend", "Wren's lesson.");
+      }
       if (c === "askmask") {
         S.hv.maskAsk = true;
         await say("\"Saltroot,\" Wren says, and taps the grey cloth tied over her nose and mouth. \"Woven into the weft. The spores won't sit on it. Bring me three roots from the slopes and I'll make you one. Mind the slopes. The Hesk use them.\"", "voice");
