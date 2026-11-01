@@ -20,6 +20,16 @@ Open `index.html` in any browser. It's a single self-contained page with no buil
 
 To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / root**. The game will then be live at `https://coderblack15.github.io/labyrinth-of-roots/`.
 
+## Free demo
+
+`demo.html` is a free demo that plays Parts I–X and then shows an end card pointing to the full game. It's generated from `index.html`, so rebuild it after any change to the game:
+
+```
+python3 tools/build-demo.py --parts 10 --full-url https://your-full-game-link
+```
+
+`TIP_URL` (the Support the creator link) and `FULL_URL` (where the demo's "Play the full game" button goes) are set near the top of the script in `index.html`.
+
 ## What's in the game
 
 - **A WARNING screen** that greets every visitor. Press *ENTER* to go in.

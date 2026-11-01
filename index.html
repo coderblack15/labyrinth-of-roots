@@ -160,6 +160,29 @@ body.intro-open { overflow: hidden; }
 .finale { border-top: 1px solid var(--line); }
 .finale .quote { font-family: var(--land-display); font-weight: 700; font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: .08em; color: var(--ember); margin: .3em 0 .5em; line-height: 1.1; }
 .finale .btn { margin-top: 18px; }
+.support { text-align: center; }
+.support .container > p { margin-inline: auto; }
+.support .eyebrow { margin: 0 0 10px; }
+.tip-btn {
+  display: inline-block; text-decoration: none; cursor: pointer;
+  font-family: var(--label); font-weight: 700; letter-spacing: .14em; font-size: .9rem;
+  color: var(--gold); background: transparent; border: 1px solid var(--gold); border-radius: 3px;
+  padding: 12px 24px; margin-top: 8px;
+  transition: background .2s, color .2s;
+}
+.tip-btn:hover { background: var(--gold); color: var(--bg); }
+.tip-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.tip-note { font-size: .9rem; color: var(--muted); margin: 12px 0 0; }
+.tbc .tip-line { margin: 0; color: var(--muted); }
+.tbc .tip-line a { color: var(--gold); }
+.demo-full {
+  display: inline-block; text-decoration: none; color: var(--ink);
+  background: #3a1a15; border: 1px solid var(--ember); border-radius: 4px;
+  padding: 10px 16px; font-family: var(--body); font-size: 1.02rem; line-height: 1.3;
+}
+.demo-full:hover { background: #4c211a; border-color: #ef6a52; }
+.demo-full:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.demo-badge { display: inline-block; margin: 0 0 14px; padding: 4px 12px; border: 1px solid var(--gold); border-radius: 3px; font-family: var(--label); font-weight: 700; letter-spacing: .14em; font-size: .8rem; color: var(--gold); }
 
 /* ---------- hero ---------- */
 .hero {
@@ -625,6 +648,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <a class="btn" href="#play">PLAY NOW</a>
     </div>
   </section>
+
+  <section class="section support dark band" id="support">
+    <div class="container">
+      <p class="eyebrow">Free to play</p>
+      <h2>Keep The Lantern Lit</h2>
+      <p>Labyrinth of Roots is free, and new chapters keep coming. If the dark has given you a good night or two, you can leave a coin at the gate to help the next chapter get written.</p>
+      <a class="tip-btn" data-tip href="#" target="_blank" rel="noopener">SUPPORT THE CREATOR</a>
+      <p class="tip-note">Every tip goes to the creator. The game stays free either way.</p>
+    </div>
+  </section>
 </div>
 
 <header class="hero" id="play">
@@ -794,6 +827,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   });
   let S = fresh();
 
+  // Tip jar: Adrian's Stripe Payment Link.
+  const TIP_URL = "https://buy.stripe.com/00w7sL4wG4SSbtkePE2Nq00";
+  // Demo builds: tools/build-demo.py sets DEMO_END to the number of parts the demo plays (0 = the full game).
+  const DEMO_END = 0;
+  const FULL_URL = "https://coderblack15.github.io/labyrinth-of-roots/";
+  document.querySelectorAll("a[data-tip]").forEach(a => { a.href = TIP_URL; });
+
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; return v; } catch (e) { return null; } }
   function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
@@ -813,6 +853,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
   function stat(path, title) {
     if (!statsOn) return;
+    if (DEMO_END) { path = "demo-" + path; title = "Demo: " + (title || path.slice(5)); }
     statQueue.push({ path, title: title || path, event: true });
     statFlush();
   }
@@ -6791,6 +6832,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       "<p style='margin:0'>You stand in the square at Ashgate with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
       "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + (S.deaths ? " The Bloom killed you " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + ", and Vellum Rest brought you back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + " On the deep stair under the mountain, the footprints go down toward a gold light: the second Sulmara, and the Magistrate somewhere in it.</p>" +
+      '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>');
     scrollNext = true;
     add(box);
@@ -6807,7 +6849,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function checkpoint() { CHECK = JSON.stringify(S); save(); jCheckpoint(); }
   async function play(fromPart) {
     started = true;
-    for (let i = fromPart; i < PARTS.length; i++) {
+    const last = DEMO_END || PARTS.length;
+    for (let i = fromPart; i < last; i++) {
       S.part = i; checkpoint(); jPart(i);
       for (;;) {
         try { await PARTS[i](); break; }
@@ -6815,7 +6858,22 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       }
       await jChapterDone(i);
     }
+    if (DEMO_END) { S.part = DEMO_END; save(); demoEnd(); return; }
     S.part = PARTS.length - 1; save();
+  }
+
+  function demoEnd() {
+    const box = el("section", "tbc",
+      '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
+      '<p class="big">The labyrinth goes deeper.</p>' +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass and a mountain that sings.</p>" +
+      "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
+      '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
+      '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');
+    scrollNext = true;
+    add(box);
+    $("againBtn").onclick = () => restart();
+    $("endJournalBtn").onclick = () => jOpen();
   }
 
   function begin(resumeState) {
@@ -6849,7 +6907,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const saved = load();
   $("beginBtn").onclick = () => { clearSave(); begin(null); };
   if (saved && saved.part > 0) {
-    const c = el("button", "", "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
+    const c = el("button", "", DEMO_END && saved.part >= DEMO_END ? "Continue: the end of the demo" : "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
     c.type = "button";
     c.onclick = () => begin(saved);
     $("startActions").appendChild(c);
