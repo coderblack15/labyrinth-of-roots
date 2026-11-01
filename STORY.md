@@ -706,6 +706,115 @@ Tyra is a laid-back rogue, named for the crossguard of a sword because her mothe
   - If you're found guilty, you escape the chains with Tyra's key, Tobbin, Varro's thread, a pick, or brute force.
   - Then you grab your gear (and risk the beam), solve the mirror rig, and fight Coyle: 40 HP, a mirrored mantle that halves and reflects spells until it's cracked, and a glass gavel.
   - Endings: the Blackjackal takes her (if you made the jackal deal), mercy, or the mirror turns her to glass.
-- **Hook.** Orrin sends a map of a second Sulmara under the sand. The Blackjackal took the Magistrate below. The end card is Part XXXV.
+- **Hook.** Orrin sends a map of a second Sulmara under the sand. The Blackjackal took the Magistrate below, and the oldest road down starts under Mount Corrach, three days north.
+
+## The Corrach Three: Thrumhold
+
+This chapter follows The Glass Assize. Brother Orrin's glass map shows that the oldest road down to the second Sulmara starts three days north of the city, under a grey mountain called **Corrach**. The valley under Corrach is home to three settlements, known together as "the Three":
+
+- **Ashgate**, a salt-and-copper mining town at the foot of the mountain. It has the bounty board and the bank.
+- **Vellum Rest**, a hillside village where the Bloom-sick live. You learn the cures and the Hesk language here.
+- **Thrumhold**, the fortress of the Hesk, hidden inside the mountain.
+
+### The Hesk
+
+Adrian asked for something new instead of carrion beetles, so the race is an original one.
+
+- **What they are.** The Hesk are tall, humanoid cicadas (not a hive, beetles or spiders). They stand taller than a door, with shell the color of bark, wide-set eyes like smoked glass, and folded wings too small to fly with.
+- **How they live.** They sleep in stone cradles for seventeen years, then wake for one summer to sing and to trade **moltwater** for salt at Vellum Rest.
+- **How they speak.** They talk in a droning chest-song made of four tones: low drone, rasp, click and high whine.
+- **Why they're dangerous now.** They woke four years early. The Blackjackal dragged the Magistrate through their sleeping halls on his way down the deep stair, and his passing cracked a hundred cradles. Korr-Vesh, **the Long Drummer**, woke first and woke sick. Ever since, he has beaten the great drum to keep everyone awake and raiding.
+- **Song-forged weapons (Adrian's lore).** The Hesk channel sound through the Bloom fungus and shape it with resonance until it hardens into a weapon. A gleaner hums its hook-glaive into being on the run, and the blade slumps back into white fur when the song stops. Ninefold eats porridge with a spoon he sang out of fungus. On Thrumhold's third tier, a choir-forge of Hesk sings glaives up out of a bed of fungus. Korr-Vesh hums the Bloom off his own arms onto his drum-bones as barbed points, and his drum-calls rain hardened shards. Thessk sings a training blade out of shell-sand, and the Moltglaive was sung from moltwater salt, which is why it carries no Bloom.
+- **Their weapons.** They carry song-forged hook-glaives, spore-censers and spore-hounds.
+- **Fighting the song.** The Drum of Stilling makes their song falter, so their blades soften and hit for 2 less for the rest of the fight. At song 2 you can sing a discord into a Hesk blade (Wisdom DC 13, once a fight). The blade crumbles, and the Hesk loses its next turn singing a new one from bare shell. That one is clean, so its hits don't carry the Bloom for the rest of the fight.
+- **Named Hesk:**
+  - Skarrit, the raid-leader
+  - Thessk, champion of the Ring of Echoes
+  - Iyu, the Old Cantor, who sings the Long Sleep and is held prisoner
+  - Ninefold, an exile who lives at Vellum Rest and teaches you their song
+
+### The Pale Bloom (the disease that stops the axe's revive)
+
+- **Catching it.** Hesk blades, spore-hounds, spore pockets and censers all call for a Constitution save (+2, DC 11–14). Each failure raises the Bloom one stage.
+- **Stage 1, Spotted.** Vaelric's axe can't keep you up at 0 HP. Fungus eats roots, and his power is roots.
+- **Stage 2, Rooted.** All healing is halved, including potions and rest.
+- **Stage 3, Blooming.** You lose 1d4 HP every morning and at the start of every part.
+- **Dying.** If you hit 0 HP while you carry the Bloom, you die. You wake at Vellum Rest at full HP with the Bloom at stage 1, and you lose half the gold in your purse (gold in the bank is safe). Sister Wren gives you a Draught of Mending if you have none. Then the part replays from your last rest, which is the start of the part or the last time slot.
+- **Counters:**
+  - Saltroot tea: 4 gold at Vellum Rest, or brew it yourself with Herbcraft. Each cup is −1 stage.
+  - Wren's salt poultice: −1 stage, once a day.
+  - The smelter's firebath: 3 gold, or free once you kill the salamander. −1 stage, once a day.
+  - The Saltroot Mask: every save is 3 easier.
+  - The Weathercloak's poison thread: advantage on every save.
+  - **Moltwater** from the cistern in Thrumhold: a full cure, and you can't catch the Bloom again.
+
+### Systems
+
+- **Time.** You have three days in Ashgate, each with a morning, afternoon and night, so nine turns. Errands in town (the bank, the tailor, the firebath, the shop, drinking tea) take no time.
+- **The Waking Drum (0–10).** It starts at 3 and climbs 1 every night.
+  - From 4 up, the Hesk raid Ashgate each night. You can hold the gate (a mob fight, paid 3 gold a head) or bar the door, which raises the drum by 1.
+  - Killing Skarrit lowers it by 2. Exposing the Reeve lowers it by 1. Blowing the Singing Door raises it by 2.
+  - The final boss has 30 + 2×drum HP.
+- **The Reckoning Board (bounties).** Each posting gives dead or alive terms, and payouts of 20 gold or more go straight into your bank account if you have one. Rank climbs with bounties closed: Copper at 1, Iron at 2, Silver at 3. Reaching Silver earns the Long Reckoning crossbow.
+  - **Wat Gorse** (any time). He steals the Bloom-sick for the Hesk. Pays 12 gold alive or 8 dead. Track him with Investigation and Survival, then fight him. You free two villagers and find his tally book, the proof that the Reeve is paying him.
+  - **Corvin Dray, the Thrice-Seen** (by day). A highwayman, 25 gold. In each round of the fight you have to pick the real Corvin out of three in a shell game. The Lantern Knight's lamp shows you which one throws a shadow. Pays the Mirrorwake blade and the Tarn treasure map.
+  - **Skarrit** (by night). You fight a spore-hound, then Skarrit himself. Pays 20 gold, the spore-hound pelt (the poison hide), the location of the Singing Door, and drum −2.
+  - **The quiet contract** (an assassination). It comes through the bank and is open to account holders only: 40 gold, paid into your account, to kill Reeve Halloran. Investigating shows he has been feeding the sick to the Hesk. You can kill him, expose him in the square (25 gold and drum −1), or take his 30-gold bribe, after which Sister Wren charges you double.
+  - **The Thrumhold Contract.** It unlocks after 2 bounties or after Skarrit. Pays 60 gold to collapse the drum hall, and comes with 2 blasting charges.
+- **The Coffer-House (the bank).** Banker Cassius Merrow charges **15 gold to open an account**. After that, deposits and withdrawals are free by daylight. Banked gold survives a death. He also runs a dead depositor's box auction for 8 gold, which holds the Slag-Field map, and he passes on the quiet contract.
+- **The Hesk language (song 0–3).** Ninefold teaches one lesson per visit to Vellum Rest. Each lesson is a "sing it back" memory puzzle of 4, 6 and then 8 notes. If you fail, a Wisdom check can still get you there.
+  - Song 1: Hesk attack you at −1, you can read the cache map, and you can understand Skarrit and Iyu.
+  - Song 2: you can talk past guards, ask for moltwater, challenge in the Ring of Echoes, break Korr-Vesh's drum calls, and learn the Long Sleep from Iyu.
+  - Song 3: the Singing Door opens on its own.
+  - At every level, the door's tone-lock shows you more of its notes.
+- **Treasure hunts.** You dig on a 6×6 map, using a riddle about the landmarks. You get 4 digs, and each miss tells you how many paces off you are.
+  - The Slag-Field Purse (from the bank auction): 30 gold.
+  - The Tarn Pay-Chest (from Corvin's coat): 20 gold and an Elixir of Health.
+  - The Seventeen-Year Cache (Ninefold's tablet, readable at song 1, in Thrumhold's oldest tier): the Seventeen-Year Ring.
+
+### Eight quest-earned items
+
+| Item | Quest | Effect |
+|---|---|---|
+| **The Weathercloak** | Bring Granny Ebb three hides (5 gold a thread): a salamander from the smelter flue, a frost-eel from the Meltwater Tarn, a spore-hound pelt from Skarrit's ledge or a night raid | Fire, frost or poison damage is halved for each thread sewn in. The poison thread also gives advantage on Bloom saves |
+| **Mirrorwake** | Corvin Dray's bounty | Once a fight, two copies of you appear. Each of the next 3 attacks on you has a 2 in 3 chance to hit a copy |
+| **Drum of Stilling** | Find Ninefold's sleep-shell in the shell field and bring it back | Once a fight, every Hesk loses its next turn, and their blades soften (−2 damage) for the rest of the fight |
+| **Saltroot Mask** | Bring Sister Wren 3 saltroot from the slopes | Every Bloom save is 3 easier |
+| **The Daylamp** | Rescue the trapped miners in Shaft Nine (shoring puzzle) | Hesk attack at −2, and it shows spore pockets in the tunnel maze. Also gives 1 blasting charge and opens the Shaft Nine breach |
+| **The Long Reckoning** | Close 3 bounties to reach Silver Reckoner | A free opening crossbow shot in every fight: +5 to hit, 2d8 |
+| **Seventeen-Year Ring** | The Seventeen-Year Cache treasure hunt | Once, when the Bloom would let you die, you live at 1 HP |
+| **The Moltglaive** | Win the honor duel with Thessk in the Ring of Echoes (needs song 2) | 1d10 + 3, and +1d6 against the Hesk |
+
+### Puzzles (each has a fallback)
+
+1. **Song lessons.** Watch a four-tone phrase, then sing it back (Simon-style). The fallback is a Wisdom check.
+2. **The Singing Door.** Guess a four-note phrase from five tones. The door answers each try with ● for a right note in the right place and ○ for a right note in the wrong place. You get 8 tries, and song lessons reveal the first notes. The fallback is to blow the door (drum +2) or heave it open (Athletics DC 15, and each failure costs HP and drum).
+3. **The snaking tunnel.** A 7×7 maze under fog, with spore pockets. The Daylamp shows pockets one step ahead, and you can stop and listen 3–4 times to hear which way to go. The fallback is the dead miners' chalk marks (Survival DC 14). Each pocket you walk into means a Bloom save.
+4. **Shoring Shaft Nine.** Set 4 timber props, each covering its own span and the four spans around it, so that every crack is braced within 16 moves. The fallback is holding up the roof yourself (Athletics DC 15).
+5. **The Thrice-Seen Man.** A shell game in each round of the Corvin fight.
+6. **Treasure digs.** Three maps with riddles.
+7. **The finale.** Every third round Korr-Vesh beats a call on the drum, and you sing it back in reverse to break it (song 2). The Long Sleep is a 6-note song you sing with Iyu.
+
+### Story beats
+
+- **XXXV Ashgate.** The road north. Ashgate's chalked doors. Jessamy Rook and the Reckoning Board. Your first Hesk gleaner fight, and the Bloom rules explained. A tour of the town.
+- **XXXVI–XXXVIII. The three days under Corrach.** The hub, with night raids, Tyra's daily moments and checkpoints after every turn.
+- **XXXIX The Singing Door.** Go in by the door or by the Shaft Nine breach (the breach has more spore pockets). Then the door, the tunnel maze, and the two wardens at the last bend, whom you can talk past, sneak past or fight.
+- **XL Thrumhold.** The 200-foot drum-shaped cavern, tiers of carved shell-ribbed stone homes, sealed cradles of sleepers, and the great drum in the middle. You can do three things before the alarm goes up:
+  - The moltwater cistern, guarded by the Spore-Keeper (song 2 lets you ask instead of fight).
+  - The Ring of Echoes.
+  - Freeing Iyu. Tyra's key no. 42 opens the lock, or Lockcraft, or strength.
+  - The cache dig.
+  - The deep stair, where you find the Magistrate's gold mask.
+- **XLI The Long Drum.** Fight Korr-Vesh: 30 + 2×drum HP, AC 14, drum-bones that do 1d10 and carry the Bloom (DC 14). His drum calls summon two Hesk (once the drum is at 6 or more) or rain hardened Bloom shards (2d4 and a Bloom save). Then the ending:
+  - **The Long Sleep:** Iyu sings them all back into the cradles.
+  - **Truce:** the drum stays silent and the moltwater trade resumes.
+  - **Collapse:** the Thrumhold Contract brings down the whole cavern, sleepers and all (60 gold).
+  - **Walk away.**
+- **Hook.** On the deep stair, footprints (bare human feet and a jackal's prints) go down toward a gold light: the second Sulmara. The end card is Part XLII.
+
+### Tyra
+
+If her fondness was 2 or more (or you romanced her), she comes north. She takes one Hesk down in each mob fight and has a line each day. Her key no. 42, from an Ashgate granary, opens Iyu's padlock.
 
 *To be continued.*
