@@ -25,7 +25,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 `demo.html` is a free demo that plays Parts I–X and then shows an end card pointing to the full game. It's generated from `index.html`, so rebuild it after any change to the game:
 
 ```
-python3 tools/build-demo.py --parts 10 --full-url https://your-full-game-link
+python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/labyrinth-of-roots
 ```
 
 `TIP_URL` (the Support the creator link) and `FULL_URL` (where the demo's "Play the full game" button goes) are set near the top of the script in `index.html`.
