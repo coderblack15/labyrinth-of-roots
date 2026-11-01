@@ -56,6 +56,13 @@ python3 tools/build-demo.py --parts 10 --full-url https://your-full-game-link
 - **Eight quest-earned items**: the Weathercloak (fire, frost and poison threads), Mirrorwake (a blade that splits you into copies), the Drum of Stilling, the Saltroot Mask, the Daylamp, the Long Reckoning crossbow, the Seventeen-Year Ring, and the Moltglaive.
 - **Treasure hunts**: three riddle maps to dig up, and more puzzles: a tone-lock door, a fog-shrouded tunnel maze, shoring a collapsed mine, a shell game against an illusionist, and singing a drum-call back to break it.
 - **Progress saving** in your browser, so you can continue from the last part you reached.
+- **A journal** of each journey, kept in your browser: time played, deaths, close calls (when the axe held you at 1 HP), fights, gold found and spent, every item found, bounties claimed and treasure dug up. Each chapter ends with a summary card, and the journal (the *Journal* button in your items) keeps a table of finished chapters, totals across every journey, and your earlier runs.
+
+## Visitor stats (public site only)
+
+The GitHub Pages version can count anonymous visits with [GoatCounter](https://www.goatcounter.com/), which uses no cookies and collects nothing personal. It's off until a site code is filled in: set `GOATCOUNTER_CODE` near the top of the game script in `index.html` to your GoatCounter code. It only ever runs on `coderblack15.github.io`, never in the private Claude link or a copy opened from disk.
+
+Besides page views, the dashboard shows these events: `journey-start`, `journey-continue`, `part-1` … `part-41` (how far players get), `chapter-done-labyrinth`, `chapter-done-desert`, `chapter-done-hushfen`, `chapter-done-carrowmere`, `chapter-done-lastwell`, `chapter-done-assize`, `chapter-done-corrach`, `journey-finished`, and `bloom-death`.
 
 ## Files
 
