@@ -39,6 +39,7 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 - **More puzzles**: rebuilding a shattered witness pane, steering sunlight through mirror rigs, breaking a two-dial cipher, and cross-examining a lying witness.
 - **The Corrach Three** (Parts XXXV–XLI): three days in the mining town of Ashgate, then the Singing Door, a snaking tunnel, and Thrumhold, the Hesk fortress in a 200-foot cavern of carved stone homes.
 - **The Pale Bloom**, a disease that stops Vaelric's axe from keeping you on your feet. While you carry it, 0 HP means death: you wake at Vellum Rest, lose half your purse, and replay the part. Saltroot tea, firebaths, a saltroot mask and moltwater fight it.
+- **Staying alive** in the Hesk fights: **Evade** gives up your swing for a 65% chance to slip every attack that round, and Sister Wren teaches **Field Mending** (first aid, 10 gold, also sold at the Vitreous Library) to bind your wounds twice a fight and patch up after every win.
 - **The Reckoning Board**: bounties paid dead or alive (Wat Gorse, Corvin Dray the Thrice-Seen, the raid-leader Skarrit, a quiet assassination contract), with ranks from Copper to Silver.
 - **The Coffer-House**, Ashgate's bank: 15 gold to open an account, and banked gold survives a death.
 - **The Hesk song-language**, learned in lessons with the exile Ninefold: each level opens new ways to talk, sneak and fight.
