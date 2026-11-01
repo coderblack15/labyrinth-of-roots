@@ -175,6 +175,14 @@ body.intro-open { overflow: hidden; }
 .tip-note { font-size: .9rem; color: var(--muted); margin: 12px 0 0; }
 .tbc .tip-line { margin: 0; color: var(--muted); }
 .tbc .tip-line a { color: var(--gold); }
+.demo-full {
+  display: inline-block; text-decoration: none; color: var(--ink);
+  background: #3a1a15; border: 1px solid var(--ember); border-radius: 4px;
+  padding: 10px 16px; font-family: var(--body); font-size: 1.02rem; line-height: 1.3;
+}
+.demo-full:hover { background: #4c211a; border-color: #ef6a52; }
+.demo-full:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.demo-badge { display: inline-block; margin: 0 0 14px; padding: 4px 12px; border: 1px solid var(--gold); border-radius: 3px; font-family: var(--label); font-weight: 700; letter-spacing: .14em; font-size: .8rem; color: var(--gold); }
 
 /* ---------- hero ---------- */
 .hero {
@@ -770,6 +778,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // Tip jar: put Adrian's Ko-fi or Buy Me a Coffee page here.
   const TIP_URL = "https://ko-fi.com/YOUR-PAGE";
+  // Demo builds: tools/build-demo.py sets DEMO_END to the number of parts the demo plays (0 = the full game).
+  const DEMO_END = 0;
+  const FULL_URL = "https://coderblack15.github.io/labyrinth-of-roots/";
   document.querySelectorAll("a[data-tip]").forEach(a => { a.href = TIP_URL; });
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -6584,14 +6595,29 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function checkpoint() { CHECK = JSON.stringify(S); save(); }
   async function play(fromPart) {
     started = true;
-    for (let i = fromPart; i < PARTS.length; i++) {
+    const last = DEMO_END || PARTS.length;
+    for (let i = fromPart; i < last; i++) {
       S.part = i; checkpoint();
       for (;;) {
         try { await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); await fallen(); checkpoint(); }
       }
     }
+    if (DEMO_END) { S.part = DEMO_END; save(); demoEnd(); return; }
     S.part = PARTS.length - 1; save();
+  }
+
+  function demoEnd() {
+    const box = el("section", "tbc",
+      '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
+      '<p class="big">The labyrinth goes deeper.</p>' +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass and a mountain that sings.</p>" +
+      "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
+      '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button></div>' +
+      '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');
+    scrollNext = true;
+    add(box);
+    $("againBtn").onclick = () => restart();
   }
 
   function begin(resumeState) {
@@ -6624,7 +6650,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const saved = load();
   $("beginBtn").onclick = () => { clearSave(); begin(null); };
   if (saved && saved.part > 0) {
-    const c = el("button", "", "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
+    const c = el("button", "", DEMO_END && saved.part >= DEMO_END ? "Continue: the end of the demo" : "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
     c.type = "button";
     c.onclick = () => begin(saved);
     $("startActions").appendChild(c);
