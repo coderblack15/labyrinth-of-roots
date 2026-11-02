@@ -62,6 +62,7 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 - **Five more quest items**: the Sun-Shard, the Hour-Key, Oriel's Shadow Needle, the Lidless Veil and the Dimmer's Shutter-Cloak.
 - **Progress saving** in your browser, so you can continue from the last part you reached.
 - **A journal** of each journey, kept in your browser: time played, deaths, close calls (when the axe held you at 1 HP), fights, gold found and spent, every item found, bounties claimed and treasure dug up. Each chapter ends with a summary card, and the journal (the *Journal* button in your items) keeps a table of finished chapters, totals across every journey, and your earlier runs.
+- **The story so far.** Continuing a save opens with a short recap of that run: the choices you made in each chapter, who is with you, where you stopped and what you carry. Skip it, turn it off, or read it again any time at the top of the journal. Each chapter's lines come from the `RECAP` table in `index.html`, keyed by the chapter's slug in `CHAPTERS`; a new chapter should add an entry there.
 
 ## Visitor stats (public site only)
 

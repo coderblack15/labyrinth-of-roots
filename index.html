@@ -524,6 +524,27 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .journal td { text-align: right; padding: 5px 0 5px 8px; border-top: 1px solid var(--line); }
 .journal th:first-child, .journal td:first-child { text-align: left; padding-left: 0; }
 .journal .j-note { margin: 0; color: var(--muted); font-size: .82rem; }
+.journal .j-note button { padding: 2px 10px; font-size: .8rem; margin-left: 4px; }
+.recap {
+  margin: 8px 0 24px; padding: 18px 18px 16px; border: 1px solid #5c4d27; border-radius: 6px;
+  background: linear-gradient(180deg, rgba(207,168,80,.08), rgba(207,168,80,0) 70%), var(--panel);
+  display: grid; gap: 12px; scroll-margin-top: 24px;
+}
+.recap .num { font-family: var(--label); font-weight: 700; letter-spacing: .16em; font-size: .8rem; color: var(--gold); }
+.recap h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 2px 0 0; line-height: 1.15; }
+.recap .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.recap .j-note { margin: 0; color: var(--muted); font-size: .82rem; }
+.recap-ch { display: grid; gap: 4px; }
+.recap-name { margin: 0; font-family: var(--label); font-weight: 700; letter-spacing: .1em; font-size: .85rem; color: var(--gold); }
+.recap-name small { font-weight: 400; color: var(--muted); letter-spacing: .06em; }
+.recap-ch ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: .95rem; line-height: 1.45; }
+.recap-now { margin: 0; }
+.journal .j-recap { display: grid; gap: 12px; }
+.journal .j-recap h3 { margin: 0; }
+.recap-early { display: grid; gap: 12px; }
+.recap-early summary { cursor: pointer; font-family: var(--label); letter-spacing: .08em; font-size: .85rem; color: var(--muted); }
+.recap-early[open] summary { margin-bottom: 12px; }
+.recap-early .recap-ch + .recap-ch { margin-top: 12px; }
 
 @media (max-width: 860px) {
   .hero { grid-template-columns: minmax(0, 1fr); padding-block: 36px 24px; }
@@ -724,7 +745,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Read each scene, then pick what you do next.</li>
       <li>When a check comes up, click to roll the d20. Your bonus is added, and you need to meet or beat the number shown.</li>
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser, and you can keep up to three runs in separate save slots. Use Saves in your items to switch.</li>
-      <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
+      <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter. When you come back to a save, a short recap of the story so far reminds you where you left off.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
       <li>Sound is off to start. Turn it on here or from your items for a quiet bed of sound in each region, and the Hesk songs sung out loud.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
@@ -1325,6 +1346,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function jRender() {
     const r = J.run, body = $("jBody");
     let h = "";
+    const rs = started ? S : load(SLOT);
+    if (rs && rs.part > 0) {
+      h += '<section class="j-recap"><h3>The story so far · Slot ' + SLOT + "</h3>" + recapHTML(rs, true) +
+        '<p class="j-note">' + (recapOff() ? "This recap no longer shows when you continue a save. " : "This recap shows each time you continue a save. ") +
+        '<button class="ghost" type="button" id="jRecapToggle">' + (recapOff() ? "Show it again" : "Stop showing it") + "</button></p></section>";
+    }
     if (r) {
       const found = Object.values(r.items).map(x => x.name);
       h += "<section><h3>This journey · Slot " + SLOT + "</h3>" +
@@ -1357,6 +1384,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       BEASTS.map(b => beastCard(b, !!bz[b.id], bz[b.id])).join("") + "</div></section>";
     h += '<p class="j-note">Your journal is kept only in this browser. Close calls are times the axe (or the shell ring) held you up at 1 HP.</p>';
     body.innerHTML = h;
+    const rt = $("jRecapToggle");
+    if (rt) rt.onclick = () => { setRecapOff(!recapOff()); jRender(); };
   }
   function jOpen() {
     jRender();
@@ -3181,7 +3210,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("You run back the way you came, through the dark and the reeds, and reach the great split tree just before moonrise. You pound on the bark. The tree opens. Varro is standing on the black stair with a crossbow in each hand, and for the first time, he looks surprised.");
     await say("You tell him about the flooded tunnel. He goes pale, then laughs. \"Thirteen years,\" he says, \"and the first guest I ever let leave comes back to save my life.\"", "voice");
     await say("Together you hold the tunnel when the Gnawkin come, and by dawn the fen is quiet.");
-    S.ring = true; renderSheet();
+    S.ring = true; S.varroAlly = true; renderSheet();
     await mech("Varro is your ally now. He presses his violet signet ring into your hand: show it anywhere in the Hushfen and the shadows will hide you once.", "loot");
     S.mire = "warn";
   }
@@ -8725,8 +8754,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await go("Get up");
   }
 
-  async function endCard() {
-    await wait(300);
+  // Everything you carry, in words: used by the end card and the story-so-far recap.
+  function carriedList() {
     const carried = [];
     if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
     if (S.shield) carried.push("The pauldron shield" + (S.pitted ? ", pitted by slime" : ", dented in the shape of a spider's face"));
@@ -8743,7 +8772,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.lens) carried.push("A burning lens");
     (S.gear || []).forEach(k => carried.push(GEAR[k].name + (k === "cloak" ? " (" + ["fire", "frost", "poison"].filter(t => S.cloak[t]).join(", ") + ")" : k === "ring" && S.ringUsed ? ", cracked" : "")));
     if (S.mask2) carried.push("The Magistrate's gold mask");
-    if (S.bounty && S.bounty.done.length) carried.push("A " + rank() + "'s tally: " + S.bounty.done.length + " contract" + (S.bounty.done.length > 1 ? "s" : "") + " closed");
+    if (S.bounty && S.bounty.done.length) carried.push(("AEIOU".includes(rank()[0]) ? "An " : "A ") + rank() + "'s tally: " + S.bounty.done.length + " contract" + (S.bounty.done.length > 1 ? "s" : "") + " closed");
     if (S.molt) carried.push("Moltwater in your blood, and no Bloom");
     if (S.nk) carried.push(S.nk.jackal === "sewn" ? "A shadow with a jackal's ears, sewn into your own" : "Your shadow: " + SHADE_NAME[S.nk.shade].toLowerCase());
     if (S.nk && S.nk.jars) carried.push(S.nk.jars + " noon-jar" + (S.nk.jars > 1 ? "s" : ""));
@@ -8757,6 +8786,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.blessing) carried.push("The strangers' blessing, still unspent");
     if (S.potions) carried.push(S.potions + " Draught" + (S.potions > 1 ? "s" : "") + " of Mending");
     if (S.elixirs) carried.push(S.elixirs + " Elixir" + (S.elixirs > 1 ? "s" : "") + " of Health");
+    return carried;
+  }
+
+  async function endCard() {
+    await wait(300);
+    const carried = carriedList();
     const CODA = {
       sleep: "Thrumhold sleeps, every cradle sealed, and the Old Cantor lies on the silent drum, singing.",
       truce: "In Thrumhold the drum is silent, and the Hesk will come down to Vellum Rest to trade moltwater for salt.",
@@ -8781,6 +8816,122 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     add(box);
     $("againBtn").onclick = () => restart();
     $("endJournalBtn").onclick = () => jOpen();
+  }
+
+  // ---------- the story so far ----------
+  // A short recap for a returning player, read from the save itself (so it works for runs older than the
+  // journal). One entry per chapter slug in CHAPTERS; each returns the lines worth remembering from that
+  // chapter. A new chapter adds an entry here; a chapter without one still gets its name and RECAP_PLAIN.
+  const RECAP_OFF = "lor-recap-off";
+  const RECAP_PLAIN = "You came through it.";
+  const RECAP = {
+    labyrinth: (s) => [
+      s.axe && "You took up Vaelric's Axe, and the spirit of the knight who carried it came with it.",
+      s.shield && "You pried a pauldron shield off the dead and made it your own.",
+      s.slain && "You killed Ryytaa the Ender in her nest, and the spiders fled.",
+      s.part > 4 && "You walked out through the Library of Roots" + (s.books.length ? " with " + s.books.length + " book" + (s.books.length > 1 ? "s" : "") + " in your pack." : ".")
+    ],
+    desert: (s) => [
+      s.crew === "join" ? "You took Sable's hand and joined the Hollow Hands." : s.crew === "decline" ? "You told Sable you walk alone." : "",
+      { magistrate: "In the vault you did the Magistrate's job, and handed Sable and Grell to his guards.",
+        crew: "When Tobbin turned his crossbow on Sable, you threw your shield up in front of her.",
+        self: "You slipped past thieves and guards alike with the Ember Root, and now both of them want you." }[s.side],
+      { return: "You planted the Ember Root where the great tree fell, and the labyrinth began to heal.",
+        keep: "You kept the Ember Root, and it grew into you." }[s.ending]
+    ],
+    hushfen: (s) => [
+      s.writ && "You carry the Blackjackal's bounty writ.",
+      s.varroCaught ? "Varro Duskwane, the Violet Baron, caught you stealing from him." : s.stoleClean ? "You robbed Varro Duskwane, the Violet Baron, and he never knew." : s.part > 12 && "You were a guest of Varro Duskwane, the Violet Baron, in his tree under the fen.",
+      (s.varroAlly || s.ring) && "You warned Varro of the Gnawkin and held the tunnel beside him, and he gave you his violet ring."
+    ],
+    carrowmere: (s) => [
+      s.pike && "You fed the Gravepike, and it swam beside you all the way to the drowned castle.",
+      s.kingFled && "You broke the chains on the drowned king's clerks, and they set down their quills and faded.",
+      s.lantern && "You won the Lantern Knight's lamp.",
+      { forgive: "You forgave Tobbin, and he came with you to the treasury.", rob: "You robbed Tobbin" + (s.signet ? ", and took the Royal Signet of Carrowmere off him." : "."),
+        jackal: "You handed Tobbin to the Blackjackal." }[s.boy]
+    ],
+    lastwell: (s) => [
+      s.hobb && "You cut Hobb's Book of Iron Mischief out of its cage.",
+      s.part > 25 && "You found the Scroll of Revelation behind the bell in the Belfry.",
+      s.part > 27 && "You put the Wringer back down its own well, and drank Lastwell's water clean. Nobody else sat up."
+    ],
+    assize: (s) => [
+      s.ansel && "You walked old Brother Orrin to the Temple.",
+      s.wonDrink && "You drank Brannoch under the table.",
+      s.fixerBad && "You bribed a juror, and Hesper Coyle heard of it.",
+      s.jackalDeal && "You struck a deal with the Blackjackal in his cell: the truth, for her sun.",
+      { free: "The Glass Assize tried you, and twelve hands came down clear enough to set you free.", guilty: "The Glass Assize found you guilty." }[s.verdict],
+      s.jackalTook ? "The Blackjackal took Hesper Coyle, the Glass Judge, into the dark." :
+        { spare: "You chained Hesper Coyle in the focus and let the court decide.", mirror: "You let the mirror have Hesper Coyle." }[s.coyle],
+      s.tyra && (s.tyra.love ? "You fell for Tyra Quillon, and she for you." : s.tyra.aff >= 2 ? "You made a friend of Tyra Quillon, thief and key-collector." : "You met Tyra Quillon.")
+    ],
+    corrach: (s) => [
+      s.tyraHk && "Tyra came up the mountain with you.",
+      s.bank && s.bank.open && "You opened an account at the Coffer-House" + (s.bank.bal ? ", and left " + s.bank.bal + " gold in it." : "."),
+      s.bounty && s.bounty.done.length && "You closed " + s.bounty.done.length + " bounty contract" + (s.bounty.done.length > 1 ? "s" : "") + " on Rook's board.",
+      s.freed && "You cut two villagers loose in Wat Gorse's sheep-fold, and found the letter H in his tally book.",
+      s.breach && "You dug three miners out of the fall and saw the Hesk tunnel beyond.",
+      s.contract && "You took the Reeve's nameless contract on the drum hall.",
+      s.molt && "You drank moltwater, and the Pale Bloom left you.",
+      s.iyu && "You found Iyu, the Old Cantor, folded in her cradle.",
+      { sleep: "You let Iyu sing the Hesk back to sleep, and Thrumhold fell silent.", truce: "You left the waking Hesk awake under Iyu, in an uneasy peace.",
+        blast: "You set the charges and brought the drum hall down on all of them.", leave: "You walked away and let the Hesk decide what they are." }[s.ending2]
+    ],
+    noon: (s) => {
+      const N = s.nk;
+      if (!N) return [s.part > 41 && "You went down the deep stair into Ammaret, where it has been noon for six hundred years."];
+      const who = SUSPECTS[N.culprit] ? SUSPECTS[N.culprit].short : "";
+      return [
+        "You went down the deep stair into Ammaret, where it has been noon for six hundred years.",
+        N.named === "right" ? "In the Noon-room you named " + who + " as the one the Blackjackal was wearing, and you were right." : N.named === "wrong" && "You named the wrong suspect. The Blackjackal had been wearing " + who + ".",
+        { burn: "You held the Blackjackal up into the Kept Noon until he was gone.", sewn: "You sewed the Blackjackal into your own shadow.", free: "You let the Blackjackal crawl away into the deep dark." }[N.jackal],
+        { keep: "The Kept Noon blazes on.", dusk: "You gave Ammaret a dusk.", night: "You closed the lens, and Ammaret had its first night." }[N.ending]
+      ];
+    }
+  };
+  function recapOff() { try { return localStorage.getItem(RECAP_OFF) === "1"; } catch (e) { return false; } }
+  function setRecapOff(v) { try { if (v) localStorage.setItem(RECAP_OFF, "1"); else localStorage.removeItem(RECAP_OFF); } catch (e) {} }
+  // The recap of save s as HTML: one block per chapter reached, then where you stand and what you carry.
+  // With fold set (the Continue screen), chapters before the last finished one are tucked away.
+  function recapHTML(s, fold) {
+    const keep = S;
+    S = s;
+    try {
+      const at = Math.min(s.part, PARTS.length - 1), now = chapterAt(at);
+      let h = "", early = "", nEarly = 0;
+      CHAPTERS.forEach((C, i) => {
+        if (i > now || s.part < C.from) return;
+        let lines = [];
+        try { lines = (RECAP[C.slug] ? RECAP[C.slug](s) : []).filter(x => typeof x === "string" && x); } catch (e) {}
+        const done = s.part > C.to;
+        if (!lines.length) lines = [done ? RECAP_PLAIN : "You are still in it."];
+        const block = '<div class="recap-ch"><p class="recap-name">' + esc(C.name) + (done ? "" : ' <small>· where you are</small>') + "</p><ul>" + lines.map(l => "<li>" + l + "</li>").join("") + "</ul></div>";
+        if (fold && i < now - 1) { early += block; nEarly++; } else h += block;
+      });
+      if (nEarly) h = '<details class="recap-early"><summary>Earlier chapters (' + nEarly + ")</summary>" + early + "</details>" + h;
+      const pack = carriedList();
+      h += '<p class="recap-now">You stopped at <b>Part ' + roman(at + 1) + ", " + NAMES[at] + "</b>, with " + s.hp + " of " + s.maxHp + " HP and " + (s.coins || 0) + " gold" +
+        (s.bank && s.bank.open ? " (" + s.bank.bal + " banked)" : "") + ".</p>";
+      if (pack.length) h += '<p class="j-list"><b>In your pack:</b> ' + pack.join(" · ") + "</p>";
+      return h;
+    } finally { S = keep; }
+  }
+  // On Continue: show the recap at the top of the page and wait for the player to carry on.
+  function showRecap() {
+    return new Promise((done) => {
+      const box = el("section", "recap",
+        '<div><span class="num">The story so far · Slot ' + SLOT + "</span><h3>Where you left off</h3></div>" + recapHTML(S, true) +
+        '<div class="actions"><button class="primary" type="button">Carry on</button><button class="ghost" type="button">Skip recaps from now on</button></div>' +
+        '<p class="j-note">You can read this again any time in your journal.</p>');
+      const [cont, off] = box.querySelectorAll(".actions button");
+      const finish = () => { box.remove(); done(); };
+      cont.onclick = finish;
+      off.onclick = () => { setRecapOff(true); stat("recap-off", "Turned off the story so far"); finish(); };
+      scrollNext = true;
+      add(box);
+      cont.focus({ preventScroll: true });
+    });
   }
 
   const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon];
@@ -8832,7 +8983,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("slots").hidden = true;
     $("resumeNote").hidden = true;
     renderSheet();
-    play(S.part);
+    if (resumeState && S.part > 0 && !recapOff()) showRecap().then(() => play(S.part));
+    else play(S.part);
   }
   let resetArmed = false;
   function restart() {
