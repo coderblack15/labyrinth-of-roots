@@ -303,6 +303,29 @@ body.intro-open { overflow: hidden; }
 .lw[hidden], .jury-row[hidden] { display: none; }
 .jury-row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; }
 .part-head.sub { margin: 32px 0 10px; }
+.part-head.sub h2 { font-size: clamp(1.35rem, 3.4vw, 1.75rem); }
+/* dig in: stop the sweeping marker on the root */
+.dig-track { position: relative; height: 38px; border-radius: 4px; background: #1a1410; border: 1px solid var(--line); overflow: hidden; max-width: 420px; }
+.dig-zone { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, #4a3a1e 0 3px, #5d4824 3px 7px); border-left: 2px solid var(--gold); border-right: 2px solid var(--gold); }
+.dig-mark { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: var(--ink); box-shadow: 0 0 8px rgba(231, 222, 201, .7); }
+.dig-track.held .dig-zone { background: #3b3018; box-shadow: 0 0 14px rgba(207, 168, 80, .55) inset; }
+.dig-track.slip .dig-mark { background: var(--ember); box-shadow: 0 0 8px rgba(217, 80, 58, .7); }
+.pips { color: var(--gold); letter-spacing: .1em; font-size: .8em; margin-left: 4px; }
+.dig-roots { display: flex; gap: 8px; font-family: var(--label); font-size: .85rem; color: var(--muted); }
+.dig-roots i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line); display: inline-block; }
+.dig-roots i.on { background: var(--gold); border-color: var(--gold); }
+.dig-roots i.off { background: #2a1512; border-color: var(--ember); }
+/* bestiary card, inline and in the journal */
+.beast { border: 1px solid var(--line); border-left: 3px solid var(--ember); background: var(--panel); border-radius: 6px; padding: 12px 14px; margin: 4px 0 20px; display: grid; gap: 6px; font-size: .95rem; }
+.beast .bh { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.beast .bn { font-family: var(--label); font-weight: 700; letter-spacing: .08em; }
+.beast .bs { font-family: var(--label); font-size: .8rem; letter-spacing: .05em; color: var(--muted); }
+.beast p { margin: 0; line-height: 1.45; }
+.beast .bl { color: var(--muted); font-style: italic; }
+.beast b { color: var(--gold); font-weight: 600; }
+.beast.unmet { border-left-color: var(--line); color: var(--muted); }
+.journal .beasts { display: grid; gap: 8px; }
+.journal .beast { margin: 0; }
 .pgrid.shards button { width: 88px; height: 88px; padding: 0; position: relative; overflow: hidden; }
 .pgrid.shards button svg { width: 100%; height: 100%; display: block; }
 .pgrid.shards button.gap { background: #0b0d10; border-style: dashed; }
@@ -673,6 +696,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser.</li>
       <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
+      <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met.</li>
     </ul>
     <div class="actions" id="startActions">
       <button class="primary" id="beginBtn" type="button">Begin the descent</button>
@@ -876,7 +900,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     ["The Corrach Three", "corrach", 34, 40]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra"]);
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1020,6 +1044,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
           (x.end === "finished" ? "Finished" : "Part " + roman(x.furthest + 1)) + "</td><td>" + dur(x.ms) + '</td><td class="opt">' + x.deaths + "</td></tr>").join("") +
         "</tbody></table></section>";
     }
+    const bz = J.beasts || {}, metN = BEASTS.filter(b => bz[b.id]).length;
+    h += "<section><h3>Bestiary · " + metN + " of " + BEASTS.length + " met</h3>" +
+      '<p class="j-sub">Creatures of the realm turn up on the road between parts. Each one you meet is written here, across every journey.</p><div class="beasts">' +
+      BEASTS.map(b => beastCard(b, !!bz[b.id], bz[b.id])).join("") + "</div></section>";
     h += '<p class="j-note">Your journal is kept only in this browser. Close calls are times the axe (or the shell ring) held you up at 1 HP.</p>';
     body.innerHTML = h;
   }
@@ -1060,9 +1088,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     glaive: '<svg viewBox="0 0 26 26"><path d="M6 23L19 6" stroke="#8a7a62" stroke-width="2"/><path d="M17 3c4 0 6 3 5 7l-4-1l-2-3z" fill="#e3c46a"/></svg>',
     map: '<svg viewBox="0 0 26 26"><path d="M3 6l6-2l8 2l6-2v16l-6 2l-8-2l-6 2z" fill="#d8c79a"/><path d="M9 4v16M17 6v16" stroke="#a8946a" stroke-width="1"/><path d="M12 12l2 2M14 12l-2 2" stroke="#a8322b" stroke-width="1.4"/></svg>',
     coin: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="17" rx="8" ry="3" fill="#a8863a"/><ellipse cx="13" cy="14" rx="8" ry="3" fill="#cfa850"/><ellipse cx="13" cy="11" rx="8" ry="3" fill="#e3c46a"/></svg>',
-    blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>'
+    blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>',
+    dig: '<svg viewBox="0 0 26 26"><path d="M4 15h18" stroke="#8a6c3a" stroke-width="1.6"/><path d="M13 3v12M13 15c0 3-3 4-5 7M13 15c0 3 3 4 5 7M13 15v8M9 18l-3 1M17 18l3 1" stroke="#cfa850" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
+    grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0);
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0);
   let lastItems = new Set();
   function renderSheet() {
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
@@ -1086,6 +1116,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.pike) items.push(["pike", "blessing", "The Gravepike's Favor", "The great white pike of the drowned lake swims at your side."]);
     if (S.shadow) items.push(["shadow", "shadow", "Shadowblend", "Once per scene, vanish into shadow. Advantage on Stealth in the dark."]);
     if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
+    if (S.axe) items.push(["dig", "dig", "Footholds " + "<span class='pips'>" + "●".repeat(digsLeft()) + "○".repeat(DIG_MAX - digsLeft()) + "</span>", digsLeft() + " of " + DIG_MAX + " left. Once a fight, at 23% HP or less, spend one to dig in. One comes back with each new chapter."]);
+    if (S.grain) items.push(["grain", "grain", "Heartgrain", GRAIN_DESC]);
     lastwellItems(items);
     assizeItems(items);
     heskItems(items);
@@ -1190,6 +1222,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // A player check against a DC or AC. Returns { ok, kept, total }.
   function check({ label, mod, dc, target = "DC", adv = false, dis = false, cta = "Roll d20" }) {
     if (S.lw && S.exh >= (target === "AC" ? 2 : 1)) dis = true;
+    if (FOE.on && target === "AC" && FOE.digAdv) { FOE.digAdv = false; adv = true; }
     if (adv && dis) { adv = dis = false; }
     const atk = FOE.on && target === "AC";
     const cb = atk ? Math.min(2, FOE.chain) : 0;
@@ -1310,8 +1343,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
     const rolled = total;
     if (resists(type)) total = Math.max(1, Math.floor(total / 2));
+    const halved = total;
+    // The heartgrain slows the first blow to land in each fight.
+    let slowed = 0;
+    if (FOE.on && S.grain && !FOE.grained && total > 1) { FOE.grained = true; slowed = Math.min(total - 1, d(4)); total -= slowed; }
     S.hp -= total;
-    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (total < rolled ? ", halved by the Weathercloak to " + total : "") + ".";
+    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (slowed ? ", and the heartgrain slows it by " + slowed + " to " + total : "") + ".";
     let saved = false;
     if (S.hp <= 0) {
       // The Pale Bloom eats roots: while you carry it, Vaelric's axe can't hold you up.
@@ -1328,6 +1365,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (S.axe) await voice('"Not yet," Vaelric hisses from the blade. "I told you. You will not perish here." Red warmth floods your chest, and you stay on your feet with 1 HP.');
       else await say("Your vision swims and your knees buckle, but something stubborn in you refuses to fall. You stay standing with 1 HP.");
     }
+    if (FOE.on && !FOE.dug && S.hp > 0 && S.hp / S.maxHp <= DIG_AT) await digIn();
     return total;
   }
 
@@ -1344,13 +1382,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // attack (max +2), the second hit in a row deals +2 damage, and the third is a Rootbreaker
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
-  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0 };
+  // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
+  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false };
   function foeStart(name, max, { hp = max, unit = "" } = {}) {
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0 });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false });
     jCount("fights");
     renderFoe(true);
   }
-  function foeEnd() { FOE.on = false; FOE.chain = 0; renderFoe(); }
+  function foeEnd() { FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; renderFoe(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -1395,7 +1434,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
   function foeSet(hp) { if (!FOE.on) return; const n = FOE.hp - hp; FOE.hp = Math.max(0, hp); renderFoe(); if (n > 0) foePop("−" + n); }
   // A landed spell or gem burst keeps the combo alive (but never fires the Rootbreaker itself).
-  function comboKeep() { if (FOE.on) { FOE.chain = Math.min(2, FOE.chain + 1); renderFoe(); } }
+  function comboKeep() { if (FOE.on) { FOE.burnt = true; FOE.chain = Math.min(2, FOE.chain + 1); renderFoe(); } }
   // Called once a hit lands: returns 1, 2 or 3 (3 = Rootbreaker, which spends the combo).
   function comboLanded() {
     const k = FOE.chain;
@@ -5616,12 +5655,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0);
     if (st.evade) {
-      if (d(100) <= EVADE) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + EVADE + "%).", "loot"); return; }
+      if (d(100) <= EVADE) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + EVADE + "%).", "loot"); return false; }
       await mech("You read it wrong. (Evade failed: " + EVADE + "%.)", "hurt");
     }
     if (st.split > 0) {
       st.split--;
-      if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return; }
+      if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return false; }
     }
     const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, cta: "Brace" });
     if (hit) {
@@ -5629,9 +5668,349 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       else await hurt(n, s, type, o.why || F.hitWhy);
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
     } else if (F.miss) await say(F.miss);
+    return hit;
   }
 
   const HESK = (o) => Object.assign({ ac: 13, atk: 4, n: 1, s: 8, type: "slashing", bloom: 12, hesk: true, who: "the Hesk", hitWhy: "A hook-glaive opens you up.", miss: "The glaive rings off the stone beside your head." }, o);
+
+  // ---------- dig in: the last stand ----------
+  // Once a fight, when a blow leaves you at 23% of your HP or less, you dig in: a marker sweeps a
+  // bar of earth, and you stop it on the root three times. Each root you catch heals you; one or
+  // two roots give +1 AC for the rest of the fight, all three give +2 AC and advantage on your next
+  // swing. The heartgrain (gifted the first time you dig in) widens the root and adds 2 HP.
+  const DIG_AT = 0.23;
+  // Footholds: dig-in has limited uses. You start with 3, each dig-in spends one, and one comes back
+  // at the start of each new chapter (never more than 3).
+  const DIG_MAX = 3;
+  const digsLeft = () => S.digs ?? DIG_MAX;
+  function digRefill(i) {
+    const ch = CHAPTERS.findIndex(c => c.from === i);
+    if (ch < 1 || (S.digCh ?? 0) >= ch) return;
+    S.digCh = ch;
+    S.digs = Math.min(DIG_MAX, digsLeft() + 1);
+  }
+  function digGame() {
+    return new Promise(resolve => {
+      const wide = S.grain ? 26 : 19;
+      const P = puzzleBox("Dig in", "Stop the marker on the root. Three tries: every root you catch holds you up." + (S.grain ? " The heartgrain slows the world a little, and the root is wider." : ""));
+      const track = el("div", "dig-track"), zone = el("div", "dig-zone"), mark = el("div", "dig-mark");
+      track.setAttribute("aria-hidden", "true");
+      track.append(zone, mark);
+      const pips = el("div", "dig-roots", "<span>Roots</span><i></i><i></i><i></i>");
+      P.body.append(track, pips);
+      const btn = pbtn("Grab the root", "primary");
+      P.ctrl.appendChild(btn);
+      let tries = 0, held = 0, pos = 0, dir = 1, at = 0, live = true, raf = 0, last = performance.now();
+      const place = () => { at = 6 + Math.random() * (88 - wide); zone.style.left = at + "%"; zone.style.width = wide + "%"; };
+      // Percent of the bar per second; each try is a little faster.
+      const speed = () => (reduced ? 45 : 70) * (1 + tries * 0.18) * (S.grain ? 0.85 : 1);
+      function step(now) {
+        const dt = Math.min(64, now - last); last = now;
+        if (live) {
+          pos += dir * speed() * dt / 1000;
+          if (pos >= 100) { pos = 100; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; }
+          mark.style.left = pos + "%";
+        }
+        raf = requestAnimationFrame(step);
+      }
+      place();
+      P.status.textContent = "Try 1 of 3.";
+      raf = requestAnimationFrame(step);
+      btn.onclick = () => {
+        if (!live) return;
+        live = false; btn.disabled = true;
+        const ok = pos >= at - 1 && pos <= at + wide + 1;
+        if (ok) held++;
+        pips.querySelectorAll("i")[tries].className = ok ? "on" : "off";
+        track.classList.add(ok ? "held" : "slip");
+        tries++;
+        P.status.textContent = (ok ? "The root holds." : "Your hand closes on loose dirt.") + " Roots held: " + held + " of " + tries + ".";
+        setTimeout(() => {
+          track.classList.remove("held", "slip");
+          if (tries >= 3) { cancelAnimationFrame(raf); P.end(); scrollNext = true; resolve(held); return; }
+          place(); live = true; btn.disabled = false; btn.focus({ preventScroll: true });
+          P.status.textContent = "Try " + (tries + 1) + " of 3. Roots held: " + held + ".";
+        }, 650);
+      };
+      setTimeout(() => btn.focus({ preventScroll: true }), 50);
+    });
+  }
+  async function digIn() {
+    FOE.dug = true;
+    if (digsLeft() <= 0) { await mech("You'd dig in here if you had anything left to dig in with. You've no footholds left; one comes back with each new chapter.", "hurt"); return; }
+    S.digs = digsLeft() - 1;
+    await say(["You're nearly done, and your body knows it before you do. You stop backing up. You set your heels into the ground and reach down for something to hold on to.",
+      "Everything has gone quiet and far away. You plant your feet, bend your knees, and dig in, the way a tree does when the wind finally means it."][d(2) - 1]);
+    const n = await digGame();
+    const heal = d(4) + n * 2 + (S.grain ? 2 : 0);
+    const before = S.hp;
+    if (!(S.lw && S.exh >= 5)) S.hp = Math.min(S.lw ? hpCap() : S.maxHp, S.hp + heal);
+    FOE.dig = n >= 3 ? 2 : n >= 1 ? 1 : 0;
+    FOE.digAdv = n >= 3;
+    renderSheet();
+    const got = S.hp - before;
+    if (n === 0) await mech("You dug in, but the ground gave nothing back. " + (got ? "Regain " + got + " HP." : "You're too far gone to heal."), got ? "loot" : "hurt");
+    else await mech("Dug in: " + n + " of 3 roots held. " + (got ? "Regain " + got + " HP" : "You're too far gone to heal") + ", +" + FOE.dig + " AC for the rest of this fight" + (FOE.digAdv ? ", and advantage on your next attack" : "") + ".", "loot");
+    await mech("Footholds left: " + S.digs + " of " + DIG_MAX + ". One comes back with each new chapter.");
+    if (!S.grain) await giftGrain();
+  }
+
+  // ---------- the heartgrain ----------
+  const GRAIN_DESC = "When you're hurt, slow rings like the grain of cut wood ripple out around you. The first blow to land in each fight is slowed by 1d4. When you dig in, the root is wider and you heal 2 more.";
+  async function giftGrain() {
+    S.grain = true; renderSheet();
+    await say("Then something comes up through the soles of your boots. Not roots, this time: a slowness, warm and patient, like sap rising in spring. When you breathe out, the air around you ripples in rings, thin and brown-gold, the way the grain runs through a cut log. A blow coming at you crosses the first ring and arrives a heartbeat late.");
+    if (vaelricSpeaks()) await voice("\"Heartgrain,\" Vaelric says, and for once he sounds pleased. \"Every tree that kept its feet through a storm carries a ring for it. That one's yours. You earned it on your knees, which is the only way anyone does.\"");
+    else await say("You don't have a name for it. Later you'll call it the heartgrain, because that's what it looks like: every time you didn't fall, written in a ring around you.");
+    await mech("Gained the <b>Heartgrain</b>. " + GRAIN_DESC, "loot");
+  }
+
+  // ---------- the bestiary: creatures of the realm ----------
+  // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
+  // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6 };
+  // Part index → the region whose creatures walk the road before that part.
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach" };
+  const WILD_CHANCE = 50;
+  const BEASTS = [
+    { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
+      ability: ["Latch", "Two bite each round while two or more are left. A tick that bites hangs on and drinks 1 HP at the start of the next round."],
+      tactic: "Thin them fast. A gem flare, a spell or a flask drops one without a roll, and a Rootbreaker can carry through into a second.",
+      lore: "Grey ticks the size of your thumb that live in the labyrinth's root walls and drink the sap. They aren't fussy about whether it's sap.",
+      intro: "The root wall beside you shivers, and three grey ticks the size of your thumb drop out of it onto the floor. Then they start toward your boots.",
+      who: "the ticks", hitWhy: "A tick gets under your collar and bites.", miss: "A tick skitters over your boot and loses its grip.", hitLine: "You crush one against the roots with the flat of the axe." },
+    { id: "hound", name: "Knot-hound", region: "roots", quirk: "regrow", hp: 18, ac: 12, atk: 4, n: 1, s: 6, type: "piercing", notice: 13,
+      ability: ["Regrowth", "At the start of each round it knits 3 HP back together."],
+      tactic: "Burn the knots out. Once any no-roll blast lands on it (a gem flare, a spell, a flask or the lens), it stops regrowing for good.",
+      lore: "A hound-shape the labyrinth grew out of braided roots, with thorns where its teeth should be. Nobody made it. The roots just remember dogs.",
+      intro: "Something pads after you through the tunnels, low and patient. When it steps into your light, it's a dog made of knotted roots, with a muzzle full of thorns.",
+      who: "the knot-hound", hitWhy: "Thorn teeth close on your arm.", miss: "Its jaws snap shut on air an inch from your knee." },
+    { id: "skimmer", name: "Duneskimmer", region: "desert", quirk: "skirmish", hp: 16, ac: 15, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
+      ability: ["Hit and run", "Glass scales make it hard to hit, and once it's down to half its health it bolts for the dunes."],
+      tactic: "Hit hard and early. Drop it before it bolts and you get its whole hoard of shiny things. Let it run and you only get what falls off it.",
+      lore: "A flat, glass-scaled lizard as long as a man that skates over the sand on its belly. It hoards anything that shines, and it has decided that includes you.",
+      intro: "A ripple races across the dune toward you, faster than a horse, and a long glassy lizard bursts out of the sand at the end of it.",
+      who: "the duneskimmer", hitWhy: "Its glass-edged tail whips across your shins.", miss: "It skates past, close enough that sand rattles off your boots." },
+    { id: "picker", name: "Sandpicker", region: "desert", quirk: "thief", hp: 15, ac: 13, atk: 4, n: 1, s: 6, type: "bludgeoning", notice: 13,
+      ability: ["Light fingers", "Every time it hits you, it lifts 2 to 5 gold from your purse. Once it has 6 or more, it runs."],
+      tactic: "Evade keeps your purse shut. Kill it and you get every coin back, plus its own.",
+      lore: "Scavengers who work the caravan roads with a hooked pole and a weighted sack. They don't want to kill you. They want your purse, and then they want to be somewhere else.",
+      intro: "A thin figure wrapped to the eyes in sand-coloured rags steps out from behind a dune, spinning a hooked pole, and looks straight at your belt.",
+      who: "the sandpicker", hitWhy: "The weighted sack catches you on the side of the head.", miss: "The hook snags your sleeve and tears free." },
+    { id: "hulk", name: "Peat-hulk", region: "fen", quirk: "brute", hp: 24, ac: 11, atk: 3, n: 2, s: 8, type: "bludgeoning", notice: 11,
+      ability: ["Wind-up", "Every other round it rears back and does nothing. The round after, it brings both arms down for 2d8."],
+      tactic: "Swing while it rears back. When its arms go up, Evade the next round.",
+      lore: "A heap of wet peat that stands up in the shape of a man when something warm walks past. Cut one open and you'll find a cart wheel or a boot in the middle of it.",
+      intro: "The bank beside the path stands up. It's peat, black and dripping, heaped in the shape of a man twice your size, with reeds growing out of its shoulders.",
+      who: "the peat-hulk", hitWhy: "Both peat fists come down on you like a falling wall.", miss: "Its fists sink into the bog beside you up to the elbow." },
+    { id: "wader", name: "Siltwader", region: "fen", quirk: "drain", hp: 18, ac: 13, atk: 4, n: 1, s: 8, type: "piercing", notice: 13,
+      ability: ["Drink", "Whatever damage it does to you, it heals."],
+      tactic: "Don't trade blows when it's ahead. Evade its strikes and finish it with a no-roll blast.",
+      lore: "Heron-legged and taller than you, with a lamprey's round mouth where a beak should be. It stands in the reeds on one leg and waits for something warm.",
+      intro: "What you took for a dead tree in the reeds lifts one long leg and turns toward you, and the end of its neck opens into a round mouth with rings of teeth.",
+      who: "the siltwader", hitWhy: "The round mouth fastens on your shoulder and pulls.", miss: "The mouth strikes the mud and comes up dripping." },
+    { id: "crab", name: "Rustcoat", region: "mere", quirk: "harden", hp: 20, ac: 13, atk: 4, n: 1, s: 8, type: "bludgeoning", notice: 12,
+      ability: ["Plating", "Each round you don't hurt it, it closes its shell tighter: +1 AC, up to +3. Hurt it and the plates crack back open."],
+      tactic: "Keep the pressure on. When the shell gets too tight to hit, a spell or a gem flare lands anyway and cracks it open.",
+      lore: "Crabs as broad as shields that live in Carrowmere's drowned halls and wear whatever armour they find there. Some still carry a knight's crest.",
+      intro: "Something scrapes across the flagstones behind you: a crab as broad as a shield, its back plated with a rusted breastplate that still has half a crest on it.",
+      who: "the rustcoat", hitWhy: "A claw like a smith's tongs closes on your leg.", miss: "The claw clangs shut on the flagstones." },
+    { id: "lamprey", name: "Moat-lampreys", region: "mere", quirk: "undertow", heads: 3, unit: "lamprey|lampreys", ac: 12, atk: 4, n: 1, s: 6, type: "piercing", notice: 12,
+      ability: ["Undertow", "Two bite each round while two or more are left. Every other round they try to drag you into the water: Strength DC 12, or take 1d6 more."],
+      tactic: "Thin them before they get a grip. Two down and the undertow loses its pull.",
+      lore: "Grey-green eels as long as your arm that crowded Carrowmere's moat when the castle went under, and never left. They hunt together, and they pull.",
+      intro: "The black water at the moat's edge boils, and three long grey shapes come up out of it in a rush, round mouths first.",
+      who: "the lampreys", hitWhy: "A lamprey fastens on your calf and wrenches.", miss: "One lunges, misses, and slaps back into the water.", hitLine: "You pin one to the stones and it goes still." },
+    { id: "crows", name: "Gibbet crows", region: "lastwell", quirk: "scatter", heads: 4, unit: "crow|crows", ac: 12, atk: 4, n: 1, s: 4, type: "piercing", notice: 12,
+      ability: ["Pecking order", "Two peck each round, and they go for the eyes. Once half of them are down, the rest lose their nerve and scatter."],
+      tactic: "You only have to drop two. Tyra, the crossbow and the burning lens make it quicker.",
+      lore: "Lastwell's gibbets have been empty a long time. The crows that used to sit on them have not forgotten what gibbets are for.",
+      intro: "A crow lands on the fence post beside you. Then another, and two more, and they all look at you the same way, head on one side.",
+      who: "the crows", hitWhy: "A beak goes for your eye and opens your cheek instead.", miss: "Wings beat in your face and the beak misses.", hitLine: "You swat one out of the air in a burst of black feathers." },
+    { id: "reeve", name: "Ditch-reeve", region: "lastwell", quirk: "caller", hp: 16, ac: 13, atk: 4, n: 1, s: 8, type: "slashing", notice: 13,
+      ability: ["The horn", "If it's still standing on the third round, it blows its horn and another reeve comes over the ditch (+10 HP)."],
+      tactic: "Put it down in two rounds. Open with a spell or a gem flare, then build the combo.",
+      lore: "Lastwell's ditch-reeves once kept the drains clear and the roads safe. Now they keep the roads, and charge for it. They never work alone for long.",
+      intro: "A man in a reeve's rotten tabard climbs out of the drainage ditch with a billhook in one hand and a cow horn on a cord round his neck. \"Toll,\" he says, and doesn't name a price.",
+      who: "the ditch-reeve", hitWhy: "The billhook catches you across the ribs.", miss: "The billhook bites the fence post beside you." },
+    { id: "cutter", name: "Glass-cutter", region: "glass", quirk: "mirror", hp: 17, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
+      ability: ["Mirror cloak", "Its cloak is sewn with mirror shards. Some rounds it splits into reflections, and its AC goes up by 5 until the round ends."],
+      tactic: "When it splits, don't swing: Evade, heal, or throw a blast that doesn't need a roll. Strike when there's only one of it.",
+      lore: "Sulmaran footpads who sew offcuts from the glassworks into their cloaks. In the white noon light they're a dozen people at once, and none of them are where they seem.",
+      intro: "A figure drops from a balcony into the lane ahead of you, and the noon sun hits its cloak. For a second there are six of it, all smiling.",
+      who: "the glass-cutter", hitWhy: "A diamond-tipped glove draws a line across your forearm.", miss: "You strike at it and the reflection shatters into light." },
+    { id: "mastiff", name: "Kiln-mastiff", region: "glass", quirk: "breath", hp: 20, ac: 13, atk: 4, n: 1, s: 8, type: "piercing", notice: 12,
+      ability: ["Kiln breath", "Every third round it breathes cinders for 2d6 fire, no roll to hit. The other rounds, it bites."],
+      tactic: "Count the rounds and Evade on the third. A Weathercloak sewn against fire halves the breath.",
+      lore: "Glassmakers' guard dogs, bred near the furnaces until their bellies glow. The ones that got loose live on the slag heaps outside the walls.",
+      intro: "Heat comes off the slag heap like a breath, and then the slag heap breathes: a broad dog with a belly that glows orange through its skin climbs down toward you.",
+      who: "the kiln-mastiff", hitWhy: "Hot jaws close on your arm.", miss: "Its teeth clack shut, and you smell scorched hair." },
+    { id: "lurker", name: "Scree-lurker", region: "corrach", quirk: "ambush", hp: 18, ac: 14, atk: 5, n: 1, s: 10, type: "piercing", notice: 15,
+      ability: ["Ambush", "It lies flat under the loose shale. If you don't spot it, it strikes before you can act."],
+      tactic: "Look before you climb. Spot it and you get advantage on your first swing.",
+      lore: "A flat grey thing like a paving stone with legs, that lies under the shale on Corrach's slopes for weeks at a time. The Hesk drone to the scree before they cross it, to wake them.",
+      intro: "The path crosses a long slope of loose grey shale. Halfway over, one of the flat stones ahead of you is a slightly different grey from the others.",
+      who: "the scree-lurker", hitWhy: "A stone that isn't a stone unfolds and drives a spike into you.", miss: "The spike strikes sparks off the rock." },
+    { id: "mites", name: "Husk-mites", region: "corrach", quirk: "hatch", heads: 3, unit: "mite|mites", ac: 12, atk: 3, n: 1, s: 4, type: "necrotic", notice: 12,
+      ability: ["Hatch", "Two bite each round while two or more are left, and at the start of each round a new one may crawl out of the old husks (up to twice)."],
+      tactic: "Kill them faster than they hatch. Anything that drops more than one at a time is worth it here.",
+      lore: "Mites that live in empty Hesk sleep-cradles and eat the shed husks. They're the reason the Hesk seal their cradles, and the reason they sing to them.",
+      intro: "You pass a row of old cracked sleep-cradles in the rock, and something inside the nearest one rustles. Pale mites the size of a fist come pouring out over the lip.",
+      who: "the mites", hitWhy: "Mandibles sink into your ankle, and it goes cold.", miss: "A mite scrabbles at your boot and falls back.", hitLine: "One pops under the axe like a dry seed pod." }
+  ];
+
+  function beastCard(B, met = true, tally) {
+    if (!met) return '<div class="beast unmet"><div class="bh"><span class="bn">Not yet met</span><span class="bs">' + REGIONS[B.region] + "</span></div></div>";
+    const stats = (B.heads ? B.heads + " " + B.unit.split("|")[1] : B.hp + " HP") + " · AC " + B.ac + " · hits for " + B.n + "d" + B.s + " " + B.type;
+    return '<div class="beast"><div class="bh"><span class="bn">' + B.name + '</span><span class="bs">' + REGIONS[B.region] + " · " + stats + "</span></div>" +
+      "<p><b>" + B.ability[0] + ".</b> " + B.ability[1] + "</p><p><b>Tactic.</b> " + B.tactic + '</p><p class="bl">' + B.lore + "</p>" +
+      (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + "</p>" : "") + "</div>";
+  }
+  function beastLog(B, beaten) {
+    J.beasts = J.beasts || {};
+    const e = J.beasts[B.id] || (J.beasts[B.id] = { met: 0, beaten: 0 });
+    if (beaten) e.beaten++; else e.met++;
+    jSave();
+  }
+
+  // Each quirk adds before (start of each round) and/or turn (its attack; "done" skips the default swing).
+  const QUIRKS = {
+    latch: {
+      before: async (F) => { if (F.latched && FOE.hp > 0) { F.latched = false; await hurt(1, 1, "piercing", "The tick that latched on is still drinking."); } },
+      turn: async (F, st) => { const k = Math.min(FOE.hp, 2); for (let i = 0; i < k; i++) if (await foeSwing(F, st)) F.latched = true; st.evade = false; return "done"; }
+    },
+    regrow: {
+      before: async (F, st) => {
+        if (FOE.burnt) { if (!F.saidBurnt) { F.saidBurnt = true; await say("Where the blast tore into it, the roots are black and smoking, and they don't knit."); await mech("The knot-hound can't regrow any more.", "loot"); } return; }
+        if (st.round > 1 && FOE.hp < FOE.max) { const n = Math.min(3, FOE.max - FOE.hp); FOE.hp += n; renderFoe(); await mech("Its roots creak and knit back together: +" + n + " HP (" + FOE.hp + " / " + FOE.max + ").", "hurt"); }
+      }
+    },
+    skirmish: {
+      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2) { F.fled = true; FOE.hp = 0; renderFoe(); await say("It's had enough. It flips, hits the sand on its belly and skates away over the dune faster than you could ever run, shedding bright things as it goes."); } }
+    },
+    thief: {
+      turn: async (F, st) => {
+        if (await foeSwing(F, st) && S.coins > 0) {
+          const n = Math.min(S.coins, d(4) + 1);
+          S.coins -= n; F.stolen += n; renderSheet();
+          await mech("The sandpicker's other hand was in your purse the whole time: " + n + " gold gone (" + F.stolen + " so far).", "hurt");
+          if (F.stolen >= 6) { F.fled = "thief"; FOE.hp = 0; renderFoe(); await say("It feels the weight of the sack, decides that's plenty, and runs. By the time you've got your feet under you it's three dunes away."); }
+        }
+        st.evade = false; return "done";
+      }
+    },
+    brute: {
+      turn: async (F, st) => {
+        if (st.round % 2) { await say("It rears back, both arms high, peat sliding off them in sheets. Whatever comes next is going to be heavy."); st.evade = false; return "done"; }
+        await foeSwing(F, st, { label: "The peat-hulk brings both arms down", atk: F.atk + 1 }); st.evade = false; return "done";
+      }
+    },
+    drain: {
+      turn: async (F, st) => {
+        const hp = S.hp;
+        if (await foeSwing(F, st) && FOE.hp > 0) { const n = Math.max(1, hp - S.hp); FOE.hp = Math.min(FOE.max, FOE.hp + n); renderFoe(); await mech("Its throat pulses as it drinks: +" + n + " HP (" + FOE.hp + " / " + FOE.max + ").", "hurt"); }
+        st.evade = false; return "done";
+      }
+    },
+    harden: {
+      before: async (F, st) => {
+        if (st.round === 1) { F.baseAc = F.ac; F.lastHp = FOE.hp; return; }
+        if (FOE.hp < F.lastHp) { if (F.ac > F.baseAc) { F.ac = F.baseAc; await mech("The plates crack open: AC back to " + F.ac + ".", "loot"); } }
+        else if (F.ac < F.baseAc + 3) { F.ac++; await mech("It draws in its legs and the plates grind shut: AC " + F.ac + ".", "hurt"); }
+        F.lastHp = FOE.hp;
+      }
+    },
+    undertow: {
+      before: async (F, st) => {
+        if (st.round % 2 || FOE.hp < 2) return;
+        await say("They wrap round your legs and pull for the water, all together.");
+        const r = await check({ label: "Strength check (keep your feet)", mod: 2, dc: 12, cta: "Brace" });
+        if (r.ok) await say("You dig your heels in and they lose their grip.");
+        else await hurt(1, 6, "bludgeoning", "You go down on the wet stones and they drag you to the edge.");
+      }
+    },
+    scatter: {
+      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2) { F.fled = true; FOE.hp = 0; renderFoe(); await say("The rest of the murder lifts all at once, screaming, and scatters over the rooftops. Crows remember faces. They'll remember yours."); } }
+    },
+    caller: {
+      before: async (F, st) => {
+        if (st.round !== 3 || F.called || FOE.hp <= 0) return;
+        F.called = true;
+        await say("It backs off a step, puts the horn to its mouth and blows: one long, sick note. A second reeve comes up over the ditch with a cudgel.");
+        FOE.max += 10; FOE.hp += 10; FOE.name = "The ditch-reeves"; renderFoe();
+        await mech("Another reeve joins: +10 HP to the fight.", "hurt");
+      }
+    },
+    mirror: {
+      before: async (F, st) => {
+        F.ac = F.baseAc ?? (F.baseAc = F.ac);
+        if (st.round > 1 && d(3) === 1) { F.ac += 5; await say("It turns into the light, and there are five of it. You can't tell which one is breathing."); await mech("It has split: AC " + F.ac + " this round.", "hurt"); }
+      }
+    },
+    breath: {
+      turn: async (F, st) => {
+        if (st.round % 3) return;
+        await say("Its belly flares white, and it opens its mouth and breathes out a roar of cinders.");
+        if (st.evade && d(100) <= EVADE) await mech("You throw yourself flat and the cinders pass over you. Evaded (" + EVADE + "%).", "loot");
+        else await hurt(2, 6, "fire", "The cinders wash over you.");
+        st.evade = false; return "done";
+      }
+    },
+    ambush: {
+      before: async (F, st) => {
+        if (st.round !== 1) return;
+        if (F.spotted) { st.adv = true; await mech("You spotted it first: advantage on your first attack.", "loot"); }
+        else { await say("The stone unfolds under your foot before you can swing."); await foeSwing(F, st, { label: "The scree-lurker strikes first" }); }
+      }
+    },
+    hatch: {
+      before: async (F, st) => { if (st.round > 1 && F.hatch > 0 && FOE.hp > 0 && d(2) === 1) { F.hatch--; FOE.hp++; FOE.max = Math.max(FOE.max, FOE.hp); renderFoe(); await mech("Another husk splits and a fresh mite crawls out: " + FOE.hp + " left.", "hurt"); } }
+    }
+  };
+
+  async function wildEncounter(i) {
+    const reg = WILD_SLOTS[i];
+    if (!reg || !S.axe || S.stripped || S.hp / S.maxHp <= 0.3 || d(100) > WILD_CHANCE) return;
+    S.met = S.met || [];
+    const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
+    const from = unmet.length ? unmet : pool, B = from[d(from.length) - 1];
+    if (!S.met.includes(B.id)) S.met.push(B.id);
+    const isNew = !(J.beasts && J.beasts[B.id]);
+    beastLog(B, false);
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">On the road · ' + REGIONS[reg] + "</span><h2>" + B.name + "</h2>");
+    scrollNext = true; add(h);
+    await say(B.intro);
+    add(el("div", "", beastCard(B)));
+    if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
+    const sneak = 3 + (S.shadow ? 2 : 0);
+    const c = await choose([{ key: "fight", label: "Fight" }, { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
+    let spotted = false;
+    if (c === "slip") {
+      const r = await check({ label: "Stealth check", mod: sneak, dc: B.notice, cta: "Sneak" });
+      if (r.ok) { await say("You keep low and quiet and let it lose interest. When you look back, it's gone."); light(back); return; }
+      await say("It hears you. It always hears you.");
+    } else if (B.quirk === "ambush") {
+      const r = await check({ label: "Perception check (which stone is wrong?)", mod: 2, dc: B.notice, cta: "Look" });
+      spotted = r.ok;
+    }
+    const q = QUIRKS[B.quirk] || {};
+    const F = { name: B.name, ac: B.ac, atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
+      stolen: 0, hatch: 2, spotted };
+    if (B.heads) { F.heads = B.heads; F.unit = B.unit; } else F.hp = B.hp;
+    if (q.before) F.before = (st) => q.before(F, st);
+    if (q.turn) F.turn = (st) => q.turn(F, st);
+    await hkFight(F);
+    light(back);
+    const tier = TIER[reg];
+    if (F.fled === "thief") { await mech("The sandpicker got away with " + F.stolen + " gold.", "hurt"); return; }
+    if (F.stolen) { S.coins += F.stolen; renderSheet(); await mech("You take back the " + F.stolen + " gold it lifted from you.", "loot"); }
+    if (F.fled) { await gold(1, 4, "It got away, but it left something behind."); beastLog(B, true); return; }
+    beastLog(B, true);
+    if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
+    else await gold(1, 6 + tier, "You search what's left.");
+  }
 
   // ---------- puzzles: the song, the tone-lock, the tunnel, the shell game, the shoring, the dig ----------
   const TONES = [
@@ -6852,9 +7231,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     started = true;
     const last = DEMO_END || PARTS.length;
     for (let i = fromPart; i < last; i++) {
-      S.part = i; checkpoint(); jPart(i);
+      S.part = i; digRefill(i); checkpoint(); jPart(i);
       for (;;) {
-        try { await PARTS[i](); break; }
+        try { await wildEncounter(i); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
       await jChapterDone(i);
