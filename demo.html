@@ -334,6 +334,19 @@ body.intro-open { overflow: hidden; }
 .marks li b { font-family: var(--label); letter-spacing: .05em; font-weight: 700; }
 .marks li.won b { color: var(--gold); }
 .journal .beast { margin: 0; }
+.marks.ach li.hid { font-style: italic; }
+.marks .ach-date { color: var(--muted); font-size: .84rem; }
+.ach-toasts { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
+.ach-toast { pointer-events: auto; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; width: 100%;
+  background: var(--panel); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px; padding: 10px 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 14px rgba(207, 168, 80, .25);
+  font: inherit; cursor: pointer; animation: achIn .35s ease-out; }
+.ach-toast.out { opacity: 0; transform: translateY(-8px); transition: opacity .3s, transform .3s; }
+.ach-toast svg { width: 34px; height: 34px; }
+.ach-toast small { display: block; font-family: var(--label); font-weight: 700; letter-spacing: .14em; font-size: .72rem; color: var(--gold); }
+.ach-toast b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.15rem; line-height: 1.2; }
+.ach-toast span span { display: block; color: var(--muted); font-size: .86rem; line-height: 1.35; }
+.ach-toast:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@keyframes achIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
 .pgrid.shards button { width: 88px; height: 88px; padding: 0; position: relative; overflow: hidden; }
 .pgrid.shards button svg { width: 100%; height: 100%; display: block; }
 .pgrid.shards button.gap { background: #0b0d10; border-style: dashed; }
@@ -585,7 +598,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .roll { padding: 12px; gap: 6px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fade, .inv li.new, .inv-toggle.new, .foe.hit .foebar, .foe-pop { animation: none; }
+  .fade, .inv li.new, .inv-toggle.new, .foe.hit .foebar, .foe-pop, .ach-toast { animation: none; }
+  .ach-toast.out { transition: none; }
   .foebar .lag, .foebar .now { transition: none; }
   .inv-panel, .sheet.inv-open .inv-panel { transition: none; }
   .die.spin svg { animation: none; }
@@ -829,6 +843,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   <div class="j-head"><h2 id="jTitle">Journal</h2><button class="ghost" id="jClose" type="button">Close</button></div>
   <div class="j-body" id="jBody"></div>
 </dialog>
+<div class="ach-toasts" id="achToasts" aria-live="polite"></div>
 
 <script>
 (() => {
@@ -1301,6 +1316,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     r.chapters = r.chapters.filter(c => c.name !== C.name).concat([sum]);
     if (ch === CHAPTERS.length - 1) { r.end = "finished"; stat("journey-finished", "Finished the journey"); }
     jSave();
+    achCheck({ ch: C.slug, sum, last: ch === CHAPTERS.length - 1 });
     stat("chapter-done-" + C.slug, "Finished " + C.name);
     const box = el("section", "chap-sum",
       '<div><span class="num">Chapter complete</span><h3>' + C.name + "</h3></div>" +
@@ -1335,6 +1351,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       h += "<section><h3>All journeys</h3>" + tiles([[all.length, "begun"], [all.filter(x => x.end === "finished").length, "finished"],
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
+    h += achSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
         J.past.slice(0, 8).map(x => "<tr><td>" + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + "</td><td>" +
@@ -1357,6 +1374,106 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   $("jClose").onclick = () => { const dlg = $("journal"); if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); };
   $("journal").addEventListener("click", (e) => { if (e.target === $("journal")) $("jClose").click(); });
   $("jOpenBtn").onclick = () => jOpen();
+
+  // ---------- achievements ----------
+  // Feats are kept in the journal (J.ach, id → time earned), shared by every save slot and every
+  // journey, like the bestiary: earn one once and it's yours in this browser. Tests read the live
+  // save (S) and the current journey (J.run). A test with on: "chapter" is only tried when a chapter
+  // ends (c.ch is its slug, c.sum its summary); on: "part" also at the start of each part; the rest
+  // are tried every time the sheet redraws. grant() is for one-off moments (a Rootbreaker, digging in).
+  // New chapters: add their feats here; "Unbroken Road" counts CHAPTERS, so it grows on its own.
+  const ACH = [
+    { id: "roots", name: "Into the Roots", desc: "Finish the first chapter, The Labyrinth of Roots.", on: "chapter", test: (c) => c.ch === "labyrinth" },
+    { id: "unbroken", name: "Unbroken", desc: "Finish a chapter without dying once.", on: "chapter", test: (c) => c.sum.deaths === 0 },
+    { id: "scratch", name: "Not a Scratch", desc: "Finish a chapter with no deaths and no close calls.", on: "chapter", test: (c) => c.sum.deaths === 0 && c.sum.close === 0 },
+    { id: "road", name: "Unbroken Road", desc: "Finish every chapter without dying, on any journeys.", on: "chapter",
+      prog: () => [CHAPTERS.filter(C => J.achCh && J.achCh[C.slug]).length, CHAPTERS.length], test: () => CHAPTERS.every(C => J.achCh && J.achCh[C.slug]) },
+    { id: "end", name: "To Be Continued", desc: "Reach the end of the story so far.", on: "chapter", test: (c) => c.last },
+    { id: "deathless", name: "Deathless Descent", desc: "Play the whole story from Part I without dying once.", on: "chapter",
+      test: (c) => c.last && J.run && J.run.deaths === 0 && !J.run.note },
+    { id: "close", name: "Close Shave", desc: "Be held up at 1 HP ten times in one journey.", test: () => J.run && J.run.close >= 10, prog: () => [Math.min(10, J.run ? J.run.close : 0), 10] },
+    { id: "rootbreaker", name: "Rootbreaker", desc: "Land three hits in a row in a fight.", test: () => false },
+    { id: "dig", name: "Dig In", desc: "Make a last stand at the edge of defeat.", test: () => false },
+    { id: "rich", name: "Deep Pockets", desc: "Hold 200 gold between your purse and the bank.", test: () => wealth() >= 200 },
+    { id: "packrat", name: "Packrat", desc: "Find 25 different things on one journey.", test: () => J.run && Object.keys(J.run.items).length >= 25,
+      prog: () => [Math.min(25, J.run ? Object.keys(J.run.items).length : 0), 25] },
+    { id: "slots", name: "Three Lives", desc: "Have a journey going in all three save slots.", on: "part", test: () => SAVE_SLOTS.every(n => n === SLOT || load(n)) },
+    { id: "beasts", name: "Every Creature", desc: "Meet every creature in the bestiary.", test: () => BEASTS.every(b => J.beasts && J.beasts[b.id]),
+      prog: () => [BEASTS.filter(b => J.beasts && J.beasts[b.id]).length, BEASTS.length] },
+    { id: "spider", name: "Spider's Bane", desc: "Bring down Ryytaa the Ender in her nest.", test: () => S.slain },
+    { id: "warden", name: "Warden of the Labyrinth", desc: "Give the Ember Root back to the labyrinth.", test: () => S.ending === "return" },
+    { id: "heartwood", name: "Heartwood", desc: "Keep the Ember Root for yourself.", test: () => S.ending === "keep" },
+    { id: "alone", name: "Walks Alone", desc: "Do the desert job without the Hollow Hands.", on: "chapter", test: (c) => c.ch === "desert" && S.crew === "decline" },
+    { id: "fingers", name: "Light Fingers", desc: "Rob the Violet Baron in his own house without being caught.", test: () => S.stoleClean },
+    { id: "pike", name: "The Gravepike's Friend", desc: "Win the favor of the great white pike of Carrowmere.", test: () => S.pike },
+    { id: "well", name: "Down the Well", desc: "Shove the Wringer back down its well.", test: () => S.wShove },
+    { id: "unheard", name: "Unheard", desc: "Get through Lastwell without the Hunt ever reaching 10.", on: "chapter", test: (c) => c.ch === "lastwell" && !S.hunt10 },
+    { id: "clear", name: "Clear Hands", desc: "Walk out of the Glass Assize not guilty.", test: () => S.verdict === "free" },
+    { id: "keys", name: "Forty-Three Keys", desc: "Win Tyra Quillon's heart.", test: () => S.tyra && S.tyra.love },
+    { id: "molt", name: "Molted", desc: "Cure yourself of the Pale Bloom.", test: () => S.molt },
+    { id: "song", name: "The Whole Song", desc: "Learn all three Hesk songs.", test: () => S.song >= 3 },
+    { id: "bounties", name: "Contract Closer", desc: "Close every bounty on the Ashgate board in one journey.", test: () => S.bounty && Object.keys(BOUNTIES).every(k => S.bounty.done.includes(k)),
+      prog: () => [S.bounty ? Object.keys(BOUNTIES).filter(k => S.bounty.done.includes(k)).length : 0, Object.keys(BOUNTIES).length] },
+    { id: "maps", name: "X Marks It", desc: "Dig up every treasure map's prize in one journey.", test: () => J.run && Object.values(MAPS).every(M => J.run.maps.includes(M.name)),
+      prog: () => [J.run ? Object.values(MAPS).filter(M => J.run.maps.includes(M.name)).length : 0, Object.keys(MAPS).length] },
+    { id: "sleep", name: "The Long Sleep", desc: "Sing Thrumhold back to sleep.", test: () => S.ending2 === "sleep" },
+    { id: "named", name: "Named Him", desc: "Name the one the Blackjackal is wearing, first time.", test: () => S.nk && S.nk.named === "right" },
+    { id: "guess", name: "Blind Guess", desc: "Name the Blackjackal's host without clearing a single suspect.", hidden: true, test: () => S.nk && S.nk.named === "right" && !S.nk.elim.length },
+    { id: "sale", name: "Not for Sale", desc: "Finish The Kept Noon without selling a length of your shadow.", on: "chapter", test: (c) => c.ch === "noon" && S.nk && !S.nk.sold },
+    { id: "whole", name: "Whole Shadow", desc: "Finish The Kept Noon without losing any of your shadow, to anyone.", on: "chapter", test: (c) => c.ch === "noon" && S.nk && !S.nk.lost },
+    { id: "dusk", name: "First Dusk", desc: "Give Ammaret a dusk.", test: () => S.nk && S.nk.ending === "dusk" },
+    { id: "sewn", name: "Two Shadows", desc: "Sew the Blackjackal into your own shadow.", hidden: true, test: () => S.nk && S.nk.jackal === "sewn" }
+  ];
+  const hasAch = (id) => !!(J.ach && J.ach[id]);
+  function achEarn(list) {
+    if (!list.length) return;
+    J.ach = J.ach || {};
+    list.forEach(a => { J.ach[a.id] = Date.now(); stat("achievement-" + a.id, "Achievement: " + a.name); achToast(a); });
+    jSave();
+  }
+  function achCheck(c) {
+    if (!started || !jLive) return;
+    c = c || {};
+    if (c.ch && c.sum.deaths === 0) { J.achCh = J.achCh || {}; J.achCh[c.ch] = true; }
+    achEarn(ACH.filter(a => {
+      if (hasAch(a.id) || (a.on === "chapter" && !c.ch) || (a.on === "part" && !c.ch && !c.part)) return false;
+      try { return !!a.test(c); } catch (e) { return false; }
+    }));
+  }
+  function grant(id) { if (started && !hasAch(id)) achEarn(ACH.filter(a => a.id === id)); }
+  const ACH_ICON = '<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#3b3018" stroke="#cfa850" stroke-width="1.5"/><path d="M17 6v22M17 13l-6-5M17 13l6-5M17 20l-7-4M17 20l7-4" stroke="#cfa850" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
+  const achQueue = [];
+  function achToast(a) {
+    achQueue.push(a);
+    if (achQueue.length === 1) achShow();
+  }
+  function achShow() {
+    const a = achQueue[0];
+    if (!a) return;
+    const t = el("button", "ach-toast", ACH_ICON + "<span><small>Achievement</small><b>" + a.name + "</b><span>" + a.desc + "</span></span>");
+    t.type = "button";
+    t.setAttribute("aria-label", "Achievement earned: " + a.name + ". " + a.desc + " Open your journal.");
+    t.onclick = () => { jOpen(); };
+    $("achToasts").appendChild(t);
+    setTimeout(() => {
+      t.classList.add("out");
+      setTimeout(() => { t.remove(); achQueue.shift(); achShow(); }, reduced ? 0 : 320);
+    }, 4200);
+  }
+  function achSection() {
+    const won = ACH.filter(a => hasAch(a.id)).length;
+    const day = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    return "<section><h3>Achievements · " + won + " of " + ACH.length + "</h3>" +
+      '<p class="j-sub">Feats from every journey and save slot. Once earned, they stay earned.</p><ul class="marks ach">' +
+      ACH.map(a => {
+        const got = hasAch(a.id);
+        if (!got && a.hidden) return '<li class="hid"><span class="mk"></span><span><b>A hidden feat</b> · keep playing to find it.</span></li>';
+        let p = "";
+        if (!got && a.prog) { const [n, of] = a.prog(); if (n > 0) p = " (" + n + " of " + of + ")"; }
+        return '<li class="' + (got ? "won" : "") + '"><span class="mk"></span><span><b>' + a.name + "</b> · " + a.desc + p +
+          (got ? ' <span class="ach-date">Earned ' + day(J.ach[a.id]) + ".</span>" : "") + "</span></li>";
+      }).join("") + "</ul></section>";
+  }
 
   // ---------- sheet ----------
   const ICONS = {
@@ -1446,6 +1563,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("invCount").textContent = items.length;
     const tog = $("invToggle");
     if (gained) { tog.classList.remove("new"); void tog.offsetWidth; tog.classList.add("new"); }
+    achCheck();
   }
 
   // On phones the item list lives in a bottom sheet behind the Items button.
@@ -1753,7 +1871,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     for (let i = 0; i < n; i++) { const r = d(sides); rolls.push(r); total += r; }
     const extra = k === 2 ? 2 : rb ? 4 : 0;
     total += extra;
-    if (rb) await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo");
+    if (rb) { await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo"); grant("rootbreaker"); }
     let txt = label + ": " + n + "d" + sides + (bonus ? " + " + bonus : "") + (extra ? " + " + extra + " combo" : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + (extra ? " + " + extra : "") + " = " + total + ".";
     return { total, txt, rb };
   }
@@ -3357,6 +3475,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.hunt = Math.min(10, S.hunt + n); renderSheet();
     await mech(why + " The Hunt rises by " + n + ", to " + S.hunt + " of 10.", "hurt");
     if (S.hunt >= 10) {
+      S.hunt10 = true;
       await say("The flies stop. All of them, all at once, all over the village. In the silence you can hear your own heart. It has found you.");
       await wringerPass({});
     }
@@ -4315,7 +4434,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         ]);
         if (c === "shove") {
           const ok = await contest({ label: S.shield ? "Shield Slam" : "Athletics contest", mod: S.shield ? 5 : 3, foe: "The Wringer", foeMod: fx.slowed ? 1 : 4, cta: "Drive forward" });
-          if (ok) { S.wHP = 0; foeSet(0); renderSheet(); break; }
+          if (ok) { S.wHP = 0; S.wShove = true; foeSet(0); renderSheet(); break; }
           await say("It plants itself and doesn't go.");
           await wringerAttack(fx, "It wraps itself around you");
           continue;
@@ -6051,6 +6170,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     FOE.dug = true;
     if (digsLeft() <= 0) { await mech("You'd dig in here if you had anything left to dig in with. You've no footholds left; one comes back with each new chapter.", "hurt"); return; }
     S.digs = digsLeft() - 1;
+    grant("dig");
     await say(["You're nearly done, and your body knows it before you do. You stop backing up. You set your heels into the ground and reach down for something to hold on to.",
       "Everything has gone quiet and far away. You plant your feet, bend your knees, and dig in, the way a tree does when the wind finally means it."][d(2) - 1]);
     const n = await digGame();
@@ -7661,7 +7781,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
   async function shadeLoss(n, why) {
     const N = nk(), was = N.shade;
-    N.shade = Math.max(0, N.shade - n); renderSheet();
+    N.shade = Math.max(0, N.shade - n);
+    if (N.shade < was) N.lost = true;
+    renderSheet();
     if (N.shade === was) return;
     await mech(why + " Your shadow: <b>" + SHADE_NAME[N.shade] + "</b>. " + SHADE_FX[N.shade], "hurt");
     if (N.shade === 0 && !N.warned) {
@@ -8531,7 +8653,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     started = true;
     const last = DEMO_END || PARTS.length;
     for (let i = fromPart; i < last; i++) {
-      S.part = i; digRefill(i); checkpoint(); jPart(i); SND.region(CHAPTERS[chapterAt(i)].slug);
+      S.part = i; digRefill(i); checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
         try { await wildEncounter(i); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
