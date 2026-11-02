@@ -342,6 +342,26 @@ body.intro-open { overflow: hidden; }
 .lw { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
 .lw .note { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); line-height: 1.35; }
 .lw[hidden], .jury-row[hidden] { display: none; }
+.lw [hidden] { display: none; }
+.rh-tab { display: grid; gap: 4px; }
+.rh-row { display: grid; grid-template-columns: 6.5em 1fr auto; gap: 8px; align-items: baseline; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; font-family: var(--label); font-size: .86rem; text-align: left; font-variant-numeric: tabular-nums; }
+.rh-row i { font-style: normal; color: var(--muted); }
+.rh-row.bad i { color: var(--ember); }
+.rh-row.head { border: 0; color: var(--muted); padding-bottom: 0; }
+button.rh-row { width: 100%; background: transparent; color: var(--ink); cursor: pointer; }
+button.rh-row.on { background: #3b3018; border-color: var(--gold); }
+.rh-rota { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.rh-rota b { flex: 1 1 100%; font-family: var(--label); font-size: .86rem; }
+.rh-rota button { padding: 6px 10px; font-size: .8rem; }
+.rh-rota button.on, .puzzle .pctrl button.on { background: #3b3018; border-color: var(--gold); color: var(--gold); }
+.rh-clues { margin: 0; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
+.rh-hist { font-family: var(--label); font-size: .85rem; line-height: 1.6; color: var(--muted); }
+.rh-read { font-family: var(--label); font-size: .88rem; letter-spacing: .06em; overflow-wrap: anywhere; }
+.rh-read.ok { color: var(--gold); }
+.rh-enc { font-family: var(--label); font-size: .9rem; letter-spacing: .12em; color: var(--muted); overflow-wrap: anywhere; }
+.rh-lead { display: grid; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.puzzle .pctrl button small { display: block; font-size: .72rem; color: var(--muted); }
+@media (max-width: 480px) { .rh-row { grid-template-columns: 1fr auto; } .rh-row span { grid-column: 1 / -1; grid-row: 2; } }
 .jury-row { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; }
 .part-head.sub { margin: 32px 0 10px; }
 .part-head.sub h2 { font-size: clamp(1.35rem, 3.4vw, 1.75rem); }
@@ -908,7 +928,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in forty-eight parts · d20</p>
+    <p class="eyebrow">An adventure in sixty-two parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -1020,6 +1040,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-val hk-x" id="umPins">0 of 3 driven</span>
     </div>
     <div class="wx-line" id="wxBox" hidden><span class="stat-label">Weather</span><span class="wx-name" id="wxName"></span><small id="wxFx"></small></div>
+    <div class="lw" id="rhBox" hidden>
+      <span class="stat-label">Hunger</span>
+      <span class="stat-val" id="rhHunger">7 / 10</span>
+      <div class="huntbar"><span id="rhHungerBar" style="width:70%"></span></div>
+      <span class="note" id="rhNote"></span>
+      <span class="stat-label hk-x">Time</span>
+      <span class="stat-val hk-x" id="rhTime">Day 1</span>
+      <span class="stat-label">Standing</span>
+      <span class="stat-val" id="rhRep">Stranger</span>
+      <span class="stat-label hk-x">Cases</span>
+      <span class="stat-val hk-x" id="rhCases">0 of 7 solved</span>
+      <span class="stat-label hk-x" id="rhSiegeL" hidden>Blockade</span>
+      <span class="stat-val hk-x" id="rhSiege" hidden></span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -1142,7 +1176,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; return lvInit(v); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; return lvInit(v); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1333,6 +1367,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         wind(sc, { cut: 3200, q: 9, vol: 0.01, sweep: 900, rate: 0.02 });
         every(sc, 5, 12, () => { const f0 = rnd(90, 150); for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) hiss(sc.out, { f: f0 * (1 + i * 0.07), q: 14, a: 0.05, dec: 0.5, vol: 0.05, at: i * 0.45, to: f0 * 0.8 }); });
         every(sc, 20, 40, () => bell(sc.out, hz(pick([67, 70, 74])), 0.012, 6));
+      },
+      rahdaria(sc) {    // sea wind on the terraces, gulls, water lifting in the screws, and the Bathyr drum under everything
+        wind(sc, { type: "lowpass", cut: 700, q: 0.5, vol: 0.08, sweep: 400, rate: 0.06 });
+        drone(sc, [36, 43], { cut: 300, vol: 0.03, wob: 0.04 });
+        every(sc, 4, 10, () => { const f = rnd(1400, 2200); blip(sc.out, f, { type: "triangle", dec: 0.35, vol: 0.035, bend: 0.7 }); blip(sc.out, f * 0.92, { type: "triangle", dec: 0.3, vol: 0.03, bend: 0.75, at: 0.28 }); });
+        every(sc, 3.2, 3.8, () => { hiss(sc.out, { f: 70, q: 4, a: 0.01, dec: 0.6, vol: 0.09, to: 45 }); });
+        every(sc, 9, 18, () => hiss(sc.out, { f: 600, q: 1.5, a: 0.4, dec: 1.4, vol: 0.03, to: 300 }));
       }
     };
 
@@ -1428,10 +1469,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     ["The Labyrinth of Roots", "labyrinth", 0, 5], ["The Burning Sands", "desert", 6, 9], ["The Hushfen", "hushfen", 10, 16],
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
     ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
-    ["The Undermoon", "undermoon", 48, 54]
+    ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade"]);
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1665,7 +1706,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     undermoon: { at: [200, 374], parts: { 48: [320, 300] }, clear: [[200, 372, 58], [320, 300, 40]],
       under: [[200, 304], [200, 352]],
       art: [["moon", 200, 378, 1]],
-      labels: [["The Undermoon", 290, 398, 13, "u"], ["Kedge", 140, 384, 10, "u"]] }
+      labels: [["The Undermoon", 290, 398, 13, "u"], ["Kedge", 140, 384, 10, "u"]] },
+    rahdaria: { at: [92, 316], clear: [[92, 322, 58], [54, 378, 32]],
+      road: [[196, 300], [150, 312], [114, 318]],
+      art: [["terraces", 92, 320, 1], ["fleet", 54, 376, .9]],
+      labels: [["Rahdaria", 90, 356, 14, ""], ["the Bathyr fleet", 62, 402, 9, "s"]] }
   };
   const MAP_SEEN = "lor-map-seen";
   const INK = "#3b2a18", INK2 = "#6b5434", PAPER = "#dcc8a0", WATER = "#5d7774", GLASS = "#5f9a84", AMBER = "#c58a2c";
@@ -1717,6 +1762,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<g fill="none" stroke="' + INK2 + '" stroke-width="1"><circle cx="-7" cy="-5" r="4"/><circle cx="8" cy="6" r="3"/><circle cx="4" cy="-10" r="2"/></g>' +
       '<path d="M-26 -14h16v-6h-16zM28 -14h16v-6h-16z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1" transform="translate(-8 0)"/>'
   };
+  Object.assign(MAP_ART, {
+    terraces: () => '<g stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round" fill="' + PAPER + '">' +
+      '<path d="M-26 12h52v-6h-44v-6h36v-6h-28v-6h20v-5h-12"/></g>' +
+      '<g fill="' + GLASS + '" fill-opacity=".55"><ellipse cx="-18" cy="5" rx="5" ry="2.4"/><ellipse cx="14" cy="-1" rx="5" ry="2.2"/><ellipse cx="-6" cy="-7" rx="4" ry="2"/><ellipse cx="4" cy="-13" rx="3" ry="1.8"/></g>' +
+      '<path d="M-26 12v8h52v-8M-30 20h60" fill="none" stroke="' + INK + '" stroke-width="1.3"/>',
+    fleet: () => '<g fill="' + INK + '" fill-opacity=".8">' + [[-16, -4], [2, 2], [-6, 10], [14, -8]].map(([x, y]) => '<path d="M' + (x - 6) + " " + y + "h12l-2 3h-8z\"/>").join("") + "</g>" +
+      '<path d="M-26 16q4-3 8 0t8 0 8 0 8 0 8 0" fill="none" stroke="' + WATER + '" stroke-width="1"/>'
+  });
   const mapPath = (pts) => pts.map((p, k) => (k ? "L" : "M") + p[0] + " " + p[1]).join("");
   const mapSmooth = (pts) => {
     if (pts.length < 3) return mapPath(pts);
@@ -1886,13 +1939,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "sapper", name: "Bring It Down", desc: "Drop a structure on a foe through sabotage.", test: () => false },
     { id: "allweather", name: "All Weathers", desc: "Fight in five kinds of weather.", test: () => S.tc && S.tc.wxSeen.length >= 5, prog: () => [Math.min(5, S.tc ? S.tc.wxSeen.length : 0), 5] },
     { id: "moons", name: "Two Moons", desc: "Let the Undermoon rise into the sky.", hidden: true, test: () => S.um && S.um.ending === "rise" },
+    { id: "inquirer", name: "The Inquirer", desc: "Solve all seven cases in Rahdaria.", test: () => S.rh && Object.keys(S.rh.solved).length >= 7,
+      prog: () => [S.rh ? Object.keys(S.rh.solved).length : 0, 7] },
+    { id: "sharp", name: "Not One Wrong Name", desc: "Solve all seven Rahdarian cases without a single wrong answer.", hidden: true, test: () => S.rh && Object.keys(S.rh.solved).length >= 7 && !S.rh.wrongAny },
+    { id: "sweet", name: "Sweet Water", desc: "End the blight in the Hanging Gardens.", test: () => S.rh && S.rh.blight },
+    { id: "rhhero", name: "Hero of Rahdaria", desc: "Reach the highest Standing with the people of Rahdaria.", test: () => S.rh && S.rh.rep >= 80 },
+    { id: "rhearly", name: "The Blockade Lifted", desc: "Beat the Bathyr's hundred soldiers, hundred crates and three Generals before their last assault.", test: () => false },
+    { id: "rhall", name: "Every Terrace Green", desc: "Complete every objective in Rahdaria: every case, the blight, the hungry fed, the soldiers, the black market, the traitor and the blockade.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
     { id: "lv25", name: "Ringed Heartwood", desc: "Reach level 25.", test: () => lv() >= 25, prog: () => [Math.min(25, lv()), 25] },
     { id: "lv40", name: "Forty Rings", desc: "Reach level 40, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
     { id: "read", name: "Read Like a Book", desc: "Read one kind of foe all the way (5 reads) with Adaptive Reasoning.", test: () => Object.values(S.reads || {}).some(n => n >= 5) },
     { id: "print", name: "Copycat", desc: "Copy a foe's blow with Mockwax.", test: () => false },
     { id: "prints", name: "Full Print Book", desc: "Keep three prints in your print book at once.", test: () => (S.prints || []).length >= 3 },
-    { id: "hidden", name: "Everything Hidden", desc: "Find all nine things the Cascades washed loose.", test: () => (S.relics || []).length >= Object.keys(RELICS).length,
+    { id: "hidden", name: "Everything Hidden", desc: "Find every hidden thing the Cascades washed loose.", test: () => (S.relics || []).length >= Object.keys(RELICS).length,
       prog: () => [(S.relics || []).length, Object.keys(RELICS).length] },
     { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false }
   ];
@@ -1982,7 +2042,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC();
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC();
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = S.name || "The Wanderer";
@@ -2019,6 +2079,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     noonItems(items);
     underItems(items);
     companyItems(items);
+    rahItems(items);
     lvItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
@@ -2027,6 +2088,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     renderHesk();
     renderNoon();
     renderUnder();
+    renderRah();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -2553,7 +2615,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     undermoon: { key: "kinring", icon: "ring", name: "The Kinstone Ring", fx: "A ring of a Moored warden's kinstones: +6 max HP, and it came with 3 Mockwax.", hint: "the chains under Kedge",
       where: "Under Kedge, a Cascade rises past the hanging town and up into the dark, and the chains are swinging in it. Something small is tangled in the lowest one.",
       find: "It's a ring, strung with seven tiny kinstones: some warden's whole family, worn on one hand. Tucked in it are three cakes of Mockwax, as if somebody meant you to have them.",
-      on: () => { S.maxHp += 6; S.hp += 6; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); } }
+      on: () => { S.maxHp += 6; S.hp += 6; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); } },
+    rahdaria: { key: "inqring", icon: "ring", name: "The First Inquirer's Ring", fx: "A bronze ring cut with an open eye, and the purse hidden with it: +4 max HP and 40 gold.", hint: "the dry cisterns under the Hanging Gardens",
+      where: "In Rahdaria, a Cascade pours up out of the old Lily cistern under the Hanging Gardens, and the water that's been in it for a century goes up with it. The floor of the cistern is dry for the first time since it was cut.",
+      find: "On the cistern floor, in a lead box gone white with age, are a bronze ring cut with an open eye, a purse, and a note in a square hand: <i>for whoever has my job next</i>. The first Inquirer of Rahdaria hid it here, three hundred years ago.",
+      on: () => { S.maxHp += 4; S.hp += 4; S.coins += 40; } }
   };
   const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part));
   const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
@@ -3142,12 +3208,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     assize: "Outside Sulmara's walls, in the caravanserai where nobody looks at faces, the same three sellswords have a table near the camel lines. Sulmara is expensive. They look hopeful.",
     corrach: "In the caravan yard before the road north, the same three sellswords are eating soup out of one pot. Odran has the biggest spoon.",
     noon: "At the top of the deep stair, in the last of Thrumhold's lamplight, the same three sellswords are waiting. Odran has brought extra lamp oil. A great deal of extra lamp oil.",
-    undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\""
+    undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\"",
+    rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\""
   };
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
     if (!S.tyra) return false;
+    if (S.rh && S.rh.on) return !!S.rh.tyra;
     if (S.um && S.um.on) return !!S.um.tyra;
     if (S.nk && S.nk.on) return !!S.nk.tyra;
     if (S.hk) return !!S.tyraHk;
@@ -8032,7 +8100,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
             await say(n > 1 ? "You go through the first and into the second, and both of their chest-drums stop at once." : (F.hitLine || "One of them folds up like a dropped coat and stops singing."));
           } else {
             if (glaive) { await foeStrike(1, 10, 3, "Glaive damage"); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
-            else await foeStrike(1, 8, S.dull ? 2 : 3, "Axe damage" + (S.dull ? " (dulled)" : ""));
+            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0), "Axe damage" + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : ""));
             if (FOE.hp > 0 && F.hitLine) await say(F.hitLine);
           }
         } else if (F.missLine) await say(F.missLine);
@@ -8217,10 +8285,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -8330,7 +8398,19 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       tactic: "Stay light on your feet. Weighed down, you won't get out from under it. Make it miss, then hit it while it's stuck.",
       lore: "A grey lump of a thing with a mouth on the bottom, as heavy as lead, that clings to the roof-roots of the hollow and waits. It's the only creature down there that weighs more than it should. The Moored use its shell for anchor-stones.",
       intro: "A shadow on the roof-roots overhead is the wrong shape. It's heavy and round, and it's moving, slowly, until it's right above you. Then it lets go.",
-      who: "the plumbmaw", hitWhy: "It rolls into you like a boulder with teeth.", miss: "It thuds down beside you and the roots shake.", hitLine: "The axe skips off its shell and bites underneath." }
+      who: "the plumbmaw", hitWhy: "It rolls into you like a boulder with teeth.", miss: "It thuds down beside you and the roots shake.", hitLine: "The axe skips off its shell and bites underneath." },
+    { id: "brinehound", name: "Brine-hound", region: "rahdaria", quirk: "brine", hp: 20, ac: 13, atk: 5, n: 1, s: 6, type: "piercing", notice: 13,
+      ability: ["Brine", "Its jaws are wet with deep brine from the sea floor. Every bite burns for 1d4 more, unless sweet water has washed you."],
+      tactic: "Keep it off you and finish it fast. Sabine Orr's Sweetwater Phial takes the sting out of the brine altogether.",
+      lore: "Hairless grey hounds as heavy as anvils that the Bathyr brought up from the bottom of the sea, where they hunt the blind crabs of the deep. Some broke loose in the siege. They can't swim either, and they hate the rain.",
+      intro: "Something is snuffling along the bottom of the ditch toward you, low and grey and slow, leaving wet prints that steam. It's a dog, or the shape of one: hairless, slate-grey, broad as a barrel, with a jaw like a mantrap, dripping.",
+      who: "the brine-hound", hitWhy: "Its jaws close on you, and the brine bites after them.", miss: "Its jaws clap shut on nothing, spattering grey.", hitLine: "It yelps like a hinge and backs off, dripping." },
+    { id: "rotwreath", name: "Rotwreath", region: "rahdaria", quirk: "choke", hp: 22, ac: 12, atk: 4, n: 1, s: 6, type: "bludgeoning", notice: 12,
+      ability: ["Choke", "Every second round it throws its vines round you and squeezes: a Strength check or 1d6, and it drinks 2 HP back from you."],
+      tactic: "Break its grip when it comes, and don't let a long fight feed it. Fire and gem-light both make it let go.",
+      lore: "When the brine killed the Hanging Gardens, something in the dead vines didn't die. Rotwreaths are knots of grey, salted vine that drag themselves along the terraces at night, looking for anything still green, and strangle it.",
+      intro: "A heap of dead grey vines at the side of the path shifts as you pass, and lifts itself up on a dozen of its own stems, like a hand getting up off a table.",
+      who: "the rotwreath", hitWhy: "A grey vine whips across you, hard as wire.", miss: "The vines lash the stones.", hitLine: "Grey stems split and rain salt." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -8466,6 +8546,21 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         else await hurt(2, 6, "bludgeoning", "It lands on you.");
       },
       turn: async (F, st) => { if (st.plunged) { st.plunged = false; st.evade = false; return "done"; } }
+    },
+    brine: {
+      turn: async (F, st) => {
+        if (await foeSwing(F, st)) { if (hasGear("sweet")) await mech("The brine runs off you: sweet water.", "loot"); else await hurt(1, 4, "acid", "The brine burns in the bite."); }
+        st.evade = false; return "done";
+      }
+    },
+    choke: {
+      before: async (F, st) => {
+        if (st.round % 2 || FOE.hp <= 0) return;
+        await say("Its vines whip round you and pull tight.");
+        const r = await check({ label: "Strength check (break its grip)", mod: 3, dc: 13, cta: "Heave" });
+        if (r.ok) await say("You tear free, and the grey stems snap like old string.");
+        else { await hurt(1, 6, "bludgeoning", "It squeezes."); FOE.hp = Math.min(FOE.max, FOE.hp + 2); renderFoe(); await mech("It drinks from you: +2 HP (" + FOE.hp + " / " + FOE.max + ").", "hurt"); }
+      }
     },
     hatch: {
       before: async (F, st) => { if (st.round > 1 && F.hatch > 0 && FOE.hp > 0 && d(2) === 1) { F.hatch--; FOE.hp++; FOE.max = Math.max(FOE.max, FOE.hp); renderFoe(); await mech("Another husk splits and a fresh mite crawls out: " + FOE.hp + " left.", "hurt"); } }
@@ -11630,6 +11725,1469 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("\"It's been there all along,\" he says. \"You can only see it now the big one's quiet. It's coming from the west. From under the sea.\" He looks at Mother Kell.");
     await say("\"The Moored remember two lights falling,\" the Anchor-Mother says slowly. \"A thousand years ago. Our wardens and yours caught one. The other went into the western sea, and we always told the children it drowned.\" Her chair creaks. \"We told them a lot of things.\"", "voice");
     U.on = false; renderSheet();
+    await go("Take the road west");
+  }
+
+
+  // ---------- The Siege of Rahdaria: the garden city, the Bathyr, and the Inquirer ----------
+  // Ilo Brack's cords found a second pull under the western sea. It belongs to the other light that
+  // fell a thousand years ago: the Drowned Light. It lies on the sea floor and presses down, and round
+  // it the sea stands back in a great dry bowl, and in the bowl is a country, Bathyrra. Its people, the
+  // Bathyr, are born too heavy, the Moored turned inside out: short, broad, dense as slate, and they
+  // sink in water like stones. Since the Undermoon changed, the sea has been coming into their bowl.
+  // They came up out of the sea twelve days ago and besieged Rahdaria, the garden city of the west
+  // coast, whose seven terraces of hanging gardens feed it. Then somebody poisoned the gardens.
+  // Systems: the city's Hunger (a clock that rises every dawn; at 10 the city riots), your Standing
+  // with the people (a discount at the inn, the smithy and the stalls), the Casebook of seven cases
+  // (three clues each; two are enough to work one out; the Inquirer's Eye strikes out wrong answers),
+  // three days of four watches, and after the investigation, the blockade: a hundred soldiers, a
+  // hundred crates and three Generals, a sabotage mission in three branches, and the last assault.
+  // Puzzles: the cisterns, the ledger, the watch rota, the knock, the soil, the lead-letters, the plan.
+  const WATCHES = ["Morning", "Afternoon", "Dusk", "Night"];
+  const B_WATCHES = ["Morning", "Afternoon", "Night"];
+  const CISTERNS = ["the Ram", "the Crane", "the Lily", "the Old Queen"];
+  const SOLDIERS = ["Corporal Brisk Hallam", "Private Odo Fenn", "Private Wat Carrow", "Lance-Corporal Jory Tamblin"];
+  const RH_POSTS = ["the West Stair", "Cistern Lane", "the Bread Line", "the Granary Gate"];
+  const RH_TIERS = [[0, "Stranger", 0], [20, "Known", 5], [40, "Trusted", 10], [60, "Honoured", 15], [80, "Hero of Rahdaria", 25]];
+  const GENERALS = { keel: "General Ghorrad Keel", sault: "General Ysmay Sault", thole: "General Dunmere Thole" };
+  const rh = () => S.rh;
+  const rhOn = () => !!(S.rh && S.rh.on);
+  const rhTier = (rep) => RH_TIERS.reduce((t, x) => rep >= x[0] ? x : t, RH_TIERS[0]);
+  const rhDisc = () => S.rh ? rhTier(S.rh.rep)[2] : 0;
+  const rhPrice = (n) => Math.max(1, Math.round(n * (100 - rhDisc()) / 100));
+  const priceTag = (n) => rhPrice(n) + " gold" + (rhDisc() ? " (" + n + " less " + rhDisc() + "%)" : "");
+  const hasClue = (k) => !!(S.rh && S.rh.clues.includes(k));
+  const solved = (id) => !!(S.rh && S.rh.solved[id]);
+  const solvedN = () => S.rh ? Object.keys(S.rh.solved).length : 0;
+  const DET = 2;   // the Inquirer's bonus to Investigation and Insight in Rahdaria
+  Object.assign(GEAR, {
+    seal: { name: "The Inquirer's Seal", icon: "clue", desc: "A bronze seal on a chain, cut with an open eye. In Rahdaria, doors open to it, and you're +2 to Investigation and Insight." },
+    horn: { name: "Kerrow's Warhorn", icon: "drum", desc: "The garrison's old brass horn. In the blockade, blow it to bring the garrison out behind you: +4 to every sortie." },
+    vkey: { name: "The Velvet Key", icon: "token", desc: "The Saltwife's key to the old menagerie tunnels, which run out under the walls. Raids on the Bathyr supply road take 5 more crates." },
+    signal: { name: "The Lead-Letter Wheel", icon: "map", desc: "Two lead discs, one inside the other, for reading Bathyr lead-letters. You know their signals: General Keel can't catch you with his anchor-blow." },
+    sweet: { name: "The Sweetwater Phial", icon: "vial", desc: "Sabine Orr's cure for the blight, in a phial. Brine can't burn you: Bathyr brine does you no extra harm." },
+    knot: { name: "Tamsk's Pressing", icon: "token", desc: "A lead tablet pressed with Tamsk's own name and his mother's. Shown to Bathyr soldiers, it says: this one can be trusted with your surrender." },
+    scale: { name: "Rahdarian Scale Shirt", icon: "shield", desc: "Bronze scales sewn on a leather shirt by the Brazier smithy. +1 AC." }
+  });
+
+  function initRah() {
+    S.gear = S.gear || [];
+    const cis = [0, 1, 2, 3].sort(() => Math.random() - .5).slice(0, 2).sort();
+    S.rh = { on: true, day: 1, watch: 0, hunger: 7, rep: 10, clues: [], solved: {}, wrong: {}, cold: {}, eyes: 3, hv: {}, f: {},
+      cis, c4who: d(4) - 1, fed: [], bm: "", tamsk: "", vantry: "", blight: false, riots: 0, phase: "inv",
+      sol: 100, crates: 100, gens: [], branch: "", plan: -1, militia: 0, bturn: 0, day2: 1, powder: false, early: false, done: false,
+      tyra: !!(S.tyra && (S.um ? S.um.tyra : S.tyraHk)), wrongAny: false };
+    S.detective = true;
+    renderSheet();
+  }
+  function renderRah() {
+    const box = $("rhBox");
+    if (!box) return;
+    box.hidden = !rhOn();
+    if (!rhOn()) return;
+    const R = rh(), t = rhTier(R.rep);
+    $("rhHunger").textContent = R.hunger + " / 10";
+    $("rhHungerBar").style.width = R.hunger * 10 + "%";
+    $("rhNote").textContent = R.hunger >= 9 ? "The city is on the edge of a riot." : R.hunger >= 6 ? "Thousands are starving." : R.hunger >= 4 ? "Hungry, but holding." : "The city is eating again.";
+    $("rhTime").textContent = R.phase === "inv" ? "Day " + Math.min(3, R.day) + " · " + (WATCHES[R.watch] || "") : R.phase === "siege" ? "Blockade day " + R.day2 + " · " + (B_WATCHES[R.watch] || "") : "Rahdaria";
+    $("rhRep").textContent = t[1] + (t[2] ? " · −" + t[2] + "%" : "");
+    $("rhCases").textContent = solvedN() + " of 7 solved";
+    const sg = R.phase !== "inv";
+    $("rhSiegeL").hidden = $("rhSiege").hidden = !sg;
+    if (sg) $("rhSiege").textContent = R.sol + " soldiers · " + R.crates + " crates · " + R.gens.length + " of 3 Generals";
+  }
+  function rahItems(items) {
+    if (S.detective) items.push(["detective", "clue", "Detective: the Inquirer's Eye", "You notice things, and you know how to ask. +2 to Investigation and Insight in Rahdaria. At a deduction, the Eye strikes out the wrong half of each answer" + (S.rh ? " (" + S.rh.eyes + " of 3 left)." : ".")]);
+    if (!S.rh) return;
+    const R = rh();
+    if (R.on) {
+      const t = rhTier(R.rep), nx = RH_TIERS.find(x => x[0] > R.rep);
+      items.push(["rhrep", "token", "Standing: " + t[1] + " (" + R.rep + ")", (t[2] ? "The inn, the Brazier smithy and the stalls knock " + t[2] + "% off for you. " : "No discount yet. ") + (nx ? "At " + nx[0] + " you'll be " + nx[1] + " (" + nx[2] + "% off)." : "The whole city knows your face.")]);
+      items.push(["rhcase", "scroll", "The Casebook · " + solvedN() + " of 7", CASES.map(c => (solved(c.id) ? "✓ " : "· ") + c.name + " (" + c.keys.filter(hasClue).length + " of 3 clues)").join("<br>")]);
+    }
+    if (!S.lw && S.potions) items.push(["potion", "vial", "Draught of Mending ×" + S.potions, "Drink it to regain 10 HP."]);
+    if (!S.lw && S.elixirs) items.push(["elixir", "vial", "Elixir of Health ×" + S.elixirs, "Drink it to regain 20 HP."]);
+    if (R.powder) items.push(["rhpowder", "vial", "Bathyr blasting-salt", "A sealed jar of grey crystals that hiss in damp air. It brings down stone."]);
+  }
+
+  async function standing(n, why) {
+    const R = rh(), was = rhTier(R.rep);
+    R.rep = Math.max(0, Math.min(100, R.rep + n)); renderSheet();
+    await mech(why + " Standing " + (n >= 0 ? "+" + n : n) + ": " + R.rep + ".", n >= 0 ? "loot" : "hurt");
+    const now = rhTier(R.rep);
+    if (now !== was) await mech("The people of Rahdaria " + (now[0] > was[0] ? "know you better now" : "trust you less") + ": you're <b>" + now[1] + "</b>. " + (now[2] ? "Inn, smithy and stalls: " + now[2] + "% off." : "No discount."), now[0] > was[0] ? "loot" : "hurt");
+  }
+  async function hunger(n, why) {
+    const R = rh();
+    R.hunger = Math.max(0, Math.min(10, R.hunger + n)); renderSheet();
+    await mech(why + (n > 0 ? " Hunger rises to " : " Hunger falls to ") + R.hunger + " of 10.", n > 0 ? "hurt" : "loot");
+    if (R.hunger >= 10) await riot();
+  }
+  async function feed(key, n, why) {
+    const R = rh();
+    if (R.fed.includes(key)) return;
+    R.fed.push(key);
+    await hunger(-n, why);
+  }
+  async function riot() {
+    const R = rh();
+    R.riots++;
+    await say("It starts at the bread line in the Lower City, the way it always does. Somebody pushes. Somebody else has a knife. By the time the bells ring, there are three thousand people on the Fourth Stair and the garrison has its spears out, facing them, and both sides are crying.");
+    await say("You get between them. It's the only place to be.");
+    await hurt(1, 6, "bludgeoning", "A thrown cobble finds you.");
+    R.hunger = 8; renderSheet();
+    await standing(-8, "The riot burns itself out by dark. Eleven people are dead, and the city remembers that you were here and it happened anyway.");
+  }
+  // A clue for a case, found once.
+  async function clue(k) {
+    const R = rh();
+    if (hasClue(k)) return;
+    R.clues.push(k); renderSheet();
+    const C = CASES.find(c => c.keys.includes(k));
+    await mech("Clue · <b>" + C.name + "</b>: " + clueText(k), "loot");
+    if (!solved(C.id) && C.keys.filter(hasClue).length === 2 && C.id !== 6) await mech("You have enough to work out <b>" + C.name + "</b>. Open your casebook when you're ready (it takes no time).");
+  }
+  function clueText(k) {
+    const R = rh();
+    const T = {
+      c1a: "The Bathyr scout who fell off the sea wall sank in the harbour like a dropped anvil. It took four divers and a winch to bring him up. His flesh is as dense as wet slate.",
+      c1b: "Tamsk, the prisoner, says his country has a sky made of water, and a light lying at the bottom of it.",
+      c1c: "Netta Shrike, a fisherwife, saw their ships come up: they rose out of the sea mast-first, streaming water, two miles out, where the sea is deeper than any line.",
+      c2a: "The soil of the dead terraces tastes of salt: not sea salt, something bitter and heavy that sinks in water instead of dissolving. Deep brine.",
+      c2b: "Of the four cisterns that water the terraces, the brine went into " + CISTERNS[R.cis[0]] + " and " + CISTERNS[R.cis[1]] + ".",
+      c2c: "In the Velvet Ledger they sell sacks of 'grey sea salt': the same bitter brine, in sacks stitched with a city granary's mark.",
+      c3a: "Widow Hanna Loy: soldiers in garrison grey took the bread line's flour cart at spear-point, \"by the quartermaster's order\".",
+      c3b: "The garrison grain ledger: on two nights, more grain left the store than was ever issued to the men. Both nights are signed off with the quartermaster's seal.",
+      c3c: "On the Velvet Ledger's tables, flour sacks with the garrison's stamp on them, still tied with the quartermaster's tally-cord.",
+      c4a: "Nim, the baker's boy, was beaten in Cistern Lane at the second bell of the night by a soldier on watch who wanted his loaf. He saw a garrison cloak, and nothing of the face.",
+      c4b: "The watch rota for that night: " + SOLDIERS[R.c4who] + " stood in Cistern Lane.",
+      c4c: "Sergeant Brannagh Holt, drinking alone: one of her four came off watch that night with a whole loaf and split knuckles, and none of the others will say which.",
+      c5a: "A clipped coin with a thread of red velvet through the hole: a token for the black market. \"Under the menagerie,\" the woman who dropped it says, and runs.",
+      c5b: "Under the old royal menagerie, the cages are full of food. The woman who keeps the market is called the Saltwife: Ysolde Crane, who kept the menagerie's beasts before the siege, and sold them, one by one, by the pound.",
+      c5c: "The Saltwife's own ledger: her biggest supplier signs himself \"A.V.\", and sells grain by the cartload, from a granary nobody else knows is full.",
+      c6a: "Only four keys open the iron grates over the terrace cisterns: the High Steward's, the Marshal's, the Master of Waters', and the Master of Granaries'.",
+      c6b: "\"A.V.\" has been selling the city's grain on the black market by the cartload while the city starves.",
+      c6c: "In Councillor Aurel Vantry's office: a letter pressed in Bathyr lead, and a cistern key with grey brine crusted in its teeth.",
+      c7a: "Decoded Bathyr lead-letters: \"The crates go to the old salt kilns.\" And: \"Keel's diggers work the trenches at the ebb.\"",
+      c7b: "You scouted their camp: three pavilions, three Generals, Keel's soldiers, Sault's brine wagons, Thole's engines. Their watch changes at the third bell of night, and at dusk the wind comes in off the sea.",
+      c7c: "Tamsk says the Generals don't agree. Keel wants the city whole, to live in. Sault wants it empty. Thole wants to go home. It was Sault who brought the brine."
+    };
+    return T[k];
+  }
+
+  // The seven cases. Each has three clues; two are enough to work it out. qs() are the questions.
+  const CASES = [
+    { id: 1, name: "The Unknown Flag", ask: "Who are the besiegers, and where have they come from?", keys: ["c1a", "c1b", "c1c"],
+      qs: () => [{ q: "Where have the besiegers come from?", a: ["Across the desert, from the east", "Down from the mountains in the north", "Up from the bottom of the western sea", "From an island beyond the fog"], right: 2 },
+        { q: "What will they never do?", a: ["Fight at night", "Swim", "Cross running water", "Eat bread"], right: 1 }] },
+    { id: 2, name: "The Poisoned Gardens", ask: "What killed the Hanging Gardens, and how did it get in?", keys: ["c2a", "c2b", "c2c"],
+      qs: () => { const R = rh(), pr = []; for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) pr.push([i, j]);
+        const right = pr.findIndex(p => p[0] === R.cis[0] && p[1] === R.cis[1]);
+        const pick = [right].concat(pr.map((p, k) => k).filter(k => k !== right).sort(() => Math.random() - .5).slice(0, 3)).sort((a, b) => a - b);
+        return [{ q: "How did the brine get into the gardens?", a: ["Bathyr engines threw it over the walls", "It came in with the sea fog", "Someone inside the walls poured it into the cisterns", "It's a blight, and nobody did it"], right: 2 },
+          { q: "Which two cisterns were poisoned?", a: pick.map(k => CISTERNS[pr[k][0]].replace("the", "The") + " and " + CISTERNS[pr[k][1]]), right: pick.indexOf(right) }]; } },
+    { id: 3, name: "The Missing Grain", ask: "Where is the garrison's grain going?", keys: ["c3a", "c3b", "c3c"],
+      qs: () => [{ q: "Who is selling the garrison's grain?", a: ["Marshal Dace Kerrow", "Quartermaster Ludo Fenwick", "Sergeant Brannagh Holt", "The Bakers' Guild"], right: 1 }] },
+    { id: 4, name: "The Beating in Cistern Lane", ask: "Which soldier beat Nim the baker's boy?", keys: ["c4a", "c4b", "c4c"],
+      qs: () => [{ q: "Who beat Nim in Cistern Lane?", a: SOLDIERS.slice(), right: rh().c4who }] },
+    { id: 5, name: "The Velvet Ledger", ask: "Who runs the black market, and who feeds it?", keys: ["c5a", "c5b", "c5c"],
+      qs: () => [{ q: "Who runs the Velvet Ledger?", a: ["Ysolde Crane, who kept the royal menagerie", "Marshal Kerrow, through his quartermaster", "A Bathyr spy inside the walls", "The Bakers' Guild"], right: 0 },
+        { q: "Who supplies her biggest loads?", a: ["The Bathyr, through the lines", "\"A.V.\", from a granary of his own", "Farmers sneaking in over the walls", "The gardeners of the terraces"], right: 1 }] },
+    { id: 6, name: "The Key to the Cisterns", ask: "Is there a traitor on the Council of Terraces?", keys: ["c6a", "c6b", "c6c"],
+      qs: () => [{ q: "Who let the brine into the cisterns?", a: ["High Steward Nerys Aldane", "Marshal Dace Kerrow", "Odile Moorcant, Master of Waters", "Aurel Vantry, Master of Granaries"], right: 3 },
+        { q: "Why?", a: ["For gold, and a Bathyr promise of safe passage", "For revenge on the High Steward", "Because he's a Bathyr in disguise", "Because they forced him at knifepoint"], right: 0 }] },
+    { id: 7, name: "The Three Generals", ask: "Who commands the Bathyr, and how can they be beaten?", keys: ["c7a", "c7b", "c7c"],
+      qs: () => [{ q: "Where are their hundred crates of equipment kept?", a: ["Aboard the ships in the bay", "In the old salt kilns south of their camp", "In General Keel's pavilion", "Buried on the beach"], right: 1 },
+        { q: "Which General poisoned the gardens?", a: ["Ghorrad Keel, the Anchor", "Ysmay Sault, the Brinewife", "Dunmere Thole, the Siege-Wright", "None of them: it was the sea"], right: 1 }] }
+  ];
+
+  // Work out a case: answer its questions. The Inquirer's Eye strikes out half the wrong answers.
+  async function deduce(C) {
+    const R = rh();
+    heading2("The Casebook · " + C.name);
+    await say("<i>" + C.ask + "</i> You lay out what you've got: " + C.keys.filter(hasClue).map(k => clueText(k)).join(" ") );
+    let eye = false;
+    if (R.eyes > 0) {
+      const u = await choose([{ key: "self", label: "Work it out yourself" }, { key: "eye", label: "Use the Inquirer's Eye", tag: R.eyes + " of 3 left · strikes out the wrong half", plain: true }]);
+      if (u === "eye") { R.eyes--; eye = true; renderSheet(); await say("You let your eyes go soft and stop trying, the way the High Steward told you, and the shape of it comes up out of the details like a face out of dark water."); }
+    }
+    let ok = true;
+    for (const q of C.qs()) {
+      let opts = q.a.map((a, i) => ({ key: "a" + i, label: a, plain: true, i }));
+      if (eye) { const wrong = opts.filter(o => o.i !== q.right).sort(() => Math.random() - .5).slice(0, opts.length - 2); opts = opts.filter(o => !wrong.includes(o)); }
+      await say("<b>" + q.q + "</b>");
+      const c = await choose(opts);
+      if (c !== "a" + q.right) ok = false;
+    }
+    return ok;
+  }
+  const rhPuzXP = (r) => { if (r && r.ok && typeof xpGain === "function") xpGain(60); return r; };
+  function heading2(t) { const h = el("div", "part-head sub", '<span class="num">' + t + "</span>"); scrollNext = true; add(h); }
+  const caseReady = (C) => !solved(C.id) && C.id !== 6 && C.keys.filter(hasClue).length >= 2 && (rh().cold[C.id] == null || C.keys.filter(hasClue).length > rh().cold[C.id] || C.keys.every(hasClue));
+  async function casebook() {
+    const R = rh();
+    for (;;) {
+      const lines = CASES.map(C => "<b>" + C.id + ". " + C.name + "</b> " + (solved(C.id) ? "· solved" : "· " + C.keys.filter(hasClue).length + " of 3 clues" + (C.id === 6 ? " · you'll lay it before the Council" : R.cold[C.id] != null && !caseReady(C) ? " · gone cold: find another clue" : "")));
+      await say("Your casebook:<br>" + lines.join("<br>"));
+      const opts = CASES.filter(caseReady).map(C => ({ key: "c" + C.id, label: "Work out " + C.name, tag: C.keys.filter(hasClue).length + " clues" }));
+      opts.push({ key: "done", label: "Close the casebook", plain: true });
+      const c = await choose(opts);
+      if (c === "done") return;
+      await solveCase(CASES.find(C => "c" + C.id === c));
+    }
+  }
+  async function solveCase(C) {
+    const R = rh();
+    const ok = await deduce(C);
+    if (!ok) {
+      R.wrong[C.id] = (R.wrong[C.id] || 0) + 1; R.wrongAny = true;
+      R.cold[C.id] = C.keys.filter(hasClue).length;
+      await say("You take it to the Steward's Hall, and it falls apart in your hands as you say it out loud. Nerys Aldane hears you out, very politely, and writes nothing down.");
+      await standing(-5, "Word gets round that the Inquirer named the wrong answer.");
+      await mech("The case has gone cold. " + (C.keys.every(hasClue) ? "You have every clue there is: go over them again when you're ready." : "Find another clue before you try it again."), "hurt");
+      return false;
+    }
+    R.solved[C.id] = true; renderSheet();
+    if (typeof xpGain === "function") xpGain(120);
+    await mech("Case solved: <b>" + C.name + "</b>.", "loot");
+    await CASE_DONE[C.id]();
+    return true;
+  }
+  const CASE_DONE = {
+    1: async () => {
+      const R = rh();
+      await say("You tell Nerys Aldane what you know: that the Bathyr came up out of the bottom of the western sea, out of a country under the water; and that they weigh so much they sink like stones, and never, ever swim.");
+      await say("The High Steward is quiet for a long time. \"So the harbour,\" she says at last, \"is a wall to them. And the river.\" She sends a runner to the Marshal at once.", "voice");
+      R.f.swim = true;
+      await standing(8, "The criers call it on every terrace: <i>they can't swim.</i> It's the first good news in twelve days.");
+    },
+    2: async () => {
+      const R = rh();
+      await say("You walk the High Steward up to the Fourth Terrace and show her the grates over " + CISTERNS[R.cis[0]] + " and " + CISTERNS[R.cis[1]] + ", and the grey crust on their lips. \"From inside,\" you tell her. \"Somebody with a key.\"");
+      await say("Nerys Aldane looks at the grates for a long time. \"There are four keys,\" she says. \"I have one.\"", "voice");
+      R.f.cisterns = true;
+      await standing(8, "Keeper Sabine Orr seals the two cisterns, and the gardeners stop watering the dying terraces with poison.");
+      await mech("Now that you know what poisoned the gardens, Keeper Sabine Orr can try to cure them: go back to the Hanging Gardens.");
+    },
+    3: async () => {
+      await say("Marshal Kerrow listens to all of it standing at his window with his back to you. Then he goes down to the quartermaster's store himself, with six men, and you hear Ludo Fenwick shouting from two floors away.");
+      await say("They find the grain behind a false wall in the store: eleven hundred measures, sacked and stamped and ready to go out to the Velvet Ledger. Kerrow has the flour carted to the bread lines that same afternoon, and he rides on the first cart.");
+      await say("Afterwards he comes and finds you. \"My men,\" he says, \"my store. I didn't see it.\" He unslings a battered brass horn from his shoulder and puts it in your hands. \"When it comes to fighting, blow that, and the garrison will be behind you. I'll see to it.\"", "voice");
+      S.gear.push("horn"); renderSheet();
+      await mech("Gain <b>Kerrow's Warhorn</b>. " + GEAR.horn.desc, "loot");
+      await feed("granary", 2, "The garrison's hidden grain goes out to the bread lines.");
+      await standing(8, "Every bread line in the city knows who found it.");
+    },
+    4: async () => {
+      const R = rh(), who = SOLDIERS[R.c4who];
+      await say("You find " + who + " in the barracks yard, with his knuckles still scabbed. He doesn't deny it. He's too tired. \"I hadn't eaten in three days,\" he says. \"He had a whole loaf. A whole one.\"", "voice");
+      const c = await choose([
+        { key: "marshal", label: "Hand him over to the Marshal", tag: "the garrison's justice" },
+        { key: "nim", label: "Take him to Nim's family and let them decide", tag: "the Lower City's justice", plain: true },
+        { key: "let", label: "Let it go: everyone's starving", plain: true }
+      ]);
+      R.c4end = c;
+      if (c === "marshal") { await say("Kerrow strips him of his cloak in front of the whole company and puts him on the walls with no rank, where the stones come in. \"He'll be useful there,\" the Marshal says."); await standing(5, "The Lower City hears that a soldier was punished for it."); }
+      if (c === "nim") { await say("Nim's mother looks at him for a long time. Then she makes him carry flour sacks for the bread line every morning until the siege ends, and gives him a crust at the end of every day, and doesn't say a word to him. Nim watches him from the door, with his bandaged head."); await standing(8, "The Lower City talks about it for days: the Inquirer brought the soldier to them."); }
+      if (c === "let") { await say("You let him go. He doesn't thank you."); await standing(-5, "Nim's family hears you let him go."); }
+    },
+    5: async () => {
+      const R = rh();
+      R.f.tunnels = true;
+      await say("You go down under the menagerie one last time, and the Saltwife is waiting for you among the cages, with her hands folded. She's a small, neat woman with grey hair, and she smells of straw and hay and old lion.");
+      await say("\"I kept them alive for thirty years,\" she says. \"The tusk-oxen, the striped deer, the old bear. Then the siege came, and people were hungry, and I sold them, one at a time, by the pound. And then I'd sold them all, and people were still hungry.\" She shrugs. \"So I found other things to sell.\"", "voice");
+      const c = await choose([
+        { key: "kitchen", label: "Turn it into a kitchen that feeds whoever comes", tag: "hunger −1 · she keeps her key" },
+        { key: "shut", label: "Shut it down and give her to the Steward", plain: true },
+        { key: "cut", label: "Keep it running, and take a cut", tag: "+40 gold", plain: true }
+      ]);
+      R.bm = c;
+      if (c === "kitchen") {
+        await say("She looks at you as if you've said something in a language she used to speak. Then she nods. By the next morning the cages are open and there's a pot on a fire in the middle of the menagerie floor, and a line of people with bowls going right up the stairs.");
+        await say("Afterwards she gives you a long iron key. \"The old tunnels,\" she says. \"The keepers used them to bring the beasts in from outside the walls. They still go under. I don't need them now.\"", "voice");
+        S.gear.push("vkey"); renderSheet();
+        await mech("Gain <b>the Velvet Key</b>. " + GEAR.vkey.desc, "loot");
+        await feed("kitchen", 1, "The Velvet Ledger feeds people instead of selling to them.");
+        await standing(10, "The Lower City calls it the Velvet Kitchen, and they know whose idea it was.");
+      }
+      if (c === "shut") {
+        await say("The garrison carries out what's left in the cages, and the Saltwife goes to the Steward's cells without a word. In her apron pocket, they find a long iron key. Nobody knows what it opens. You take it.");
+        S.gear.push("vkey"); renderSheet();
+        await mech("Gain <b>the Velvet Key</b>. " + GEAR.vkey.desc, "loot");
+        await standing(6, "The black market is closed.");
+      }
+      if (c === "cut") {
+        S.coins += 40; renderSheet();
+        await say("She counts out forty gold for you without blinking, the first week's share. \"Everyone's got a price,\" she says. \"Even inquirers. It's a comfort, really.\"", "voice");
+        await standing(-10, "People in the Lower City see you coming out from under the menagerie with a heavy purse, and they talk.");
+      }
+      if (!hasClue("c6b")) { R.clues.push("c6b"); renderSheet(); await mech("Clue · <b>The Key to the Cisterns</b>: " + clueText("c6b"), "loot"); }
+    },
+    7: async () => {
+      const R = rh();
+      R.f.kilns = R.f.ebb = true;
+      if (hasClue("c7b")) R.f.dusk = R.f.bell = true;
+      await say("You draw it out for the Marshal and the Steward on the back of a ration list: three Generals, three pavilions, the crates at the salt kilns, the diggers at the ebb. Ghorrad Keel, the Anchor, who holds the soldiers. Dunmere Thole, the Siege-Wright, who keeps the engines and the crates. And Ysmay Sault, the Brinewife, who poisoned the gardens.");
+      await say("Kerrow looks at it for a long time. \"Three heads,\" he says. \"Cut them, and the body sits down.\"", "voice");
+      await standing(8, "The garrison knows what it's facing now.");
+    }
+  };
+
+  // ---------- puzzles ----------
+  // The cisterns: four cisterns water seven terraces through the old channels. Two were poisoned.
+  // Name the two that explain every dead terrace and no green one.
+  function cisternPuzzle() {
+    return new Promise(resolve => {
+      const R = rh(), pr = [];
+      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) pr.push([i, j]);
+      let feeds = null, dead = null;
+      for (let t = 0; t < 2000 && !feeds; t++) {
+        const f = Array.from({ length: 7 }, () => { const a = d(4) - 1; if (d(3) === 1) return [a]; let b = d(4) - 1; while (b === a) b = d(4) - 1; return [a, b].sort(); });
+        const deadOf = (p) => f.map(x => x.some(c => p.includes(c)));
+        const dd = deadOf(R.cis), n = dd.filter(Boolean).length;
+        if (n < 3 || n > 5) continue;
+        if (pr.filter(p => deadOf(p).every((v, k) => v === dd[k])).length !== 1) continue;
+        feeds = f; dead = dd;
+      }
+      const P = puzzleBox("The Cisterns", "Four cisterns water the seven terraces through the old channels, and each terrace drinks from one or two of them. Brine went into two of the cisterns. Choose the two that would kill every blighted terrace and spare every green one. Two tries.");
+      const tab = el("div", "rh-tab");
+      ["I", "II", "III", "IV", "V", "VI", "VII"].forEach((r, k) => tab.appendChild(el("div", "rh-row" + (dead[k] ? " bad" : ""),
+        "<b>Terrace " + r + "</b><span>fed by " + feeds[k].map(c => CISTERNS[c]).join(" and ") + "</span><i>" + (dead[k] ? "blighted" : "green") + "</i>")));
+      const pick = el("div", "pctrl");
+      const on = new Set();
+      const bs = CISTERNS.map((c, i) => { const b = pbtn(c.replace("the ", "The ")); b.setAttribute("aria-pressed", "false"); b.onclick = () => { if (on.has(i)) on.delete(i); else if (on.size < 2) on.add(i); bs.forEach((x, k) => { x.classList.toggle("on", on.has(k)); x.setAttribute("aria-pressed", on.has(k)); }); }; pick.appendChild(b); return b; });
+      P.body.append(tab, pick);
+      const go_ = pbtn("Seal these two", "primary"), give = pbtn("I can't see it");
+      P.ctrl.append(go_, give);
+      let tries = 0;
+      P.status.textContent = "Choose two cisterns.";
+      go_.onclick = () => {
+        if (on.size !== 2) { P.status.textContent = "Choose two cisterns."; return; }
+        tries++;
+        const p = [...on], got = feeds.map(x => x.some(c => p.includes(c)));
+        const miss = got.filter((v, k) => v !== dead[k]).length;
+        if (!miss) { P.end(); P.status.textContent = "Every dead terrace drinks from one of them, and no green one does."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (tries >= 2) { P.end(); P.status.textContent = "It was " + CISTERNS[R.cis[0]] + " and " + CISTERNS[R.cis[1]] + "."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = "That would get " + miss + " of the seven terraces wrong. One try left.";
+      };
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); };
+    });
+  }
+
+  // The ledger: each day the store should hold yesterday's stock less what was issued. Find the two
+  // nights grain walked out of the store.
+  function ledgerPuzzle() {
+    return new Promise(resolve => {
+      const days = 7, bad = new Set();
+      while (bad.size < 2) bad.add(d(days - 1));
+      let stock = 1500 + 10 * d(30);
+      const rows = [];
+      for (let k = 0; k < days; k++) {
+        const men = 60 + d(30), issued = men * 2, theft = bad.has(k) ? 10 * (2 + d(4)) : 0;
+        stock = stock - issued - theft;
+        rows.push({ men, issued, stock });
+      }
+      const P = puzzleBox("The Grain Ledger", "Quartermaster Fenwick's ledger for the last seven days. Every man gets two measures a day. The stock left each night should be the night before's, less what was issued. On two nights, grain left the store that was never issued. Tap those two days. Two tries.");
+      const tab = el("div", "rh-tab");
+      tab.appendChild(el("div", "rh-row head", "<b>Day</b><span>Men · issued</span><i>Stock left</i>"));
+      tab.appendChild(el("div", "rh-row", "<b>Opening</b><span></span><i>" + (rows[0].stock + rows[0].issued) + "</i>"));
+      const on = new Set();
+      const btns = rows.map((r, k) => {
+        const b = el("button", "rh-row pick", "<b>Day " + (k + 1) + "</b><span>" + r.men + " men · " + r.issued + " measures</span><i>" + r.stock + "</i>");
+        b.type = "button"; b.setAttribute("aria-pressed", "false");
+        b.onclick = () => { if (on.has(k)) on.delete(k); else if (on.size < 2) on.add(k); btns.forEach((x, i) => { x.classList.toggle("on", on.has(i)); x.setAttribute("aria-pressed", on.has(i)); }); };
+        tab.appendChild(b); return b;
+      });
+      P.body.appendChild(tab);
+      const go_ = pbtn("Circle these two", "primary"), give = pbtn("The numbers swim");
+      P.ctrl.append(go_, give);
+      let tries = 0;
+      go_.onclick = () => {
+        if (on.size !== 2) { P.status.textContent = "Tap two days."; return; }
+        tries++;
+        const right = [...on].filter(k => bad.has(k)).length;
+        if (right === 2) { P.end(); P.status.textContent = "Both nights, signed off with the quartermaster's seal."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (tries >= 2) { P.end(); P.status.textContent = "It was day " + [...bad].map(k => k + 1).join(" and day ") + "."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = right + " of 2 right. One try left.";
+      };
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); };
+    });
+  }
+
+  // The watch rota: four soldiers, four posts in a row along the wall. Work out who stood where from
+  // what the others say; the one in Cistern Lane beat Nim. Clues are drawn at random until exactly one
+  // arrangement fits them, then trimmed of any clue the others already imply.
+  function rotaClues(culprit) {
+    const others = [0, 1, 2, 3].filter(s => s !== culprit).sort(() => Math.random() - .5);
+    const pos = []; pos[culprit] = 1; [0, 2, 3].forEach((p, k) => pos[others[k]] = p);
+    const perms = [];
+    (function rec(a, used) { if (a.length === 4) { perms.push(a.slice()); return; } for (let p = 0; p < 4; p++) if (!used.has(p)) { used.add(p); a.push(p); rec(a, used); a.pop(); used.delete(p); } })([], new Set());
+    const cand = [];
+    for (let s = 0; s < 4; s++) {
+      for (let p = 0; p < 4; p++) if (p !== pos[s]) cand.push({ t: "not", s, p });
+      if (s !== culprit) cand.push({ t: "at", s, p: pos[s] });
+      if (pos[s] === 0 || pos[s] === 3) cand.push({ t: "end", s });
+      for (let b = 0; b < 4; b++) if (b !== s) {
+        if (Math.abs(pos[s] - pos[b]) === 1 && s < b) cand.push({ t: "next", s, b });
+        if (pos[s] < pos[b]) cand.push({ t: "west", s, b });
+        if (Math.abs(pos[s] - pos[b]) > 1 && s < b) cand.push({ t: "far", s, b });
+      }
+    }
+    const fits = (c, q) => c.t === "not" ? q[c.s] !== c.p : c.t === "at" ? q[c.s] === c.p : c.t === "end" ? (q[c.s] === 0 || q[c.s] === 3) :
+      c.t === "next" ? Math.abs(q[c.s] - q[c.b]) === 1 : c.t === "far" ? Math.abs(q[c.s] - q[c.b]) > 1 : q[c.s] < q[c.b];
+    const count = (cs) => perms.filter(q => cs.every(c => fits(c, q))).length;
+    let cs = [];
+    const pool = cand.sort(() => Math.random() - .5).filter(c => c.t !== "at" || d(3) === 1);
+    for (const c of pool) { if (count(cs) === 1) break; if (count(cs.concat([c])) < count(cs)) cs.push(c); }
+    for (let i = cs.length - 1; i >= 0; i--) { const t = cs.slice(0, i).concat(cs.slice(i + 1)); if (count(t) === 1) cs = t; }
+    const nm = (s) => SOLDIERS[s].split(" ").slice(-2).join(" ");
+    const say_ = (c) => c.t === "not" ? nm(c.s) + " wasn't at " + RH_POSTS[c.p] + "." : c.t === "at" ? nm(c.s) + " stood at " + RH_POSTS[c.p] + "." :
+      c.t === "end" ? nm(c.s) + " had a post at one end of the wall." : c.t === "next" ? nm(c.s) + " and " + nm(c.b) + " had posts side by side." :
+      c.t === "far" ? nm(c.s) + " and " + nm(c.b) + " couldn't see each other: there was a post between them, at least." : nm(c.s) + "'s post was west of " + nm(c.b) + "'s.";
+    return { lines: cs.map(say_), pos };
+  }
+  function rotaPuzzle() {
+    return new Promise(resolve => {
+      const R = rh(), { lines } = rotaClues(R.c4who);
+      const P = puzzleBox("The Watch Rota", "Four soldiers stood four posts along the inner wall that night, west to east: " + RH_POSTS.join(", ") + ". The rota itself is torn, but you have what each of them and their sergeant say. Set each soldier at a post, then name the one in Cistern Lane. Two tries.");
+      P.body.appendChild(el("ul", "rh-clues", lines.map(l => "<li>" + l + "</li>").join("")));
+      const at = [-1, -1, -1, -1];
+      const grid = el("div", "rh-tab");
+      const rowsB = SOLDIERS.map((s, i) => {
+        const row = el("div", "rh-rota", "<b>" + s + "</b>");
+        const bs = RH_POSTS.map((p, k) => { const b = pbtn(p.replace("the ", "")); b.onclick = () => { at[i] = at[i] === k ? -1 : k; draw(); }; row.appendChild(b); return b; });
+        grid.appendChild(row); return bs;
+      });
+      function draw() { rowsB.forEach((bs, i) => bs.forEach((b, k) => { b.classList.toggle("on", at[i] === k); b.setAttribute("aria-pressed", at[i] === k); })); }
+      P.body.appendChild(grid);
+      const go_ = pbtn("Name the one in Cistern Lane", "primary"), give = pbtn("Ask them instead");
+      P.ctrl.append(go_, give);
+      let tries = 0;
+      go_.onclick = () => {
+        const who = at.indexOf(1);
+        if (who < 0 || at.filter(x => x === 1).length > 1) { P.status.textContent = "Put exactly one soldier in Cistern Lane."; return; }
+        tries++;
+        if (who === R.c4who) { P.end(); P.status.textContent = "It can only have been " + SOLDIERS[who] + "."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (tries >= 2) { P.end(); P.status.textContent = "Holt shakes her head. \"Can't have been. Not by what they've told you.\""; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = "That doesn't fit everything they've said. One try left.";
+      };
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); };
+    });
+  }
+
+  // The knock: the Velvet Ledger's door answers a pattern of four sounds. Each wrong pattern, the
+  // doorkeeper taps back how many were right, and how many were right but in the wrong place.
+  function knockPuzzle() {
+    return new Promise(resolve => {
+      const SND_ = ["Knock", "Scrape", "Tap"];
+      const code = Array.from({ length: 4 }, () => d(3) - 1), guess = [0, 0, 0, 0], tries = 7;
+      const P = puzzleBox("The Velvet Door", "A plain door under the menagerie stairs, with a grille. Behind it, someone waits for the right four sounds: knocks, scrapes and taps. After each wrong try, they tap back how many sounds were right and in place (●) and how many were right but in the wrong place (○). " + tries + " tries before they stop listening.");
+      const row = el("div", "pctrl");
+      const bs = guess.map((g, i) => { const b = pbtn(SND_[0]); b.onclick = () => { guess[i] = (guess[i] + 1) % 3; b.textContent = SND_[guess[i]]; }; row.appendChild(b); return b; });
+      const hist = el("div", "rh-hist");
+      P.body.append(row, hist);
+      const go_ = pbtn("Make the sounds", "primary"), give = pbtn("Give up on the door");
+      P.ctrl.append(go_, give);
+      let used = 0;
+      P.status.textContent = "Tap each sound to change it.";
+      go_.onclick = () => {
+        used++;
+        const exact = guess.filter((g, i) => g === code[i]).length;
+        let any = 0; [0, 1, 2].forEach(v => { any += Math.min(guess.filter(g => g === v).length, code.filter(c => c === v).length); });
+        hist.appendChild(el("div", "", guess.map(g => SND_[g]).join(" · ") + "  →  " + "●".repeat(exact) + "○".repeat(any - exact)));
+        if (exact === 4) { P.end(); P.status.textContent = "A bolt slides back."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= tries) { P.end(); P.status.textContent = "The grille slides shut. It was " + code.map(c => SND_[c]).join(" · ") + "."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = (tries - used) + " tries left.";
+      };
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); };
+      void bs;
+    });
+  }
+
+  // The soil: each amendment moves the salt and the sourness of a terrace's soil. Spread a mix of up
+  // to four (each at most once) that brings both to zero. Two terraces, two tries each.
+  const AMEND = [["Gypsum", -2, 0], ["Lime", 0, -2], ["Bone meal", -1, -1], ["Pine needles", 0, 2], ["Fresh-water flush", -3, 1], ["Kelp ash", 1, -2], ["Charcoal", -1, 1]];
+  function soilPuzzle(name) {
+    return new Promise(resolve => {
+      let salt = 0, sour = 0;
+      for (let t = 0; t < 200; t++) {
+        const pick = [0, 1, 2, 3, 4, 5, 6].sort(() => Math.random() - .5).slice(0, 2 + d(2));
+        salt = -pick.reduce((s, k) => s + AMEND[k][1], 0); sour = -pick.reduce((s, k) => s + AMEND[k][2], 0);
+        if (salt >= 3 && (sour !== 0 || d(2) === 1)) break;
+      }
+      const P = puzzleBox("The Soil · " + name, "Sabine's test plot reads salt " + fmt(salt) + ", sourness " + fmt(sour) + ". Each amendment moves the reading: choose up to four, each once, to bring both to zero, then spread it on the terrace. Two tries.");
+      const on = new Set(), tab = el("div", "pctrl");
+      const read = el("div", "rh-read");
+      const bs = AMEND.map(([n, a, b], k) => { const x = pbtn(n + ' <small>salt ' + fmt(a) + ", sour " + fmt(b) + "</small>"); x.onclick = () => { if (on.has(k)) on.delete(k); else if (on.size < 4) on.add(k); draw(); }; tab.appendChild(x); return x; });
+      P.body.append(tab, read);
+      function draw() {
+        const s = salt + [...on].reduce((t, k) => t + AMEND[k][1], 0), r = sour + [...on].reduce((t, k) => t + AMEND[k][2], 0);
+        bs.forEach((x, k) => { x.classList.toggle("on", on.has(k)); x.setAttribute("aria-pressed", on.has(k)); });
+        read.textContent = "With this mix the plot would read: salt " + fmt(s) + ", sourness " + fmt(r) + " · " + on.size + " of 4 scoops";
+        return [s, r];
+      }
+      draw();
+      const go_ = pbtn("Spread it", "primary"), give = pbtn("Leave it to Sabine");
+      P.ctrl.append(go_, give);
+      let tries = 0;
+      go_.onclick = () => {
+        const [s, r] = draw();
+        tries++;
+        if (!s && !r) { P.end(); P.status.textContent = "The grey crust darkens, and the soil smells of soil again."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (tries >= 2) { P.end(); P.status.textContent = "The terrace drinks it and stays grey."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = "Not yet: the plot still reads salt " + fmt(s) + ", sourness " + fmt(r) + ". One try left.";
+      };
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); };
+    });
+  }
+
+  // The lead-letters: Bathyr signals are pressed into lead in letters shifted round the alphabet.
+  // Turn Tamsk's wheel until the message reads.
+  const LEAD_MSG = ["THE CRATES GO TO THE OLD SALT KILNS", "KEEL DIGS THE TRENCHES AT THE EBB"];
+  function leadPuzzle() {
+    return new Promise(resolve => {
+      const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const shifts = LEAD_MSG.map(() => 3 + d(20));
+      const enc = LEAD_MSG.map((m, i) => m.replace(/[A-Z]/g, ch => A[(A.indexOf(ch) + shifts[i]) % 26]));
+      const P = puzzleBox("The Lead-Letters", "Two Bathyr signal tablets, taken off the dead scout. The letters are your own alphabet, every one moved the same number of places along it, a different number on each tablet. Turn the wheel for each until it reads, then lock it. Each tablet can be locked wrong once.");
+      const turn = [0, 0], done = [false, false], miss = [0, 0];
+      const rows = enc.map((e, i) => {
+        const box = el("div", "rh-lead");
+        const txt = el("div", "rh-read"), ctl = el("div", "pctrl");
+        const back = pbtn("◀"), fwd = pbtn("▶"), lock = pbtn("Lock it", "primary");
+        back.setAttribute("aria-label", "Turn the wheel back"); fwd.setAttribute("aria-label", "Turn the wheel on");
+        back.onclick = () => { if (!done[i]) { turn[i] = (turn[i] + 25) % 26; draw(); } };
+        fwd.onclick = () => { if (!done[i]) { turn[i] = (turn[i] + 1) % 26; draw(); } };
+        lock.onclick = () => {
+          if (done[i]) return;
+          if (turn[i] === shifts[i]) { done[i] = true; [back, fwd, lock].forEach(b => b.disabled = true); txt.classList.add("ok"); }
+          else if (++miss[i] >= 2) { done[i] = "x"; [back, fwd, lock].forEach(b => b.disabled = true); turn[i] = shifts[i]; P.status.textContent = "That tablet's ruined: you pressed too hard and the lead smeared."; }
+          else P.status.textContent = "That isn't it. You can lock that tablet wrong only once more.";
+          draw(); finish();
+        };
+        ctl.append(back, fwd, lock);
+        box.append(el("div", "rh-enc", enc[i]), txt, ctl);
+        P.body.appendChild(box);
+        return txt;
+      });
+      function draw() { rows.forEach((t, i) => { t.textContent = (done[i] === "x" ? "(smeared)" : enc[i].replace(/[A-Z]/g, ch => A[(A.indexOf(ch) - turn[i] + 26) % 26])) + "  · wheel " + turn[i]; }); }
+      function finish() { if (done.every(Boolean)) { P.end(); setTimeout(() => resolve({ ok: done.every(x => x === true), n: done.filter(x => x === true).length }), 900); } }
+      const give = pbtn("Hand them to the Marshal's clerks");
+      P.ctrl.append(give);
+      give.onclick = () => { P.end(); resolve({ ok: false, forced: true, n: done.filter(x => x === true).length }); };
+      draw();
+    });
+  }
+
+  const BATHYR = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Bathyr", whoShort: "Bathyr",
+    hitWhy: "A Bathyr fist comes down on you like a dropped anvil.", miss: "The blow cracks the paving where you were standing.",
+    hitLine: "A Bathyr goes over like a felled wall, and you feel it through your boots." }, o);
+  // High on the terraces, the Bathyr get giddy: there's too little weight on them up here.
+  const giddy = (F) => Object.assign(F, { before: async (st) => { if (st.round === 1) { st.adv = true; await mech("They're giddy up here, a long way from the sea floor, and slow to turn: advantage on your first swing.", "loot"); } } });
+  const GARRISON = (o) => Object.assign({ ac: 12, atk: 3, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the soldiers", whoShort: "Soldiers",
+    hitWhy: "A spear-butt catches you in the ribs.", miss: "He swings wide; he's too hungry to swing straight.", hitLine: "He sits down hard in the gutter and stays there." }, o);
+  async function tyraSays(t) { if (rh().tyra) await say(t); }
+
+  // ---------- Part LVI: the Garden City ----------
+  async function partGardenCity() {
+    heading("LVI", "The Garden City");
+    light("dusk");
+    if (!S.rh) initRah();
+    const R = rh(), U = S.um || {};
+    await say(U.ending === "rise" ? "Ilo Brack's last cord goes with you up the drop-line, knotted round your wrist. Under two moons, the second pull is easy to feel once you know it: a faint heaviness on the west side of you, as if somebody were leaning on that shoulder." : "Ilo Brack's last cord goes with you up the drop-line, knotted round your wrist. With the Undermoon asleep, the second pull is easy to feel once you know it: a faint heaviness on the west side of you, as if somebody were leaning on that shoulder.");
+    await say("You follow it west. Past the dunes, past the last of the desert, through a week of dry hills and empty villages where the wells have gone salt. The people you meet on the road are all walking the other way, east, with their goods on their backs, and none of them will say what they're walking from.");
+    if (vaelricSpeaks()) await voice("\"West,\" Vaelric says. \"There's nothing west but the sea. The wardens never went there. We said the sea was somebody else's business.\" A pause. \"I think it's ours now.\"");
+    if (R.tyra) await say("Tyra walks with her hands in her pockets, kicking stones. \"I've never seen the sea,\" she says, as if it's a confession. \"Is it very big? Don't tell me. I want to see it.\"");
+    await say("On the eighth day you come over the last ridge, and there it is: the sea, grey-green and enormous, all the way to the edge of the world. And on the shore below you, a city made of gardens.");
+    await say("<b>Rahdaria</b> rises out of the coast in seven great stepped terraces, each one smaller than the one beneath, like a stair built for giants, and every step of it is a garden. Trees lean out over the edges. Vines fall down the walls in green curtains a hundred feet long. At the corners of every terrace, great wooden screws as tall as towers turn slowly in their housings, lifting river water from step to step, so that the whole city drips and shines.");
+    await say("Or it did. You can see from here that half the gardens are grey. Not brown, like a dry summer: grey, like ash, like something dead a long time. The grey runs down the terraces in long streaks, the way rust runs down a wall.");
+    await say("And all round the city, on the land side, from the beach in the north to the river in the south, there is a second city: a camp. Earthworks and trenches, cut deep. Long low pavilions of some dark stuff that isn't cloth. Engines on wheels, as tall as the city walls. And out in the bay, riding very low in the water, a fleet of black hulls with no sails and no oars at all.");
+    await say("A drum is beating somewhere in the camp. It's very low and very slow, and you feel it in the ground rather than hear it.");
+    if (S.ember) await say("Under your ribs, the Ember Root goes cold and still, the way a hare goes still in long grass.");
+    await say("There's no getting in by the gates. Ilo's cord points straight at the city, and so does everything in you that's ever been any good at this.");
+    const c = await choose([
+      { key: "boat", label: "Find a smuggler and go in by sea, after dark", tag: "Stealth DC 13" + (R.tyra ? " · Tyra knows the type" : "") },
+      { key: "aqua", label: "Climb in through the old aqueduct", tag: "Athletics DC 13", plain: true },
+      { key: "fight", label: "Go straight through their lines", tag: "a fight", plain: true }
+    ]);
+    if (c === "boat") {
+      await say("You find her in a fishing hamlet three miles down the coast: a big red-handed woman called Netta Shrike, with a boat, and debts, and no fear left at all. Twenty gold, she says. Or ten and a story, if it's a good one.");
+      const fee = Math.min(S.coins, 10); S.coins -= fee; renderSheet();
+      await say("You go in at the dark of the moon, oars muffled in rags, along the edge of the black fleet. Up close, the ships are made of something like slate, in great overlapping scales, and they sit so low that the sea slops over their decks. Nobody's on deck. Nobody rows. Something under the water is towing them.");
+      const r = await check({ label: "Stealth check (past the black fleet)", mod: 3, dc: 13, adv: R.tyra, cta: "Hold your breath" });
+      if (r.ok) await say("The boat slides through the gap in the harbour chain like a needle through cloth. Nobody sees. Netta spits over the side for luck.");
+      else { await say("Something knocks on the bottom of the boat. Three slow knocks, from underneath. Netta rows like a madwoman and you go through the gap in the chain with something scraping along the keel."); await hurt(1, 6, "bludgeoning", "You go over the side on the harbour steps and crack your knee on the stone."); }
+      R.hv.netta = true;
+    }
+    if (c === "aqua") {
+      await say("The old aqueduct comes down out of the hills on a hundred arches and goes in through the city wall at the height of the third terrace. The Bathyr have broken it a mile out, so it's dry, a long stone channel full of dead leaves, and they don't seem to think anyone would be mad enough to walk along the top of it in the wind.");
+      const r = await check({ label: "Athletics check (the broken arches)", mod: 3, dc: 13, cta: "Jump" });
+      if (r.ok) await say("You jump the broken arch with the camp lights spread out below you like a second sky, and land in the channel on the far side with dead leaves up to your shins.");
+      else await hurt(1, 8, "bludgeoning", "You make the jump. Most of you does. You hang off the edge of the channel by your fingers for a long time before you get a knee up.");
+      await say("Below you as you go, you watch a Bathyr work-gang dragging an engine through the mud by ropes. They're short, no taller than your shoulder, and wider than any man you've ever seen. Their skin is grey-blue and shines like wet slate. Twelve of them pull a thing that would need sixty horses.");
+    }
+    if (c === "fight") {
+      await say("You go at their lines at dawn, along the riverbank, where the trench is shallowest. Two of them are on the bank, and they turn to look at you.");
+      await say("They're short, no taller than your shoulder, and wider than any man you've ever seen: broad as doors, with arms like the trunks of young trees. Their skin is grey-blue and shines like wet slate, and their eyes are big and black, with a second clear lid that slides across when they blink. They don't wear armour. They don't need to. They don't carry swords either, only short hooked bars of dark metal.");
+      await say("They don't shout. One of them taps his bar twice on a stone, and the other nods.");
+      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr" }));
+      await say("You go into the river to get round the end of the trench, and it's only waist-deep, and they don't follow you. They stand on the bank and watch you go, with their black eyes, and one of them takes a step toward the water, and stops, as though the water were a wall.");
+    }
+    light("sun");
+    await say("Inside the walls, Rahdaria is starving.");
+    await say("You see it first in the quiet. A city this size should be loud. Rahdaria isn't. People move slowly in the streets, the way people move when they're saving something. On the Fourth Stair, which should be a market, a man is selling rats, fat grey harbour rats strung by their tails in braces of six, and people are queuing for them. Next to him, a woman is selling boiled leather: belts and boot-tops, cut into squares, simmered soft. Next to her, a boy is selling paste scraped off the backs of wallpaper.");
+    await say("In the Lower City there's a line down three streets to a bakery with a soldier on the door. Every person in it holds a little notched stick, a ration tally. One notch, one loaf, one day. The bread that comes out of the door is grey and heavy and small enough to close your hand round. People eat it in the street. They don't take it home.");
+    await say("Children fly kites off the top terrace, big square kites of oiled paper. You don't understand why anyone would fly kites in a siege, until you see one cut loose at the top of its flight and go sailing away east over the Bathyr camp, and you see the letter tied to its tail. People are writing to anyone at all, outside.");
+    await say("And a cart goes past you up the Stair with a sheet over it, and a hand hanging out from under the sheet, and nobody looks at it.");
+    if (vaelricSpeaks()) await voice("\"I've seen this before,\" Vaelric says quietly. \"Not here. Everywhere. It always looks the same.\"");
+    await say("You're in the city for less than an hour before the garrison picks you up. Four soldiers in grey cloaks, thin as rakes, with their spears held as though they weigh too much. \"You came in from outside,\" says their sergeant, a lean grey-haired woman with a broken nose. \"Nobody comes in from outside. The Steward will want to see you.\"", "voice");
+    await say("The <b>Steward's Hall</b> is on the sixth terrace, under a roof of glass gone green with age. In the middle of it, at a long table covered with ration lists, sits a tall woman in a gardener's apron, with dirt under her nails and a chain of office round her neck. She looks as if she hasn't slept in twelve days.");
+    await say("\"Nerys Aldane,\" she says. \"High Steward of Rahdaria, for what that's worth this week. Sit down. Sergeant Holt says you came in from outside. Through them.\" She looks at your axe. \"Nobody does that. So either you're one of them, or you're the most useful person I've met since they came.\"", "voice");
+    await say("Around the table sit three more of the Council of Terraces. A broad scarred man in a soldier's coat: <b>Marshal Dace Kerrow</b>, who holds the walls. A sharp grey woman with wet sleeves: <b>Odile Moorcant</b>, Master of Waters, who keeps the screws turning. And a soft, well-fed man in a velvet coat, who's the only person you've seen in Rahdaria who isn't thin: <b>Aurel Vantry</b>, Master of Granaries. He smiles at you. Nobody else does.");
+    await say("You tell them what you've seen: the camp, the fleet that rides too low, the people who don't fight in water. You tell them about Ilo Brack's cord, and the second pull in the west.");
+    await say("Nerys Aldane listens to all of it. Then she says: \"Twelve days ago, they came up out of the sea. We don't know who they are. They don't speak to us. They have no flag. They dug in round the land side, and their ships closed the bay, and three days later the gardens started to die, terrace by terrace, from the top down. Rahdaria has eighty thousand people, and the gardens fed every one of them. There's flour in the city for nine days. There's been flour in the city for nine days for the last six days.\" She doesn't smile. \"Do you see?\"", "voice");
+    await say("\"And now my own soldiers are taking bread off the lines, and somebody beat a boy half to death in Cistern Lane for a loaf, and there's a market under the old menagerie selling things nobody can find on the Stair, at prices nobody can pay.\" She takes something off her chain and pushes it across the table: a bronze seal, cut with an open eye. \"Rahdaria used to have an Inquirer. She died in the first week. I need someone who notices things. Be my Inquirer. Find out what's happening to my city. Then we'll see about the people outside it.\"", "voice");
+    await say("Vantry laughs softly. \"Steward, really. A stranger off the road.\"");
+    await say("\"Yes,\" says Nerys Aldane. \"That's rather the point.\"", "voice");
+    S.gear.push("seal"); renderSheet();
+    await mech("Gain <b>the Inquirer's Seal</b>. " + GEAR.seal.desc, "loot");
+    await say("She shows you how the old Inquirer worked: a casebook, a page for every question, and on every page, what you know and how you know it. \"Don't guess,\" she says. \"When you've got two good facts, you'll find the third is usually standing between them. And when you can't see it, stop looking straight at it.\" She taps the corner of her own eye. \"Look beside it. You'll learn.\"", "voice");
+    await mech("<b>Detective.</b> You have the <b>Inquirer's Eye</b>: +2 to Investigation and Insight in Rahdaria. You keep a <b>casebook</b> of seven cases, each with three clues to find. Two clues are enough to work a case out. Three times in Rahdaria, the Eye can strike out the wrong half of the answers when you do. A wrong answer costs you Standing, and the case goes cold until you find another clue.", "loot");
+    await say("She writes the seven questions on the first page herself, in a gardener's square hand:");
+    await say(CASES.map(C => "<b>" + C.id + ". " + C.name + ".</b> " + C.ask).join("<br>"));
+    await mech("<b>Hunger.</b> The city's hunger is " + R.hunger + " of 10, and rises every dawn. At 10 the city riots. Every way you find to feed it brings it down.");
+    await mech("<b>Standing.</b> Rahdaria doesn't know you yet. What you do for its people raises your Standing (and some things lower it). The higher it is, the less you pay at the Pressed Rose inn, the Brazier smithy and the stalls on the Stair: up to 25% off.");
+    await mech("<b>Time.</b> You have three days, of four watches each: Morning, Afternoon, Dusk and Night. Some places can only be done in daylight, and some only in the dark. Your casebook, the stalls and the smithy take no time.");
+    await say("\"Three days,\" says the Marshal. It's the first thing he's said. \"After that the flour's gone, and they'll know it, and they'll come over the walls.\"", "voice");
+    await say("You go out of the Steward's Hall into the long gold evening. Below you the seven terraces fall away to the sea, half green, half grey, and out in the bay, the black fleet sits in the water like a row of stones.");
+    await go("Go to work");
+  }
+
+  // ---------- the city: three days of four watches ----------
+  async function rhDays(lastDay) {
+    const R = rh();
+    while (R.day <= lastDay) {
+      while (R.watch < 4) {
+        const dark = R.watch >= 2;
+        const h = el("div", "part-head sub", '<span class="num">Day ' + R.day + " · " + WATCHES[R.watch] + "</span>");
+        scrollNext = true; add(h);
+        light(dark ? (R.watch === 2 ? "dusk" : "dark") : "sun");
+        if (R.watch === 0 && R.day > 1 && !R.hv["dawn" + R.day]) {
+          R.hv["dawn" + R.day] = true;
+          await say(R.day === 2 ? "Dawn comes up grey over the camp. The drum has beaten all night. In the Lower City the bread line starts forming before the bakery has lit its ovens." : "The third dawn. The bread is smaller today. The Marshal has doubled the guard on the bakeries, and the kites are flying off the top terrace again, and none of them are coming back.");
+          await hunger(1, "Another day of the siege.");
+          if (R.tyra && R.day === 2) await tyraRah();
+        }
+        let c;
+        for (;;) {
+          const v = R.hv;
+          c = await choose([
+            { key: "gardens", label: "The Hanging Gardens", tag: !v.gardens ? "Keeper Sabine Orr · the grey terraces" : "cure the blight", show: !dark && (!v.gardens || (solved(2) && !R.blight)) },
+            { key: "lower", label: "The Lower City and the bread line", tag: "the people", show: !v.lower },
+            { key: "garrison", label: "The garrison barracks", tag: "Marshal Kerrow · the grain store", show: !dark && !v.garrison },
+            { key: "wall", label: "The sea wall", tag: !v.wall ? "the prisoner, the drowned scout" : "Tamsk", show: !dark && (!v.wall || (!hasClue("c7c") && (solved(1) || R.tamsk === "kind"))) },
+            { key: "hall", label: "The Steward's Hall", tag: "the cistern keys", show: !dark && solved(2) && !hasClue("c6a") },
+            { key: "velvet", label: "Under the old menagerie", tag: v.velvet ? "the Velvet Ledger" : "a velvet-threaded coin", show: dark && hasClue("c5a") && !solved(5) && (!v.velvet || !hasClue("c5c") || !R.powder) },
+            { key: "lines", label: "Out to the Bathyr lines", tag: "scout their camp · Stealth DC 14", show: dark && !hasClue("c7b") },
+            { key: "search", label: "Search the council offices", tag: "Stealth DC 13", show: dark && (hasClue("c6a") || hasClue("c6b")) && !hasClue("c6c") },
+            { key: "fish", label: "Lower the harbour chain for the fishing boats", tag: "food", show: dark && v.wall && !R.fed.includes("fish") },
+            { key: "inn", label: "The Pressed Rose", tag: priceTag(6) + " · a bed, 2d6 + 2 HP, and talk", show: dark && S.coins >= rhPrice(6), plain: true },
+            { key: "doze", label: "Sleep in a doorway", tag: "1d4 HP", show: dark, plain: true },
+            { key: "walk", label: "Walk the terraces", tag: "1d4 HP · see who needs help", show: !dark, plain: true },
+            { key: "errands", label: "The casebook, the stalls, the smithy", tag: "no time passes", plain: true }
+          ]);
+          if (c !== "errands") break;
+          await rhErrands();
+        }
+        if (c === "gardens") await (R.hv.gardens ? cureBlight() : gardens());
+        if (c === "lower") await lowerCity();
+        if (c === "garrison") await garrison();
+        if (c === "wall") await seaWall();
+        if (c === "hall") await hallKeys();
+        if (c === "velvet") await velvet();
+        if (c === "lines") await bathyrLines();
+        if (c === "search") await councilSearch();
+        if (c === "fish") await fishing();
+        if (c === "inn") await pressedRose();
+        if (c === "doze") { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + d(4)); renderSheet(); await mech("You sleep sitting up in a doorway on the Fourth Stair with your axe across your knees, and a family you don't know sleeps round you. Regain " + (S.hp - b) + " HP.", "loot"); }
+        if (c === "walk") await walkTerraces();
+        R.watch++;
+        renderSheet();
+        checkpoint();
+      }
+      R.watch = 0; R.day++;
+    }
+  }
+
+  async function rhErrands() {
+    const R = rh();
+    for (;;) {
+      const c = await choose([
+        { key: "case", label: "Open your casebook", tag: CASES.filter(caseReady).length ? CASES.filter(caseReady).length + " ready to work out" : solvedN() + " of 7 solved" },
+        { key: "pot", label: "Buy a Draught of Mending at the stalls", tag: priceTag(8) + " · 10 HP", show: S.coins >= rhPrice(8), plain: true },
+        { key: "drink", label: "Drink a Draught of Mending", tag: S.potions + " left", show: S.potions > 0 && S.hp < S.maxHp, plain: true },
+        { key: "bread", label: "Buy bread for the line", tag: priceTag(10) + " · once a day", show: S.coins >= rhPrice(10) && R.hv.breadDay !== R.day2 * 10 + R.day, plain: true },
+        { key: "roofs", label: "Pay for seed-trays on the rooftops", tag: priceTag(12) + " · Sabine's idea", show: R.hv.gardens && !R.fed.includes("roofs") && S.coins >= rhPrice(12), plain: true },
+        { key: "smith", label: "The Brazier smithy", tag: "Mattie Gorse", plain: true },
+        { key: "done", label: "Back to it", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "case") await casebook();
+      if (c === "pot") { S.coins -= rhPrice(8); S.potions = (S.potions || 0) + 1; renderSheet(); await mech("A Draught of Mending from an apothecary's stall on the Stair, in a stoppered horn. " + rhPrice(8) + " gold.", "loot"); }
+      if (c === "drink") await drink("potion");
+      if (c === "bread") {
+        R.hv.breadDay = R.day2 * 10 + R.day; S.coins -= rhPrice(10); renderSheet();
+        await say("You buy every loaf the baker on the Third Stair can spare, at siege prices, and walk them down the bread line yourself, one to each person at the back, where the bread always runs out.");
+        await standing(3, "Nobody at the back of a bread line forgets the person who walked down it.");
+      }
+      if (c === "roofs") {
+        S.coins -= rhPrice(12); renderSheet();
+        await say("Sabine Orr's idea: every flat roof in the Lower City has sun on it and nothing growing. You pay for seed and boards, and by evening there are children carrying buckets of clean earth up every ladder in the Lower City. Beans and radishes. Fast things.");
+        await feed("roofs", 1, "In a week, the rooftops will feed a few thousand.");
+        await standing(3, "The Lower City is growing food on its roofs.");
+      }
+      if (c === "smith") await brazier();
+    }
+  }
+
+  async function brazier() {
+    const R = rh();
+    if (!R.hv.smith) { R.hv.smith = true; await say("The <b>Brazier</b> is a smithy cut into the back wall of the second terrace, where the forge smoke can go up a chimney through the garden above and come out between the vines. <b>Mattie Gorse</b> runs it: a short, bald, cheerful woman with burn-scarred forearms who's been making spearheads for twelve days straight and has run out of iron for them. \"Brought me anything to melt?\" she says. \"No? Then you'd better be buying.\"", "voice");
+      if (typeof findSchematic === "function") { await say("When she hears what you're for, she pulls a roll of oilcloth out from behind the bellows. \"My grandad's,\" she says. \"Drew it up for the last siege, a hundred years back. Never had to build it.\""); await findSchematic("gallows", "Mattie Gorse gives you her grandfather's plans."); } }
+    for (;;) {
+      const c = await choose([
+        { key: "scale", label: "A Rahdarian scale shirt", tag: priceTag(30) + " · +1 AC", show: !hasGear("scale") && S.coins >= rhPrice(30) },
+        { key: "whet", label: "Have her hone and balance the axe", tag: priceTag(15) + " · +1 axe damage", show: S.axe && !S.whet && S.coins >= rhPrice(15), plain: true },
+        { key: "done", label: "Leave the smithy", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "scale") { S.coins -= rhPrice(30); S.gear.push("scale"); renderSheet(); await mech("Mattie laces you into a shirt of overlapping bronze scales, each one cut from a melted-down garden ornament. \"That was a fountain,\" she says, tapping one. \"Bronze frog. Ugly thing.\" Gain the <b>Rahdarian Scale Shirt</b>: +1 AC. " + rhPrice(30) + " gold.", "loot"); }
+      if (c === "whet") { S.coins -= rhPrice(15); S.whet = true; renderSheet(); await mech("Mattie takes the axe, looks at it for a long while, and says, \"Who made this?\" She hones it on a wheel of garden stone and rebalances the haft with a ring of lead. Your axe does +1 damage. " + rhPrice(15) + " gold.", "loot"); }
+    }
+  }
+
+  async function walkTerraces() {
+    const R = rh(), b = S.hp;
+    S.hp = Math.min(S.maxHp, S.hp + d(4)); renderSheet();
+    const k = (R.hv.walks = (R.hv.walks || 0) + 1);
+    if (k === 1) {
+      await say("On the Fifth Terrace an old man is trying to dig a grave in a dead garden bed with a trowel, for his wife, because the carts are full. You take the trowel off him and dig it. It takes an hour. He holds the lantern and tells you about her the whole time.");
+      await standing(3, "On the Fifth Terrace they remember the stranger who dug the grave.");
+    } else if (k === 2) {
+      await say("A gang of boys has caught a cat on the Second Stair and is arguing about who gets which part. The cat is very thin, and so are the boys. You give them a coin each and they let it go, and it walks off with its tail up, as if it had paid them.");
+      S.coins = Math.max(0, S.coins - 3); renderSheet();
+      await standing(1, "Three gold, and a cat.");
+    } else await say("You walk the terraces in the sun with your hands in your pockets, and people nod to you now.");
+    await mech("Regain " + (S.hp - b) + " HP.", "loot");
+  }
+
+  async function pressedRose() {
+    const R = rh(), b = S.hp;
+    S.coins -= rhPrice(6);
+    S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet();
+    if (!R.hv.inn) { R.hv.inn = true; await say("The <b>Pressed Rose</b> is an inn on the Third Terrace with roses carved over the door and nothing at all to eat inside it. <b>Bel Amory</b>, who keeps it, still serves wine, because the cellars go back three hundred years and wine is the one thing in Rahdaria there's plenty of. People come in to drink it on empty stomachs and talk, because there's nothing else to do in the dark."); }
+    await mech("A bed under the eaves at the Pressed Rose, " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot");
+    if (!hasClue("c1c")) {
+      await say("At the next table, a big red-handed woman is drinking alone, steadily, like someone doing a job." + (R.hv.netta ? " It's Netta Shrike, who brought you in by sea." : " She's a fisherwife, from her hands.") + " \"I saw them come up,\" she says, to nobody in particular. \"Nobody believes me. Their ships. Two miles out, where the sea's deeper than any line I own. Came up out of the water, mast first, streaming, like something getting out of a bath.\"", "voice");
+      await clue("c1c");
+    } else if (!hasClue("c4c")) {
+      await say("Sergeant Brannagh Holt is drinking in the corner, alone, which in the Pressed Rose is hard. You sit down across from her. She doesn't look up for a while.");
+      await say("\"The boy in Cistern Lane,\" she says. \"It was one of mine. Must have been. Four of mine had the inner wall that night. One of them came off watch with a whole loaf under his cloak and his knuckles split, and not one of the other three will tell me which. They've all eaten off that loaf, I'd bet. That's how it is.\"", "voice");
+      await clue("c4c");
+    } else await say("You drink Bel Amory's wine and listen to the city talk in the dark. It mostly talks about bread.");
+  }
+
+  async function tyraRah() {
+    await say("Tyra finds you on the Fourth Stair at dawn with something wrapped in a cloth. It's a whole fish, a big silver one, still wet. \"Don't ask,\" she says. \"I'll tell you anyway: there's a man on the harbour steps who's been fishing off them at night with a line through a drain grate, and he had two.\" She looks at it. \"I paid. Mostly.\"");
+    const c = await choose([{ key: "give", label: "Give it to the bread line" }, { key: "eat", label: "Eat it together", tag: "2d4 HP", plain: true }]);
+    if (c === "give") { await say("You carry it down to the back of the bread line, and Tyra cuts it up with her knife into as many pieces as there are children, which isn't enough, and isn't nothing."); await standing(2, "A fish, between forty children."); if (S.tyra) await fond(1, "She watches you give it away, and doesn't say anything, but she walks closer after."); }
+    else { await say("You cook it on a roof over a fire of dead vine, and eat it with your fingers, and Tyra talks with her mouth full about all the things she's going to steal when this is over."); await heal(2, 4, "The first good meal in days."); }
+  }
+
+  // ---------- the places ----------
+  async function gardens() {
+    const R = rh();
+    R.hv.gardens = true;
+    await say("You climb up through the city to the <b>Hanging Gardens</b>. Close to, they're vast. Each terrace is a hundred yards deep, and every yard is planted: fruit trees, vines on frames, beds of grain and beans and gourds in long straight rows, terraced fishponds, beehives. The great screws stand at the corners, turning, and the water they lift runs out along a web of stone channels to every bed.");
+    await say("The top three terraces are grey. All of it. The trees stand with their grey leaves still on them, not fallen, as if they died too fast to drop them. The beehives are silent. On the surface of the fishponds there's a grey skin, like the skin on cold milk.");
+    await say("The Keeper of the Gardens is waiting for you among the dead trees: <b>Sabine Orr</b>, a tiny woman of seventy with a straw hat and a voice like a sergeant's. \"So you're the Inquirer,\" she says. \"Good. Find out what did this, and I'll find out how to undo it. Eat a grape first. They're the last on the terrace and I'm not going to waste them.\"", "voice");
+    await say("You kneel in a dead bed and pinch up the soil. There's a grey crust on it, fine as frost. It tastes of salt. Then bitter, and then heavier than salt, if a taste can be heavy. You drop a pinch in a cup of water from the channel and it doesn't dissolve. It sinks, and lies on the bottom like sand.");
+    await clue("c2a");
+    await say("Sabine shows you the old water plan of the gardens, cut into a slab of slate by the gardeners who built them: four cisterns at the top of the city, and channels running down from them to every terrace.");
+    const r = rhPuzXP(await cisternPuzzle());
+    if (r.ok) await clue("c2b");
+    else {
+      const f = await check({ label: "Investigation check (follow the grey crust up the channels)", mod: 2 + DET, dc: 14, cta: "Follow it" });
+      if (f.ok) { await say("You give up on the plan and follow the crust itself, up the channels on your knees, until you find where it starts."); await clue("c2b"); }
+      else await say("The channels cross and recross, and the crust is everywhere. You can't tell where it starts.");
+    }
+    await say("Sabine walks you to the edge of the top terrace before you go, and points. Below the city on the land side, over the Bathyr engine park, there's an outcrop of old quarry rock the size of a cathedral, with a split in it. \"The Lion's Brow,\" she says. \"Cracked on the seaward face since my grandmother's time. We always said it would come down one day.\" She points the other way, to the river, and a great iron wheel above it, rusted solid. \"And that's the Queen's Sluice. It would turn the whole river into the low ground, where their trenches are, if anyone remembered how to work it. My gardeners do. Three turns of the wheel, and you need people who know the old channels.\"", "voice");
+    R.f.brow = R.f.wheel = true;
+    await mech("You note it down: the <b>Lion's Brow</b> is cracked on its seaward face, and Sabine's gardeners know how to work <b>the Queen's Sluice</b>.");
+  }
+
+  async function cureBlight() {
+    const R = rh();
+    R.cure = R.cure || [false, false];
+    await say("You bring Sabine the answer: deep brine, poured into " + CISTERNS[R.cis[0]] + " and " + CISTERNS[R.cis[1]] + ". She closes her eyes. \"Brine,\" she says. \"Of course. Salt you can wash out. This stuff sits. We'll have to break it.\" She has her gardeners carry up every sack of anything in the city that might help: gypsum from the masons, lime from the plasterers, bone meal, charcoal, pine needles, kelp ash from the harbour.", "voice");
+    const T = ["the upper terraces", "the lower terraces"];
+    for (let i = 0; i < 2; i++) {
+      if (R.cure[i]) continue;
+      const r = rhPuzXP(await soilPuzzle(T[i]));
+      let ok = r.ok;
+      if (!ok) {
+        const f = await check({ label: "Wisdom check (trust Sabine's nose)" + (hasSkill("herb") ? " (Herbcraft)" : ""), mod: 2, dc: 13, adv: hasSkill("herb"), cta: "Mix it" });
+        ok = f.ok;
+        await say(ok ? "Sabine crumbles the soil and sniffs it, and says \"More bone,\" and \"less of that,\" and you do what she says, and the third mix takes." : "The mix doesn't take. The terrace stays grey. \"Tomorrow,\" Sabine says. \"We'll try again tomorrow.\"");
+      }
+      R.cure[i] = ok;
+    }
+    if (R.cure[0] && R.cure[1]) {
+      R.blight = true; renderSheet();
+      await say("It takes the gardeners all afternoon to spread it, and all night for the screws to wash it down. In the morning, the grey on the top terrace has gone dark and wet, and the soil smells like soil. By the next day there's green on the bean frames: not new leaves, not yet, just a green flush in the stems, like a blush.");
+      await say("Sabine fills a phial from the first clean channel and presses it into your hand. \"Sweet water,\" she says. \"Brine can't sit where that's been. Keep it.\" Then she sits down in a bed of mud and cries, very briefly, the way a sergeant would.");
+      S.gear.push("sweet"); renderSheet();
+      await mech("Gain <b>the Sweetwater Phial</b>. " + GEAR.sweet.desc, "loot");
+      await feed("blight", 3, "The blight is broken. The gardens will feed the city again, slowly.");
+      await standing(12, "The whole city can see the green coming back on the terraces.");
+    } else await mech("The blight is only half broken. Come back to the Hanging Gardens to finish it.", "hurt");
+  }
+
+  async function lowerCity() {
+    const R = rh();
+    R.hv.lower = true;
+    light("sun");
+    await say("The <b>Lower City</b> is the old part of Rahdaria, down by the harbour, where the gardens are smallest and the people are poorest. The streets are narrow and steep and full of washing lines, and nobody's washing anything.");
+    await say("At the bakery on Cistern Lane the bread line is three hundred long. You're halfway down it when a flour cart comes round the corner, with a hungry-looking driver and two of the bakers' boys pushing, and four soldiers in garrison grey step out in front of it.");
+    await say("\"Quartermaster's order,\" says the biggest of them. \"Garrison requisition.\" He puts his spear across the shafts. The line goes very still.");
+    const c = await choose([
+      { key: "stop", label: "Stop them", tag: "Intimidation DC 13 · the seal helps" },
+      { key: "fight", label: "Fight them for it", tag: "four starving soldiers", plain: true },
+      { key: "watch", label: "Watch, and remember their faces", plain: true }
+    ]);
+    if (c === "stop") {
+      const r = await check({ label: "Intimidation check (the Inquirer's seal)", mod: 4, dc: 13, cta: "Hold up the seal" });
+      if (r.ok) { await say("You hold up the seal with the open eye on it, and say your name, loudly, and ask them for theirs. They look at each other. They let go of the cart and walk away fast, without their names."); await standing(4, "The bread line saw the Inquirer stop the soldiers."); }
+      else { await say("\"Never heard of you,\" the big one says, and they take the cart."); }
+    }
+    if (c === "fight") {
+      await hkFight(GARRISON({ name: "Garrison soldiers", heads: 3, unit: "soldier|soldiers" }));
+      await say("They go down easy. They hadn't eaten in days. You stand over them in the street and feel worse than you have about any fight in a long time.");
+      await standing(2, "The bread line saw you take the cart back. Some of them saw you knock down three men too hungry to stand up straight.");
+    }
+    if (c === "watch") await say("They take the cart. Nobody in the line says anything. You watch which way it goes: up, toward the barracks.");
+    await say("Afterwards, a widow in a black shawl, Hanna Loy, catches your sleeve. \"Third time this week,\" she says. \"Always 'quartermaster's order'. Always garrison grey. Ask the quartermaster where it goes, Inquirer. It doesn't go to the walls. My son's on the walls, and he's thinner than me.\"", "voice");
+    await clue("c3a");
+    await say("Above the bakery, in two rooms, lives the baker's family. The boy, Nim, is eleven, with a bandage round his head and one eye swollen shut. He tells you about it in a whisper, while his mother holds his hand: he was taking a loaf to his grandmother at the second bell of the night, the long way round by Cistern Lane, and a soldier on watch stepped out of a doorway and took it off him, and then kept hitting him after he'd let go of it.");
+    await say("\"I didn't see his face,\" Nim says. \"Only the cloak. And his boots.\" He thinks. \"He was standing in Cistern Lane, by the cistern. He'd been there a long time. There were bread crumbs on the ground where he'd been.\"", "voice");
+    await clue("c4a");
+    await say("On your way out, a woman pushes past you in the stairwell and something rings on the step: a coin, clipped half away, with a thread of red velvet through the hole. You hold it up. She looks at it, and at you, and at the seal. \"Under the menagerie,\" she says, very fast. \"At night. Knock right, or they won't open.\" And she's gone.");
+    await clue("c5a");
+  }
+
+  async function garrison() {
+    const R = rh();
+    R.hv.garrison = true;
+    await say("The garrison barracks are on the second terrace, behind the walls on the land side. Half the soldiers are asleep on the floors in their cloaks to save the strength it takes to stand. <b>Marshal Dace Kerrow</b> receives you in a room with a map of the walls on every wall.");
+    await say("\"I don't like you,\" he says. \"That's nothing personal. I don't like anyone the Steward likes this week. What do you want?\"", "voice");
+    await say("You want the grain ledger and the watch rota. He laughs, without much in it, and sends for both. \"My quartermaster keeps the ledger,\" he says. \"Ludo Fenwick. He's a good man with a number. My sergeants keep the rota.\" He looks at you hard. \"If one of my men beat that boy, I'll hang him myself. If it's lies, I'll hang you.\"", "voice");
+    const r = rhPuzXP(await ledgerPuzzle());
+    if (r.ok) await clue("c3b");
+    else {
+      const f = await check({ label: "Investigation check (add it up again, slowly)", mod: 2 + DET, dc: 14, cta: "Add it up" });
+      if (f.ok) { await say("You go through it a third time with your finger on every line, and it comes out."); await clue("c3b"); }
+      else await say("The columns swim. Somebody who wanted to hide something hid it well.");
+    }
+    await say("Sergeant Brannagh Holt brings the rota herself. It's been torn in half, and the bottom half is gone. \"It happens,\" she says, flatly. \"Rats.\" But she's brought the four soldiers who had the inner wall that night, too, and stands them in a row, and lets you ask.");
+    const t = rhPuzXP(await rotaPuzzle());
+    if (t.ok) await clue("c4b");
+    else {
+      const f = await check({ label: "Insight check (watch them while they lie)", mod: 2 + DET, dc: 14, cta: "Watch" });
+      if (f.ok) { await say("You ask them all the same question again, slowly, one by one, and watch their hands. Only one of them hides his."); await clue("c4b"); }
+      else await say("They're all too tired and too hungry to lie well, and that makes it harder, not easier.");
+    }
+  }
+
+  async function seaWall() {
+    const R = rh();
+    if (R.hv.wall) return tamskAgain();
+    R.hv.wall = true;
+    await say("The <b>sea wall</b> runs round the harbour on the west side of the city, broad enough to drive a cart along, with the harbour chain stretched across the mouth below it, as thick as your waist. From up here you can see the whole black fleet, close: thirty hulls of grey scaled slate, sitting in the water like a row of whales.");
+    await say("On the wall by the harbour tower, under a sheet, there's a body. A Bathyr scout, who came over the wall three nights ago with a hooked bar and fell off it into the harbour when the guard pushed him. The divers brought him up yesterday.");
+    await say("\"Took four of us and the winch,\" the old diver says. \"He went down like an anchor. Didn't even try to swim. Didn't kick. Just stood on the bottom and looked up at us, and drowned.\" He pulls back the sheet. The Bathyr's skin is grey-blue and cold. You press a thumb into his arm and it's like pressing slate. His flesh is twice as heavy as it should be.", "voice");
+    await clue("c1a");
+    await say("In the harbour tower, in a cell meant for drunks, they're holding a prisoner: a young Bathyr, no taller than a child but broad as a barrel, chained to the floor by a ring. His name, scratched on the wall in a careful hand, is <b>Tamsk</b>. He's been learning your letters from the guards' dice-scores. He watches you come in with his black eyes, and the clear lid slides across them, and back.");
+    if (vaelricSpeaks()) await voice("\"He's frightened,\" Vaelric says. \"Of the sky, I think. Look how he keeps his eyes on the floor.\"");
+    const c = await choose([
+      { key: "kind", label: "Sit down with him, and share your bread", tag: "Persuasion DC 12 · slower, and he'll remember" },
+      { key: "rough", label: "Make him talk", tag: "Intimidation · quick", plain: true }
+    ]);
+    if (c === "rough") {
+      R.tamsk = "rough";
+      await say("You haul him up by the chain and lean on him, and he's strong enough to break your arm and doesn't, and that tells you something too. He talks. He talks in a low rumbling voice, slowly, like stones turning in a river.");
+      await say("\"Our sky is water,\" he says. \"Over everything. Very far up. And at the bottom of the world, a light. Lying on the ground. It holds the sky up off us.\" He shuts his eyes. \"Not any more. Not well.\"", "voice");
+      await clue("c1b");
+    } else {
+      const r = await check({ label: "Persuasion check (patience)", mod: 2, dc: 12, cta: "Wait" });
+      if (r.ok) {
+        R.tamsk = "kind";
+        await say("You sit on the floor across from him and break your bread in half and push half across. He looks at it for a long time. Then he eats it, very carefully, crumb by crumb, the way people eat who have learned not to waste anything.");
+        await say("\"Our sky is water,\" he says at last, in a low rumbling voice, like stones turning in a river. \"Over everything. Very far up. Fish go over, sometimes, like birds. And at the bottom of the world, a light. The Drowned Light. Lying on the ground, in a hollow. It holds the sky up off us.\" He shuts his eyes. \"Not any more. Not well. The sky comes down a little more every year, and now every month. Something changed, far east. Something under your land.\"", "voice");
+        await clue("c1b");
+        await say("He looks up at the window, and away again, fast. \"And your sky is too high,\" he says. \"Nothing holds you down here. On your high places we are drunk. Dizzy. We fall over. The Generals don't say so.\"", "voice");
+        R.f.giddy = true;
+        await mech("You note it: up high, the Bathyr are giddy. On the upper terraces, you'll have the advantage of them.");
+      } else await say("He eats the bread. He doesn't say a word. But he watches you go, and the clear lids don't slide across his eyes once.");
+      if (!r.ok) R.tamsk = "kind";
+    }
+    await say("The Marshal's clerks give you what they took off the drowned scout: two little tablets of lead, as long as your finger, pressed with rows of letters. Your letters, but in an order that makes no sense. Tamsk looks at them and says nothing.");
+    const t = rhPuzXP(await leadPuzzle());
+    if (t.n >= 1) {
+      if (t.ok) { S.gear.push("signal"); renderSheet(); await mech("Gain <b>the Lead-Letter Wheel</b>: two lead discs you cut and scratched to read their letters. " + GEAR.signal.desc, "loot"); }
+      await clue("c7a");
+    } else {
+      const f = await check({ label: "Investigation check (count the letters)", mod: 2 + DET, dc: 14, cta: "Count" });
+      if (f.ok) { await say("You count which letter comes up most, the way the old Inquirer's book says to, and guess it's an E, and the rest comes."); await clue("c7a"); }
+      else await say("The letters stay letters.");
+    }
+  }
+  async function tamskAgain() {
+    const R = rh();
+    await say("Tamsk is sitting with his back to the cell wall, where he can't see the window. He looks up when you come in.");
+    if (R.tamsk === "kind" && !hasClue("c1b")) {
+      await say("He's kept a crust from yesterday's bread. He holds it up. Then he talks.");
+      await say("\"Our sky is water,\" he says, in a low rumbling voice, like stones turning in a river. \"And at the bottom of the world, a light. The Drowned Light. It holds the sky up off us. Not any more. Not well.\"", "voice");
+      await clue("c1b");
+      R.f.giddy = true;
+      await mech("And something else: on your high places, the Bathyr are giddy. On the upper terraces, you'll have the advantage of them.");
+    }
+    if (!hasClue("c7c")) {
+      if (R.tamsk === "rough") await say("He doesn't want to talk to you. You make him, again. He tells you about the Generals in short hard words, looking at the floor.");
+      else await say("He tells you about the Generals because you ask him to. He seems to think you'll be fair about it.");
+      await say("\"Three,\" he says. \"Keel, the Anchor: he has the soldiers. He wants your city. Whole. To live in, when the sky comes down. Thole, the Siege-Wright: he has the engines and the crates. He wants to go home and doesn't know how to say it. And Sault. The Brinewife.\" His voice goes lower. \"She brought brine up from the deep in wagons. She said: empty the city, and there's room. She found a man inside your walls with a key. Fat man. Soft. Smelled of grain.\"", "voice");
+      await clue("c7c");
+    }
+    if (R.tamsk === "kind" && !hasGear("knot")) {
+      await say("When you get up to go, he holds out his hand, closed, and opens it. In it is a little tablet of lead, pressed on both sides. \"My name,\" he says. \"My mother's name. Show it to my people when they're beaten, and they'll know there's a way to be taken alive.\" He looks away. \"Most of them are only diggers. Like me.\"", "voice");
+      S.gear.push("knot"); renderSheet();
+      await mech("Gain <b>Tamsk's Pressing</b>. " + GEAR.knot.desc, "loot");
+    }
+  }
+
+  async function hallKeys() {
+    await say("Odile Moorcant, Master of Waters, takes you to the cistern grates herself. Four locks on every grate, and four keys to open them: hers, the Steward's, the Marshal's, and the Master of Granaries'. \"And mine is here,\" she says, pulling it out of her bodice on a cord, \"and has been here every hour of the siege, and I've slept in my boots.\"", "voice");
+    await say("You check the other three. The Steward's is on her chain. The Marshal's is in his strongbox, and the dust on the lid hasn't been touched. Aurel Vantry's, his clerk tells you, is in the Master's office, where it always is.");
+    await clue("c6a");
+  }
+
+  async function councilSearch() {
+    const R = rh();
+    light("dark");
+    await say("The council offices are along a gallery under the green glass roof of the Steward's Hall. At night there's a guard at the far end, and a lamp, and nobody else.");
+    const r = await check({ label: "Stealth check (the gallery)", mod: 3, dc: 13, adv: R.tyra, cta: "Go" });
+    if (!r.ok) { await say("A clerk of Vantry's, working late, comes out of a side door with a candle and finds you with your hand on the latch. You talk your way out of it, more or less. By morning everyone knows the Inquirer was creeping round the council offices in the dark."); await standing(-3, "Gossip."); return; }
+    if (R.tyra) await say("Tyra does the lock on Vantry's door in the time it takes you to look over your shoulder, and holds it open for you with a little bow.");
+    await say("Aurel Vantry's office is the only warm room in Rahdaria. There's a bowl of dried figs on his desk. In the back of a drawer, under a false bottom, there's a letter: a sheet of lead, pressed with rows of letters like the scout's tablets. Under it, wrapped in a handkerchief, there's a cistern key. Its teeth are crusted with something grey that sinks when you breathe on it.");
+    await clue("c6c");
+  }
+
+  async function velvet() {
+    const R = rh();
+    light("dark");
+    if (!R.hv.velvet) {
+      await say("The old royal menagerie sits in its own walled garden on the First Terrace: a ring of empty cages round a dry pool, and a sign that still says THE QUEEN'S BEASTS. Under the keepers' stairs, there's a door with a grille.");
+      const r = rhPuzXP(await knockPuzzle());
+      let ok = r.ok;
+      if (!ok) {
+        const c = await choose([{ key: "talk", label: "Talk your way in", tag: "Persuasion DC 14" }, { key: "pay", label: "Pay the tout on the stair", tag: "10 gold", show: S.coins >= 10, plain: true }]);
+        if (c === "pay") { S.coins -= 10; renderSheet(); ok = true; await say("A boy on the stairs, who's been watching you get it wrong, does the knock for you for ten gold, grinning."); }
+        else { const f = await check({ label: "Persuasion check (through the grille)", mod: 2, dc: 14, cta: "Talk" }); ok = f.ok; if (!ok) await say("The grille slides shut. You'll have to come back another night."); }
+      }
+      if (!ok) return;
+      R.hv.velvet = true;
+      await say("Inside, under the menagerie, it's warm, and it smells of food. You'd forgotten. The old cages have been fitted with shelves, and on the shelves there's flour, oil, salt pork, cheese in wax, dried fruit, honey. There are people here buying it: people in good coats, who pay in gold, and people in rags, who pay with rings and teeth and children's shoes. The prices are written on slates. A loaf of real bread is twelve gold.");
+      await say("The keeper of it all sits at a table in the middle, a small neat woman with grey hair and an apron, writing in a ledger bound in red velvet. People call her the Saltwife. You hear her real name from a man at the next cage: Ysolde Crane, who kept the Queen's beasts for thirty years.");
+      await clue("c5b");
+      await say("On the shelves by the door, under a sign that says GREY SEA SALT, there are sacks of something grey and heavy. You pinch some. It's bitter, and it sinks in water. The sacks are stitched with a granary mark: a sheaf of wheat in a circle.");
+      await clue("c2c");
+      await say("And on the next shelf, flour sacks stamped with the garrison's tower, still tied with the quartermaster's tally-cord.");
+      await clue("c3c");
+    } else await say("You go back down under the menagerie, and the doorkeeper lets you in without the knock this time, and looks at the seal on your chest and doesn't say anything.");
+    for (;;) {
+      const c = await choose([
+        { key: "ledger", label: "Get a look at the Saltwife's ledger", tag: R.tyra ? "Tyra can do it" : "Sleight of Hand DC 14", show: !hasClue("c5c") },
+        { key: "salt", label: "Buy a jar of Bathyr blasting-salt", tag: "25 gold · it brings down stone", show: !R.powder && S.coins >= 25, plain: true },
+        { key: "elixir", label: "Buy an Elixir of Health", tag: "30 gold · 20 HP · no discount down here", show: S.coins >= 30, plain: true },
+        { key: "done", label: "Leave", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "salt") {
+        R.powder = true; S.coins -= 25; renderSheet();
+        await mech("A sealed jar of grey crystals that hiss when the air's damp. \"Came over the walls with a deserter,\" the stall-keeper says. \"They use it to crack rock on the sea floor. Don't drop it.\" 25 gold.", "loot");
+      }
+      if (c === "elixir") { S.coins -= 30; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("An Elixir of Health, red and thick. 30 gold. The Saltwife doesn't do discounts.", "loot"); }
+      if (c === "ledger") {
+        let ok = R.tyra;
+        if (R.tyra) await say("Tyra drifts past the Saltwife's table, knocks a honey-pot off it, apologises beautifully, and comes back to you with the red velvet ledger under her coat. \"Two minutes,\" she says. \"Then I put it back. That's the trick: always put it back.\"");
+        else { const r = await check({ label: "Sleight of Hand check (the red ledger)", mod: 3, dc: 14, cta: "Lift it" }); ok = r.ok; if (!ok) await say("The Saltwife puts her hand flat on the ledger without looking up. \"No,\" she says, pleasantly."); }
+        if (ok) { await say("You read it in the dark behind a cage. Most of the names are small: a sack here, a cheese there. One name isn't. Every three days, a cartload of grain, from a supplier who signs himself <b>A.V.</b>, and pays in nothing, and is paid in gold."); await clue("c5c"); }
+        if (!ok) return;
+      }
+    }
+  }
+
+  async function bathyrLines() {
+    const R = rh();
+    light("dark");
+    await say("You go out over the land wall on a rope at the second bell, and down into the dark between the walls and the Bathyr trenches.");
+    const r = await check({ label: "Stealth check (into their camp)", mod: 3, dc: 14, adv: R.tyra, cta: "Creep" });
+    if (!r.ok) {
+      await say("A Bathyr picket taps twice on a stone right beside you, and a second answers from behind.");
+      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr" }));
+      await say("You've seen enough by the time you run for the wall. You get a good look at it while you run.");
+    }
+    await say("Their camp is quiet. They don't sing, or drink, or gamble. They sit in rows in the dark outside their long pavilions, very still, with their heads on one side, as if listening. Every so often one of them taps a stone, and others answer, all down the lines: they're talking.");
+    await say("There are three great pavilions in the middle of the camp, each with its own sign pressed in lead over the door. Round the first, a thousand soldiers sleep in rows on the bare ground: that's Keel's. Round the second, the engines stand, tarred and dripping, and a lean Bathyr with a measuring-rod walks between them all night: that's Thole's. Round the third stand wagons, sealed, and a smell comes off them like the bottom of a harbour at low tide: Sault's.");
+    await say("You note the rest. At the third bell of night, their watch changes, all at once, and for a long minute everyone's walking and nobody's looking. And at dusk, when you came out, the wind turned and came in off the sea, steady, blowing east, across the camp and away from the city.");
+    await clue("c7b");
+    R.f.dusk = R.f.bell = true;
+  }
+
+  async function fishing() {
+    const R = rh();
+    light("dark");
+    await say("The harbourmaster agrees to lower the chain for an hour after midnight, if you're there when it happens. Forty fishing boats are waiting in the inner harbour with their crews, oars muffled.");
+    await say("The chain goes down into the black water with a long rattle, and the boats go out through the gap like a flock of birds. And while they're out, you stand on the chain-tower and watch the water, because something knocked on Netta Shrike's boat from underneath.");
+    const r = await check({ label: "Perception check (watch the water)", mod: 3, dc: 13, cta: "Watch" });
+    if (r.ok) {
+      await say("You see them before they reach the chain: dark shapes on the harbour bottom, walking. Bathyr, in helmets like iron bells, walking along the sea floor toward the chain to cut it. You shout down, and the tower crew drop the great harbour stones on them, one, two, three, and the shapes stop walking.");
+    } else {
+      await say("You don't see them until they're climbing the chain itself: Bathyr, out of the water, in helmets like iron bells, streaming, hooked bars in their teeth.");
+      await hkFight(BATHYR({ name: "Bathyr bottom-walkers", heads: 2, unit: "bottom-walker|bottom-walkers", ac: 13 }));
+    }
+    await say("The boats come back at dawn, low in the water with fish. Herring, and mackerel, and big silver things nobody can name. They gut them on the harbour steps and there's a line to the harbour from the Fourth Stair before the first fire's lit.");
+    await feed("fish", 2, "The fishing boats got out and back.");
+    await standing(5, "The harbour knows who stood on the chain-tower.");
+  }
+
+  // Hooks into the trap, weather and sabotage layer when this build has it; harmless when it doesn't.
+  const rhWx = async (k, o) => { if (typeof wxSet === "function") await wxSet(k, o || {}); };
+
+  // ---------- Parts LVII and LVIII: the investigation ----------
+  async function partRahDays1() {
+    heading("LVII", "The First Days");
+    if (!S.rh) initRah();
+    const R = rh();
+    R.phase = "inv";
+    if (R.day > 2) return;
+    await rhWx("heat");
+    await rhDays(2);
+  }
+  async function partRahDays2() {
+    heading("LVIII", "The Third Day");
+    if (!S.rh) initRah();
+    const R = rh();
+    if (R.day < 3) { R.day = 3; R.watch = 0; }
+    await rhWx("fog");
+    if (R.day <= 3) await rhDays(3);
+  }
+
+  // ---------- Part LIX: the Council of Terraces ----------
+  async function partCouncil() {
+    heading("LIX", "The Council of Terraces");
+    const R = rh();
+    light("sun");
+    if (!R.hv.dawn4) { R.hv.dawn4 = true; await hunger(1, "The fourth dawn, and the flour is gone."); }
+    await say("On the morning of the fourth day, Nerys Aldane calls the Council of Terraces to the Steward's Hall, and the people of Rahdaria come up the Stair behind them until the hall is full and the terrace outside it is full and there are people standing in the dead gardens to hear.");
+    await say(S.name ? "\"The Inquirer,\" says the High Steward, \"" + esc(S.name) + ", will tell us what they've found.\" There's a murmur at the name: it's been on every terrace for three days." : "\"The Inquirer,\" says the High Steward, \"will tell us what she's found. Or he. Or they.\" She looks at you. \"I never asked.\" There's a laugh from the back, the first laugh you've heard in Rahdaria.", "voice");
+    const done = CASES.filter(C => solved(C.id) && C.id !== 6).map(C => C.name);
+    await say(done.length ? "You go through it case by case: " + done.join(", ") + ". The hall is very quiet." : "You haven't much to tell them. The hall is very quiet.");
+    const ready = CASES.filter(caseReady);
+    if (ready.length) {
+      await mech("You can still work out " + ready.length + (ready.length > 1 ? " cases" : " case") + " before you get to the last one.");
+      await casebook();
+    }
+    await say("And then you come to the last page. <i>Is there a traitor on the Council of Terraces?</i> Aurel Vantry is sitting at the long table with his soft hands folded on his velvet stomach, looking interested.");
+    const n = CASES[5].keys.filter(hasClue).length;
+    const c = await choose([
+      { key: "accuse", label: "Lay it before the Council", tag: n + " of 3 clues" + (n < 2 ? " · you'd be guessing" : "") },
+      { key: "silent", label: "Say you don't know yet", tag: "the case stays open", plain: true }
+    ]);
+    if (c === "accuse") {
+      const ok = await deduce(CASES[5]);
+      if (ok) {
+        R.solved[6] = true; R.vantry = "caught"; renderSheet();
+        if (typeof xpGain === "function") xpGain(150);
+        await mech("Case solved: <b>The Key to the Cisterns</b>.", "loot");
+        await say("You put it on the table one thing at a time: the four keys, and which three never left their owners. The letters A.V. in the Saltwife's ledger, against cartloads of grain. " + (hasClue("c6c") ? "And from a drawer in his own office, a letter pressed in Bathyr lead, and his cistern key, with the brine still in its teeth." : "And the grey crust on the cistern grates, which only a key could have let in."));
+        await say("Aurel Vantry doesn't run. He looks round the hall at all the thin faces, and for a moment he looks honestly puzzled. \"They were going to win anyway,\" he says. \"Anyone could see that. I was going to get some of us out. Some of us who mattered. The Brinewife promised.\"", "voice");
+        await say("Nerys Aldane has him taken down to the cells. Then she sends Odile Moorcant and forty gardeners to the address in the Saltwife's ledger, and they come back at noon with the news that the Master of Granaries had a granary of his own: a whole warehouse behind the harbour, sealed, with grain in it to the rafters.");
+        await feed("vantry", 2, "Vantry's hoard goes out to the bread lines.");
+        await standing(12, "The whole city heard you name him.");
+      } else {
+        R.vantry = "free"; R.wrongAny = true; R.wrong[6] = 1;
+        await say("You say it, and the hall goes very quiet in a different way. Then Aurel Vantry laughs, softly, and gets up, and says that he's sure the Inquirer means well, and that he's going to go home now and lie down.");
+        await standing(-10, "You named the wrong answer in front of the whole city.");
+      }
+    } else { R.vantry = "free"; await say("You say you don't know yet. Aurel Vantry smiles at you and nods, as if you'd done something sensible."); }
+    if (R.vantry === "free") {
+      await say("That night, Aurel Vantry goes over the land wall on a rope, with a bag of gold and the Steward's water-plans. In the morning his office is empty except for a bowl of figs.");
+      R.f.vantryOut = true;
+    }
+    await say("At noon on the fourth day, the Bathyr drum stops.");
+    await say("The silence is so sudden that people on the terraces put their hands over their ears. Then, all round the city, the Bathyr begin to move. Their engines roll forward on the land side and stop a bowshot from the walls, and a second line of earthworks goes up in front of the first, and the black fleet in the bay closes up hull to hull until it's a wall across the harbour mouth. Up the river, a work-gang dams the stream, and the great screws on the terraces groan and slow and stand still.");
+    await rhWx("wind", { quake: true, say: "The ground shudders as their engines roll forward." });
+    await say("By dusk, Rahdaria is sealed. Nothing goes in, and nothing comes out. Even the kites come down.");
+    if (R.f.vantryOut) await say("The Marshal comes off the walls with his face grey. \"They're digging at the old sally-port,\" he says. \"The one nobody uses. Somebody told them where it is.\"", "voice");
+    await say("Nerys Aldane stands on the top terrace with you and the Marshal and looks at it all for a long time. \"We'll starve behind our walls,\" she says, \"or we break it.\" She turns to you. \"You know them now, Inquirer. Better than any of us. Tell us how.\"", "voice");
+    await mech("<b>The blockade.</b> The Bathyr have sealed Rahdaria. It lifts when you've beaten their <b>hundred soldiers</b>, destroyed their <b>hundred crates</b> of equipment, and defeated their <b>three Generals</b>. You have two days of three watches before they come over the walls. Sorties take soldiers, raids take crates, and a General can be brought to battle when you've cut away what protects them. You can plan <b>one sabotage mission</b>. The city goes hungrier every day the blockade holds.");
+    R.phase = "siege"; R.watch = 0; R.day2 = 1;
+    R.militia = rhTier(R.rep)[2] >= 15 ? 8 : rhTier(R.rep)[2] >= 10 ? 6 : rhTier(R.rep)[2] >= 5 ? 4 : 2;
+    if (hasGear("knot") && solved(1)) {
+      await say("That evening, you walk out along the land wall holding Tamsk's lead pressing up where the Bathyr can see it, and Tamsk walks with you, in chains, calling down to them in his low stone voice. It takes an hour. Then, one by one, a dozen Bathyr diggers come out of the trenches with their hands open, and walk to the river, and stand in it up to their knees, where none of their own will follow them.");
+      R.sol -= 12; renderSheet();
+      await mech("Twelve Bathyr give themselves up. Soldiers: " + R.sol + ".", "loot");
+    }
+    renderSheet();
+    await go("Break the blockade");
+  }
+
+  // ---------- Part LX: the Blockade ----------
+  const genOpen = (k) => { const R = rh(); return !R.gens.includes(k) && (k === "keel" ? R.sol <= 60 : k === "thole" ? R.crates <= 60 : solved(7) || R.blight); };
+  async function partBlockade() {
+    heading("LX", "The Blockade");
+    const R = rh();
+    R.phase = "siege";
+    await rhWx("wind");
+    while (R.day2 <= 2) {
+      while (R.watch < 3) {
+        const night = R.watch === 2;
+        const h = el("div", "part-head sub", '<span class="num">Blockade day ' + R.day2 + " · " + B_WATCHES[R.watch] + "</span>");
+        scrollNext = true; add(h);
+        light(night ? "dark" : "sun");
+        if (R.watch === 0 && R.day2 === 2 && !R.hv.bdawn2) { R.hv.bdawn2 = true; await hunger(R.blight ? 1 : 2, R.blight ? "The terraces are green again, but nothing comes in from outside." : "Nothing comes in, and the gardens are still grey."); }
+        let c;
+        for (;;) {
+          c = await choose([
+            { key: "sortie", label: "Lead a sortie from the land gate", tag: "fight · soldiers −" + sortieN(), show: !night && R.sol > 0 },
+            { key: "raid", label: "Raid their supply road", tag: "Stealth DC 13 · crates −" + (15 + (hasGear("vkey") ? 5 : 0)) + "ish", show: night && R.crates > 0 },
+            { key: "sabo", label: "The sabotage mission", tag: "once · plan it well", show: !R.branch },
+            { key: "keel", label: "Bring General Keel to battle", tag: "the Anchor", show: genOpen("keel") },
+            { key: "thole", label: "Bring General Thole to battle", tag: "the Siege-Wright", show: genOpen("thole") },
+            { key: "sault", label: "Bring General Sault to battle", tag: "the Brinewife", show: genOpen("sault") },
+            { key: "trap", label: "Raise a twelve-foot trap on the land road", tag: "Trapcraft · once · soldiers", show: night && !R.hv.trap && R.sol > 0 && typeof trapSite === "function" && hasSkill("trap"), plain: true },
+            { key: "rally", label: "Rally the terraces", tag: "Standing 40+ · once · more militia", show: !R.hv.rally && R.rep >= 40, plain: true },
+            { key: "inn", label: "Sleep at the Pressed Rose", tag: priceTag(6) + " · 2d6 + 2 HP", show: night && S.coins >= rhPrice(6), plain: true },
+            { key: "wall", label: "Rest on the walls", tag: "1d4 HP", plain: true },
+            { key: "errands", label: "The casebook, the stalls, the smithy", tag: "no time passes", plain: true }
+          ]);
+          if (c !== "errands") break;
+          await rhErrands();
+        }
+        if (c === "sortie") await sortie();
+        if (c === "raid") await supplyRaid();
+        if (c === "sabo") await sabotageMission();
+        if (c === "keel" || c === "thole" || c === "sault") await generalFight(c, false);
+        if (c === "rally") await rally();
+        if (c === "trap") await rhTrap();
+        if (c === "inn") { const b = S.hp; S.coins -= rhPrice(6); S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet(); await mech("Bel Amory keeps your bed under the eaves. " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot"); }
+        if (c === "wall") { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + d(4)); renderSheet(); await mech("You sleep in a guard-niche on the wall with the Bathyr drum in the stones under you. Regain " + (S.hp - b) + " HP.", "loot"); }
+        if (R.militia >= 6 && R.sol > 0) { const k = Math.min(R.sol, 4); R.sol -= k; renderSheet(); await mech("The terrace militia harry the trenches with slings and dropped stones from the high walls: " + k + " Bathyr down. Soldiers: " + R.sol + ".", "loot"); }
+        if (R.crates > 40 && !R.hv["bomb" + R.day2 + R.watch]) {
+          R.hv["bomb" + R.day2 + R.watch] = true;
+          await say("Their engines throw. A boulder of black sea-stone comes over the wall and goes through the roof of a house on the Second Terrace like a fist through paper.");
+          const r = await check({ label: "Dexterity save (the next one)", mod: 2, dc: 12, cta: "Throw yourself flat" });
+          if (!r.ok) await hurt(1, 6, "bludgeoning", "The next one hits the wall-walk beside you and the stone splinters.");
+        }
+        R.watch++;
+        renderSheet();
+        checkpoint();
+        if (R.sol <= 0 && R.crates <= 0 && R.gens.length >= 3) break;
+      }
+      if (R.sol <= 0 && R.crates <= 0 && R.gens.length >= 3) break;
+      R.watch = 0; R.day2++;
+    }
+    R.early = R.sol <= 0 && R.crates <= 0 && R.gens.length >= 3;
+    renderSheet();
+    await go(R.early ? "Watch them go" : "To the walls");
+  }
+  async function rhTrap() {
+    const R = rh();
+    await say("Mattie Gorse and twenty of the garrison carry timber out of the land gate after dark, beams from the dead orchards and the menagerie's cage-bars, to the place on the land road where the Bathyr come up out of their trenches in the morning.");
+    const r = await trapSite({ where: "the land road", vs: "troops", count: 20, supply: { metal: 4, cloth: 2 } });
+    if (!r) { await say("You stand looking at the timber for a long time, and can't make it into anything that would hold. You carry it back in before dawn."); return; }
+    R.hv.trap = true;
+    const n = Math.min(R.sol, r.downed || 0);
+    R.sol -= n; renderSheet();
+    await mech("The trap takes " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", n ? "loot" : "hurt");
+  }
+  const sortieN = () => 12 + rh().militia + (hasGear("horn") ? 4 : 0);
+  async function sortie() {
+    const R = rh();
+    await say("You go out of the land gate at the head of " + (R.militia >= 6 ? "a crowd of terrace folk with slings and garden forks, and " : "") + "a company of the garrison, thin and grey and furious, straight at the nearest trench.");
+    if (hasGear("horn")) await say("You blow Kerrow's horn as you go, and the garrison roars behind you, and you hear it taken up all along the walls.");
+    const F = BATHYR({ name: "Bathyr wedge", heads: 3, unit: "Bathyr|Bathyr" });
+    if (R.f.giddy) { giddy(F); await say("You lead them up the old ramp onto the Lion's Shoulder, the high ground by the gate, and they follow you up it, and up there, they sway."); }
+    if (typeof sabotage === "function") F.terrain = ["the gatehouse crane", "large"];
+    await hkFight(F);
+    const n = Math.min(R.sol, sortieN() + d(4));
+    R.sol -= n; renderSheet();
+    await say("Behind you, the garrison breaks the trench line and drives them back to the second earthwork before the Bathyr engines turn on them and they have to run for the gate.");
+    await mech("The sortie takes " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", "loot");
+    if (hasGear("knot")) { const k = Math.min(R.sol, 3); R.sol -= k; renderSheet(); if (k) await mech("Three more see Tamsk's pressing and walk to the river with their hands open. Soldiers: " + R.sol + ".", "loot"); }
+  }
+  async function supplyRaid() {
+    const R = rh();
+    light("dark");
+    await say(hasGear("vkey") ? "You go out under the walls through the old menagerie tunnels with the Velvet Key, twenty of the garrison behind you, and come up in a dry well a mile behind the Bathyr camp, right beside their supply road." : "You go over the south wall on ropes with twenty of the garrison and work your way round the end of the trenches in the dark, to the supply road.");
+    const r = await check({ label: "Stealth check (the wagon line)", mod: 3, dc: 13, adv: hasGear("vkey"), cta: "Go" });
+    if (!r.ok) {
+      await say("The wagon guards are awake.");
+      await hkFight(BATHYR({ name: "Wagon guards", heads: 2, unit: "Bathyr|Bathyr" }));
+    }
+    const n = Math.min(R.crates, (r.ok ? 15 : 9) + d(6) + (hasGear("vkey") ? 5 : 0));
+    R.crates -= n; renderSheet();
+    await say("You cut the traces, tip the wagons into the ditch, and stave in what you can't carry. The crates are full of strange things: rope that sinks, hooked bars, bell-helmets, jars of blasting-salt, dried fish as hard as wood.");
+    await mech("Crates destroyed: " + n + ". Crates left: " + R.crates + ".", "loot");
+  }
+  async function rally() {
+    const R = rh();
+    R.hv.rally = true;
+    await say("You stand on the steps of the Steward's Hall with Nerys Aldane, and say it plainly to everybody who'll listen: the Bathyr can't swim, they get dizzy up high, and they're only people, and they're as frightened as you are. And then you ask who'll come up on the walls.");
+    await say("They come. Gardeners with forks, bakers with peels, the rat-seller from the Fourth Stair with a sling. Old women who carry buckets of hot sand up the ladders to tip on whoever comes too close. Nim the baker's boy comes with a basket of stones as big as his fists.");
+    R.militia += 4; renderSheet();
+    await mech("The terraces rise: +4 to every sortie, and the militia harry the Bathyr every watch.", "loot");
+    await feed("rally", 1, "People who would have hoarded share, now that they're all on the walls together.");
+  }
+
+  // ---------- the sabotage mission: three branches, each planned from what you've found ----------
+  const RH_NOTES = {
+    swim: "The Bathyr can't swim. They sink like stones.",
+    giddy: "On high ground, the Bathyr are giddy.",
+    cisterns: "The brine went into the city through the cisterns. The cistern gates in the Lower City connect them to the river channels.",
+    brow: "The Lion's Brow is cracked on its seaward face.",
+    wheel: "Sabine's gardeners know how to work the Queen's Sluice: three turns of the great wheel.",
+    kilns: "The crates are kept in the old salt kilns, south of the camp.",
+    ebb: "Keel's diggers are down in the trenches at the ebb.",
+    dusk: "At dusk, the wind comes in off the sea and blows east, away from the city, across their camp.",
+    bell: "Their watch changes at the third bell of night, and for a long minute nobody is looking.",
+    tunnels: "The old menagerie tunnels run out under the walls."
+  };
+  const BRANCHES = {
+    flood: { name: "The Flood", lead: "Open the Queen's Sluice and turn the river into their trenches.",
+      qs: [{ q: "When do you open the sluice?", a: ["At the ebb, while Keel's diggers are down in the trenches", "At the flood tide, while they're asleep", "At noon, in the heat", "Tonight, at once"], right: 0 },
+        { q: "What must be done first?", a: ["Close the Lower City's cistern gates, or the river comes through the city too", "Ring the bells so the city knows", "Nothing: speed is everything", "Open the harbour chain"], right: 0 },
+        { q: "Who turns the great wheel?", a: ["Sabine Orr's gardeners, who know the old channels", "Marshal Kerrow's soldiers", "You, alone", "The Saltwife's people"], right: 0 }],
+      check: { label: "Strength check (the rusted wheel)", stat: 3 }, sol: 50, crates: 20 },
+    fire: { name: "The Fire", lead: "Burn their crates where they're kept.",
+      qs: [{ q: "Where are the crates?", a: ["Aboard the ships in the bay", "In the old salt kilns south of their camp", "In General Keel's pavilion", "Buried on the beach"], right: 1 },
+        { q: "When do you light it?", a: ["At dawn, when the wind blows off the land", "At noon, in the still air", "At dusk, when the wind comes off the sea and blows away from the city", "At midnight"], right: 2 },
+        { q: "How do you get there?", a: ["Over the wall on ropes", "Through the menagerie tunnels, under the walls", "Straight out of the land gate", "Round by boat"], right: 1 }],
+      check: { label: "Stealth check (the kilns)", stat: 3 }, sol: 15, crates: 60 },
+    fall: { name: "The Fall", lead: "Bring the Lion's Brow down on their engine park.",
+      qs: [{ q: "Where do you cut the Lion's Brow?", a: ["On the landward face", "At the top", "On the seaward face, along the old crack", "At the foot"], right: 2 },
+        { q: "What do you bring it down with?", a: ["Lamp oil and fire", "Picks and crowbars", "Bathyr blasting-salt", "A great many people pushing"], right: 2, need: "powder" },
+        { q: "When?", a: ["At dawn", "At dusk", "At the third bell of night, when their watch changes", "At noon"], right: 2 }],
+      check: { label: "Athletics check (up the Brow)", stat: 3 }, sol: 30, crates: 35 }
+  };
+  async function sabotageMission() {
+    const R = rh();
+    await say("You lay it out on the Marshal's table in the barracks, with a map of the walls and the camp, and Nerys Aldane, and Sabine Orr, and Kerrow, and whoever else is still standing.");
+    const known = Object.keys(RH_NOTES).filter(k => R.f[k]);
+    await say("Your notes:<br>" + (known.length ? known.map(k => "· " + RH_NOTES[k]).join("<br>") : "· Not much. You'll be guessing."));
+    await say("There are three ways to hurt them, and you've only the people and the time for one.");
+    const b = await choose(Object.entries(BRANCHES).map(([k, B], i) => ({ key: k, label: B.name, tag: B.lead, plain: i > 0 })));
+    const B = BRANCHES[b];
+    R.branch = b;
+    let right = 0;
+    for (const q of B.qs) {
+      await say("<b>" + q.q + "</b>");
+      const c = await choose(q.a.map((a, i) => ({ key: "a" + i, label: a, plain: true })));
+      let ok = c === "a" + q.right;
+      if (ok && q.need === "powder" && !R.powder) { ok = false; await say("Good idea. You haven't got any. The Velvet Ledger had a jar, if you'd bought it."); }
+      if (ok) right++;
+    }
+    R.plan = right;
+    if (typeof xpGain === "function") xpGain(20 * right);
+    await mech("Your plan: " + right + " of 3 right." + (right === 3 ? " It's a good plan." : right === 2 ? " It'll mostly work." : " Kerrow looks at it and doesn't say anything, which is worse."), right >= 2 ? "loot" : "hurt");
+    let step = right, ok = true;
+    if (b === "fall" && typeof sabotage === "function") {
+      await say("You climb the Lion's Brow in the dark and feel along the old crack for the stone that holds it all up.");
+      const sr = await sabotage({ what: "the Lion's Brow", size: "huge", vs: "troops", count: 40 });
+      ok = sr.hit;
+      if (sr.found && step < 3) step++;
+    } else ok = (await check({ label: B.check.label, mod: B.check.stat, dc: 13, adv: right === 3, cta: "Do it" })).ok;
+    if (!ok) { step = Math.max(0, step - 1); await hurt(2, 6, "bludgeoning", "It goes wrong in the dark, the way things do."); }
+    const mult = [0.25, 0.5, 0.75, 1][step];
+    if (b === "flood") {
+      await rhWx("rain", { quake: true, say: "Rain comes in off the sea, and the riverbank trembles under your feet." });
+      await say("At the ebb, with Keel's diggers deep in the trenches, Sabine's gardeners put their shoulders to the Queen's wheel. It doesn't move. Then it does, with a shriek like a hurt animal, one turn, two, three, and the old sluice gate lifts out of the riverbed for the first time in a hundred years.");
+      await say("The river goes where it was always meant to go: down the old channels into the low ground. Into the trenches. It doesn't come fast. It comes steady, brown, knee-deep, waist-deep, and the Bathyr in the trenches try to climb out of them, and the sides are mud, and they're too heavy.");
+      await say("You watch it from the wall. You make yourself watch it. Some of them get out. Many don't. They don't shout. They tap on the stones, on the trench walls, on each other, all the way down.");
+      if (R.tamsk === "kind") await say("Later, Tamsk asks you how many. You tell him. He nods slowly, and turns his face to the wall.");
+    }
+    if (b === "fire") {
+      await rhWx("wind");
+      await say("At dusk, " + (step >= 2 ? "you come up out of the menagerie tunnels a hundred yards from the salt kilns, with twenty of the garrison carrying lamp-oil" : "you come at the kilns the long way round, and get there late") + ". The old kilns are long brick vaults, and they're stacked to the roof with Bathyr crates: rope and bars and bell-helms and blasting-salt and food.");
+      await say("You light it. The sea wind takes it, and blows it east, through the vaults and out of their far ends and on across the camp, away from the city. The blasting-salt goes up in the third vault with a sound like the sky splitting, and the brick roofs come down, and the fire runs on into the wagon park.");
+      await say("From the walls, the whole city watches the Bathyr camp burn, and somebody starts to cheer, and then everyone does.");
+    }
+    if (b === "fall") {
+      await rhWx("storm", { quake: true, say: "A storm comes in off the sea, and the ground under the Brow is uneasy." });
+      await say("You climb the Lion's Brow in the dark with the jar of blasting-salt in a sling on your back, like carrying a sleeping animal. At the old crack on the seaward face you pack the crystals in, and run the fuse, and wait for the third bell.");
+      await say("When it comes, their watch changes, and the whole camp is walking and nobody's looking up. You light the fuse. It goes up the crack like a lit thread. And the Lion's Brow, which has looked over the coast since before there was a city, leans forward very slowly, like an old man bowing, and comes down on the Bathyr engine park.");
+      await say("The ground shakes as far as the harbour. On the terraces, the dead leaves fall at last off the grey trees, all at once, like a dark snow.");
+    }
+    const s = Math.min(R.sol, Math.round(B.sol * mult)), k = Math.min(R.crates, Math.round(B.crates * mult));
+    R.sol -= s; R.crates -= k; renderSheet();
+    if (b === "fall") R.f.tholeHurt = step >= 2;
+    await mech(B.name + ": " + s + " Bathyr soldiers and " + k + " crates gone. Soldiers: " + R.sol + ". Crates: " + R.crates + "." + (b === "fall" && step >= 2 ? " General Thole was in the engine park: he's hurt." : ""), "loot");
+    await standing(6, "The city saw it.");
+  }
+
+  // ---------- the Generals ----------
+  async function generalFight(k, last) {
+    const R = rh();
+    const extra = last ? Math.floor(R.sol / 8) + Math.floor(R.crates / 8) + (R.f.vantryOut ? 4 : 0) : 0;
+    if (k === "keel") {
+      await say(last ? "Ghorrad Keel comes over the wall at the head of his last soldiers, and you meet him on the wall-walk." : "You go out under a flag and challenge Ghorrad Keel in front of his own lines, the way Tamsk said they used to settle things on the sea floor: one to one, until one of you sits down.");
+      await say("<b>General Ghorrad Keel, the Anchor</b>, is the biggest Bathyr you've seen: not tall, but broad as a cart, grey-blue and scarred white across the chest. He carries an anchor. An actual anchor, iron, with a broken chain on it, and swings it one-handed.");
+      await say("\"You're the one who reads,\" he says, slowly, in your own tongue. \"The city is good. Strong walls. High. I wanted it whole.\" He lifts the anchor. \"I'll have it some other way.\"", "voice");
+      const F = BATHYR({ name: GENERALS.keel, hp: 34 + extra, ac: 15, atk: 6, n: 1, s: 10, who: "General Keel", whoShort: "Keel", hitWhy: "The anchor comes round like the end of the world.", miss: "The anchor bites a yard of stone out of the wall.", hitLine: "Keel grunts and shifts his feet, like a wall settling." });
+      if (R.f.giddy) giddy(F);
+      F.turn = async (st) => {
+        if (st.round % 3) return;
+        await say("Keel plants his feet and drops the anchor straight down, and the whole wall jumps under you.");
+        if (hasGear("signal")) { await mech("You know the signal: he taps the haft twice before he does it. You're already off the ground when it lands.", "loot"); st.evade = false; return "done"; }
+        const r = await check({ label: "Strength save (keep your feet)", mod: 2, dc: 14, cta: "Brace" });
+        if (!r.ok) await hurt(2, 6, "bludgeoning", "You go down on the stones and the anchor follows you.");
+        st.evade = false; return "done";
+      };
+      if (typeof sabotage === "function") F.terrain = ["the wall's old hoarding", "large"];
+      await hkFight(F);
+      await say("Keel sits down. He does it slowly, on the stones, and puts the anchor across his knees, and taps it twice, and every Bathyr who can hear him stops fighting.");
+      if (!last) { const n = Math.min(R.sol, 30); R.sol -= n; await mech("General Keel has yielded, and his soldiers lose their heart for it: " + n + " of them lay down their bars. Soldiers: " + R.sol + ".", "loot"); }
+    }
+    if (k === "thole") {
+      await say(last ? "Dunmere Thole comes at the walls behind his last great engine, the one they call the Lung, and you go out to meet it." : "You go out at night to his engine park with twenty of the garrison and find Dunmere Thole sitting on the wheel of his last great engine, the one they call the Lung, as if he's been waiting for you.");
+      await say("<b>General Dunmere Thole, the Siege-Wright</b>, is old and thin for a Bathyr, with a measuring-rod in one hand and a hammer in the other. His engine is a great black thing on six wheels, made of slate and iron, and it breathes in and out through leather lungs, and throws stones.");
+      await say("\"I built ships that walk on the bottom of the sea,\" he says. \"I built houses that don't leak when the sky comes down. I didn't come here to build this.\" He gets down off the wheel. \"But I'm good at it.\"", "voice");
+      const F = BATHYR({ name: GENERALS.thole, hp: (R.f.tholeHurt ? 20 : 30) + extra, ac: 16, atk: 5, n: 1, s: 8, who: "General Thole", whoShort: "Thole", hitWhy: "The hammer comes down on your shoulder.", miss: "The hammer rings off the engine's flank.", hitLine: "Thole staggers back against his engine." });
+      F.before = async (st) => {
+        if (st.round % 2 || st.jammed) return;
+        await say("The Lung breathes in, with a long groan of leather, and throws.");
+        const r = await check({ label: "Dexterity save (out of the way)", mod: 2, dc: 13, cta: "Dive" });
+        if (!r.ok) await hurt(2, 6, "bludgeoning", "A stone the size of a pig catches you on the way past.");
+      };
+      F.extra = (st) => st.jammed ? [] : [{ key: "jam", label: "Jam the Lung", tag: "Strength DC 13 · it stops throwing", plain: true }];
+      F.onExtra = async (c, st) => {
+        if (c !== "jam") return;
+        const r = await check({ label: "Strength check (a bar in the wheel)", mod: 3, dc: 13, cta: "Heave" });
+        if (r.ok) { st.jammed = true; await say("You ram a Bathyr bar through the spokes of the Lung's great wheel, and it shudders and groans and stops breathing."); }
+        else await say("The bar bends. The Lung breathes in.");
+      };
+      if (typeof sabotage === "function") F.terrain = ["the Lung's own throwing-arm", "large"];
+      await hkFight(F);
+      await say("Thole sits down on the ground with his back to his engine. \"Good,\" he says, to nobody. \"Good. I'm tired.\"");
+      if (!last) { const n = Math.min(R.crates, 30); R.crates -= n; await mech("With Thole beaten, his engine-crews break up their own stores rather than haul them: " + n + " crates. Crates: " + R.crates + ".", "loot"); }
+    }
+    if (k === "sault") {
+      await say(last ? "Ysmay Sault comes last of all, with her brine wagons, up the river road to the gate." : "You find the Brinewife's wagons by the smell, on the river road, and the Brinewife with them.");
+      await say("<b>General Ysmay Sault, the Brinewife</b>, is small and broad and sleek, with her grey skin crusted white at the joints like a rock at low tide. She wears gloves of thick leather to the shoulder, and carries a long iron ladle and a cask on her back, and when she dips the ladle in the cask, it comes out smoking.");
+      await say("\"Eighty thousand,\" she says. \"Eighty thousand of you in our new country. Where would we put you?\" She sounds honestly curious. \"Empty is simpler. The man with the key understood.\"", "voice");
+      const F = BATHYR({ name: GENERALS.sault, hp: 28 + extra, ac: 13, atk: 5, n: 1, s: 8, type: "acid", who: "General Sault", whoShort: "Sault", hitWhy: "The ladle comes round and the brine comes with it.", miss: "The brine hisses on the stones.", hitLine: "Sault hisses, and the crust at her joints cracks." });
+      F.turn = async (st) => {
+        const hit = await foeSwing(F, st);
+        if (hit) { if (hasGear("sweet")) await mech("The brine runs off you like rain off oilcloth: Sabine's sweet water.", "loot"); else await hurt(1, 4, "acid", "The brine sits in the cut and burns."); }
+        st.evade = false; return "done";
+      };
+      await hkFight(F);
+      await say("Sault goes down on her back in the road, and her own cask splits open beside her, and the brine runs out into the river and sinks, a long grey ribbon on the bottom, and is gone.");
+      if (!last) { const a = Math.min(R.sol, 10), b = Math.min(R.crates, 10); R.sol -= a; R.crates -= b; await mech("Her brine wagons go into the river. Soldiers: " + R.sol + ". Crates: " + R.crates + ".", "loot"); await hunger(-1, "With the Brinewife gone, the gardeners stop being afraid of the water."); }
+    }
+    R.gens.push(k); renderSheet();
+  }
+
+  // ---------- Part LXI: the Last Assault ----------
+  async function partLastAssault() {
+    const R = rh();
+    heading("LXI", R.early ? "The Envoy" : "The Last Assault");
+    if (R.early) {
+      light("sun");
+      await say("On the morning of the third day of the blockade, there's no drum. There's no anything. When the sun comes up, the Bathyr camp is quiet, and the black fleet has drawn back from the harbour mouth, and a single Bathyr is walking up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
+      await say("The Marshal looks at you. \"That's never happened,\" he says. \"Not once, in twelve days.\"", "voice");
+      grant("rhearly");
+      if (typeof xpGain === "function") xpGain(300);
+    } else {
+      light("dusk");
+      await rhWx("storm", { quake: true, say: "Their engines and their drums together shake the walls." });
+      await say("They come at dawn on the third day, with everything that's left. The drum beats fast for the first time, and the ground shakes with it, and they come up out of the trenches in a grey wave, with ladders and hooks and the last of their engines rolling behind.");
+      await say("Rahdaria meets them on the walls. Kerrow's garrison, thin as rakes. The terrace folk with forks and slings. Old women tipping buckets of hot sand onto the ladders. Children running baskets of stones along the wall-walk. It's the oldest kind of fight there is, and the city knows how to do it, in its bones, the way cities always have.");
+      if (R.f.vantryOut) await say("They come through the old sally-port, the one Vantry told them about, and for an hour there's fighting in the streets of the First Terrace.");
+      const left = ["keel", "thole", "sault"].filter(k => !R.gens.includes(k));
+      if (left.length) {
+        await mech("Every Bathyr soldier and crate still in the field stands behind " + (left.length > 1 ? "their Generals" : "their last General") + ": they're stronger for it.");
+        for (const k of left) await generalFight(k, true);
+      } else {
+        await say("They have no Generals left to lead them, and they come anyway. You meet the last of them at the top of the ladders on the Third Terrace, where they're giddy and slow.");
+        await hkFight(giddy(BATHYR({ name: "The last of the Bathyr", heads: 3, unit: "Bathyr|Bathyr" })));
+      }
+      await say("By noon it's over. The Bathyr still on the walls sit down where they are, one after another, and tap their bars on the stones, and stop. The ones in the trenches walk down to the river and stand in it. The engines stand where they've stopped, smoking.");
+      await say("And then, in the afternoon, a single Bathyr walks up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
+    }
+    R.sol = 0; R.crates = 0; ["keel", "thole", "sault"].forEach(k => { if (!R.gens.includes(k)) R.gens.push(k); }); renderSheet();
+    await say("He's very old, and walks with a stick, and has a cord of sea-shells round his neck, each one pressed with a name. " + (R.tamsk ? "Tamsk, brought up from the cells, looks at him and goes grey. \"The Speaker for the Deep,\" he whispers." : "He says he is the Speaker for the Deep.") + " He talks to Nerys Aldane in the gate for an hour, in slow careful words of your own tongue, with long silences, and you stand at her shoulder, and listen.");
+    await say("\"Our sky is falling,\" he says. \"Not quickly. A hand's breadth a year, and now a hand's breadth a month. The Light that holds it up is going out. It went cold when something under your land changed. We felt it. Everything at the bottom of the sea felt it.\" He looks at you. At the axe. \"We came up because there was nowhere else to go. The Generals thought they could take a country. I thought we should ask for one.\" He spreads his old hands. \"I'm asking.\"", "voice");
+    if (S.um && S.um.ending === "rise") await say("\"Two moons,\" he says, turning his face up to the sky, where the second one hangs pale in the afternoon. \"That one is new. It pulls our sea. Every night it pulls it a little harder.\"", "voice");
+    else if (S.um && S.um.ending) await say("\"Something under your land went to sleep,\" he says. \"They pulled against each other, the two Lights. One let go. Now the other is falling in.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"Two lights fell,\" Vaelric says. \"The wardens caught one, and nailed it down. Nobody caught the other. It's been holding up a sea for a thousand years, alone.\" A long pause. \"Of course it's tired.\"");
+    await go("Go back up into the city");
+  }
+
+  // ---------- Part LXII: the Gardens of Rahdaria ----------
+  const RH_OBJ = () => {
+    const R = rh();
+    return [
+      [CASES.every(C => solved(C.id)), "Solve all seven cases (" + solvedN() + " of 7)"],
+      [R.blight, "End the blight in the Hanging Gardens"],
+      [R.hunger <= 3, "Feed the city: Hunger 3 or less (" + R.hunger + ")"],
+      [solved(3), "Stop the soldiers taking the city's food"],
+      [solved(4) && R.c4end !== "let", "Bring the soldier who beat Nim to justice"],
+      [solved(5) && R.bm !== "cut", "Deal with the black market"],
+      [R.vantry === "caught", "Unmask the traitor on the Council"],
+      [R.early, "Lift the blockade yourself, before the last assault"]
+    ];
+  };
+  async function partRahEnd() {
+    heading("LXII", "The Gardens of Rahdaria");
+    const R = rh();
+    light("sun");
+    await rhWx("heat");
+    await say("They open the gates on the fifth day. Farmers come in from the hills with carts. The fishing boats go out past the black fleet, which lies at anchor in the bay and lets them. Up the river, the garrison breaks the Bathyr dam, and the great screws on the terraces groan and turn and lift, and the water comes back to the gardens.");
+    await say(R.blight ? "On the upper terraces, where the grey was, the green has come back in the stems first, then the leaves. Sabine Orr walks the rows with her hat in her hand. \"Beans in three weeks,\" she says. \"Grain by the autumn. Fruit next year, if the trees remember how.\"" : "The upper terraces are still grey. Sabine Orr walks the dead rows with her hat in her hand, and the gardeners start, very slowly, to dig them out by hand, to the bedrock, and carry the poisoned earth down to the sea in baskets. \"Two years,\" she says. \"Three.\"");
+    await say("Nerys Aldane gives the Speaker for the Deep the old salt flats north of the city, where nothing grows and the sea comes in twice a day, and four hundred Bathyr walk up out of the bay that week, carrying their children, and their dead in lead boxes, and stand on the dry land and look up at the sky and fall over, and laugh, which nobody in Rahdaria knew they could do.");
+    if (R.tamsk === "kind") await say("Tamsk goes with them. He comes to find you first, and presses his forehead to the back of your hand, which Bathyr do, you learn, for family.");
+    if (R.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits with you on the edge of the top terrace with her boots hanging over seven terraces of garden and the sea. \"Forty-four keys,\" she says. \"And a city.\" She bumps your shoulder. \"You're getting very hard to keep up with.\"" : "Tyra spends the whole of the fifth day standing in the sea up to her knees. \"It's very big,\" she says when you come to fetch her. \"You were right not to tell me.\"");
+    await say("And the city, which knows who you are now, comes to find you.");
+    const t = rhTier(R.rep);
+    await say(t[2] >= 15 ? "Every door on the Stair is open to you. Bel Amory won't take your money, and then takes some of it when you insist, and gives most of it back. Mattie Gorse at the Brazier has hammered a bronze frog out of your old fountain-scale, as a joke, and it's terrible, and she's very proud of it. Children follow you up the Stair." : t[2] >= 5 ? "People nod to you on the Stair. Bel Amory knocks a little off your bill. You're somebody they know." : "People look at you on the Stair, and some of them nod, and most of them don't. You came, and it ended. That's what they'll remember.");
+    await mech("Your Standing with Rahdaria: <b>" + t[1] + "</b> (" + R.rep + ")." + (t[2] ? " The Pressed Rose, the Brazier and the stalls give you " + t[2] + "% off, whenever you're back." : ""), "loot");
+    const obj = RH_OBJ();
+    await say("Nerys Aldane walks you up to the Steward's Hall on the last evening, and opens the casebook on the long table, and reads it all through without saying anything, page by page.");
+    await say(obj.map(([ok, t]) => (ok ? "✓ " : "· ") + t).join("<br>"));
+    if (obj.every(o => o[0])) {
+      grant("rhall");
+      if (typeof xpGain === "function") xpGain(300);
+      await say("\"Every page,\" she says. She closes it, and puts her hand flat on it. \"The old Inquirer never got every page. Not in thirty years.\" She takes off her own chain, with the High Steward's key on it, and puts it round your neck. \"That opens every door in Rahdaria. Including mine.\"", "voice");
+      S.maxHp += 4; S.hp = S.maxHp; renderSheet();
+      await mech("<b>Every objective complete.</b> The city gives you its key, and a feast, and you sleep for a day and a night. +4 max HP, healed to full.", "loot");
+    } else await say("\"Enough,\" she says, and closes the book. \"More than enough. Nobody gets every page.\"", "voice");
+    S.coins += 30; renderSheet();
+    await mech("The Council of Terraces pays its Inquirer: 30 gold.", "loot");
+    await say("On the last night, the Speaker for the Deep comes up to the top terrace and stands beside you, leaning on his stick, looking out at the sea. It's very calm. Two miles out, where the sea is deeper than any line, there's a faint light under the water. You'd never notice it if you weren't looking. It's flickering.");
+    await say("\"The Drowned Light,\" he says. \"Our people are still down there. Most of them. Under it, waiting. And it's going out.\" He doesn't look at you. \"You put one Light to bed. I don't suppose you'd come down and look at ours.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"Well,\" Vaelric says softly. \"We did say the sea was our business now.\"");
+    R.on = false; R.done = true; R.phase = "done"; renderSheet();
     await endCard();
   }
 
@@ -11713,13 +13271,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done;
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_MAX + ", hidden things and the Cascades wake.</p>");
@@ -11810,6 +13368,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { moored: "You tied a stone back into Corwen Lisk's hair, and she stands trial in Kedge.", up: "You let Corwen Lisk go up into the dark." }[U.corwen],
         { plant: "You put the Ember Root back in the heart of the cage, and the Undermoon sleeps.", vael: "Vaelric took the Ember Root's place, and keeps the lock.", rise: "You let the Undermoon rise. There are two moons in the sky." }[U.ending]
       ];
+    },
+    rahdaria: (s) => {
+      const R = s.rh;
+      if (!R) return [s.part > 55 && "You followed the second pull west, to Rahdaria, the garden city, besieged by people who came up out of the sea."];
+      const n = Object.keys(R.solved).length;
+      return [
+        "You followed the second pull west to Rahdaria, the garden city, besieged by the Bathyr, who came up out of the bottom of the sea, and High Steward Nerys Aldane made you her Inquirer.",
+        n ? "You solved " + (n === 7 ? "all seven" : n + " of the seven") + " cases in your casebook." : "Your casebook is still mostly questions.",
+        R.blight ? "You and Sabine Orr broke the blight in the Hanging Gardens." : R.hv && R.hv.gardens ? "The Hanging Gardens are still grey." : "",
+        R.vantry === "caught" ? "You unmasked Aurel Vantry, the Master of Granaries, who let the brine into the cisterns." : R.vantry === "free" ? "Aurel Vantry, the traitor on the Council, got away over the wall." : "",
+        R.branch ? { flood: "You turned the river into the Bathyr trenches.", fire: "You burned the Bathyr crates in the salt kilns.", fall: "You brought the Lion's Brow down on the Bathyr engines." }[R.branch] : "",
+        R.done ? (R.early ? "You broke the blockade yourself, and the Bathyr sent an envoy." : "You held the walls in the last assault, and the Bathyr sent an envoy.") + " Their Drowned Light, under the sea, is going out." : "",
+        R.phase !== "inv" || R.done ? "Your Standing in Rahdaria: " + rhTier(R.rep)[1] + "." : ""
+      ];
     }
   };
   function recapOff() { try { return localStorage.getItem(RECAP_OFF) === "1"; } catch (e) { return false; } }
@@ -11856,8 +13428,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Third Day", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
@@ -11888,7 +13460,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
       '<p class="big">The labyrinth goes deeper.</p>' +
-      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, and a fallen moon under the labyrinth where you began.</p>" +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, a fallen moon under the labyrinth where you began, and a garden city besieged by people who came up out of the sea.</p>" +
       "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
       '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');
