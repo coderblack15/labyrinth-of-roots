@@ -457,6 +457,20 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .foe.hit .foebar { animation: jolt .3s ease; }
 @keyframes jolt { 0%, 100% { transform: none; } 25% { transform: translateX(-3px); } 60% { transform: translateX(2px); } }
 .foe-top .stat-val { margin-left: auto; }
+.foe-lv { font-family: var(--label); font-size: .7rem; letter-spacing: .08em; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+.foe-lv[hidden] { display: none; }
+.foe.nightmare .foe-name { color: #c79cf0; }
+.foe.nightmare .foe-lv { color: #c79cf0; border-color: #6c4a8c; }
+.foe.nightmare .foebar .now { background: linear-gradient(90deg, #3e1f5c, #9b5cd6); }
+/* experience and levels */
+.xp { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center; position: relative; }
+.xpbar { grid-column: 1 / -1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; border: 1px solid var(--line); }
+.xpbar span { display: block; height: 100%; background: linear-gradient(90deg, #6f8f5a, #cfa850); transition: width .6s ease; }
+.xp.cap .xpbar span { background: linear-gradient(90deg, #6c4a8c, #cfa850); }
+.xp-num { grid-column: 1 / -1; order: 1; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; margin-top: -2px; }
+.xp-pop { position: absolute; right: 0; top: -14px; font-family: var(--label); font-weight: 700; font-size: .8rem; color: #b8d68f; pointer-events: none; animation: pop 1.3s ease forwards; }
+.xp.up .xpbar { animation: lvglow 1.4s ease; }
+@keyframes lvglow { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 10px 2px rgba(207, 168, 80, .7); } }
 .foe-pop { font-family: var(--label); font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; pointer-events: none; animation: pop 1.1s ease forwards; }
 .foe-pop.rb { color: #ffd27a; font-size: 1.15rem; }
 @keyframes pop { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
@@ -723,6 +737,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .lw .stat-val { margin-right: 10px; white-space: nowrap; font-size: .95rem; }
   .lw .note, .lw .huntbar, .lw .hk-x { display: none; }
   .foe { padding-top: 6px; gap: 4px; }
+  .xp { grid-template-columns: auto auto 1fr; gap: 2px 8px; }
+  .xp .xp-num { display: none; }
+  .xp .xpbar { grid-column: auto; align-self: center; }
   .foe-name { font-size: .82rem; }
   .foebar { height: 8px; }
   .combo .combo-note { font-size: .74rem; }
@@ -739,6 +756,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .fade, .inv li.new, .inv-toggle.new, .foe.hit .foebar, .foe-pop, .ach-toast { animation: none; }
   .ach-toast.out { transition: none; }
   .bag-swirl, .bag-spark, .bag-twinkle, .bag-art.gulp { animation: none; }
+  .xp-pop, .xp.up .xpbar { animation: none; }
   .mp-pulse, .mp-new, .mp-fade, .mp-ink { animation: none; stroke-dashoffset: 0; }
   .mp-road.mp-ink { stroke-dasharray: 5 4; }
   .mp-under.mp-ink { stroke-dasharray: 1.5 4; }
@@ -941,7 +959,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   <aside class="sheet" id="sheet" aria-label="Character sheet">
     <div>
       <h2 id="heroName">The Wanderer</h2>
-      <div class="sub">Level 3 adventurer</div>
+      <div class="sub" id="lvSub">Level 3 adventurer</div>
     </div>
     <div class="vitals">
       <span class="stat-label">HP</span>
@@ -951,6 +969,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-val" id="acVal">13</span>
       <span class="stat-label">Purse</span>
       <span class="stat-val" id="coinVal">12 gp</span>
+    </div>
+    <div class="xp" id="xpBox">
+      <span class="stat-label">Level</span>
+      <span class="stat-val" id="lvVal">3</span>
+      <span class="xp-num" id="xpVal">0 / 60 XP</span>
+      <div class="xpbar" role="meter" id="xpMeter" aria-label="Experience"><span id="xpBar" style="width:0%"></span></div>
     </div>
     <div class="lw" id="lwBox" hidden>
       <span class="stat-label">Water</span>
@@ -1031,7 +1055,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-val hk-x" id="rhSiege" hidden></span>
     </div>
     <div class="foe" id="foeBox" hidden>
-      <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
+      <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
@@ -1132,7 +1156,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     part: 0, hp: 24, maxHp: 24, coins: 12,
     blessing: false, torch: false, axe: false, shield: false,
     gemsSpent: false, slain: false, books: [], dis: false, adv: false,
-    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true
+    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true, lv: 3, xp: 0
   });
   let S = fresh();
 
@@ -1152,7 +1176,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && v.um && v.um.on === false && v.um.ending) v.part = 55; return v; } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; return lvInit(v); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1448,7 +1472,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "rhrep", "rhcase"]);
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1921,7 +1945,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "sweet", name: "Sweet Water", desc: "End the blight in the Hanging Gardens.", test: () => S.rh && S.rh.blight },
     { id: "rhhero", name: "Hero of Rahdaria", desc: "Reach the highest Standing with the people of Rahdaria.", test: () => S.rh && S.rh.rep >= 80 },
     { id: "rhearly", name: "The Blockade Lifted", desc: "Beat the Bathyr's hundred soldiers, hundred crates and three Generals before their last assault.", test: () => false },
-    { id: "rhall", name: "Every Terrace Green", desc: "Complete every objective in Rahdaria: every case, the blight, the hungry fed, the soldiers, the black market, the traitor and the blockade.", test: () => false }
+    { id: "rhall", name: "Every Terrace Green", desc: "Complete every objective in Rahdaria: every case, the blight, the hungry fed, the soldiers, the black market, the traitor and the blockade.", test: () => false },
+    { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
+    { id: "lv25", name: "Ringed Heartwood", desc: "Reach level 25.", test: () => lv() >= 25, prog: () => [Math.min(25, lv()), 25] },
+    { id: "lv40", name: "Forty Rings", desc: "Reach level 40, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
+    { id: "read", name: "Read Like a Book", desc: "Read one kind of foe all the way (5 reads) with Adaptive Reasoning.", test: () => Object.values(S.reads || {}).some(n => n >= 5) },
+    { id: "print", name: "Copycat", desc: "Copy a foe's blow with Mockwax.", test: () => false },
+    { id: "prints", name: "Full Print Book", desc: "Keep three prints in your print book at once.", test: () => (S.prints || []).length >= 3 },
+    { id: "hidden", name: "Everything Hidden", desc: "Find every hidden thing the Cascades washed loose.", test: () => (S.relics || []).length >= Object.keys(RELICS).length,
+      prog: () => [(S.relics || []).length, Object.keys(RELICS).length] },
+    { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false }
   ];
   const hasAch = (id) => !!(J.ach && J.ach[id]);
   function achEarn(list) {
@@ -1949,9 +1982,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function achShow() {
     const a = achQueue[0];
     if (!a) return;
-    const t = el("button", "ach-toast", ACH_ICON + "<span><small>Achievement</small><b>" + a.name + "</b><span>" + a.desc + "</span></span>");
+    const t = el("button", "ach-toast", (a.icon || ACH_ICON) + "<span><small>" + (a.kicker || "Achievement") + "</small><b>" + a.name + "</b><span>" + a.desc + "</span></span>");
     t.type = "button";
-    t.setAttribute("aria-label", "Achievement earned: " + a.name + ". " + a.desc + " Open your journal.");
+    t.setAttribute("aria-label", (a.kicker ? a.kicker + ": " : "Achievement earned: ") + a.name + ". " + a.desc + " Open your journal.");
     t.onclick = () => { jOpen(); };
     $("achToasts").appendChild(t);
     setTimeout(() => {
@@ -2009,7 +2042,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0);
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC();
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = S.name || "The Wanderer";
@@ -2017,6 +2050,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
     $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
+    renderXp();
     const items = [];
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
     if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
@@ -2046,6 +2080,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     underItems(items);
     companyItems(items);
     rahItems(items);
+    lvItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
     renderLastwell();
@@ -2182,7 +2217,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (adv && dis) { adv = dis = false; }
     const atk = FOE.on && target === "AC";
     const cb = atk ? Math.min(2, FOE.chain) : 0;
-    mod += cb;
+    const gu = atk ? gearHit() : 0, ru = atk ? adaptHit() : 0;
+    mod += cb + gu + ru;
     const cob = coCheck(label);
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
     const wm = atk ? wxYou() : 0;
@@ -2191,6 +2227,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       let detach = null;
       const resolve = (r) => {
         if (atk) { FOE.chain = r.ok ? Math.min(3, FOE.chain + 1) : 0; if (!FOE.rounds) { FOE.swung = true; fightTurn(); } renderFoe(); }
+        else if (r.ok) xpGain(3);
         done(r);
       };
       const card = el("div", "roll");
@@ -2198,7 +2235,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const n = adv || dis ? 2 : 1;
       const dies = Array.from({ length: n }, () => dieEl(false));
       dies.forEach(x => dice.appendChild(x));
-      const metaBits = ["d20 " + fmt(mod) + (cb ? ' <span class="combo-tag">(combo +' + cb + ")</span>" : ""), target + " " + dc];
+      const metaBits = ["d20 " + fmt(mod) + (cb ? ' <span class="combo-tag">(combo +' + cb + ")</span>" : "") + (gu ? ' <span class="combo-tag">(level +' + gu + ")</span>" : "") + (ru ? ' <span class="combo-tag">(read +' + ru + ")</span>" : ""), target + " " + dc];
       if (adv) metaBits.push('<span class="adv">advantage</span>');
       if (dis) metaBits.push('<span class="dis">disadvantage</span>');
       const out = el("div", "out", "&nbsp;");
@@ -2275,6 +2312,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (FOE.on && FOE.prone) { FOE.prone = false; adv = true; label += " (you're down on one knee)"; }
     if (FOE.on && FOE.pitted > 0) { FOE.pitted--; bonus -= 2; label += " (climbing out, −2)"; }
     if (FOE.on && wxFoe()) { bonus += wxFoe(); label += " (" + WX[S.wx.k].name.toLowerCase() + " " + fmt(wxFoe()) + ")"; }
+    if (FOE.on && FOE.lvd && foeAtkUp()) bonus += foeAtkUp();
+    if (FOE.on && FOE.sick > 0) { FOE.sick--; bonus -= 2; label += " (sickened, −2)"; }
     if (adv && dis) adv = dis = false;
     return new Promise(resolve => {
       const ac = acNow();
@@ -2301,6 +2340,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
         scrollNext = true;
         await wait(350);
+        if (hit && FOE.on && S.adapt && FOE.adapt < 2) { FOE.adapt++; await mech("Adaptive Reasoning: you've felt how it moves now. +1 AC against " + FOE.name + " for the rest of this fight (+" + FOE.adapt + " so far).", "loot"); }
         resolve(hit);
       };
     });
@@ -2312,13 +2352,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const rolled = total;
     if (resists(type)) total = Math.max(1, Math.floor(total / 2));
     const halved = total;
+    // Foes hit harder as you level (and harder still as Nightmares). Mimic can copy the blow.
+    const lvx = FOE.on && FOE.lvd ? foeDmgUp() : 0;
+    total += lvx;
+    if (FOE.on && !FOE.unit) FOE.blow = { n: count, s: sides, type, from: readKey(FOE.name) };
     // The heartgrain slows the first blow to land in each fight.
     let slowed = 0;
     if (FOE.on && S.grain && !FOE.grained && total > 1) { FOE.grained = true; slowed = Math.min(total - 1, d(4)); total -= slowed; }
     const caught = coBlock(total);
     if (caught) total -= caught.cut;
     S.hp -= total;
-    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (slowed ? ", and the heartgrain slows it by " + slowed + (caught ? "" : " to " + total) : "") + (caught ? ". " + caught.line + ", and it takes " + caught.cut + " off: you take " + total : "") + ".";
+    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (lvx ? ", +" + lvx + (cascadeOn() ? " from a Nightmare at your level" : " from its level") + " = " + (halved + lvx) : "") + (slowed ? ", and the heartgrain slows it by " + slowed + (caught ? "" : " to " + total) : "") + (caught ? ". " + caught.line + ", and it takes " + caught.cut + " off: you take " + total : "") + ".";
     let saved = false;
     if (S.hp <= 0) {
       // The Pale Bloom eats roots: while you carry it, Vaelric's axe can't hold you up.
@@ -2347,19 +2391,402 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
 
 
+  // ---------- experience and levels ----------
+  // You start at level 3 (the sheet always said so) and can climb to 40. XP comes from fights you
+  // come through, parts and chapters you finish, and checks you pass. Every level is +2 max HP and a
+  // little healing; every 9 levels +1 to hit, every 6 +1 damage, every 12 +1 AC. Foes are scaled to
+  // your level when they step onto the meter (more HP, a harder swing, harder hits), so the story's
+  // fights stay fights. Head-count mobs keep their numbers. Level 5 teaches Adaptive Reasoning,
+  // level 8 teaches Mimic, and level 40 wakes the Cascades (see the roads back, further down).
+  const LV_MIN = 3, LV_MAX = 40, WAX_MAX = 9, PART_XP = 40, CHAPTER_XP = 200;
+  const xpNeed = (L) => 60 + 10 * (L - LV_MIN);
+  const lv = () => Math.min(LV_MAX, Math.max(LV_MIN, S.lv || LV_MIN));
+  const lvk = () => lv() - LV_MIN;
+  const lvHit = () => Math.floor(lvk() / 9);
+  const lvDmg = () => Math.floor(lvk() / 6);
+  const lvAC = () => Math.floor(lvk() / 12);
+  const cascadeOn = () => !!S.cascade;
+  const foeMult = () => (1 + 0.035 * lvk()) * (cascadeOn() ? 1.25 : 1);
+  const foeAtkUp = () => Math.floor(lvk() / 8) + (cascadeOn() ? 2 : 0);
+  const foeDmgUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? 2 : 0);
+  const relic = (k) => (S.relics || []).includes(k);
+  const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
+  const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
+  const adaptHit = () => FOE.on && S.adapt ? (FOE.read >= 5 ? 2 : FOE.read >= 1 ? 1 : 0) : 0;
+  const adaptAC = () => FOE.on && S.adapt ? FOE.adapt + (FOE.read >= 3 ? 1 : 0) : 0;
+  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0);
+  const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0);
+  const lvNewsQ = () => (S.lvNews = S.lvNews || []);
+  // A save from before levels gets the XP a player would have earned on the way to its part.
+  function lvInit(v) {
+    if (!v || v.lv) return v;
+    v.lv = LV_MIN; v.xp = 0;
+    let pool = Math.round((v.part || 0) * 118);
+    while (v.lv < LV_MAX && pool >= xpNeed(v.lv)) { pool -= xpNeed(v.lv); v.lv++; v.maxHp += 2; v.hp += 2; }
+    v.xp = pool;
+    if (v.lv >= 5) v.adapt = true;
+    if (v.lv >= 8) { v.mimic = true; v.wax = Math.min(WAX_MAX, 3 + Math.max(0, Math.floor(v.lv / 4) - 2)); }
+    return v;
+  }
+  function xpGain(n) {
+    n = Math.round(n);
+    if (!started || !(n > 0)) return;
+    if (lv() >= LV_MAX) { S.xp = 0; return; }
+    S.xp = (S.xp || 0) + n;
+    const ups = [];
+    while (lv() < LV_MAX && S.xp >= xpNeed(lv())) { S.xp -= xpNeed(lv()); S.lv = lv() + 1; ups.push(S.lv); lvUp(S.lv); }
+    if (lv() >= LV_MAX) S.xp = 0;
+    renderSheet();
+    xpPop("+" + n + " XP");
+    ups.forEach(L => {
+      achToast({ name: "Level " + L, desc: lvPerks(L), kicker: "Level up", icon: LV_ICON, quiet: true });
+      const b = $("xpBox"); b.classList.remove("up"); void b.offsetWidth; b.classList.add("up");
+    });
+  }
+  function lvUp(L) {
+    S.maxHp += 2;
+    S.hp = Math.min(S.maxHp, S.hp + 2 + Math.floor(S.maxHp / 10));
+    if (L === 5) { S.adapt = true; lvNewsQ().push(["adapt", L]); }
+    if (L === 8) { S.mimic = true; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); lvNewsQ().push(["mimic", L]); }
+    else if (L > 8 && L % 4 === 0) S.wax = Math.min(WAX_MAX, (S.wax || 0) + 1);
+    if (L === LV_MAX) { S.cascade = true; lvNewsQ().push(["cascade", L]); }
+    stat("level-" + L, "Reached level " + L);
+  }
+  function lvPerks(L) {
+    const k = L - LV_MIN, p = ["+2 max HP"];
+    if (k % 9 === 0) p.push("+1 to hit");
+    if (k % 6 === 0) p.push("+1 damage");
+    if (k % 12 === 0) p.push("+1 AC");
+    if (L === 5) p.push("learned Adaptive Reasoning");
+    if (L === 8) p.push("learned Mimic, with 3 Mockwax");
+    else if (L > 8 && L % 4 === 0) p.push("+1 Mockwax");
+    if (L === LV_MAX) p.push("the Cascades wake");
+    return p.join(", ") + ". Foes rise to meet you.";
+  }
+  const LV_ICON = '<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#22301f" stroke="#cfa850" stroke-width="1.5"/><circle cx="17" cy="17" r="10" fill="none" stroke="#9fbf7a" stroke-width="1"/><circle cx="17" cy="17" r="6" fill="none" stroke="#9fbf7a" stroke-width="1"/><path d="M17 26V12M12 16l5-5 5 5" fill="none" stroke="#ffd27a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function renderXp() {
+    const L = lv(), cap = L >= LV_MAX, need = xpNeed(L), x = cap ? need : Math.min(need, S.xp || 0);
+    $("lvVal").textContent = L;
+    $("lvSub").textContent = "Level " + L + " adventurer" + (cap ? " (the most there is)" : "");
+    $("xpVal").textContent = cap ? "Level cap" : x + " / " + need + " XP";
+    $("xpBar").style.width = (cap ? 100 : x / need * 100) + "%";
+    $("xpBox").classList.toggle("cap", cap);
+    const m = $("xpMeter");
+    m.setAttribute("aria-valuemin", 0); m.setAttribute("aria-valuemax", need); m.setAttribute("aria-valuenow", x);
+    m.setAttribute("aria-label", "Level " + L + (cap ? ", the level cap" : ", " + x + " of " + need + " XP to level " + (L + 1)));
+  }
+  function xpPop(t) {
+    const b = $("xpBox");
+    if (!b) return;
+    b.querySelectorAll(".xp-pop").forEach(x => x.remove());
+    const p = el("span", "xp-pop", t);
+    b.appendChild(p);
+    setTimeout(() => p.remove(), 1300);
+  }
+  // Called by foeEnd for a fight you came through: XP, and a read for Adaptive Reasoning.
+  let roamFight = false;
+  function fightWon() {
+    if (!FOE.on || !started || FOE.hp >= FOE.max) return;
+    const base = FOE.unit ? 12 * FOE.max : 15 + FOE.base;
+    xpGain((roamFight ? base * 2 + 4 * lv() : base) * (FOE.hp > 0 ? 0.5 : 1));
+    if (S.adapt) { S.reads = S.reads || {}; const k = readKey(FOE.name); S.reads[k] = Math.min(5, (S.reads[k] || 0) + 1); }
+  }
+
+  // ---------- Mimic: Mockwax prints ----------
+  // Mockwax is the grey wax tallow-moths leave in the labyrinth's walls. It remembers the last shape
+  // pressed into it. Thumb it into a fresh wound and it takes the print of the blow that made it;
+  // lay the print on your blade and your next hit deals that blow too, with what it carries (poison
+  // sickens, fire and light dazzle). Each print is kept in your print book (3 at most), and once a
+  // fight you can lay an old print on the blade without spending wax. It works through quick hands.
+  const RIDER = { poison: "sick", necrotic: "sick", acid: "sick", psychic: "sick", fire: "blind", radiant: "blind", lightning: "blind", cold: "blind", thunder: "blind", force: "blind", bludgeoning: "blind" };
+  const printTag = (P) => P.n + "d" + P.s + " " + P.type + (RIDER[P.type] === "sick" ? ", sickens" : RIDER[P.type] === "blind" ? ", dazzles" : "");
+  function waxItems(o) {
+    if (!S.mimic || FOE.unit || FOE.mimic) return;
+    if (S.wax > 0 && FOE.blow) o.push({ key: "wax", label: "Press Mockwax to the wound", tag: "copy " + FOE.blow.from + "'s blow: " + printTag(FOE.blow) + " · " + S.wax + " left" });
+    if (!FOE.printUsed) (S.prints || []).forEach((P, i) => o.push({ key: "print" + i, label: "Lay on a print: " + P.from, tag: printTag(P) + " · once a fight, no wax" }));
+  }
+  async function waxUse(key, mult, t) {
+    if (key === "wax") {
+      const B = FOE.blow; FOE.blow = null; S.wax--;
+      await say(t === "fumble" ? "You fumble the wax into the wound half-warm. It takes some of the shape, smudged." : "You thumb a cake of Mockwax into the fresh wound. It stings like a burn and sets hard at once, holding the exact shape of the blow that made it. You lay the cast along your blade, and the steel takes it.");
+      FOE.mimic = Object.assign({}, B, { mult });
+      S.prints = [B].concat((S.prints || []).filter(P => P.from !== B.from)).slice(0, 3);
+      grant("print");
+      await mech("Mimic: your next hit also deals " + B.from + "'s " + printTag(B) + (mult > 1 ? ", ×1.5 for a perfect press" : mult < 1 ? ", at half" : "") + ". The print goes in your print book (" + S.prints.length + " of 3).", "loot");
+    } else {
+      const P = S.prints[+key.slice(5)];
+      FOE.printUsed = true;
+      FOE.mimic = Object.assign({}, P, { mult });
+      await say("You breathe on an old print until the wax goes soft, and lay it on the blade. The steel remembers " + P.from + ".");
+      await mech("Mimic: your next hit also deals " + printTag(P) + (mult > 1 ? ", ×1.5" : mult < 1 ? ", at half" : "") + ".", "loot");
+    }
+  }
+  // Fires on the hit after a print is laid on the blade. Returns the extra damage.
+  async function mimicLands() {
+    const M = FOE.mimic;
+    if (!M) return 0;
+    FOE.mimic = null;
+    const rolls = []; let x = 0;
+    for (let i = 0; i < M.n; i++) { const r = d(M.s); rolls.push(r); x += r; }
+    const raw = x;
+    x = Math.max(1, Math.floor(x * M.mult));
+    const rider = RIDER[M.type];
+    if (rider === "sick") FOE.sick = Math.max(FOE.sick, 2);
+    if (rider === "blind") FOE.blind = Math.max(FOE.blind, 1);
+    await mech("Mimic: the print lets go, and the blow lands the way " + M.from + " dealt it. " + M.n + "d" + M.s + " " + M.type + " → " + rolls.join(" + ") + (rolls.length > 1 ? " = " + raw : "") + (x !== raw ? (M.mult > 1 ? ", ×1.5 = " : ", halved = ") + x : "") + "." +
+      (rider === "sick" ? " It's sickened: its next 2 attacks are at −2." : rider === "blind" ? " It's dazzled: its next attack has disadvantage." : ""), "combo");
+    return x;
+  }
+
+  // ---------- level news: scenes for what a level teaches ----------
+  async function lvNews() {
+    const q = S.lvNews || [];
+    while (q.length) {
+      const [what, L] = q.shift();
+      const h = el("div", "part-head sub", '<span class="num">Level ' + L + "</span><h2>" + (what === "adapt" ? "Adaptive Reasoning" : what === "mimic" ? "Mimic" : "The Cascades") + "</h2>");
+      scrollNext = true; add(h);
+      if (what === "adapt") {
+        await say("It happens in the middle of nothing, while you're walking. You find you're replaying a fight, the way you'd turn a stone over in your pocket: where its weight went before it swung, which foot it favoured, the half-breath it took before it lunged.");
+        await say("Then you realise you've been doing it after every fight for weeks. The fights have started teaching you, if you let them.");
+        if (vaelricSpeaks()) await voice("\"Good,\" Vaelric says. \"A blade learns nothing. The arm learns everything. I wondered when yours would start.\"");
+        await mech("Learned <b>Adaptive Reasoning</b>. In a fight, every blow that lands on you teaches you the next one: +1 AC against that foe, up to +2. Every fight you come through against a kind of foe is a read on it: 1 read gives +1 to hit against its kind, 3 reads add +1 AC, and 5 reads make it +2 to hit.", "loot");
+      } else if (what === "mimic") {
+        await say("Where you bled on the axe-haft last night, there's a crust of grey wax you don't remember. You pick at it. It has set in the exact shape of the cut on your arm, down to the nick where the blade turned.");
+        await say("Mockwax. The tallow-moths that live in the labyrinth's walls leave it in the cracks, and the old wardens used to say it was the only thing in the roots with a memory. It remembers the last shape pressed into it. Pressed into a fresh wound, it remembers the blow. Laid on a blade, it teaches the blade the blow.");
+        await say("You find three more cakes of it in the bottom of your pack, wrapped in a leaf, where you swear there was nothing yesterday.");
+        await mech("Learned <b>Mimic</b>, with 3 <b>Mockwax</b>. Mid-fight, after a foe has hurt you, use Mockwax through quick hands to copy that blow: your next hit deals it too, with its rider (poison and rot sicken, fire and light dazzle). Each copied blow is kept as a print (3 at most), and once a fight you can lay an old print on your blade for free. More Mockwax turns up in spoils and every fourth level.", "loot");
+      } else {
+        light("dark");
+        await say("That night the ground starts falling upward.");
+        await say("You see the first one from the road: a crack in a hillside with black water coming out of it, except the water isn't running down. It's pouring up, in a long smooth rope, silver at the edges, into the sky, where it frays into nothing. It makes no sound at all. By morning there are hundreds of them, out of wells and graves and the roots of old trees, all over the realm.");
+        await say("Every creature dreams, and bad dreams are heavy. For a thousand years they sank down through the roots to the Undermoon, which drank them the way any moon drinks a sea. " + (S.um && S.um.ending === "rise" ? "But the Undermoon is in the sky now." : "But you've been down there and moved things, and the cage has a different weight in it now.") + " And dreams fall toward the heaviest thing nearby. You have forty rings in your heartgrain. You have become very heavy indeed.");
+        await say("So now the realm's nightmares are falling toward you. People are calling them the Cascades. Anything that drinks from one wakes up as the thing it was most afraid of.");
+        if (vaelricSpeaks()) await voice("\"I felt them start,\" Vaelric says, very quietly. \"Every one of them is running the same way. Somewhere they all fall from one place. Find it, before it finds you.\"");
+        await mech("<b>The Cascades</b> have woken. Every creature you fight is now a <b>Nightmare</b>: a quarter tougher, +2 to hit and +2 damage, and worth more. The Cascades have washed hidden things loose in the old places. " + (S.roam ? "Search for them from the roads back, and find where the Cascades fall from." : "When the story so far is done, take the roads back to search for them, and to find where the Cascades fall from."), "hurt");
+        light("dusk");
+      }
+    }
+    S.lvNews = [];
+  }
+
+  // Sheet entries for levels, skills and what you've found.
+  function lvItems(items) {
+    if (S.adapt) {
+      const known = Object.keys(S.reads || {}).filter(k => S.reads[k] > 0);
+      const top = known.sort((a, b) => S.reads[b] - S.reads[a]).slice(0, 4).map(k => k + " " + "●".repeat(S.reads[k]) + "○".repeat(5 - S.reads[k]));
+      items.push(["adapt", "clue", "Adaptive Reasoning", "Each blow that lands on you in a fight gives +1 AC against that foe (up to +2). Reads on a kind of foe: 1 = +1 to hit, 3 = +1 AC, 5 = +2 to hit." + (FOE.on && FOE.read ? " This one: " + FOE.read + " read" + (FOE.read > 1 ? "s" : "") + "." : "") + (top.length ? " Read so far: " + top.join(", ") + (known.length > 4 ? ", and " + (known.length - 4) + " more" : "") + "." : " Nothing read yet.")]);
+    }
+    if (S.mimic) items.push(["mimic", "mask", "Mimic", "Copy a foe's blow with Mockwax mid-fight and your next hit deals it too. Print book: " + ((S.prints || []).length ? S.prints.map(P => P.from + " (" + printTag(P) + ")").join("; ") : "empty") + "."]);
+    if (S.mimic || S.wax) items.push(["wax", "vial", "Mockwax ×" + (S.wax || 0), "Tallow-moth wax with a memory. Press it into a fresh wound to take the print of the blow."]);
+    Object.keys(RELICS).forEach(r => { const R = RELICS[r]; if (relic(R.key)) items.push(["relic-" + R.key, R.icon, R.name, R.fx]); });
+    if (cascadeOn()) items.push(["cascade", "sick", "The Cascades", "Every creature is a Nightmare: a quarter tougher, +2 to hit, +2 damage." + (S.underdream ? " You can still them, or open them again, from the roads back." : " Somewhere they all fall from one place.")]);
+  }
+
+  // ---------- the roads back, the hidden things, and the Underdream ----------
+  // After the story so far, you can walk back through every region you've cleared: fight its
+  // creatures (scaled to you, and Nightmares once the Cascades wake) for XP and gold. At level 40
+  // each region has one hidden thing the Cascades washed loose, and the Cascades lead to the Underdream.
+  const RELICS = {
+    roots: { key: "crown", icon: "grain", name: "The Seedcrown", fx: "+6 max HP.", hint: "under the Library of Roots",
+      where: "The Library of Roots is quiet. A Cascade pours up out of the floor where the reading table stood, and it has washed the dirt out from between two shelves. There's a gap behind them that wasn't there before.",
+      find: "In the gap, on a bed of dry seed-husks, lies a circlet of living wood no wider than a bracelet, still putting out leaves. The first wardens wore these, before anybody carved Vaelric's axe. It settles on your brow and roots, gently, into your hair.",
+      on: () => { S.maxHp += 6; S.hp += 6; } },
+    desert: { key: "fang", icon: "blade", name: "The Glassfang", fx: "A knife of fused desert glass, worn at your hip: +1 damage on every hit.", hint: "the dune past the Ember Root's hollow",
+      where: "Out past the Ember Root's old hollow, the Cascades come up through the sand in a dozen thin black threads, and the wind has stripped a dune down to something that glints.",
+      find: "It's a knife. Lightning struck the sand here once and fused it into a curved fang of green glass, and somebody, long ago, wrapped a grip around it. The edge is the sharpest thing you have ever touched." },
+    fen: { key: "lens", icon: "clue", name: "Duskwane's Lens", fx: "A violet monocle the Baron kept for himself: it shows where a blow will land. +1 to hit.", hint: "the Violet Baron's drowned lair",
+      where: "The Violet Baron's lair has sunk another foot into the Hushfen. A Cascade rises straight up through his old desk, and the drawers have come open in it.",
+      find: "Floating in the black water, not wet at all, is a round violet lens on a chain. Hold it to your eye and the world goes slow and purple, and you can see where every moving thing is about to be." },
+    mere: { key: "gauntlet", icon: "shield", name: "The Drowned King's Gauntlet", fx: "The last king of Carrowmere's left gauntlet, rust-free: +1 AC.", hint: "the drowned treasury of Carrowmere",
+      where: "The water in Carrowmere's treasury is running up the walls now, in sheets, and for the first time in a hundred years the floor is dry.",
+      find: "In the middle of the floor, where the water was deepest, there's a single steel gauntlet. No rust. When you put it on, it closes itself around your hand like it knows the shape of it." },
+    lastwell: { key: "bell", icon: "caltrop", name: "The Bell-Iron Buckle", fx: "Cast from the Belfry's cracked bell. The first attack against you each fight has disadvantage: it rings.", hint: "the bottom of the Belfry",
+      where: "In Lastwell, the cracked bell has come down out of the Belfry at last. A Cascade comes up through the hole it made in the floor.",
+      find: "Somebody, sometime, cast a belt buckle from a chip of the bell's iron, and dropped it down here. When you knock it with a knuckle it rings, low and long, and everything nearby flinches." },
+    glass: { key: "verdict", icon: "writ", name: "The Clear Verdict", fx: "A sword-breaker of witness glass from the Assize vault. Every fight starts with one combo pip.", hint: "the Assize evidence vault",
+      where: "Sulmara's evidence vault has a Cascade in it, pouring up through the floor tiles, and every pane of witness glass in the room is showing the same thing: you, looking at them.",
+      find: "Behind the panes is a short blade of clear glass with a comb of teeth along its back: a sword-breaker, the kind the old Justiciars carried. It has already decided you're going to win." },
+    corrach: { key: "shell", icon: "glaive", name: "Ninefold's Blade-Shell", fx: "A shell sung soft by an old Hesk. +10% to Evade.", hint: "a ledge high in Thrumhold",
+      where: "High in Thrumhold, on a ledge nobody's stood on for years, a Cascade rises out of a cradle. The Hesk who meet you on the stair won't go any closer.",
+      find: "In the cradle is a curved plate of shell, sung thin as paper and hard as iron. It hums when you move, and when something swings at you, it hums sooner." },
+    noon: { key: "noon", icon: "lantern", name: "A Splinter of the Kept Noon", fx: "A sliver of Ammaret's noon in a glass. Foes start each fight with a tenth less HP: it burns them as they come at you.", hint: "the House of Shutters in Ammaret",
+      where: "In Ammaret, the House of Shutters has every shutter open, and a Cascade comes up through the roof of it, black against the light.",
+      find: "At the bottom of the Cascade, where black water meets the noon, a sliver of the light has broken off and lodged in a fallen shutter-slat. You prise it out into an empty phial. It's warm through the glass." },
+    undermoon: { key: "kinring", icon: "ring", name: "The Kinstone Ring", fx: "A ring of a Moored warden's kinstones: +6 max HP, and it came with 3 Mockwax.", hint: "the chains under Kedge",
+      where: "Under Kedge, a Cascade rises past the hanging town and up into the dark, and the chains are swinging in it. Something small is tangled in the lowest one.",
+      find: "It's a ring, strung with seven tiny kinstones: some warden's whole family, worn on one hand. Tucked in it are three cakes of Mockwax, as if somebody meant you to have them.",
+      on: () => { S.maxHp += 6; S.hp += 6; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); } },
+    rahdaria: { key: "inqring", icon: "ring", name: "The First Inquirer's Ring", fx: "A bronze ring cut with an open eye, and the purse hidden with it: +4 max HP and 40 gold.", hint: "the dry cisterns under the Hanging Gardens",
+      where: "In Rahdaria, a Cascade pours up out of the old Lily cistern under the Hanging Gardens, and the water that's been in it for a century goes up with it. The floor of the cistern is dry for the first time since it was cut.",
+      find: "On the cistern floor, in a lead box gone white with age, are a bronze ring cut with an open eye, a purse, and a note in a square hand: <i>for whoever has my job next</i>. The first Inquirer of Rahdaria hid it here, three hundred years ago.",
+      on: () => { S.maxHp += 4; S.hp += 4; S.coins += 40; } }
+  };
+  const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part));
+  const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
+  async function roamFall() {
+    foeEnd(true);
+    S = JSON.parse(CHECK);
+    const lost = Math.floor(S.coins / 2);
+    S.coins -= lost; S.deaths = (S.deaths || 0) + 1; S.hp = S.maxHp;
+    jRewind();
+    renderSheet();
+    light("torch");
+    const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
+    scrollNext = true; add(h);
+    await say("You go down on the road, and this time nothing holds you up. Somebody finds you in the morning and carries you to the nearest fire, and you wake there with a purse a good deal lighter.");
+    await mech("You died. You wake at the nearest inn with full HP. You lost " + lost + " gold from your purse. Everything else is as it was before the fight.", "hurt");
+    await go("Get up");
+  }
+  async function roamHub() {
+    started = true;
+    const first = !S.roam;
+    if (first) { S.roam = true; S.roamEnd = S.part; }
+    foeEnd();
+    save();
+    light("dusk");
+    const h = el("div", "part-head", '<span class="num">After the story so far</span><h2>The Roads Back</h2>');
+    scrollNext = true; add(h);
+    if (first) {
+      await say("The roads you came down are still there behind you, and so are the things that live on them. Nothing in the realm has stopped growing just because you passed through.");
+      await mech("The roads back: walk any region you've cleared and fight what lives there, for XP and gold. Every foe is matched to your level. At level " + LV_MAX + ", things hidden in the old places come loose, and the Cascades wake.");
+    } else await say("You're on the road again, at level " + lv() + ".");
+    for (;;) {
+      checkpoint();
+      try {
+        await lvNews();
+        const left = relicsLeft().length, cap = lv() >= LV_MAX;
+        const c = await choose([
+          { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (cap ? " · gold" : " · XP and gold") },
+          { key: "seek", label: "Search the old places for what was hidden", tag: left + " of " + roamRegions().filter(r => RELICS[r]).length + " still hidden", plain: true, show: cap && left > 0 },
+          { key: "head", label: S.underdream ? "Go back to where the Cascades fall from" : "Follow the Cascades to where they fall from", tag: "the Underdream", plain: true, show: cap },
+          { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
+          { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · 8 gold", plain: true, show: S.coins >= 8 && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+          { key: "journal", label: "Open your journal", plain: true }
+        ]);
+        if (c === "walk") await roamWalk();
+        else if (c === "seek") await roamSeek();
+        else if (c === "head") await roamUnderdream();
+        else if (c === "toggle") {
+          S.cascade = !S.cascade; renderSheet();
+          await say(S.cascade ? "You go back to where they started and stop holding them shut. All over the realm, the black water starts falling upward again." : "You stand at the head of the Cascades and sing the Underdream's own lullaby back down into it. One by one, all over the realm, the black ropes thin and stop.");
+          await mech(S.cascade ? "The Cascades run. Every creature is a Nightmare again, and the roads pay double gold." : "The Cascades are still. Creatures are what they were (still matched to your level).", S.cascade ? "hurt" : "loot");
+        } else if (c === "rest") {
+          S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+          await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
+          await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
+        } else if (c === "journal") jOpen();
+        save();
+      } catch (e) { if (e !== FALLEN) throw e; await roamFall(); }
+    }
+  }
+  async function roamWalk() {
+    const regs = roamRegions();
+    const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    if (r === "back") return;
+    roamFight = true;
+    try { await meetBeast(r, { roam: true }); } finally { roamFight = false; }
+  }
+  async function roamSeek() {
+    const left = relicsLeft();
+    const r = await choose(left.map((x, i) => ({ key: x, label: REGIONS[x], tag: RELICS[x].hint, plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    if (r === "back") return;
+    const R = RELICS[r];
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">Hidden · ' + REGIONS[r] + "</span><h2>" + R.hint.charAt(0).toUpperCase() + R.hint.slice(1) + "</h2>");
+    scrollNext = true; add(h);
+    light("dark");
+    await say(R.where);
+    const k = await check({ label: "Investigation check (where the Cascade has been)", mod: 4 + gearHit(), dc: 17, cta: "Search" });
+    if (!k.ok) {
+      await say("You're not the first one here. Something has been drinking from the Cascade, and it lifts its head.");
+      roamFight = true;
+      try { await meetBeast(r, { forced: true }); } finally { roamFight = false; }
+      await say("With it gone, you can search properly.");
+    }
+    light("gems");
+    await say(R.find);
+    S.relics = (S.relics || []).concat([R.key]);
+    if (R.on) R.on();
+    renderSheet();
+    await mech("Found <b>" + R.name + "</b>. " + R.fx + " (" + (S.relics.length) + " of " + Object.keys(RELICS).length + " hidden things found.)", "loot");
+    light(back);
+  }
+  async function roamUnderdream() {
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head", '<span class="num">Where the Cascades fall from</span><h2>The Underdream</h2>');
+    scrollNext = true; add(h);
+    light("dark");
+    if (!S.underdream) {
+      await say("You follow them. It's easy: every Cascade in the realm leans a little, the way grass leans in a wind, and they all lean the same way. Three days on, you come over a ridge and see where.");
+      await say("It's a hollow in the hills, perfectly round, and the Cascades all pour up out of the ground around its rim. In the middle there's a pool of the black water lying flat and still, the only still water in the realm. Something stands in it, up to the knee.");
+      await say("It's you. Not a reflection. It has your height and your stance and your scars, and it's holding a copy of your axe, and its eyes are the silver at the edge of the Cascades. It's every bad dream anyone ever had about you, poured into your shape, and it's had a long time to practise.");
+      if (vaelricSpeaks()) await voice("\"The Underdream,\" Vaelric breathes. \"A dream that learned to dream back. It's been watching you fight, the same as you've been watching them. Don't give it anything new.\"");
+    } else await say("The hollow in the hills is as you left it. The black pool has filled again, and the thing standing in it has your face again.");
+    const prints = S.prints || [];
+    const F = {
+      name: "The Underdream", hp: 52, ac: 15, atk: 7, n: 1, s: 10, type: "psychic", bloom: 0, hesk: false, who: "the Underdream",
+      hitWhy: "It hits you exactly where you'd have hit you.", miss: "It swings the way you would, and you know the way you would.", hitLine: "Black water runs out of the cut instead of blood.",
+      before: async (st) => {
+        if (!F.half && FOE.hp > 0 && FOE.hp <= FOE.max / 2) {
+          F.half = true; F.atk += 1; F.s = 12;
+          await say("It stops, and takes its time looking at you, and smiles with your mouth. Then it starts fighting the way you fight now, not the way you used to.");
+          await mech("The Underdream has caught up with you: +1 to hit and 1d12 damage from here on.", "hurt");
+        }
+      },
+      turn: async (st) => {
+        if (st.round % 3) return;
+        const P = prints.length ? prints[d(prints.length) - 1] : null;
+        if (P) await say("It opens its hand and shows you a print in black wax: " + P.from + "'s blow, the one you copied. It learned Mimic from watching you.");
+        else await say("It swings your own Rootbreaker back at you: three blows in a row, the way you taught it.");
+        const sv = await check({ label: "Dexterity saving throw", mod: 2 + lvAC(), dc: 15, cta: "Get out of the way" });
+        if (sv.ok) { await say("You see it coming, because you know it. You're mostly out of the way."); await hurt(1, P ? P.s : 8, P ? P.type : "slashing", "It clips you."); }
+        else await hurt(P ? P.n + 1 : 2, P ? P.s : 8, P ? P.type : "slashing", P ? "Your own stolen blow lands on you." : "Your own combo lands on you.");
+        return "done";
+      }
+    };
+    roamFight = true;
+    try { await hkFight(F); } finally { roamFight = false; }
+    light("dusk");
+    if (!S.underdream) {
+      S.underdream = true; grant("underdream");
+      await say("It doesn't fall. It just lets go of your shape, all at once, and goes back to water, and the water lies down flat in the pool, and the pool is only a pool.");
+      await say("Around the rim, the Cascades falter. They don't stop. They're waiting to see what you'll do.");
+      S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); S.coins += 60; renderSheet();
+      await mech("Gained 60 gold and 3 Mockwax from the bottom of the pool.", "loot");
+      const c = await choose([
+        { key: "still", label: "Still the Cascades", tag: "creatures go back to what they were" },
+        { key: "run", label: "Let the Cascades run", tag: "Nightmares stay, and pay double gold", plain: true }
+      ]);
+      S.cascade = c === "run"; renderSheet();
+      await say(c === "run" ? "You leave them running. Let the realm's bad dreams come; you'll be on the road to meet them." : "You kneel by the pool and put your palm flat on the water, and push. All over the realm, the black ropes thin, and fray, and stop.");
+      await mech("You can change your mind from the roads back whenever you like.");
+    } else {
+      S.coins += 25; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 1); renderSheet();
+      await mech("It lets go of your shape again. Gained 25 gold and 1 Mockwax.", "loot");
+    }
+    light(back);
+  }
+
   // ---------- enemy meter and combos ----------
   // While a foe is on the meter, attack rolls build a combo: each hit in a row adds +1 to your next
   // attack (max +2), the second hit in a row deals +2 damage, and the third is a Rootbreaker
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
-  function foeStart(name, max, { hp = max, unit = "" } = {}) {
+  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
+  function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
+    const base = max, lvd = scale, grow = scale && !unit;
+    if (grow) max = Math.max(1, Math.round(max * foeMult()));
+    hp = hp === undefined ? max : Math.min(hp, max);
+    if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
+    Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
+    if (relic("bell")) FOE.blind = 1;
+    if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
     renderFoe(true);
   }
-  function foeEnd(lost) { if (!lost) { spoilsWon(); coWon(); } FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -2368,6 +2795,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!FOE.on) return;
     const pct = Math.max(0, FOE.hp / FOE.max * 100) + "%";
     $("foeName").textContent = FOE.name;
+    const nm = FOE.lvd && cascadeOn();
+    box.classList.toggle("nightmare", nm);
+    $("foeLv").hidden = !FOE.lvd;
+    $("foeLv").textContent = (nm ? "Nightmare · " : "") + "Lv " + lv();
     const u = FOE.unit.split("|"), unit = FOE.hp === 1 ? u[0] : u[u.length - 1];
     $("foeVal").textContent = FOE.unit ? FOE.hp + " " + unit + " left" : FOE.hp + " / " + FOE.max + " HP";
     const bar = $("foeBar"), lag = $("foeLag");
@@ -2415,6 +2846,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   // Roll weapon damage with the combo bonus for the hit that just landed.
   async function comboDamage(count, sides, bonus, label) {
+    if (FOE.on) bonus += dmgUp();
     const k = FOE.on ? comboLanded() : 1;
     const rb = k >= 3;
     const n = rb ? count * 2 : count;
@@ -2423,7 +2855,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const extra = k === 2 ? 2 : rb ? 4 : 0;
     total += extra;
     if (rb) { await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo"); grant("rootbreaker"); }
-    let txt = label + ": " + n + "d" + sides + (bonus ? " + " + bonus : "") + (extra ? " + " + extra + " combo" : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + (extra ? " + " + extra : "") + " = " + total + ".";
+    if (FOE.on && FOE.mimic) total += await mimicLands();
+    const mim = total - bonus - extra - rolls.reduce((a, b) => a + b, 0);
+    let txt = label + ": " + n + "d" + sides + (bonus ? " + " + bonus : "") + (extra ? " + " + extra + " combo" : "") + (mim ? " + mimic" : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + (extra ? " + " + extra : "") + (mim ? " + " + mim : "") + " = " + total + ".";
     return { total, txt, rb };
   }
   // Strike the foe on the meter. Returns the damage dealt.
@@ -2438,6 +2872,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   // A spell or burst that lands automatically: damage, and the combo carries on.
   async function foeBurst(count, sides, bonus, label) {
+    if (FOE.on) bonus += Math.floor(dmgUp() / 2);
     let total = bonus; const rolls = [];
     for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
     FOE.hp = Math.max(0, FOE.hp - total);
@@ -2482,6 +2917,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.um && S.um.milk) o.push({ key: "milk", label: "Gulp a phial of moonmilk", tag: "2d8 + 2 HP · " + S.um.milk + " left" });
     trapBelt(o);
     if (S.cullet) o.push({ key: "cullet", label: "Fling a fistful of cullet", tag: "its next attack is half-blind · " + S.cullet + " left" });
+    waxItems(o);
     return o;
   }
   // The timing catch. Resolves "perfect", "clean" or "fumble".
@@ -2596,7 +3032,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("You fling a fistful of scrap glass at " + (FOE.unit ? "their" : "its") + " face.");
       if (t === "fumble") await mech("It goes wide. Only a little of it finds the eyes.", "hurt");
       else { FOE.blind = Math.max(FOE.blind, t === "perfect" ? 2 : 1); await mech("Half-blind: " + (t === "perfect" ? "the next two attacks against you have" : "the next attack against you has") + " disadvantage.", "loot"); }
-    }
+    } else if (key === "wax" || /^print\d$/.test(key)) await waxUse(key, mult, t);
     renderSheet();
     await mech(t === "perfect" ? "Perfect timing: your hands are free again next turn." : "Your next item is ready in " + BELT_CD + " turns.");
   }
@@ -2668,7 +3104,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const got = { cloth: 0, metal: 0, spore: 0 };
     if (down) {
       got.cloth = d(2) + (FOE.unit ? Math.max(0, FOE.max - 2) : 0);
-      got.metal = (d(2) === 2 ? 1 : 0) + (FOE.max >= 30 && !FOE.unit ? 1 : 0);
+      got.metal = (d(2) === 2 ? 1 : 0) + (FOE.base >= 30 && !FOE.unit ? 1 : 0);
       if ((FOE.F && FOE.F.hesk) || (S.hk && FOE.F && d(3) === 3)) got.spore = FOE.unit ? Math.min(2, FOE.max) : 1;
       Object.keys(got).forEach(k => salv()[k] += got[k]);
     }
@@ -2679,6 +3115,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const sch = down ? schemDrop() : "";
     if (sch) bits.push(sch);
     if (!got.extra) bits.push("a loose leaf of old vellum turns up in the mess, written in a cramped teaching hand (Scroll of Acquisition: " + S.leaves + " of " + LEAVES + " leaves)");
+    if (down && S.mimic && (S.wax || 0) < WAX_MAX && d(cascadeOn() ? 2 : 4) === 1) { S.wax = (S.wax || 0) + 1; bits.push("there's a lump of grey Mockwax caught in a seam of " + (FOE.unit ? "their" : "its") + " hide (" + S.wax + " now)"); }
     if (bits.length) add(el("p", "mech loot", "Spoils: " + bits.join(", and ") + "."));
   }
   async function spoilsTurnIn() {
@@ -5559,7 +5996,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
   }
 
-  function wMeter(fx) { foeStart("The Wringer", WR_MAX, { hp: S.wHP }); wName(fx); }
+  function wMeter(fx) { foeStart("The Wringer", WR_MAX, { hp: S.wHP, scale: false }); wName(fx); }
   function wName(fx) { if (FOE.on) { FOE.name = fx.revealed ? "The Wringer" : "The Wringer (unseen)"; renderFoe(); } }
   async function wringerAttack(fx, label) {
     const hit = await enemyAttack({ label, foe: "The Wringer", bonus: 6, dis: fx.slowed || fx.cal, adv: S.exh >= 3, cta: "Brace" });
@@ -7728,7 +8165,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade();
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0);
   async function foeSwing(F, st, o = {}) {
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0) - (F.road && hasMark("tally") ? 1 : 0);
@@ -8193,6 +8630,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   async function wildMeet(i) {
     const reg = WILD_SLOTS[i];
     if (!reg || !S.axe || S.stripped || S.hp / S.maxHp <= 0.3 || d(100) > WILD_CHANCE) return;
+    await meetBeast(reg);
+  }
+  // A creature of the region on the road. roam: walked into on the roads back (you can let it go);
+  // forced: it won't let you slip past. Once the Cascades wake, every creature is a Nightmare.
+  async function meetBeast(reg, { roam = false, forced = false } = {}) {
     S.met = S.met || [];
     const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
     const from = unmet.length ? unmet : pool, B = from[d(from.length) - 1];
@@ -8200,14 +8642,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const isNew = !(J.beasts && J.beasts[B.id]);
     beastLog(B, false);
     const back = document.body.dataset.light;
-    const h = el("div", "part-head sub", '<span class="num">On the road · ' + REGIONS[reg] + "</span><h2>" + B.name + "</h2>");
+    const nm = cascadeOn(), nmName = (nm ? "Nightmare " : "") + B.name;
+    const h = el("div", "part-head sub", '<span class="num">' + (roam ? "The roads back" : "On the road") + " · " + REGIONS[reg] + "</span><h2>" + nmName + "</h2>");
     scrollNext = true; add(h);
     await wxRoad(reg);
     await say(B.intro);
+    if (nm && B.heads) await say(["They've been drinking from a Cascade. Their outlines won't hold still: each of them keeps trying on the shape of whatever it was most afraid of, and keeping the worst parts.", "Black water runs up off them in threads, toward the sky. Their eyes have all gone the same silver as the Cascades' edges, and they all look at you at once.", "There are too many of them, somehow, even when you count. The Cascade they drank from has filled them up with something that wasn't theirs."][d(3) - 1]);
+    else if (nm) await say(["It has been drinking from a Cascade. Its outline won't hold still: it keeps trying on the shape of whatever it was most afraid of, and keeping the worst parts.", "Black water runs up off it in threads, toward the sky. Its eyes have gone the silver of the Cascades' edges, and they look at you as if they've dreamed about you.", "It's bigger than it should be, and there's too much of it in places, as if a nightmare had been poured into it and nobody stopped when it was full."][d(3) - 1]);
     add(el("div", "", beastCard(B)));
     if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
     const sneak = 3 + (S.shadow ? 2 : 0) + (hasMark("roadwise") ? 2 : 0) + wxSneak();
-    const c = await choose([{ key: "fight", label: "Fight" }, { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
+    const c = forced ? "fight" : await choose([{ key: "fight", label: "Fight", tag: "Lv " + lv() + (nm ? " Nightmare" : "") }, roam ? { key: "leave", label: "Let it go", plain: true } : { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
+    if (c === "leave") { await say("You step off the road and let it pass."); light(back); return; }
     let spotted = false;
     if (c === "slip") {
       const r = await check({ label: "Stealth check", mod: sneak, dc: B.notice, cta: "Sneak" });
@@ -8218,7 +8664,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       spotted = r.ok;
     }
     const q = QUIRKS[B.quirk] || {};
-    const F = { name: B.name, ac: B.ac, atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
+    const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
       stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
     if (B.heads) { F.heads = B.heads; F.unit = B.unit; } else F.hp = B.hp;
     F.terrain = roadTerrain(reg);
@@ -8229,6 +8675,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (q.before) await q.before(F, st);
     };
     if (q.turn) F.turn = (st) => q.turn(F, st);
+    if (nm) {
+      const inner = F.before;
+      F.before = async (st) => {
+        if (st.round > 1 && st.round % 3 === 1 && FOE.hp > 0) {
+          await say("It shows you something. You don't know how: it just turns, and for a moment you're looking at the worst thing that ever happened to you.");
+          const w = await check({ label: "Wisdom save (the Nightmare's dread)", mod: 2 + lvAC(), dc: 14, cta: "Look away" });
+          if (!w.ok) await hurt(1, 6, "psychic", "You can't stop seeing it.");
+        }
+        if (inner) await inner(st);
+      };
+    }
     await hkFight(F);
     light(back);
     const tier = TIER[reg];
@@ -8241,6 +8698,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
     if (hasMark("measure")) await gold(1, 6, "You know where its kind hide what they carry.");
+    if (roam) await gold(nm ? 2 : 1, 6 + tier, nm ? "The Cascade-water on it has set hard into black pearls, and tinkers pay well for those." : "Word gets round that the road's clear, and somebody pays you for it.");
   }
 
   // ---------- puzzles: the song, the tone-lock, the tunnel, the shell game, the shoring, the dig ----------
@@ -11463,6 +11921,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
     return ok;
   }
+  const rhPuzXP = (r) => { if (r && r.ok && typeof xpGain === "function") xpGain(60); return r; };
   function heading2(t) { const h = el("div", "part-head sub", '<span class="num">' + t + "</span>"); scrollNext = true; add(h); }
   const caseReady = (C) => !solved(C.id) && C.id !== 6 && C.keys.filter(hasClue).length >= 2 && (rh().cold[C.id] == null || C.keys.filter(hasClue).length > rh().cold[C.id] || C.keys.every(hasClue));
   async function casebook() {
@@ -11489,6 +11948,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       return false;
     }
     R.solved[C.id] = true; renderSheet();
+    if (typeof xpGain === "function") xpGain(120);
     await mech("Case solved: <b>" + C.name + "</b>.", "loot");
     await CASE_DONE[C.id]();
     return true;
@@ -12054,7 +12514,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("You kneel in a dead bed and pinch up the soil. There's a grey crust on it, fine as frost. It tastes of salt. Then bitter, and then heavier than salt, if a taste can be heavy. You drop a pinch in a cup of water from the channel and it doesn't dissolve. It sinks, and lies on the bottom like sand.");
     await clue("c2a");
     await say("Sabine shows you the old water plan of the gardens, cut into a slab of slate by the gardeners who built them: four cisterns at the top of the city, and channels running down from them to every terrace.");
-    const r = await cisternPuzzle();
+    const r = rhPuzXP(await cisternPuzzle());
     if (r.ok) await clue("c2b");
     else {
       const f = await check({ label: "Investigation check (follow the grey crust up the channels)", mod: 2 + DET, dc: 14, cta: "Follow it" });
@@ -12073,7 +12533,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const T = ["the upper terraces", "the lower terraces"];
     for (let i = 0; i < 2; i++) {
       if (R.cure[i]) continue;
-      const r = await soilPuzzle(T[i]);
+      const r = rhPuzXP(await soilPuzzle(T[i]));
       let ok = r.ok;
       if (!ok) {
         const f = await check({ label: "Wisdom check (trust Sabine's nose)" + (hasSkill("herb") ? " (Herbcraft)" : ""), mod: 2, dc: 13, adv: hasSkill("herb"), cta: "Mix it" });
@@ -12131,7 +12591,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("The garrison barracks are on the second terrace, behind the walls on the land side. Half the soldiers are asleep on the floors in their cloaks to save the strength it takes to stand. <b>Marshal Dace Kerrow</b> receives you in a room with a map of the walls on every wall.");
     await say("\"I don't like you,\" he says. \"That's nothing personal. I don't like anyone the Steward likes this week. What do you want?\"", "voice");
     await say("You want the grain ledger and the watch rota. He laughs, without much in it, and sends for both. \"My quartermaster keeps the ledger,\" he says. \"Ludo Fenwick. He's a good man with a number. My sergeants keep the rota.\" He looks at you hard. \"If one of my men beat that boy, I'll hang him myself. If it's lies, I'll hang you.\"", "voice");
-    const r = await ledgerPuzzle();
+    const r = rhPuzXP(await ledgerPuzzle());
     if (r.ok) await clue("c3b");
     else {
       const f = await check({ label: "Investigation check (add it up again, slowly)", mod: 2 + DET, dc: 14, cta: "Add it up" });
@@ -12139,7 +12599,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       else await say("The columns swim. Somebody who wanted to hide something hid it well.");
     }
     await say("Sergeant Brannagh Holt brings the rota herself. It's been torn in half, and the bottom half is gone. \"It happens,\" she says, flatly. \"Rats.\" But she's brought the four soldiers who had the inner wall that night, too, and stands them in a row, and lets you ask.");
-    const t = await rotaPuzzle();
+    const t = rhPuzXP(await rotaPuzzle());
     if (t.ok) await clue("c4b");
     else {
       const f = await check({ label: "Insight check (watch them while they lie)", mod: 2 + DET, dc: 14, cta: "Watch" });
@@ -12181,7 +12641,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (!r.ok) R.tamsk = "kind";
     }
     await say("The Marshal's clerks give you what they took off the drowned scout: two little tablets of lead, as long as your finger, pressed with rows of letters. Your letters, but in an order that makes no sense. Tamsk looks at them and says nothing.");
-    const t = await leadPuzzle();
+    const t = rhPuzXP(await leadPuzzle());
     if (t.n >= 1) {
       if (t.ok) { S.gear.push("signal"); renderSheet(); await mech("Gain <b>the Lead-Letter Wheel</b>: two lead discs you cut and scratched to read their letters. " + GEAR.signal.desc, "loot"); }
       await clue("c7a");
@@ -12236,7 +12696,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("dark");
     if (!R.hv.velvet) {
       await say("The old royal menagerie sits in its own walled garden on the First Terrace: a ring of empty cages round a dry pool, and a sign that still says THE QUEEN'S BEASTS. Under the keepers' stairs, there's a door with a grille.");
-      const r = await knockPuzzle();
+      const r = rhPuzXP(await knockPuzzle());
       let ok = r.ok;
       if (!ok) {
         const c = await choose([{ key: "talk", label: "Talk your way in", tag: "Persuasion DC 14" }, { key: "pay", label: "Pay the tout on the stair", tag: "10 gold", show: S.coins >= 10, plain: true }]);
@@ -12357,6 +12817,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const ok = await deduce(CASES[5]);
       if (ok) {
         R.solved[6] = true; R.vantry = "caught"; renderSheet();
+        if (typeof xpGain === "function") xpGain(150);
         await mech("Case solved: <b>The Key to the Cisterns</b>.", "loot");
         await say("You put it on the table one thing at a time: the four keys, and which three never left their owners. The letters A.V. in the Saltwife's ledger, against cartloads of grain. " + (hasClue("c6c") ? "And from a drawer in his own office, a letter pressed in Bathyr lead, and his cistern key, with the brine still in its teeth." : "And the grey crust on the cistern grates, which only a key could have let in."));
         await say("Aurel Vantry doesn't run. He looks round the hall at all the thin faces, and for a moment he looks honestly puzzled. \"They were going to win anyway,\" he says. \"Anyone could see that. I was going to get some of us out. Some of us who mattered. The Brinewife promised.\"", "voice");
@@ -12547,6 +13008,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (ok) right++;
     }
     R.plan = right;
+    if (typeof xpGain === "function") xpGain(20 * right);
     await mech("Your plan: " + right + " of 3 right." + (right === 3 ? " It's a good plan." : right === 2 ? " It'll mostly work." : " Kerrow looks at it and doesn't say anything, which is worse."), right >= 2 ? "loot" : "hurt");
     let step = right, ok = true;
     if (b === "fall" && typeof sabotage === "function") {
@@ -12655,6 +13117,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("On the morning of the third day of the blockade, there's no drum. There's no anything. When the sun comes up, the Bathyr camp is quiet, and the black fleet has drawn back from the harbour mouth, and a single Bathyr is walking up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
       await say("The Marshal looks at you. \"That's never happened,\" he says. \"Not once, in twelve days.\"", "voice");
       grant("rhearly");
+      if (typeof xpGain === "function") xpGain(300);
     } else {
       light("dusk");
       await rhWx("storm", { quake: true, say: "Their engines and their drums together shake the walls." });
@@ -12714,6 +13177,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say(obj.map(([ok, t]) => (ok ? "✓ " : "· ") + t).join("<br>"));
     if (obj.every(o => o[0])) {
       grant("rhall");
+      if (typeof xpGain === "function") xpGain(300);
       await say("\"Every page,\" she says. She closes it, and puts her hand flat on it. \"The old Inquirer never got every page. Not in thirty years.\" She takes off her own chain, with the High Steward's key on it, and puts it round your neck. \"That opens every door in Rahdaria. Including mine.\"", "voice");
       S.maxHp += 4; S.hp = S.maxHp; renderSheet();
       await mech("<b>Every objective complete.</b> The city gives you its key, and a feast, and you sleep for a day and a night. +4 max HP, healed to full.", "loot");
@@ -12815,11 +13279,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
       "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
-      '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>');
+      '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
+      "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_MAX + ", hidden things and the Cascades wake.</p>");
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
     $("endJournalBtn").onclick = () => jOpen();
+    $("roamBtn").onclick = async () => { box.querySelectorAll(".actions button").forEach(b => { if (b.id !== "endJournalBtn") b.disabled = true; }); await wait(50); roamHub(); };
   }
 
   // ---------- the story so far ----------
@@ -12979,9 +13445,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
-        try { await wildEncounter(i); await wxSet(null); await PARTS[i](); break; }
+        try { await lvNews(); await wildEncounter(i); await wxSet(null); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
+      xpGain(PART_XP + (CHAPTERS.some(c => c.to === i) ? CHAPTER_XP : 0));
       await jChapterDone(i);
       await coChapterEnd(i);
     }
@@ -13014,7 +13481,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     $("slots").hidden = true;
     $("resumeNote").hidden = true;
     renderSheet();
-    const go2 = () => resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
+    // A run on the roads back carries on there, unless new chapters have been written since.
+    if (S.roam && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
+    const go2 = () => S.roam ? roamHub() : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
     if (S.name === undefined) askName(!resumeState || S.part === 0).then(go2);
     else go2();
   }
@@ -13066,7 +13535,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     SAVE_SLOTS.forEach((n, k) => {
       const v = saves[k], card = el("div", "slot" + (v ? "" : " empty") + (v && n === SLOT ? " current" : ""));
       const where = !v ? "Empty" : DEMO_END && v.part >= DEMO_END ? "The end of the demo" : "Part " + roman(v.part + 1) + " · " + NAMES[v.part];
-      const info = !v ? "A fresh descent" : v.hp + "/" + v.maxHp + " HP · " + (v.coins || 0) + " gold" + (v.bank && v.bank.open ? " (+" + v.bank.bal + " banked)" : "") + (v.at ? " · " + slotDate(v.at) : "");
+      const info = !v ? "A fresh descent" : "Lv " + (v.lv || LV_MIN) + " · " + v.hp + "/" + v.maxHp + " HP · " + (v.coins || 0) + " gold" + (v.bank && v.bank.open ? " (+" + v.bank.bal + " banked)" : "") + (v.at ? " · " + slotDate(v.at) : "");
       card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + (v && v.name ? " · " + esc(v.name) : "") + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
       const btns = card.querySelector(".slot-btns");
       const mk = (cls, label) => { const b = el("button", cls, label); b.type = "button"; btns.appendChild(b); return b; };
