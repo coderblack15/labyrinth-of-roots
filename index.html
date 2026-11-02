@@ -257,7 +257,46 @@ body.intro-open { overflow: hidden; }
 .gems i:nth-child(3) { background: var(--emerald); }
 .spent .gems i { opacity: .3; }
 .sheet .reset { justify-self: start; }
-.inv-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.inv-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+/* The Bottomless Bag: the item list's header, a drawn sack whose mouth opens onto a slow swirl of dark. */
+.bag-title {
+  display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: var(--ink);
+  font-family: var(--label); font-weight: 700; letter-spacing: .1em; font-size: .86rem; cursor: pointer; text-align: left;
+}
+.bag-title:hover:not(:disabled) { background: none; color: var(--gold); }
+.bag-art { width: 40px; height: 40px; flex: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.bag-art.sm { width: 22px; height: 22px; margin: -4px 0; }
+.bag-n { font-variant-numeric: tabular-nums; color: var(--gold); font-weight: 700; }
+.bag-chev { width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); margin: -3px 0 0 2px; transition: transform .2s; }
+.sheet.bag-shut .bag-chev { transform: rotate(-45deg); margin-top: 0; }
+.bag-swirl { transform-box: fill-box; transform-origin: center; animation: bag-turn 9s linear infinite; }
+.bag-spark { transform-box: fill-box; transform-origin: center; animation: bag-rise 3.6s ease-in infinite; }
+.bag-spark.s2 { animation-delay: -1.2s; }
+.bag-spark.s3 { animation-delay: -2.4s; }
+.bag-twinkle { transform-box: fill-box; transform-origin: center; animation: bag-twinkle 2.8s ease-in-out infinite; }
+.bag-art.gulp { transform-origin: 50% 90%; animation: bag-gulp .7s ease; }
+@keyframes bag-turn { to { transform: rotate(360deg); } }
+@keyframes bag-rise { 0% { transform: translateY(12px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(-4px); opacity: 0; } }
+@keyframes bag-twinkle { 0%, 100% { transform: scale(.4) rotate(0deg); opacity: .3; } 50% { transform: scale(1.15) rotate(45deg); opacity: 1; } }
+@keyframes bag-gulp { 0% { transform: none; } 30% { transform: scale(1.12, .84); } 60% { transform: scale(.94, 1.08); } 100% { transform: none; } }
+.bag-foot { margin: 12px 0 0; color: var(--muted); font-style: italic; font-size: .82rem; line-height: 1.4; }
+.sheet.bag-shut .bag-foot { display: none; }
+@media (min-width: 861px) {
+  /* Desktop: the sheet never grows past the screen. Vitals, the foe and chapter trackers stay put;
+     the bag takes what room is left and scrolls inside itself. */
+  .sheet { display: flex; flex-direction: column; max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; scrollbar-width: thin; }
+  .sheet > * { flex: none; }
+  .inv-panel { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; border-top: 1px solid var(--line); padding-top: 12px; }
+  .inv-panel .inv-head { flex: none; }
+  .inv-head .head-btns { width: 100%; gap: 6px; }
+  .inv-head .head-btns button { flex: 1 1 0; padding: 4px 6px; letter-spacing: .05em; text-align: center; justify-content: center; }
+  .inv-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin-right: -10px; padding-right: 10px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  .sheet.bag-shut:not(.belt-live) .inv-scroll { display: none; }
+  .sheet.bag-shut:not(.belt-live) .inv-head { margin-bottom: 0; }
+  .sheet.bag-shut:not(.belt-live) .inv-panel { flex: none; min-height: 0; }
+  .sheet .reset { align-self: flex-start; }
+  .sheet.belt-live .bag-chev { display: none; }
+}
 .inv-toggle, .inv-close, .inv-scrim { display: none; }
 
 /* ---------- story elements ---------- */
@@ -593,6 +632,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .inv-toggle span { font-variant-numeric: tabular-nums; color: var(--gold); }
   .inv-toggle.new { animation: gain 1.6s ease; }
   .inv-close { display: inline-flex; padding: 4px 12px; font-size: .88rem; }
+  .bag-title { pointer-events: none; }
+  .bag-chev { display: none; }
+  .bag-art { width: 30px; height: 30px; }
   .journal .j-head { padding: 12px 14px; }
   .journal .j-body { padding: 14px 14px 18px; }
   .journal td.opt, .journal th.opt { display: none; }
@@ -637,6 +679,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 @media (prefers-reduced-motion: reduce) {
   .fade, .inv li.new, .inv-toggle.new, .foe.hit .foebar, .foe-pop, .ach-toast { animation: none; }
   .ach-toast.out { transition: none; }
+  .bag-swirl, .bag-spark, .bag-twinkle, .bag-art.gulp { animation: none; }
   .foebar .lag, .foebar .now { transition: none; }
   .inv-panel, .sheet.inv-open .inv-panel { transition: none; }
   .die.spin svg { animation: none; }
@@ -872,11 +915,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <div><b>+2</b><small>WIS</small></div>
       <div><b>+1</b><small>INT</small></div>
     </div>
-    <button class="ghost inv-toggle" id="invToggle" type="button" aria-expanded="false" aria-controls="invPanel">Items <span id="invCount">0</span></button>
+    <button class="ghost inv-toggle" id="invToggle" type="button" aria-expanded="false" aria-controls="invPanel"><svg class="bag-art sm" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 22c-2 4-8 7-9 13-1 6 3 10 10 10h16c7 0 11-4 10-10-1-6-7-9-9-13z" fill="#6b4a2e" stroke="#2e1f12" stroke-width="1.2"/><path d="M9 15c2 4 4 6 6 7h18c2-1 4-3 6-7z" fill="#7c5634" stroke="#2e1f12" stroke-width="1.1"/><path d="M13 29c-3 4-3 9 0 12M35 29c3 4 3 9 0 12" fill="none" stroke="#cfa850" stroke-width=".9" stroke-dasharray="1.6 1.6" opacity=".8"/><path d="M22 30v10M22 30h3.5l-3.5 4 4.5 6" fill="none" stroke="#cfa850" stroke-width="1.1" stroke-linejoin="round" opacity=".9"/><ellipse cx="24" cy="15" rx="15" ry="4.2" fill="#050706" stroke="#8a6440" stroke-width="1.4"/><clipPath id="bagMouth"><ellipse cx="24" cy="15" rx="14" ry="3.6"/></clipPath><g clip-path="url(#bagMouth)"><g transform="translate(24 15) scale(1 .3)"><path class="bag-swirl" d="M0.8 0.0 L1.0 0.3 L1.1 0.6 L1.1 1.1 L0.9 1.6 L0.5 2.0 L0.0 2.3 L-0.7 2.5 L-1.4 2.4 L-2.2 2.2 L-2.9 1.6 L-3.4 0.9 L-3.8 0.0 L-3.9 -1.0 L-3.7 -2.2 L-3.2 -3.2 L-2.4 -4.2 L-1.3 -4.9 L-0.0 -5.3 L1.4 -5.4 L2.9 -5.0 L4.3 -4.3 L5.5 -3.2 L6.3 -1.7 L6.8 -0.0 L6.8 1.8 L6.3 3.6 L5.3 5.3 L3.9 6.8 L2.1 7.8 L0.0 8.3 L-2.2 8.3 L-4.4 7.6 L-6.4 6.4 L-8.1 4.6 L-9.2 2.5 L-9.8 0.0 L-9.7 -2.6 L-8.9 -5.1 L-7.5 -7.5 L-5.4 -9.4 L-2.9 -10.7 L-0.0 -11.3 L3.0 -11.2 L5.9 -10.2 L8.5 -8.5 L10.7 -6.1 L12.1 -3.2 L12.8 -0.0" fill="none" stroke="#79ab92" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round"/></g></g><path d="M14 22.2c5 1.6 15 1.6 20 0" fill="none" stroke="#c9a46a" stroke-width="1.5" stroke-linecap="round"/><path d="M33.5 23c2.2 2 2.6 5 1.6 8M35.1 31l-1.8 2.6M35.1 31l1.8 2.4" fill="none" stroke="#c9a46a" stroke-width="1.1" stroke-linecap="round"/><circle class="bag-spark s1" cx="18" cy="7" r=".9" fill="#ffd27a"/><circle class="bag-spark s2" cx="28" cy="4.5" r=".7" fill="#ffd27a"/><circle class="bag-spark s3" cx="23" cy="2" r=".6" fill="#ffd27a" opacity=".7"/><path class="bag-twinkle" d="M33 7l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#ffd27a"/></svg>Bag <span id="invCount">0</span></button>
     <div class="inv-scrim" id="invScrim" hidden></div>
     <div class="inv-panel" id="invPanel">
       <div class="inv-head">
-        <div class="stat-label">Carrying</div>
+        <button class="bag-title" id="bagBtn" type="button" aria-expanded="true" aria-controls="inv" title="Open or close the bag"><svg class="bag-art" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 22c-2 4-8 7-9 13-1 6 3 10 10 10h16c7 0 11-4 10-10-1-6-7-9-9-13z" fill="#6b4a2e" stroke="#2e1f12" stroke-width="1.2"/><path d="M9 15c2 4 4 6 6 7h18c2-1 4-3 6-7z" fill="#7c5634" stroke="#2e1f12" stroke-width="1.1"/><path d="M13 29c-3 4-3 9 0 12M35 29c3 4 3 9 0 12" fill="none" stroke="#cfa850" stroke-width=".9" stroke-dasharray="1.6 1.6" opacity=".8"/><path d="M22 30v10M22 30h3.5l-3.5 4 4.5 6" fill="none" stroke="#cfa850" stroke-width="1.1" stroke-linejoin="round" opacity=".9"/><ellipse cx="24" cy="15" rx="15" ry="4.2" fill="#050706" stroke="#8a6440" stroke-width="1.4"/><clipPath id="bagMouth"><ellipse cx="24" cy="15" rx="14" ry="3.6"/></clipPath><g clip-path="url(#bagMouth)"><g transform="translate(24 15) scale(1 .3)"><path class="bag-swirl" d="M0.8 0.0 L1.0 0.3 L1.1 0.6 L1.1 1.1 L0.9 1.6 L0.5 2.0 L0.0 2.3 L-0.7 2.5 L-1.4 2.4 L-2.2 2.2 L-2.9 1.6 L-3.4 0.9 L-3.8 0.0 L-3.9 -1.0 L-3.7 -2.2 L-3.2 -3.2 L-2.4 -4.2 L-1.3 -4.9 L-0.0 -5.3 L1.4 -5.4 L2.9 -5.0 L4.3 -4.3 L5.5 -3.2 L6.3 -1.7 L6.8 -0.0 L6.8 1.8 L6.3 3.6 L5.3 5.3 L3.9 6.8 L2.1 7.8 L0.0 8.3 L-2.2 8.3 L-4.4 7.6 L-6.4 6.4 L-8.1 4.6 L-9.2 2.5 L-9.8 0.0 L-9.7 -2.6 L-8.9 -5.1 L-7.5 -7.5 L-5.4 -9.4 L-2.9 -10.7 L-0.0 -11.3 L3.0 -11.2 L5.9 -10.2 L8.5 -8.5 L10.7 -6.1 L12.1 -3.2 L12.8 -0.0" fill="none" stroke="#79ab92" stroke-opacity=".8" stroke-width="1.6" stroke-linecap="round"/></g></g><path d="M14 22.2c5 1.6 15 1.6 20 0" fill="none" stroke="#c9a46a" stroke-width="1.5" stroke-linecap="round"/><path d="M33.5 23c2.2 2 2.6 5 1.6 8M35.1 31l-1.8 2.6M35.1 31l1.8 2.4" fill="none" stroke="#c9a46a" stroke-width="1.1" stroke-linecap="round"/><circle class="bag-spark s1" cx="18" cy="7" r=".9" fill="#ffd27a"/><circle class="bag-spark s2" cx="28" cy="4.5" r=".7" fill="#ffd27a"/><circle class="bag-spark s3" cx="23" cy="2" r=".6" fill="#ffd27a" opacity=".7"/><path class="bag-twinkle" d="M33 7l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#ffd27a"/></svg><span class="bag-name">Bottomless Bag</span><span class="bag-n" id="bagCount">0</span><span class="bag-chev" aria-hidden="true"></span></button>
         <div class="head-btns">
           <button class="ghost sound-btn" type="button" aria-pressed="false">Sound: off</button>
           <button class="ghost j-open" id="slotBtn" type="button" title="Go back to your save slots. You'll pick up from the start of this part.">Saves</button>
@@ -884,7 +927,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
           <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
         </div>
       </div>
-      <ul class="inv" id="inv"></ul>
+      <div class="inv-scroll"><ul class="inv" id="inv"></ul>
+      <p class="bag-foot">The bag goes down further than your arm can reach. Nothing you put in it has ever been lost.</p></div>
     </div>
     <button class="ghost reset" id="resetBtn" type="button">Start over</button>
   </aside>
@@ -1641,13 +1685,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         b.onclick = () => { const h = beltHook; setInv(false); if (h) h(key); };
         li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
       }
-      ul.appendChild(li);
+      if (u) { li.classList.add("usable"); ul.insertBefore(li, ul.querySelector("li:not(.usable)")); } else ul.appendChild(li);
     });
+    $("sheet").classList.toggle("belt-live", usable.size > 0);
+    $("bagCount").textContent = items.length;
     const gained = started && items.some(([key]) => !lastItems.has(key));
     lastItems = now;
     $("invCount").textContent = items.length;
     const tog = $("invToggle");
     if (gained) { tog.classList.remove("new"); void tog.offsetWidth; tog.classList.add("new"); }
+    if (gained) bagGulp();
     achCheck();
   }
 
@@ -1659,6 +1706,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (open) $("invClose").focus();
   }
   $("invToggle").onclick = () => setInv(!$("sheet").classList.contains("inv-open"));
+  function bagGulp() { document.querySelectorAll(".bag-art").forEach(a => { a.classList.remove("gulp"); void a.getBoundingClientRect(); a.classList.add("gulp"); }); }
+  // Desktop: the bag's header opens and closes it. The choice is remembered on this device.
+  const BAG_KEY = "labyrinth-of-roots-bag-shut";
+  function setBag(shut) {
+    $("sheet").classList.toggle("bag-shut", shut);
+    $("bagBtn").setAttribute("aria-expanded", !shut);
+    try { localStorage.setItem(BAG_KEY, shut ? "1" : "0"); } catch (e) {}
+  }
+  try { if (localStorage.getItem(BAG_KEY) === "1") setBag(true); } catch (e) {}
+  $("bagBtn").onclick = () => { if (!matchMedia("(max-width: 860px)").matches) { setBag(!$("sheet").classList.contains("bag-shut")); bagGulp(); } };
   $("invClose").onclick = () => { setInv(false); $("invToggle").focus(); };
   $("invScrim").onclick = () => setInv(false);
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("sheet").classList.contains("inv-open")) { setInv(false); $("invToggle").focus(); } });
