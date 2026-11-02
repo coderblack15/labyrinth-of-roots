@@ -325,6 +325,13 @@ body.intro-open { overflow: hidden; }
 .beast b { color: var(--gold); font-weight: 600; }
 .beast.unmet { border-left-color: var(--line); color: var(--muted); }
 .journal .beasts { display: grid; gap: 8px; }
+.marks { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
+.marks li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; font-size: .93rem; line-height: 1.4; color: var(--muted); }
+.marks li .mk { width: 14px; height: 14px; margin-top: 3px; border-radius: 50%; border: 1px solid var(--line); }
+.marks li.won { color: var(--ink); }
+.marks li.won .mk { background: var(--gold); border-color: var(--gold); }
+.marks li b { font-family: var(--label); letter-spacing: .05em; font-weight: 700; }
+.marks li.won b { color: var(--gold); }
 .journal .beast { margin: 0; }
 .pgrid.shards button { width: 88px; height: 88px; padding: 0; position: relative; overflow: hidden; }
 .pgrid.shards button svg { width: 100%; height: 100%; display: block; }
@@ -705,7 +712,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser, and you can keep up to three runs in separate save slots. Use Saves in your items to switch.</li>
       <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
-      <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met.</li>
+      <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
     </ul>
     <div class="slots" id="slots" hidden></div>
     <div class="actions" id="startActions">
@@ -923,7 +930,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     ["The Corrach Three", "corrach", 34, 40]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig"]);
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1082,7 +1089,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
     const bz = J.beasts || {}, metN = BEASTS.filter(b => bz[b.id]).length;
     h += "<section><h3>Bestiary · " + metN + " of " + BEASTS.length + " met</h3>" +
-      '<p class="j-sub">Creatures of the realm turn up on the road between parts. Each one you meet is written here, across every journey.</p><div class="beasts">' +
+      '<p class="j-sub">Creatures of the realm turn up on the road between parts. Each one you meet is written here, across every journey.</p>' + marksList(metN) + '<div class="beasts">' +
       BEASTS.map(b => beastCard(b, !!bz[b.id], bz[b.id])).join("") + "</div></section>";
     h += '<p class="j-note">Your journal is kept only in this browser. Close calls are times the axe (or the shell ring) held you up at 1 HP.</p>';
     body.innerHTML = h;
@@ -1126,6 +1133,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     coin: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="17" rx="8" ry="3" fill="#a8863a"/><ellipse cx="13" cy="14" rx="8" ry="3" fill="#cfa850"/><ellipse cx="13" cy="11" rx="8" ry="3" fill="#e3c46a"/></svg>',
     blessing: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="8" fill="none" stroke="#79ab92" stroke-width="1.5"/><path d="M13 7v12M7 13h12" stroke="#79ab92" stroke-width="1.5"/></svg>',
     dig: '<svg viewBox="0 0 26 26"><path d="M4 15h18" stroke="#8a6c3a" stroke-width="1.6"/><path d="M13 3v12M13 15c0 3-3 4-5 7M13 15c0 3 3 4 5 7M13 15v8M9 18l-3 1M17 18l3 1" stroke="#cfa850" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
+    tally: '<svg viewBox="0 0 26 26"><path d="M5 4c4 3 1 6 5 9s1 6 5 9" stroke="#8a6c3a" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="6.6" cy="6" r="1.8" fill="#cfa850"/><circle cx="9" cy="11" r="1.8" fill="#cfa850"/><circle cx="11" cy="16" r="1.8" fill="#cfa850"/><circle cx="13.6" cy="20.6" r="1.8" fill="#cfa850"/><path d="M15 6h6M15 10h6M17 14h4" stroke="#b08a48" stroke-width="1.2" stroke-linecap="round"/></svg>',
+    roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
   const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0);
@@ -1154,6 +1163,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.snare) items.push(["snare", "snare", "Snare Trap", "Set a snare at rest: Survival DC " + S.snare + " to catch and cook a meal, restoring 1d6 HP."]);
     if (S.axe) items.push(["dig", "dig", "Footholds " + "<span class='pips'>" + "●".repeat(digsLeft()) + "○".repeat(DIG_MAX - digsLeft()) + "</span>", digsLeft() + " of " + DIG_MAX + " left. Once a fight, at 23% HP or less, spend one to dig in. One comes back with each new chapter."]);
     if (S.grain) items.push(["grain", "grain", "Heartgrain", GRAIN_DESC]);
+    markItems(items);
     lastwellItems(items);
     assizeItems(items);
     heskItems(items);
@@ -5689,7 +5699,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const EVADE = 65;
   async function foeSwing(F, st, o = {}) {
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
-    let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0);
+    let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0) - (F.road && hasMark("tally") ? 1 : 0);
     if (st.evade) {
       if (d(100) <= EVADE) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + EVADE + "%).", "loot"); return false; }
       await mech("You read it wrong. (Evade failed: " + EVADE + "%.)", "hurt");
@@ -6005,7 +6015,67 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
   };
 
-  async function wildEncounter(i) {
+  // ---------- bestiary marks: rewards for filling the bestiary ----------
+  // Marks are earned across every journey (from the journal's J.beasts), at a quarter, half, three
+  // quarters and all of BEASTS. Thresholds are fractions, so new creatures raise them automatically,
+  // and a mark once earned is kept. Each mark gives a one-time reward in the journey that earns it,
+  // plus a standing perk on the road in every journey after.
+  const MARKS = [
+    { id: "roadwise", frac: 0.25, name: "Roadwise", perk: "+2 to Stealth when you try to slip past a road creature.", now: "Gain 2d6 gold." },
+    { id: "tells", frac: 0.5, name: "Knows the Tells", perk: "Advantage on your first swing in every road fight.", now: "A foothold comes back." },
+    { id: "measure", frac: 0.75, name: "Takes Their Measure", perk: "Road creatures you beat leave 1d6 more gold.", now: "You're healed to full." },
+    { id: "tally", frac: 1, name: "The Tally Cord", perk: "Road creatures attack at −1, and +4 max HP. The cord rides with you on every journey.", now: "+4 max HP at once." }
+  ];
+  const markAt = (m) => Math.max(1, Math.ceil(m.frac * BEASTS.length));
+  const hasMark = (id) => !!(J.marks && J.marks[id]);
+  const TALLY_DESC = "A cord of braided root with a knot tied in it for every creature of the realm you've faced. Road creatures attack you at −1, and it gives +4 max HP.";
+  function markItems(items) {
+    const won = MARKS.filter(m => m.id !== "tally" && hasMark(m.id));
+    if (won.length) items.push(["roadlore", "roadlore", "Road Lore", won.map(m => "<b>" + m.name + ".</b> " + m.perk).join(" ")]);
+    if (hasMark("tally")) items.push(["tally", "tally", "The Tally Cord", TALLY_DESC]);
+  }
+  function marksList(metN) {
+    return '<ul class="marks">' + MARKS.map(m => {
+      const won = hasMark(m.id), at = markAt(m);
+      return '<li class="' + (won ? "won" : "") + '"><span class="mk"></span><span><b>' + m.name + "</b> · " +
+        (won ? "earned" : "meet " + at + " (" + Math.min(metN, at) + " of " + at + ")") + ". " + m.perk + " " + (won ? "" : "When earned: " + m.now) + "</span></li>";
+    }).join("") + "</ul>";
+  }
+  async function beastMarks() {
+    const bz = J.beasts || {}, metN = BEASTS.filter(b => bz[b.id]).length;
+    for (const m of MARKS) {
+      if (hasMark(m.id) || metN < markAt(m)) continue;
+      J.marks = J.marks || {}; J.marks[m.id] = Date.now(); jSave();
+      const h = el("div", "part-head sub", '<span class="num">Bestiary mark · ' + metN + " of " + BEASTS.length + " met</span><h2>" + m.name + "</h2>");
+      scrollNext = true; add(h);
+      if (m.id === "roadwise") {
+        await say("You've started to notice things on the road: which shadows have weight, which sounds are the wind and which aren't. You walk a little quieter now without meaning to.");
+        await gold(2, 6, "Among the road's leavings you find a few coins nobody's coming back for.");
+      } else if (m.id === "tells") {
+        await say("Every creature you've faced had a tell: a hitch in the shoulder, a breath held too long. You've stopped waiting to see them twice.");
+        S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+        await mech("A foothold comes back: " + S.digs + " of " + DIG_MAX + ".", "loot");
+      } else if (m.id === "measure") {
+        await say("You know these roads now, and what walks them, and what they carry. You stop at the roadside and let the knowing settle into your bones like rest.");
+        S.hp = S.maxHp; renderSheet();
+        await mech("Healed to full: " + S.hp + " HP.", "loot");
+      } else {
+        await say("That night, by the fire, you find you can count them all: every creature of the realm you've stood in front of, from the ticks in the root walls to the last one on the road. You cut a strip of root and braid it, and tie a knot for each, until the cord is as long as your arm.");
+        if (vaelricSpeaks()) await voice("\"A tally cord,\" Vaelric says. \"The old wardens of the roads kept them. When something on the road sees one, it remembers what happened to the others.\"");
+        S.tallyHp = true; S.maxHp += 4; S.hp = Math.min(S.maxHp, S.hp + 4); renderSheet();
+        await mech("Gained <b>The Tally Cord</b>: +4 max HP. " + TALLY_DESC, "loot");
+      }
+      await mech("Mark earned: <b>" + m.name + "</b>. " + m.perk + (m.id === "tally" ? "" : " This holds on every journey."), "loot");
+    }
+    // On a later journey (or after a replay from rest), the cord's +4 max HP comes back the first time you meet the road.
+    if (hasMark("tally") && !S.tallyHp) {
+      S.tallyHp = true; S.maxHp += 4; S.hp = Math.min(S.maxHp, S.hp + 4); renderSheet();
+      await mech("The Tally Cord rides at your belt: +4 max HP.", "loot");
+    }
+  }
+
+  async function wildEncounter(i) { await wildMeet(i); await beastMarks(); }
+  async function wildMeet(i) {
     const reg = WILD_SLOTS[i];
     if (!reg || !S.axe || S.stripped || S.hp / S.maxHp <= 0.3 || d(100) > WILD_CHANCE) return;
     S.met = S.met || [];
@@ -6020,7 +6090,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say(B.intro);
     add(el("div", "", beastCard(B)));
     if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
-    const sneak = 3 + (S.shadow ? 2 : 0);
+    const sneak = 3 + (S.shadow ? 2 : 0) + (hasMark("roadwise") ? 2 : 0);
     const c = await choose([{ key: "fight", label: "Fight" }, { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
     let spotted = false;
     if (c === "slip") {
@@ -6033,9 +6103,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
     const q = QUIRKS[B.quirk] || {};
     const F = { name: B.name, ac: B.ac, atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
-      stolen: 0, hatch: 2, spotted };
+      stolen: 0, hatch: 2, spotted, road: true };
     if (B.heads) { F.heads = B.heads; F.unit = B.unit; } else F.hp = B.hp;
-    if (q.before) F.before = (st) => q.before(F, st);
+    const tells = hasMark("tells");
+    if (q.before || tells) F.before = async (st) => {
+      if (tells && st.round === 1 && !(B.quirk === "ambush" && F.spotted)) { st.adv = true; await mech("You know its tells: advantage on your first swing.", "loot"); }
+      if (q.before) await q.before(F, st);
+    };
     if (q.turn) F.turn = (st) => q.turn(F, st);
     await hkFight(F);
     light(back);
@@ -6046,6 +6120,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     beastLog(B, true);
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
+    if (hasMark("measure")) await gold(1, 6, "You know where its kind hide what they carry.");
   }
 
   // ---------- puzzles: the song, the tone-lock, the tunnel, the shell game, the shoring, the dig ----------
