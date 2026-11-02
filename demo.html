@@ -61,6 +61,7 @@ body[data-light="gems"]  { --glow: rgba(217, 67, 59, .30); }
 body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
 body[data-light="mire"]  { --glow: rgba(92, 140, 96, .26); }
 body[data-light="lake"]  { --glow: rgba(84, 132, 170, .26); }
+body[data-light="noon"]  { --glow: rgba(236, 196, 96, .36); }
 body[data-light="dark"] .story { filter: brightness(.86); }
 .story { transition: filter 2s ease; }
 
@@ -783,6 +784,18 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <span class="stat-label hk-x">Hesk song</span>
       <span class="stat-val hk-x" id="hkSong">0 / 3</span>
     </div>
+    <div class="lw" id="nkBox" hidden>
+      <span class="stat-label">The Noon</span>
+      <span class="stat-val" id="nkNoon">8 / 10</span>
+      <div class="huntbar"><span id="nkNoonBar" style="width:80%"></span></div>
+      <span class="note" id="nkNoonNote"></span>
+      <span class="stat-label hk-x">Time</span>
+      <span class="stat-val hk-x" id="nkTime">Span 1</span>
+      <span class="stat-label">Your shadow</span>
+      <span class="stat-val" id="nkShade">●●●</span>
+      <span class="stat-label hk-x">Suspects</span>
+      <span class="stat-val hk-x" id="nkClues">0 of 3 cleared</span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -897,7 +910,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; return v; } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; return v; } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1074,6 +1087,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         osc("sawtooth", 55, f, sc); osc("sawtooth", 55.7, f, sc); osc("sawtooth", 82.6, f, sc);
         lfo(5.5, 0.01, g.gain, sc);
         every(sc, 22, 45, () => { const seq = Array.from({ length: 3 + Math.floor(Math.random() * 3) }, () => Math.floor(Math.random() * 5)); phraseInto(sc.out, seq, { vol: 0.22, step: 0.6, dur: 0.55 }); });
+      },
+      noon(sc) {        // the Kept Noon: a warm hum of heat that never breaks, clocks ticking everywhere, a far clock striking twelve
+        drone(sc, [57, 64, 69, 76], { cut: 1800, vol: 0.022, wob: 0.15 });
+        wind(sc, { cut: 2400, q: 3, vol: 0.012, sweep: 400, rate: 0.03 });
+        every(sc, 0.9, 1.4, () => hiss(sc.out, { f: rnd(3000, 4200), q: 6, a: 0.002, dec: 0.03, vol: 0.05 }));
+        every(sc, 40, 75, () => { for (let i = 0; i < 12; i++) bell(sc.out, hz(64), 0.016, 2.5, i * 0.9); });
       }
     };
 
@@ -1162,7 +1181,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const CHAPTERS = [
     ["The Labyrinth of Roots", "labyrinth", 0, 5], ["The Burning Sands", "desert", 6, 9], ["The Hushfen", "hushfen", 10, 16],
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
-    ["The Corrach Three", "corrach", 34, 40]
+    ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
   const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore"]);
@@ -1255,7 +1274,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   function roman(n) {
     let out = "";
-    [[40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]].forEach(([v, r]) => { while (n >= v) { out += r; n -= v; } });
+    [[50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]].forEach(([v, r]) => { while (n >= v) { out += r; n -= v; } });
     return out;
   }
   function dur(ms) {
@@ -1402,11 +1421,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     lastwellItems(items);
     assizeItems(items);
     heskItems(items);
+    noonItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
     renderLastwell();
     renderAssize();
     renderHesk();
+    renderNoon();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -1633,7 +1654,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     let saved = false;
     if (S.hp <= 0) {
       // The Pale Bloom eats roots: while you carry it, Vaelric's axe can't hold you up.
-      if (S.hk && S.bloom > 0 && !S.molt) {
+      if ((S.hk && S.bloom > 0 && !S.molt) || (S.nk && S.nk.on && S.nk.shade <= 0)) {
         if (hasGear("ring") && !S.ringUsed) { S.ringUsed = true; S.hp = 1; saved = "ring"; }
         else { S.hp = 0; renderSheet(); await mech(txt, "hurt"); throw FALLEN; }
       } else { S.hp = 1; saved = true; }
@@ -5799,6 +5820,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   async function fallen() {
+    if (S.nk && S.nk.on) return fallenNoon();
     foeEnd();
     light("dark");
     const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
@@ -5846,6 +5868,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "2d6 · " + S.flasks + " left", plain: true });
       if (S.lens) opts.push({ key: "lens", label: "Throw the burning lens", tag: "3d6 fire, once", plain: true });
+      if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
+      if (S.nk && S.nk.jars) opts.push({ key: "jar", label: "Smash a noon-jar", tag: (F.shade ? "4d6" : "2d6") + " radiant · " + S.nk.jars + " left", plain: true });
       if (hasGear("mirror") && !st.used.mirror) opts.push({ key: "mirror", label: "Draw Mirrorwake", tag: "two copies of you", plain: true });
       if (hasGear("drum") && F.hesk && !st.used.drum) opts.push({ key: "drum", label: "Play the stilling beat", tag: "they lose a turn", plain: true });
       if (F.hesk && S.song >= 2 && !st.used.discord) opts.push({ key: "discord", label: "Sing a discord into their blade", tag: "Wisdom DC 13", plain: true });
@@ -5857,7 +5881,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       const c = await choose(opts);
       if (c === "atk") {
-        const a = await check({ label: glaive ? "Glaive attack" : "Axe attack", mod: S.dull ? 4 : 5, dc: F.ac, target: "AC", adv: st.adv, cta: "Strike" });
+        const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
+        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : ""), mod: S.dull ? 4 : 5, dc: F.ac, target: "AC", adv: st.adv, dis: dim, cta: "Strike" });
         st.adv = false;
         if (a.ok) {
           if (F.heads) {
@@ -5886,6 +5911,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         S.lens = 0; renderSheet();
         await say("You catch the light in the lens and throw it, and it bursts like a small sun.");
         if (F.heads) { foeHit(Math.min(2, FOE.hp)); comboKeep(); await mech("The burst takes down two. Your combo holds.", "loot"); } else await foeBurst(3, 6, 0, "Burning lens");
+      } else if (c === "shard" || c === "jar") {
+        if (c === "shard") st.used.shard = true; else { S.nk.jars--; renderSheet(); }
+        await say(c === "shard" ? "You lift the Sun-Shard, and a blade of noon cuts across " + F.who + (F.shade ? ", who comes apart in it like smoke in a doorway." : ".") : "You smash the jar at " + F.who + "'s feet, and the noon in it goes up like a struck match.");
+        if (F.heads) { foeHit(Math.min(F.shade ? 2 : 1, FOE.hp)); comboKeep(); await mech("The light takes " + (F.shade ? "two of them" : "one of them") + ". Your combo holds.", "loot"); }
+        else await foeBurst((c === "shard" ? 3 : 2) * (F.shade ? 2 : 1), c === "shard" ? 8 : 6, 0, c === "shard" ? "The Sun-Shard" : "The noon-jar");
       } else if (c === "mirror") {
         st.used.mirror = true; st.split = 3;
         await say("You draw Mirrorwake, and the air beside you cracks like ice. Two more of you step out of the crack, one on each side, axes up, faces set. Even you aren't sure which one is you.");
@@ -6050,10 +6080,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -6139,7 +6169,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       tactic: "Kill them faster than they hatch. Anything that drops more than one at a time is worth it here.",
       lore: "Mites that live in empty Hesk sleep-cradles and eat the shed husks. They're the reason the Hesk seal their cradles, and the reason they sing to them.",
       intro: "You pass a row of old cracked sleep-cradles in the rock, and something inside the nearest one rustles. Pale mites the size of a fist come pouring out over the lip.",
-      who: "the mites", hitWhy: "Mandibles sink into your ankle, and it goes cold.", miss: "A mite scrabbles at your boot and falls back.", hitLine: "One pops under the axe like a dry seed pod." }
+      who: "the mites", hitWhy: "Mandibles sink into your ankle, and it goes cold.", miss: "A mite scrabbles at your boot and falls back.", hitLine: "One pops under the axe like a dry seed pod." },
+    { id: "shearer", name: "Shade-shearer", region: "noon", quirk: "shear", hp: 18, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
+      ability: ["Shear", "Every hit also snips your shadow. Two snips and it cuts a whole length away. Kill it and the length comes back to you."],
+      tactic: "Evade while it's ahead, and finish it: whatever it cuts, it carries. Oriel's Shadow Needle keeps its blades out of your shadow altogether.",
+      lore: "Tall, pale scavengers that walk Ammaret's drains on stilt legs, with blades for fingers. The Lidless leave them alone, because they only ever take shadows, and shadows can be bought back.",
+      intro: "Something unfolds out of a drain grating ahead of you: tall and pale and stooped, on legs like a heron's, with long scissoring blades where its fingers should be. It isn't looking at you. It's looking at your shadow.",
+      who: "the shade-shearer", hitWhy: "The finger-blades open you up as they snip at your shadow.", miss: "The blades close on the stones beside your foot with a sound like shears." },
+    { id: "cutshade", name: "Cutshades", region: "noon", quirk: "fade", heads: 3, unit: "cutshade|cutshades", ac: 12, atk: 4, n: 1, s: 6, type: "necrotic", notice: 13,
+      ability: ["Fade", "Two strike each round while two or more are left. They're shadows: in the dim, without a light, your swings at them have disadvantage, and each round one may slip into the walls and out again."],
+      tactic: "Bring a light. The Sun-Shard and noon-jars burn through two at a time.",
+      lore: "Shadows that were cut and never sold, gone feral in the dark corners of Ammaret. They're cold, and they want what you've got: a shadow with somebody still attached to it.",
+      intro: "In a dim alley out of the lens-light, your shadow has company. Three more shadows on the wall beside it, with nobody to cast them, and they're turning toward you.",
+      who: "the cutshades", hitWhy: "A cold hand that is only a shape closes on you, and something warm goes out of you.", miss: "It passes through the place you just were, like a draught.", hitLine: "It tears like wet paper and blows away." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -6246,6 +6288,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         else { await say("The stone unfolds under your foot before you can swing."); await foeSwing(F, st, { label: "The scree-lurker strikes first" }); }
       }
     },
+    shear: {
+      turn: async (F, st) => {
+        if (await foeSwing(F, st) && S.nk && S.nk.on && !hasGear("needle")) {
+          F.snips = (F.snips || 0) + 1;
+          if (F.snips >= 2 && S.nk.shade > 0) { F.snips = 0; F.took = (F.took || 0) + 1; await shadeLoss(1, "The shearer cuts a whole length of your shadow away and tucks it under its arm."); }
+          else if (F.snips === 1) await mech("It snips at the edge of your shadow. One more snip and it takes a length.", "hurt");
+        }
+        st.evade = false; return "done";
+      }
+    },
+    fade: {
+      before: async (F, st) => { if (st.round > 1 && FOE.hp > 1 && d(3) === 1 && !(S.nk && S.nk.noon >= 6) && !hasLight()) { st.slipped = true; await say("One of them slides into the wall and out again behind you."); await foeSwing(F, st, { label: "A cutshade strikes from the wall" }); } }
+    },
     hatch: {
       before: async (F, st) => { if (st.round > 1 && F.hatch > 0 && FOE.hp > 0 && d(2) === 1) { F.hatch--; FOE.hp++; FOE.max = Math.max(FOE.max, FOE.hp); renderFoe(); await mech("Another husk splits and a fresh mite crawls out: " + FOE.hp + " left.", "hurt"); } }
     }
@@ -6339,7 +6394,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
     const q = QUIRKS[B.quirk] || {};
     const F = { name: B.name, ac: B.ac, atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
-      stolen: 0, hatch: 2, spotted, road: true };
+      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
     if (B.heads) { F.heads = B.heads; F.unit = B.unit; } else F.hp = B.hp;
     const tells = hasMark("tells");
     if (q.before || tells) F.before = async (st) => {
@@ -6353,6 +6408,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (F.fled === "thief") { await mech("The sandpicker got away with " + F.stolen + " gold.", "hurt"); return; }
     if (F.stolen) { S.coins += F.stolen; renderSheet(); await mech("You take back the " + F.stolen + " gold it lifted from you.", "loot"); }
     if (F.fled) { await gold(1, 4, "It got away, but it left something behind."); beastLog(B, true); return; }
+    if (F.took && S.nk && S.nk.on) await shadeGain(F.took, "You take back what it cut from you, and it settles back at your heels.");
     beastLog(B, true);
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
@@ -7519,8 +7575,891 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("Back in Ashgate, the salt dust lies still on the tables of the Pit Pony for the first time in four days.");
     if (S.bank.open) await mech("Your Coffer-House account holds " + S.bank.bal + " gold. Merrow will release it to you any time you pass through the Three.");
     S.hk = false; renderSheet();
+    await go("Go back down the deep stair");
+  }
+
+  // ---------- The Kept Noon: Ammaret, the buried city under Sulmara ----------
+  // Under Sulmara's glass streets lies the city it was built on: Ammaret, sunk when the desert
+  // melted to glass over it six hundred years ago. Its Noonkeepers caught the last noon in a great
+  // lens so the buried city would never go dark, and it never has. Its people, the Lidless, have had
+  // no night since: their eyelids withered away generations ago, and they can't sleep. The only dark
+  // they have is shadow, so shadows are cut, sold and laid over the eyes like blankets. The Blackjackal,
+  // a shadow that got loose, dragged the Magistrate down here with the Noon-mask to close the lens.
+  // Systems: the Noon (a clock that dims each bell), your shadow (three lengths you can sell, which
+  // the Blackjackal reaches you through, and without which Vaelric's axe can't hold you), two spans of
+  // three bells, a deduction (who is the Blackjackal wearing?), five quest items, and puzzles: the
+  // Hour-House dials, the assayer's scales, the shadow gates and pinning the Jackal's shadow.
+  const BELLS = ["First Bell", "Second Bell", "Quiet Bell"];
+  const SHADE_NAME = ["Shadowless", "A scrap", "Thin", "Whole"];
+  const SHADE_FX = [
+    "You cast nothing at all. Vaelric's roots can't find you: at 0 HP, you die. Rest won't heal you, and the Blackjackal can walk straight in.",
+    "One length left. Rest heals half, and the Blackjackal can reach you easily.",
+    "Two lengths left. The Blackjackal finds you a little easier.",
+    "Your shadow is whole, all three lengths of it."
+  ];
+  const SUSPECTS = [
+    { name: "Noonkeeper Sabeth Ure", short: "Sabeth", clear: "Sabeth Ure stood in the lens-light at the Second Bell for a full count of sixty with the whole temple watching. Her shadow stayed a pool of plain black at her feet, and it moved when she moved. Whatever the Blackjackal is wearing, it isn't her." },
+    { name: "Oriel Vane, the shadow-cutter", short: "Oriel", clear: "Oriel Vane cut her own thumb's shadow off on a dare in front of six witnesses, and it bled black like anyone's. A worn shadow doesn't bleed. It isn't her." },
+    { name: "Master Tollan Rusk of the Hour-House", short: "Tollan", clear: "Master Tollan has a stopped clock for every hour of his life, and the last hand on the last one moved at the Quiet Bell, when the Blackjackal was seen across the city. He can't be in two places. It isn't him." },
+    { name: "Assayer Nim of the Shade Market", short: "Nim", clear: "Assayer Nim weighed her own shadow on her own scales in the market, as the law says every assayer must each span. It weighed exactly what a woman's shadow should. It isn't her." }
+  ];
+  const nk = () => S.nk;
+  const nkOn = () => !!(S.nk && S.nk.on);
+  const hasLight = () => !!(S.lantern || hasGear("lamp") || hasGear("shard") || (S.nk && S.nk.jars > 0));
+  Object.assign(GEAR, {
+    shard: { name: "The Sun-Shard", icon: "shard", desc: "A splinter of the Kept Noon, prised out of the glass sky. It counts as a light. Once a fight: 3d8 radiant, no roll, and double against shadows." },
+    hourkey: { name: "The Hour-Key", icon: "key", desc: "Master Tollan's winding key, as long as your forearm. It turns the shutters of the great lens." },
+    needle: { name: "Oriel's Shadow Needle", icon: "needle", desc: "A black needle threaded with something you can't see. Shade-shearers can't cut your shadow while you carry it." },
+    veil: { name: "The Lidless Veil", icon: "veil", desc: "The gold gauze the Noonkeepers wear over their open eyes. Advantage on every save against the Wearing." },
+    shutter: { name: "Dimmer's Shutter-Cloak", icon: "cloak", desc: "Grey, hooded, smelling of lamp-smoke. The Dimmers take you for one of their own." }
+  });
+  Object.assign(ICONS, {
+    shard: '<svg viewBox="0 0 26 26"><path d="M13 2l4 9l-4 13l-4-13z" fill="#f0c86e"/><path d="M13 2l4 9l-4 3z" fill="#ffe7a8"/><path d="M4 8l3 2M22 8l-3 2M3 15h3M23 15h-3" stroke="#cfa850" stroke-width="1.2"/></svg>',
+    key: '<svg viewBox="0 0 26 26"><circle cx="7" cy="13" r="4.5" fill="none" stroke="#cfa850" stroke-width="2"/><path d="M11.5 13H23M19 13v4M22 13v3" stroke="#cfa850" stroke-width="2"/></svg>',
+    needle: '<svg viewBox="0 0 26 26"><path d="M5 21L20 5" stroke="#9ea6aa" stroke-width="1.8"/><ellipse cx="20" cy="5" rx="1.6" ry="2.4" transform="rotate(45 20 5)" fill="none" stroke="#9ea6aa" stroke-width="1"/><path d="M20 5c-4 6-8 3-13 12" stroke="#2a2433" stroke-width="1.6" fill="none"/></svg>',
+    veil: '<svg viewBox="0 0 26 26"><path d="M4 6h18v6c0 6-4 10-9 10S4 18 4 12z" fill="#cfa850" opacity=".45"/><circle cx="9.5" cy="12" r="2.2" fill="#f0e2b0"/><circle cx="16.5" cy="12" r="2.2" fill="#f0e2b0"/><path d="M4 6h18" stroke="#cfa850" stroke-width="1.6"/></svg>',
+    jar: '<svg viewBox="0 0 26 26"><rect x="9" y="3" width="8" height="3" rx="1" fill="#7a5a3a"/><path d="M8 6h10l1 4v10a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3V10z" fill="#3b3018" stroke="#cfa850"/><circle cx="13" cy="15" r="3.5" fill="#f0c86e"/></svg>',
+    shade: '<svg viewBox="0 0 26 26"><circle cx="13" cy="6" r="3" fill="#8f979b"/><path d="M13 9v8" stroke="#8f979b" stroke-width="2"/><ellipse cx="13" cy="21" rx="9" ry="2.6" fill="#2a2433"/></svg>'
+  });
+
+  function initNoon() {
+    S.gear = S.gear || [];
+    S.nk = { on: true, noon: 8, span: 1, bell: 0, shade: 3, sold: 0, jars: 0, culprit: d(4) - 1, elim: [], hv: {}, named: "", mag: false,
+      route: "", tyra: !!S.tyraHk, warned: false };
+    if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
+    renderSheet();
+  }
+  function renderNoon() {
+    const box = $("nkBox");
+    if (!box) return;
+    box.hidden = !nkOn();
+    if (!nkOn()) return;
+    const N = nk();
+    $("nkNoon").textContent = N.noon + " / 10";
+    $("nkNoonBar").style.width = N.noon * 10 + "%";
+    $("nkNoonNote").textContent = N.noon <= 0 ? "The lens is dark. Ammaret has its first night in six hundred years." : N.noon <= 4 ? "Dim. Shadows in a fight are harder to hit without a light." : "The Kept Noon still burns.";
+    $("nkTime").textContent = N.span > 2 ? "Ammaret" : "Span " + N.span + " · " + (BELLS[N.bell] || "");
+    $("nkShade").textContent = "●".repeat(N.shade) + "○".repeat(3 - N.shade);
+    $("nkClues").textContent = N.elim.length + " of 3 cleared";
+  }
+  function noonItems(items) {
+    if (!S.nk) return;
+    const N = nk();
+    if (N.jars) items.push(["jar", "jar", "Noon-Jar ×" + N.jars, "A stoppered jar of kept noon. It counts as a light. Smash one in a fight: 2d6 radiant, no roll, double against shadows."]);
+    if (N.on) items.push(["shade", "shade", "Your shadow: " + SHADE_NAME[N.shade], SHADE_FX[N.shade]]);
+    if (N.on && N.elim.length) items.push(["clues", "clue", "Who is he wearing?", "Cleared: " + N.elim.map(i => SUSPECTS[i].short).join(", ") + ". Still in doubt: " + SUSPECTS.map((s, i) => i).filter(i => !N.elim.includes(i)).map(i => SUSPECTS[i].short).join(", ") + "."]);
+    if (N.mag) items.push(["mag", "blessing", "The Magistrate", "Thin, grey, and walking on his own feet. He keeps looking up."]);
+    if (N.jackal === "sewn") items.push(["jshadow", "shadow", "The Jackal's Shadow", "Sewn into your own. +2 to Stealth anywhere dark. Sometimes it laughs a moment after you do."]);
+  }
+
+  async function noonDown(n, why) {
+    const N = nk(), was = N.noon;
+    N.noon = Math.max(0, Math.min(10, N.noon - n)); renderSheet();
+    if (N.noon === was) return;
+    if (n > 0) await mech(why + " The Noon dims to " + N.noon + " of 10.", "hurt");
+    else await mech(why + " The Noon brightens to " + N.noon + " of 10.", "loot");
+  }
+  async function shadeLoss(n, why) {
+    const N = nk(), was = N.shade;
+    N.shade = Math.max(0, N.shade - n); renderSheet();
+    if (N.shade === was) return;
+    await mech(why + " Your shadow: <b>" + SHADE_NAME[N.shade] + "</b>. " + SHADE_FX[N.shade], "hurt");
+    if (N.shade === 0 && !N.warned) {
+      N.warned = true;
+      if (vaelricSpeaks()) await voice("\"Where are you?\" Vaelric's voice is very small. \"I hold you by your shadow, you fool. It's what touches the ground. Without it, I can't find you. If you fall now, you fall.\"");
+      else await say("You look down and there's nothing at your feet at all. You feel very light, and not in a good way.");
+    }
+  }
+  async function shadeGain(n, why) {
+    const N = nk();
+    N.shade = Math.min(3, N.shade + n); renderSheet();
+    await mech(why + " Your shadow: <b>" + SHADE_NAME[N.shade] + "</b>.", "loot");
+  }
+  // The Wearing: the Blackjackal steps into people through their shadows. Less shadow, easier for him.
+  async function wearSave(why) {
+    const N = nk(), dc = N.shade <= 0 ? 16 : 9 + 2 * (3 - N.shade);
+    const r = await check({ label: "Wisdom save against the Wearing" + (hasGear("veil") ? " (veil)" : ""), mod: 2, dc, adv: hasGear("veil"), cta: "Hold on to yourself" });
+    if (!r.ok && why) await say(why);
+    return r.ok;
+  }
+  async function clueFound(how) {
+    const N = nk();
+    const open = [0, 1, 2, 3].filter(i => i !== N.culprit && !N.elim.includes(i));
+    if (!open.length) { await mech("You learn nothing you didn't already know about who the Blackjackal is wearing."); return; }
+    const k = open[d(open.length) - 1];
+    N.elim.push(k); renderSheet();
+    if (how) await say(how);
+    await say(SUSPECTS[k].clear);
+    await mech("Cleared: " + SUSPECTS[k].name + ". " + (N.elim.length >= 3 ? "Only one name is left. You know who he's wearing." : (4 - N.elim.length) + " suspects left."), "loot");
+  }
+  // The Lidless rent darkness by the bell: a shade-house is a room roofed with bought shadow.
+  async function shadeRest(paid) {
+    const N = nk();
+    let h = paid ? d(6) + d(6) : d(4);
+    if (N.shade <= 0) h = 0; else if (N.shade === 1) h = Math.max(1, Math.floor(h / 2));
+    if (paid) S.coins -= 3;
+    const before = S.hp;
+    S.hp = Math.min(S.maxHp, S.hp + h); renderSheet();
+    if (!h) await mech("You lie with your eyes open in the gold light and don't sleep at all. Without a shadow, there's no dark small enough for you to fit in. No HP regained.", "hurt");
+    else await mech((paid ? "A cot in a shade-house (3 gold): the first true dark you've had since the stair. " : "You sleep on the temple steps with your arm over your eyes. ") + "Regain " + (S.hp - before) + " HP" + (N.shade === 1 ? " (halved: you're down to a scrap of shadow)" : "") + ".", "loot");
+  }
+
+  // Shadow-touched foes: in dim light (Noon 4 or less) you need a lamp to hit them cleanly.
+  const SHADES = (o) => Object.assign({ ac: 12, atk: 4, n: 1, s: 6, type: "necrotic", bloom: 0, hesk: false, shade: true, who: "the cutshades", whoShort: "Cutshade",
+    hitWhy: "A cold hand that is only a shape closes on you, and something warm goes out of you.", miss: "It passes through the place you just were, like a draught.", hitLine: "It tears like wet paper and blows away." }, o);
+  const DIMMERS = (o) => Object.assign({ ac: 12, atk: 4, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the Dimmers", whoShort: "Dimmer",
+    hitWhy: "A shutter-pole cracks across your shoulder.", miss: "The pole whistles past and rings off the stone.", hitLine: "A Dimmer goes down with his hands over his wide, wet eyes." }, o);
+
+  // ---------- puzzles: the dials, the scales, the shadow gates, the pin ----------
+  // The Hour-House: four stopped clocks and four levers. Each lever winds some of the clocks forward
+  // one hour. Bring every hand to twelve. (The links are chosen so there's exactly one answer.)
+  function dialPuzzle({ extra = 10 } = {}) {
+    return new Promise(resolve => {
+      const LEV = [[0, 1], [1, 2], [2, 3], [0, 1, 3]], ABC = ["A", "B", "C", "D"], RN = ["I", "II", "III", "IV"];
+      const val = [0, 0, 0, 0];
+      let need = 0;
+      LEV.forEach((L, i) => { const k = d(4); need += k; for (let j = 0; j < k; j++) L.forEach(x => val[x] = (val[x] + 11) % 12); });
+      if (val.every(v => v === 0)) val[0] = 11;
+      const limit = need + extra;
+      const P = puzzleBox("The Hour-House", "Four stopped clocks, A to D, and four brass levers. Each pull winds the clocks it's chained to forward one hour. Lever I turns A and B. Lever II turns B and C. Lever III turns C and D. Lever IV turns A, B and D. Bring every hand to 12. You have " + limit + " pulls before the springs give out.");
+      const faces = el("div", "pgrid tones"); faces.style.gridTemplateColumns = "repeat(4, 64px)";
+      const fb = val.map((_, i) => { const b = pbtn(""); b.disabled = true; b.style.width = b.style.height = "64px"; faces.appendChild(b); return b; });
+      const levers = el("div", "pgrid tones"); levers.style.gridTemplateColumns = "repeat(4, 64px)";
+      LEV.forEach((L, i) => { const b = pbtn('<span class="tg">' + RN[i] + "</span><small>" + L.map(x => ABC[x]).join("") + "</small>"); b.setAttribute("aria-label", "Lever " + RN[i] + ": turns " + L.map(x => ABC[x]).join(", ")); b.onclick = () => pull(i); levers.appendChild(b); });
+      P.body.append(faces, levers);
+      const force = pbtn("Force the hands round");
+      P.ctrl.append(force);
+      let used = 0, done = false;
+      const draw = () => {
+        fb.forEach((b, i) => { b.innerHTML = '<span class="tg">' + (val[i] || 12) + "</span><small>" + ABC[i] + "</small>"; b.classList.toggle("on", val[i] === 0); b.setAttribute("aria-label", "Clock " + ABC[i] + ": " + (val[i] || 12)); });
+        P.status.textContent = used + " of " + limit + " pulls used";
+      };
+      function pull(i) {
+        if (done) return;
+        used++;
+        LEV[i].forEach(x => val[x] = (val[x] + 1) % 12);
+        draw();
+        if (val.every(v => v === 0)) { done = true; P.end(); P.status.textContent = "Every hand stands at twelve. Somewhere in the walls, a spring lets go."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= limit) { done = true; P.end(); P.status.textContent = "A spring snaps with a sound like a shot. The clocks won't turn again today."; setTimeout(() => resolve({ ok: false }), 900); }
+      }
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // The Shade Market's scales: nine folded shadows, one of them heavier (a sliver of the Blackjackal).
+  // Two weighings. Tap a shadow to put it on the left pan, again for the right, again to take it off.
+  function scalesPuzzle({ weighings = 2 } = {}) {
+    return new Promise(resolve => {
+      const bad = d(9) - 1, pan = Array(9).fill(0);
+      const P = puzzleBox("The Assayer's Scales", "Nine folded shadows on the counter, and one of them is heavier than a shadow has any right to be. You have " + weighings + " weighings on the balance. Tap a shadow once for the left pan, twice for the right, three times to take it off. When you know, point to it.");
+      const grid = el("div", "pgrid shell"); grid.style.gridTemplateColumns = "repeat(3, 80px)";
+      const bs = pan.map((_, i) => { const b = pbtn(""); b.onclick = () => tap(i); grid.appendChild(b); return b; });
+      const hist = el("div", "lockhist");
+      P.body.append(grid, hist);
+      const weigh = pbtn("Weigh them", "primary"), point = pbtn("Point to the false one"), force = pbtn("Trust your hands instead");
+      P.ctrl.append(weigh, point, force);
+      let used = 0, accusing = false, done = false;
+      const draw = () => {
+        bs.forEach((b, i) => {
+          b.innerHTML = '<span class="tg">' + (pan[i] === 1 ? "◧" : pan[i] === 2 ? "◨" : "▪") + "</span><small>" + (i + 1) + (pan[i] === 1 ? " · left" : pan[i] === 2 ? " · right" : "") + "</small>";
+          b.setAttribute("aria-label", "Shadow " + (i + 1) + (pan[i] === 1 ? ", on the left pan" : pan[i] === 2 ? ", on the right pan" : ""));
+        });
+        weigh.disabled = accusing || used >= weighings || !pan.includes(1) || !pan.includes(2);
+        P.status.textContent = accusing ? "Which one is false? Tap it." : used + " of " + weighings + " weighings used";
+      };
+      function tap(i) {
+        if (done) return;
+        if (accusing) {
+          done = true; P.end();
+          const ok = i === bad;
+          bs[bad].classList.add("on");
+          P.status.textContent = ok ? "You unfold shadow " + (i + 1) + ", and it squirms in your hands like something alive." : "Shadow " + (i + 1) + " is only a shadow. The false one was number " + (bad + 1) + ".";
+          setTimeout(() => resolve({ ok }), 1000); return;
+        }
+        if (used >= weighings) return;
+        pan[i] = (pan[i] + 1) % 3; draw();
+      }
+      weigh.onclick = () => {
+        const L = pan.map((p, i) => p === 1 ? i : -1).filter(i => i >= 0), R = pan.map((p, i) => p === 2 ? i : -1).filter(i => i >= 0);
+        used++;
+        const w = (A) => A.length + (A.includes(bad) ? 0.5 : 0), a = w(L), b = w(R);
+        const res = a > b ? "the left pan sinks" : b > a ? "the right pan sinks" : "the pans hang level";
+        hist.appendChild(el("div", "", L.map(x => x + 1).join(" ") + "  |  " + R.map(x => x + 1).join(" ") + "  →  " + res));
+        pan.fill(0);
+        if (used >= weighings) accusing = true;
+        draw();
+      };
+      point.onclick = () => { if (!done) { accusing = true; draw(); } };
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // A shadow gate: the light falls from one side across a 5×5 floor of glyphs. Set three
+  // shutter-stones. Each stone throws shadow on the two cells behind it. Every ☾ must lie in shadow,
+  // and every ☼ must stay in the light. Each stone you set or lift costs a move.
+  function shadowGate({ dir = "e", moves = 10, title = "The Shadow Gate" } = {}) {
+    return new Promise(resolve => {
+      const W = 5, N = 25, STONES = 3;
+      const step = { e: [0, -1], w: [0, 1], n: [1, 0], s: [-1, 0] }[dir];
+      const from = { e: "the east", w: "the west", n: "the north", s: "the south" }[dir];
+      const shadowOf = (set) => {
+        const sh = new Set();
+        set.forEach(i => { let r = Math.floor(i / W), c = i % W; for (let k = 0; k < 2; k++) { r += step[0]; c += step[1]; if (r < 0 || r >= W || c < 0 || c >= W) break; sh.add(r * W + c); } });
+        set.forEach(i => sh.delete(i));
+        return sh;
+      };
+      let sol, night, sun;
+      for (let tries = 0; tries < 200; tries++) {
+        sol = new Set(); while (sol.size < STONES) sol.add(d(N) - 1);
+        const sh = [...shadowOf(sol)];
+        if (sh.length < 4) continue;
+        night = new Set(sh.sort(() => Math.random() - .5).slice(0, Math.min(5, sh.length)));
+        const lit = [...Array(N).keys()].filter(i => !sh.includes(i) && !sol.has(i)).sort(() => Math.random() - .5);
+        sun = new Set(lit.slice(0, 4));
+        break;
+      }
+      const P = puzzleBox(title, "The light falls from " + from + ". Set " + STONES + " shutter-stones on the floor: each throws shadow on the two squares behind it, away from the light. Every ☾ must lie in shadow, and every ☼ must stay in the light. Setting or lifting a stone costs a move. You have " + moves + ".");
+      const grid = el("div", "pgrid beam"); grid.style.gridTemplateColumns = "repeat(5, 52px)";
+      const placed = new Set();
+      const bs = [...Array(N).keys()].map(i => { const b = pbtn(""); b.onclick = () => tap(i); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const force = pbtn("Heave the gate instead");
+      P.ctrl.append(force);
+      let used = 0, done = false;
+      const solved = () => { const sh = shadowOf(placed); return placed.size === STONES && [...night].every(i => sh.has(i)) && [...sun].every(i => !sh.has(i) && !placed.has(i)); };
+      function draw() {
+        const sh = shadowOf(placed);
+        bs.forEach((b, i) => {
+          const g = placed.has(i) ? "■" : night.has(i) ? "☾" : sun.has(i) ? "☼" : "";
+          b.textContent = g;
+          b.classList.toggle("lit", !sh.has(i) && !placed.has(i));
+          b.classList.toggle("rot", sun.has(i) && (sh.has(i) || placed.has(i)));
+          b.classList.toggle("on", night.has(i) && sh.has(i));
+          b.style.background = sh.has(i) && !placed.has(i) && !night.has(i) ? "#0b0d10" : "";
+          b.setAttribute("aria-label", "Row " + (Math.floor(i / W) + 1) + ", column " + (i % W + 1) + ": " + (placed.has(i) ? "stone" : night.has(i) ? "moon glyph" : sun.has(i) ? "sun glyph" : "floor") + (sh.has(i) ? ", in shadow" : placed.has(i) ? "" : ", in the light"));
+        });
+        P.status.textContent = placed.size + " of " + STONES + " stones set · " + used + " of " + moves + " moves used";
+      }
+      function tap(i) {
+        if (done) return;
+        if (placed.has(i)) placed.delete(i);
+        else { if (placed.size >= STONES) return; placed.add(i); }
+        used++; draw();
+        if (solved()) { done = true; P.end(); P.status.textContent = "The last ☾ goes dark, and the gate grinds open on its own."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= moves) { done = true; P.end(); P.status.textContent = "The light moves on, and the pattern is lost."; setTimeout(() => resolve({ ok: false }), 900); }
+      }
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // Pin the shadow: the Blackjackal hides among five shadows. Swing the lamp, and every shadow
+  // swings with it, all but his, which follows a heartbeat late.
+  function pinShadow({ swings = 2, count = 5 } = {}) {
+    return new Promise(resolve => {
+      const who = d(count) - 1;
+      const P = puzzleBox("Pin the shadow", "He's gone into one of the shadows on the wall. Swing the lamp, and watch: every true shadow swings with the light at once. His is a heartbeat late. Then strike the one he's in.");
+      const grid = el("div", "pgrid shell"); grid.style.gridTemplateColumns = "repeat(" + count + ", 56px)";
+      const bs = Array.from({ length: count }, (_, i) => { const b = pbtn('<span class="tg">▮</span>'); b.style.width = "56px"; b.style.transition = reduced ? "none" : "transform .25s"; b.setAttribute("aria-label", "Shadow " + (i + 1)); b.onclick = () => strike(i); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const swing = pbtn("Swing the lamp", "primary");
+      P.ctrl.append(swing);
+      let left = swings, done = false, busy = false;
+      const shift = (on) => bs.forEach((b, i) => setTimeout(() => { b.style.transform = on ? "translateX(12px) skewX(-12deg)" : ""; }, i === who ? 420 : 0));
+      swing.onclick = () => {
+        if (busy || done || left <= 0) return;
+        busy = true; left--; swing.disabled = true;
+        P.status.textContent = "The lamp swings…";
+        shift(true);
+        setTimeout(() => shift(false), 1000);
+        setTimeout(() => { busy = false; swing.disabled = left <= 0; P.status.textContent = "Swings left: " + left + ". Strike the late one."; if (reduced) bs[who].querySelector(".tg").textContent = "▯"; }, 1600);
+      };
+      function strike(i) {
+        if (done || busy) return;
+        done = true; P.end();
+        bs[who].classList.add("on");
+        P.status.textContent = i === who ? "Your blade goes into the shadow, and the shadow screams." : "You strike plain stone. He was the " + ["first", "second", "third", "fourth", "fifth"][who] + ".";
+        setTimeout(() => resolve({ ok: i === who }), 900);
+      }
+      P.status.textContent = "Swings left: " + left + ".";
+    });
+  }
+
+  // ---------- Part XLII: the Deep Stair ----------
+  async function partDeepStair() {
+    heading("XLII", "The Deep Stair");
+    light("dark");
+    if (!S.nk) initNoon();
+    await say("The deep stair goes down from the back of Thrumhold, past the cracked cradles and the place where you found the mask, and keeps going. The steps were cut for human feet a very long time ago, and worn into dips by a great many of them. Then, for six hundred years, by nobody.");
+    if (S.nk.tyra) await say("Tyra counts the steps under her breath for the first thousand, then gives up. \"I'm going to say four thousand,\" she says, \"and if anyone asks, I'm going to say it with confidence.\"");
+    await say("The bare footprints and the small neat jackal-prints go down ahead of you in the dust, side by side. The bare feet drag. In one place they stop, and the dust is scuffed in a circle, as if a man sat down on the stair and refused to go on, and was made to.");
+    await say("Far below, the gold light grows. It isn't lamplight. It's steady, and warm, and it comes from everywhere at once, the way daylight does.");
+    await say("Two thirds of the way down, the stair passes a landing where somebody once hung a row of bronze bells on a beam. Their tongues have been cut out. Under the bells, on the wall, your torchlight throws your shadow, long and thin. And beside your shadow, three more shadows that don't belong to anyone.");
+    const c = await choose([
+      { key: "fight", label: "Put your back to the wall and fight them" },
+      { key: "run", label: "Run for the light", tag: "Dexterity DC 13", plain: true },
+      { key: "bell", label: "Ring the tongueless bells with the axe-haft", tag: "Wisdom DC 12 · a hunch", plain: true }
+    ]);
+    let heads = 3;
+    if (c === "run") {
+      const r = await check({ label: "Dexterity check (taking the stair three at a time)", mod: 2, dc: 13, cta: "Run" });
+      if (r.ok) { heads = 0; await say("You go down the stair three at a time with the shadows pouring along the wall after you, and burst out into the gold light, and they stop at the edge of it like dogs at a stream."); }
+      else { heads = 3; await hurt(1, 4, "bludgeoning", "You miss a worn step and go down hard on the next twenty."); await say("The shadows catch up with you on the landing below."); }
+    } else if (c === "bell") {
+      const r = await check({ label: "Wisdom check (a hunch about the bells)", mod: 2, dc: 12, cta: "Ring" });
+      if (r.ok) { heads = 1; await say("A bell without a tongue still rings if you hit it hard enough: a flat, dead note. The shadows flinch from it like a slapped hand. Two of them pour away down the stair. One is too hungry to care."); }
+      else await say("The bells give a dull clank and nothing else. The shadows come off the wall.");
+    }
+    if (heads) {
+      await say("They peel off the wall like wet paper and come at you flat and fast, arms first. They're shadows that somebody cut off and never sold, gone feral in the dark: cold, and hungry for anything with a shadow of its own.");
+      await hkFight(SHADES({ name: "Cutshades", heads, unit: "cutshade|cutshades" }));
+      await say("When they're gone, the bells on the beam are swinging, though there's no wind.");
+    }
+    light("noon");
+    await say("And then the stair comes out of the rock, and you are standing on a ledge high up in a cavern so big it has weather.");
+    await say("There's a city below you. It fills the bottom of the cavern from wall to wall: domes, towers, flat roofs, long straight streets, squares with dry fountains in them. It's built of the same pale stone as Sulmara, in the same shapes, only older and heavier. A palace stands at the far end with a tower on it like a lighthouse.");
+    await say("And the sky over it is glass. Not a ceiling of rock with glass in it. Glass, from wall to wall, thick and amber and rippled like poured honey, the whole desert floor melted and set hard. Through it, very faint and very far up, you can see the dark undersides of streets. Shapes cross them. People. You are looking up at the soles of Sulmara.");
+    await say("In the top of the lighthouse tower, a lens as big as a house holds a light that hurts to look at. It's noon in there. It has been noon in there for six hundred years. The light spills from it across the whole city, gold and straight down, so that nothing in Ammaret casts more than a small black pool at its own feet.");
+    if (vaelricSpeaks()) await voice("\"Ammaret,\" Vaelric says, softly. \"The old Sulmara. We thought it was a story they told the children. They said the Noonkeepers caught the last noon before the glass came down, so their city would never see night.\" A pause. \"It looks like they did.\"");
+    await go("Go down into the city");
+  }
+
+  // ---------- Part XLIII: Ammaret ----------
+  async function partAmmaret() {
+    heading("XLIII", "Ammaret");
+    light("noon");
+    if (!S.nk) initNoon();
+    await say("A switchback road takes you down to a gate in the city wall. The gate is open. Two people stand in it with long poles hooked at the end, and as you get close, you see their eyes.");
+    await say("They have no eyelids. None at all. Their eyes are wide and round and wet, the irises gone pale gold, the whites shot with fine red threads, and every few breaths each of them lifts a little brush on a cord round their neck and wets their eyes with it from a vial. They don't blink. They can't. They're the people of Ammaret, and in the city above they'd be called <b>the Lidless</b>, if anyone up there remembered they were here.");
+    await say("\"A long shadow,\" one of them says, and both of them stare at the ground behind you. In the gold light your shadow is a short black puddle at your heels, but it's still more shadow than either of them has. Theirs are thin grey stains. \"Toll for the gate. A length of that, or ten gold.\"", "voice");
+    const opts = [
+      { key: "gold", label: "Pay ten gold", tag: S.coins >= 10 ? "" : "you don't have it", show: S.coins >= 10 },
+      { key: "shade", label: "Let them cut a length of your shadow", tag: "lose a length", plain: true },
+      { key: "mask", label: "Show them the gold mask", tag: "the Magistrate's mask", plain: true, show: !!S.mask2 }
+    ];
+    const c = await choose(opts);
+    if (c === "gold") { S.coins -= 10; renderSheet(); await say("They weigh the coins in their palms, puzzled, as if they'd forgotten money could be round."); }
+    if (c === "shade") {
+      await say("One of them kneels behind you with a pair of long bone shears and cuts, very carefully, along the ground. It doesn't hurt. It feels like stepping out of cold water. He rolls something black and thin up like a ribbon and tucks it inside his shirt, and his whole face goes soft with wanting.");
+      await shadeLoss(1, "A length of your shadow is gone.");
+    }
+    if (c === "mask") {
+      await say("The moment the gold catches the light, both of them go down on their knees on the stones. \"The Noon-mask,\" one says. \"It's come back down.\" The other is already running into the city.");
+      S.nk.hv.bowed = true;
+    }
+    await say("Inside the wall, Ammaret is awake. All of it, all the time. There are people in every street, walking slowly, talking quietly, sitting in doorways with their wide wet eyes fixed on nothing. Nobody is asleep, because nobody here has ever slept. In the squares, the clocks on the towers all stand at twelve.");
+    await say("Every so often you see someone stop in the street, take a folded black cloth from a pocket, and lay it over their face. They stand very still. Then, after a while, they fold it up and walk on. It takes you a while to realise what they are. They're shadows. Bought shadows, folded small, and laid over open eyes. It's the only dark these people have.");
+    await say("A woman in gold gauze is waiting for you at the end of the street, with the gate-warden panting behind her. She's very old and very straight, and the gauze is tied over her open eyes.");
+    await say("\"I am <b>Sabeth Ure</b>, Noonkeeper of Ammaret,\" she says. \"You came down the deep stair. So did he. Six days ago. A shadow with a jackal's head, and a man from up there in a mask of gold.\" She turns her veiled face toward the mask on your belt. \"And now the mask comes down without him. Walk with me.\"", "voice");
+    await say("She takes you up to the Temple of the Kept Noon, a white dome at the foot of the lighthouse tower, and tells you, walking.");
+    await say("\"When the desert melted over us, the Noonkeepers caught the last noon in the great lens, so Ammaret would never be dark. The ones who kept the mask went up, and built a new city on our glass, and called themselves Magistrates. They forgot us. We didn't forget them. The mask opens the lens, and the mask can close it. Only a Magistrate's hand, in the mask, can do either.\"", "voice");
+    await say("\"The Blackjackal wants the Noon put out. A shadow is a small thing in our light. In the dark, a shadow is everywhere, and can go anywhere, and put on anyone. He brought your Magistrate down to close the lens. The Magistrate wouldn't, and somewhere on the stair he dropped the mask, so he couldn't be made to. Now the Blackjackal hides in our city, in someone, and waits. For the mask.\" Her veil turns toward you. \"For you.\"", "voice");
+    await say("\"And he isn't alone. There are Lidless who'd give him the dark gladly. We call them the <b>Dimmers</b>. Six hundred years without sleep is a long time. They climb the lens tower and close the shutters, one by one, and every bell the Noon grows dimmer.\"", "voice");
+    await mech("<b>The Noon</b> starts at 8 of 10 and dims by 1 every bell. The darker it gets, the stronger the Blackjackal will be when you face him, and at 4 or less, shadows in a fight are hard to hit without a light (the Lantern Knight's lamp, the Daylamp, the Sun-Shard or a noon-jar).");
+    await mech("<b>Your shadow</b> has three lengths. The Lidless pay well for it, but the Blackjackal reaches people through their shadows (the less you have, the harder it is to resist him), rest heals less, and with no shadow at all Vaelric's axe can't hold you up.");
+    await mech("<b>The Blackjackal is wearing someone</b> in the city. Each clue you find clears one suspect. Find three, and you'll know who.");
+    await say("\"Four people in Ammaret could hide him,\" Sabeth says. \"The four who handle shadows, or the light, every bell. Myself. Oriel Vane, who cuts shadows. Master Tollan of the Hour-House, who winds the lens. And Nim, the market's assayer, who weighs every shadow sold.\" She doesn't smile. \"You may suspect me. I would.\"", "voice");
+    if (S.nk.hv.bowed) await say("\"Keep the mask,\" she adds. \"I don't trust my own hands with it, and neither should you.\"", "voice");
+    await say("Outside the temple, someone is waiting in the shade of the dome: four Lidless in grey hoods, holding long hooked shutter-poles. \"Give us the mask, stranger,\" the first says, gently. \"We only want to sleep.\"", "voice");
+    const c2 = await choose([
+      { key: "fight", label: "\"No.\"" },
+      { key: "talk", label: "\"Sleep isn't what he's offering you.\"", tag: "Persuasion DC 14", plain: true }
+    ]);
+    let heads = 4;
+    if (c2 === "talk") {
+      const r = await check({ label: "Persuasion check", mod: 1, dc: 14, cta: "Talk" });
+      if (r.ok) { heads = 2; await say("Two of them hesitate, look at each other, and back away into the crowd. The other two don't."); }
+      else await say("\"Everything is what he's offering us,\" the first one says, and lifts his pole.");
+    }
+    await hkFight(DIMMERS({ name: "Dimmers", heads, unit: "Dimmer|Dimmers" }));
+    await say("When it's over, the crowd that gathered to watch drifts away again, slowly, unblinking. Nobody calls a guard. You're not sure Ammaret has any.");
+    await mech("Sabeth gives you a cot in the temple and two spans of three bells to hunt him before he hunts you. At each bell, you can go somewhere in the city. The third bell of each span is the Quiet Bell, when the shade-houses open.");
+    await go("Go out into the city");
+  }
+
+  // ---------- the hub: two spans of three bells ----------
+  async function errandsNoon() {
+    const N = nk();
+    for (;;) {
+      const price = 12 + N.sold * 4;
+      const c = await choose([
+        { key: "sell", label: "Sell a length of your shadow at the Shade Market", tag: price + " gold", show: N.shade > 0 },
+        { key: "jar", label: "Buy a noon-jar", tag: "10 gold · a light", show: S.coins >= 10 },
+        { key: "buy", label: "Have Oriel Vane sew a length of shadow back on", tag: "25 gold", show: N.shade < 3 && S.coins >= 25 && N.hv.oriel },
+        { key: "done", label: "That's all", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "sell") {
+        N.sold++; S.coins += price; renderSheet();
+        await say("The buyer, a young Lidless with her eyes red-rimmed and streaming, cuts the length herself with shaking hands, folds it, and presses it against her face right there at the counter. She's asleep before you've counted the coins.");
+        await mech("Sold a length of your shadow for " + price + " gold. The next will fetch more: there's less of it.", "loot");
+        await shadeLoss(1, "");
+      }
+      if (c === "jar") { S.coins -= 10; N.jars++; renderSheet(); await say("A glassblower in the market sells you a jar the size of your fist, stoppered with wax. It's full of light: ordinary noon, scooped up from under the lens and sealed in. It's warm."); }
+      if (c === "buy") { S.coins -= 25; renderSheet(); await say("Oriel Vane sews a length of somebody else's shadow onto yours with three fast stitches. It doesn't quite match. It's a little taller than you."); await shadeGain(1, "A borrowed length, sewn on."); }
+    }
+  }
+
+  async function nkSpan(span) {
+    const N = nk();
+    N.span = span; renderSheet();
+    while (N.bell < 3) {
+      const quiet = N.bell === 2;
+      const h = el("div", "part-head sub", '<span class="num">Span ' + span + " · " + BELLS[N.bell] + "</span>");
+      scrollNext = true; add(h);
+      light(N.noon <= 4 ? "dusk" : "noon");
+      if (N.bell === 0 && span === 2) await say(N.noon <= 4 ? "The light in Ammaret has gone the colour of weak tea. In the squares, people stand looking up at the lens tower with their wide eyes, and some of them are smiling." : "The great lens is still burning, but you can see the shutters in the lighthouse tower now, three of them, closed like eyelids over part of the light.");
+      let c;
+      for (;;) {
+        const v = N.hv;
+        c = await choose([
+          { key: "market", label: "The Shade Market", tag: v.scales ? "shadows bought and sold" : "the assayer's scales", show: true },
+          { key: "hour", label: "The Hour-House", tag: hasGear("hourkey") ? "Master Tollan" : "nine hundred stopped clocks", show: !v.hour },
+          { key: "oriel", label: "Oriel Vane's cutting-room", tag: hasGear("needle") ? "she owes you nothing" : "the shadow-cutter", show: !hasGear("needle") || !v.oriel },
+          { key: "gallery", label: "The lens galleries", tag: "reopen the shutters", show: !v.gallery },
+          { key: "chapel", label: "The Dimmers' chapel", tag: "Brother Lull preaches sleep", show: !v.chapel },
+          { key: "under", label: "Climb to the underside of the glass sky", tag: "Athletics DC 13", show: !v.under },
+          { key: "temple", label: "The Temple of the Kept Noon", tag: hasGear("veil") ? "rest" : "Sabeth Ure", show: true },
+          { key: "errands", label: "Errands in the market", tag: "no time passes", plain: true },
+          { key: "rest", label: quiet ? "Rent a cot in a shade-house" : "Rest on the temple steps", tag: quiet ? "3 gold · 2d6 HP" : "1d4 HP", plain: true, show: !quiet || S.coins >= 3 },
+          { key: "steps", label: "Sleep on the temple steps", tag: "1d4 HP", plain: true, show: quiet && S.coins < 3 }
+        ]);
+        if (c !== "errands") break;
+        await errandsNoon();
+      }
+      if (c === "market") await marketVisit();
+      if (c === "hour") await hourHouse();
+      if (c === "oriel") await orielVisit();
+      if (c === "gallery") await galleryVisit();
+      if (c === "chapel") await chapelVisit();
+      if (c === "under") await undersunVisit();
+      if (c === "temple") await templeVisit();
+      if (c === "rest") await shadeRest(quiet);
+      if (c === "steps") await shadeRest(false);
+      if (N.tyra && N.bell === 1 && !N.hv["tyra" + span]) { N.hv["tyra" + span] = true; await tyraAmmaret(span); }
+      if (quiet && c !== "rest") { const g = d(3), before = S.hp; if (N.shade > 0) { S.hp = Math.min(S.maxHp, S.hp + g); renderSheet(); } if (S.hp > before) await mech("You doze in a doorway through the Quiet Bell with your arm over your eyes. Regain " + (S.hp - before) + " HP.", "loot"); }
+      N.bell++;
+      await noonDown(1, BELLS[N.bell - 1] + " passes. Up in the tower, another Dimmer leans on another shutter.");
+      checkpoint();
+    }
+  }
+
+  async function tyraAmmaret(span) {
+    if (span === 1) {
+      await say("Tyra comes back from the market eating something that looks like a pear and is very definitely not a pear. She holds up a long iron key. \"Took it off one of the grey-hood lot while he was sleeping in his own shadow,\" she says. \"Opens a side door in that palace. Number forty-three.\" She grins. \"Collection's getting serious.\"");
+      N_tyraKey();
+      await mech("Tyra has the Dimmers' side-door key to the House of Shutters.", "loot");
+    } else {
+      await say("Tyra drops onto the step beside you. \"I've been watching your four,\" she says. \"Watching's what I'm good at. You want to know who isn't him?\"");
+      await clueFound("");
+      if (S.tyra) await fond(1, "She did the boring part, and didn't complain.");
+    }
+  }
+  function N_tyraKey() { nk().hv.tyraKey = true; renderSheet(); }
+
+  async function marketVisit() {
+    const N = nk();
+    light("noon");
+    await say("The Shade Market fills a long arcade where the light is filtered through cloth, so it's the dimmest place in Ammaret. Stalls sell shadows by the length: folded, rolled, pressed flat between glass, labelled by who they came from. <i>A child's, very soft. A soldier's, heavy, sleeps eight hours. A dog's.</i> Buyers stand with their faces wrapped in them, asleep on their feet, while the stall-keepers watch the bell.");
+    if (N.hv.scales) { await say("Assayer Nim nods to you from behind her scales, and goes back to weighing."); await errandsNoon(); return; }
+    N.hv.scales = true;
+    await say("At the end of the arcade the assayer sits at a great brass balance: <b>Nim</b>, small and severe, with her sleeves rolled up. Every shadow sold in Ammaret crosses her scales. When she sees you, she pushes nine folded black cloths across the counter.");
+    await say("\"Somebody's been selling slivers of something that isn't a shadow,\" she says. \"Heavier. Colder. Every one I find is a sliver of him: he's been feeding pieces of himself into my market, so that half the Lidless in this city are sleeping with a bit of the Jackal over their eyes. One of these nine is false. I have two weighings left on the city's licence today. You can have them.\"", "voice");
+    const r = await scalesPuzzle({ weighings: 2 });
+    let ok = r.ok;
+    if (!r.ok && r.forced) {
+      const w = await check({ label: "Wisdom check (feeling for the cold one)", mod: 2, dc: 15, cta: "Feel" });
+      ok = w.ok;
+      if (ok) await say("You close your eyes and run your hands over them one by one. One is colder than it should be, like a coin left out at night.");
+    }
+    if (ok) {
+      await say("Nim takes the false shadow from you with tongs and drops it into a jar of lamp-oil, where it thrashes and goes still. \"Good,\" she says. \"Now I know what he weighs. I can find the rest.\"");
+      await clueFound("Then she looks at you differently. \"He's been selling to my stalls through somebody. I'll tell you what I know about who it isn't.\"");
+      await noonDown(-1, "Nim clears the false slivers out of her market, and a hundred Lidless stop dreaming of the dark.");
+    } else await say("\"No matter,\" Nim says, though it clearly does. \"I'll find it myself, slower.\"");
+    await errandsNoon();
+  }
+
+  async function hourHouse() {
+    const N = nk();
+    N.hv.hour = true;
+    light("noon");
+    await say("The Hour-House is a tower of clocks. Every wall of every floor is covered with them, hundreds and hundreds, wood and brass and stone, and every one of them says twelve. Some are ticking. The hands go round, and come back to twelve, and go round again. In Ammaret, every hour is noon.");
+    await say("<b>Master Tollan Rusk</b> is a tall, stooped Lidless with ink on his fingers and spectacles over his lidless eyes. He winds the shutters of the great lens: the tower's great clockwork is his. He shows you the master clocks at the top of the tower, four of them, all stopped at different hours, chained to four brass levers.");
+    await say("\"The Dimmers jammed the master clocks,\" he says. \"While they're wrong, the shutters can't be wound open again from the tower. Set them right, and I'll give you my winding key. You'll have to climb the galleries to use it, I'm afraid. I'm too old for the galleries.\"", "voice");
+    const r = await dialPuzzle({ extra: 10 });
+    let ok = r.ok;
+    if (!ok) {
+      const f = await check({ label: "Intelligence check (working the chains backwards)", mod: 1, dc: 14, cta: "Reckon" });
+      ok = f.ok;
+      if (ok) await say("You stop pulling and start counting, and work it out on the back of your hand in charcoal, and get it right on the first try.");
+      else { await hurt(1, 4, "bludgeoning", "A spring lets go and the lever smacks you in the chest."); await say("Tollan sighs. \"Tomorrow, then. If there is one.\""); }
+    }
+    if (ok) {
+      S.gear.push("hourkey"); renderSheet();
+      await say("The master clocks tick once, all four together, and the whole tower answers: a thousand clocks ticking at once, like rain. Tollan presses a key as long as your forearm into your hands.");
+      await mech("Gain <b>the Hour-Key</b>. In the lens galleries, it winds the shutters open.", "loot");
+      await clueFound("\"And something you'll want,\" Tollan says, quietly. \"I've been keeping track of who comes and goes from the tower. Every hour. It's what I do.\"");
+    }
+  }
+
+  async function orielVisit() {
+    const N = nk();
+    light("noon");
+    if (!N.hv.oriel) {
+      N.hv.oriel = true;
+      await say("Oriel Vane's cutting-room is down three steps under a bridge: the darkest room you've seen in Ammaret, hung with drying shadows like a tanner's shop. Oriel is long-boned and quick, with bone shears on a cord around her neck and a black needle stuck through her collar.");
+      await say("\"The axe-carrier,\" she says. \"Everyone in the city's talking about your shadow. It's a very good shadow. If you ever want to sell it, sell it to me, not those vultures in the arcade.\" She sniffs. \"I could do with a favour, though. There's a loose shade in the drainage under the Weavers' Square. Feral. It's been taking shadows off sleeping children. Bring it to me in this,\" a jar of black glass, \"and I'll make you a needle no shearer can get past.\"", "voice");
+    } else await say("Oriel looks up from her stitching. \"Got my shade yet?\"");
+    const c = await choose([{ key: "go", label: "Go down into the drains after the loose shade" }, { key: "no", label: "Not now", plain: true }]);
+    if (c === "no") { N.hv.oriel = true; return; }
+    light("dark");
+    await say("The drains under the Weavers' Square are the only truly dark place in Ammaret, and they're full of the smell of it: cold stone and old water. Your light finds it at the bottom of a cistern. A child-sized shadow on the wall, with no child. When it sees your light, it grows.");
+    await mech("Bring it down to 5 HP or less, then <b>bottle it</b>. Kill it outright and there's nothing left to bottle.");
+    const F = SHADES({ name: "The loose shade", hp: 20, ac: 13, who: "the loose shade", hitWhy: "It folds itself round your arm, cold to the bone." });
+    F.extra = (st) => FOE.hp <= 5 && FOE.hp > 0 ? [{ key: "bottle", label: "Bottle it", tag: "Dexterity DC 11" }] : [];
+    F.onExtra = async (c2, st) => {
+      const r = await check({ label: "Dexterity check (the jar)", mod: 2, dc: 11, cta: "Bottle it" });
+      if (r.ok) { st.bottled = true; F.bottled = true; FOE.hp = 0; renderFoe(); await say("You clap the jar over it against the wall, and it pours itself inside like smoke, and you jam the stopper down."); }
+      else await say("It slides out from under the jar's mouth like a fish.");
+    };
+    await hkFight(F);
+    light("noon");
+    if (F.bottled) {
+      S.gear.push("needle"); renderSheet();
+      await say("Oriel holds the black jar up to the light and grins at the thing inside. Then she unpins the black needle from her collar and gives it to you. \"Shearers can't cut what this has sewn,\" she says. \"And here.\" She sews a scrap of the loose shade onto your heel with three fast stitches.");
+      await mech("Gain <b>Oriel's Shadow Needle</b>. Shade-shearers can't cut your shadow.", "loot");
+      if (N.shade < 3) await shadeGain(1, "Three stitches, and the scrap holds.");
+      await clueFound("\"One more thing,\" Oriel says, as you go. \"You're hunting the four of us. Fine. I cut shadows for a living: I know what a worn one looks like. I'll tell you who it isn't.\"");
+    } else await say("Oriel looks at the empty jar, and at you, and sighs. \"Well. At least it won't take any more children's shadows. Come back if you change your mind about selling.\"");
+  }
+
+  async function galleryVisit() {
+    const N = nk();
+    N.hv.gallery = true;
+    light("noon");
+    await say("The lens galleries wind up the inside of the lighthouse tower: iron walkways bolted to the stone, ring after ring of them, round and round the great shaft where the Kept Noon pours down from the lens. The heat is like an oven. Every fifty feet there's a shutter: a huge iron leaf on a hinge, built to swing across the light. Three of them are closed.");
+    await say("And on the walkway at the first closed shutter, three Dimmers are leaning on their poles, their faces wrapped in black, asleep on their feet.");
+    let fight = true;
+    if (hasGear("shutter")) { fight = false; await say("In your grey hood, they don't even wake. One of them murmurs <i>sleep well</i> as you pass."); }
+    else {
+      const c = await choose([{ key: "fight", label: "Wake them the hard way" }, { key: "sneak", label: "Slip past while they sleep", tag: "Stealth DC 13", plain: true }]);
+      if (c === "sneak") {
+        const r = await check({ label: "Stealth check", mod: 3 + (S.shadow ? 2 : 0), dc: 13, cta: "Sneak" });
+        if (r.ok) { fight = false; await say("You go by them so close you can hear them breathing slow, the way only sleepers breathe."); }
+        else await say("A walkway plate rings under your boot. Three faces come up out of their shadows.");
+      }
+    }
+    if (fight) await hkFight(DIMMERS({ name: "Shutter-Dimmers", heads: 3, unit: "Dimmer|Dimmers" }));
+    if (hasGear("hourkey")) {
+      await say("Tollan's key fits the winding-post beside the shutter. You lean on it, and the great iron leaf groans and swings back, and the light comes down the shaft like a hammer. Then the next. Then the last, at the very top, where the lens hangs over you like a second sun.");
+      await noonDown(-3, "All three shutters open.");
+    } else {
+      await say("Without a winding key, all you can do is get your shoulder under the first shutter and heave.");
+      const r = await check({ label: "Strength check (forcing the shutter)", mod: 3, dc: 15, cta: "Heave" });
+      if (r.ok) await noonDown(-1, "One shutter grinds open. The other two are chained.");
+      else await hurt(1, 6, "fire", "The iron is hot as a skillet, and it doesn't move.");
+    }
+    await say("From the top gallery you can see the whole city, gold and still. And the palace at the far end, the <b>House of Shutters</b>, where the Noonkeepers lived when there were more of them. Every one of its windows is shuttered. Every one.");
+  }
+
+  async function chapelVisit() {
+    const N = nk();
+    N.hv.chapel = true;
+    light("dusk");
+    await say("The Dimmers' chapel is an old cistern under the Street of Wells, roofed over with bought shadows sewn edge to edge, so that inside it's nearly dark. A hundred Lidless sit on the floor in grey hoods, faces covered, breathing slow. At the far end, a man with a soft round face and a voice like a pillow is talking about night. This is <b>Brother Lull</b>.");
+    await say("\"Our ancestors gave away the night,\" he says, \"to keep a light none of us asked for. We have not closed our eyes in six hundred years. Our children are born with their eyes open and die with their eyes open. And now someone has come who can give us the dark. Who would refuse a gift like that?\"", "voice");
+    const c = await choose([
+      { key: "pass", label: "Sit down among them, hooded, and listen", tag: "Deception DC 13" },
+      { key: "give", label: "Offer Brother Lull a length of your shadow as a tithe", tag: "lose a length · no roll", plain: true, show: N.shade > 0 },
+      { key: "speak", label: "Stand up and argue with him", tag: "Persuasion DC 15", plain: true }
+    ]);
+    let inside = false;
+    if (c === "give") { await say("Lull takes your shadow in both hands like a loaf of bread, and kisses it, and folds it into his robe. \"Brother,\" he says. \"Sit. Listen.\""); await shadeLoss(1, "A length of your shadow goes to the Dimmers."); inside = true; }
+    else if (c === "pass") {
+      const r = await check({ label: "Deception check", mod: 2, dc: 13, cta: "Blend in" });
+      inside = r.ok;
+      if (!r.ok) { await say("You blink. It's the most natural thing in the world, and in a room full of the Lidless it's like shouting. Every hood turns toward you."); await hkFight(DIMMERS({ name: "Chapel Dimmers", heads: 3, unit: "Dimmer|Dimmers" })); }
+    } else {
+      const r = await check({ label: "Persuasion check", mod: 1, dc: 15, cta: "Argue" });
+      if (r.ok) {
+        await say("\"He doesn't want you asleep,\" you tell them. \"He wants you dark. He wears people. When the Noon's out, every one of you is a coat he can put on.\" A murmur goes round. Lull's soft face doesn't change, but a dozen Dimmers take off their hoods and walk out.");
+        await noonDown(-1, "A dozen Dimmers leave the cult, and their shutter-poles go with them.");
+      } else { await say("Lull smiles at you kindly. \"You've slept every night of your life,\" he says. \"What would you know?\" The Dimmers stand up."); await hkFight(DIMMERS({ name: "Chapel Dimmers", heads: 3, unit: "Dimmer|Dimmers" })); }
+    }
+    if (inside) {
+      await say("You sit in the dark for a long time, and listen. When the sermon ends, the Dimmers whisper to each other, the way people in a congregation always do. You learn three things.");
+      await say("That the Magistrate is held in the House of Shutters, in the old Noon-room under the roof, behind two gates that open only in shadow. That the Jackal comes to the chapel at every Quiet Bell to bless them, in a different body each time, but always with the same voice. And where the spare hoods are kept.");
+      S.gear.push("shutter"); renderSheet();
+      await mech("Gain <b>a Dimmer's Shutter-Cloak</b>. Dimmers take you for one of their own.", "loot");
+      await clueFound("And one more thing, from an old woman next to you who talks in her sleep. She's seen the Jackal at the Quiet Bell, she says, and she knows who it wasn't.");
+      await noonDown(-1, "On your way out you cut the chapel's pole-store ropes. Twenty shutter-poles go rattling down the cistern.");
+    }
+  }
+
+  async function undersunVisit() {
+    const N = nk();
+    N.hv.under = true;
+    light("noon");
+    await say("At the edge of the city, where the cavern wall meets the glass sky, old scaffolds of bronze and rope climb up into the gold. The Noonkeepers built them to polish the glass. Nobody has polished it in a long time.");
+    const r = await check({ label: "Athletics check (the scaffolds)", mod: 3, dc: 13, cta: "Climb" });
+    if (!r.ok) await hurt(1, 6, "bludgeoning", "A rope parts under your hand and you drop a storey onto a bronze crossbar.");
+    await say("At the top, you're lying on your back on a gantry with the glass a foot above your face. It's warm. And it's not dark up there, on the other side: it's day in Sulmara. You can see the city above through a hundred feet of amber glass, blurred and gold, the way you'd see the sun through closed eyelids. A cart crosses overhead. Someone stops and stands right above you, and doesn't know you're there.");
+    await say("Embedded in the glass beside the gantry, where the Noonkeepers left it, there's a splinter of the Kept Noon: a sliver of light as long as your hand, caught in the glass like a fly in amber, and still burning.");
+    const c = await choose([
+      { key: "cut", label: "Prise the splinter out with the axe", tag: "Dexterity DC 12" },
+      { key: "leave", label: "Leave it", plain: true }
+    ]);
+    if (c === "cut") {
+      const p = await check({ label: "Dexterity check (prising it free)", mod: 2, dc: 12, cta: "Prise" });
+      if (!p.ok) await hurt(1, 6, "fire", "It's hotter than it looks. You get it anyway, and your palm will never be quite the same.");
+      S.gear.push("shard"); renderSheet();
+      await say("It comes free with a sound like a struck glass, and lies in your wrapped hand, humming, too bright to look at straight.");
+      await mech("Gain <b>the Sun-Shard</b>. It counts as a light, and once a fight it burns for 3d8 radiant, no roll, double against shadows.", "loot");
+    }
+    await say("Further along the gantry, scratched into the bronze rail with something sharp, there's writing in a neat clerk's hand, in Sulmara's own script.");
+    N.route = N.route || "under";
+    await clueFound("<i>They took me along this rail. The thing wearing the Jackal took off its body here to rest, and I saw it put another on. I write this so someone will know who it was NOT.</i> The Magistrate. It has to be.");
+    await say("And the rail itself goes on, along the underside of the glass, all the way to the roof of the House of Shutters. It's a way in that doesn't use a door.");
+  }
+
+  async function templeVisit() {
+    const N = nk();
+    light("noon");
+    if (!hasGear("veil") && !N.hv.temple) {
+      N.hv.temple = true;
+      await say("The Temple of the Kept Noon is the brightest place in Ammaret: a white dome with an open eye in its roof that the lens pours straight down through, onto a floor of polished brass. Noonkeepers in gold gauze stand around the edge of the light with their faces tipped up into it.");
+      await say("Sabeth Ure takes your hand in her dry, cool one. \"You're going to have to stand in front of him,\" she says. \"He'll try to step into you. He'll reach for your shadow first, always. Wear this.\" She unties the gold gauze from her own eyes and ties it over yours. Through it, the world is softer, and the light doesn't hurt.", "voice");
+      S.gear.push("veil"); renderSheet();
+      await mech("Gain <b>the Lidless Veil</b>: advantage on every save against the Wearing.", "loot");
+      await say("Without it, Sabeth's own eyes are terrible: wide, white-gold, and wet, and red at every edge. She doesn't look away from you. \"Six hundred years,\" she says. \"Try not to judge them too hard. The Dimmers.\"", "voice");
+      return;
+    }
+    await say("You sit in the edge of the temple's light, where it's warm, and let your shoulders drop for the length of a bell.");
+    const g = N.shade > 0 ? d(4) + 1 : 0, before = S.hp;
+    S.hp = Math.min(S.maxHp, S.hp + g); renderSheet();
+    await mech(g ? "Regain " + (S.hp - before) + " HP." : "You can't rest without a shadow. No HP regained.", g ? "loot" : "hurt");
+  }
+
+  async function partSpan1() { heading("XLIV", "The First Span"); if (!S.nk) initNoon(); if (S.nk.bell >= 3) S.nk.bell = 0; await nkSpan(1); S.nk.bell = 0; }
+  async function partSpan2() { heading("XLV", "The Second Span"); if (!S.nk) initNoon(); if (S.nk.bell >= 3) S.nk.bell = 0; await nkSpan(2); S.nk.bell = 0; }
+
+  // ---------- Part XLVI: the House of Shutters ----------
+  async function partShutters() {
+    heading("XLVI", "The House of Shutters");
+    const N = nk();
+    N.span = 3; renderSheet();
+    light(N.noon <= 4 ? "dusk" : "noon");
+    await say("At the start of the third span, the bells don't ring. Instead, all over Ammaret, the clocks that only ever say twelve start striking, out of time with each other, a thousand of them, like a city of startled birds. And every shutter on the House of Shutters swings open at once, and then closed. Open. Closed. Like an eye, blinking.");
+    await say("He's calling you.");
+    if (N.tyra) await say("Tyra looks at the palace, and at you. \"For the record,\" she says, \"I'd like it noted that I said <i>let's not.</i>\"");
+    const opts = [
+      { key: "front", label: "Walk up to the front doors", tag: hasGear("shutter") ? "in a Dimmer's hood" : "through the Dimmers" },
+      { key: "side", label: "Tyra's side door", tag: "key number forty-three", plain: true, show: !!N.hv.tyraKey },
+      { key: "rail", label: "Along the glass rail, to the roof", tag: "the Magistrate's way · Athletics DC 12", plain: true, show: N.hv.under }
+    ];
+    const c = await choose(opts);
+    N.route = c;
+    if (c === "front") {
+      if (hasGear("shutter")) await say("The Dimmers on the steps nod to you as you go up between them in your grey hood. One of them tucks a stray thread back into your hem for you, kindly.");
+      else await hkFight(DIMMERS({ name: "Palace Dimmers", heads: N.noon <= 4 ? 4 : 3, unit: "Dimmer|Dimmers" }));
+    }
+    if (c === "side") await say("Number forty-three turns in the lock as if it had been waiting for you. Tyra kisses it before she puts it back on the ring.");
+    if (c === "rail") {
+      const r = await check({ label: "Athletics check (along the rail)", mod: 3, dc: 12, cta: "Climb" });
+      if (!r.ok) await hurt(1, 6, "bludgeoning", "You slip, swing by one hand over a two-hundred-foot drop, and haul yourself back up by your teeth.");
+      await say("You drop through a shutter on the palace roof, straight into the gallery above the inner gates.");
+    }
+    light("dusk");
+    if (c !== "rail") {
+      await say("Inside, every window is shuttered, and the halls are full of a thin, striped light, bars of gold and bars of dark. At the end of the long hall stands the first gate: two leaves of black stone, closed, with a floor of glyphs before it. Sun glyphs and moon glyphs, cut into the stone. A shaft of light falls on them from a slot high in the east wall.");
+      const g1 = await shadowGate({ dir: "e", moves: 10, title: "The Outer Gate" });
+      if (!g1.ok) {
+        const r = await check({ label: "Strength check (heaving the gate)", mod: 3, dc: 15, cta: "Heave" });
+        if (!r.ok) { await hurt(1, 6, "bludgeoning", "The gate swings back on you."); await noonDown(1, "It takes too long."); }
+        await say("The gate grinds open far enough to squeeze through.");
+      } else await say("The gate opens on its own, without a sound.");
+    }
+    await say("The second gate guards the Noon-room itself. The glyph floor here is lit from a slot in the ceiling, so the light falls from straight above, slanting north. Somewhere behind the stone, a man is coughing.");
+    const g2 = await shadowGate({ dir: "n", moves: 10, title: "The Inner Gate" });
+    if (!g2.ok) {
+      const r = await check({ label: "Strength check (heaving the gate)", mod: 3, dc: 15, cta: "Heave" });
+      if (!r.ok) { await hurt(1, 6, "bludgeoning", "The gate swings back on you."); await noonDown(1, "It takes too long."); }
+      await say("The gate grinds open far enough to squeeze through.");
+    }
+    await say("The Noon-room is round and bare, with a ring of shuttered windows, and a man chained to the wall under them. He's thin, grey, unshaven, with the white band across his face where a mask used to sit. <b>The Magistrate of Sulmara.</b> When he sees the gold mask on your belt, he closes his eyes.");
+    await say("\"I dropped it,\" he whispers. \"On the stair. On purpose. Without it, he can't make me close the lens. Tell me you didn't bring it here.\"", "voice");
+    await say("Before you can answer, the four of them come into the room behind you.");
+    await say("Sabeth Ure, in her gold gauze. Oriel Vane, with her shears. Master Tollan, out of breath from the stairs. Assayer Nim, with her sleeves rolled up. Each of them says the bells brought them. Each of them looks at the others. And in the striped light, every one of them casts a shadow.");
+    await say("One of those shadows has ears.");
+    await mech("Name the one the Blackjackal is wearing. " + (N.elim.length >= 3 ? "You know who it is." : N.elim.length ? "You've cleared " + N.elim.length + ". Guess well." : "You have no clues. Guess."));
+    const pick = await choose(SUSPECTS.map((s, i) => ({ key: i, label: s.name, tag: N.elim.includes(i) ? "cleared" : "", plain: N.elim.includes(i) })));
+    N.named = pick === N.culprit ? "right" : "wrong";
+    const W = SUSPECTS[N.culprit];
+    if (N.named === "right") {
+      await say("You point at " + W.short + ". For a moment nobody moves. Then " + W.short + " smiles, a smile that doesn't fit the face it's on, and the shadow at " + W.short + "'s feet stands up off the floor by itself.");
+      await say("It's a man made of dark, lean, in a hood that is a jackal's head, ears up. " + W.short + " drops to the floor like an empty coat and lies there, breathing. The Blackjackal stretches, slowly, the way a cat does when it's been in a box too long.");
+      await say("\"Well done, warden's friend,\" he says, in a voice like a coin rolling on stone. \"It was getting tight in there.\"", "voice");
+      await mech("You named him. Torn out of his host before he was ready, he starts the fight weaker (−8 HP), and he doesn't get the first strike.", "loot");
+    } else {
+      const wrong = SUSPECTS[pick];
+      await say("You point at " + wrong.short + ". " + wrong.short + " looks back at you with wide, wet, honest eyes, and for a moment the room is very quiet.");
+      await say("Then someone behind you laughs. It's " + W.short + ". It's " + W.short + "'s mouth, anyway. \"Oh,\" says the Blackjackal, \"close.\" And " + W.short + " drops to the floor like an empty coat, and the shadow at " + W.short + "'s feet stands up, and is on you before you've turned round.");
+      await hurt(1, 8, "necrotic", "Cold hands go into your back like it's water.");
+      await noonDown(1, "Every shutter in the palace slams at once.");
+    }
+    S.nk.mag = true; renderSheet();
+    if (N.tyra) await say("Out of the corner of your eye, you see Tyra go to the Magistrate's chains with her ring of keys, and start trying them one by one, without hurrying at all.");
+    else await say("The Magistrate yanks at his chains behind you, uselessly.");
+  }
+
+  // ---------- Part XLVII: the Blackjackal ----------
+  async function partJackal() {
+    heading("XLVII", "The Blackjackal");
+    const N = nk();
+    light(N.noon <= 4 ? "dark" : "dusk");
+    const hp = 32 + 2 * (10 - N.noon) - (N.named === "right" ? 8 : 0);
+    await say("He comes at you across the striped floor, in and out of the bars of light, and in the light he's thin, a sketch of a man, and in the dark bars he's thick and solid and fast.");
+    if (vaelricSpeaks()) await voice("\"Keep him in the light,\" Vaelric says. \"That's all he is. A shadow. Keep him where it's bright.\"");
+    await mech("The Blackjackal has " + hp + " HP: the dimmer the Noon got, the stronger he is." + (N.noon <= 4 && !hasLight() ? " It's dim, and you have no light, so your swings at him have disadvantage." : "") + " Every third round he hides in the shadows on the wall: pin the right one and he takes damage. Every other round, he reaches for your shadow.");
+    if (N.named !== "right") await mech("He gets the first strike.", "hurt");
+    const opts = (st) => {
+      const o = [];
+      if (S.mask2 && N.mag && !st.used.mask) o.push({ key: "mask", label: "Throw the Noon-mask to the Magistrate", tag: "the lens answers him", plain: true });
+      if (hasGear("hourkey") && !st.used.key) o.push({ key: "key", label: "Wind the shutters open with the Hour-Key", tag: "he loses a turn", plain: true });
+      return o;
+    };
+    let tyraSaved = false;
+    const F = SHADES({ name: "The Blackjackal", hp, ac: 15, atk: 6, n: 1, s: 10, type: "necrotic", who: "the Blackjackal", whoShort: "The Blackjackal",
+      hitWhy: "His hand goes into your chest like into cold water, and squeezes.", miss: "You feel him go past your ear, laughing.", hitLine: "He comes apart where the blade went through, and pulls himself back together slower than before.",
+      extra: opts,
+      before: async (st) => {
+        if (st.round === 1 && N.named !== "right") await foeSwing(F, st, { label: "The Blackjackal strikes first" });
+        if (st.round % 3 === 0 && FOE.hp > 0) {
+          await say("He melts into the dark bars on the wall, and suddenly there are five shadows there, five jackal-headed shapes, and only one of them is him.");
+          const r = await pinShadow({ swings: N.noon >= 6 || hasLight() ? 2 : 1 });
+          if (r.ok) { await foeBurst(2, 8, 0, "You pin him to the wall"); st.adv = true; await mech("Your next attack has advantage.", "loot"); }
+          else { await say("He comes off the wall behind you."); await foeSwing(F, st, { label: "The Blackjackal strikes from the dark" }); }
+        }
+      },
+      turn: async (st) => {
+        if (st.round % 2 === 0) {
+          await say("He doesn't swing at you. He reaches down, past you, for your shadow.");
+          const ok = await wearSave("");
+          if (ok) await say("You hold on. He gets a grip on the edge of your shadow and it tears free of his fingers like a sail in a gale.");
+          else {
+            await say("He steps into you. For a moment you're standing in the Noon-room looking out of your own eyes from somewhere far back, and your hand is lifting the axe toward your own throat, and it isn't you lifting it.");
+            if (N.tyra && !tyraSaved) { tyraSaved = true; await say("Tyra hits you across the face, hard, with an open hand. \"<i>Oi,</i>\" she says. And you're back, and he's thrown out of you like a cork out of a bottle."); if (S.tyra) await fond(1, "She'll never let you forget it."); }
+            else { await hurt(1, 8, "psychic", "You get your hand back, but not before it has cut you."); FOE.hp = Math.min(FOE.max, FOE.hp + 4); renderFoe(); await mech("He drinks from you as he goes: +4 HP.", "hurt"); }
+          }
+          return "done";
+        }
+      },
+      onExtra: async (c, st) => {
+        if (c === "mask") {
+          st.used.mask = true;
+          if (N.tyra || N.named === "right") {
+            await say("You tear the gold mask off your belt and throw it across the room. The Magistrate, " + (N.tyra ? "his chains hanging open where Tyra left them," : "his chains broken by the shock of the Jackal leaving its host,") + " catches it, and puts it on.");
+            await say("The shutters of the Noon-room open, all of them, at his word, and the light of the great lens comes down the shaft and into the room in one solid gold bar. The Blackjackal is standing in the middle of it.");
+            await foeBurst(3, 10, 0, "The Kept Noon finds him");
+          } else {
+            await say("The mask skids across the floor and stops a foot short of the Magistrate's chained hand. He strains for it. He can't reach.");
+            st.used.mask = false;
+          }
+        }
+        if (c === "key") {
+          st.used.key = true; st.stilled = true;
+          await say("You jam the Hour-Key into the winding-post under the window and haul on it, and the shutters of the Noon-room grind open, one after another. Light floods the floor in great gold slabs. The Blackjackal has nowhere to stand.");
+          await mech("He loses his next turn.", "loot");
+        }
+      } });
+    await hkFight(F);
+    light("noon");
+    await say("He comes apart on the floor of the Noon-room like smoke in a draught, thinner and thinner, until all that's left of the Blackjackal is a scrap of shadow the size of a dog, lying in the light, with its ears flat.");
+    await say("\"Warden's friend,\" it says. Its voice is very small now. \"Do you know how long I was a shadow on a wall in Carrowmere? A hundred years. Nobody even looked at me. I only wanted to be somewhere it was dark enough to be big.\"", "voice");
+    const c = await choose([
+      { key: "burn", label: "Hold him up into the Kept Noon until he's gone" },
+      { key: "sew", label: "Sew him into your own shadow with Oriel's needle", tag: "the Jackal's Shadow", plain: true, show: hasGear("needle") },
+      { key: "free", label: "Let him crawl away down the stair", tag: "into the deep dark", plain: true }
+    ]);
+    N.jackal = c === "sew" ? "sewn" : c;
+    if (c === "burn") {
+      await say("You pick him up. He weighs nothing. You hold him up into the bar of gold light, and he doesn't struggle. He just gets thinner, and thinner, and then he's a shape on the air like the shape a lamp leaves on your eyes, and then not even that.");
+      if (vaelricSpeaks()) await voice("\"A hundred years on a wall,\" Vaelric says, after a while. \"I know a little about that.\"");
+    }
+    if (c === "sew") {
+      await say("You hold him down against your own shadow, where it pools at your feet, and sew. Three stitches, the way Oriel does it. He doesn't fight. When it's done, your shadow is a little longer than it should be, and when you turn your head, it turns its head a moment later.");
+      await mech("Gain <b>the Jackal's Shadow</b>: +2 Stealth in the dark. He's in there. He's quiet, for now.", "loot");
+      if (N.shade < 3) await shadeGain(3 - N.shade, "He fills out every length you lost.");
+    }
+    if (c === "free") {
+      await say("You step back out of the light, and so does he. He looks at you for a long moment with eyes that are only holes, and then he's gone, a darker patch sliding down the deep stair, and down past it, toward places even the stair doesn't go.");
+      if (vaelricSpeaks()) await voice("\"You'll see him again,\" Vaelric says. \"His kind always come back to whoever let them go.\"");
+    }
+    const W = SUSPECTS[N.culprit];
+    await say(W.short + " sits up on the floor of the Noon-room, holding " + (N.culprit === 2 ? "his" : "her") + " head, and asks what day it is. Nobody in Ammaret can answer that.");
+  }
+
+  // ---------- Part XLVIII: the Kept Noon ----------
+  async function partKeptNoon() {
+    heading("XLVIII", "The Kept Noon");
+    const N = nk();
+    light("noon");
+    await say("The Magistrate stands at the window of the Noon-room with the gold mask in his hands, looking out at the lens. It hangs in the tower across the way like a second sun, and with your hand on the shutter you can feel how warm it is from here." + (N.noon <= 4 ? " It's dimmer than it was. You can look at it now, almost." : ""));
+    await say("\"I can close it,\" he says. \"Or open it all the way, so it burns another six hundred years. Or turn it down, if there's a way to turn it down. I don't know if there is. The Noonkeepers who went up forgot everything about it but the mask.\" He turns it over in his hands. \"You found it on the stair. You came all this way. I think you'd better tell me.\"", "voice");
+    await say("Down in the city, the Lidless are standing in the streets, all of them, looking up at the palace with their wide, wet eyes. Sabeth is with them. So is Brother Lull. Nobody is saying anything.");
+    const c = await choose([
+      { key: "keep", label: "\"Open it all the way. Keep the Noon.\"", tag: "Ammaret stays in the light" },
+      { key: "dusk", label: "\"Turn it down. Give them a dusk.\"", tag: "Intelligence DC 13 · the Hour-House's clockwork", plain: true, show: hasGear("hourkey") },
+      { key: "night", label: "\"Close it. Let them sleep.\"", tag: "the first night in six hundred years", plain: true }
+    ]);
+    let end = c;
+    if (c === "dusk") {
+      await say("You take Tollan's key across the bridge to the lens tower, and the Magistrate comes with you in the mask, and together you work out what the old clockwork was for. It was never for open and closed. It was for this: the shutters can wind across the lens in turns, so the Noon goes round the city like a sun, and every part of Ammaret has its hours of dark.");
+      const r = await check({ label: "Intelligence check (the old clockwork)", mod: 1, dc: 13, adv: N.noon >= 6, cta: "Set the shutters turning" });
+      if (r.ok) await say("It takes a whole span. When it's done, the light moves. For the first time in six hundred years, it moves, and a shadow crawls slowly across the Street of Wells, long and soft and grey, and people stand in it with their mouths open.");
+      else { end = "keep"; await say("You can't make it turn. The shutters jam open, the Noon blazes, and the old clockwork seizes for good. Ammaret is going to be a city of noon for as long as the lens lasts."); }
+    }
+    N.ending = end;
+    if (end === "keep") {
+      await say("The Magistrate lifts the mask and puts it on, and says the old word, and the last shutters swing back. The lens blazes. In the streets, the Lidless turn their faces up into it the way they've always done, and some of them are crying, and you can't tell which way.");
+      await say("Sabeth Ure bows to you. Brother Lull doesn't. By the next bell the Dimmers are back in their chapel, under their roof of bought shadows, waiting for whoever comes next.");
+    }
+    if (end === "dusk") {
+      await say("You watch the dark come to Ammaret from the tower. It comes slowly, from the west, like a tide. Where it reaches, people lie down in the streets. Just lie down, wherever they are, in doorways, on stairs, in the middle of the Shade Market, and close their eyes. They can't close their eyes. They put their hands over them instead.");
+      await say("Brother Lull is asleep on the steps of the temple with his head in Sabeth Ure's lap. She's awake, sitting very straight. When the dark reaches her, she takes off her gauze, and lets it.");
+    }
+    if (end === "night") {
+      await say("The Magistrate puts on the mask and says the old word, and the shutters close over the great lens one after another, and the Kept Noon goes out.");
+      await say("The dark comes down on Ammaret all at once, like a lid. It's total. You can't see your hand. Down in the streets there's a sound you don't understand at first, a long low sound from a whole city at once. It's people sighing.");
+      await say("Some of them won't wake up. Sabeth told you that before, in the temple, very calmly: six hundred years of sleep is owed, and some of them will take all of it. You light a torch, and sit with the Magistrate in the dark, and nobody comes to complain.");
+    }
+    if (N.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits down next to you on the windowsill and puts her head on your shoulder. \"Forty-three keys,\" she says. \"And not one of them opens anything as good as that.\"" : "Tyra leans on the windowsill next to you, turning key number forty-three over in her fingers. \"Well,\" she says. \"That's a story nobody up there is going to believe.\"");
+    await say("Going up takes three days. The Magistrate climbs the deep stair on his own feet, slowly, not talking much. On the last night, at the top, in the dark of Thrumhold, he tells you why the Blackjackal wanted him, and not some other man.");
+    await say("\"There's a ledger,\" he says. \"The Magistrates keep it. One page a year, for six hundred years. It's not about money. It's about the roots.\" He looks at your axe for a long time. \"Every year, the roots under the world grow a little closer to the surface. Something under your labyrinth is pushing them up. The Ember Root was the last thing holding it down, and someone took the Ember Root.\" A pause. \"Some thieves. In a heist. You may have heard.\"", "voice");
+    if (vaelricSpeaks()) await voice("Vaelric is silent for a very long time. Then: \"Take me home,\" he says.");
+    N.on = false; renderSheet();
     await jChapterDone(PARTS.length - 1);
     await endCard();
+  }
+
+  async function fallenNoon() {
+    foeEnd();
+    light("dark");
+    const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
+    scrollNext = true; add(h);
+    await say("You go down, and there's nothing under you to catch you: no shadow on the stones, nothing for the roots to hold. The gold light goes grey, and then goes.");
+    const lost = Math.floor(S.coins / 2);
+    S.coins -= lost; S.deaths = (S.deaths || 0) + 1; S.hp = S.maxHp;
+    S.nk.shade = Math.max(1, S.nk.shade);
+    renderSheet();
+    light("noon");
+    await say("You wake on the brass floor of the Temple of the Kept Noon with the light pouring down on you. There's a shadow at your heels again: a stranger's, sewn on badly, a little too short. Sabeth Ure is kneeling beside you with a black needle in her fingers.");
+    await say("\"It belonged to a woman who died at the Second Bell,\" she says. \"She'd want it used. Somebody took your purse while you lay in the street.\"", "voice");
+    await mech("You died. You wake in the temple with full HP and a borrowed scrap of shadow. You lost " + lost + " gold from your purse. The part begins again from your last rest. Deaths so far: " + S.deaths + ".", "hurt");
+    await go("Get up");
   }
 
   async function endCard() {
@@ -7543,6 +8482,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.mask2) carried.push("The Magistrate's gold mask");
     if (S.bounty && S.bounty.done.length) carried.push("A " + rank() + "'s tally: " + S.bounty.done.length + " contract" + (S.bounty.done.length > 1 ? "s" : "") + " closed");
     if (S.molt) carried.push("Moltwater in your blood, and no Bloom");
+    if (S.nk) carried.push(S.nk.jackal === "sewn" ? "A shadow with a jackal's ears, sewn into your own" : "Your shadow: " + SHADE_NAME[S.nk.shade].toLowerCase());
+    if (S.nk && S.nk.jars) carried.push(S.nk.jars + " noon-jar" + (S.nk.jars > 1 ? "s" : ""));
     if (S.tyra) carried.push(S.tyra.love ? "Tyra Quillon, at your side and holding your hand" : "Tyra Quillon's friendship, for what it's worth (" + S.tyra.aff + " of 5)");
     const sc = S.scrolls ? S.scrolls.fire + S.scrolls.poison + S.scrolls.frost : 0;
     if (sc) carried.push(sc + " snare rune scroll" + (sc > 1 ? "s" : ""));
@@ -7559,12 +8500,18 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       blast: "Where Thrumhold was, there is a mountain of fallen stone, and nobody sings in it.",
       leave: "In Thrumhold, the Hesk stand on their ledges in the silence, deciding what they are without a drum."
     };
+    const NOON = {
+      keep: "Under Sulmara, the Kept Noon blazes on, and the Lidless keep their open eyes on it.",
+      dusk: "Under Sulmara, the Noon goes round Ammaret like a sun now, and the Lidless lie down in the shadow when it comes.",
+      night: "Under Sulmara, Ammaret sleeps in the first night it has had in six hundred years."
+    };
+    const JACKAL = { burn: " The Blackjackal burned away in the light.", sewn: " The Blackjackal is sewn into your shadow, and quiet, for now.", free: " The Blackjackal went down into the deep dark, and you let him." };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XLII</p>' +
+      '<p class="eyebrow" style="margin:0">Part XLIX</p>' +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You stand in the square at Ashgate with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>You stand at the top of the deep stair with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + (S.deaths ? " The Bloom killed you " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + ", and Vellum Rest brought you back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + " On the deep stair under the mountain, the footprints go down toward a gold light: the second Sulmara, and the Magistrate somewhere in it.</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>');
     scrollNext = true;
@@ -7573,8 +8520,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("endJournalBtn").onclick = () => jOpen();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
@@ -7599,7 +8546,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
       '<p class="big">The labyrinth goes deeper.</p>' +
-      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass and a mountain that sings.</p>" +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, and a buried city where it has been noon for six hundred years.</p>" +
       "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
       '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');

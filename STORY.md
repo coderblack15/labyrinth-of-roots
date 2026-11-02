@@ -811,10 +811,84 @@ Adrian asked for something new instead of carrion beetles, so the race is an ori
   - **Truce:** the drum stays silent and the moltwater trade resumes.
   - **Collapse:** the Thrumhold Contract brings down the whole cavern, sleepers and all (60 gold).
   - **Walk away.**
-- **Hook.** On the deep stair, footprints (bare human feet and a jackal's prints) go down toward a gold light: the second Sulmara. The end card is Part XLII.
+- **Hook.** On the deep stair, footprints (bare human feet and a jackal's prints) go down toward a gold light: the second Sulmara. It leads on into the next chapter.
 
 ### Tyra
 
 If her fondness was 2 or more (or you romanced her), she comes north. She takes one Hesk down in each mob fight and has a line each day. Her key no. 42, from an Ashgate granary, opens Iyu's padlock.
 
+## The Kept Noon: Ammaret (Parts XLII–XLVIII)
+
+This chapter follows The Corrach Three. The deep stair under Thrumhold goes down for thousands of steps to **Ammaret**, the old Sulmara. Six hundred years ago the desert melted to glass over it, and the new Sulmara was built on top of that glass. From below, the sky is amber glass from wall to wall, and you can see the dark soles of Sulmara's streets through it.
+
+### The Lidless and the Kept Noon
+
+- **The Kept Noon.** Before the glass came down, Ammaret's Noonkeepers caught the last noon in a lens as big as a house, at the top of a lighthouse tower, so their city would never be dark. It has been noon in Ammaret ever since. Every clock in the city says twelve.
+- **The Lidless.** Ammaret's people (an original race). Six hundred years without night have changed them. Their eyelids withered away generations ago, their eyes are wide, wet and pale gold, and they keep them wet with little brushes on cords. They have never slept.
+- **Shadows as currency.** Under a sun that stands straight overhead, a shadow is a small black pool at your feet, and it's the only dark the Lidless have. Shadow-cutters cut shadows off with bone shears, and the Lidless buy them, fold them, and lay them over their open eyes to sleep for a while.
+- **The Noon-mask.** The Noonkeepers who went up became Sulmara's Magistrates and forgot everything except the gold mask. Only a Magistrate's hand, in the mask, can open or close the lens.
+- **The Blackjackal's plan.** He's a shadow that got loose. In the noon he is small, but in the dark he could be everywhere and wear anyone. He dragged the Magistrate down to close the lens. The Magistrate dropped the mask on the stair on purpose (you found it in Thrumhold), so now the Blackjackal hides in someone in the city and waits for you to bring it.
+- **The Dimmers.** Lidless who want the dark so badly they'd give it to him. Led by Brother Lull, they climb the lens tower and close its shutters.
+
+### Systems
+
+- **The Noon (0–10).** It starts at 8 and dims by 1 every bell. At 4 or less it's dim: shadow enemies are hard to hit without a light (attacks at disadvantage). The final boss has 32 + 2 × (10 − Noon) HP. Clearing Nim's market (+1), the Dimmer chapel (+1), arguing Dimmers out of the cult (+1) and opening the lens shutters with the Hour-Key (+3, or +1 by force) brighten it.
+- **Your shadow (3 lengths).** You can sell lengths at the Shade Market (12, then 16, then 20 gold) or pay the gate toll or the Dimmers' tithe with one. Oriel Vane sews a length back for 25 gold. With fewer lengths:
+  - The Blackjackal's **Wearing** gets easier to suffer: a Wisdom save at DC 9 + 2 per missing length (DC 16 with no shadow).
+  - Rest heals half at one length, and not at all at none.
+  - **With no shadow at all, Vaelric's axe can't hold you up** ("I hold you by your shadow"). At 0 HP you die, wake in the Temple of the Kept Noon with a stranger's shadow sewn on, lose half your purse, and replay the part from your last rest.
+- **Lights.** The Lantern Knight's lamp, the Daylamp, the Sun-Shard and noon-jars (10 gold in the market; smash one for 2d6 radiant, 4d6 against shadows).
+- **Time.** Two spans of three bells: First Bell, Second Bell, and the Quiet Bell, when the shade-houses open (3 gold for a cot of real dark, 2d6 HP). Errands in the market take no time.
+- **Who is he wearing? (a deduction).** The Blackjackal is wearing one of four people, picked at random each game: Noonkeeper Sabeth Ure, Oriel Vane the shadow-cutter, Master Tollan Rusk of the Hour-House, or Assayer Nim. Each clue clears one innocent: the assayer's scales, the Hour-House, Oriel's errand, the Dimmer chapel, the Magistrate's note under the glass sky, and Tyra in the second span. Three clues and you know. In the House of Shutters you name him. Right: he's torn out early (−8 HP, no first strike). Wrong: he strikes first and the Noon dims.
+
+### Places
+
+- **The Shade Market.** Sell shadow, buy noon-jars. Assayer Nim's scales puzzle (a clue, Noon +1).
+- **The Hour-House.** Nine hundred stopped clocks. Master Tollan's dial puzzle earns the Hour-Key and a clue.
+- **Oriel Vane's cutting-room.** Catch the loose shade in the drains alive (bring it to 5 HP, then bottle it) for the Shadow Needle, a length back and a clue.
+- **The lens galleries.** Iron walkways inside the lighthouse. Fight or sneak past the shutter-Dimmers, then open the shutters.
+- **The Dimmers' chapel.** A cistern roofed with sewn shadows. Get in by bluffing, by tithing a length of your shadow, or by arguing with Brother Lull. Inside: the Shutter-Cloak, a clue, and the pole-store to sabotage.
+- **The underside of the glass sky.** Climb the old polishing scaffolds, lie under Sulmara's streets, prise out the Sun-Shard, and find the Magistrate's scratched note (a clue) and a rail to the palace roof.
+- **The Temple of the Kept Noon.** Sabeth gives you the Lidless Veil. Rest in its light.
+
+### Five quest-earned items
+
+| Item | Quest | Effect |
+|---|---|---|
+| **The Sun-Shard** | Prise it out of the glass sky | Counts as a light. Once a fight, 3d8 radiant, no roll, double against shadows |
+| **The Hour-Key** | Set Master Tollan's master clocks | Opens all three lens shutters (Noon +3). In the boss fight, wind the Noon-room shutters open: he loses a turn |
+| **Oriel's Shadow Needle** | Bottle the loose shade alive | Shade-shearers can't cut your shadow. Lets you sew the Blackjackal into your shadow at the end |
+| **The Lidless Veil** | Visit Sabeth at the temple | Advantage on every save against the Wearing |
+| **Dimmer's Shutter-Cloak** | Get inside the Dimmers' chapel | Dimmers take you for one of their own (the galleries, the palace front doors) |
+
+### Puzzles (each has a fallback)
+
+1. **The Hour-House dials.** Four stopped clocks, four levers. Each lever winds two or three of the clocks forward an hour (I: A+B, II: B+C, III: C+D, IV: A+B+D). Bring every hand to 12 within the pull limit. There's exactly one answer. Fallback: Intelligence DC 14.
+2. **The assayer's scales.** Nine folded shadows, one heavier. Two weighings on a balance, then point to the false one. Fallback: Wisdom DC 15.
+3. **The shadow gates.** A 5×5 floor of sun and moon glyphs, with light falling from one side. Set three shutter-stones, each throwing shadow two squares away from the light, so every ☾ is in shadow and every ☼ stays lit, within 10 moves. The outer gate is lit from the east, the inner gate from above. Fallback: Strength DC 15 (failure costs HP and Noon).
+4. **Pin the shadow.** In the boss fight, every third round he hides among five shadows. Swing the lamp: true shadows move at once, his is a heartbeat late. Strike the right one for 2d8 and advantage.
+5. **The deduction.** Name the one he's wearing.
+
+### Story beats
+
+- **XLII The Deep Stair.** Thousands of steps. The tongueless bells and three cutshades (fight, run, or ring the bells). Coming out under the glass sky.
+- **XLIII Ammaret.** The gate toll (gold, a length of shadow, or show the mask). The Lidless, the shade-sleepers in the streets. Sabeth Ure explains the Kept Noon, the mask and the four suspects. The Dimmers ambush you outside the temple.
+- **XLIV–XLV The First and Second Span.** The hub, with checkpoints after every bell and Tyra's moments (key no. 43, and a clue).
+- **XLVI The House of Shutters.** In by the front (fight, or walk in hooded), by Tyra's side door, or along the glass rail to the roof. Two shadow gates. The Magistrate in chains in the Noon-room. The four suspects arrive. Name him.
+- **XLVII The Blackjackal.** 32 + 2 × (10 − Noon) HP, AC 15, 1d10 necrotic. Pin the shadow every third round, the Wearing every second round (Tyra slaps you out of it once). Throw the mask to the Magistrate (once he's free) and the lens burns him for 3d10. Then his fate: burn him in the noon, sew him into your shadow (needs the needle: +2 Stealth in the dark, he fills your lost lengths), or let him crawl away down the stair.
+- **XLVIII The Kept Noon.** The Magistrate asks you what to do with the lens:
+  - **Keep the Noon:** Ammaret stays in the light forever.
+  - **A dusk:** with the Hour-Key, set the shutters turning so the light goes round the city like a sun (Intelligence DC 13). The Lidless lie down in the first shadow they've seen.
+  - **Night:** close the lens. Ammaret sleeps, and some won't wake.
+- **Hook.** On the way up, the Magistrate tells you about the Magistrates' ledger: every year the roots under the world grow closer to the surface, something under the labyrinth is pushing them up, and the Ember Root (which you stole in the heist) was the last thing holding it down. Vaelric asks to go home. The end card is Part XLIX.
+
+### Bestiary
+
+Two new creatures walk the road in Ammaret (before Parts XLIII–XLV): the **Shade-shearer** (each hit snips your shadow; two snips cut a length, which you get back if you kill it; the Shadow Needle stops it) and **Cutshades** (feral cut shadows in threes; hard to hit in the dim without a light, and they slip through walls).
+
+### Tyra
+
+If she came north, she comes down too. She steals the Dimmers' side-door key (no. 43), clears a suspect in the second span, unlocks the Magistrate's chains during the fight, and slaps you out of the Wearing once.
+
 *To be continued.*
+
