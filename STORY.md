@@ -962,4 +962,54 @@ Two new creatures walk the road under the labyrinth (before Parts L–LII): the 
 
 If she came north, she comes down too, hating every minute of it. She steals the Lunary's star-door key (no. 44) from an upside-down Unmoored, gives you her lucky river stone in the second tide, clips her belt to yours at the Heartfall, and hauls you back down once when the moon pulses.
 
+
+---
+
+## The Siege of Rahdaria (Parts LVI–LXII)
+
+This chapter follows The Undermoon. Ilo Brack's cords found a second pull from under the western sea. You follow it west to the coast and find Rahdaria, the garden city, under siege.
+
+### The world
+
+- **Rahdaria.** A city of seven stepped terraces rising out of the coast, every terrace a garden (the Hanging Gardens), watered by great wooden screws that lift river water from step to step. Eighty thousand people, fed by the gardens. Ruled by the Council of Terraces under High Steward Nerys Aldane.
+- **The Bathyr** (an original race) and their country, **Bathyrra**. The other light that fell a thousand years ago, the Drowned Light, lies on the sea floor and presses down, and round it the sea stands back in a dry bowl. The Bathyr are born too heavy, the Moored turned inside out: short, broad, slate-grey and dense, and they sink in water like stones. They talk by tapping on stone, write in letters pressed into lead, and get giddy on high ground. Since the Undermoon changed, their sky of water has been coming down. They came up out of the sea twelve days ago.
+- **Historical siege echoes.** Ration tallies at the bread line, rats sold by the brace, boiled leather and wallpaper paste, the royal menagerie's beasts sold by the pound, letters flown out on kites, hot sand tipped from the walls, a chain across the harbour, the garrison seizing grain, a black market under the menagerie.
+
+### Cast
+
+Nerys Aldane (High Steward), Marshal Dace Kerrow, Odile Moorcant (Master of Waters), Aurel Vantry (Master of Granaries, the traitor), Sergeant Brannagh Holt, Quartermaster Ludo Fenwick, Keeper Sabine Orr (the gardens), Ysolde Crane the Saltwife (the black market), Widow Hanna Loy, Nim the baker's boy, Netta Shrike (fisherwife), Bel Amory (the Pressed Rose inn), Mattie Gorse (the Brazier smithy), Tamsk (a young Bathyr prisoner), the Speaker for the Deep. Generals: Ghorrad Keel the Anchor (soldiers), Ysmay Sault the Brinewife (poisoner), Dunmere Thole the Siege-Wright (engines and crates).
+
+### Systems
+
+- **Detective.** The High Steward makes you her Inquirer and gives you the Inquirer's Seal. The Inquirer's Eye: +2 to Investigation and Insight in Rahdaria, and 3 uses to strike out the wrong half of the answers at a deduction. `S.detective` stays with you after the chapter.
+- **The Casebook: seven cases**, three clues each, two enough to work a case out (free action). A wrong answer costs 5 Standing and the case goes cold until you find another clue.
+  1. The Unknown Flag (who they are, what they can't do)
+  2. The Poisoned Gardens (how the brine got in, which two cisterns)
+  3. The Missing Grain (Quartermaster Fenwick)
+  4. The Beating in Cistern Lane (one of four soldiers, random each run)
+  5. The Velvet Ledger (the Saltwife, and "A.V."): then kitchen, shut it, or take a cut
+  6. The Key to the Cisterns (Aurel Vantry), accused before the Council in Part LIX
+  7. The Three Generals (the crates at the salt kilns; Sault poisoned the gardens)
+- **Hunger** (0–10, starts at 7) rises every dawn. At 10 the city riots (Standing −8). Brought down by: the garrison's hidden grain, curing the blight, the fishing run, the Velvet Kitchen, Vantry's hoard, rooftop seed-trays, rallying the terraces, beating Sault.
+- **Standing** (0–100) with tiers Stranger, Known (5% off), Trusted (10%), Honoured (15%), Hero of Rahdaria (25%). The discount applies at the Pressed Rose inn, the Brazier smithy (scale shirt +1 AC, honing +1 axe damage) and the stalls (Draughts of Mending, bread for the line, seed-trays). The black market doesn't discount.
+- **Time.** Three days of four watches (Morning, Afternoon, Dusk, Night). Some places are daylight-only, some dark-only. Casebook, stalls and smithy take no time.
+- **The blockade** (Part LIX onward). After the Council, the Bathyr seal the city. It lifts when 100 soldiers, 100 crates and 3 Generals are beaten. Two days of three watches: sorties (soldiers), raids (crates), Generals when their protection is cut away (Keel at 60 soldiers or fewer, Thole at 60 crates or fewer, Sault once case 7 is solved or the blight is cured), rally the terraces (Standing 40+), and one **sabotage mission** in three branches (the Flood, the Fire, the Fall), each planned with three questions answered from your notes. If you break it all before the last assault, the Bathyr send an envoy instead.
+- **The all-objectives feat, "Every Terrace Green":** all seven cases, the blight ended, Hunger 3 or less, the grain thief stopped, justice for Nim, the black market dealt with (not for a cut), the traitor caught, and the blockade lifted before the last assault. Reward: the High Steward's key, +4 max HP.
+
+### Puzzles (each with a fallback)
+
+The cisterns (which two of four explain the dead terraces), the grain ledger (find the two nights grain walked out), the watch rota (a logic grid generated and solver-checked each run), the Velvet door (a knock code with ●/○ feedback), the soil (amendments that bring salt and sourness to zero), the lead-letters (a shift-cipher wheel), and the sabotage plan.
+
+### Items
+
+The Inquirer's Seal, Kerrow's Warhorn, the Velvet Key, the Lead-Letter Wheel, the Sweetwater Phial, Tamsk's Pressing, the Rahdarian Scale Shirt, Bathyr blasting-salt.
+
+### Bestiary
+
+Brine-hound (its bite burns with brine, unless sweet water has washed you) and Rotwreath (salted dead vines that strangle and drink). They walk the road before Parts LVII, LVIII and LX.
+
+### Hook
+
+The Speaker for the Deep: the Drowned Light under the western sea is going out, and the Bathyr still down there are waiting under it. "You put one Light to bed. I don't suppose you'd come down and look at ours." End card is Part LXIII.
+
 *To be continued.*
