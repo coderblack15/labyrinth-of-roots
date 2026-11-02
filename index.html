@@ -476,7 +476,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
 /* ---------- journal ---------- */
 .inv-head .head-btns { display: flex; gap: 8px; align-items: center; }
-.j-open { padding: 4px 12px; font-size: .88rem; font-family: var(--label); letter-spacing: .08em; }
+.inv-head .head-btns button { white-space: nowrap; }
+.j-open, .inv-head .sound-btn { padding: 4px 12px; font-size: .88rem; font-family: var(--label); letter-spacing: .08em; }
 .j-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
 .j-grid div { background: var(--panel-2); border-radius: 4px; padding: 8px 10px 6px; display: grid; gap: 2px; }
 .j-grid b { font-variant-numeric: lining-nums tabular-nums; font-size: 1.15rem; line-height: 1.2; }
@@ -576,6 +577,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
 }
 @media (max-width: 480px) {
+  .inv-head .head-btns { gap: 6px; }
+  .inv-head .head-btns button { padding: 4px 8px; letter-spacing: .04em; }
   body { font-size: 1.05rem; }
   .die { width: 48px; height: 48px; }
   .roll { padding: 12px; gap: 6px 12px; }
@@ -712,11 +715,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser, and you can keep up to three runs in separate save slots. Use Saves in your items to switch.</li>
       <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
+      <li>Sound is off to start. Turn it on here or from your items for a quiet bed of sound in each region, and the Hesk songs sung out loud.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
     </ul>
     <div class="slots" id="slots" hidden></div>
     <div class="actions" id="startActions">
       <button class="primary" id="beginBtn" type="button">Begin the descent</button>
+      <button class="ghost sound-btn" type="button" aria-pressed="false">Sound: off</button>
     </div>
     <p class="resume" id="resumeNote" hidden></p>
   </div>
@@ -794,6 +799,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <div class="inv-head">
         <div class="stat-label">Carrying</div>
         <div class="head-btns">
+          <button class="ghost sound-btn" type="button" aria-pressed="false">Sound: off</button>
           <button class="ghost j-open" id="slotBtn" type="button" title="Go back to your save slots. You'll pick up from the start of this part.">Saves</button>
           <button class="ghost j-open" id="jOpenBtn" type="button">Journal</button>
           <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
@@ -919,6 +925,234 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     sc.onload = statFlush;
     document.head.appendChild(sc);
   }
+
+  // ---------- sound ----------
+  // Every sound is made live with Web Audio, so there is nothing to download. Sound starts off and
+  // only wakes on a tap or key press, because phones won't play anything before one. Each chapter has
+  // its own quiet bed of sound, and the five Hesk tones are real notes: you hear them in the song
+  // lessons, at the Singing Door, and drifting down the mountain. New chapters need a SCENES entry.
+  const SKEY = "labyrinth-of-roots-sound";
+  const SND = (() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    let ctx = null, master = null, amb = null, sfx = null, noiseBuf = null;
+    let on = false, want = null, scene = null, offTimer = 0;
+    try { on = localStorage.getItem(SKEY) === "on"; } catch (e) {}
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const pick = (a) => a[Math.floor(Math.random() * a.length)];
+    const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+    const live = () => on && ctx && ctx.state === "running";
+    function init() {
+      if (ctx) return true;
+      if (!AC) return false;
+      try { ctx = new AC(); } catch (e) { return false; }
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -20; comp.ratio.value = 4;
+      comp.connect(ctx.destination);
+      master = ctx.createGain(); master.gain.value = 0; master.connect(comp);
+      amb = ctx.createGain(); amb.gain.value = 0.6; amb.connect(master);
+      sfx = ctx.createGain(); sfx.gain.value = 0.9; sfx.connect(master);
+      const len = ctx.sampleRate * 2;
+      noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const ch = noiseBuf.getChannelData(0);
+      for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+      return true;
+    }
+    // building blocks
+    function gain(v, dest) { const g = ctx.createGain(); g.gain.value = v; g.connect(dest); return g; }
+    function filt(type, f, q, dest) { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; }
+    function osc(type, f, dest, sc) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.connect(dest); o.start(); if (sc) sc.nodes.push(o); return o; }
+    function lfo(rate, depth, param, sc) { const g = ctx.createGain(); g.gain.value = depth; g.connect(param); return osc("sine", rate, g, sc); }
+    function noise(dest, sc) { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.connect(dest); s.start(0, Math.random() * 1.9); if (sc) sc.nodes.push(s); return s; }
+    function env(g, t, a, peak, dec) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); }
+    function blip(dest, f, { type = "sine", a = 0.005, dec = 0.4, vol = 0.1, bend = 1, at = 0 } = {}) {
+      const t = ctx.currentTime + at, g = gain(0, dest), o = ctx.createOscillator();
+      o.type = type; o.frequency.setValueAtTime(f, t);
+      if (bend !== 1) o.frequency.exponentialRampToValueAtTime(f * bend, t + a + dec);
+      o.connect(g); env(g, t, a, vol, dec); o.start(t); o.stop(t + a + dec + 0.05);
+    }
+    function bell(dest, f, vol = 0.05, dec = 4, at = 0) {
+      [1, 2.76, 5.4, 0.5].forEach((r, i) => blip(dest, f * r, { a: 0.004, dec: dec / (1 + i * 0.6), vol: vol / (1 + i * 1.5), at }));
+    }
+    function hiss(dest, { f = 1000, q = 1, a = 0.02, dec = 0.3, vol = 0.1, at = 0, to = 0 } = {}) {
+      const t = ctx.currentTime + at, s = ctx.createBufferSource(), g = gain(0, dest), b = filt("bandpass", f, q, g);
+      if (to) b.frequency.exponentialRampToValueAtTime(to, t + a + dec);
+      s.buffer = noiseBuf; s.connect(b); env(g, t, a, vol, dec);
+      s.start(t, Math.random() * 1.5); s.stop(t + a + dec + 0.05);
+    }
+    // beds: a held chord, and filtered noise for wind or water
+    function drone(sc, notes, { type = "sine", cut = 800, vol = 0.05, wob = 0.08 } = {}) {
+      const f = filt("lowpass", cut, 0.7, gain(vol, sc.out));
+      notes.forEach((m, i) => { const o = osc(type, hz(m), f, sc); o.detune.value = i % 2 ? 4 : -4; lfo(wob + i * 0.03, 4, o.detune, sc); });
+      lfo(0.05, cut * 0.3, f.frequency, sc);
+    }
+    function wind(sc, { type = "bandpass", cut = 500, q = 0.8, vol = 0.05, sweep = 300, rate = 0.07 } = {}) {
+      const g = gain(vol, sc.out), f = filt(type, cut, q, g);
+      noise(f, sc); lfo(rate, sweep, f.frequency, sc); lfo(rate * 1.7, vol * 0.5, g.gain, sc);
+    }
+    // a little event that comes back every min..max seconds, skipped while sound is off or hidden
+    function every(sc, min, max, fn) {
+      const h = { id: 0 };
+      const go = () => { if (sc.dead) return; if (live() && !document.hidden) { try { fn(); } catch (e) {} } h.id = setTimeout(go, rnd(min, max) * 1000); };
+      h.id = setTimeout(go, rnd(min * 0.3, max * 0.6) * 1000);
+      sc.timers.push(h);
+    }
+
+    // The five Hesk tones, matching the song buttons: low drone, rasp, click, high whine, hum.
+    function heskTone(i, dest, { dur = 0.5, vol = 1, at = 0 } = {}) {
+      const t = ctx.currentTime + at, end = t + dur, peak = 0.16 * vol;
+      const g = gain(0, dest);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.04);
+      g.gain.setValueAtTime(peak, Math.max(t + 0.05, end - 0.08)); g.gain.exponentialRampToValueAtTime(0.0001, end + 0.06);
+      const srcs = [];
+      const mk = (type, f, into) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.connect(into); srcs.push(o); return o; };
+      const wob = (rate, depth, param, type = "sine") => { const d = ctx.createGain(); d.gain.value = depth; d.connect(param); mk(type, rate, d); };
+      if (i === 0) {        // low drone: two saws beating in a dark throat, throbbing like a chest-drum
+        const a = gain(0.8, g), f = filt("lowpass", 480, 4, a);
+        mk("sawtooth", 98, f); mk("sawtooth", 98.9, f); wob(9, 0.35, a.gain);
+      } else if (i === 1) { // rasp: a nasal buzz that ratchets
+        const a = gain(2.4, g), f = filt("bandpass", 1100, 1.4, a);
+        mk("sawtooth", 196, f); wob(31, 0.5, a.gain, "square");
+        const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; const n = gain(0.25, f); s.connect(n); srcs.push(s);
+      } else if (i === 2) { // click: a fast train of dry ticks
+        const k = Math.max(3, Math.round(dur * 20));
+        for (let j = 0; j < k; j++) hiss(g, { f: 2600 + (j % 2) * 700, q: 2.5, a: 0.002, dec: 0.035, vol: 5, at: at + j / 20 });
+      } else if (i === 3) { // high whine: the cicada note, with a fast shiver
+        const a = gain(0.5, g), o = mk("sine", 1318, a); mk("sine", 2636, gain(0.12, g));
+        wob(7, 22, o.frequency); wob(55, 0.2, a.gain);
+      } else {              // hum: warm and wavering
+        const a = gain(0.8, g); mk("triangle", 262, a); mk("sine", 524, gain(0.25, a)); wob(5, 0.3, a.gain);
+      }
+      srcs.forEach(o => { o.start(t); o.stop(end + 0.12); });
+    }
+    function phraseInto(dest, seq, { step = 0.48, dur = 0.42, vol = 1, at = 0 } = {}) {
+      seq.forEach((n, k) => heskTone(n, dest, { dur, vol, at: at + k * step }));
+      return seq.length * step;
+    }
+
+    const SCENES = {
+      labyrinth(sc) {   // roots, dripping stone, something shifting in the walls
+        drone(sc, [33, 40, 45], { type: "triangle", cut: 360, vol: 0.06 });
+        wind(sc, { type: "lowpass", cut: 260, q: 0.5, vol: 0.05, sweep: 120, rate: 0.04 });
+        every(sc, 2.5, 7, () => blip(sc.out, rnd(1300, 2100), { dec: 0.25, vol: 0.05, bend: 0.6 }));
+        every(sc, 14, 30, () => hiss(sc.out, { f: 180, q: 6, a: 0.4, dec: 1.6, vol: 0.06, to: 90 }));
+      },
+      desert(sc) {      // hot wind and a slow, far-off oud
+        wind(sc, { cut: 900, q: 0.6, vol: 0.1, sweep: 500, rate: 0.05 });
+        drone(sc, [38, 45], { type: "sawtooth", cut: 380, vol: 0.035 });
+        const sc_ = [62, 63, 66, 67, 69, 70, 72, 74];
+        every(sc, 3, 8, () => { const n = 1 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) blip(sc.out, hz(pick(sc_)), { type: "triangle", dec: 1.2, vol: 0.06, at: i * 0.32 }); });
+      },
+      hushfen(sc) {     // mud, insects, frogs, something bubbling up from below
+        wind(sc, { type: "lowpass", cut: 380, q: 0.4, vol: 0.06, sweep: 120, rate: 0.03 });
+        wind(sc, { cut: 5200, q: 6, vol: 0.012, sweep: 600, rate: 0.9 });
+        drone(sc, [36, 43, 51], { cut: 500, vol: 0.035 });
+        every(sc, 4, 11, () => { const f = rnd(70, 120), k = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < k; i++) blip(sc.out, f, { type: "square", a: 0.01, dec: 0.12, vol: 0.025, bend: 0.8, at: i * 0.16 }); });
+        every(sc, 9, 20, () => { blip(sc.out, rnd(160, 260), { dec: 0.35, vol: 0.04, bend: 1.8 }); blip(sc.out, rnd(200, 300), { dec: 0.25, vol: 0.03, bend: 1.8, at: 0.2 }); });
+      },
+      carrowmere(sc) {  // water lapping at stone, a drowned bell
+        wind(sc, { type: "lowpass", cut: 600, q: 0.7, vol: 0.05, sweep: 300, rate: 0.12 });
+        drone(sc, [38, 45, 50, 53], { cut: 600, vol: 0.03 });
+        every(sc, 18, 34, () => bell(sc.out, hz(pick([50, 45, 53])), 0.045, 6));
+        every(sc, 3, 8, () => blip(sc.out, rnd(700, 1100), { dec: 0.3, vol: 0.035, bend: 0.5 }));
+      },
+      lastwell(sc) {    // thin wind, your own heartbeat, the well bell far off
+        wind(sc, { cut: 700, q: 2, vol: 0.035, sweep: 400, rate: 0.06 });
+        drone(sc, [40, 41, 47], { cut: 300, vol: 0.04 });
+        every(sc, 5, 9, () => { blip(sc.out, 55, { a: 0.01, dec: 0.25, vol: 0.09, bend: 0.7 }); blip(sc.out, 50, { a: 0.01, dec: 0.3, vol: 0.07, bend: 0.7, at: 0.28 }); });
+        every(sc, 30, 55, () => bell(sc.out, hz(43), 0.03, 7));
+      },
+      assize(sc) {      // a city of glass: chimes and a high shimmer
+        drone(sc, [79, 86, 91], { cut: 4000, vol: 0.007, wob: 0.3 });
+        drone(sc, [43, 50], { cut: 500, vol: 0.03 });
+        const gl = [72, 74, 76, 78, 79, 83, 84, 86];
+        every(sc, 2, 6, () => bell(sc.out, hz(pick(gl)), 0.022, 3.5));
+      },
+      corrach(sc) {     // mountain wind over the drone of the Hesk, and singing far up the slope
+        wind(sc, { cut: 1100, q: 0.7, vol: 0.075, sweep: 700, rate: 0.08 });
+        const g = gain(0.04, sc.out), f = filt("lowpass", 320, 2, g);
+        osc("sawtooth", 55, f, sc); osc("sawtooth", 55.7, f, sc); osc("sawtooth", 82.6, f, sc);
+        lfo(5.5, 0.01, g.gain, sc);
+        every(sc, 22, 45, () => { const seq = Array.from({ length: 3 + Math.floor(Math.random() * 3) }, () => Math.floor(Math.random() * 5)); phraseInto(sc.out, seq, { vol: 0.22, step: 0.6, dur: 0.55 }); });
+      }
+    };
+
+    function kill(sc) {
+      sc.dead = true;
+      sc.timers.forEach(h => clearTimeout(h.id));
+      sc.nodes.forEach(n => { try { n.stop(); } catch (e) {} });
+      try { sc.out.disconnect(); } catch (e) {}
+    }
+    function build() {
+      if (!ctx || !want || (scene && scene.slug === want && !scene.dead)) return;
+      const t = ctx.currentTime, old = scene;
+      if (old) { old.out.gain.cancelScheduledValues(t); old.out.gain.setTargetAtTime(0, t, 0.8); setTimeout(() => kill(old), 4000); }
+      const sc = { slug: want, nodes: [], timers: [], dead: false, out: gain(0, amb) };
+      (SCENES[want] || SCENES.labyrinth)(sc);
+      sc.out.gain.setTargetAtTime(1, t + 0.5, 1.5);
+      scene = sc;
+    }
+    const btns = () => document.querySelectorAll(".sound-btn");
+    function paint() {
+      btns().forEach(b => {
+        b.hidden = !AC;
+        b.textContent = on ? "Sound: on" : "Sound: off";
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+    function wake() {
+      if (!on || !init()) return;
+      clearTimeout(offTimer);
+      const go = () => { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(1, ctx.currentTime, 0.4); build(); };
+      if (ctx.state !== "running") ctx.resume().then(go, () => {}); else go();
+    }
+    function set(v) {
+      on = !!v;
+      try { localStorage.setItem(SKEY, on ? "on" : "off"); } catch (e) {}
+      paint();
+      if (on) { wake(); return; }
+      if (!ctx) return;
+      master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
+      offTimer = setTimeout(() => { if (on) return; if (scene) { kill(scene); scene = null; } ctx.suspend().catch(() => {}); }, 700);
+    }
+    // A saved "on" can only start from a tap or key press.
+    const unlock = () => { if (on && (!ctx || ctx.state !== "running")) wake(); };
+    ["pointerdown", "keydown", "touchend"].forEach(ev => document.addEventListener(ev, unlock, true));
+    document.addEventListener("visibilitychange", () => {
+      if (!ctx) return;
+      if (document.hidden) ctx.suspend().catch(() => {});
+      else if (on) wake();
+    });
+    document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest(".sound-btn"); if (b) set(!on); });
+    return {
+      paint,
+      region(slug) { want = slug; if (live()) build(); },
+      tone(i, dur = 0.42) { if (live()) heskTone(i, sfx, { dur }); },
+      // Plays a phrase of tones and says how long it lasts in ms (0 when sound is off).
+      phrase(seq, o = {}) { return live() ? phraseInto(sfx, seq, o) * 1000 : 0; },
+      // The Singing Door hums back its answer: a bright bell for each true note, a low one for each near note.
+      door(hit, near) {
+        if (!live()) return;
+        if (!hit && !near) { blip(sfx, 70, { a: 0.02, dec: 0.6, vol: 0.12, bend: 0.7 }); return; }
+        let k = 0;
+        for (let i = 0; i < hit; i++) bell(sfx, hz(81), 0.07, 2, 0.15 + 0.28 * k++);
+        for (let i = 0; i < near; i++) bell(sfx, hz(62), 0.07, 2, 0.15 + 0.28 * k++);
+      },
+      // A crowd of Hesk droning together, swelling and fading.
+      chorus(secs = 6) {
+        if (!live()) return;
+        const g = gain(0, sfx), t = ctx.currentTime;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + secs * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + secs);
+        [0, 0, 4, 0, 1].forEach((n, k) => heskTone(n, g, { dur: secs - 0.4, vol: 0.5, at: k * 0.05 }));
+      },
+      // Your discord: the note next to theirs, grating.
+      discord() {
+        if (!live()) return;
+        heskTone(4, sfx, { dur: 1.6, vol: 0.8 });
+        const g = gain(0.6, sfx), o = ctx.createOscillator(), t = ctx.currentTime + 0.3;
+        o.type = "triangle"; o.frequency.setValueAtTime(277, t); o.connect(g); env(g, t, 0.1, 0.12, 1.3); o.start(t); o.stop(t + 1.5);
+      }
+    };
+  })();
 
   // ---------- playthrough journal ----------
   // A record of each journey, kept in this browser apart from the save, so a Bloom death (which
@@ -5663,6 +5897,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         await mech("Their blades soften: they hit for 2 less for the rest of the fight.", "loot");
       } else if (c === "discord") {
         st.used.discord = true;
+        SND.discord();
         await say("Their blades are held hard by a note. You find it, the way Ninefold taught you, and sing the note next to it, the one that grates.");
         const r = await check({ label: "Wisdom check (singing the discord)", mod: 2 + (S.song >= 3 ? 2 : 0), dc: 13, cta: "Sing" });
         if (r.ok) { st.stilled = true; st.clean = true; await say("The " + (F.heads ? "nearest blade" : "blade") + " shivers, cracks, and crumbles into white dust. It has to sing a new one from bare shell, in a hurry, and the new one is clean."); await mech("It loses its next turn, and its hits no longer carry the Bloom this fight.", "loot"); }
@@ -6153,13 +6388,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         busy = true; btns.forEach(b => b.disabled = true); replay.disabled = true; pos = 0;
         P.status.textContent = "Listen…";
         await nap(600);
-        for (const i of seq) { if (done) return; btns[i].classList.add("flash"); await nap(560); btns[i].classList.remove("flash"); await nap(200); }
+        for (const i of seq) { if (done) return; SND.tone(i, 0.5); btns[i].classList.add("flash"); await nap(560); btns[i].classList.remove("flash"); await nap(200); }
         if (done) return;
         busy = false; btns.forEach(b => b.disabled = false); replay.disabled = false;
         P.status.textContent = (reverse ? "Now sing it back, last note first. " : "Now sing it back. ") + tally();
       }
       function press(i) {
         if (busy || done) return;
+        SND.tone(i, 0.3);
         btns[i].classList.add("flash"); setTimeout(() => btns[i].classList.remove("flash"), 220);
         if (i === want()) {
           pos++;
@@ -6189,7 +6425,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       const slots = el("div", "pgrid lock"); slots.style.gridTemplateColumns = "repeat(4, 56px)";
       const sb = guess.map((_, i) => { const b = pbtn(""); b.onclick = () => { if (i >= known) { guess[i] = null; draw(); } }; slots.appendChild(b); return b; });
       const keys = el("div", "pgrid tones"); keys.style.gridTemplateColumns = "repeat(5, 60px)";
-      const kb = TONES.map((t, i) => { const b = pbtn('<span class="tg">' + t.glyph + "</span><small>" + t.name.split(" ")[0] + "</small>"); b.setAttribute("aria-label", t.name); b.onclick = () => { const j = guess.indexOf(null); if (j >= 0 && !guess.includes(i)) { guess[j] = i; draw(); } }; keys.appendChild(b); return b; });
+      const kb = TONES.map((t, i) => { const b = pbtn('<span class="tg">' + t.glyph + "</span><small>" + t.name.split(" ")[0] + "</small>"); b.setAttribute("aria-label", t.name); b.onclick = () => { const j = guess.indexOf(null); if (j >= 0 && !guess.includes(i)) { guess[j] = i; SND.tone(i, 0.3); draw(); } }; keys.appendChild(b); return b; });
       const hist = el("div", "lockhist");
       P.body.append(slots, keys, hist);
       const sing = pbtn("Sing it to the door", "primary"), force = pbtn("Give up and find another way");
@@ -6205,8 +6441,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         used++;
         let hit = 0, near = 0;
         guess.forEach((g, i) => { if (g === code[i]) hit++; else if (code.includes(g)) near++; });
+        const sung = SND.phrase(guess);
+        setTimeout(() => SND.door(hit, near), sung);
         hist.appendChild(el("div", "", guess.map(g => TONES[g].glyph).join(" ") + "  →  " + ("●".repeat(hit) + "○".repeat(near) || "silence")));
-        if (hit === 4) { P.end(); P.status.textContent = "The door sings the phrase back to you, and swings in."; setTimeout(() => resolve({ ok: true, used }), 900); return; }
+        if (hit === 4) { P.end(); P.status.textContent = "The door sings the phrase back to you, and swings in."; setTimeout(() => SND.phrase(code, { vol: 0.8, step: 0.55, dur: 0.5 }), sung + 1700); setTimeout(() => resolve({ ok: true, used }), 900); return; }
         if (used >= tries) { P.end(); P.status.textContent = "The door goes silent and stays silent."; setTimeout(() => resolve({ ok: false, used }), 900); return; }
         for (let i = known; i < 4; i++) guess[i] = null;
         draw();
@@ -6569,6 +6807,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   async function nightRaid(day) {
     light("dark");
+    SND.chorus(7);
     await say("The bell starts after midnight. Then the drone: not one chest-drum but a dozen, thrumming together, so the shutters buzz in their frames. The Hesk are coming down the north road.");
     const c = await choose([
       { key: "hold", label: "Hold the north gate with the miners", tag: "fight · 3 gold a head" },
@@ -6808,6 +7047,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await say("Long before there was a Bloom, this was where the Three met. Every seventeen years, when the Hesk woke, they came down to these terraces to trade moltwater for salt and sing for the people of the valley. Now the terraces are full of the sick, and Sister Wren looks after them.");
       await say("Sister Wren is a square, red-faced woman with her sleeves rolled to the shoulder. She isn't a nun; nobody remembers who first called her Sister. \"Cuts, you've come to the wrong place,\" she says. \"Bloom, sit down.\"", "voice");
       await say("Behind her, in the shade of the meeting-house, something very tall is folded on a bench like a heron. A Hesk, so old its shell has gone the white of driftwood. It turns its huge smoked-glass eyes on you, and a soft, rasping drone comes out of its chest.");
+      SND.phrase([0, 1, 4], { vol: 0.6, step: 0.7, dur: 0.65 });
       await say("\"That's Ninefold,\" Wren says. \"He woke early too. Thirteen years early, the last time, and he wouldn't go back down, and wouldn't fight for the drum, so they threw him out. He's been sitting on my bench ever since. He'll teach you their song, if you've the ears for it.\"", "voice");
       await say("While she talks, Ninefold picks a tuft of white fungus off the bench and hums into his cupped hands. When he opens them, there's a small grey spoon in his palm, hard as horn. He eats his porridge with it. \"That's the trick of them,\" Wren says. \"Song and fungus. They used to make bowls and combs and children's whistles that way. Now it's glaives.\"", "voice");
     } else await say("Vellum Rest. White terraces, slow people, the smell of vinegar and smoke. Ninefold lifts his head when you come up the steps.");
@@ -7041,6 +7281,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       await say("When the wind blows across the holes, the door sings one note to itself, very softly.");
       if (S.song >= 3) {
         await say("You can read the lintel all the way through. It's not a lock. It's a greeting. You sing it, and the door sings it back, and swings inward on a breath of warm, damp air.");
+        { const sg = [0, 4, 3, 1]; setTimeout(() => SND.phrase(sg, { vol: 0.8 }), SND.phrase(sg) + 500); }
       } else {
         const r = await toneLock({ known: S.song >= 2 ? 2 : S.song, tries: 8 });
         if (!r.ok) {
@@ -7342,7 +7583,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     started = true;
     const last = DEMO_END || PARTS.length;
     for (let i = fromPart; i < last; i++) {
-      S.part = i; digRefill(i); checkpoint(); jPart(i);
+      S.part = i; digRefill(i); checkpoint(); jPart(i); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
         try { await wildEncounter(i); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
@@ -7395,6 +7636,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // ---------- boot ----------
   light("dusk");
+  SND.paint();
   renderSheet();
   if (location.hash === "#play") requestAnimationFrame(() => toPlay());
   // A button that needs a second tap within 3 seconds before it acts.
@@ -7446,6 +7688,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     jb.onclick = () => jOpen();
     $("startActions").appendChild(jb);
   }
+  $("startActions").appendChild($("startActions").querySelector(".sound-btn"));
 })();
 </script>
 </body>
