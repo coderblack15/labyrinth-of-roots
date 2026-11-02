@@ -597,6 +597,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .recap-name small { font-weight: 400; color: var(--muted); letter-spacing: .06em; }
 .recap-ch ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: .95rem; line-height: 1.45; }
 .recap-now { margin: 0; }
+.name-form { display: grid; gap: 8px; margin: 0; }
+.name-form input { font: inherit; font-size: 1.1rem; padding: 10px 12px; border-radius: 4px; border: 1px solid #5c4d27; background: var(--bg); color: var(--ink); width: 100%; max-width: 360px; box-sizing: border-box; }
+.name-form input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
 .journal .j-recap { display: grid; gap: 12px; }
 .journal .j-recap h3 { margin: 0; }
 .recap-early { display: grid; gap: 12px; }
@@ -851,6 +854,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter. When you come back to a save, a short recap of the story so far reminds you where you left off.</li>
       <li>The Map button beside your journal opens a hand-drawn map of the realm. The fog lifts off each region as you reach it, and a red mark shows where you are.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
+      <li>You name your adventurer when you begin, and the people you meet will use it. You won't walk alone for long: friends join your company, and their bond grows with every third fight you win together and with an evening at camp at the end of each chapter. At the start of most chapters you can hire one sellsword for that chapter, and one who serves you long enough will swear to you and stop charging. Your company softens up foes and catches blows, but the killing blow is always yours.</li>
       <li>Sound is off to start. Turn it on here or from your items for a quiet bed of sound in each region, and the Hesk songs sung out loud.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
     </ul>
@@ -869,7 +873,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   <aside class="sheet" id="sheet" aria-label="Character sheet">
     <div>
-      <h2>The Wanderer</h2>
+      <h2 id="heroName">The Wanderer</h2>
       <div class="sub">Level 3 adventurer</div>
     </div>
     <div class="vitals">
@@ -1349,7 +1353,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     ["The Undermoon", "undermoon", 48, 54]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore"]);
+  const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1794,6 +1798,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     { id: "footed", name: "Sure-Footed", desc: "Finish The Undermoon without the Lift ever carrying you off.", on: "chapter", test: (c) => c.ch === "undermoon" && S.um && !S.um.carried },
     { id: "knot", name: "The Weak Knot", desc: "Cut Corwen Lisk's cord of stones.", test: () => S.um && S.um.cut },
     { id: "lock", name: "The Lock Keeper", desc: "Let Vaelric take the Ember Root's place.", hidden: true, test: () => S.vRooted },
+    { id: "christened", name: "A Name to Carve", desc: "Give your adventurer a name.", test: () => !!S.name },
+    { id: "goodboy", name: "Good Dog", desc: "Bring Burr's bond all the way to 5.", test: () => S.co && S.co.burr && S.co.burr.bond >= 5 },
+    { id: "sworn", name: "Sworn Sword", desc: "Keep a sellsword long enough that they swear to you.", test: () => S.co && S.co.sworn.length > 0 },
+    { id: "company", name: "The Whole Company", desc: "Win a fight with a friend and a sellsword both at your side.", test: () => false },
     { id: "moons", name: "Two Moons", desc: "Let the Undermoon rise into the sky.", hidden: true, test: () => S.um && S.um.ending === "rise" }
   ];
   const hasAch = (id) => !!(J.ach && J.ach[id]);
@@ -1849,6 +1857,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // ---------- sheet ----------
   const ICONS = {
+    paw: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="17" rx="5" ry="4.2" fill="#b08a48"/><ellipse cx="7" cy="11" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="11" cy="7.5" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="15.5" cy="7.5" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="19.4" cy="11" rx="2" ry="2.6" fill="#cfa850"/></svg>',
+    merc: '<svg viewBox="0 0 26 26"><path d="M13 3l7 3v6c0 5-3 8.5-7 11-4-2.5-7-6-7-11V6z" fill="#5d6b70" stroke="#b9c0c4" stroke-width="1.2"/><path d="M13 7v12M9 11h8" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     torch: '<svg viewBox="0 0 26 26"><path d="M13 3c3 3 3 6 0 9c-3-3-3-6 0-9z" fill="#d68c34"/><rect x="11.5" y="12" width="3" height="11" rx="1" fill="#7a5a3a"/></svg>',
     axe: '<svg viewBox="0 0 26 26"><rect x="12" y="3" width="2.4" height="21" rx="1" fill="#8a7a62"/><path d="M14 5c6 0 9 3 9 7s-3 7-9 7z" fill="#b9c0c4"/><path d="M12 7c-4 0-7 2-7 5s3 5 7 5z" fill="#9ea6aa"/><circle cx="17.5" cy="9" r="1.3" fill="#d9433b"/><circle cx="19" cy="12" r="1.3" fill="#5b8ad1"/><circle cx="17.5" cy="15" r="1.3" fill="#47a771"/></svg>',
     shield: '<svg viewBox="0 0 26 26"><path d="M4 8c3-4 15-4 18 0c0 8-4 13-9 15c-5-2-9-7-9-15z" fill="#8f979b"/><path d="M9 12l3 2l-2 3M16 11l-2 3l3 2" stroke="#4d5457" stroke-width="1.2" fill="none"/></svg>',
@@ -1883,6 +1893,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0);
   let lastItems = new Set();
   function renderSheet() {
+    $("heroName").textContent = S.name || "The Wanderer";
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
     $("acVal").textContent = acNow();
@@ -1913,6 +1924,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heskItems(items);
     noonItems(items);
     underItems(items);
+    companyItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
     renderLastwell();
@@ -2049,6 +2061,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const atk = FOE.on && target === "AC";
     const cb = atk ? Math.min(2, FOE.chain) : 0;
     mod += cb;
+    const cob = coCheck(label);
+    if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
     return new Promise(done => {
       let detach = null;
       const resolve = (r) => {
@@ -2174,8 +2188,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     // The heartgrain slows the first blow to land in each fight.
     let slowed = 0;
     if (FOE.on && S.grain && !FOE.grained && total > 1) { FOE.grained = true; slowed = Math.min(total - 1, d(4)); total -= slowed; }
+    const caught = coBlock(total);
+    if (caught) total -= caught.cut;
     S.hp -= total;
-    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (slowed ? ", and the heartgrain slows it by " + slowed + " to " + total : "") + ".";
+    let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (slowed ? ", and the heartgrain slows it by " + slowed + (caught ? "" : " to " + total) : "") + (caught ? ". " + caught.line + ", and it takes " + caught.cut + " off: you take " + total : "") + ".";
     let saved = false;
     if (S.hp <= 0) {
       // The Pale Bloom eats roots: while you carry it, Vaelric's axe can't hold you up.
@@ -2210,13 +2226,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null };
+  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null };
   function foeStart(name, max, { hp = max, unit = "" } = {}) {
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null });
     jCount("fights");
     renderFoe(true);
   }
-  function foeEnd(lost) { if (!lost) spoilsWon(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { if (!lost) { spoilsWon(); coWon(); } FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -2290,6 +2306,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     renderFoe();
     foePop("−" + total, rb);
     await mech(txt + " " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."));
+    await coStrike();
     return total;
   }
   // A spell or burst that lands automatically: damage, and the combo carries on.
@@ -2551,6 +2568,316 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function spoilsItems(items) {
     if (salvWorth() > 0) items.push(["salv", "coin", "Salvage", salvList(salv()) + ". Sells for " + salvWorth() + " gold at the start of the next part."]);
     if (S.leaves) items.push(["leaves", "scroll", "Scroll of Acquisition, " + S.leaves + " of " + LEAVES + " leaves", "Win fights to find the rest. When it's whole, it teaches you a skill of your choice."]);
+  }
+
+  // ---------- your name ----------
+  // The player names their adventurer when they begin (or the first time an older save is
+  // continued). S.name is "" for someone who stays nameless, and undefined until they're asked.
+  // nm("text with {N}", "text without") picks the line that fits.
+  const NAME_MAX = 20;
+  const cleanName = (t) => String(t || "").replace(/[<>&"{}]/g, "").replace(/\s+/g, " ").trim().slice(0, NAME_MAX);
+  const nm = (withName, without = "") => S.name ? withName.split("{N}").join(esc(S.name)) : without;
+  function askName(isNew) {
+    return new Promise((done) => {
+      const box = el("section", "recap namecard",
+        '<div><span class="num">' + (isNew ? "Before you go down" : "One thing first") + "</span><h3>What do they call you?</h3></div>" +
+        "<p class='recap-now'>" + (isNew ? "Names get used down here. A thief will try yours on for size, a clerk will write it in a ledger, and one day a judge will read it off a warrant." : "You've come this far without a name. Give your adventurer one, and the people you meet from here on will use it.") + "</p>" +
+        '<form class="name-form"><label class="stat-label" for="nameIn">Your adventurer\'s name</label><input id="nameIn" type="text" maxlength="' + NAME_MAX + '" autocomplete="off" spellcheck="false" placeholder="A name to carve on a stone">' +
+        '<div class="actions"><button class="primary" type="submit">' + (isNew ? "Go down" : "Carry on") + '</button><button class="ghost" type="button">Stay nameless</button></div></form>');
+      const form = box.querySelector("form"), input = box.querySelector("input"), skip = box.querySelector(".ghost");
+      const finish = (name) => {
+        S.name = cleanName(name);
+        box.querySelectorAll("button, input").forEach(x => x.disabled = true);
+        box.remove();
+        save(); renderSheet(); renderSlots();
+        if (S.name) stat("named", "Named their adventurer");
+        done();
+      };
+      form.onsubmit = (e) => { e.preventDefault(); const v = cleanName(input.value); if (!v) { input.focus(); input.placeholder = "Type a name, or stay nameless"; return; } finish(v); };
+      skip.onclick = () => finish("");
+      scrollNext = true;
+      add(box);
+      input.focus({ preventScroll: true });
+    });
+  }
+
+  // ---------- the company: friends and sellswords ----------
+  // People (and one dog) who travel with you. Friends have a bond of 0-5 that grows with every
+  // third fight won together and with an evening at camp at the end of each chapter, and each step
+  // of bond buys more help. Tyra Quillon's bond is her fondness (S.tyra.aff), and she's only along
+  // where the story has her along (tyraHere). Burr the dog follows you out of the labyrinth.
+  // Sellswords sign on at a hiring post at the start of a chapter, one at a time, for that chapter.
+  // Each chapter served (and each camp evening) earns loyalty; at SWEAR_AT they swear to you and
+  // stay for free. The Hushfen lets one walker in, so the company waits outside it (SOLO).
+  // In fights on the health meter, each companion strikes once, after your first blow, and always
+  // leaves the foe at least 1 HP: the kill is yours, so no fight's script gets skipped. The first
+  // blow you take in a fight can be caught by a blocker, which halves it. Head-count fights (mobs)
+  // get the block, not the strikes.
+  const SOLO = new Set(["hushfen"]);
+  const SWEAR_AT = 3;
+  const MERCS = {
+    odran: { name: "Odran Vey", him: "him", role: "shield-for-hire", fee: 8, perk: "Catches half of the first blow you take in each fight (the first two, once sworn)." },
+    wenna: { name: "Wenna Strake", him: "her", role: "crossbow", fee: 10, perk: "Puts a bolt in each foe after your first blow: 1d8 + 1 (1d8 + 3 once sworn)." },
+    caddock: { name: "Mother Caddock", him: "her", role: "hedge-surgeon", fee: 6, perk: "Patches you up after every fight you win: 1d4 + 1 HP (1d6 + 2 once sworn)." }
+  };
+  const FRIEND_PERKS = {
+    burr: ["Bond 1: bites a foe once a fight (1d4, more as your bond grows).", "Bond 3: hauls on whatever hits you first, halving the blow.", "Bond 5: his nose gives +1 to your Perception and Survival checks."],
+    tyra: ["Fondness 2: puts a knife in a foe once a fight (1d6 + 1).", "Fondness 4: steps in front of the first blow you take, halving it.", "Fondness 5: +1 to your Stealth and Sleight of Hand checks."]
+  };
+  // Where the sellswords wait, by chapter. They follow trouble, and you are trouble.
+  const POSTS = {
+    carrowmere: "Where the Hushfen gives out onto the drowned lake, there's a fisher's hut with a fire going in front of it, and three people at the fire who are very obviously for hire.",
+    lastwell: "Where the hill road leaves the lake country, someone has pitched a patched tent beside the milestone. It's the same three sellswords. They follow trouble, and you're trouble.",
+    assize: "Outside Sulmara's walls, in the caravanserai where nobody looks at faces, the same three sellswords have a table near the camel lines. Sulmara is expensive. They look hopeful.",
+    corrach: "In the caravan yard before the road north, the same three sellswords are eating soup out of one pot. Odran has the biggest spoon.",
+    noon: "At the top of the deep stair, in the last of Thrumhold's lamplight, the same three sellswords are waiting. Odran has brought extra lamp oil. A great deal of extra lamp oil.",
+    undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\""
+  };
+  const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
+  const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
+  function tyraHere() {
+    if (!S.tyra) return false;
+    if (S.um && S.um.on) return !!S.um.tyra;
+    if (S.nk && S.nk.on) return !!S.nk.tyra;
+    if (S.hk) return !!S.tyraHk;
+    if (S.gl) return S.tyra.errand === "with";
+    return false;
+  }
+  // Who's with you right now.
+  function company() {
+    const c = co(), out = [];
+    if (coSolo()) return out;
+    if (c.burr) out.push("burr");
+    if (tyraHere()) out.push("tyra");
+    if (c.merc) out.push(c.merc);
+    return out;
+  }
+  const coName = (id) => id === "burr" ? "Burr" : id === "tyra" ? "Tyra" : MERCS[id].name;
+  const isMerc = (id) => !!MERCS[id];
+  const sworn = (id) => co().sworn.includes(id);
+  const bondOf = (id) => id === "tyra" ? (S.tyra ? S.tyra.aff : 0) : id === "burr" ? (co().burr ? co().burr.bond : 0) : (co().loyal[id] || 0);
+  const hearts = (n, of = 5) => "♥".repeat(Math.min(n, of)) + "♡".repeat(Math.max(0, of - n));
+  const hireFee = (id) => sworn(id) ? 0 : MERCS[id].fee + 2 * Math.max(0, chapterAt(S.part) - 3);
+
+  // Raise a friend's bond (or a sellsword's loyalty) and say why.
+  async function coBond(id, n, why) {
+    if (id === "tyra") return fond(n, why);
+    const c = co();
+    if (id === "burr") { const b = c.burr; b.bond = Math.max(0, Math.min(5, b.bond + n)); renderSheet(); await mech(why + " Burr's bond +" + n + ", to " + b.bond + " of 5." + (b.bond === 1 || b.bond === 3 || b.bond === 5 ? " " + FRIEND_PERKS.burr[(b.bond - 1) / 2] : ""), "loot"); return; }
+    c.loyal[id] = (c.loyal[id] || 0) + n; renderSheet();
+    if (!sworn(id)) await mech(why + " " + MERCS[id].name + "'s loyalty +" + n + ", to " + Math.min(SWEAR_AT, c.loyal[id]) + " of " + SWEAR_AT + ".", "loot");
+  }
+
+  // Strikes, once each per fight, after one of your own blows lands.
+  const STRIKES = {
+    burr: () => bondOf("burr") >= 1 && [1, 4, Math.floor(bondOf("burr") / 2), "Burr comes in low and fast and gets his teeth into " + FOE.name + "'s leg, and hangs on, growling, until he's shaken off", "Burr's bite"],
+    tyra: () => bondOf("tyra") >= 2 && !/^Hesper Coyle/.test(FOE.name) && [1, 6, 1, "Tyra drifts round behind " + FOE.name + " as if she's lost interest, and then she hasn't, and there's a knife in it", "Tyra's knife"],
+    wenna: () => [1, 8, sworn("wenna") ? 3 : 1, "There's a flat <i>thock</i> from somewhere behind you, and a bolt stands out of " + FOE.name, "Wenna's bolt"]
+  };
+  async function coStrike() {
+    if (!FOE.on || FOE.unit || FOE.hp <= 1) return;
+    FOE.co = FOE.co || {};
+    for (const id of company()) {
+      if (FOE.co[id] || FOE.hp <= 1 || !STRIKES[id]) continue;
+      const s = STRIKES[id]();
+      if (!s) continue;
+      FOE.co[id] = true;
+      const [count, sides, bonus, line, label] = s;
+      let total = bonus; const rolls = [];
+      for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
+      const dealt = Math.min(total, FOE.hp - 1);
+      FOE.hp -= dealt; renderFoe(); foePop("−" + dealt);
+      await say(line + ".");
+      await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + "." + (dealt < total ? " " + coName(id) + " leaves the last of it to you." : "") + " " + FOE.name + ": " + FOE.hp + " HP left.", "loot");
+    }
+  }
+  // The first blow you take in a fight (two, with Odran sworn) can be caught and halved.
+  function coBlock(total) {
+    if (!FOE.on || total < 2) return null;
+    FOE.co = FOE.co || {};
+    const here = company();
+    const can = [
+      here.includes("odran") && (FOE.co.odranB || 0) < (sworn("odran") ? 2 : 1) && ["odranB", "Odran Vey gets his door of a shield in the way"],
+      here.includes("burr") && bondOf("burr") >= 3 && !FOE.co.burrB && ["burrB", "Burr hits the attacker from the side and hauls on it with his whole weight"],
+      here.includes("tyra") && bondOf("tyra") >= 4 && !FOE.co.tyraB && !/^Hesper Coyle/.test(FOE.name) && ["tyraB", "Tyra shoulders you out of the way and takes some of it herself"]
+    ].find(Boolean);
+    if (!can) return null;
+    if (FOE.co.blocked && !(can[0] === "odranB" && sworn("odran"))) return null;
+    FOE.co[can[0]] = (FOE.co[can[0]] || 0) + 1; FOE.co.blocked = true;
+    return { cut: Math.floor(total / 2), line: can[1] };
+  }
+  // A +1 on checks from a friend at bond 5.
+  function coCheck(label) {
+    const here = company();
+    if (here.includes("burr") && bondOf("burr") >= 5 && /Perception|Survival/.test(label)) return [1, "Burr"];
+    if (here.includes("tyra") && bondOf("tyra") >= 5 && /Stealth|Sleight/.test(label)) return [1, "Tyra"];
+    return null;
+  }
+  // After a fight you won: Mother Caddock patches you up, and friends who fought beside you grow
+  // closer (every third win together). Runs inside foeEnd, so it writes its lines directly.
+  function coWon() {
+    if (!FOE.on || !started) return;
+    if (FOE.hp > 0 && FOE.hp >= FOE.max) return;
+    const here = company(), c = co();
+    if (here.includes("caddock") && S.hp < hpCap()) {
+      const n = sworn("caddock") ? d(6) + 2 : d(4) + 1, got = Math.max(0, Math.min(n, hpCap() - S.hp));
+      S.hp += got;
+      add(el("p", "mech loot", "Mother Caddock has you sitting on a rock before you've got your breath back, and stitches you up with her pipe in her teeth. Regain " + got + " HP."));
+    }
+    const friends = here.filter(id => !isMerc(id));
+    friends.forEach(id => {
+      c.wins = c.wins || {};
+      c.wins[id] = (c.wins[id] || 0) + 1;
+      if (c.wins[id] % 3 || bondOf(id) >= 5) return;
+      if (id === "burr") c.burr.bond++; else S.tyra.aff++;
+      add(el("p", "mech loot", (id === "burr" ? "Burr comes and leans against your legs, panting, and won't be moved. Burr's bond +1, to " : "Tyra wipes her knife on her sleeve and bumps your shoulder with hers. Tyra's fondness +1, to ") + bondOf(id) + " of 5, for three fights won together."));
+    });
+    if (friends.length && here.some(isMerc)) grant("company");
+  }
+
+  // Burr: a dog who has been lost in the labyrinth for a very long time, and follows you out.
+  async function meetBurr(i) {
+    if (i === 5) {
+      await say("All the way back through the root-halls, something has been following you. You hear it before you see it: claws on stone, keeping pace, stopping when you stop. When you finally turn the torch on it, it's a dog.");
+      await say("A lean, long-legged, rope-coloured dog, with burrs matted all through his coat and one ear that has never stood up in its life. He is as thin as a rake. Nobody knows how long he's been down here. <i>Nothing that goes down there comes back up.</i> He looks at the bread in your hand, and then very hard at something else.");
+    } else {
+      await say("You've had a follower since the last town. A dog: lean, long-legged and the colour of old rope, with burrs matted all through his coat and one ear that has never stood up in its life. He keeps exactly thirty feet back. When you stop, he stops. When you look at him, he looks at something else, very interested in it.");
+      await say("At dusk he lies down just outside the light of your fire, chin on his paws, and watches the bread in your hand.");
+    }
+    const c = await choose([
+      { key: "share", label: "Tear off half your bread and toss it to him" },
+      { key: "let", label: "Let him follow, if he wants", plain: true },
+      { key: "shoo", label: "Stamp your foot and send him off", plain: true }
+    ]);
+    if (c === "shoo") {
+      co().burr = false;
+      await say("He goes, without any fuss, the way dogs do who've been sent off before. He looks back once. You don't see him again.");
+      return;
+    }
+    co().burr = { bond: c === "share" ? 1 : 0 };
+    await say(c === "share" ? "He catches it out of the air without seeming to move, and it's gone. Later, when you sit down to rest, he lies down against your boots, and he smells terrible, and he's warm." : "He keeps his distance. But when you move on, so does he, and the distance gets a little shorter every hour.");
+    await say("You call him Burr, for the coat. He doesn't object. He doesn't answer to it either, but then he doesn't answer to anything." + nm(" He does seem to know who {N} is, though. You catch him watching you when he thinks you aren't looking.", ""));
+    renderSheet();
+    await mech("Burr has joined your company. His bond grows every third fight you win together and with an evening at camp at the end of each chapter. " + FRIEND_PERKS.burr.join(" "), "loot");
+  }
+
+  // The hiring post, at the start of a chapter.
+  async function hirePost(C) {
+    const c = co();
+    c.post = C.slug;
+    await say(POSTS[C.slug]);
+    if (!c.seen) {
+      c.seen = true;
+      await say("<b>Odran Vey</b> is a slab of a man with a shield the size of a cellar door and a face like the other side of it. <b>Wenna Strake</b> is small and freckled and is restringing a crossbow very nearly as long as she is. <b>Mother Caddock</b> is very old, wears a leather apron full of hooks and needles, and is smoking a pipe that smells of burnt sage and something worse.");
+      await say("\"Swords for hire,\" Wenna says. \"Well. One sword, one bow, and one Caddock. By the chapter, as it were: we'll see you through whatever you're walking into, and then we'll want paying again.\"" + nm(" She squints at you. \"You're {N}, aren't you? People talk about you. Mostly in the past tense.\"", ""), "voice");
+      await mech("You can hire one sellsword at a time, for the rest of this chapter. Each chapter they serve with you (and each evening at camp) earns their loyalty, and at " + SWEAR_AT + " they swear to you and stop charging.");
+    }
+    const opts = Object.keys(MERCS).map(id => ({
+      key: id, label: "Hire " + MERCS[id].name + ", " + MERCS[id].role, plain: true,
+      tag: (S.coins >= hireFee(id) ? hireFee(id) + " gold" : "you need " + hireFee(id) + " gold") + " · " + MERCS[id].perk + (c.loyal[id] ? " · loyalty " + c.loyal[id] + " of " + SWEAR_AT : ""),
+      show: S.coins >= hireFee(id)
+    }));
+    opts.push({ key: "none", label: "Not this time", plain: true });
+    if (opts.length === 1) await say("You haven't got the coin for any of them. Odran looks at your purse, and then at you, with something like sympathy.");
+    const k = await choose(opts);
+    if (k === "none") { await say("\"Suit yourself,\" Wenna says. \"We'll be around. We're always around.\""); return; }
+    S.coins -= hireFee(k); c.merc = k; renderSheet();
+    await say({
+      odran: "Odran stands up, which takes a while, and picks up his shield, which takes longer. \"I stand in front,\" he says. That's the whole of his speech, and he seems pleased with it.",
+      wenna: "Wenna slings the crossbow and counts your coins twice. \"I don't do close,\" she says. \"You do close. I do from back here. It's a very good arrangement.\"",
+      caddock: "Mother Caddock knocks out her pipe on her boot heel and looks you up and down like a side of beef. \"You'll do,\" she says. \"You'll need me. They all need me.\""
+    }[k], "voice");
+    await mech(MERCS[k].name + " is with you until the end of this chapter. " + MERCS[k].perk, "loot");
+  }
+
+  // Before each part: the dog, the Hushfen's one-walker rule, and the hiring posts.
+  async function coBefore(i) {
+    const ch = chapterAt(i), C = CHAPTERS[ch], c = co();
+    const anyone = c.burr || c.merc;
+    if (i === C.from && SOLO.has(C.slug) && anyone) await say("At the edge of the reeds, " + (c.burr ? "Burr stops dead with his hackles up and won't go another step. He whines once, and lies down facing the mire" : "your company stops") + ". <i>The Hushfen lets one walker in.</i> Whatever's with you will have to wait on the far side, and find you when you come out.");
+    if (i === C.from && ch > 0 && SOLO.has(CHAPTERS[ch - 1].slug) && anyone) await say(c.burr ? "Burr is waiting where the mire gives out, thinner and muddier, as if he's come the long way round. He doesn't make a fuss. He just leans against your legs for a long time." : "Your company is waiting where the mire gives out.");
+    if (SOLO.has(C.slug)) return;
+    if (i >= 5 && c.burr === null) await meetBurr(i);
+    if (i === C.from && POSTS[C.slug] && c.post !== C.slug && !c.merc) await hirePost(C);
+  }
+
+  // Lines for an evening at camp, by the bond it reaches.
+  const CAMP = {
+    burr: ["", "You pull the burrs out of Burr's coat one at a time by the fire. He grumbles through all of it and won't let you stop.",
+      "You throw a stick. Burr watches it land, looks at you with deep disappointment, and goes and fetches it anyway, out of kindness.",
+      "Burr falls asleep with his head on your knee and dreams, running, his feet twitching. Somewhere down in his dream, he's still in the labyrinth. Then he isn't.",
+      "You share your supper with Burr, half and half, without thinking about it. He's put on weight. He looks like a dog someone owns.",
+      "Burr sits beside you and watches the dark with you, ear up and ear down, and you realise you haven't once worried about what's out there since he came."],
+    tyra: ["", "Tyra shows you her keys, one at a time, and tells you a lie about each of them. The lies get better as it gets later.",
+      "Tyra lets you win at knucklebones, and then shows you how she let you win.",
+      "Tyra tells you about her mother's forge, and the swords, and why she doesn't make them. It's the first thing she's told you that she didn't make up.",
+      "Tyra falls asleep sitting up, against your shoulder, and you don't move for an hour in case you wake her.",
+      "Tyra doesn't say anything at all. She doesn't need to. It's a good silence, the best kind, the kind you only get with someone who's decided to stay."],
+    odran: ["", "Odran mends a strap on his shield by the fire, very slowly and very well. After an hour he says, \"Good fire.\" It's the longest conversation you've had with him.",
+      "Odran tells you about the one time he didn't stand in front. It's a short story. He's never told anyone the end of it, and he doesn't tell you either, but he tells you that much.",
+      "Odran falls asleep sitting up with his shield across his knees, between you and the dark. In the morning he's still there."],
+    wenna: ["", "Wenna shows you how to string a crossbow, and then how not to lose a thumb doing it, in that order, which she says is a mistake she made once.",
+      "Wenna shares a flask of something that tastes like a lamp. \"You pay on time,\" she says. \"You'd be surprised how rare that is.\"",
+      "Wenna sits up late with you counting stars, and gets a different number every time, and says that's how you know they're real."],
+    caddock: ["", "Mother Caddock looks at your old scars by firelight and tells you who did a bad job on each of them. Most of them were you.",
+      "Mother Caddock teaches you a song for setting bones. It's mostly counting, and the counting is mostly rude.",
+      "Mother Caddock tells you she was a soldier once, before she was a surgeon, and that the surgeon's the better job, \"because you get to finish things.\""]
+  };
+  async function coCamp(i) {
+    const here = company();
+    if (!here.length || i >= PARTS.length - 1) return;
+    await say("That night you make camp with the chapter behind you" + (here.length > 1 ? ", and your company round the fire" : "") + ". There's time to sit up with someone before you sleep.");
+    const opts = here.map((id, k) => ({ key: id, label: "Sit up with " + coName(id), plain: k > 0,
+      tag: isMerc(id) ? (sworn(id) ? "sworn to you" : "loyalty " + bondOf(id) + " of " + SWEAR_AT) : (id === "tyra" ? "fondness " : "bond ") + hearts(bondOf(id)) }));
+    opts.push({ key: "sleep", label: "Turn in early", tag: "regain 1d6 HP", plain: true });
+    const k = await choose(opts);
+    if (k === "sleep") { await heal(1, 6, "You sleep like a stone."); return; }
+    const lv = Math.min(5, bondOf(k) + 1);
+    if (isMerc(k)) {
+      await say(CAMP[k][Math.min(3, Math.max(1, (co().loyal[k] || 0) + 1))]);
+      if (!sworn(k)) await coBond(k, 1, "An evening by the fire.");
+      else await heal(1, 6, "You sleep well, with someone you trust on watch.");
+      return;
+    }
+    if (bondOf(k) >= 5) { await say(CAMP[k][5]); await heal(1, 6, "You sleep well."); return; }
+    await say(CAMP[k][lv]);
+    await coBond(k, 1, "An evening by the fire.");
+  }
+  // At the end of a chapter: camp, then the sellsword's contract runs out (or they swear to you).
+  async function coChapterEnd(i) {
+    const C = CHAPTERS[chapterAt(i)];
+    if (i !== C.to) return;
+    await coCamp(i);
+    const c = co(), m = c.merc;
+    if (!m || sworn(m) || i >= PARTS.length - 1) return;
+    c.loyal[m] = (c.loyal[m] || 0) + 1;
+    if (c.loyal[m] >= SWEAR_AT) {
+      c.sworn.push(m); renderSheet();
+      await say({
+        odran: "In the morning Odran holds out the contract you signed, and tears it in half, slowly, because he's never torn anything quickly in his life. \"I stand in front,\" he says. \"Of you. No charge.\"",
+        wenna: "In the morning Wenna screws your contract into a ball and shoots it off a fence post at sixty yards. \"I'm not getting paid any more,\" she says. \"Which is idiotic. Don't tell anyone.\"",
+        caddock: "In the morning Mother Caddock lights her pipe with your contract. \"I've buried a lot of people who hired me,\" she says. \"I'd rather not bury you. Come on.\""
+      }[m], "voice");
+      await mech(MERCS[m].name + " has sworn to you, and travels with you for free from now on. " + MERCS[m].perk, "loot");
+      return;
+    }
+    c.merc = ""; renderSheet();
+    await say({
+      odran: "In the morning Odran counts his pay twice, nods once, and heads back down the road with his shield on his back like a turtle. \"Wherever the trouble is,\" he says. \"That's where.\"",
+      wenna: "In the morning Wenna counts her pay, bites one of the coins, and heads back down the road. \"You know where to find us,\" she calls. \"Wherever the trouble is.\"",
+      caddock: "In the morning Mother Caddock pockets her pay without counting it and stumps off down the road. \"Try not to need me,\" she says over her shoulder. \"You will, though.\""
+    }[m]);
+    await mech(MERCS[m].name + "'s contract is done. Loyalty " + c.loyal[m] + " of " + SWEAR_AT + ": hire " + MERCS[m].him + " again to keep it growing.");
+  }
+  function companyItems(items) {
+    const c = S.co;
+    if (S.tyra) {
+      const away = !tyraHere();
+      items.push(["tyra", "blessing", "Tyra Quillon", "A laid-back rogue who collects debts, keys and cats. Fondness " + hearts(S.tyra.aff) + (S.gl ? (S.tyra.errand && S.tyra.errand !== "with" ? ". Out on an errand." : S.tyra.errand === "with" ? ". At your side today." : ".") : away ? ". Not with you now." : ". With you.") + (S.tyra.key ? " She has the Assize shackle key." : "") + (!away || S.gl ? " " + FRIEND_PERKS.tyra.filter((p, k) => S.tyra.aff >= [2, 4, 5][k]).join(" ") : "")]);
+    }
+    if (!c) return;
+    if (c.burr) items.push(["co-burr", "paw", "Burr", "A rope-coloured dog with one ear up, who followed you out of the labyrinth. Bond " + hearts(c.burr.bond) + "." + (coSolo() ? " Waiting outside the Hushfen." : "") + " " + (FRIEND_PERKS.burr.filter((p, k) => c.burr.bond >= [1, 3, 5][k]).join(" ") || "He'll fight for you once he trusts you (bond 1).")]);
+    if (c.merc) items.push(["co-" + c.merc, "merc", MERCS[c.merc].name + (sworn(c.merc) ? ", sworn" : ""), MERCS[c.merc].role[0].toUpperCase() + MERCS[c.merc].role.slice(1) + ". " + MERCS[c.merc].perk + (sworn(c.merc) ? " Sworn to you: no fee." : " Hired until the end of this chapter. Loyalty " + (c.loyal[c.merc] || 0) + " of " + SWEAR_AT + ".")]);
   }
 
   // ---------- the labyrinth ----------
@@ -2950,6 +3277,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     heading("VIII", "The Hollow Hands");
     light("torch");
     await say("Her name is Sable, and the four of them call themselves the Hollow Hands. They are thieves, and not apologetic about it.");
+    if (S.name) await say("\"And you?\" she says. You tell her. \"" + esc(S.name) + ",\" Sable repeats, trying it on like a borrowed coat. \"That'll do. It sounds like somebody who comes back up.\"", "voice");
     await say("<b>Sable</b> leads them: a talker and a planner who wears that coin like a trophy. <b>Grell</b>, the shorter stranger from the road, is broad and silent and picks his teeth with a lockpick. <b>Ysolde</b> is an alchemist with stained fingers and a bandolier of corked glass vials that clink when she moves. <b>Tobbin</b> is barely more than a boy. He never stops fidgeting with a deck of cards, and he watches your axe the whole time.");
     await say("As night falls and the cold comes in, Sable tells you why they stood on that road.");
     await say("\"Every few years someone goes into the labyrinth. Nobody comes out. We wait by the old well anyway, because the stories say that one day someone will, carrying the warden's axe.\" She nods at the gems. \"And there it is.\"", "voice");
@@ -3318,7 +3646,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       const st = await check({ label: "Stealth check", mod: 2, dc: 15, cta: "Slip past" });
       if (!st.ok) await hurt(1, 8, "piercing", "Tobbin sees you and fires.");
       await openVault();
-      await say("You snatch the Ember Root from its pedestal and run, and behind you two kinds of people start shouting your name.");
+      await say("You snatch the Ember Root from its pedestal and run, and behind you two kinds of people start shouting your name" + nm(": <i>{N}!</i>", ".") + "");
       await mech("The Magistrate and the Hollow Hands will both be hunting you.", "hurt");
     }
     S.ember = true; renderSheet();
@@ -3863,7 +4191,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (c === "pay") {
       const owed = Math.min(S.coins, d(6) + 2);
       S.coins -= owed; renderSheet();
-      await mech("You pay " + owed + " gold. Master Fell writes your name in his book, and the clerks go back to counting.", "hurt");
+      await mech("You pay " + owed + " gold. Master Fell writes " + nm("<b>{N}</b>", "your name") + " in his book, and the clerks go back to counting.", "hurt");
       await say("While he's in a good mood, you ask him about the night of the floods.");
       const p = await check({ label: "Persuasion check", mod: 1, dc: 10, cta: "Ask" });
       if (p.ok) {
@@ -4686,7 +5014,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (!S.lw) initLastwell();
     await say("The road to Sulmara climbs out of the lake country through two days of empty hills. On the first night you open your pack, and the lake has been in it. The bread is green. The dried meat has gone soft and pale and smells sweet. There's one wax-wrapped heel of cheese left, and a skin of lake water.");
     await mech("Water and food are tracked on your sheet now. Every morning you drink and eat; every morning without costs you a level of exhaustion.");
-    if (S.boy === "forgive") await say("Tobbin left you at the crossroads with your cloak still around his shoulders, to go south and face Sable. You walk on alone.");
+    if (S.boy === "forgive") await say("Tobbin left you at the crossroads with your cloak still around his shoulders, to go south and face Sable. " + (S.co && S.co.burr ? "You walk on, just you and Burr." : "You walk on alone."));
     if (S.mire === "warn") await say("Varro rode ahead to Sulmara on a horse he didn't pay for.");
     await say("On the second evening, a milestone: <b>LASTWELL ½ MILE</b>. No smoke rises from the chimneys. No dogs bark. A crow sits on the milestone and doesn't fly when you pass.");
     await go("Walk into the village");
@@ -5192,7 +5520,6 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.lens) items.push(["lens", "clue", "Burning Lens", "Catch the sun and throw it: 3d6 fire, once."]);
     if (S.thread) items.push(["thread", "ring", "Varro's Violet Thread", "Snap it, and a shadow will hide you once, even at noon."]);
     if (S.ykey) items.push(["ykey", "token", "Ysolde's Key", "Opens the side door of the Hall of Records."]);
-    if (S.tyra) items.push(["tyra", "blessing", "Tyra Quillon", "A laid-back rogue who collects debts, keys and cats. Fondness " + "♥".repeat(S.tyra.aff) + "♡".repeat(5 - S.tyra.aff) + (S.tyra.errand && S.tyra.errand !== "with" ? ". Out on an errand." : S.tyra.errand === "with" ? ". At your side today." : ".") + (S.tyra.key ? " She has the Assize shackle key." : "")]);
     if (S.turned) items.push(["turned", "blessing", S.boy === "jackal" ? "The Blackjackal's Word" : "Tobbin's Word", S.boy === "jackal" ? "He'll tell the truth on the stand, if you put out the sun-mirror." : "He'll tell the truth on the stand."]);
   }
 
@@ -5812,7 +6139,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       const r = await check({ label: "Stealth check", mod: 2, dc: 14, cta: "Slip in" });
       if (!r.ok) await heatUp(2, "A clerk saw you on the stair.");
     }
-    await say("Her office is clear glass on three sides and very bright. On her desk, weighted with a lump of green glass, is a warrant with your name on it. The ink is fresh. The date has been scraped and written over. Under the new date, the old one has been painted out with something milky that isn't paint: a glazier's resist, that burns away in strong light.");
+    await say("Her office is clear glass on three sides and very bright. On her desk, weighted with a lump of green glass, is a warrant with " + nm("your name on it, <b>{N}</b>, bearer of the warden's axe", "your name on it") + ". The ink is fresh. The date has been scraped and written over. Under the new date, the old one has been painted out with something milky that isn't paint: a glazier's resist, that burns away in strong light.");
     await say("There's a lens rig on the windowsill, a row of hand-mirrors on swivels, for reading fine etching by sunlight. If you can get the sun onto the seal, the resist will burn off and show you what's underneath.");
     const p = await beamPuzzle(LENS_TOWER, { title: "The lens rig", hint: "Steer the sunlight onto the warrant's seal.", target: "the warrant", forceLabel: "Hold it over a candle instead" });
     if (p.turns > 12) await heatUp(1, "It took a while. Someone knocked.");
@@ -6035,7 +6362,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
 
     // Charge 1: the theft.
-    await say("<b>The first charge:</b> \"That the accused, with others, broke the Magistrate's vault and carried off the Ember Root, an heirloom of his house.\"");
+    await say("<b>The first charge:</b> \"That the accused" + nm(", {N}, ", ", ") + "with others, broke the Magistrate's vault and carried off the Ember Root, an heirloom of his house.\"");
     const c1 = await choose([
       { key: "admit", label: "\"I did. And I'd do it again.\"", tag: "confess" + tagF(["T", "M"]) },
       { key: "argue", label: "\"It was stolen first. His grandfather took it.\"", tag: "Persuasion DC 14" + (law ? " +2" : "") + tagF(["G", "M"]), plain: true },
@@ -6345,7 +6672,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
   async function meetTyra() {
     await say("There's a woman with her boots up on the next table, peeling a pear with a knife much too long for peeling pears. Dark hair cut short with something sharp, a leather coat with more pockets than coat, and a way of sitting that says she could be across the room before you finished standing.");
-    await say("\"Tyra Quillon,\" she says, without getting up. \"Like the crossguard. My mother made swords.\" She eats a slice of pear off the knife. \"Marrit says you're the one on the posters. The posters don't do you justice. The axe, though, they got right.\"", "voice");
+    await say("\"Tyra Quillon,\" she says, without getting up. \"Like the crossguard. My mother made swords.\" She eats a slice of pear off the knife. \"Marrit says you're " + nm("{N}, ", "") + "the one on the posters. The posters don't do you justice. The axe, though, they got right.\"", "voice");
     await say("\"I do odd jobs. Collecting, mostly: debts, keys, cats, things people left in places they shouldn't have. I'm cheap, I'm good, and I'm bored. Two days till they burn you? That's the most interesting thing that's happened in this city all year.\"", "voice");
     const c = await choose([
       { key: "deal", label: "\"Then you're hired.\"" },
@@ -6602,7 +6929,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
     scrollNext = true; add(h);
     await say("You go down, and this time nothing catches you. The ground comes up. The light goes out of the top of your eyes first, then the sides.");
-    if (vaelricSpeaks()) await voice("Somewhere very far off, an old man is shouting your name into the roots, and the roots don't carry it.");
+    if (vaelricSpeaks()) await voice("Somewhere very far off, an old man is shouting your name into the roots" + nm(", <i>{N}, {N}</i>,", ",") + " and the roots don't carry it.");
     const lost = Math.floor(S.coins / 2);
     S.coins -= lost; S.deaths = (S.deaths || 0) + 1;
     S.bloom = Math.max(1, S.bloom); S.hp = S.maxHp;
@@ -7592,7 +7919,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       opts.push({ key: "done", label: "Leave the Coffer-House", plain: true });
       const c = await choose(opts);
       if (c === "done") return;
-      if (c === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await say("Merrow writes your name in a ledger bound in grey leather, blots it, and hands you a brass tally with a number punched in it."); await mech("You have a Coffer-House account. Gold on deposit is safe if you fall, and big bounties can be paid straight into it.", "loot"); }
+      if (c === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await say("Merrow writes " + nm("<b>{N}</b>", "your name") + " in a ledger bound in grey leather, blots it, and hands you a brass tally with a number punched in it."); await mech("You have a Coffer-House account. Gold on deposit is safe if you fall, and big bounties can be paid straight into it.", "loot"); }
       if (c === "d10" || c === "dall") { const n = c === "d10" ? 10 : S.coins; S.coins -= n; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); }
       if (c === "w10" || c === "wall") { const n = c === "w10" ? 10 : S.bank.bal; S.coins += n; S.bank.bal -= n; renderSheet(); await mech("You withdraw " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); }
       if (c === "box") {
@@ -9914,7 +10241,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       { key: "past", label: "Push past him", tag: "the dead will mind", plain: true }
     ]);
     let calm = true;
-    if (c === "stone") { await stones(-1, "You lay a stone on the nearest shelf. Sexton Pell scratches your name on it with a nail."); }
+    if (c === "stone") { await stones(-1, "You lay a stone on the nearest shelf. Sexton Pell scratches " + nm("<b>{N}</b>", "your name") + " on it with a nail."); }
     if (c === "rite") {
       const r = await check({ label: "Wisdom check (the rite)", mod: 2, dc: 14, cta: "Speak" });
       if (r.ok) await say("You don't know the rite. You say what you'd want said, if it were your dead on the shelves: their names, as many as you can read, out loud. Sexton Pell listens, and then he stands aside.");
@@ -10281,6 +10608,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.nk && S.nk.jars) carried.push(S.nk.jars + " noon-jar" + (S.nk.jars > 1 ? "s" : ""));
     if (S.um && S.um.ballast) carried.push(S.um.ballast + " kinstone" + (S.um.ballast > 1 ? "s" : "") + (S.um.gaveVael ? ", one of them with Vaelric's name on it" : ""));
     if (S.um && S.um.milk) carried.push(S.um.milk + " phial" + (S.um.milk > 1 ? "s" : "") + " of moonmilk");
+    if (S.co && S.co.burr) carried.push("Burr, a rope-coloured dog with one ear up (bond " + S.co.burr.bond + " of 5)");
+    if (S.co && S.co.merc) carried.push(MERCS[S.co.merc].name + (sworn(S.co.merc) ? ", sworn to you" : ", hired"));
     if (S.tyra) carried.push(S.tyra.love ? "Tyra Quillon, at your side and holding your hand" : "Tyra Quillon's friendship, for what it's worth (" + S.tyra.aff + " of 5)");
     const sc = S.scrolls ? S.scrolls.fire + S.scrolls.poison + S.scrolls.frost : 0;
     if (sc) carried.push(sc + " snare rune scroll" + (sc > 1 ? "s" : ""));
@@ -10469,12 +10798,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     for (let i = fromPart; i < last; i++) {
       S.part = i; digRefill(i);
       if (i > fromPart) await spoilsTurnIn();
+      await coBefore(i);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
         try { await wildEncounter(i); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
       await jChapterDone(i);
+      await coChapterEnd(i);
     }
     if (DEMO_END) { S.part = DEMO_END; save(); demoEnd(); return; }
     S.part = PARTS.length - 1; save();
@@ -10505,8 +10836,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("slots").hidden = true;
     $("resumeNote").hidden = true;
     renderSheet();
-    if (resumeState && S.part > 0 && !recapOff()) showRecap().then(() => play(S.part));
-    else play(S.part);
+    const go2 = () => resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
+    if (S.name === undefined) askName(!resumeState || S.part === 0).then(go2);
+    else go2();
   }
   let resetArmed = false;
   function restart() {
@@ -10557,7 +10889,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       const v = saves[k], card = el("div", "slot" + (v ? "" : " empty") + (v && n === SLOT ? " current" : ""));
       const where = !v ? "Empty" : DEMO_END && v.part >= DEMO_END ? "The end of the demo" : "Part " + roman(v.part + 1) + " · " + NAMES[v.part];
       const info = !v ? "A fresh descent" : v.hp + "/" + v.maxHp + " HP · " + (v.coins || 0) + " gold" + (v.bank && v.bank.open ? " (+" + v.bank.bal + " banked)" : "") + (v.at ? " · " + slotDate(v.at) : "");
-      card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
+      card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + (v && v.name ? " · " + esc(v.name) : "") + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
       const btns = card.querySelector(".slot-btns");
       const mk = (cls, label) => { const b = el("button", cls, label); b.type = "button"; btns.appendChild(b); return b; };
       if (v) {
