@@ -456,6 +456,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .tbc .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .resume { color: var(--muted); font-size: .95rem; margin-top: 14px; }
+.slots { display: grid; gap: 10px; margin-top: 24px; max-width: 640px; }
+.slots-head { margin: 0; font-family: var(--label); letter-spacing: .1em; color: var(--muted); font-size: .9rem; }
+.slot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.slot.current { border-color: var(--gold); }
+.slot-info { display: grid; gap: 2px; min-width: 0; }
+.slot-num { font-family: var(--label); letter-spacing: .1em; color: var(--gold); font-size: .85rem; }
+.slot-info small { color: var(--muted); }
+.slot.empty .slot-info b { color: var(--muted); font-weight: normal; }
+.slot-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-btns button { padding: 6px 12px; font-size: .92rem; }
 
 /* ---------- journal ---------- */
 .inv-head .head-btns { display: flex; gap: 8px; align-items: center; }
@@ -693,11 +703,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     <ul class="howto">
       <li>Read each scene, then pick what you do next.</li>
       <li>When a check comes up, click to roll the d20. Your bonus is added, and you need to meet or beat the number shown.</li>
-      <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser.</li>
+      <li>Your character sheet tracks your HP, armor class, gold and everything you find. Your progress is saved in this browser, and you can keep up to three runs in separate save slots. Use Saves in your items to switch.</li>
       <li>Your journal keeps a record of each journey in this browser: time played, deaths, gold, items, bounties and treasure. Open it from your items, and you'll get a summary at the end of every chapter.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met.</li>
     </ul>
+    <div class="slots" id="slots" hidden></div>
     <div class="actions" id="startActions">
       <button class="primary" id="beginBtn" type="button">Begin the descent</button>
     </div>
@@ -777,6 +788,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <div class="inv-head">
         <div class="stat-label">Carrying</div>
         <div class="head-btns">
+          <button class="ghost j-open" id="slotBtn" type="button" title="Go back to your save slots. You'll pick up from the start of this part.">Saves</button>
           <button class="ghost j-open" id="jOpenBtn" type="button">Journal</button>
           <button class="ghost inv-close" id="invClose" type="button" aria-label="Close items">Close</button>
         </div>
@@ -825,9 +837,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("rootsPath").setAttribute("d", r.trim());
   })();
 
-  // Warning screen: shown on every visit until the player presses ENTER.
-  document.body.classList.add("intro-open");
-  $("enter-btn").focus({ preventScroll: true });
+  // Warning screen: shown on every visit until the player presses ENTER. Going back to the save
+  // slots reloads the page, and that reload skips it.
+  let skipIntro = false;
+  try { skipIntro = sessionStorage.getItem("lor-skip-intro") === "1"; sessionStorage.removeItem("lor-skip-intro"); } catch (e) {}
+  if (skipIntro) $("intro-overlay").hidden = true;
+  else document.body.classList.add("intro-open");
+  if (!skipIntro) $("enter-btn").focus({ preventScroll: true });
   $("enter-btn").addEventListener("click", () => {
     const o = $("intro-overlay");
     o.classList.add("leaving");
@@ -859,9 +875,17 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const FULL_URL = "https://coderblack15.itch.io/labyrinth-of-roots";
   document.querySelectorAll("a[data-tip]").forEach(a => { a.href = TIP_URL; });
 
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-  function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; return v; } catch (e) { return null; } }
-  function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
+  // ---------- save slots ----------
+  // Three separate runs. Slot 1 keeps the original save key, so saves from before slots existed
+  // land there. SLOT_KEY remembers which slot was played last.
+  const SAVE_SLOTS = [1, 2, 3];
+  const SLOT_KEY = "labyrinth-of-roots-slot";
+  const slotKey = (n) => n === 1 ? KEY : KEY + "-s" + n;
+  let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
+  function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
+  function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; return v; } catch (e) { return null; } }
+  function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
   // GoatCounter counts visits without cookies or anything personal. It only runs on the public
@@ -904,18 +928,31 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
+  // Each save slot has its own current journey (J.runs, by slot); earlier journeys and the bestiary
+  // are shared. J.run is the journey of the slot in play. A journal from before slots goes to slot 1.
   function jLoad() {
-    try { const v = JSON.parse(localStorage.getItem(JKEY) || "null"); if (v && v.v === 1 && Array.isArray(v.past)) return v; } catch (e) {}
-    return { v: 1, run: null, past: [] };
+    let v = null;
+    try { v = JSON.parse(localStorage.getItem(JKEY) || "null"); } catch (e) {}
+    if (!v || v.v !== 1 || !Array.isArray(v.past)) v = { v: 1, run: null, past: [] };
+    if (!v.runs) v.runs = { 1: v.run || null };
+    v.run = v.runs[SLOT] || null;
+    return v;
   }
   let J = jLoad(), jLive = false, jBase = 0;
-  function jSave() { try { localStorage.setItem(JKEY, JSON.stringify(J)); } catch (e) {} }
+  function jSave() {
+    J.runs[SLOT] = J.run;
+    try { localStorage.setItem(JKEY, JSON.stringify(Object.assign({}, J, { run: undefined }))); } catch (e) {}
+  }
+  function jUseSlot(n) { J.runs[SLOT] = J.run; J.run = J.runs[n] || null; }
+  // Drop a slot's journey into the earlier journeys (used when a slot is erased).
+  function jEraseSlot(n) { const keep = J.run; J.run = J.runs[n] || null; jArchive(n); J.runs[n] = null; J.run = n === SLOT ? null : keep; jSave(); }
+  const slotRuns = () => SAVE_SLOTS.map(n => n === SLOT ? J.run : J.runs[n]).filter(Boolean);
   const wealth = () => (S.coins || 0) + (S.bank && S.bank.bal || 0);
-  function jArchive() {
+  function jArchive(slot) {
     const r = J.run;
     if (!r) return;
     if (r.ms > 0 || r.furthest > 0) {
-      J.past.unshift({ start: r.start, ms: r.ms, deaths: r.deaths, earned: r.earned, items: Object.keys(r.items).length,
+      J.past.unshift({ slot: slot || SLOT, start: r.start, ms: r.ms, deaths: r.deaths, earned: r.earned, items: Object.keys(r.items).length,
         bounties: r.bounties.length, maps: r.maps.length, furthest: r.furthest, end: r.end || "left" });
       J.past.length = Math.min(J.past.length, 60);
     }
@@ -1020,7 +1057,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     let h = "";
     if (r) {
       const found = Object.values(r.items).map(x => x.name);
-      h += "<section><h3>This journey</h3>" +
+      h += "<section><h3>This journey · Slot " + SLOT + "</h3>" +
         '<p class="j-sub">Begun ' + new Date(r.start).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) +
         " · furthest: Part " + roman(r.furthest + 1) + ", " + NAMES[r.furthest] + (r.end === "finished" ? " · finished" : "") + "</p>" +
         tiles([[dur(r.ms), "time played"], [r.deaths, "deaths"], [r.close, "close calls"], [r.fights, "fights"], [r.earned, "gold found"],
@@ -1032,7 +1069,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
           r.chapters.map(c => "<tr><td>" + esc(c.name) + "</td><td>" + dur(c.ms) + "</td><td>" + c.deaths + "</td><td>+" + c.earned + '</td><td class="opt">' + c.items.length + "</td></tr>").join("") + "</tbody></table>"
         : '<p class="j-empty">No chapter finished yet on this journey. You get a summary at the end of each one.</p>') + "</section>";
     } else h += '<section><p class="j-empty">You haven\'t begun a journey yet. Your journal starts when you go down.</p></section>';
-    const all = J.past.concat(r ? [{ ms: r.ms, deaths: r.deaths, earned: r.earned, end: r.end }] : []);
+    const all = J.past.concat(slotRuns().map(x => ({ ms: x.ms, deaths: x.deaths, earned: x.earned, end: x.end })));
     if (all.length) {
       const sum = (k) => all.reduce((a, x) => a + (x[k] || 0), 0);
       h += "<section><h3>All journeys</h3>" + tiles([[all.length, "begun"], [all.filter(x => x.end === "finished").length, "finished"],
@@ -7256,13 +7293,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("endJournalBtn").onclick = () => jOpen();
   }
 
-  function begin(resumeState) {
+  function begin(resumeState, slot) {
+    if (slot && slot !== SLOT) { jUseSlot(slot); useSlot(slot); } else useSlot(SLOT);
     S = resumeState || fresh();
     jStart(!resumeState);
     story.innerHTML = "";
     lastItems = new Set();
     foeEnd();
     $("startActions").hidden = true;
+    $("slots").hidden = true;
     $("resumeNote").hidden = true;
     renderSheet();
     play(S.part);
@@ -7284,16 +7323,50 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   light("dusk");
   renderSheet();
   if (location.hash === "#play") requestAnimationFrame(() => toPlay());
-  const saved = load();
-  $("beginBtn").onclick = () => { clearSave(); begin(null); };
-  if (saved && saved.part > 0) {
-    const c = el("button", "", DEMO_END && saved.part >= DEMO_END ? "Continue: the end of the demo" : "Continue from Part " + (saved.part + 1) + ": " + NAMES[saved.part]);
-    c.type = "button";
-    c.onclick = () => begin(saved);
-    $("startActions").appendChild(c);
-    $("beginBtn").textContent = "Begin a new descent";
+  // A button that needs a second tap within 3 seconds before it acts.
+  function twoTap(btn, armedLabel, fn) {
+    const label = btn.textContent;
+    let armed = false, t = 0;
+    btn.onclick = () => {
+      if (!armed) { armed = true; btn.textContent = armedLabel; t = setTimeout(() => { armed = false; btn.textContent = label; }, 3000); return; }
+      clearTimeout(t); fn();
+    };
   }
-  if (J.run || J.past.length) {
+  twoTap($("slotBtn"), "Tap again", () => {
+    if (started) save();
+    try { sessionStorage.setItem("lor-skip-intro", "1"); } catch (e) {}
+    location.hash = "play";
+    location.reload();
+  });
+  function slotDate(t) {
+    if (!t) return "";
+    const days = Math.floor((Date.now() - t) / 86400000);
+    return days < 1 ? "played today" : days < 2 ? "played yesterday" : "played " + new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+  function renderSlots() {
+    const saves = SAVE_SLOTS.map(n => load(n));
+    const box = $("slots");
+    if (!saves.some(Boolean)) { box.hidden = true; $("beginBtn").hidden = false; $("beginBtn").onclick = () => { clearSave(); begin(null); }; return; }
+    $("beginBtn").hidden = true;
+    box.hidden = false;
+    box.innerHTML = '<p class="slots-head">Save slots</p>';
+    SAVE_SLOTS.forEach((n, k) => {
+      const v = saves[k], card = el("div", "slot" + (v ? "" : " empty") + (v && n === SLOT ? " current" : ""));
+      const where = !v ? "Empty" : DEMO_END && v.part >= DEMO_END ? "The end of the demo" : "Part " + roman(v.part + 1) + " · " + NAMES[v.part];
+      const info = !v ? "A fresh descent" : v.hp + "/" + v.maxHp + " HP · " + (v.coins || 0) + " gold" + (v.bank && v.bank.open ? " (+" + v.bank.bal + " banked)" : "") + (v.at ? " · " + slotDate(v.at) : "");
+      card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
+      const btns = card.querySelector(".slot-btns");
+      const mk = (cls, label) => { const b = el("button", cls, label); b.type = "button"; btns.appendChild(b); return b; };
+      if (v) {
+        mk("primary", "Continue").onclick = () => begin(load(n), n);
+        twoTap(mk("", "New descent"), "Tap again to overwrite", () => { clearSave(n); begin(null, n); });
+        twoTap(mk("ghost", "Erase"), "Tap again to erase", () => { clearSave(n); jEraseSlot(n); renderSlots(); });
+      } else mk("primary", "Begin here").onclick = () => begin(null, n);
+      box.appendChild(card);
+    });
+  }
+  renderSlots();
+  if (slotRuns().length || J.past.length) {
     const jb = el("button", "ghost", "Your journal");
     jb.type = "button";
     jb.onclick = () => jOpen();
