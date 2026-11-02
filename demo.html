@@ -399,6 +399,12 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .p-set { font-family: var(--display); font-weight: 400; font-size: 1.12rem; margin: 18px 0 2px; }
 .p-ver { font-family: var(--label); font-size: .74rem; letter-spacing: .1em; color: var(--muted); margin-left: 6px; }
 .p-new { color: var(--gold); font-weight: 700; }
+.rs-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.rs-form label { font-family: var(--label); font-size: .78rem; letter-spacing: .1em; color: var(--muted); }
+.rs-form input { flex: 1 1 140px; min-width: 0; padding: 7px 10px; background: transparent; color: inherit; border: 1px solid var(--muted); border-radius: 6px; font: inherit; text-transform: uppercase; }
+.rs-msg { flex-basis: 100%; color: var(--muted); font-size: .86rem; }
+.rs-code { color: var(--gold); letter-spacing: .08em; }
+.j-sub a { color: var(--gold); }
 .ach-toasts { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
 .ach-toast { pointer-events: auto; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; width: 100%;
   background: var(--panel); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px; padding: 10px 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 14px rgba(207, 168, 80, .25);
@@ -1638,6 +1644,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
     h += achSection();
+    h += linkSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
         J.past.slice(0, 8).map(x => "<tr><td>" + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + "</td><td>" +
@@ -1958,7 +1965,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "prints", name: "Full Print Book", desc: "Keep three prints in your print book at once.", test: () => (S.prints || []).length >= 3 },
     { id: "hidden", name: "Everything Hidden", desc: "Find every hidden thing the Cascades washed loose.", test: () => (S.relics || []).length >= Object.keys(RELICS).length,
       prog: () => [(S.relics || []).length, Object.keys(RELICS).length] },
-    { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false }
+    { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false },
+    { id: "rslantern", name: "Light from the Deep", desc: "Bring the Lantern of Rahdaria over from Relicsong.", test: () => lantern() },
+    { id: "rslight", name: "Light for the Listener", desc: "End the blight in the Hanging Gardens, and send the light on to Relicsong.", test: () => J.link && J.link.garden },
+    { id: "rsbright", name: "The Lantern Comes Home", desc: "End the blight in the Hanging Gardens with the Lantern of Rahdaria in your bag.", test: () => lantern() && S.rh && S.rh.blight },
+    { id: "rsmael", name: "Into the Maelstrom", desc: "Calm a Storm in Relicsong on Maelstrom, the hardest setting. Both games must be played on the same site.", test: () => { const w = rsWins(); return !!(w && w.diffs && w.diffs.maelstrom); } },
+    { id: "rsvoyage", name: "The Long Voyage", desc: "Save Rahdaria here, then win a whole Voyage in Relicsong. Both games must be played on the same site.", test: () => { const w = rsWins(); return !!(J.link && J.link.garden && w && w.voyage); } }
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -1970,7 +1982,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "rahdaria", name: "The Siege of Rahdaria", ver: "2", desc: "Rahdaria, the company you keep, the traps you build and the forty rings.",
       ids: ["christened", "goodboy", "sworn", "company", "trapwright", "inventor", "twelvefoot", "sapper", "allweather",
         "lv10", "lv25", "lv40", "read", "print", "prints", "hidden", "underdream",
-        "inquirer", "sharp", "sweet", "rhhero", "rhearly", "rhall"] }
+        "inquirer", "sharp", "sweet", "rhhero", "rhearly", "rhall"] },
+    { id: "relicsong", name: "Echoes of Relicsong", ver: "3", desc: "Feats that cross between Labyrinth of Roots and Relicsong, the card game set after Rahdaria drowns.",
+      ids: ["rslantern", "rslight", "rsbright", "rsmael", "rsvoyage"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -1985,6 +1999,56 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
     if (J.pSeen !== last) { J.pSeen = last; jSave(); }
   }
+  // ---------- Relicsong link ----------
+  // Prophecy of the Listener: Relicsong (coderblack15.github.io/listener-game) is Adrian's card game,
+  // set after Rahdaria has drowned. On GitHub Pages both games share one origin, so they read each
+  // other's marks from localStorage: Relicsong writes RS_WINS when you beat a Storm, and this game
+  // writes RS_GARDEN when you end the blight in the Hanging Gardens. Elsewhere (itch.io, the artifact)
+  // each game shows a code the other one accepts. The link lives in the journal (J.link), so every
+  // save slot shares it. A Relicsong win gives the Lantern of Rahdaria: +1 on checks that aren't attacks.
+  const RS_WINS = "relicsong-wins", RS_GARDEN = "labyrinth-of-roots-rahdaria-saved";
+  const RS_CODE_IN = "STORMSONG", RS_CODE_OUT = "GARDENLIGHT";
+  const RS_URL = "https://coderblack15.github.io/listener-game/";
+  function rsWins() { try { const v = JSON.parse(localStorage.getItem(RS_WINS) || "null"); return v && v.n > 0 ? v : null; } catch (e) { return null; } }
+  const lantern = () => !!(J.link && J.link.lantern);
+  function rsSync() {
+    J.link = J.link || {};
+    let changed = false;
+    if (!J.link.lantern && rsWins()) { J.link.lantern = Date.now(); changed = true; lanternToast(); }
+    if (!J.link.garden && S && S.rh && S.rh.blight) { J.link.garden = Date.now(); changed = true; }
+    if (J.link.garden) { try { localStorage.setItem(RS_GARDEN, "1"); } catch (e) {} }
+    if (changed) jSave();
+  }
+  function lanternToast() {
+    achToast({ kicker: "From Relicsong", name: "The Lantern of Rahdaria", desc: "Light carried out of a drowned city. It's in your bag in every save slot: +1 on checks that aren't attacks." });
+  }
+  function rsCode(raw) {
+    const c = String(raw || "").toUpperCase().replace(/[^A-Z]/g, "");
+    if (c !== RS_CODE_IN) return false;
+    J.link = J.link || {};
+    if (!J.link.lantern) { J.link.lantern = Date.now(); J.link.coded = true; jSave(); lanternToast(); renderSheet(); }
+    return true;
+  }
+  function linkItems(items) {
+    if (lantern()) items.push(["rs-lantern", "lantern", "The Lantern of Rahdaria", "Light carried from a city under the sea, won in Relicsong. +1 on every check that isn't an attack."]);
+  }
+  function linkSection() {
+    const L = J.link || {};
+    return '<section><h3>Echoes of Relicsong</h3><p class="j-sub">Relicsong is a card game set long after Rahdaria drowns. ' +
+      '<a href="' + RS_URL + '" target="_blank" rel="noopener">Play it here</a>. Beat a Storm there to bring the Lantern of Rahdaria into this game. ' +
+      "End the blight in the Hanging Gardens here to put the Lantern in Relicsong's starting deck. On the same site the two games find each other on their own. Anywhere else, swap codes.</p>" +
+      '<ul class="marks"><li class="' + (L.lantern ? "won" : "") + '"><span class="mk"></span><span><b>The Lantern of Rahdaria</b> · ' + (L.lantern ? "In your bag." : "Win a Storm in Relicsong, then enter the code it shows you below.") + "</span></li>" +
+      '<li class="' + (L.garden ? "won" : "") + '"><span class="mk"></span><span><b>Light for the Listener</b> · ' +
+      (L.garden ? 'The Hanging Gardens are saved. If Relicsong asks for a code, it\'s <b class="rs-code">' + RS_CODE_OUT + "</b>." : "End the blight in the Hanging Gardens of Rahdaria.") + "</span></li></ul>" +
+      (L.lantern ? "" : '<form class="rs-form" id="rsForm"><label for="rsIn">Relicsong code</label><input id="rsIn" type="text" maxlength="24" autocomplete="off" spellcheck="false"><button class="btn" type="submit">Enter</button><span class="rs-msg" id="rsMsg" role="status"></span></form>') +
+      "</section>";
+  }
+  $("journal").addEventListener("submit", (e) => {
+    if (e.target.id !== "rsForm") return;
+    e.preventDefault();
+    if (rsCode($("rsIn").value)) jRender();
+    else $("rsMsg").textContent = "That isn't a Relicsong code.";
+  });
   const hasAch = (id) => !!(J.ach && J.ach[id]);
   function achEarn(list) {
     if (!list.length) return;
@@ -1996,6 +2060,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function achCheck(c) {
     if (!started || !jLive) return;
     if (!pursuitsTold) { pursuitsTold = true; pursuitsNews(); }
+    rsSync();
     c = c || {};
     if (c.ch && c.sum.deaths === 0) { J.achCh = J.achCh || {}; J.achCh[c.ch] = true; }
     achEarn(ACH.filter(a => {
@@ -2119,6 +2184,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     companyItems(items);
     rahItems(items);
     lvItems(items);
+    linkItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
     renderLastwell();
@@ -2259,6 +2325,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     mod += cb + gu + ru;
     const cob = coCheck(label);
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
+    if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
     const wm = atk ? wxYou() : 0;
     if (wm) { mod += wm; label += " (" + WX[S.wx.k].name.toLowerCase() + " " + fmt(wm) + ")"; }
     return new Promise(done => {
@@ -12581,10 +12648,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       R.cure[i] = ok;
     }
     if (R.cure[0] && R.cure[1]) {
-      R.blight = true; renderSheet();
+      R.blight = true; renderSheet(); rsSync();
       await say("It takes the gardeners all afternoon to spread it, and all night for the screws to wash it down. In the morning, the grey on the top terrace has gone dark and wet, and the soil smells like soil. By the next day there's green on the bean frames: not new leaves, not yet, just a green flush in the stems, like a blush.");
       await say("Sabine fills a phial from the first clean channel and presses it into your hand. \"Sweet water,\" she says. \"Brine can't sit where that's been. Keep it.\" Then she sits down in a bed of mud and cries, very briefly, the way a sergeant would.");
       S.gear.push("sweet"); renderSheet();
+      if (lantern()) await say("At your belt, the Lantern of Rahdaria flares, once, as bright as noon. Sabine stares at it. \"Where did you get one of the old lamps?\" she says. \"They were all lost, my grandmother said. Lost under the water.\" There's no water anywhere near Rahdaria, and you both look at the lantern, and neither of you says anything else.");
       await mech("Gain <b>the Sweetwater Phial</b>. " + GEAR.sweet.desc, "loot");
       await feed("blight", 3, "The blight is broken. The gardens will feed the city again, slowly.");
       await standing(12, "The whole city can see the green coming back on the terraces.");
