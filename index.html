@@ -396,6 +396,9 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .journal .beast { margin: 0; }
 .marks.ach li.hid { font-style: italic; }
 .marks .ach-date { color: var(--muted); font-size: .84rem; }
+.p-set { font-family: var(--display); font-weight: 400; font-size: 1.12rem; margin: 18px 0 2px; }
+.p-ver { font-family: var(--label); font-size: .74rem; letter-spacing: .1em; color: var(--muted); margin-left: 6px; }
+.p-new { color: var(--gold); font-weight: 700; }
 .ach-toasts { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
 .ach-toast { pointer-events: auto; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; width: 100%;
   background: var(--panel); color: var(--ink); border: 1px solid var(--gold); border-radius: 6px; padding: 10px 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 0 14px rgba(207, 168, 80, .25);
@@ -1956,6 +1959,31 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       prog: () => [(S.relics || []).length, Object.keys(RELICS).length] },
     { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false }
   ];
+  // ---------- pursuits ----------
+  // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
+  // found by its id in a set's ids list, and any feat not listed belongs to the first set (Founding).
+  // New release: add a set at the end with the ids of the feats it adds to ACH. Players who already
+  // have a journal get a toast naming the new set the first time they open the new version.
+  const PURSUITS = [
+    { id: "founding", name: "Founding", ver: "1", desc: "The road from the labyrinth to the Undermoon." },
+    { id: "rahdaria", name: "The Siege of Rahdaria", ver: "2", desc: "Rahdaria, the company you keep, the traps you build and the forty rings.",
+      ids: ["christened", "goodboy", "sworn", "company", "trapwright", "inventor", "twelvefoot", "sapper", "allweather",
+        "lv10", "lv25", "lv40", "read", "print", "prints", "hidden", "underdream",
+        "inquirer", "sharp", "sweet", "rhhero", "rhearly", "rhall"] }
+  ];
+  const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
+  const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
+  function pursuitsNews() {
+    const last = PURSUITS.length - 1, played = J.ach && Object.keys(J.ach).length;
+    let seen = typeof J.pSeen === "number" ? J.pSeen : (played ? 0 : last);
+    if (seen < last) {
+      for (let i = seen + 1; i <= last; i++) {
+        const P = PURSUITS[i], n = pursuitFeats(P).length;
+        if (n) achToast({ kicker: "New pursuits", name: P.name, desc: n + " new pursuit" + (n === 1 ? "" : "s") + " to chase in version " + P.ver + "." });
+      }
+    }
+    if (J.pSeen !== last) { J.pSeen = last; jSave(); }
+  }
   const hasAch = (id) => !!(J.ach && J.ach[id]);
   function achEarn(list) {
     if (!list.length) return;
@@ -1963,8 +1991,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     list.forEach(a => { J.ach[a.id] = Date.now(); stat("achievement-" + a.id, "Achievement: " + a.name); achToast(a); });
     jSave();
   }
+  let pursuitsTold = false;
   function achCheck(c) {
     if (!started || !jLive) return;
+    if (!pursuitsTold) { pursuitsTold = true; pursuitsNews(); }
     c = c || {};
     if (c.ch && c.sum.deaths === 0) { J.achCh = J.achCh || {}; J.achCh[c.ch] = true; }
     achEarn(ACH.filter(a => {
@@ -1995,16 +2025,23 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function achSection() {
     const won = ACH.filter(a => hasAch(a.id)).length;
     const day = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-    return "<section><h3>Achievements · " + won + " of " + ACH.length + "</h3>" +
-      '<p class="j-sub">Feats from every journey and save slot. Once earned, they stay earned.</p><ul class="marks ach">' +
-      ACH.map(a => {
-        const got = hasAch(a.id);
-        if (!got && a.hidden) return '<li class="hid"><span class="mk"></span><span><b>A hidden feat</b> · keep playing to find it.</span></li>';
-        let p = "";
-        if (!got && a.prog) { const [n, of] = a.prog(); if (n > 0) p = " (" + n + " of " + of + ")"; }
-        return '<li class="' + (got ? "won" : "") + '"><span class="mk"></span><span><b>' + a.name + "</b> · " + a.desc + p +
-          (got ? ' <span class="ach-date">Earned ' + day(J.ach[a.id]) + ".</span>" : "") + "</span></li>";
-      }).join("") + "</ul></section>";
+    const item = (a) => {
+      const got = hasAch(a.id);
+      if (!got && a.hidden) return '<li class="hid"><span class="mk"></span><span><b>A hidden feat</b> · keep playing to find it.</span></li>';
+      let p = "";
+      if (!got && a.prog) { const [n, of] = a.prog(); if (n > 0) p = " (" + n + " of " + of + ")"; }
+      return '<li class="' + (got ? "won" : "") + '"><span class="mk"></span><span><b>' + a.name + "</b> · " + a.desc + p +
+        (got ? ' <span class="ach-date">Earned ' + day(J.ach[a.id]) + ".</span>" : "") + "</span></li>";
+    };
+    return "<section><h3>Pursuits · " + won + " of " + ACH.length + "</h3>" +
+      '<p class="j-sub">Each version of the game adds a set of pursuits. They count across every journey and save slot, and once earned, they stay earned.</p>' +
+      PURSUITS.map((P, i) => [P, i]).reverse().map(([P, i]) => {
+        const list = pursuitFeats(P);
+        if (!list.length) return "";
+        const got = list.filter(a => hasAch(a.id)).length;
+        return '<h4 class="p-set">' + P.name + ' <span class="p-ver">Version ' + P.ver + (i === PURSUITS.length - 1 && i > 0 ? ' · <b class="p-new">New</b>' : "") +
+          " · " + got + " of " + list.length + '</span></h4><p class="j-sub">' + P.desc + '</p><ul class="marks ach">' + list.map(item).join("") + "</ul>";
+      }).join("") + "</section>";
   }
 
   // ---------- sheet ----------
