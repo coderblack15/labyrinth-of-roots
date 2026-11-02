@@ -890,5 +890,76 @@ Two new creatures walk the road in Ammaret (before Parts XLIII–XLV): the **Sha
 
 If she came north, she comes down too. She steals the Dimmers' side-door key (no. 43), clears a suspect in the second span, unlocks the Magistrate's chains during the fight, and slaps you out of the Wearing once.
 
-*To be continued.*
+## The Undermoon: Kedge (Parts XLIX–LV)
 
+This chapter follows The Kept Noon. Vaelric asked to go home, and the Magistrate's ledger said something under the labyrinth is pushing the roots of the world up. You walk back west to where it all began, and find the labyrinth heaved up out of the sand.
+
+### The Undermoon and the Moored
+
+- **The Undermoon.** A thousand years ago a moon fell. The first wardens caught it in the roots of the great tree and buried it: the great tree was never a tree, it was a cage grown down round a fallen moon, and the labyrinth is the top of the cage. Five iron-wood pins nail the cage to the rock, and the Ember Root sat in the socket at its heart as the lock. The moon is cold and the Ember Root is warm, and while it sat there the moon dreamed of being warm and stayed asleep. Vaelric's old teacher called it the Low Lantern.
+- **The Lift.** The Undermoon doesn't pull things down. It lifts them, the way the moon lifts the sea. Since the heist took the Ember Root, it has been waking, and everything near it weighs less: sand falls up in the desert, roots break out of the ground, and in the hollow under the labyrinth loose things float.
+- **The Moored** (an original race). The people of Kedge, who have lived beside the Undermoon for a thousand years. Tall, very thin, grey-white and faintly see-through, with silver blood. They're born lighter than air, so they carry their weight: the stones of their dead, braided into their hair or sewn into their clothes, one stone per ancestor, passed down when someone dies. A Moored with no stones floats away. They walk with one hand on a rope, always, and their children wear harnesses clipped to the rails. Their dead with no heirs are kept in the ossuary, a cave of a million named stones.
+- **Kedge.** A town hung from the roof of the hollow on a thousand chains, houses like lanterns, walkways of plank and rope, every house weighted with a great stone, directly above the Undermoon.
+- **The Unmoored.** Moored who cut off their own stones and float free. They believe their dead live on the moon's face and that when it rises they'll all go home. Led by **Corwen Lisk**, Kedge's tide-reader, they've pulled three of the five pins and mean to pull the last two at the end of the second tide.
+
+### Systems
+
+- **The Lift (0–10).** Starts at 4 and rises by 1 every turn. Driving a pin back lowers it by 2 (by 1 if you drive it crooked), and cutting the Unmoored's tackle in the roost lowers it by 1. Corwen has 28 + 2 × Lift HP.
+- **Kinstones and footing.** You need half the Lift (rounded up) in stones to keep your feet. Orrin gives you two guest-stones; the market sells them for 5 gold and buys them back for 3; some things cost a stone (the ossuary's rule, rising after Corwen) and some give one (Tyra's lucky stone, Vaelric's stone). Kite-eels steal them. Your footing is your weight minus what you need:
+  - **Adrift** (below 0): disadvantage on attacks (unless clipped to the Tether-Line) and on Strength and Athletics checks. At the end of a turn the Lift may carry you off (Athletics, DC 10 + 2 per stone short): fail and you take 2d4 and pay a line-catcher 5 gold to reel you in.
+  - **Footed** (0 to 2): no penalties.
+  - **Weighed down** (3 or more, 4 with the Plumb-Heart): disadvantage on Dexterity, Stealth and climbing, and Evade drops from 65% to 40%.
+- **Time.** Two tides of three turns: Slack Water, the Flood, and the Ebb, when the knot-houses open (3 gold for a hammock, 2d6 HP). Errands in the market take no time.
+- **Moonmilk.** The Moored's silver medicine (12 gold, Mother Kell gives you one). 2d8 + 2 HP, in or out of a fight.
+- **Death.** The axe holds you at 1 HP as usual.
+
+### Places
+
+- **The kinstone market.** Buy and sell stones and moonmilk. Ama Pell the stonewright's heir-beam (a balance puzzle) for the Plumb-Heart.
+- **The Chainworks.** Gage Tull gives you the Wardens' Maul. Climb down to the moon's face and clear the root-knot choking the North Pin's socket, then drive it.
+- **The Drift.** A ring of floating stones circling the moon. Cross it to the Weeping Pin, deal with the two Unmoored on watch (fight or come at them from below), and drive it.
+- **The ossuary.** Leave a stone, speak the rite (Wisdom DC 14), or push past (the dead mind: a shelf of stones falls on you). Four Unmoored are hauling up the Grave Pin. If Vaelric still speaks, Sexton Pell shows you the stone the Moored kept for him, and you can carry it.
+- **The Lunary.** Corwen's old tide-house. The star-door (Tyra's key no. 44, or Arcana DC 13). Ilo Brack's tide-table puzzle for Corwen's Tide-Chart; persuade him (DC 13, +2 if you read the cords) to learn the weak knot in her cord.
+- **The Unmoored roost.** An upside-down chapel on the roof. Float up (hand your stones to Orrin) or climb (Athletics DC 14). Rescue Pim (Stealth or fight), cut their tackle (Lift −1), see their plan. Pim's mother gives you the Tether-Line.
+- **Mother Kell's chair.** News, a phial of moonmilk the first time, and rest.
+
+### Five quest-earned items
+
+| Item | Quest | Effect |
+|---|---|---|
+| **The Plumb-Heart** | Hang Ama Pell's heir-beam level | Weighs as two kinstones, and you can carry one more stone before you're weighed down |
+| **The Wardens' Maul** | The Chainworks | Drive a pin with no roll. Against Corwen, strike the root-floor: she falls (2d6), loses a turn and can't rise next round |
+| **The Tether-Line** | Rescue Pim from the roost | Adrift, no disadvantage on attacks, and the Lift can't carry you off. A no-roll way down to the Heartfall |
+| **Corwen's Tide-Chart** | Read Ilo's tide-table | Once a tide, call slack water: the Lift doesn't rise that turn. Against Corwen, bracing for her dive always works |
+| **The Ember Sapling** | Only if you returned the Ember Root in Part X: the Lift dragged it out of the dunes | The seed you can put back |
+
+### Puzzles (each has a fallback)
+
+1. **The balance (the drop-line and the heir-beam).** A load hangs on a left hook. Hang stones of weight 1 to 5 on the other hooks so weight × distance balances. Four tests; each says tips left, tips right or level. Fallback: Strength DC 13 (ride it down) or Intelligence DC 14.
+2. **The root-knot (the North Socket and the Heart-Knot).** A 6×6 sliding-block puzzle: push roots along their length to get the gold pin out to the right. Four layouts, checked by a solver (13 to 17 pushes), with 12 spare. Fallback: Strength DC 15 / 14.
+3. **The Drift.** Rows of floating stones drift left and right with every step and carry you with them. Cross six rows to the far ledge. Each layout is checked by a search for a route of 7 to 14 steps; you get 4 spare. Fallback: Athletics DC 14.
+4. **The tide-table.** Eight readings of the Lift follow a repeating pattern of rises and falls. Set the next three. Two tries. Fallback: Wisdom DC 14.
+5. **Corwen's dive.** In the boss fight she rises out of reach every second round. Cut a stone loose and rise after her, throw a kinstone, or brace for her dive.
+
+### Story beats
+
+- **XLIX The Road Home.** Parting with the Magistrate. Sand falling up. The Ember Sapling (if you returned the seed) or the Ember Root pulling under your ribs. The labyrinth heaved out of the sand. Orrin Lode, a Moored line-walker, cut loose by the Unmoored (fight, or Intimidation to scare one off). Guest-stones. Down through the old labyrinth: upward webs, floating books in the Library (catch one you don't have, Dexterity DC 12). The drop-line down the great tree's taproot shaft.
+- **L Kedge.** The Undermoon in its cage of roots, three pins floating. Mother Ashby Kell, the Anchor-Mother, carrying four hundred and six of her dead. Corwen Lisk drops by to ask you not to stop her. The Unmoored attack.
+- **LI–LII The First and Second Tide.** The hub, with checkpoints after every turn and Tyra's moments (key no. 44; her lucky stone).
+- **LIII The Heartfall.** Down to the moon's face (the great chain, the Drift, or the Tether-Line), the Heart-Knot, the last watch of Unmoored (more if pins are still out, and if any are, they get one of the last two up: Lift +1).
+- **LIV The Tidecaller.** Corwen Lisk: 28 + 2 × Lift HP, AC 14, a flail of her mother's stones (1d10, 2d6 when she dives). She rises every second round; the moon pulses every third (Strength save; adrift is bad, footed is good; Tyra catches you once). Cut the weak knot (Dexterity DC 15) and she hits for 1d6. Then: tie a stone back into her hair (she stands trial) or let her go up.
+- **LV The Undermoon.** Mother Kell says it's yours to say:
+  - **Put it back:** cut the Ember Root out from under your ribs (−4 max HP, lose its power) or plant the sapling. The cage closes and the moon sleeps. If Vaelric still speaks, he goes down with it to keep the lock, and you become the Warden of the Labyrinth.
+  - **Vaelric takes its place:** he roots himself into the socket. You keep the Ember Root. The axe still holds you at 1 HP, from underneath, but he won't speak again.
+  - **Let it rise:** strike out the last pins. The Undermoon goes up through the labyrinth and the desert over three days, and there are two moons in the sky, with a thousand Moored riding the new one.
+- **Hook.** Ilo's cords show a second pull, faint, from under the western sea. The Moored remember two lights falling. The wardens only caught one. The end card is Part LVI.
+
+### Bestiary
+
+Two new creatures walk the road under the labyrinth (before Parts L–LII): the **Kite-eel** (an eel of clear glass that swims through the air; each hit steals a kinstone, which you get back if you kill it) and the **Plumbmaw** (a lump of lead with a mouth that clings to the roof; every second round it drops on you, Dexterity save or 2d6, and if you dodge it gets stuck and your next swing has advantage).
+
+### Tyra
+
+If she came north, she comes down too, hating every minute of it. She steals the Lunary's star-door key (no. 44) from an upside-down Unmoored, gives you her lucky river stone in the second tide, clips her belt to yours at the Heartfall, and hauls you back down once when the moon pulses.
+
+*To be continued.*

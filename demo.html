@@ -62,6 +62,7 @@ body[data-light="sun"]   { --glow: rgba(240, 200, 110, .40); }
 body[data-light="mire"]  { --glow: rgba(92, 140, 96, .26); }
 body[data-light="lake"]  { --glow: rgba(84, 132, 170, .26); }
 body[data-light="noon"]  { --glow: rgba(236, 196, 96, .36); }
+body[data-light="moon"]  { --glow: rgba(170, 186, 214, .26); }
 body[data-light="dark"] .story { filter: brightness(.86); }
 .story { transition: filter 2s ease; }
 
@@ -363,6 +364,11 @@ body.intro-open { overflow: hidden; }
 .pgrid.maze button:disabled { opacity: 1; }
 .pgrid.maze button.rot { color: var(--ember); }
 .pgrid.dig button { width: 48px; height: 48px; }
+.pgrid.beamhooks { gap: 3px; }
+.pgrid.beamhooks button { width: 32px; height: 44px; font-size: 1rem; }
+.pgrid.knot, .pgrid.drift { gap: 3px; }
+.pgrid.knot button, .pgrid.drift button { width: 44px; height: 44px; font-size: 1.1rem; }
+.pgrid.knot button:disabled, .pgrid.drift button:disabled { opacity: 1; }
 .pgrid.dig button.land { opacity: 1; color: var(--muted); background: #1a1f1c; }
 .huntbar { grid-column: 1 / -1; height: 6px; background: #2a1d1a; border-radius: 3px; overflow: hidden; }
 .huntbar span { display: block; height: 100%; background: linear-gradient(90deg, #6d6a5a, var(--ember)); transition: width .4s; }
@@ -796,6 +802,20 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <span class="stat-label hk-x">Suspects</span>
       <span class="stat-val hk-x" id="nkClues">0 of 3 cleared</span>
     </div>
+    <div class="lw" id="umBox" hidden>
+      <span class="stat-label">The Lift</span>
+      <span class="stat-val" id="umLift">4 / 10</span>
+      <div class="huntbar"><span id="umLiftBar" style="width:40%"></span></div>
+      <span class="note" id="umLiftNote"></span>
+      <span class="stat-label hk-x">Time</span>
+      <span class="stat-val hk-x" id="umTime">Tide 1</span>
+      <span class="stat-label">Kinstones</span>
+      <span class="stat-val" id="umStones">○○○○○○</span>
+      <span class="stat-label">Footing</span>
+      <span class="stat-val" id="umHeft">Footed</span>
+      <span class="stat-label hk-x">Pins</span>
+      <span class="stat-val hk-x" id="umPins">0 of 3 driven</span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -910,7 +930,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; return v; } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; return v; } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1093,6 +1113,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         wind(sc, { cut: 2400, q: 3, vol: 0.012, sweep: 400, rate: 0.03 });
         every(sc, 0.9, 1.4, () => hiss(sc.out, { f: rnd(3000, 4200), q: 6, a: 0.002, dec: 0.03, vol: 0.05 }));
         every(sc, 40, 75, () => { for (let i = 0; i < 12; i++) bell(sc.out, hz(64), 0.016, 2.5, i * 0.9); });
+      },
+      undermoon(sc) {   // a cold hollow: the moon's slow breath, chains creaking in the dark, a far glassy whistle in the roots
+        drone(sc, [31, 38, 43], { cut: 260, vol: 0.05, wob: 0.03 });
+        const g = gain(0.0001, sc.out), f = filt("lowpass", 200, 0.7, g);
+        osc("sine", 41, f, sc); lfo(1 / 60, 0.05, g.gain, sc);
+        wind(sc, { cut: 3200, q: 9, vol: 0.01, sweep: 900, rate: 0.02 });
+        every(sc, 5, 12, () => { const f0 = rnd(90, 150); for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) hiss(sc.out, { f: f0 * (1 + i * 0.07), q: 14, a: 0.05, dec: 0.5, vol: 0.05, at: i * 0.45, to: f0 * 0.8 }); });
+        every(sc, 20, 40, () => bell(sc.out, hz(pick([67, 70, 74])), 0.012, 6));
       }
     };
 
@@ -1181,7 +1209,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   const CHAPTERS = [
     ["The Labyrinth of Roots", "labyrinth", 0, 5], ["The Burning Sands", "desert", 6, 9], ["The Hushfen", "hushfen", 10, 16],
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
-    ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47]
+    ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
+    ["The Undermoon", "undermoon", 48, 54]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
   const NOT_ITEMS = new Set(["bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore"]);
@@ -1422,12 +1451,14 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     assizeItems(items);
     heskItems(items);
     noonItems(items);
+    underItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
     renderLastwell();
     renderAssize();
     renderHesk();
     renderNoon();
+    renderUnder();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -2600,7 +2631,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   // ---------- the hushfen ----------
-  const vaelricSpeaks = () => S.axe && S.ending !== "return";
+  const vaelricSpeaks = () => S.axe && S.ending !== "return" && !S.vRooted;
   const fullHeal = async (why) => { S.hp = S.maxHp; renderSheet(); await mech(why + " You're back to full: " + S.hp + " HP.", "loot"); };
 
   async function partBounty() {
@@ -5863,12 +5894,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     while (FOE.hp > 0) {
       st.round++;
       if (F.before) { await F.before(st); if (FOE.hp <= 0) break; }
-      const opts = [{ key: "atk", label: glaive ? "Swing the Moltglaive" : "Swing the axe", tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
+      const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : "Swing the axe", tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "2d6 · " + S.flasks + " left", plain: true });
       if (S.lens) opts.push({ key: "lens", label: "Throw the burning lens", tag: "3d6 fire, once", plain: true });
       if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
+      if (S.um && S.um.milk && S.hp < S.maxHp) opts.push({ key: "milk", label: "Drink a phial of moonmilk", tag: "2d8 + 2 HP · " + S.um.milk + " left · costs your turn", plain: true });
       if (S.nk && S.nk.jars) opts.push({ key: "jar", label: "Smash a noon-jar", tag: (F.shade ? "4d6" : "2d6") + " radiant · " + S.nk.jars + " left", plain: true });
       if (hasGear("mirror") && !st.used.mirror) opts.push({ key: "mirror", label: "Draw Mirrorwake", tag: "two copies of you", plain: true });
       if (hasGear("drum") && F.hesk && !st.used.drum) opts.push({ key: "drum", label: "Play the stilling beat", tag: "they lose a turn", plain: true });
@@ -5877,12 +5909,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (S.elixirs) opts.push({ key: "elixir", label: "Drink an Elixir of Health", tag: "+" + (S.bloom >= 2 ? 10 : 20) + " HP · costs your turn", plain: true });
       if (S.tea && S.bloom) opts.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1 · costs your turn", plain: true });
       if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
-      opts.push({ key: "evade", label: "Evade", tag: EVADE + "% to slip every attack this round · costs your turn", plain: true });
+      opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       const c = await choose(opts);
       if (c === "atk") {
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
-        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : ""), mod: S.dull ? 4 : 5, dc: F.ac, target: "AC", adv: st.adv, dis: dim, cta: "Strike" });
+        const adrift = umAdrift() && !hasGear("tether");
+        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : ""), mod: S.dull ? 4 : 5, dc: F.ac, target: "AC", adv: st.adv, dis: dim || adrift, cta: "Strike" });
         st.adv = false;
         if (a.ok) {
           if (F.heads) {
@@ -5933,7 +5966,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         const r = await check({ label: "Wisdom check (singing the discord)", mod: 2 + (S.song >= 3 ? 2 : 0), dc: 13, cta: "Sing" });
         if (r.ok) { st.stilled = true; st.clean = true; await say("The " + (F.heads ? "nearest blade" : "blade") + " shivers, cracks, and crumbles into white dust. It has to sing a new one from bare shell, in a hurry, and the new one is clean."); await mech("It loses its next turn, and its hits no longer carry the Bloom this fight.", "loot"); }
         else await say("Your voice cracks on the note. The blade hums on, unbothered.");
-      } else if (c === "potion" || c === "elixir") await drink(c);
+      } else if (c === "milk") await drinkMilk();
+      else if (c === "potion" || c === "elixir") await drink(c);
       else if (c === "tea") { S.tea--; await bloomDown(1, "The tea is scalding and bitter as sweat."); }
       else if (c === "mend") {
         st.used.mend = (st.used.mend || 0) + 1;
@@ -5962,13 +5996,16 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     }
   }
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
+  // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
+  const evadeChance = () => umHeavy() ? 40 : EVADE;
   async function foeSwing(F, st, o = {}) {
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0) - (F.road && hasMark("tally") ? 1 : 0);
     if (st.evade) {
-      if (d(100) <= EVADE) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + EVADE + "%).", "loot"); return false; }
-      await mech("You read it wrong. (Evade failed: " + EVADE + "%.)", "hurt");
+      const ev = evadeChance();
+      if (d(100) <= ev) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + ev + "%).", "loot"); return false; }
+      await mech("You read it wrong. (Evade failed: " + ev + "%" + (ev < EVADE ? ", weighed down" : "") + ".)", "hurt");
     }
     if (st.split > 0) {
       st.split--;
@@ -6080,10 +6117,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -6181,7 +6218,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       tactic: "Bring a light. The Sun-Shard and noon-jars burn through two at a time.",
       lore: "Shadows that were cut and never sold, gone feral in the dark corners of Ammaret. They're cold, and they want what you've got: a shadow with somebody still attached to it.",
       intro: "In a dim alley out of the lens-light, your shadow has company. Three more shadows on the wall beside it, with nobody to cast them, and they're turning toward you.",
-      who: "the cutshades", hitWhy: "A cold hand that is only a shape closes on you, and something warm goes out of you.", miss: "It passes through the place you just were, like a draught.", hitLine: "It tears like wet paper and blows away." }
+      who: "the cutshades", hitWhy: "A cold hand that is only a shape closes on you, and something warm goes out of you.", miss: "It passes through the place you just were, like a draught.", hitLine: "It tears like wet paper and blows away." },
+    { id: "kiteeel", name: "Kite-eel", region: "undermoon", quirk: "tug", hp: 16, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", notice: 13,
+      ability: ["Tug", "Every hit also hooks one of your kinstones and pulls it away. Kill it and you get them back."],
+      tactic: "End it fast, before you're too light to swing. If you're adrift, the Tether-Line keeps your footing; a gem flare or a spell doesn't care how much you weigh.",
+      lore: "Long, flat, see-through eels that swim through the air of the hollow in the Lift, steering with fins like sails. They line their nests with stolen stones, and the Moored say a kite-eel's nest is the richest place in Kedge.",
+      intro: "Something ripples in the air ahead of you, like heat over a road. Then it turns, and it's an eel as long as a rope, flat and clear as glass, swimming toward you through nothing, with its hook-jaws open and its eyes on the stones round your neck.",
+      who: "the kite-eel", hitWhy: "Its hook-jaws bite and twist.", miss: "It ripples aside like a flag in the wind.", hitLine: "It flaps away from the axe, leaking silver." },
+    { id: "plumbmaw", name: "Plumbmaw", region: "undermoon", quirk: "plunge", hp: 24, ac: 15, atk: 4, n: 1, s: 8, type: "bludgeoning", notice: 12,
+      ability: ["Plunge", "Every second round it lets go of the roof and drops on you like a stone: a Dexterity save or 2d6. Dodge it, and it buries its face in the floor, and your next swing has advantage."],
+      tactic: "Stay light on your feet. Weighed down, you won't get out from under it. Make it miss, then hit it while it's stuck.",
+      lore: "A grey lump of a thing with a mouth on the bottom, as heavy as lead, that clings to the roof-roots of the hollow and waits. It's the only creature down there that weighs more than it should. The Moored use its shell for anchor-stones.",
+      intro: "A shadow on the roof-roots overhead is the wrong shape. It's heavy and round, and it's moving, slowly, until it's right above you. Then it lets go.",
+      who: "the plumbmaw", hitWhy: "It rolls into you like a boulder with teeth.", miss: "It thuds down beside you and the roots shake.", hitLine: "The axe skips off its shell and bites underneath." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -6301,6 +6350,23 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     fade: {
       before: async (F, st) => { if (st.round > 1 && FOE.hp > 1 && d(3) === 1 && !(S.nk && S.nk.noon >= 6) && !hasLight()) { st.slipped = true; await say("One of them slides into the wall and out again behind you."); await foeSwing(F, st, { label: "A cutshade strikes from the wall" }); } }
     },
+    tug: {
+      turn: async (F, st) => {
+        if (await foeSwing(F, st) && umOn() && S.um.ballast > 0) { F.tugged = (F.tugged || 0) + 1; await stones(-1, "Its jaws hook a stone off your cord and it swallows it whole."); }
+        st.evade = false; return "done";
+      }
+    },
+    plunge: {
+      before: async (F, st) => {
+        if (st.round % 2 || FOE.hp <= 0) return;
+        st.plunged = true;
+        await say("It lets go of the roof and drops.");
+        const r = await check({ label: "Dexterity save (out from under it)" + (umDex() ? " (weighed down)" : ""), mod: 2, dc: 13, dis: umDex(), cta: "Dive aside" });
+        if (r.ok) { st.adv = true; await say("You throw yourself aside and it hits the floor face first and sticks there, mouth working."); await mech("Your next attack has advantage.", "loot"); }
+        else await hurt(2, 6, "bludgeoning", "It lands on you.");
+      },
+      turn: async (F, st) => { if (st.plunged) { st.plunged = false; st.evade = false; return "done"; } }
+    },
     hatch: {
       before: async (F, st) => { if (st.round > 1 && F.hatch > 0 && FOE.hp > 0 && d(2) === 1) { F.hatch--; FOE.hp++; FOE.max = Math.max(FOE.max, FOE.hp); renderFoe(); await mech("Another husk splits and a fresh mite crawls out: " + FOE.hp + " left.", "hurt"); } }
     }
@@ -6409,6 +6475,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (F.stolen) { S.coins += F.stolen; renderSheet(); await mech("You take back the " + F.stolen + " gold it lifted from you.", "loot"); }
     if (F.fled) { await gold(1, 4, "It got away, but it left something behind."); beastLog(B, true); return; }
     if (F.took && S.nk && S.nk.on) await shadeGain(F.took, "You take back what it cut from you, and it settles back at your heels.");
+    if (F.tugged && umOn()) await stones(F.tugged, "You cut the stones it swallowed out of its belly.");
     beastLog(B, true);
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
@@ -8441,7 +8508,1001 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     await say("\"There's a ledger,\" he says. \"The Magistrates keep it. One page a year, for six hundred years. It's not about money. It's about the roots.\" He looks at your axe for a long time. \"Every year, the roots under the world grow a little closer to the surface. Something under your labyrinth is pushing them up. The Ember Root was the last thing holding it down, and someone took the Ember Root.\" A pause. \"Some thieves. In a heist. You may have heard.\"", "voice");
     if (vaelricSpeaks()) await voice("Vaelric is silent for a very long time. Then: \"Take me home,\" he says.");
     N.on = false; renderSheet();
-    await jChapterDone(PARTS.length - 1);
+    await go("Take the road home");
+  }
+
+  // ---------- The Undermoon: Kedge, the Moored, and the moon under the labyrinth ----------
+  // A thousand years ago a moon fell. The first wardens caught it in the roots of the great tree and
+  // buried it under what became the labyrinth: the roots grew down round it like a fist round an egg,
+  // five iron-wood pins nailed the cage to the rock, and the Ember Root sat in the heart of it like a
+  // lock. Since the heist took the Ember Root, the Undermoon has been waking. It doesn't pull things
+  // down. It lifts them, the way the moon lifts the sea, and the more it wakes, the lighter everything
+  // near it gets. The Moored are the people who live beside it: born lighter than air, they carry
+  // the stones of their dead braided into their hair to keep their feet on the ground.
+  // Systems: the Lift (a clock that rises every turn), your ballast (stones you carry: too few and
+  // you're adrift, too many and you're weighed down), three pulled pins to drive back, two tides of
+  // three turns, five quest items, and puzzles: the balance beam, the root-knot, the Drift and the
+  // tide-table. The boss, Corwen Lisk, fights from above.
+  const TURNS = ["Slack Water", "The Flood", "The Ebb"];
+  const UM_MAX = 6;
+  const PIN_NAMES = { north: "the North Pin", weep: "the Weeping Pin", grave: "the Grave Pin" };
+  const um = () => S.um;
+  const umOn = () => !!(S.um && S.um.on);
+  const umNeed = () => Math.ceil(S.um.lift / 2);
+  const umWeight = () => S.um.ballast + (hasGear("plumb") ? 2 : 0);
+  const umHeft = () => umWeight() - umNeed();
+  const umHeavyAt = () => hasGear("plumb") ? 4 : 3;
+  const umAdrift = () => umOn() && umHeft() < 0;
+  const umHeavy = () => umOn() && umHeft() >= umHeavyAt();
+  const umState = () => !umOn() ? "" : umHeft() < 0 ? "Adrift" : umHeavy() ? "Weighed down" : "Footed";
+  Object.assign(GEAR, {
+    sapling: { name: "The Ember Sapling", icon: "ember", desc: "The Ember Root you planted in the dunes, dragged up by the Lift. Its roots still point down, toward home." },
+    plumb: { name: "The Plumb-Heart", icon: "plumb", desc: "Ama Pell's lead heart-stone. It weighs as much as two kinstones, and you can carry one stone more before you're weighed down." },
+    maul: { name: "The Wardens' Maul", icon: "maul", desc: "An iron-wood maul as long as your leg, made for driving the wardens' pins. Drive a pin with no roll. Once a fight against something that flies, strike the root-floor and bring it down." },
+    tether: { name: "The Tether-Line", icon: "tether", desc: "A Moored line-walker's silk rope with a bronze hook. Adrift, you clip on: no disadvantage on attacks, and the Lift can't carry you off." },
+    chart: { name: "Corwen's Tide-Chart", icon: "map", desc: "Knotted cords on a frame, reading the Undermoon's pull. Once a tide, call slack water: the Lift doesn't rise at the end of that turn. Against Corwen, you'll know when she dives." }
+  });
+  Object.assign(ICONS, {
+    stone: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="15" rx="8" ry="6.5" fill="#6e7378"/><ellipse cx="11" cy="13" rx="3" ry="1.8" fill="#9aa1a6"/><path d="M13 2v6" stroke="#cfa850" stroke-width="1.4"/></svg>',
+    plumb: '<svg viewBox="0 0 26 26"><path d="M13 23c-6-4-9-8-9-12a5 5 0 0 1 9-3a5 5 0 0 1 9 3c0 4-3 8-9 12z" fill="#55595e" stroke="#9aa1a6"/><path d="M13 2v5" stroke="#cfa850" stroke-width="1.4"/></svg>',
+    maul: '<svg viewBox="0 0 26 26"><rect x="4" y="4" width="14" height="7" rx="1.5" fill="#6b4a2b" stroke="#cfa850"/><path d="M11 11l8 12" stroke="#8a6a44" stroke-width="2.4"/></svg>',
+    tether: '<svg viewBox="0 0 26 26"><path d="M5 21c4-8 12 0 16-8c2-4-1-8-4-7" stroke="#d8d2c0" stroke-width="1.8" fill="none"/><path d="M17 6c-3-1-4 2-2 3" stroke="#cfa850" stroke-width="1.8" fill="none"/></svg>',
+    moon: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="#c9ccd2"/><circle cx="10" cy="11" r="2" fill="#a4a9b0"/><circle cx="16" cy="16" r="1.4" fill="#a4a9b0"/><path d="M4 9c4 3 14 3 18 0M4 17c4-3 14-3 18 0" stroke="#6b4a2b" stroke-width="1.3" fill="none"/></svg>',
+    milk: '<svg viewBox="0 0 26 26"><rect x="10" y="3" width="6" height="3" rx="1" fill="#7a5a3a"/><path d="M9 6h8v3l2 3v8a3 3 0 0 1-3 3h-6a3 3 0 0 1-3-3v-8l2-3z" fill="#1d2430" stroke="#c9ccd2"/><path d="M8 14h10v6a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3z" fill="#dfe3ea" opacity=".8"/></svg>'
+  });
+
+  function initUnder() {
+    S.gear = S.gear || [];
+    S.um = { on: true, lift: 4, ballast: 0, pins: [], tide: 1, turn: 0, hv: {}, milk: 0, slack: 0, cord: false, seed: false,
+      tyra: !!(S.tyraHk && S.tyra), corwen: "", ending: "", gaveVael: false };
+    renderSheet();
+  }
+  function renderUnder() {
+    const box = $("umBox");
+    if (!box) return;
+    box.hidden = !umOn();
+    if (!umOn()) return;
+    const U = um(), h = umHeft();
+    $("umLift").textContent = U.lift + " / 10";
+    $("umLiftBar").style.width = U.lift * 10 + "%";
+    $("umLiftNote").textContent = U.lift >= 10 ? "The cage is breaking." : U.lift >= 7 ? "High Lift. Loose things are falling up." : "You need " + umNeed() + " stone" + (umNeed() === 1 ? "" : "s") + " of weight to keep your feet.";
+    $("umTime").textContent = U.tide > 2 ? "The Heartfall" : "Tide " + U.tide + " · " + (TURNS[U.turn] || "");
+    $("umStones").textContent = "●".repeat(U.ballast) + "○".repeat(UM_MAX - U.ballast) + (hasGear("plumb") ? " ♥" : "");
+    $("umHeft").textContent = umState() + " (" + (h >= 0 ? "+" + h : h) + ")";
+    $("umPins").textContent = U.pins.length + " of 3 driven";
+  }
+  function underItems(items) {
+    if (!S.um) return;
+    const U = um();
+    if (U.on) {
+      items.push(["umstones", "stone", "Kinstones ×" + U.ballast, "Borrowed weight. You need " + umNeed() + " to keep your feet at Lift " + U.lift + (hasGear("plumb") ? " (the Plumb-Heart counts as two)" : "") + "."]);
+      const st = umState();
+      items.push(["umheft", "moon", "Footing: " + st, st === "Adrift" ? "Too light. Disadvantage on attacks and on Strength and Athletics checks" + (hasGear("tether") ? " (attacks are fine while you're clipped to the Tether-Line)" : "") + ", and at the end of a turn the Lift may carry you off." : st === "Weighed down" ? "Too heavy. Disadvantage on Dexterity, Stealth and climbing, and Evade only works 40% of the time." : "Just right. No penalties."]);
+    }
+    if (U.milk) items.push(["milk", "milk", "Moonmilk ×" + U.milk, "A phial of the Moored's silver blood-medicine. Drink it: 2d8 + 2 HP."]);
+    if (U.on && U.cord) items.push(["umcord", "clue", "The weak knot", "Ilo Brack told you where Corwen's cord of stones was knotted badly. Cut it, and her flail is gone."]);
+    if (U.corwen === "moored") items.push(["umcorwen", "tether", "Corwen's stones", "Tied back into her hair by your hands. She'll stand trial in Kedge."]);
+  }
+
+  async function liftUp(n, why) {
+    const U = um(), was = U.lift;
+    U.lift = Math.max(0, Math.min(10, U.lift + n));
+    const before = umState();
+    renderSheet();
+    if (U.lift === was) return;
+    await mech(why + (n > 0 ? " The Lift rises to " : " The Lift falls to ") + U.lift + " of 10.", n > 0 ? "hurt" : "loot");
+    const after = umState();
+    if (after !== before) await mech("You need " + umNeed() + " stone" + (umNeed() === 1 ? "" : "s") + " of weight now. Your footing: <b>" + after + "</b>.", after === "Footed" ? "loot" : "hurt");
+  }
+  async function stones(n, why) {
+    const U = um(), was = U.ballast;
+    U.ballast = Math.max(0, Math.min(UM_MAX, U.ballast + n));
+    renderSheet();
+    if (U.ballast === was) return;
+    await mech(why + " Kinstones: " + U.ballast + ". Your footing: <b>" + umState() + "</b>.", n > 0 ? "loot" : "hurt");
+  }
+  // Checks that weight changes: Strength and Athletics suffer adrift; Dexterity, Stealth and climbing suffer weighed down.
+  const umStr = () => umAdrift();
+  const umDex = () => umHeavy();
+  async function pinDriven(key, how) {
+    const U = um();
+    if (U.pins.includes(key)) return;
+    if (how) await say(how);
+    let ok = true;
+    if (!hasGear("maul")) {
+      const r = await check({ label: "Strength check (driving " + PIN_NAMES[key] + " home)" + (umStr() ? " (adrift)" : ""), mod: 3, dc: 14, dis: umStr(), cta: "Drive it" });
+      ok = r.ok;
+      if (!ok) await say("You get it in, but crooked, and not as deep as the wardens drove it. It'll hold. Mostly.");
+    } else await say("You swing the Wardens' Maul. It was made for this, and it knows it: three blows, each one ringing down through the roots into the moon like a bell into water, and the pin sinks to its collar.");
+    U.pins.push(key); renderSheet();
+    await liftUp(ok ? -2 : -1, PIN_NAMES[key].replace(/^the/, "The") + " is back in the rock.");
+  }
+  // The Moored sleep tied in. A knot-house is a loft of hammocks lashed to the chains.
+  async function knotRest(paid) {
+    const before = S.hp;
+    const h = paid ? d(6) + d(6) : d(4);
+    if (paid) S.coins -= 3;
+    S.hp = Math.min(S.maxHp, S.hp + h); renderSheet();
+    await mech((paid ? "A hammock in a knot-house (3 gold), with a cord round your waist so you don't float off in your sleep. " : "You doze on a walkway with your arm through the chain. ") + "Regain " + (S.hp - before) + " HP.", "loot");
+  }
+  // At the end of a turn, if you're adrift, the Lift may take you.
+  async function goingUp() {
+    if (!umAdrift() || hasGear("tether")) return;
+    const dc = 10 + 2 * Math.min(3, -umHeft());
+    await say("Your feet come off the walkway. Not much. Then a little more.");
+    const r = await check({ label: "Athletics check (grab something)", mod: 3, dc, cta: "Grab" });
+    if (r.ok) { await say("You get a fist round a chain and haul yourself back down hand over hand, and hook your boot under the rail."); return; }
+    await hurt(2, 4, "bludgeoning", "You drift up into the roots overhead and fetch up hard against them.");
+    const fee = Math.min(5, S.coins);
+    S.coins -= fee; renderSheet();
+    await say("A Moored line-catcher hooks your belt with a long pole and reels you down like a kite." + (fee ? " She holds out her hand for " + fee + " gold, which is the going rate." : " She doesn't charge you. She looks at your empty purse and laughs."));
+  }
+
+  const UNMOORED = (o) => Object.assign({ ac: 13, atk: 4, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the Unmoored", whoShort: "Unmoored",
+    hitWhy: "A cord of stones whips round out of the air and cracks into your ribs.", miss: "The stones whirr past your ear.",
+    hitLine: "An Unmoored goes tumbling up into the dark with nothing left to hold on to." }, o);
+
+  // ---------- puzzles: the balance, the root-knot, the Drift, the tide-table ----------
+  // The balance beam: a load hangs on the left. Hang your stones on the hooks so the beam hangs level.
+  // A stone pulls by its weight times its hook's distance from the middle.
+  function balancePuzzle({ title = "The Balance", lead = "", tests = 4 } = {}) {
+    return new Promise(resolve => {
+      const W = [1, 2, 3, 4, 5];
+      let load = 0, at = 0;
+      for (let t = 0; t < 400; t++) {
+        const hooks = [-4, -3, -2, -1, 1, 2, 3, 4].sort(() => Math.random() - .5);
+        const ws = W.slice().sort(() => Math.random() - .5).slice(0, 3);
+        const used = hooks.slice(0, 3);
+        const T = ws.reduce((s, w, i) => s + w * used[i], 0);
+        if (T <= 0) continue;
+        const p = [2, 3, 4].filter(p => !used.includes(-p) && T % p === 0 && T / p >= 4 && T / p <= 14);
+        if (!p.length) continue;
+        at = -p[d(p.length) - 1]; load = T / -at;
+        break;
+      }
+      if (!load) { load = 6; at = -2; }
+      const P = puzzleBox(title, (lead ? lead + " " : "") + "A load of " + load + " hangs on hook " + (-at) + " on the left. Hang stones from the tray on the other hooks so the beam hangs level. A stone pulls by its weight times its hook's distance from the middle, and each hook takes one stone. You can lower the beam to test it " + tests + " times.");
+      const beam = el("div", "pgrid beamhooks"); beam.style.gridTemplateColumns = "repeat(9, 32px)";
+      const POS = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+      const hung = {}; hung[at] = "L";
+      const hb = POS.map(p => { const b = pbtn(""); b.onclick = () => tapHook(p); beam.appendChild(b); return b; });
+      const tray = el("div", "pgrid tones"); tray.style.gridTemplateColumns = "repeat(5, 52px)";
+      let sel = -1;
+      const tb = W.map(w => { const b = pbtn(""); b.onclick = () => { if (done) return; sel = sel === w ? -1 : w; draw(); }; tray.appendChild(b); return b; });
+      const hist = el("div", "lockhist");
+      P.body.append(beam, tray, hist);
+      const lower = pbtn("Lower the beam", "primary"), force = pbtn("Guess and let go");
+      P.ctrl.append(lower, force);
+      let used = 0, done = false;
+      const onBeam = (w) => Object.keys(hung).some(k => hung[k] === w);
+      function tapHook(p) {
+        if (done || p === 0 || p === at) return;
+        if (sel > 0) { Object.keys(hung).forEach(k => { if (hung[k] === sel) delete hung[k]; }); hung[p] = sel; sel = -1; }
+        else if (hung[p]) delete hung[p];
+        draw();
+      }
+      function draw() {
+        hb.forEach((b, i) => {
+          const p = POS[i];
+          b.innerHTML = p === 0 ? "▲" : p === at ? '<b style="color:var(--ember)">' + load + "</b>" : hung[p] ? "<b>" + hung[p] + "</b>" : '<small style="font-size:.7rem;color:var(--muted)">' + Math.abs(p) + "</small>";
+          b.classList.toggle("on", !!hung[p] && p !== at);
+          b.setAttribute("aria-label", p === 0 ? "The pivot" : (p < 0 ? "Left" : "Right") + " hook " + Math.abs(p) + (p === at ? ": the load, " + load : hung[p] ? ": stone " + hung[p] : ", empty"));
+        });
+        tb.forEach((b, i) => {
+          const w = W[i];
+          b.innerHTML = '<span class="tg">' + w + "</span><small>" + (onBeam(w) ? "hung" : sel === w ? "picked" : "stone") + "</small>";
+          b.classList.toggle("flash", sel === w);
+          b.style.opacity = onBeam(w) ? ".45" : "";
+          b.setAttribute("aria-label", "Stone of weight " + w + (onBeam(w) ? ", on the beam" : sel === w ? ", picked up" : ""));
+        });
+        P.status.textContent = sel > 0 ? "Stone " + sel + " in hand. Tap a hook." : used + " of " + tests + " tests used";
+      }
+      lower.onclick = () => {
+        if (done) return;
+        used++;
+        const T = Object.keys(hung).reduce((s, k) => s + (+k) * (hung[k] === "L" ? load : hung[k]), 0);
+        const res = T === 0 ? "it hangs level" : T > 0 ? "it tips right" : "it tips left";
+        hist.appendChild(el("div", "", Object.keys(hung).filter(k => hung[k] !== "L").sort((a, b) => a - b).map(k => hung[k] + "@" + k).join("  ") + "  →  " + res));
+        if (T === 0) { done = true; P.end(); P.status.textContent = "The beam settles dead level, and stays."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= tests) { done = true; P.end(); P.status.textContent = "The beam swings hard, and the chain jumps its pulley."; setTimeout(() => resolve({ ok: false }), 900); return; }
+        draw();
+      };
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // The root-knot: cage-roots choke a pin's socket. Slide them along their length to clear a way for
+  // the pin (the gold one) to slide out to the right. Layouts were checked by a solver beforehand.
+  const KNOTS = [
+    { s: 17, ps: [[2,1,2,1],[5,4,2,1],[1,3,3,0],[2,0,2,0],[3,5,2,0],[3,2,3,0],[1,1,2,1],[1,4,3,0],[4,0,2,1]] },
+    { s: 17, ps: [[2,0,2,1],[3,1,2,1],[2,5,2,0],[2,4,2,0],[1,3,3,0],[4,4,2,1],[1,4,2,1],[0,2,3,0],[5,1,2,1],[5,4,2,1]] },
+    { s: 15, ps: [[2,2,2,1],[3,2,2,0],[1,0,2,1],[3,0,2,1],[2,5,2,0],[4,3,3,1],[0,4,2,0],[2,4,2,0],[0,2,2,1]] },
+    { s: 13, ps: [[2,0,2,1],[0,2,3,1],[1,2,3,0],[3,1,2,0],[4,5,2,0],[2,4,2,0],[4,2,2,1],[1,3,2,1],[1,0,2,1],[2,5,2,0]] }
+  ];
+  function rootKnot({ title = "The Root-Knot", lead = "", spare = 12 } = {}) {
+    return new Promise(resolve => {
+      const L = KNOTS[d(KNOTS.length) - 1];
+      const ps = L.ps.map(p => p.slice());
+      const limit = L.s + spare;
+      const P = puzzleBox(title, (lead ? lead + " " : "") + "The gold root is the pin. Get it out through the gap on the right. Tap a root to take hold of it, then push it along its length. Roots can't pass through each other. You have " + limit + " pushes before the cage tightens again.");
+      const grid = el("div", "pgrid knot"); grid.style.gridTemplateColumns = "repeat(6, 44px)";
+      const cells = [...Array(36).keys()].map(i => { const b = pbtn(""); b.onclick = () => pick(i); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const back = pbtn("◀ ▲ Push back"), fwd = pbtn("Push on ▶ ▼"), force = pbtn("Hack through the roots");
+      P.ctrl.append(back, fwd, force);
+      let sel = 0, used = 0, done = false;
+      const occ = () => { const g = Array(36).fill(-1); ps.forEach((p, i) => { for (let k = 0; k < p[2]; k++) g[(p[0] + (p[3] ? 0 : k)) * 6 + p[1] + (p[3] ? k : 0)] = i; }); return g; };
+      const SHADE = ["#3b3018", "#2a3a2c", "#33402e", "#2c3326", "#3a3424", "#283528", "#36402a", "#2f3a30", "#3a3a28", "#2a3324"];
+      function draw() {
+        const g = occ();
+        cells.forEach((b, i) => {
+          const k = g[i];
+          b.textContent = k === 0 ? "▬" : k > 0 ? (ps[k][3] ? "═" : "║") : "";
+          b.style.background = k === 0 ? "#5a4416" : k > 0 ? SHADE[k % SHADE.length] : "#0b0d10";
+          b.style.color = k === 0 ? "#ffe7a8" : "#9fb59a";
+          b.classList.toggle("on", k === sel && k >= 0);
+          b.classList.toggle("goal", i === 17 && k === -1);
+          b.setAttribute("aria-label", "Row " + (Math.floor(i / 6) + 1) + ", column " + (i % 6 + 1) + ": " + (k === 0 ? "the pin" : k > 0 ? (ps[k][3] ? "a root lying across" : "a root standing up") : "empty") + (i === 17 ? ", the way out" : ""));
+        });
+        back.textContent = ps[sel][3] ? "◀ Push left" : "▲ Push up";
+        fwd.textContent = ps[sel][3] ? "Push right ▶" : "Push down ▼";
+        P.status.textContent = (sel === 0 ? "Holding the pin" : "Holding a root") + " · " + used + " of " + limit + " pushes";
+      }
+      function pick(i) { if (done) return; const k = occ()[i]; if (k >= 0) { sel = k; draw(); } }
+      function push(dir) {
+        if (done) return;
+        const p = ps[sel], g = occ();
+        if (p[3]) { const c = dir < 0 ? p[1] - 1 : p[1] + p[2]; if (c < 0 || c > 5 || g[p[0] * 6 + c] !== -1) { P.status.textContent = "It won't go that way."; return; } p[1] += dir; }
+        else { const r = dir < 0 ? p[0] - 1 : p[0] + p[2]; if (r < 0 || r > 5 || g[r * 6 + p[1]] !== -1) { P.status.textContent = "It won't go that way."; return; } p[0] += dir; }
+        used++;
+        draw();
+        if (ps[0][1] + ps[0][2] === 6) { done = true; P.end(); P.status.textContent = "The pin slides free of the knot and drops into your hands."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= limit) { done = true; P.end(); P.status.textContent = "The roots creak and clench tight again."; setTimeout(() => resolve({ ok: false }), 900); }
+      }
+      back.onclick = () => push(-1); fwd.onclick = () => push(1);
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // The Drift: a field of floating stones that circles the Undermoon. The rows drift with every
+  // step you take, and the stone you're on carries you with it. Cross to the far ledge.
+  function driftPuzzle({ title = "The Drift", spare = 4 } = {}) {
+    return new Promise(resolve => {
+      const C = 6, R = 6, dirs = [0, 1, -1, 1, -1, 0];
+      let rows, best;
+      const solid = (rs, r, c) => r === 0 || r === R - 1 || rs[r][c];
+      const shifted = (rs) => rs.map((row, r) => dirs[r] ? row.map((_, c) => row[(c - dirs[r] + C) % C]) : row);
+      function bfs(rs0, sr, sc) {
+        // state: row, col, time mod C (the drift repeats every C steps)
+        const seen = new Set(), q = [[sr, sc, 0, 0]];
+        const at = (t) => { let rs = rs0; for (let k = 0; k < t; k++) rs = shifted(rs); return rs; };
+        const cache = [...Array(C).keys()].map(at);
+        while (q.length) {
+          const [r, c, t, n] = q.shift();
+          if (r === 0) return n;
+          if (n > 20) continue;
+          const now = cache[t % C], next = cache[(t + 1) % C];
+          for (const [dr, dc] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
+            const nr = r + dr, nc = c + dc;
+            if (nr < 0 || nr >= R || nc < 0 || nc >= C || !solid(now, nr, nc)) continue;
+            const ec = (nc + (dirs[nr] || 0) + C) % C;
+            if (!solid(next, nr, ec)) continue;
+            const k = nr + "," + ec + "," + ((t + 1) % C);
+            if (seen.has(k)) continue;
+            seen.add(k); q.push([nr, ec, t + 1, n + 1]);
+          }
+        }
+        return -1;
+      }
+      for (let tries = 0; tries < 500; tries++) {
+        rows = [...Array(R).keys()].map(r => { const row = Array(C).fill(false); if (r > 0 && r < R - 1) { const k = 2 + (d(3) === 1 ? 1 : 0); while (row.filter(Boolean).length < k) row[d(C) - 1] = true; } return row; });
+        best = bfs(rows, R - 1, 2);
+        if (best >= 7 && best <= 14) break;
+      }
+      if (best < 0) { rows = rows.map((row, r) => r > 0 && r < R - 1 ? row.map(() => true) : row); best = 5; }
+      const limit = best + spare;
+      const P = puzzleBox(title, "Stones the size of carts hang in the air between you and the far ledge, drifting round the Undermoon in slow rings. Every step you take, the rings move one place: the first and third rows drift right, the second and fourth drift left, and a stone carries whoever is standing on it. Step onto a stone next to you, or wait for one to come. You have " + limit + " steps before the Lift changes and the rings scatter.");
+      const grid = el("div", "pgrid drift"); grid.style.gridTemplateColumns = "repeat(6, 44px)";
+      const cells = [...Array(R * C).keys()].map(i => { const b = pbtn(""); b.onclick = () => step(Math.floor(i / C), i % C); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const wait_ = pbtn("Wait for the drift"), force = pbtn("Jump for it");
+      P.ctrl.append(wait_, force);
+      let pr = R - 1, pc = 2, used = 0, done = false;
+      function draw() {
+        cells.forEach((b, i) => {
+          const r = Math.floor(i / C), c = i % C, s = solid(rows, r, c), me = r === pr && c === pc;
+          const near = Math.abs(r - pr) + Math.abs(c - pc) === 1 && s;
+          b.textContent = me ? "◉" : r === 0 ? "▔" : r === R - 1 ? "▁" : s ? "▬" : "";
+          b.style.background = s ? (r === 0 || r === R - 1 ? "#1d3329" : "#3a3d42") : "#0b0d10";
+          b.style.color = me ? "#ffe7a8" : "#c9ccd2";
+          b.classList.toggle("here", me);
+          b.classList.toggle("goal", r === 0);
+          b.classList.toggle("on", near);
+          b.setAttribute("aria-label", "Row " + (r + 1) + ", column " + (c + 1) + ": " + (me ? "you" : r === 0 ? "the far ledge" : r === R - 1 ? "the near ledge" : s ? "a stone" : "empty air") + (near ? ", in reach" : ""));
+        });
+        P.status.textContent = used + " of " + limit + " steps";
+      }
+      function advance(nr, nc) {
+        used++;
+        rows = shifted(rows);
+        pr = nr; pc = (nc + (dirs[nr] || 0) + C) % C;
+        draw();
+        if (pr === 0) { done = true; P.end(); P.status.textContent = "You jump the last gap and land on the far ledge on your hands and knees."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= limit) { done = true; P.end(); P.status.textContent = "The rings break up and wander off, and you're left on a stone going nowhere."; setTimeout(() => resolve({ ok: false }), 900); }
+      }
+      function step(r, c) {
+        if (done) return;
+        if (Math.abs(r - pr) + Math.abs(c - pc) !== 1 || !solid(rows, r, c)) { P.status.textContent = "Too far, or nothing there to land on."; return; }
+        advance(r, c);
+      }
+      wait_.onclick = () => { if (!done) advance(pr, pc); };
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // The tide-table: the tide-readers' cords record the Lift, turn by turn. The pull follows a pattern.
+  // Read it, and set the next three readings.
+  function tidePuzzle({ tries = 2 } = {}) {
+    return new Promise(resolve => {
+      const PATS = [[2, -1], [1, 1, -2], [3, -2, 1, -1], [-1, 2, 2, -2], [2, 2, -3]];
+      let seq;
+      for (let t = 0; t < 200; t++) {
+        const pat = PATS[d(PATS.length) - 1], off = d(pat.length) - 1;
+        seq = [d(5)];
+        for (let i = 1; i < 11; i++) seq.push(seq[i - 1] + pat[(i - 1 + off) % pat.length]);
+        if (seq.every(v => v >= 0 && v <= 10)) break;
+        seq = null;
+      }
+      if (!seq) seq = [2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7];
+      const shown = seq.slice(0, 8), want = seq.slice(8);
+      const P = puzzleBox("The Tide-Table", "The last eight readings of the Lift, knotted on the tide-readers' cord: <b>" + shown.join(" · ") + "</b>. The Undermoon's pull rises and falls in a pattern that repeats. Set the next three readings. You have " + tries + " tries before Ilo stops trusting you with the cords.");
+      const row = el("div", "pgrid tones"); row.style.gridTemplateColumns = "repeat(3, 64px)";
+      const val = [shown[7], shown[7], shown[7]];
+      const dials = val.map((_, i) => { const b = pbtn(""); b.onclick = () => { if (!done) { val[i] = (val[i] + 1) % 11; draw(); } }; row.appendChild(b); return b; });
+      const hist = el("div", "lockhist");
+      P.body.append(row, hist);
+      const down = pbtn("Turn a dial back"), set = pbtn("Read it to Ilo", "primary"), force = pbtn("Guess from the feel of it");
+      P.ctrl.append(set, down, force);
+      let used = 0, done = false, last = 0;
+      dials.forEach((b, i) => b.addEventListener("click", () => { last = i; }));
+      down.onclick = () => { if (!done) { val[last] = (val[last] + 10) % 11; draw(); } };
+      function draw() {
+        dials.forEach((b, i) => { b.innerHTML = '<span class="tg">' + val[i] + "</span><small>turn " + (9 + i) + "</small>"; b.classList.toggle("flash", i === last); b.setAttribute("aria-label", "Reading for turn " + (9 + i) + ": " + val[i] + ". Tap to turn it up."); });
+        P.status.textContent = "Tap a dial to turn it up. " + used + " of " + tries + " tries used";
+      }
+      set.onclick = () => {
+        if (done) return;
+        used++;
+        const right = val.filter((v, i) => v === want[i]).length;
+        hist.appendChild(el("div", "", val.join(" · ") + "  →  " + right + " of 3 right"));
+        if (right === 3) { done = true; P.end(); P.status.textContent = "Ilo looks at the dials, and at the cord, and at you."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (used >= tries) { done = true; P.end(); P.status.textContent = "It was " + want.join(" · ") + "."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        draw();
+      };
+      force.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- Part XLIX: the Road Home ----------
+  async function partRoadHome() {
+    heading("XLIX", "The Road Home");
+    light("dusk");
+    if (!S.um) initUnder();
+    const U = um();
+    await say("You part with the Magistrate in Sulmara, at the foot of his own palace stairs. He's still thin and grey, but he's standing very straight. He tears a page out of the back of the ledger and folds it into your hand. \"The last page,\" he says. \"I won't need it. I don't think anyone will, if you get there in time.\"");
+    if (U.tyra) await say("Tyra looks at the ledger page over your shoulder, and then at the road west. \"Home,\" she says. \"Your home, I mean. I haven't got one. I've got forty-three keys and no doors.\" She falls in beside you anyway.");
+    await say("The road west goes back the way you came, a long time ago: the desert, the dunes, the old ceremonial road. It isn't the same road.");
+    await say("On the third night, camped in the lee of a dune, you wake to find the sand falling <i>up</i>. Thin grey streams of it, rising off the crest of the dune in the still air like smoke off a candle, and drifting away into the dark. Your blanket has lifted an inch off the ground. So have you.");
+    await say("By day it's worse the further west you go. Pebbles roll uphill. Water poured from a skin wobbles in a fat silver ball before it falls. Twice you pass roots as thick as a man, black and wet, that have broken up out of the desert floor and stand in the sun, reaching for nothing.");
+    if (vaelricSpeaks()) await voice("\"I know this,\" Vaelric says. He hasn't spoken in days. \"I know this feeling. I felt it once, when I was young, on the night the great tree fell. Everything weighed less. My old teacher locked the doors and wouldn't say why.\"");
+    await say("The old well is still there, and the spiral arch beside it, half under the sand.");
+    if (S.ending === "return") {
+      await say("You planted the Ember Root here. You remember the roots bursting up green through the dunes, the first green in a hundred years.");
+      await say("The green is gone. The roots have been dragged up out of the sand in a great dead heap, and on top of the heap, lying on its side, is a sapling as high as your knee, black-barked and warm, with its roots in the air. They're still reaching. They're reaching <i>down</i>.");
+      await say("You planted it too shallow. Whatever is under the labyrinth has pulled it up like a weed.");
+      S.gear.push("sapling"); U.seed = true; renderSheet();
+      await mech("Gain <b>the Ember Sapling</b>. Its roots point down, toward wherever it came from.", "loot");
+    } else if (S.ember) {
+      await say("Under your ribs, where the Ember Root took hold, something pulls. Not hard. Like a hook in a fish's lip. It's pulling you down.");
+      if (vaelricSpeaks()) await voice("\"It knows where it's from,\" Vaelric says quietly. \"So do I.\"");
+    }
+    await say("Past the arch, the ceremonial pathway runs down to the labyrinth gate, where you came in, a lifetime ago. Only the labyrinth isn't under the ground any more.");
+    await say("It has come up. The whole top of it has heaved out of the earth like a fist out of water: walls of braided root standing thirty feet above the sand, torn open at the top, and the druid gate tilted on its side at the bottom of the hill.");
+    await say("And three feet off the ground in front of the gate, a man is floating, tangled in a root by one ankle, swearing quietly and very steadily.");
+    await say("He's tall and much too thin, with skin grey-white and faintly see-through, like a fish's belly, and you can see the veins in his hands, and they're silver. His hair is done in long heavy braids, and stones are braided into them, dozens of smooth dark stones, except that half the braids have been cut off short. Four more people just like him are hanging in the air around him like kites with no strings, swinging cords weighted with stones, and laughing. One of them is sawing at his last braid with a knife.");
+    await say("\"Go up, Orrin,\" one of them sings. \"Go up and see them. They're all waiting for you.\"", "voice");
+    const c = await choose([
+      { key: "fight", label: "Cut him down and fight them" },
+      { key: "scare", label: "\"Let him go.\"", tag: "Intimidation DC 13", plain: true }
+    ]);
+    let heads = 3;
+    if (c === "scare") {
+      const r = await check({ label: "Intimidation check", mod: 2, dc: 13, cta: "Glare" });
+      if (r.ok) { heads = 2; await say("You put your hand on the axe and they look at the gems, and one of them stops laughing and drifts away up the hill like a lost balloon. The rest don't."); }
+      else await say("\"Oh, look,\" says the one with the knife. \"A heavy.\"");
+    }
+    await say("They come at you through the air, swinging their stone-cords. You've never fought anyone who could be above you.");
+    await hkFight(UNMOORED({ name: "Unmoored", heads, unit: "Unmoored|Unmoored" }));
+    await say("You cut the man down by his ankle and he grabs your belt with both hands before he can float away, and hangs on to it, grey-faced.");
+    await say("\"Orrin Lode,\" he says. \"Line-walker. Of Kedge. Thank you. I'd be halfway to the stars by now.\" He looks at the axe, and the gems, and goes very still. \"That's a warden's.\"", "voice");
+    await say("He explains it walking, or something close to walking: he keeps one hand on your belt the whole way. Under the labyrinth, he says, under the bottom of it, there's a hollow in the rock. In the hollow there's a city. His people are the Moored. They have lived down there, beside the Undermoon, for a thousand years.");
+    await say("\"The moon that fell,\" Orrin says, as if you'd know. \"Your wardens caught it in the roots of their great tree, and buried it, and nailed it down. It pulls. It's always pulled. Not down: up, the way the moon pulls the sea. We're born light. We carry our weight.\" He touches his cut braids. \"These are my grandmother. My uncle. A man I never met. When one of us dies, their stones go to their children, so they can keep their feet. Those four cut mine off and told me to go and find my dead in the sky.\"", "voice");
+    await say("\"They're Unmoored. Corwen Lisk's people. They've cut their own stones, and they're pulling out the wardens' pins, and the Undermoon's waking. You felt it in the desert. Everyone feels it now.\"", "voice");
+    if (vaelricSpeaks()) {
+      await voice("\"The Low Lantern,\" Vaelric says, and Orrin jumps. \"That's what my teacher called it. The great tree wasn't a tree. It was a cage, grown down around a fallen moon. The labyrinth is the top of the cage. And the Ember Root...\" He stops. \"The Ember Root was the lock.\"");
+      await say("\"You said take you home,\" you tell him.");
+      await voice("\"This is home,\" Vaelric says. \"Under it.\"");
+    } else await say("You think of the Magistrate's ledger. <i>Something under your labyrinth is pushing them up. The Ember Root was the last thing holding it down.</i>");
+    await say("Orrin digs into the pockets of his coat, all of them stitched shut at the bottom and heavy, and comes out with two smooth dark stones on a cord. \"Guest-stones,\" he says. \"Everyone who comes down needs them. Wear them. If you're too light down there, you can't swing. If you're too heavy, you can't climb. You'll learn.\"");
+    await stones(2, "You hang the guest-stones round your neck.");
+    await mech("<b>The Lift</b> is " + U.lift + " of 10. You need half the Lift (rounded up) in stones to keep your feet: that's your <b>footing</b>. Short of it, you're <b>Adrift</b>: disadvantage on attacks and on Strength and Athletics, and the Lift may carry you off. Three or more stones over it, you're <b>Weighed down</b>: disadvantage on Dexterity, Stealth and climbing, and Evade works less often.");
+    light("dark");
+    await say("You go down into the labyrinth the way you came, the first time. It's all still there, and none of it is where it was.");
+    await say("The webs in the second passage hang <i>upward</i> now, floating like weed in a river. In the hollow chamber, the dust stands in the air in a fine grey mist, and doesn't settle." + (S.slain ? " Ryytaa's nest is empty, the great bones of her lying where you left them, except that they're lying on the ceiling." : " Ryytaa's nest is empty."));
+    await say("In the Library of Roots, the books have come off the shelves and are floating in the dark, turning slowly, pages fanning, like a school of fish.");
+    const left = BOOKS.filter(b => !hasBook(b.name));
+    if (left.length) {
+      const c2 = await choose([{ key: "grab", label: "Snatch a book out of the air", tag: "Dexterity DC 12" + (umDex() ? " · weighed down" : "") }, { key: "leave", label: "Leave them", plain: true }]);
+      if (c2 === "grab") {
+        const r = await check({ label: "Dexterity check (catching a book)", mod: 2, dc: 12, dis: umDex(), cta: "Snatch" });
+        if (r.ok) { const b = left[d(left.length) - 1]; S.books.push(b.name); renderSheet(); await mech("You catch <b>" + b.name + "</b>. " + b.desc, "loot"); }
+        else await say("Your fingers close on air. The book turns its pages at you and drifts out of reach.");
+      }
+    }
+    await say("At the very bottom, behind the hollow tree where you first found Vaelric's bones, there's a hole in the floor that wasn't there before: a shaft, round and smooth as the inside of a flute, where something as thick as a tower once grew down into the rock. The taproot of the great tree. A chain hangs down the middle of it into the dark, and beside it, a counterweight on a beam: the Moored drop-line.");
+    await say("\"It'll take us down,\" Orrin says, \"if it's balanced. Unbalanced, it drops like a stone, or doesn't move at all.\" He looks at the beam. \"The Unmoored have been at it. Somebody took the stones off.\"", "voice");
+    const r = await balancePuzzle({ title: "The Drop-Line", lead: "A cradle of pin-iron hangs at one end of the drop-line's beam, and a tray of loose kinstones sits beside it." });
+    let ok = r.ok;
+    if (!ok) {
+      const f = await check({ label: "Strength check (riding it down hard)" + (umStr() ? " (adrift)" : ""), mod: 3, dc: 13, dis: umStr(), cta: "Hold on" });
+      ok = f.ok;
+      if (!ok) await hurt(1, 6, "bludgeoning", "The drop-line goes down far too fast and stops dead at the bottom. So do you.");
+      else await say("You and Orrin ride the chain down hand over hand, braking with your boots, and land hard but in one piece.");
+    } else await say("The beam settles level, and the drop-line sinks down the shaft as gently as a leaf, with you and Orrin standing on the cradle.");
+    light("moon");
+    await say("And then the shaft opens out, and you're hanging in the air above the biggest thing you have ever seen.");
+    await go("Look down");
+  }
+
+  // ---------- Part L: Kedge ----------
+  async function partKedge() {
+    heading("L", "Kedge");
+    light("moon");
+    if (!S.um) initUnder();
+    const U = um();
+    await say("It fills the hollow. It's a sphere of pale grey stone a mile across, pitted and cratered and cold, and it gives off a light like frost does on a clear night: not bright, but everywhere. It's the moon. It's a moon. It lies in the bottom of the hollow in the rock like an egg in a hand.");
+    await say("And the hand is roots. The great tree's roots come down out of the roof of the hollow, thousands of them, as thick as towers and as thin as hair, and wrap round the Undermoon and grip it, and go down past it into the rock below. Five black stakes the size of ships' masts were driven through the roots into the rock, a thousand years ago, to nail the cage down. Only two of them are still in. The other three are floating, very slowly, a little way above their holes.");
+    await say("At the heart of the cage, where all the roots knot together on top of the moon, there's an empty socket the size of a fist, and a faint warm light coming out of it, like the last coal in a grate.");
+    if (S.ember) await say("Under your ribs, the Ember Root thumps once, hard, like a dog that's heard its name.");
+    else if (U.seed) await say("The Ember Sapling stirs in your arms. Its roots turn toward the socket, all of them, the way a flower turns toward the sun.");
+    await say("Above the Undermoon, hanging from the roof of the hollow on a thousand chains, is a town.");
+    await say("<b>Kedge</b> is built in the air. Its houses hang from the roof-roots like lanterns, round and many-windowed, each on its own chain, and walkways of plank and rope swing between them. Every house is weighted at the bottom with a great stone. Every walkway has a rail, and a rope along the rail, and the people on them walk with one hand on the rope, always, without thinking about it, the way you'd breathe.");
+    await say("The Moored come out on the walkways to watch you arrive. They're all like Orrin: tall, thin, grey-white, silver-veined, with their dead braided into their hair. The old ones have so many stones that their braids drag on the planks behind them. The children have one or two, and wear little harnesses with lines clipped to the rail, and they bob at the ends of the lines like fishing floats.");
+    await say("Orrin takes you to the middle of town, where a great chair hangs on four chains over the square. In it sits the oldest woman you've ever seen, so heavy with stones that she can't stand. Her hair is a grey cloak of them. Her chair creaks.");
+    await say("\"I am Ashby Kell,\" she says, \"Anchor-Mother of Kedge, and I am carrying four hundred and six of my dead. You've a warden's axe. I'd hoped I'd live to see one again. I didn't hope very hard.\"", "voice");
+    await say("\"Here's the shape of it. Our wardens and yours were the same people, once. They drove five pins through the cage. They put the Ember Root in the heart of it to keep the moon sleeping: it's warm, and the moon is cold, and as long as it sat there the moon dreamed of being warm and stayed put. Then somebody took it.\" She looks at you for a long time. \"Somebody with a warden's axe, I'd think. Nothing else opens that kind of door.\"", "voice");
+    await say("\"Without it the moon's waking. Waking, it lifts. Three weeks ago my tide-reader, Corwen Lisk, cut off her own stones in this square and went up, and a hundred of the young ones went with her. They believe our dead live on the moon's face, waiting, and when it rises they'll all go home together. They've pulled three of the five pins. When the Lift reaches its height, the cage will break, and the Undermoon will go up. Through your labyrinth. Through your desert. Through anything in the way.\" She shrugs, and four hundred and six stones rattle. \"Including Kedge.\"", "voice");
+    await mech("<b>The Lift</b> rises by 1 every turn. Three pins have been pulled: drive them back and each lowers it by 2. The higher the Lift when you face Corwen, the stronger she'll be.");
+    await mech("<b>Your stones.</b> Watch your footing as the Lift rises. Kinstones can be bought and sold in the market, and some things you do down here will cost you stones or give you some.");
+    await mech("<b>Time</b> runs in two tides of three turns: Slack Water, the Flood, and the Ebb, when the knot-houses open for sleep.");
+    await say("Something drops past the edge of the square like a falling leaf, slowly, and stops in the air ten feet above Mother Kell's chair. A woman, lean and grey, with her hair cropped to the scalp and no stones on her at all. She has a long cord in one hand, and on the end of it, swinging, a knot of smooth dark stones. Somebody's stones. Her own dead.");
+    await say("\"Mother,\" she says, warmly. \"You've found a heavy.\" She turns in the air to look at you upside down. \"I'm Corwen. I read the tides. You've got something warm in your " + (S.ember ? "chest" : U.seed ? "arms" : "pack") + ", heavy. I can smell it from here. Don't put it back where it came from. Please. Our dead have waited a thousand years on that cold face, and the wardens nailed the lid down on them.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"She believes it,\" Vaelric says. \"That's the dangerous kind.\"");
+    await say("\"I'm not asking you to help,\" Corwen says. \"Just don't stop us. At the end of the second tide, I'm going down to the Heartfall, and I'm pulling the last two pins, and we're all going home.\" She smiles at the Anchor-Mother. \"Even you, Mother. Even if we have to carry you.\"", "voice");
+    await say("She rises away into the dark between the chains, and as she goes, three of her Unmoored drop out of the roof-roots onto the walkway behind you, swinging their cords.");
+    await hkFight(UNMOORED({ name: "Unmoored", heads: 3, unit: "Unmoored|Unmoored" }));
+    await say("Afterwards, Mother Kell's chair creaks round to face you. \"Two tides,\" she says. \"The North Pin's in the Chainworks. The Weeping Pin is out past the Drift. The Grave Pin is in our ossuary, among the dead. Put them back, and you'll face her with the Lift low. Leave them, and you'll be fighting her in the sky.\"", "voice");
+    await say("\"And I'll give you a hammock in the knot-house,\" she adds, \"for as long as Kedge has chains.\"", "voice");
+    await go("Go out into Kedge");
+  }
+
+  // ---------- the hub: two tides of three turns ----------
+  async function errandsUnder() {
+    const U = um();
+    for (;;) {
+      const c = await choose([
+        { key: "buy", label: "Buy a kinstone", tag: "5 gold · +1 stone", show: S.coins >= 5 && U.ballast < UM_MAX },
+        { key: "sell", label: "Sell a kinstone back", tag: "3 gold · −1 stone", show: U.ballast > 0 },
+        { key: "milk", label: "Buy a phial of moonmilk", tag: "12 gold · 2d8 + 2 HP", show: S.coins >= 12 },
+        { key: "drink", label: "Drink a phial of moonmilk", tag: U.milk + " left", show: U.milk > 0 && S.hp < S.maxHp },
+        { key: "done", label: "That's all", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "buy") { S.coins -= 5; await stones(1, "The stone-seller weighs a stone in her hand, thinks about whose it was, and sells it to you anyway. 5 gold."); }
+      if (c === "sell") { S.coins += 3; await stones(-1, "You sell a stone back. 3 gold."); }
+      if (c === "milk") { S.coins -= 12; U.milk++; renderSheet(); await mech("A phial of moonmilk, silver and faintly cold: the Moored's medicine, pressed from the pale moss that grows on the Undermoon's face. 12 gold.", "loot"); }
+      if (c === "drink") await drinkMilk();
+    }
+  }
+  async function drinkMilk() {
+    const U = um(), before = S.hp;
+    U.milk--;
+    S.hp = Math.min(S.maxHp, S.hp + d(8) + d(8) + 2); renderSheet();
+    await mech("The moonmilk tastes of nothing at all, and then of snow. Regain " + (S.hp - before) + " HP.", "loot");
+  }
+
+  async function umTide(tide) {
+    const U = um();
+    U.tide = tide; renderSheet();
+    while (U.turn < 3) {
+      const ebb = U.turn === 2;
+      const h = el("div", "part-head sub", '<span class="num">Tide ' + tide + " · " + TURNS[U.turn] + "</span>");
+      scrollNext = true; add(h);
+      light(U.lift >= 7 ? "dark" : "moon");
+      if (U.turn === 0 && tide === 2) await say(U.lift >= 7 ? "Kedge is straining at its chains. Loose things are falling up all over town: a bucket, a boot, a whole hen, squawking. The Moored walk with both hands on the rope now." : "The Undermoon glows a little brighter than it did. Down on its face, where the pins went back in, the roots have stopped creaking.");
+      let c;
+      for (;;) {
+        const v = U.hv;
+        c = await choose([
+          { key: "market", label: "The kinstone market", tag: hasGear("plumb") ? "stones bought and sold" : "Ama Pell's heir-beam", show: true },
+          { key: "chain", label: "The Chainworks", tag: "the North Pin", show: !U.pins.includes("north") },
+          { key: "drift", label: "Out across the Drift", tag: "the Weeping Pin", show: !U.pins.includes("weep") },
+          { key: "ossuary", label: "The ossuary of stones", tag: "the Grave Pin", show: !U.pins.includes("grave") },
+          { key: "lunary", label: "The Lunary", tag: "Corwen's old tide-house", show: !v.lunary },
+          { key: "roost", label: "Up to the Unmoored roost", tag: "you'll need to be light, or climb", show: !v.roost },
+          { key: "kell", label: "Mother Kell's chair", tag: "news, and rest", show: true },
+          { key: "errands", label: "Errands in the market", tag: "no time passes", plain: true },
+          { key: "rest", label: ebb ? "Take a hammock in the knot-house" : "Rest on a walkway", tag: ebb ? "3 gold · 2d6 HP" : "1d4 HP", plain: true, show: !ebb || S.coins >= 3 },
+          { key: "doze", label: "Doze on a walkway", tag: "1d4 HP", plain: true, show: ebb && S.coins < 3 }
+        ]);
+        if (c !== "errands") break;
+        await errandsUnder();
+      }
+      if (c === "market") await stoneMarket();
+      if (c === "chain") await chainworks();
+      if (c === "drift") await driftVisit();
+      if (c === "ossuary") await ossuary();
+      if (c === "lunary") await lunary();
+      if (c === "roost") await roost();
+      if (c === "kell") await kellVisit();
+      if (c === "rest") await knotRest(ebb);
+      if (c === "doze") await knotRest(false);
+      if (U.tyra && U.turn === 1 && !U.hv["tyra" + tide]) { U.hv["tyra" + tide] = true; await tyraKedge(tide); }
+      if (ebb && c !== "rest") { const before = S.hp; S.hp = Math.min(S.maxHp, S.hp + d(3)); renderSheet(); if (S.hp > before) await mech("Through the Ebb the whole town goes quiet, and you sit with your back to a chain and close your eyes. Regain " + (S.hp - before) + " HP.", "loot"); }
+      U.turn++;
+      if (hasGear("chart") && U.slack < tide) {
+        const s = await choose([{ key: "rise", label: "Let the tide turn" }, { key: "slack", label: "Call slack water", tag: "the Tide-Chart · once a tide · the Lift doesn't rise", plain: true }]);
+        if (s === "slack") { U.slack = tide; await mech("You read the cords on Corwen's chart and find the knot where the pull holds still. You were right: this turn, the Lift doesn't rise.", "loot"); }
+        else await liftUp(1, TURNS[U.turn - 1] + " passes. The Undermoon stirs in its roots.");
+      } else await liftUp(1, TURNS[U.turn - 1] + " passes. The Undermoon stirs in its roots.");
+      await goingUp();
+      checkpoint();
+    }
+  }
+
+  async function tyraKedge(tide) {
+    if (tide === 1) {
+      await say("Tyra comes back along the walkway with both hands on the rope and her face the colour of milk. \"I don't like it,\" she says. \"I don't like any of it. I let go of the rope to scratch my nose and my <i>feet came off the floor</i>.\" She holds up a small bronze key, very old. \"Took it off one of the Unmoored lot. It was on a string round his neck, and he was upside down, so it was right in front of my face. Number forty-four.\"");
+      U_key();
+      await mech("Tyra has the key to the Lunary's star-door. You can get past Corwen's old wards there without a fight.", "loot");
+    } else {
+      await say("Tyra sits down next to you on the walkway and puts something heavy and cold in your hand: a round black stone with a hole through it. \"My lucky stone,\" she says. \"Had it since I was nine. Found it in a river. I don't believe in luck, but I believe in heavy.\" She doesn't look at you. \"Don't float off.\"");
+      await stones(1, "Tyra's lucky stone goes on your cord with the others.");
+      if (S.tyra) await fond(1, "She gave you the one thing she's kept since she was nine.");
+    }
+  }
+  function U_key() { um().hv.tyraKey = true; renderSheet(); }
+
+  async function stoneMarket() {
+    const U = um();
+    light("moon");
+    await say("The kinstone market is a ring of stalls hung round the inside of a great iron hoop, so the stall-keepers sit facing in and the buyers float in the middle. Every stall sells stones: river stones, black stones, stones from the roof-roots, stones polished smooth by a hundred hands. Every one has a name scratched on it, small, and a date.");
+    if (U.hv.ama) { await say("Ama Pell waves you over with a stone in each hand."); await errandsUnder(); return; }
+    U.hv.ama = true;
+    await say("At the biggest stall a broad, short Moored woman with forearms like hams is hanging a dead man's stones on a long brass beam. This is <b>Ama Pell</b>, the stonewright. Her own hair is shaved, and she wears her dead in a leather apron instead, pocket after pocket of them.");
+    await say("\"Old Tam Weller died yesterday,\" she says, without looking up. \"Forty stones and three daughters, and none of the three will speak to the others. The law says the heir-beam has to hang level or the stones aren't shared fair, and I've been at it all morning.\" She looks at you. \"You've got a head on you. Hang the beam for me and I'll make it worth your while.\"", "voice");
+    const r = await balancePuzzle({ title: "The Heir-Beam", lead: "The eldest daughter's share already hangs from the beam." });
+    let ok = r.ok;
+    if (!ok && r.forced) {
+      const f = await check({ label: "Intelligence check (working it out on your fingers)", mod: 1, dc: 14, cta: "Reckon" });
+      ok = f.ok;
+    }
+    if (ok) {
+      await say("The beam hangs level. The three daughters, who have been watching from three different walkways without looking at each other, all let out the same breath at the same time, and then look at each other, and one of them laughs.");
+      S.gear.push("plumb"); renderSheet();
+      await say("Ama Pell unties a heavy grey lump from her apron, shaped like a heart and the size of one, and drops it in your hand. It nearly takes your arm off. \"Lead,\" she says. \"Poured, not grown. It's no one's dead, so it's no one's business. Carry it and you'll never float off in your sleep.\"", "voice");
+      await mech("Gain <b>the Plumb-Heart</b>. It weighs as much as two kinstones, and you can carry one stone more before you're weighed down.", "loot");
+    } else await say("The beam swings, and the youngest daughter walks off. Ama Pell sighs. \"Tomorrow, then. Tam's not going anywhere.\" She looks at the roof. \"Well. He might.\"");
+    await errandsUnder();
+  }
+
+  async function chainworks() {
+    const U = um();
+    light("moon");
+    await say("The Chainworks is the top of Kedge: a forest of chains as thick as your waist, and the great winches that let the town up and down, and the iron-wood beams that hold everything to the roof-roots. It's loud and cold and smells of grease. At the bottom of it, down a long ladder that goes all the way to the Undermoon's face, the North Pin is floating a few feet above its socket, nodding gently, like a boat at a mooring.");
+    await say("The chain-foreman, a gaunt old Moored named <b>Gage Tull</b>, is staring down at it with his arms folded. \"They didn't just pull it,\" he says. \"They pulled it and let the roots grow across the hole. The cage is alive, you know. It's trying to close the wound. Only it's closing it with the pin outside.\"", "voice");
+    if (!hasGear("maul")) {
+      await say("He takes you to a rack on the wall where a huge maul hangs, iron-wood and black with age, with a warden's spiral burned into the head. \"The wardens made this to drive the pins,\" he says. \"Nobody down here's strong enough to swing it. You've got the arms for it, and the axe says you've the right.\"", "voice");
+      S.gear.push("maul"); renderSheet();
+      await mech("Gain <b>the Wardens' Maul</b>. Drive a pin with no roll. Once a fight, against something that flies, strike the root-floor and bring it down.", "loot");
+    }
+    const climb = await check({ label: "Climbing check (the long ladder)" + (umDex() ? " (weighed down)" : ""), mod: 3, dc: 12, dis: umDex(), cta: "Climb down" });
+    if (!climb.ok) await hurt(1, 6, "bludgeoning", "A rung goes, and you drop the last twenty feet to the moon's face. You land slower than you should. It still hurts.");
+    await say("Standing on the Undermoon is like nothing else. It's cold through your boots, and you weigh almost nothing, and the roots of the cage curve up all round you like the ribs of a ship. The socket is choked with them: a knot of roots grown across the hole in the last three weeks, thick and tight and green.");
+    const r = await rootKnot({ title: "The North Socket", lead: "The pin's way back into the socket is choked by a knot of young roots." });
+    let ok = r.ok;
+    if (!ok) {
+      const f = await check({ label: "Strength check (hacking through)" + (umStr() ? " (adrift)" : ""), mod: 3, dc: 15, dis: umStr(), cta: "Hack" });
+      ok = f.ok;
+      if (!ok) { await hurt(1, 6, "slashing", "The roots spring back at you like a whip."); await say("You can't clear it this turn. The roots will still be here next time."); return; }
+      await say("You go at the knot with the axe until your arms burn, and the roots part, bleeding sap.");
+    }
+    await say("You and Gage Tull's crew haul the North Pin down on ropes, hand over hand, and stand it in its socket.");
+    await pinDriven("north", "");
+    await say("Overhead, Kedge settles on its chains with a sound like a great ship coming to anchor.");
+  }
+
+  async function driftVisit() {
+    const U = um();
+    light("moon");
+    await say("Out past the last walkway of Kedge, the Drift begins: a ring of floating stones as big as carts that circles the Undermoon slowly, round and round, the way leaves circle in a pond. The Moored use it as a road, if they're brave. On the far side of it, on a ledge of root above the moon, the Weeping Pin is floating out of its hole. It's called that because it weeps sap. It's weeping now.");
+    if (!U.hv.driftSeen) {
+      U.hv.driftSeen = true;
+      if (U.tyra) await say("Tyra looks at the Drift. \"No,\" she says. \"Absolutely not. I'll wait here. With the rope.\"");
+    }
+    const r = await driftPuzzle({});
+    let ok = r.ok;
+    if (!ok) {
+      const f = await check({ label: "Athletics check (jumping the gaps)" + (umStr() ? " (adrift)" : umDex() ? " (weighed down)" : ""), mod: 3, dc: 14, dis: umStr() || umDex(), cta: "Jump" });
+      ok = f.ok;
+      if (!ok) { await hurt(1, 8, "bludgeoning", "You miss your footing and fall, slowly, all the way to the moon's face, and bounce."); await say("By the time you've climbed back up to Kedge, the turn's gone."); return; }
+      await say("You go across the Drift the stupid way, jumping from stone to stone before they've finished arriving, and make it with skinned hands.");
+    }
+    U.hv.drift = true;
+    await say("Two Unmoored are sitting on the Weeping Pin, swinging their legs, keeping watch. When they see you, they rise off it like startled birds.");
+    let fight = true;
+    const s = await choose([{ key: "fight", label: "Take them" }, { key: "sneak", label: "Come at them from below, out of the drifting stones", tag: "Stealth DC 13" + (umDex() ? " · weighed down" : ""), plain: true }]);
+    if (s === "sneak") {
+      const st = await check({ label: "Stealth check", mod: 3 + (S.shadow ? 2 : 0), dc: 13, dis: umDex(), cta: "Sneak" });
+      if (st.ok) { fight = false; await say("You come up under the ledge behind a drifting stone and catch both of their cords at once and haul. They spin away into the dark, cursing, too light to come back against the drift."); }
+      else await say("A stone you're on bumps the ledge. They turn.");
+    }
+    if (fight) await hkFight(UNMOORED({ name: "Pin-watch", heads: 2, unit: "Unmoored|Unmoored" }));
+    await pinDriven("weep", "You stand the Weeping Pin back in its socket with your shoulder.");
+    await say("The sap stops running. The pin stops weeping. Out in the Drift, the stones slow down a little in their rings, as if they'd been holding their breath.");
+  }
+
+  async function ossuary() {
+    const U = um();
+    light("dark");
+    if (!U.hv.oss) {
+      U.hv.oss = true;
+      await say("The Moored don't bury their dead. They keep them. The ossuary is a cave cut into the roof-roots above Kedge, shelf after shelf after shelf of stones, millions of them, each one with a name scratched on it, going back a thousand years. When a Moored dies with no children to carry them, their stones come here. It's very quiet. The stones are heavy, so the air is heavy, and you weigh more here than anywhere else in Kedge.");
+      await say("The keeper is a tiny Moored man named <b>Sexton Pell</b>, Ama's uncle, who has spent sixty years reading the names. He stands in the doorway. \"Nobody comes in without leaving a stone,\" he says. \"That's the rule. The dead don't lend.\"", "voice");
+    } else await say("Sexton Pell is waiting in the doorway of the ossuary.");
+    const c = await choose([
+      { key: "stone", label: "Leave one of your stones on the shelf", tag: "−1 stone · no roll", show: U.ballast > 0 },
+      { key: "rite", label: "Ask to speak the old rite instead", tag: "Wisdom DC 14" },
+      { key: "past", label: "Push past him", tag: "the dead will mind", plain: true }
+    ]);
+    let calm = true;
+    if (c === "stone") { await stones(-1, "You lay a stone on the nearest shelf. Sexton Pell scratches your name on it with a nail."); }
+    if (c === "rite") {
+      const r = await check({ label: "Wisdom check (the rite)", mod: 2, dc: 14, cta: "Speak" });
+      if (r.ok) await say("You don't know the rite. You say what you'd want said, if it were your dead on the shelves: their names, as many as you can read, out loud. Sexton Pell listens, and then he stands aside.");
+      else { await say("You stumble over the first name. Sexton Pell shakes his head sadly, and stands aside anyway, because you have a warden's axe and he's very old. But the dead mind."); calm = false; }
+    }
+    if (c === "past") calm = false;
+    await say("Deep in the ossuary, the Grave Pin goes down through the floor of the cave, through the roof-roots and the cage, into the rock under the moon. It's not floating. Not yet. Four Unmoored are hauling on it with ropes, chanting, and it's coming up an inch with every pull.");
+    if (!calm) await say("And all round you, on the shelves, the stones of the dead have started to shift. A little. Rocking in their places, as if they'd like to roll toward you.");
+    const F = UNMOORED({ name: "Pin-pullers", heads: 4, unit: "Unmoored|Unmoored" });
+    if (!calm) F.before = async (st) => { if (st.round === 2) { await say("A shelf of stones gives way behind you and comes down like hail."); await hurt(1, 6, "bludgeoning", "The dead are heavy."); } };
+    await hkFight(F);
+    await pinDriven("grave", "You haul the half-drawn Grave Pin down again, and it sinks back the way it came.");
+    if (vaelricSpeaks() && !U.hv.vael) {
+      U.hv.vael = true;
+      await say("On your way out, Sexton Pell stops you at a shelf near the door, a short one, very old. The stones on it are bigger than the others, and the names on them are in a script you know: the druidic spirals of the labyrinth. Warden names. And at the end of the shelf, a newer stone than the rest, with a name you know too.");
+      await say("<i>VAELRIC.</i>");
+      await voice("\"They kept one for me,\" Vaelric says. His voice is very thin. \"I never came down. I never knew. They kept one for me anyway.\"");
+      const v = await choose([{ key: "take", label: "Carry his stone with you", tag: "+1 stone" }, { key: "leave", label: "Leave it with the others", plain: true }]);
+      if (v === "take") { U.gaveVael = true; await stones(1, "Vaelric's stone goes on your cord. It's warmer than the others."); }
+      else await say("You leave it where it is, among the wardens. \"Good,\" Vaelric says. \"I'd like to be somewhere, I think.\"");
+    }
+  }
+
+  async function lunary() {
+    const U = um();
+    U.hv.lunary = true;
+    light("moon");
+    await say("The Lunary hangs lowest of all Kedge's houses, so close to the Undermoon you could drop a stone onto its face. It's where the tide-readers live: the Moored who watch the moon's pull and knot it into cords, turn by turn, year after year. The walls are hung with cords, thousands of them, a thousand years of tides. Corwen Lisk lived here until three weeks ago.");
+    await say("The door is a round bronze plate set with a ring of stars, and it's warded: one of the stars glows faintly, and the plate hums when you get close.");
+    if (U.hv.tyraKey) await say("Tyra's number forty-four turns in the star-door like it's glad to be home. The hum stops.");
+    else {
+      const r = await check({ label: "Arcana check (the star-ward)", mod: 2, dc: 13, cta: "Read the ward" });
+      if (!r.ok) await hurt(1, 6, "cold", "The ward bites. It's cold the way the moon is cold.");
+      await say("The door opens.");
+    }
+    await say("Inside, a young Moored with ink-black fingers and very few stones in his hair is sitting on the floor in a nest of cords, crying, quietly and efficiently, while he works. This is <b>Ilo Brack</b>, Corwen's apprentice. She didn't take him with her. He didn't ask to go.");
+    await say("\"She left me the readings,\" he says. \"She said someone had to keep them, for after. There won't be an after. But I'm keeping them.\" He wipes his nose. \"If you can read the cords, I'll trust you with her chart. She made it for the end. It shows when the moon holds still.\"", "voice");
+    const r = await tidePuzzle({ tries: 2 });
+    let ok = r.ok;
+    if (!ok && r.forced) {
+      const f = await check({ label: "Wisdom check (feeling the pull)", mod: 2, dc: 14, cta: "Feel" });
+      ok = f.ok;
+      if (ok) await say("You close your eyes and stand very still, and feel yourself get lighter, and heavier, and lighter. You call out the numbers. Ilo writes them down, and checks, and stares at you.");
+    }
+    if (ok) {
+      S.gear.push("chart"); renderSheet();
+      await say("Ilo takes a frame of knotted cords down from the wall, wraps it in oilcloth and puts it in your hands like a baby. \"Corwen's tide-chart,\" he says. \"Read it right and you'll know when the tide goes slack.\"", "voice");
+      await mech("Gain <b>Corwen's Tide-Chart</b>. Once a tide, call slack water: the Lift doesn't rise that turn. Against Corwen, you'll know when she dives.", "loot");
+    } else await say("Ilo shakes his head, not unkindly. \"It's hard,\" he says. \"It took me six years.\"");
+    const c = await choose([
+      { key: "ask", label: "Ask Ilo how to beat her", tag: "Persuasion DC 13" },
+      { key: "go", label: "Leave him to his cords", plain: true }
+    ]);
+    if (c === "ask") {
+      const p = await check({ label: "Persuasion check", mod: 1 + (ok ? 2 : 0), dc: 13, cta: "Ask" });
+      if (p.ok) {
+        U.cord = true; renderSheet();
+        await say("Ilo is quiet for a long time. \"Her cord,\" he says at last. \"The stones she swings. They're her mother's, and her mother's mother's. She tied them on herself, the night she cut them out of her hair, and she was crying, and she tied the third knot wrong. I watched her do it.\" He looks at the floor. \"Cut it there, and they'll fall. And so will she, a little.\"", "voice");
+        await mech("You know where Corwen's cord is weak. In the fight, you can try to cut it.", "loot");
+      } else await say("\"I can't,\" Ilo says. \"I'm sorry. She taught me to read.\"");
+    }
+  }
+
+  async function roost() {
+    const U = um();
+    U.hv.roost = true;
+    light("moon");
+    await say("The Unmoored roost hangs from the very roof of the hollow, above everything: an old Moored chapel, built upside down by people who could walk on the ceiling when the Lift was high. Now the Unmoored live in it, in the air, with no stones and no ropes. To get up there you can climb the roof-chains, or you can do what they did: let go.");
+    const c = await choose([
+      { key: "float", label: "Hand your stones to Orrin and float up", tag: "come back down for them after", show: U.ballast > 0 || hasGear("plumb") },
+      { key: "climb", label: "Climb the roof-chains", tag: "Athletics DC 14" + (umDex() ? " · weighed down" : "") }
+    ]);
+    let kept = 0;
+    if (c === "float") {
+      kept = U.ballast; U.ballast = 0; renderSheet();
+      await say("You hand your stones to Orrin" + (hasGear("plumb") ? ", and the Plumb-Heart, which makes him stagger," : "") + " and let go of the rail.");
+      await say("It's the strangest thing you've ever done. Nothing holds you, and you rise, slowly, through the chains and the hanging houses, past windows where Moored families look up at you with their mouths open, up and up, into the dark under the roof.");
+    } else {
+      const r = await check({ label: "Athletics check (the roof-chains)" + (umDex() ? " (weighed down)" : ""), mod: 3, dc: 14, dis: umDex(), cta: "Climb" });
+      if (!r.ok) await hurt(1, 8, "bludgeoning", "Your hands slip on the cold links and you slide a long way before you stop.");
+      await say("You climb the roof-chains hand over hand until Kedge is a cluster of lanterns far below you.");
+    }
+    await say("The roost is full of Unmoored, sleeping in the air like bats, turning slowly. In the middle of the upside-down chapel, a little boy is tied to a pole by a long cord round his waist, floating at the end of it like a kite. His braids have been cut off short. He's not crying. He's too frightened to.");
+    await say("\"That's Pim,\" says a voice in your ear, and you nearly fall. It's a Moored woman hanging on the chain beside you with her face wet. \"My son. They cut his stones and brought him up here to go home with them. I can't climb. I'm too heavy. I've got all of his father's.\"", "voice");
+    const opts = [
+      { key: "sneak", label: "Drift in quietly and cut him loose", tag: "Stealth DC 13" + (umDex() ? " · weighed down" : "") },
+      { key: "fight", label: "Go in hard", plain: true }
+    ];
+    const g = await choose(opts);
+    let fight = g === "fight";
+    if (g === "sneak") {
+      const r = await check({ label: "Stealth check", mod: 3 + (S.shadow ? 2 : 0), dc: 13, dis: umDex(), cta: "Drift in" });
+      if (r.ok) await say("You go through the sleeping Unmoored like a fish through weed, cut Pim's cord, and tow him out by the collar. Nobody wakes. He holds onto your arm with both hands.");
+      else { fight = true; await say("Pim sees you and says \"Mam?\" very loudly. Every sleeper in the roost opens their eyes."); }
+    }
+    if (fight) await hkFight(UNMOORED({ name: "The roost", heads: 3, unit: "Unmoored|Unmoored" }));
+    await say("In the back of the chapel you find their tackle: the great pulleys and ropes they've been using to pull the pins, coiled ready for the last two. You cut every rope into pieces the length of your arm.");
+    await liftUp(-1, "Without their tackle, the Unmoored will have to pull the last pins by hand.");
+    await say("Pinned to the wall there's a sheet of knotted cord: their plan, in tide-readers' knots. You can't read it, but you can read the drawing beside it: the Heartfall, and the last two pins, and a little figure with a cord of stones standing on the moon.");
+    if (c === "float") {
+      U.ballast = kept; renderSheet();
+      await say("Pim's mother takes you both down the chain on a silk line, and Orrin is waiting at the bottom with your stones, holding them like eggs.");
+      await mech("Your stones are back: " + U.ballast + ". Footing: <b>" + umState() + "</b>.");
+    } else await say("Pim's mother takes you both down the chain on a silk line, faster than you'd like.");
+    S.gear.push("tether"); renderSheet();
+    await say("At the bottom, she unclips the line from her belt and puts the bronze hook in your hand. \"His father was a line-walker,\" she says. \"It's the best line in Kedge. Clip on, and the Lift can't have you.\"", "voice");
+    await mech("Gain <b>the Tether-Line</b>. Adrift, you clip on: no disadvantage on attacks, and the Lift can't carry you off.", "loot");
+  }
+
+  async function kellVisit() {
+    const U = um();
+    light("moon");
+    const left = ["north", "weep", "grave"].filter(k => !U.pins.includes(k));
+    await say("Mother Kell's chair creaks on its chains. She listens to everything you've done with her eyes shut." + (left.length ? " \"" + left.length + (left.length === 1 ? " pin still out" : " pins still out") + ",\" she says, at the end. \"" + left.map(k => PIN_NAMES[k].replace(/^the /, "The ")).join(", ") + ".\"" : " \"All three back,\" she says, at the end, and her chair creaks as she sits back. \"I didn't think I'd see that.\""));
+    if (!U.hv.kellGift) {
+      U.hv.kellGift = true;
+      U.milk++; renderSheet();
+      await say("She takes a phial from somewhere in the cloak of stones and hands it to you: silver liquid, faintly cold through the glass. \"Moonmilk. Drink it when it's bad.\"", "voice");
+      await mech("Gain a phial of <b>moonmilk</b> (2d8 + 2 HP).", "loot");
+    }
+    await say("You sit by her chair for a while in the cold light, and rest.");
+    const before = S.hp;
+    S.hp = Math.min(S.maxHp, S.hp + d(4) + 1); renderSheet();
+    await mech("Regain " + (S.hp - before) + " HP.", "loot");
+  }
+
+  async function partTide1() { heading("LI", "The First Tide"); if (!S.um) initUnder(); if (S.um.turn >= 3) S.um.turn = 0; await umTide(1); S.um.turn = 0; }
+  async function partTide2() { heading("LII", "The Second Tide"); if (!S.um) initUnder(); if (S.um.turn >= 3) S.um.turn = 0; await umTide(2); S.um.turn = 0; }
+
+  // ---------- Part LIII: the Heartfall ----------
+  async function partHeartfall() {
+    heading("LIII", "The Heartfall");
+    const U = um();
+    U.tide = 3; renderSheet();
+    light(U.lift >= 7 ? "dark" : "moon");
+    await say("At the end of the second tide, every chain in Kedge sings at once, a long low note, and the whole town lurches on its moorings. Down on the face of the Undermoon, the roots of the cage creak like a ship in a storm. Far below, tiny figures are dropping out of the dark toward the Heartfall: Corwen and her Unmoored, going down to pull the last two pins.");
+    if (U.tyra) await say("Tyra clips her belt to yours with a short line, without asking. \"If you go up,\" she says, \"I'm going up with you, and I'm going to complain the whole way.\"");
+    const opts = [
+      { key: "chain", label: "Climb down the great chain", tag: "Athletics DC 13" + (umDex() ? " · weighed down" : umStr() ? " · adrift" : "") },
+      { key: "drift", label: "Ride the Drift down", tag: "you know the way", plain: true, show: !!U.hv.drift },
+      { key: "line", label: "Drop on the Tether-Line", tag: "no roll", plain: true, show: hasGear("tether") }
+    ];
+    const c = await choose(opts);
+    if (c === "chain") {
+      const r = await check({ label: "Athletics check (the great chain)", mod: 3, dc: 13, dis: umDex() || umStr(), cta: "Climb" });
+      if (!r.ok) await hurt(1, 8, "bludgeoning", "You lose the chain and fall the last forty feet, slowly enough to think about it, fast enough to hurt.");
+    }
+    if (c === "drift") await say("You ride the Drift round and down, stone to stone, the way you learned, and step off onto the moon's face at the edge of the Heartfall.");
+    if (c === "line") await say("You hook the Tether-Line to the bottom of Kedge's lowest chain and pay it out, hand over hand, and drop down through the cold light like a spider on its thread.");
+    await say("The Heartfall is the top of the cage, where the roots all meet. It's a forest, lying on the moon: roots as thick as houses, knotted and crossed and grown together, with the warm empty socket in the middle of them all. Between you and the socket, the roots have closed up into a thicket, the way they closed over the North Pin's hole.");
+    const r = await rootKnot({ title: "The Heart-Knot", lead: "The roots round the socket have grown shut. One of them, the gold one, is loose enough to move: it's the way in." });
+    if (!r.ok) {
+      const f = await check({ label: "Strength check (hacking through)" + (umStr() ? " (adrift)" : ""), mod: 3, dc: 14, dis: umStr(), cta: "Hack" });
+      if (!f.ok) { await hurt(1, 6, "slashing", "The roots fight back."); await liftUp(1, "It takes too long."); }
+      await say("You hack a way through, and the roots bleed warm sap over your boots.");
+    }
+    await say("On the far side, at the last two pins, the Unmoored are already hauling. Three of them on the ropes, and three more floating overhead with their stone-cords swinging, keeping watch.");
+    const pinsLeft = 3 - U.pins.length;
+    if (pinsLeft) await mech("The pins you didn't drive back are still out. Each one is another way for the moon to pull: the Unmoored work faster.", "hurt");
+    await hkFight(UNMOORED({ name: "The last watch", heads: Math.min(5, 3 + Math.floor(pinsLeft / 2)), unit: "Unmoored|Unmoored" }));
+    if (U.pins.length < 3) await liftUp(1, "One of the last two pins comes up out of the rock with a groan before you can stop them.");
+    else await say("The Unmoored on the ropes let go and scatter upward. The last two pins stay where the wardens put them.");
+    await say("And then Corwen Lisk comes down out of the dark above you, slowly, like a leaf, with her cord of stones turning in her hand.");
+  }
+
+  // ---------- Part LIV: the Tidecaller ----------
+  async function partTidecaller() {
+    heading("LIV", "The Tidecaller");
+    const U = um();
+    light(U.lift >= 7 ? "dark" : "moon");
+    const hp = 28 + 2 * U.lift;
+    await say("\"You put them back,\" Corwen says. She doesn't sound angry. She sounds tired." + (U.pins.length >= 3 ? " \"All three. Well done, heavy.\"" : "") + " \"You know what's on the moon's face, don't you? Nothing. Moss. I know. I've always known. I read the tides for twenty years, and I never once saw anyone go up and come back to say they were happy.\" She swings the cord, slowly. \"I'm going anyway. Somebody has to look.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"She's above you,\" Vaelric says. \"She'll stay above you. Make her come down.\"");
+    await mech("Corwen has " + hp + " HP: the higher the Lift, the stronger she is. Every second round she rises out of your reach, and you'll have to go up after her, throw something, or wait for her dive. Every third round the Undermoon pulses, and your footing matters.");
+    const noAtk = (st) => st.high;
+    const F = { name: "Corwen Lisk", hp, ac: 14, atk: 6, n: 1, s: 10, type: "bludgeoning", bloom: 0, hesk: false, who: "Corwen", whoShort: "Corwen",
+      hitWhy: "The cord of stones comes round out of the dark and smashes into you.", miss: "The stones hum past your head.", hitLine: "She tumbles back through the air, and rights herself slower than before.",
+      noAtk,
+      extra: (st) => {
+        const o = [];
+        if (st.high) {
+          o.push({ key: "rise", label: "Cut a stone loose and rise after her", tag: "−1 stone · then attack", show: U.ballast > 0 });
+          o.push({ key: "throw", label: "Hurl a kinstone up at her", tag: "−1 stone · 1d8 + 2", show: U.ballast > 0 });
+          o.push({ key: "brace", label: "Brace for her dive", tag: hasGear("chart") ? "the Tide-Chart tells you when" : "Dexterity DC 14" });
+        }
+        if (hasGear("maul") && !st.used.maul) o.push({ key: "maul", label: "Strike the root-floor with the Wardens' Maul", tag: "she falls · loses a turn", plain: true });
+        if (U.cord && !st.used.cord && !st.cut) o.push({ key: "cord", label: "Cut her cord at the weak knot", tag: "Dexterity DC 15", plain: true });
+        return o.filter(x => x.show !== false);
+      },
+      before: async (st) => {
+        st.high = st.round % 2 === 0 && !st.grounded;
+        st.grounded = false;
+        if (st.high) await say("She rises out of reach, ten feet, twenty, turning in the air with the cord singing round her, and hangs there over you.");
+        if (st.round % 3 === 0) {
+          await say("The Undermoon pulses under your feet: a long, slow heave, like a sleeper turning over. Everything that isn't held down jumps.");
+          const r = await check({ label: "Strength save (keep your feet)" + (umStr() ? " (adrift)" : ""), mod: 3, dc: 12, dis: umStr() && !hasGear("tether"), adv: !umAdrift() && !umHeavy(), cta: "Hold on" });
+          if (!r.ok) {
+            if (U.tyra && !st.tyra) { st.tyra = true; await say("You go up off the moon's face, and the line on your belt goes tight, and Tyra, flat on her back with her heels jammed against a root, hauls you down like a fish. \"<i>Complaining,</i>\" she says through her teeth."); if (S.tyra) await fond(1, "She held on."); }
+            else await hurt(1, 8, "bludgeoning", "You're thrown up into the roots and come down hard.");
+          }
+        }
+      },
+      turn: async (st) => {
+        if (st.high) {
+          await say("She dives.");
+          if (st.braced) { st.braced = false; return "done"; }
+          await foeSwing(F, st, { label: "Corwen dives", n: 2, s: 6 });
+          return "done";
+        }
+        if (st.cut) { await foeSwing(F, st, { n: 1, s: 6, why: "She strikes at you bare-handed, with nothing in her hands but the habit of a cord." }); return "done"; }
+      },
+      onExtra: async (c, st) => {
+        if (c === "rise") {
+          await stones(-1, "You cut a stone from your cord and let it fall, and rise to meet her.");
+          const a = await check({ label: "Axe attack (in the air)" + (umAdrift() && !hasGear("tether") ? " (adrift)" : ""), mod: 5, dc: F.ac, target: "AC", dis: umAdrift() && !hasGear("tether"), cta: "Strike" });
+          if (a.ok) await foeStrike(1, 8, 3, "Axe damage"); else await say("You swing, and the air turns you round, and you miss.");
+          st.high = false;
+          await say("You both come down together, slowly, onto the moon's face.");
+        }
+        if (c === "throw") {
+          U.ballast--; renderSheet();
+          const a = await check({ label: "Thrown stone" + (umDex() ? " (weighed down)" : ""), mod: 3, dc: F.ac, target: "AC", dis: umDex(), cta: "Throw" });
+          if (a.ok) await foeStrike(1, 8, 2, "Stone damage"); else await say("It sails past her and keeps going, up and up, until it's out of sight.");
+          await mech("Kinstones: " + U.ballast + ". Your footing: <b>" + umState() + "</b>.", "hurt");
+        }
+        if (c === "brace") {
+          if (hasGear("chart")) { st.braced = true; await say("You watch the cords on the Tide-Chart, and the knot where the pull holds still, and you know the exact moment she'll come. You step aside. She hits the moon where you were standing."); st.adv = true; await mech("Your next attack has advantage.", "loot"); }
+          else {
+            const r = await check({ label: "Dexterity check (reading her dive)" + (umDex() ? " (weighed down)" : ""), mod: 2, dc: 14, dis: umDex(), cta: "Brace" });
+            if (r.ok) { st.braced = true; st.adv = true; await say("You see her shoulders drop a breath before she does, and step aside, and she hits the moon's face where you were."); await mech("Your next attack has advantage.", "loot"); }
+          }
+        }
+        if (c === "maul") {
+          st.used.maul = true; st.stilled = true; st.grounded = true; st.high = false;
+          await say("You swing the Wardens' Maul down onto the root-floor with everything you have. The whole cage rings like a struck bell, and the pull of the moon falters for a heartbeat, and Corwen falls out of the air.");
+          await foeBurst(2, 6, 0, "She hits the moon's face");
+          await mech("She loses her next turn, and she won't rise next round.", "loot");
+        }
+        if (c === "cord") {
+          st.used.cord = true;
+          const r = await check({ label: "Dexterity check (the weak knot)" + (umDex() ? " (weighed down)" : ""), mod: 3, dc: 15, dis: umDex(), cta: "Cut" });
+          if (r.ok) { st.cut = true; F.s = 6; await say("You catch the cord as it comes round and put the axe through the third knot, the bad one, and her mother's stones go spinning away in every direction, up into the dark."); await say("Corwen screams. Not in pain. She grabs for them with both hands, and gets none."); await mech("Her flail is gone: she hits for 1d6 now.", "loot"); }
+          else await say("The cord whips out of your hand.");
+        }
+      } };
+    await hkFight(F);
+    light("moon");
+    await say("Corwen hangs in the air above the moon, limp, turning slowly, " + (F.s === 6 ? "with nothing in her hands." : "her cord of stones trailing from one hand.") + " She's not dead. She's just very light, and very tired, and the Lift is taking her up, an inch at a time.");
+    await say("\"Let me go,\" she says. \"Please. I want to see.\"", "voice");
+    const c = await choose([
+      { key: "moor", label: "Catch her ankle and tie stones back into her hair", tag: "she stands trial in Kedge", show: U.ballast > 0 || hasGear("plumb") },
+      { key: "go", label: "Let her go up", tag: "into the dark", plain: true }
+    ]);
+    U.corwen = c === "moor" ? "moored" : "up";
+    if (c === "moor") {
+      await say("You catch her by the ankle and pull her down, and she doesn't fight. You take " + (U.ballast > 0 ? "a stone off your own cord" : "the Plumb-Heart") + " and braid it into the stubble of her hair, clumsily. She looks at you the whole time.");
+      if (U.ballast > 0) U.ballast--; else S.gear = S.gear.filter(g => g !== "plumb");
+      renderSheet();
+      await say("\"Whose is it?\" she asks.");
+      await say("You don't know. Somebody's.", "voice");
+      await say("Corwen Lisk sits down on the face of the moon with her arms round her knees and cries, finally, the way Ilo did: quietly and efficiently, as if it were a job.");
+    } else {
+      await say("You let her go. She rises up past the roots of the cage, and past Kedge on its chains, slowly, turning, with her face turned up, and the Moored on the walkways stop what they're doing and watch her go. Nobody calls out. Then the dark under the roof takes her, and she's gone, and you'll never know what she saw.");
+      if (vaelricSpeaks()) await voice("\"Somebody has to look,\" Vaelric says quietly. \"I used to think that, too.\"");
+    }
+    renderSheet();
+  }
+
+  // ---------- Part LV: the Undermoon ----------
+  async function partUndermoon() {
+    heading("LV", "The Undermoon");
+    const U = um();
+    light("moon");
+    await say("You stand at the edge of the empty socket. It's warm, like a bed somebody just got out of. Below it, through a gap in the roots, you can see the Undermoon's face: grey, cratered, cold, and very close. It's breathing. You hadn't noticed before. Slow, slow breaths, a minute long, and the whole hollow gets lighter and heavier with them.");
+    await say("Mother Kell's chair comes down on its four chains until it hangs just above the Heartfall. Half of Kedge has come down with her, on lines, on the Drift, on the great chain, and stands on the roots in a ring, with their hands on each other's shoulders, heavy with their dead.");
+    await say("\"Well, warden,\" she says. \"It's yours to say. It always was, I think.\"", "voice");
+    const hasSeed = S.ember || U.seed;
+    const c = await choose([
+      { key: "plant", label: S.ember ? "Cut the Ember Root out from under your ribs and put it back" : "Plant the Ember Sapling in the socket", tag: S.ember ? "lose its power and 4 max HP · the cage closes" : "the cage closes", show: hasSeed },
+      { key: "vael", label: "Let Vaelric take the Ember Root's place", tag: "he roots himself into the cage", plain: true, show: vaelricSpeaks() },
+      { key: "rise", label: "Open the cage and let the Undermoon go up", tag: "Corwen's way", plain: true }
+    ]);
+    U.ending = c;
+    if (c === "plant") {
+      if (S.ember) {
+        await say("You take out your belt knife. It doesn't hurt as much as you thought it would. It hurts more. The Ember Root comes out from under your ribs all at once, with a long white tail of root, beating in your fist like a heart.");
+        S.ember = false; S.maxHp = Math.max(10, S.maxHp - 4); S.hp = Math.max(1, Math.min(S.maxHp, S.hp - 4)); renderSheet();
+        await mech("The Ember Root is gone from you. Max HP −4.", "hurt");
+      } else {
+        S.gear = S.gear.filter(g => g !== "sapling"); renderSheet();
+        await say("You kneel and set the Ember Sapling in the socket. Its roots go down into the cage the moment they touch it, fast, like water into sand.");
+      }
+      await say("You put it in the socket, and the roots of the cage close over it like a fist closing, all at once, with a sound you feel in your teeth. The warmth goes down into them. The Undermoon breathes out, a long, long breath, and doesn't breathe in again. It's asleep.");
+      await say("You weigh what you weigh. All of you, all at once. Up in Kedge, a thousand chains go slack and clank. The Moored stand on the roots in their ring and look at their feet.");
+      if (vaelricSpeaks()) {
+        await voice("\"There,\" Vaelric says. His voice is very close, and very calm. \"That's what I wanted. That's all I ever wanted. To put it back where it belongs.\" A pause. \"I think I'll go with it. I think I can, now. Somebody has to keep the lock.\"");
+        await say("The gems on the axe glow, one, two, three, and go dark, gently, like lamps being turned down in a house where everyone's going to bed.");
+        S.ending = "return"; renderSheet();
+        await mech("Vaelric is at peace. You are the Warden of the Labyrinth now.", "loot");
+      }
+    }
+    if (c === "vael") {
+      await voice("\"No,\" Vaelric says, before you can move. \"Keep it. It's grown into you. Cutting it out would be a killing, and I've seen enough of those.\" The gems on the axe brighten. \"Put me in the socket instead. I was the lock's keeper for a hundred years in the dark. I'll keep it for a thousand more. I'm good at waiting.\"");
+      await say("You kneel and lay the axe across the socket. The light goes out of the gems and down into the roots like water draining from a basin, and you see him, just for a moment, an old man in a warden's cloak, stepping down into the warm dark and turning round to look at you.");
+      await voice("\"I'll hold you from underneath,\" he says. \"Wherever there are roots. You won't fall far.\"");
+      S.vRooted = true; renderSheet();
+      await say("The cage closes over the empty socket like a fist. The Undermoon breathes out, and sleeps. The axe in your hand is just an axe, heavy and sharp, with three dark stones in the haft. When you hold it, you can feel something far below you, holding back.");
+      await mech("Vaelric has become the cage's lock. The axe will still hold you at 1 HP, from underneath, but he won't speak again. You keep the Ember Root.", "loot");
+    }
+    if (c === "rise") {
+      await say("You turn to Mother Kell. She looks at you for a long time. Then she nods, and the four hundred and six stones of her hair rattle like rain.");
+      await say("\"Our dead,\" she says, \"are on the shelves. Every one. They were never on the moon's face. But I'm tired of nailing things down.\" She turns to the ring of Moored. \"Whoever wants to go, go.\"", "voice");
+      await say("You and Gage Tull's crew strike the last two pins out of the rock, one after another, with the Wardens' Maul" + (hasGear("maul") ? "" : " you borrow from the Chainworks") + ". The roots of the cage don't break. They open. Slowly, like a hand opening, finger by finger, and the Undermoon rises out of them.");
+      await say("It takes three days to go up. It goes through the labyrinth, which folds round it like paper and falls away. It goes through the desert, and the sand pours off its shoulders in rivers. And on the fourth night, you stand on the dunes with half of Kedge around you and watch a second moon climb into the sky over Sulmara, grey and cratered, with a thousand of the Moored riding its face, holding hands, getting smaller.");
+      await say("Ilo Brack stays. So does Mother Kell, carried up the drop-line in her chair by forty people. \"Somebody has to keep the readings,\" Ilo says. \"There'll be tides now. Real ones. Two moons.\" He looks up at it, and he's smiling and crying. \"Everyone's going to need to know when.\"");
+      if (vaelricSpeaks()) await voice("Vaelric is very quiet for a long time. \"Well,\" he says at last. \"That's one way to stop it waking up.\"");
+    }
+    if (U.tyra) await say(S.tyra && S.tyra.love ? "Tyra finds your hand without looking. \"Forty-four keys,\" she says. \"And I've stood on a moon.\" She squeezes. \"Don't tell anyone. They'll want to come.\"" : "Tyra sits down on a root with her feet planted wide, and both hands flat on the ground, and laughs. \"I'm heavy,\" she says. \"Look at me. Heavy as anything.\"");
+    await say("That night, in the Lunary, Ilo Brack shows you the cords he's been knotting since you came down. \"The pull's settled,\" he says. \"" + (c === "rise" ? "The new one goes round the sky like the old one, and the tides follow both." : "The moon's asleep. The cords have gone flat.") + " Except...\" He pulls one cord from the rest. On it, faint, under the others, there's another tide. A second pull, very small, very far off, pulling the other way.");
+    await say("\"It's been there all along,\" he says. \"You can only see it now the big one's quiet. It's coming from the west. From under the sea.\" He looks at Mother Kell.");
+    await say("\"The Moored remember two lights falling,\" the Anchor-Mother says slowly. \"A thousand years ago. Our wardens and yours caught one. The other went into the western sea, and we always told the children it drowned.\" Her chair creaks. \"We told them a lot of things.\"", "voice");
+    U.on = false; renderSheet();
     await endCard();
   }
 
@@ -8465,7 +9526,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   async function endCard() {
     await wait(300);
     const carried = [];
-    if (S.axe) carried.push("Vaelric's Axe" + (S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
+    if (S.axe) carried.push("Vaelric's Axe" + (S.vRooted ? ", just an axe now, with Vaelric holding you from underneath" : S.ending === "return" ? ", its gems dark and at peace" : ", its three gems humming faintly"));
     if (S.shield) carried.push("The pauldron shield" + (S.pitted ? ", pitted by slime" : ", dented in the shape of a spider's face"));
     if (S.ember) carried.push("The Ember Root, rooted under your ribs");
     if (S.writ) carried.push("The Blackjackal's bounty writ");
@@ -8484,6 +9545,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.molt) carried.push("Moltwater in your blood, and no Bloom");
     if (S.nk) carried.push(S.nk.jackal === "sewn" ? "A shadow with a jackal's ears, sewn into your own" : "Your shadow: " + SHADE_NAME[S.nk.shade].toLowerCase());
     if (S.nk && S.nk.jars) carried.push(S.nk.jars + " noon-jar" + (S.nk.jars > 1 ? "s" : ""));
+    if (S.um && S.um.ballast) carried.push(S.um.ballast + " kinstone" + (S.um.ballast > 1 ? "s" : "") + (S.um.gaveVael ? ", one of them with Vaelric's name on it" : ""));
+    if (S.um && S.um.milk) carried.push(S.um.milk + " phial" + (S.um.milk > 1 ? "s" : "") + " of moonmilk");
     if (S.tyra) carried.push(S.tyra.love ? "Tyra Quillon, at your side and holding your hand" : "Tyra Quillon's friendship, for what it's worth (" + S.tyra.aff + " of 5)");
     const sc = S.scrolls ? S.scrolls.fire + S.scrolls.poison + S.scrolls.frost : 0;
     if (sc) carried.push(sc + " snare rune scroll" + (sc > 1 ? "s" : ""));
@@ -8506,12 +9569,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       night: "Under Sulmara, Ammaret sleeps in the first night it has had in six hundred years."
     };
     const JACKAL = { burn: " The Blackjackal burned away in the light.", sewn: " The Blackjackal is sewn into your shadow, and quiet, for now.", free: " The Blackjackal went down into the deep dark, and you let him." };
+    const MOON = {
+      plant: "Under the labyrinth, the Undermoon sleeps in its cage again, with the Ember Root warm in the heart of it.",
+      vael: "Under the labyrinth, the Undermoon sleeps in its cage, and Vaelric keeps the lock.",
+      rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
+    };
+    const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
+    const U = S.um, done = U && U.ending;
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part XLIX</p>' +
+      '<p class="eyebrow" style="margin:0">Part ' + (done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>You stand at the top of the deep stair with " + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>');
     scrollNext = true;
@@ -8520,8 +9590,8 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     $("endJournalBtn").onclick = () => jOpen();
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
@@ -8546,7 +9616,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
       '<p class="big">The labyrinth goes deeper.</p>' +
-      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, and a buried city where it has been noon for six hundred years.</p>" +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, and a fallen moon under the labyrinth where you began.</p>" +
       "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
       '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');

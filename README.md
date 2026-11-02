@@ -6,7 +6,7 @@
 
 Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.
 
-Labyrinth of Roots is a choose-and-roll dark fantasy adventure in forty-eight parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet, and out across its lake to Carrowmere, the drowned castle, where a knight with a lantern has guarded a stolen treasury for a hundred years, and down the road to Lastwell, a dead village where something you can't see drinks people dry, and hunts you while you scrape together water, food, rune mines and caltrops to survive it, and back to Sulmara, the Glass City, where you stand trial before the Glass Judge with a rogue named Tyra Quillon at your side, and finally north to the valley under Mount Corrach, where the Hesk, a tall, shelled people who sleep seventeen years at a time, have woken early, carrying a fungus called the Pale Bloom that Vaelric's axe can't save you from, and then down the deep stair under the mountain to Ammaret, the buried city under Sulmara, where it has been noon for six hundred years, the Lidless sell their shadows to sleep, and the Blackjackal is hiding inside one of four people.
+Labyrinth of Roots is a choose-and-roll dark fantasy adventure in fifty-five parts. Walk the ceremonial pathway, descend past the druid gate, take up Vaelric's gem-set axe, and face Ryytaa the Ender in her nest before climbing out into the desert, where a crew of thieves called the Hollow Hands wants your axe for one impossible heist, and on into the Hushfen, a drowned swamp ruled by a robber baron in violet, and out across its lake to Carrowmere, the drowned castle, where a knight with a lantern has guarded a stolen treasury for a hundred years, and down the road to Lastwell, a dead village where something you can't see drinks people dry, and hunts you while you scrape together water, food, rune mines and caltrops to survive it, and back to Sulmara, the Glass City, where you stand trial before the Glass Judge with a rogue named Tyra Quillon at your side, and finally north to the valley under Mount Corrach, where the Hesk, a tall, shelled people who sleep seventeen years at a time, have woken early, carrying a fungus called the Pale Bloom that Vaelric's axe can't save you from, and then down the deep stair under the mountain to Ammaret, the buried city under Sulmara, where it has been noon for six hundred years, the Lidless sell their shadows to sleep, and the Blackjackal is hiding inside one of four people, and at last back home to the labyrinth, which has heaved up out of the sand, and down past the bottom of it to Kedge, a town hung on chains over a moon that fell a thousand years ago and is waking up.
 
 ## How to play
 
@@ -58,6 +58,9 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 - **The Kept Noon** (Parts XLII–XLVIII): down the deep stair to Ammaret, the buried city under Sulmara's glass, where the Lidless have had no night for six hundred years. Sell your shadow (and risk the axe's protection), keep the Noon from dimming, find out which of four people the Blackjackal is wearing, and decide whether the city keeps its light.
 - **More puzzles**: the Hour-House's linked clock dials, the assayer's scales (find the false shadow in two weighings), two shadow gates (set shutter-stones so the moon glyphs fall in shadow and the sun glyphs stay lit), and pinning the Blackjackal's shadow on the wall.
 - **Five more quest items**: the Sun-Shard, the Hour-Key, Oriel's Shadow Needle, the Lidless Veil and the Dimmer's Shutter-Cloak.
+- **The Undermoon** (Parts XLIX–LV): home to the labyrinth, and under it to Kedge, where the Moored carry the stones of their dead so they don't float away. The Lift rises every turn: carry enough kinstones to keep your feet, but not so many you can't climb. Drive the wardens' pins back into the cage, stop Corwen Lisk the Tidecaller, who fights from the air, and decide whether the fallen moon sleeps or rises.
+- **More puzzles**: balance beams (weight times distance), a sliding root-knot, the Drift (stepping stones that move every time you do), and the tide-readers' tide-table.
+- **More quest items**: the Plumb-Heart, the Wardens' Maul, the Tether-Line, Corwen's Tide-Chart and the Ember Sapling.
 - **Progress saving** in your browser, so you can continue from the last part you reached.
 - **A journal** of each journey, kept in your browser: time played, deaths, close calls (when the axe held you at 1 HP), fights, gold found and spent, every item found, bounties claimed and treasure dug up. Each chapter ends with a summary card, and the journal (the *Journal* button in your items) keeps a table of finished chapters, totals across every journey, and your earlier runs.
 
@@ -65,15 +68,15 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 The GitHub Pages version can count anonymous visits with [GoatCounter](https://www.goatcounter.com/), which uses no cookies and collects nothing personal. It's off until a site code is filled in: set `GOATCOUNTER_CODE` near the top of the game script in `index.html` to your GoatCounter code. It only ever runs on `coderblack15.github.io`, never in the private Claude link or a copy opened from disk.
 
-Besides page views, the dashboard shows these events: `journey-start`, `journey-continue`, `part-1` … `part-48` (how far players get), `chapter-done-labyrinth`, `chapter-done-desert`, `chapter-done-hushfen`, `chapter-done-carrowmere`, `chapter-done-lastwell`, `chapter-done-assize`, `chapter-done-corrach`, `chapter-done-noon`, `journey-finished`, and `bloom-death`.
+Besides page views, the dashboard shows these events: `journey-start`, `journey-continue`, `part-1` … `part-55` (how far players get), `chapter-done-labyrinth`, `chapter-done-desert`, `chapter-done-hushfen`, `chapter-done-carrowmere`, `chapter-done-lastwell`, `chapter-done-assize`, `chapter-done-corrach`, `chapter-done-noon`, `chapter-done-undermoon`, `journey-finished`, and `bloom-death`.
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `index.html` | The playable game |
-| `STORY.md` | The full game master script for all forty-eight parts |
+| `STORY.md` | The full game master script for all fifty-five parts |
 
 ## Status
 
-Parts I to XLVIII are complete. The story ends with the Magistrate home in Sulmara, the roots of the world pushing up under the labyrinth, and Vaelric asking to go home. Part XLIX is still to come.
+Parts I to LV are complete. The story ends under the labyrinth, with the Undermoon asleep in its cage or risen into the sky, and the tide-readers finding a second pull coming from under the western sea. Part LVI is still to come.
