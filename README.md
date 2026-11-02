@@ -66,6 +66,7 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 - **Progress saving** in your browser, so you can continue from the last part you reached.
 - **A journal** of each journey, kept in your browser: time played, deaths, close calls (when the axe held you at 1 HP), fights, gold found and spent, every item found, bounties claimed and treasure dug up. Each chapter ends with a summary card, and the journal (the *Journal* button in your items) keeps a table of finished chapters, totals across every journey, and your earlier runs.
 - **The story so far.** Continuing a save opens with a short recap of that run: the choices you made in each chapter, who is with you, where you stopped and what you carry. Skip it, turn it off, or read it again any time at the top of the journal. Each chapter's lines come from the `RECAP` table in `index.html`, keyed by the chapter's slug in `CHAPTERS`; a new chapter should add an entry there.
+- **A map that grows.** The *Map* button (next to *Journal*) opens a hand-inked map of the realm. Each chapter you reach lifts the fog off its region, with a mark for where you are now; the western sea stays uncharted. Each save slot keeps its own map. Regions come from the `MAP` table in `index.html`, keyed by the chapter's slug in `CHAPTERS`, so a new chapter adds its region with one entry (its place, glyphs from `MAP_ART`, labels, road and the fog it clears) and no redraw.
 
 ## Visitor stats (public site only)
 
