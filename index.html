@@ -399,6 +399,16 @@ body.intro-open { overflow: hidden; }
 .roll .meta .combo-tag { color: var(--gold); }
 .story .mech.combo { color: #ffd27a; }
 .story .mech.combo::before { content: "◆"; color: var(--gold); }
+.belt { display: flex; align-items: center; gap: 8px; }
+.belt-note { font-family: var(--label); font-size: .78rem; letter-spacing: .05em; color: var(--muted); }
+.belt.ready .belt-note { color: var(--gold); }
+.belt.ready .belt-note::before { content: "● "; }
+button.belt-btn { border-style: dashed; }
+button.belt-btn:not(:disabled) { border-color: var(--gold); }
+.belt-track .dig-zone { overflow: visible; }
+.belt-sweet { position: absolute; top: 0; bottom: 0; background: rgba(255, 210, 122, .55); box-shadow: 0 0 10px rgba(255, 210, 122, .6); }
+.inv-toggle.belt-ready::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px rgba(255, 210, 122, .8); vertical-align: middle; }
+.inv .use { margin-top: 6px; font-size: .8rem; padding: 4px 10px; }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 22px; scroll-margin-top: 24px; }
 button {
   font: inherit; cursor: pointer; color: var(--ink);
@@ -819,6 +829,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
+      <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
     </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
@@ -1446,6 +1457,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (S.axe) items.push(["dig", "dig", "Footholds " + "<span class='pips'>" + "●".repeat(digsLeft()) + "○".repeat(DIG_MAX - digsLeft()) + "</span>", digsLeft() + " of " + DIG_MAX + " left. Once a fight, at 23% HP or less, spend one to dig in. One comes back with each new chapter."]);
     if (S.grain) items.push(["grain", "grain", "Heartgrain", GRAIN_DESC]);
     markItems(items);
+    spoilsItems(items);
     lastwellItems(items);
     assizeItems(items);
     heskItems(items);
@@ -1463,12 +1475,21 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     ul.innerHTML = "";
     if (!items.length) { ul.innerHTML = '<li><span></span><span class="empty">A pack, some bread, a belt knife.</span></li>'; }
     const now = new Set();
+    // Mid-fight, items you can use right now get a Use button (it works through the prompt's own quick-hands button).
+    const usable = beltHook && beltReady() ? new Map(beltItems().map(o => [o.key, o])) : new Map();
     items.forEach(([key, icon, name, desc]) => {
       now.add(key);
       const li = document.createElement("li");
       if (!lastItems.has(key) && lastItems.size + 1 > 0 && started) li.className = "new";
       if (key === "axe" && S.gemsSpent) li.classList.add("spent");
       li.innerHTML = ICONS[icon] + '<span><span class="name">' + name + '</span><span class="desc">' + desc + "</span></span>";
+      const u = usable.get(key);
+      if (u) {
+        const b = el("button", "use belt-btn", u.label.split(" ")[0] + " it now" + '<span class="tag">' + u.tag + "</span>");
+        b.type = "button";
+        b.onclick = () => { const h = beltHook; setInv(false); if (h) h(key); };
+        li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
+      }
       ul.appendChild(li);
     });
     const gained = started && items.some(([key]) => !lastItems.has(key));
@@ -1517,19 +1538,24 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   function light(v) { document.body.dataset.light = v; }
 
   function choose(opts) {
+    const main = FOE.menu; FOE.menu = false;
     return new Promise(resolve => {
       const box = el("div", "choices");
+      let detach = null;
       opts.filter(o => o.show !== false).forEach((o, i) => {
         const b = el("button", i === 0 && !o.plain ? "primary" : "", o.label + (o.tag ? '<span class="tag">' + o.tag + "</span>" : ""));
         b.type = "button";
         b.onclick = () => {
           box.querySelectorAll("button").forEach(x => x.disabled = true);
           b.classList.add("chosen");
+          if (detach) detach();
           scrollNext = true;
           resolve(o.key);
         };
         box.appendChild(b);
       });
+      // In a fight, every prompt carries the quick-hands item button.
+      detach = beltAttach(box, box, main ? () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (detach) detach(); resolve(BELT_WON); } : null);
       add(box);
     });
   }
@@ -1560,8 +1586,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const cb = atk ? Math.min(2, FOE.chain) : 0;
     mod += cb;
     return new Promise(done => {
+      let detach = null;
       const resolve = (r) => {
-        if (atk) { FOE.chain = r.ok ? Math.min(3, FOE.chain + 1) : 0; renderFoe(); }
+        if (atk) { FOE.chain = r.ok ? Math.min(3, FOE.chain + 1) : 0; if (!FOE.rounds) { FOE.swung = true; fightTurn(); } renderFoe(); }
         done(r);
       };
       const card = el("div", "roll");
@@ -1577,10 +1604,12 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       card.append(dice, el("div", "what", label), el("div", "meta", metaBits.join(" · ")), out, ctrl);
       const rollBtn = el("button", "primary", cta); rollBtn.type = "button";
       ctrl.appendChild(rollBtn);
+      if (atk && !FOE.rounds) detach = beltAttach(card, ctrl, null);
       scrollNext = true;
       add(card);
 
       async function doRoll() {
+        if (detach) { detach(); detach = null; }
         ctrl.innerHTML = "";
         out.innerHTML = "&nbsp;";
         const vals = dies.map(() => d(20));
@@ -1640,6 +1669,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   // An enemy attack you react to.
   function enemyAttack({ label, foe, bonus, dis = false, adv = false, cta }) {
+    if (FOE.on && FOE.blind > 0 && !dis) { FOE.blind--; dis = true; label += " (half-blind)"; }
     if (adv && dis) adv = dis = false;
     return new Promise(resolve => {
       const ac = acNow();
@@ -1663,6 +1693,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         const kept = vals[ki];
         const hit = kept === 20 || (kept !== 1 && kept + bonus >= ac);
         out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
+        if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
         scrollNext = true;
         await wait(350);
         resolve(hit);
@@ -1715,13 +1746,13 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false };
+  const FOE = { on: false, name: "", hp: 0, max: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null };
   function foeStart(name, max, { hp = max, unit = "" } = {}) {
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null });
     jCount("fights");
     renderFoe(true);
   }
-  function foeEnd() { FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; renderFoe(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { if (!lost) spoilsWon(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -1744,6 +1775,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     const c = FOE.chain;
     $("comboPips").querySelectorAll("i").forEach((p, i) => p.classList.toggle("on", i < c));
     $("comboBox").classList.toggle("ready", c >= 2);
+    renderBelt();
     $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : "+2 to hit · next hit is a Rootbreaker";
   }
   // On phones the sheet is a sticky top bar, so scroll targets need to clear its real height.
@@ -1812,6 +1844,249 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (spare > 0) { await mech("Rootbreaker! Three hits in a row, and the blow carries through into a second one.", "combo"); return 2; }
     await mech("Rootbreaker! Three hits in a row, and the blow lands with everything you have.", "combo");
     return 1;
+  }
+
+  // ---------- quick hands: using an item mid-fight ----------
+  // Once every two turns you can reach into your pack mid-fight and use something, on top of your
+  // action. Using it is a timing catch: stop the marker in the gold for a clean use, on the bright
+  // notch for a perfect one (stronger, and your hands are free again a turn sooner), or fumble it
+  // for half. Waiting past the two turns pays too: every turn you hold off widens the notch.
+  // A turn is an attack roll or an enemy attack (whichever comes first), or a round of a menu fight.
+  // Healing is kept modest mid-fight (a gulp, not the whole horn); most items do something else.
+  const BELT_CD = 2, BELT_WON = "__belt_won";
+  let beltLock = false, beltHook = null;
+  const beltWait = () => FOE.beltAt == null ? 0 : Math.max(0, BELT_CD - (FOE.turn - FOE.beltAt));
+  const beltReady = () => FOE.on && beltWait() === 0;
+  function fightTurn() { if (!FOE.on) return; FOE.turn++; renderBelt(); }
+  const bloomHalves = () => S.hk && S.bloom >= 2 && !S.molt;
+  const quickHeal = (n) => Math.ceil(n / (bloomHalves() ? 2 : 1));
+  function beltItems() {
+    const o = [], heads = !!FOE.unit;
+    if (S.potions) o.push({ key: "potion", label: "Gulp a Draught of Mending", tag: "+" + quickHeal(8) + " HP · " + S.potions + " left" });
+    if (S.elixirs) o.push({ key: "elixir", label: "Gulp an Elixir of Health", tag: "+" + quickHeal(15) + " HP · " + S.elixirs + " left" });
+    if (S.moss) o.push({ key: "moss", label: "Slap on a gravemoss poultice", tag: "2d6 HP · " + S.moss + " left" });
+    if (S.herbs && S.sick) o.push({ key: "herbs", label: "Chew a sprig of feverfew", tag: "cures ooze sickness" });
+    if (S.tea && S.bloom && !S.molt) o.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1" });
+    if (S.saltroot && S.hk && !S.molt && !FOE.salt) o.push({ key: "saltroot", label: "Chew raw saltroot", tag: "your next Bloom save this fight holds" });
+    if (S.flasks) o.push({ key: "flasks", label: "Throw a shatter flask", tag: (heads ? "drops one" : "2d6") + (FOE.F && FOE.F.hesk && !FOE.F.st.soft ? " · breaks their blade-song" : "") + " · " + S.flasks + " left" });
+    if (S.lens) o.push({ key: "lens", label: "Flash the burning lens", tag: (heads ? "drops one" : "3d6 fire") + " · blinds its next attack" });
+    if (S.nk && S.nk.jars) o.push({ key: "jar", label: "Smash a noon-jar", tag: (heads ? "drops one" : FOE.shade ? "4d6 radiant" : "2d6 radiant") + " · " + S.nk.jars + " left" });
+    if (S.um && S.um.milk) o.push({ key: "milk", label: "Gulp a phial of moonmilk", tag: "2d8 + 2 HP · " + S.um.milk + " left" });
+    if (S.cullet) o.push({ key: "cullet", label: "Fling a fistful of cullet", tag: "its next attack is half-blind · " + S.cullet + " left" });
+    return o;
+  }
+  // The timing catch. Resolves "perfect", "clean" or "fumble".
+  function beltGame(label) {
+    return new Promise(resolve => {
+      const waited = FOE.beltAt == null ? 0 : Math.min(2, FOE.turn - FOE.beltAt - BELT_CD);
+      const wide = 30, notch = 7 + waited * 4;
+      const P = puzzleBox("Quick hands", label + ". Stop the marker in the gold for a clean use, on the bright notch for a perfect one. A fumble only half works." + (waited > 0 ? " You waited for your moment: the notch is wider." : ""));
+      const track = el("div", "dig-track belt-track"), zone = el("div", "dig-zone"), sweet = el("div", "belt-sweet"), mark = el("div", "dig-mark");
+      track.setAttribute("aria-hidden", "true");
+      zone.appendChild(sweet);
+      track.append(zone, mark);
+      P.body.append(track);
+      const btn = pbtn("Now", "primary");
+      P.ctrl.appendChild(btn);
+      const at = 8 + Math.random() * (84 - wide), sAt = (wide - notch) / 2;
+      zone.style.left = at + "%"; zone.style.width = wide + "%";
+      sweet.style.left = sAt / wide * 100 + "%"; sweet.style.width = notch / wide * 100 + "%";
+      let pos = 0, dir = 1, live = true, raf = 0, last = performance.now();
+      const speed = (reduced ? 50 : 85) * (S.grain ? 0.9 : 1);
+      function step(now) {
+        const dt = Math.min(64, now - last); last = now;
+        if (live) {
+          pos += dir * speed * dt / 1000;
+          if (pos >= 100) { pos = 100; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; }
+          mark.style.left = pos + "%";
+        }
+        raf = requestAnimationFrame(step);
+      }
+      raf = requestAnimationFrame(step);
+      btn.onclick = () => {
+        if (!live) return;
+        live = false; btn.disabled = true;
+        const r = pos >= at + sAt - 1 && pos <= at + sAt + notch + 1 ? "perfect" : pos >= at - 1 && pos <= at + wide + 1 ? "clean" : "fumble";
+        track.classList.add(r === "fumble" ? "slip" : "held");
+        P.status.textContent = r === "perfect" ? "Perfect timing." : r === "clean" ? "Clean." : "Fumbled.";
+        setTimeout(() => { cancelAnimationFrame(raf); P.end(); scrollNext = true; resolve(r); }, 550);
+      };
+      setTimeout(() => btn.focus({ preventScroll: true }), 50);
+    });
+  }
+  // Damage from a thrown item. Outside a fight's own menu it can't land the last blow (the scene
+  // still has to play out), and in a scripted mob fight it scatters them instead of counting heads.
+  async function beltHurt(count, sides, mult, label, main) {
+    if (FOE.unit) {
+      if (!main) { FOE.blind = Math.max(FOE.blind, 1); await mech(label + ": it scatters them. Their next attack is half-blind (disadvantage).", "loot"); return; }
+      const n = Math.min(FOE.hp, mult >= 1.5 ? 2 : 1);
+      if (mult < 1) { FOE.blind = Math.max(FOE.blind, 1); await mech(label + ": fumbled, it only scatters them. Their next attack has disadvantage.", "loot"); return; }
+      foeHit(n); await mech(label + ": " + (n > 1 ? "two of them go down." : "one goes down."), "loot"); return;
+    }
+    const rolls = []; let total = 0;
+    for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
+    const raw = total;
+    total = Math.max(1, Math.floor(total * mult));
+    let held = "";
+    if (!main && total >= FOE.hp) { total = Math.max(0, FOE.hp - 1); held = " It staggers, but it's still up."; }
+    FOE.hp = Math.max(0, FOE.hp - total);
+    if (S.lw && /^The Wringer/.test(FOE.name)) S.wHP = FOE.hp;
+    renderFoe(); if (total) foePop("−" + total);
+    await mech(label + ": " + count + "d" + sides + " → " + rolls.join(" + ") + " = " + raw + (mult > 1 ? ", perfect throw ×1.5 = " + total : mult < 1 ? ", fumbled, half = " + total : "") + "." + held + " " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+  }
+  async function beltMend(n, why) {
+    if (S.lw && S.exh >= 5) { await mech(why + " But you're too far gone to heal.", "hurt"); return; }
+    const before = S.hp;
+    S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+    await mech(why + " Regain " + (S.hp - before) + " HP" + (bloomHalves() ? " (halved by the Bloom)" : "") + (S.hp - before < n ? " (you're back to full)" : "") + ".", "loot");
+  }
+  async function beltUse(key, main) {
+    const it = beltItems().find(x => x.key === key);
+    if (!it) return;
+    const t = await beltGame(it.label);
+    const mult = t === "perfect" ? 1.5 : t === "fumble" ? 0.5 : 1;
+    FOE.beltAt = FOE.turn - (t === "perfect" ? 1 : 0);
+    if (key === "potion" || key === "elixir") {
+      if (key === "elixir") S.elixirs--; else S.potions--;
+      await beltMend(Math.max(1, Math.floor(quickHeal(key === "elixir" ? 15 : 8) * mult)), t === "fumble" ? "The stopper sticks and half of it goes down your chin." : key === "elixir" ? "You get the elixir down in two swallows. Iron and clover." : "One long pull on the horn, bitter as bark.");
+    } else if (key === "moss") {
+      S.moss--;
+      await beltMend(Math.max(1, Math.floor((d(6) + d(6)) * mult)), t === "fumble" ? "You slap the poultice on crooked, and most of it falls off." : "You slap the gravemoss onto the worst cut and clamp it with your elbow.");
+    } else if (key === "herbs") {
+      S.herbs--;
+      await cure("You chew the feverfew between blows, and the bitterness goes all the way down.");
+    } else if (key === "tea") {
+      S.tea--; renderSheet();
+      if (t === "fumble") await mech("You spill most of the tea. What's left isn't enough to push the Bloom back.", "hurt");
+      else await bloomDown(t === "perfect" ? Math.min(2, S.bloom) : 1, t === "perfect" ? "You get the whole flask down hot, every drop." : "The tea is scalding and bitter as sweat.");
+    } else if (key === "saltroot") {
+      S.saltroot--; renderSheet();
+      FOE.salt = true;
+      await mech("You bite off a knuckle of raw saltroot and chew. Your whole mouth goes numb and grey. The next time the Bloom tries to take hold this fight, it won't.", "loot");
+    } else if (key === "flasks") {
+      S.flasks--; renderSheet();
+      await say("The flask bursts into a cloud of glittering edges.");
+      await beltHurt(2, 6, mult, "Shatter flask", main);
+      if (FOE.F && FOE.F.hesk && !FOE.F.st.soft && t !== "fumble") { FOE.F.st.soft = true; await mech("The glass shreds the note their blades are sung to. Their edges go furred and dull: they hit for 2 less for the rest of the fight.", "loot"); }
+    } else if (key === "lens") {
+      S.lens = 0; renderSheet();
+      await say("You catch the light in the lens and throw it, and it bursts like a small sun in their eyes.");
+      await beltHurt(3, 6, mult, "Burning lens", main);
+      if (t !== "fumble") { FOE.blind = Math.max(FOE.blind, t === "perfect" ? 2 : 1); await mech("Blinded: " + (t === "perfect" ? "its next two attacks have" : "its next attack has") + " disadvantage.", "loot"); }
+    } else if (key === "jar") {
+      S.nk.jars--; renderSheet();
+      await say("You smash the jar at their feet, and the noon in it goes up like a struck match.");
+      await beltHurt(FOE.shade ? 4 : 2, 6, mult, "Noon-jar", main);
+    } else if (key === "milk") {
+      S.um.milk--;
+      await beltMend(Math.max(1, Math.floor((d(8) + d(8) + 2) * mult)), t === "fumble" ? "Half the moonmilk floats out of the phial in silver beads before you can swallow it." : "The moonmilk tastes of nothing at all, and then of snow.");
+    } else if (key === "cullet") {
+      S.cullet--; renderSheet();
+      await say("You fling a fistful of scrap glass at " + (FOE.unit ? "their" : "its") + " face.");
+      if (t === "fumble") await mech("It goes wide. Only a little of it finds the eyes.", "hurt");
+      else { FOE.blind = Math.max(FOE.blind, t === "perfect" ? 2 : 1); await mech("Half-blind: " + (t === "perfect" ? "the next two attacks against you have" : "the next attack against you has") + " disadvantage.", "loot"); }
+    }
+    renderSheet();
+    await mech(t === "perfect" ? "Perfect timing: your hands are free again next turn." : "Your next item is ready in " + BELT_CD + " turns.");
+  }
+  function renderBelt() {
+    const b = $("beltBox");
+    if (!b) return;
+    const has = FOE.on && beltItems().length > 0;
+    b.hidden = !has;
+    const tog = $("invToggle"); if (tog) tog.classList.toggle("belt-ready", has && beltWait() === 0);
+    if (!has) return;
+    const w = beltWait();
+    b.classList.toggle("ready", w === 0);
+    $("beltNote").textContent = w === 0 ? "Ready: use one with this move" : "Ready in " + w + " turn" + (w > 1 ? "s" : "");
+  }
+  // Adds the "Use an item" button to a fight prompt. `node` is the prompt's element, `row` where the
+  // button goes, `win` ends the prompt if an item drops the foe (only on a fight's own menu).
+  function beltAttach(node, row, win) {
+    if (!FOE.on || beltLock || !beltItems().length) return null;
+    const btn = el("button", "belt-btn plain", "");
+    btn.type = "button";
+    const paint = () => {
+      const w = beltWait(), n = beltItems().length;
+      btn.disabled = w > 0 || !n;
+      btn.innerHTML = "Use an item" + '<span class="tag">' + (w > 0 ? "ready in " + w + " turn" + (w > 1 ? "s" : "") : "free · timing") + "</span>";
+    };
+    paint();
+    row.appendChild(btn);
+    const run = async (key) => {
+      if (!beltReady()) return;
+      beltHook = null; renderSheet();
+      node.remove();
+      beltLock = true;
+      let k = key;
+      try {
+        if (!k) {
+          const opts = beltItems().map(o => ({ ...o, plain: true }));
+          opts.push({ key: "back", label: "Never mind", plain: true });
+          k = await choose(opts);
+        }
+        if (k !== "back") await beltUse(k, !!win);
+      } finally { beltLock = false; }
+      if (win && FOE.hp <= 0) { win(); return; }
+      paint();
+      if (!beltItems().length) btn.remove();
+      scrollNext = true;
+      add(node);
+      beltHook = run; renderSheet();
+    };
+    btn.onclick = () => run();
+    beltHook = run;
+    renderSheet();
+    return () => { if (beltHook === run) { beltHook = null; renderSheet(); } };
+  }
+
+  // ---------- spoils: something from every fight ----------
+  // Every fight you come through leaves you a leaf of a Scroll of Acquisition (four leaves bind into
+  // a scroll that teaches a skill). Every foe you put down also leaves salvage: cloth scraps, scrap
+  // metal, and from the Hesk, Bloom spore sacks. Salvage sells to whoever's buying at the start of
+  // the next part.
+  const LEAVES = 4;
+  const SALV = { cloth: ["cloth scrap", "cloth scraps", 1], metal: ["piece of scrap metal", "pieces of scrap metal", 3], spore: ["Bloom spore sack", "Bloom spore sacks", 6] };
+  const salv = () => (S.salv = S.salv || { cloth: 0, metal: 0, spore: 0 });
+  const salvWorth = () => Object.keys(SALV).reduce((t, k) => t + salv()[k] * SALV[k][2], 0);
+  const salvList = (o) => Object.keys(SALV).filter(k => o[k]).map(k => o[k] + " " + SALV[k][o[k] > 1 ? 1 : 0]).join(", ");
+  function spoilsWon() {
+    if (!FOE.on || !started) return;
+    const down = FOE.hp <= 0, hurtIt = FOE.hp < FOE.max;
+    if (!down && !hurtIt) return;
+    const got = { cloth: 0, metal: 0, spore: 0 };
+    if (down) {
+      got.cloth = d(2) + (FOE.unit ? Math.max(0, FOE.max - 2) : 0);
+      got.metal = (d(2) === 2 ? 1 : 0) + (FOE.max >= 30 && !FOE.unit ? 1 : 0);
+      if ((FOE.F && FOE.F.hesk) || (S.hk && FOE.F && d(3) === 3)) got.spore = FOE.unit ? Math.min(2, FOE.max) : 1;
+      Object.keys(got).forEach(k => salv()[k] += got[k]);
+    }
+    if (Object.keys(SKILLS).some(k => !hasSkill(k))) S.leaves = (S.leaves || 0) + 1;
+    else got.extra = true;
+    const bits = [];
+    if (down && salvList(got)) bits.push("you strip " + salvList(got) + " from what's left");
+    if (!got.extra) bits.push("a loose leaf of old vellum turns up in the mess, written in a cramped teaching hand (Scroll of Acquisition: " + S.leaves + " of " + LEAVES + " leaves)");
+    if (bits.length) add(el("p", "mech loot", "Spoils: " + bits.join(", and ") + "."));
+  }
+  async function spoilsTurnIn() {
+    if (salvWorth() > 0) {
+      const n = salvWorth(), what = salvList(salv());
+      S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet();
+      await mech("On the way, you sell your salvage (" + what + ") to a tinker who buys anything by the pound" + (what.includes("spore") ? ", and holds the spore sacks at arm's length in a pair of tongs" : "") + ". Gain " + n + " gold.", "loot");
+    }
+    while ((S.leaves || 0) >= LEAVES) {
+      const left = Object.keys(SKILLS).filter(k => !hasSkill(k));
+      if (!left.length) break;
+      S.leaves -= LEAVES; renderSheet();
+      await say("The four leaves you've picked up off battlefields fit together edge to edge: one scroll, in one cramped hand, a teacher's. It's a primer. It can teach you one thing well.");
+      const k = await choose(left.map((x, i) => ({ key: x, label: SKILLS[x].name, tag: SKILLS[x].desc, plain: i > 0 })));
+      if (!S.skills) S.skills = [];
+      await learnSkill(k, "You read the Scroll of Acquisition through twice, and the second time it stays.");
+    }
+  }
+  function spoilsItems(items) {
+    if (salvWorth() > 0) items.push(["salv", "coin", "Salvage", salvList(salv()) + ". Sells for " + salvWorth() + " gold at the start of the next part."]);
+    if (S.leaves) items.push(["leaves", "scroll", "Scroll of Acquisition, " + S.leaves + " of " + LEAVES + " leaves", "Win fights to find the rest. When it's whole, it teaches you a skill of your choice."]);
   }
 
   // ---------- the labyrinth ----------
@@ -3035,11 +3310,15 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     S.gemsSpent = false; renderSheet();
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     let bookUsed = false;
+    FOE.rounds = true;
     while (FOE.hp > 0) {
+      fightTurn();
       const opts = [{ key: "axe", label: "Swing the axe" }];
       if (book && !bookUsed) opts.push({ key: "spell", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "advantage", plain: true });
+      FOE.menu = true;
       const c = await choose(opts);
+      if (c === BELT_WON) break;
       if (c === "spell") {
         bookUsed = true; hits++;
         await say(book === "Scroll of Moonfire" ? "A beam of silver flame lances into " + foe + "." : book === "Tome of Rootbinding" ? "Weed and root rise out of the water and drag at " + foe + "." : "A wall of thorns tears up out of the stone and through " + foe + ".");
@@ -5510,8 +5789,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       } else await foeBurst(n, s, bonus, label);
     };
     let round = 0;
+    FOE.rounds = true;
     while (FOE.hp > 0) {
-      round++;
+      round++; fightTurn();
       const opts = [{ key: "hit", label: armed && S.axe ? "Swing the axe" : armed ? "Slash with the knife" : "Swing the baton", tag: "AC " + ac() }];
       if (armed && S.shield && fx.mantle) opts.push({ key: "slam", label: "Shield Slam the mantle", tag: "contest · cracks it", plain: true });
       if (armed && S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant" + (fx.mantle ? " · reflects" : ""), plain: true });
@@ -5519,10 +5799,10 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
       if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "2d6 · cracks the mantle", plain: true });
       if (S.lens && armed) opts.push({ key: "lens", label: "Throw the sun with the burning lens", tag: "3d6 fire", plain: true });
       if (S.tyra.aff >= 1 && !used.tyra) opts.push({ key: "tyra", label: "Call for Tyra", tag: "2d6 + 2, no roll", plain: true });
-      if (S.hp < S.maxHp) opts.push(...await healOpts(" · costs your turn"));
+      FOE.menu = true;
       const c = await choose(opts);
+      if (c === BELT_WON) break;
       if (c === "tyra") { used.tyra = true; await say("\"Finally,\" says Tyra, from somewhere behind Coyle, and Coyle arches and shrieks, and there's a long knife in the back of her shoulder."); await foeBurst(2, 6, 2, "Tyra's knife"); }
-      else if (c === "moss" || c === "potion" || c === "elixir") await useHeal(c);
       else if (c === "slam") {
         const ok = await contest({ label: "Shield Slam", mod: 5, foe: "Coyle", foeMod: 2, cta: "Slam" });
         if (ok) { await say("You drive the shield into her chest, and the glass links shatter against the steel."); await crack(); }
@@ -5842,6 +6122,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
   async function bloomSave(dc, why) {
     if (S.molt) return true;
+    if (FOE.on && FOE.salt) { FOE.salt = false; await mech("The Bloom reaches for you and finds a mouthful of saltroot. It doesn't take.", "loot"); return true; }
     if (hasGear("mask")) dc -= 3;
     const r = await check({ label: "Constitution save against the Bloom" + (hasGear("mask") ? " (mask)" : ""), mod: 2, dc, adv: resists("poison"), cta: "Resist" });
     if (r.ok) return true;
@@ -5851,7 +6132,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 
   async function fallen() {
     if (S.nk && S.nk.on) return fallenNoon();
-    foeEnd();
+    foeEnd(true);
     light("dark");
     const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
     scrollNext = true; add(h);
@@ -5878,6 +6159,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit }); else foeStart(F.name, F.hp);
     S.gemsSpent = false; renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: false };
+    FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade;
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
     if (hasGear("bow")) {
@@ -5891,26 +6173,21 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     if (F.heads && FOE.hp > 0) await tyraTakes(FOE.hp);
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     while (FOE.hp > 0) {
-      st.round++;
+      st.round++; fightTurn();
       if (F.before) { await F.before(st); if (FOE.hp <= 0) break; }
       const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : "Swing the axe", tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
-      if (S.flasks) opts.push({ key: "flask", label: "Throw a shatter flask", tag: "2d6 · " + S.flasks + " left", plain: true });
-      if (S.lens) opts.push({ key: "lens", label: "Throw the burning lens", tag: "3d6 fire, once", plain: true });
       if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
-      if (S.um && S.um.milk && S.hp < S.maxHp) opts.push({ key: "milk", label: "Drink a phial of moonmilk", tag: "2d8 + 2 HP · " + S.um.milk + " left · costs your turn", plain: true });
-      if (S.nk && S.nk.jars) opts.push({ key: "jar", label: "Smash a noon-jar", tag: (F.shade ? "4d6" : "2d6") + " radiant · " + S.nk.jars + " left", plain: true });
       if (hasGear("mirror") && !st.used.mirror) opts.push({ key: "mirror", label: "Draw Mirrorwake", tag: "two copies of you", plain: true });
       if (hasGear("drum") && F.hesk && !st.used.drum) opts.push({ key: "drum", label: "Play the stilling beat", tag: "they lose a turn", plain: true });
       if (F.hesk && S.song >= 2 && !st.used.discord) opts.push({ key: "discord", label: "Sing a discord into their blade", tag: "Wisdom DC 13", plain: true });
-      if (S.potions) opts.push({ key: "potion", label: "Drink a Draught of Mending", tag: "+" + (S.bloom >= 2 ? 5 : 10) + " HP · costs your turn", plain: true });
-      if (S.elixirs) opts.push({ key: "elixir", label: "Drink an Elixir of Health", tag: "+" + (S.bloom >= 2 ? 10 : 20) + " HP · costs your turn", plain: true });
-      if (S.tea && S.bloom) opts.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1 · costs your turn", plain: true });
       if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
+      FOE.menu = true;
       const c = await choose(opts);
+      if (c === BELT_WON) break;
       if (c === "atk") {
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
@@ -5935,19 +6212,11 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         st.used.book = true;
         await say(book === "Scroll of Moonfire" ? "A beam of silver flame lances into " + F.who + "." : book === "Tome of Rootbinding" ? "Roots tear up out of the stone and drag at " + F.who + "." : "A wall of thorns rips up through the floor and through " + F.who + ".");
         if (F.heads) { foeHit(1); comboKeep(); await mech("The spell drops one. Your combo holds.", "loot"); } else await foeBurst(2, 8, 0, "The spell lands");
-      } else if (c === "flask") {
-        S.flasks--; renderSheet();
-        await say("The flask bursts into a cloud of glittering edges.");
-        if (F.heads) { foeHit(1); comboKeep(); await mech("One of them goes down shredded. Your combo holds.", "loot"); } else await foeBurst(2, 6, 0, "Shatter flask");
-      } else if (c === "lens") {
-        S.lens = 0; renderSheet();
-        await say("You catch the light in the lens and throw it, and it bursts like a small sun.");
-        if (F.heads) { foeHit(Math.min(2, FOE.hp)); comboKeep(); await mech("The burst takes down two. Your combo holds.", "loot"); } else await foeBurst(3, 6, 0, "Burning lens");
-      } else if (c === "shard" || c === "jar") {
-        if (c === "shard") st.used.shard = true; else { S.nk.jars--; renderSheet(); }
-        await say(c === "shard" ? "You lift the Sun-Shard, and a blade of noon cuts across " + F.who + (F.shade ? ", who comes apart in it like smoke in a doorway." : ".") : "You smash the jar at " + F.who + "'s feet, and the noon in it goes up like a struck match.");
+      } else if (c === "shard") {
+        st.used.shard = true;
+        await say("You lift the Sun-Shard, and a blade of noon cuts across " + F.who + (F.shade ? ", who comes apart in it like smoke in a doorway." : "."));
         if (F.heads) { foeHit(Math.min(F.shade ? 2 : 1, FOE.hp)); comboKeep(); await mech("The light takes " + (F.shade ? "two of them" : "one of them") + ". Your combo holds.", "loot"); }
-        else await foeBurst((c === "shard" ? 3 : 2) * (F.shade ? 2 : 1), c === "shard" ? 8 : 6, 0, c === "shard" ? "The Sun-Shard" : "The noon-jar");
+        else await foeBurst(3 * (F.shade ? 2 : 1), 8, 0, "The Sun-Shard");
       } else if (c === "mirror") {
         st.used.mirror = true; st.split = 3;
         await say("You draw Mirrorwake, and the air beside you cracks like ice. Two more of you step out of the crack, one on each side, axes up, faces set. Even you aren't sure which one is you.");
@@ -5965,10 +6234,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
         const r = await check({ label: "Wisdom check (singing the discord)", mod: 2 + (S.song >= 3 ? 2 : 0), dc: 13, cta: "Sing" });
         if (r.ok) { st.stilled = true; st.clean = true; await say("The " + (F.heads ? "nearest blade" : "blade") + " shivers, cracks, and crumbles into white dust. It has to sing a new one from bare shell, in a hurry, and the new one is clean."); await mech("It loses its next turn, and its hits no longer carry the Bloom this fight.", "loot"); }
         else await say("Your voice cracks on the note. The blade hums on, unbothered.");
-      } else if (c === "milk") await drinkMilk();
-      else if (c === "potion" || c === "elixir") await drink(c);
-      else if (c === "tea") { S.tea--; await bloomDown(1, "The tea is scalding and bitter as sweat."); }
-      else if (c === "mend") {
+      } else if (c === "mend") {
         st.used.mend = (st.used.mend || 0) + 1;
         const n = d(8) + 2, before = S.hp;
         S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
@@ -9507,7 +9773,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   }
 
   async function fallenNoon() {
-    foeEnd();
+    foeEnd(true);
     light("dark");
     const h = el("div", "part-head sub", '<span class="num">Fallen</span>');
     scrollNext = true; add(h);
@@ -9601,7 +9867,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
     started = true;
     const last = DEMO_END || PARTS.length;
     for (let i = fromPart; i < last; i++) {
-      S.part = i; digRefill(i); checkpoint(); jPart(i); SND.region(CHAPTERS[chapterAt(i)].slug);
+      S.part = i; digRefill(i);
+      if (i > fromPart) await spoilsTurnIn();
+      checkpoint(); jPart(i); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
         try { await wildEncounter(i); await PARTS[i](); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
