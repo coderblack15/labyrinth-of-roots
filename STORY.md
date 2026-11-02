@@ -991,9 +991,9 @@ Nerys Aldane (High Steward), Marshal Dace Kerrow, Odile Moorcant (Master of Wate
   6. The Key to the Cisterns (Aurel Vantry), accused before the Council in Part LIX
   7. The Three Generals (the crates at the salt kilns; Sault poisoned the gardens)
 - **Hunger** (0–10, starts at 7) rises every dawn. At 10 the city riots (Standing −8). Brought down by: the garrison's hidden grain, curing the blight, the fishing run, the Velvet Kitchen, Vantry's hoard, rooftop seed-trays, rallying the terraces, beating Sault.
-- **Standing** (0–100) with tiers Stranger, Known (5% off), Trusted (10%), Honoured (15%), Hero of Rahdaria (25%). The discount applies at the Pressed Rose inn, the Brazier smithy (scale shirt +1 AC, honing +1 axe damage) and the stalls (Draughts of Mending, bread for the line, seed-trays). The black market doesn't discount.
-- **Time.** Three days of four watches (Morning, Afternoon, Dusk, Night). Some places are daylight-only, some dark-only. Casebook, stalls and smithy take no time.
-- **The blockade** (Part LIX onward). After the Council, the Bathyr seal the city. It lifts when 100 soldiers, 100 crates and 3 Generals are beaten. Two days of three watches: sorties (soldiers), raids (crates), Generals when their protection is cut away (Keel at 60 soldiers or fewer, Thole at 60 crates or fewer, Sault once case 7 is solved or the blight is cured), rally the terraces (Standing 40+), and one **sabotage mission** in three branches (the Flood, the Fire, the Fall), each planned with three questions answered from your notes. If you break it all before the last assault, the Bathyr send an envoy instead.
+- **Standing** (0–100) with tiers Stranger, Known (10: people greet you), Trusted (25: 5% off), Honoured (50: 10%), Champion of the Terraces (75: 15%, and the Quiet Stall's rare stock), Hero of Rahdaria (100). The discount never goes past 20% (Supply Guardian and the Glass-Eye Coat add 5% each). The discount applies at the Pressed Rose inn, the Brazier smithy (scale shirt +1 AC, honing +1 axe damage) and the stalls (Draughts of Mending, bread for the line, seed-trays). The black market doesn't discount.
+- **Time.** Four days of four watches (Morning, Afternoon, Dusk, Night). Some places are daylight-only, some dark-only. Casebook, stalls and smithy take no time.
+- **The blockade** (Part LIX onward). After the Council, the Bathyr seal the city. It lifts when 100 soldiers, 100 crates and 3 Generals are beaten. Three days of three watches: sorties (soldiers), raids (crates), Generals when their protection is cut away (Keel at 60 soldiers or fewer, Thole at 60 crates or fewer, Sault once case 7 is solved or the blight is cured), rally the terraces (Standing 40+), and one **sabotage mission** in three branches (the Flood, the Fire, the Fall), each planned with three questions answered from your notes. If you break it all before the last assault, the Bathyr send an envoy instead.
 - **The all-objectives feat, "Every Terrace Green":** all seven cases, the blight ended, Hunger 3 or less, the grain thief stopped, justice for Nim, the black market dealt with (not for a cut), the traitor caught, and the blockade lifted before the last assault. Reward: the High Steward's key, +4 max HP.
 
 ### Puzzles (each with a fallback)
@@ -1007,6 +1007,30 @@ The Inquirer's Seal, Kerrow's Warhorn, the Velvet Key, the Lead-Letter Wheel, th
 ### Bestiary
 
 Brine-hound (its bite burns with brine, unless sweet water has washed you) and Rotwreath (salted dead vines that strangle and drink). They walk the road before Parts LVII, LVIII and LX.
+
+### Rahdaria, expanded: the Seven Inquiries
+
+Built from Adrian's expanded design doc and the suspects list. Doc names were reconciled with the game: the Generals stay Keel, Sault and Thole; Elder Botanist Merien is folded into Keeper Sabine Orr; Lucan Varr is **Lucan Harrow** (Varr is too close to Varro); Corvus Vey is **Corvus Aldane** (Vey belongs to the sellsword Odran Vey); the Curator is **Master Aubel Sorne**, a visiting antiquarian. State lives in `S.rh.x` (`rx()`), so older saves pick it up when they need it.
+
+- **Backgrounds** at character creation (and once for older saves): looks, origin, a background (Merchant's Child: +1 to every Standing gain; City Guard: +10 max HP; Historian: +1 Investigation and a look more in Detective Vision; Hunter: crits on 19), and for new games a starting skill.
+- **Detective Vision.** A 6×6 grid puzzle: follow a trace from its start with a limited number of looks. Clear marks point on, faint marks only say the trail passed, old traces lead nowhere. Each has a fallback check.
+- **The Seven Inquiries**, layered on the casebook's cases, each with red herrings, a named culprit, Inspector **Amara Holt** (Sergeant Brannagh Holt's sister, a rival) challenging your conclusion, and a final choice:
+  1. Who poisoned the gardens, and why: the trail runs from the aqueduct to the Inlet House lease and Councillor Darius Thorn (arrest, expose or blackmail). Feat Garden Protector.
+  2. Who empties the hill carts: the smuggler Silas Reed, then the tunnels (seal or deal). Supply Guardian.
+  3. Who owns the black market: the Rat King, Marcus Vale, under five faces (rat-seller, lamp-man, diver, lighter, runner) with four decoys. All of it, his lieutenant, or take it over. Crime Breaker.
+  4. Why soldiers rob the city: the watch logs, then Lucan Harrow and the Iron Brotherhood at the Lantern Barracks (convince, arrest, execute). Quartermaster Joren Hale is the red herring. Keeper of Order.
+  5. Who sends false orders: the spy trio Whisper, Rook and Veil, caught before the end of the second blockade day. Master Interceptor.
+  6. Who commands the invaders: the Silent General, Corvus Aldane, the High Steward's brother (duel, expose, or the truth). Adaptive Reasoning rank II.
+  7. Who truly invaded: the threads on the board point at the Curator, a Relicsong scholar kept alive three hundred years by the Cascades, who wants the vault under the cisterns. Master Detective, the Detective's Mantle, Adaptive Reasoning rank IV.
+  All seven: **The Eye of Rahdaria** and the Glass-Eye Coat, and the Relicsong Vault fight after the ending.
+- **The War Journal** (from the casebook): suspects, evidence, Generals, places, creatures, the Cascades, the Relicsong lore, and the inquiries.
+- **Allies** (one at a time, and never more than two companions in all, with a picker): Lysa (gardener, heals after fights), Captain Garrick Stone (tank), Talia Ash (rogue, information broker at the Low Lantern), Lucan Harrow (warrior, last stand), Rowan Crest (archivist, scholar).
+- **The blockade, three paths:** Military Defense, Sabotage and Espionage, Diplomatic Infiltration (parley with each General; turned Generals sign the Treaty of the Salt Flats). Each path has its own feat.
+- **Six battlefield professions**, each a mini-game: Medic (triage; Doctor feat at 40 saved), Reaver, Recon Agent (slip the lantern lines), Catapult (range-finding), Sapper (fuses), Digger (trenches).
+- **Enemy momentum** (0–100%, starts at 30%). Retreats, lost fights and riots push it up; wins push it down. At 100%, **Rahdaria Falls**: a game-over card, then back to the start of the blockade.
+- **A volley every 12 turns** of fighting in the blockade, plus Firestorm and Cascade Storm weather and tactical ground. Fights in the blockade can be retreated from.
+- **Adaptive Reasoning ranks II–IV** (predicted attacks at −1; something to bring down on the foe; a sabotage opening every day).
+- **Defender of Rahdaria** at 25, 100 and 500 lives saved, and **The Shield of Rahdaria** title when the starvation ends. **Savior of Rahdaria** gives the Golden Crest Cloak.
 
 ### Hook
 
