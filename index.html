@@ -3444,7 +3444,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const names = [["Cascade-Captain Aldous Merrow", "Cascade-Captain Ines Varl"], ["Cascade-Captain Brannoc Seyle", "Cascade-Captain Hollis Drane"], ["Cascade-Captain Edda Quarrel", "Cascade-Captain Moss Ivory"]][d(3) - 1];
     const F = await companyFight({
       soldiers: 10, captains: names, capHp: 24, capThem: "them",
-      capWhy: "The captain's sword comes down with three hundred years of drill behind it.", capMiss: "Your blow slides off Cascade-green plate, and the ranks shove you back.",
+      capMiss: "Your blow slides off Cascade-green plate, and the ranks shove you back.",
       F: { name: "A Cascade-drowned company", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", who: "the drowned company", whoShort: "Company", hitWhy: "A drowned soldier's blade opens your arm.", miss: "The blade cuts black water out of the air.", hitLine: "One of them comes apart into falling water.", road: true }
     });
     light(back);
@@ -13920,7 +13920,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const sortieN = () => 12 + rh().militia + (hasGear("horn") ? 4 : 0) + (rx() && rx().keeper ? 4 : 0) + (rx() && rx().path === "military" ? 6 : 0);
   // ---------- company battles: a full company, with armoured captains ----------
   // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
-  // armoured captains, each with their own health, who hit harder and steady the line (+1 to hit for
+  // armoured captains, each with their own health, who don't attack you but steady the line (+1 to hit for
   // the soldiers while any captain stands). Your swing goes at the soldiers; to reach a captain you
   // have to fight your way to them against plate (AC 17, and the plate takes 2 off every blow).
   // A bow's Onslaught sends each of its three arrows at its own target, soldier or captain.
@@ -13974,12 +13974,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       // A blow that went through the last soldier carries on into a captain.
       while (alive().length > FOE.hp) { const c = alive()[0]; c.hp = 0; await say("Your blow carries on through the last of the line and into " + c.name + ", who goes down."); }
       F.atk = o.F.atk + (alive().length ? 1 : 0);
-      if (st.round === 1) await mech("The company: " + soldiers() + " soldiers and " + caps.length + " armoured captains (" + caps.map(c => c.name).join(", ") + "). Your swing goes at the soldiers; reach a captain from the fight menu. While a captain stands, the soldiers get +1 to hit.", "loot");
+      if (st.round === 1) await mech("The company: " + soldiers() + " soldiers and " + caps.length + " armoured captains (" + caps.map(c => c.name).join(", ") + "). Your swing goes at the soldiers; reach a captain from the fight menu. The captains don't attack you themselves, but while one stands, the soldiers get +1 to hit.", "loot");
     };
     F.turn = async (st) => {
       const sw = Math.min(soldiers(), 2);
       for (let i = 0; i < sw; i++) await foeSwing(F, st);
-      for (const c of alive()) await foeSwing(F, st, { atk: o.F.atk + 2, n: 1, s: 10, label: c.name + " attacks", why: o.capWhy || "The captain's blade comes down two-handed." });
+      // Captains don't swing at you any more (Adrian found them hitting too hard): they stand back
+      // and command, steadying the line, and only fight back as plate and health.
       st.evade = false; return "done";
     };
     await hkFight(F);
@@ -13993,7 +13994,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("\"Hold the wall!\" somebody yells, and then everybody's yelling it, and you're in the middle of it with your back to the sea.");
     const F = await companyFight({
       soldiers: 12, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them",
-      capWhy: "The shield-captain's broad blade comes down like a dropped gate.", capMiss: "Your blow rings off drowned-bell plate, and the soldiers shove you back from their captain.",
+      capMiss: "Your blow rings off drowned-bell plate, and the soldiers shove you back from their captain.",
       F: { name: "The landing company", ac: 13, atk: 4, n: 1, s: 8, who: "the landing company", whoShort: "Bathyr", hitWhy: "A Bathyr bar catches you across the ribs.", miss: "The bar rings off the parapet.", hitLine: "One of them goes back over the parapet into the sea." }
     });
     if (F.fled) return;
