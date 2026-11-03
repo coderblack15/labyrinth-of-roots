@@ -327,6 +327,19 @@ body.intro-open { overflow: hidden; }
 .puzzle .hint, .puzzle .status { font-family: var(--label); font-size: .85rem; letter-spacing: .04em; color: var(--muted); line-height: 1.45; }
 .puzzle .status { color: var(--ink); min-height: 1.4em; }
 .puzzle .pctrl { display: flex; flex-wrap: wrap; gap: 10px; }
+.q { font-weight: 600; }
+.swap-tray { display: grid; gap: 6px; margin-top: 6px; width: 100%; }
+.swap-tray button.pack { opacity: .85; border-style: dashed; }
+.swap-note { margin: 4px 0 0; font-size: .85rem; color: var(--muted); width: 100%; }
+.swap-note:empty { display: none; }
+.swap-toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--gold); color: var(--ink, #eee); padding: 8px 14px; border-radius: 6px; z-index: 60; font-size: .9rem; }
+.q-ashen { color: #9a9a94; }
+.q-tempered { color: #b98a55; }
+.q-rootbound { color: #79ab92; }
+.q-gloaming { color: #b9a3e3; }
+.q-heartfire { color: #f0b43c; text-shadow: 0 0 6px rgba(240,180,60,.45); }
+.q-tier { font-size: .78em; letter-spacing: .06em; text-transform: uppercase; opacity: .9; }
+.story .mech.loot.find { border-left: 3px solid currentColor; padding-left: 10px; }
 .cheers { margin: 4px 0 22px; padding: 12px 16px; border: 1px solid #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: linear-gradient(90deg, rgba(207,168,80,.10), rgba(207,168,80,0) 80%), var(--panel); display: grid; gap: 6px; }
 .cheers-who { margin: 0; font-style: italic; color: var(--muted); font-size: .95rem; }
 .cheers-row { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
@@ -979,6 +992,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
       <li>You name your adventurer when you begin, and the people you meet will use it. You won't walk alone for long: friends join your company, and their bond grows with every third fight you win together and with an evening at camp at the end of each chapter. At the start of most chapters you can hire one sellsword for that chapter, and one who serves you long enough will swear to you and stop charging. Your company softens up foes and catches blows, but the killing blow is always yours.</li>
       <li>Once you have Vaelric's axe, a travelling armourer at the start of each chapter sells other main-hand weapons: a spear, a maul, a rapier and a burning sword, each swinging differently. Swap between them any time with the Wield button in your Bag. The axe stays on your back, and it keeps you alive whatever you're holding.</li>
+      <li>Won fights can drop weapons in five qualities: <span class="q q-ashen">Ashen</span>, <span class="q q-tempered">Tempered</span>, <span class="q q-rootbound">Rootbound</span>, <span class="q q-gloaming">Gloaming</span> and <span class="q q-heartfire">Heartfire</span> (0.34%, a little likelier with every fight that doesn't drop one). Better ones carry traits and once-a-fight actives you fire with quick hands. A bow's active is Onslaught: three arrows at once, each finding its own target. Four weapons ride ready on your harness (five at level 20, six at 40): in a fight, Swap weapon to one is free once a turn, a second swap gives the foe advantage, and pulling one from your pack costs your next swing. You can carry six found weapons; past that, the worst is sold. At level 40, Hobb Tallis or Mattie Gorse will sell you the Warden's Weapon Chest for 1,000 gold: six more places, shared by all your save slots, and safe through any death.</li>
       <li>Sound is off to start. Turn it on here or from your items for a quiet bed of sound in each region, and the Hesk songs sung out loud.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
     </ul>
@@ -1576,8 +1590,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (dw > 0) r.earned += dw; else if (dw < 0) r.lost -= dw;
     jBase = w;
     items.forEach(([key, , name]) => {
+      // Weapons are counted once each, however often they're swapped, banked or taken out.
+      if (key === "wpn") key = "arm-" + wpnKey();
+      const lk = /^arm-(L\d+)$/.exec(key), ck = /^chest-\d+-(.+)$/.exec(key);
+      if (lk) { const L = lootOf(lk[1]); if (L && L.uid) key = "w:" + L.uid; }
+      if (ck) key = "w:" + ck[1];
       if (NOT_ITEMS.has(key) || r.items[key]) return;
-      r.items[key] = { name: name.replace(/<[^>]*>/g, "").trim(), part: S.part };
+      r.items[key] = { name: name.replace(/<[^>]*>/g, "").replace(/^Main hand: /, "").trim(), part: S.part };
     });
     jSave();
   }
@@ -2019,6 +2038,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "treaty", name: "The Treaty of the Salt Flats", desc: "Win the blockade by the Diplomatic Infiltration path.", test: () => false },
     { id: "curator", name: "Interrupted Again", desc: "Face the Curator in the Relicsong Vault under the cisterns.", hidden: true, test: () => false },
     { id: "ashes", name: "Rahdaria Falls", desc: "Let enemy control of the blockade reach 100%.", hidden: true, test: () => false },
+    { id: "armed", name: "Other Hand", desc: "Take a weapon other than Vaelric's Axe in your main hand.", test: () => false },
+    { id: "fieldarms", name: "Spoils of the Road", desc: "Find a weapon in the field.", test: () => false },
+    { id: "rootfind", name: "Rootbound", desc: "Find a Rootbound weapon, or better.", test: () => false },
+    { id: "gloamfind", name: "Gloaming", desc: "Find a Gloaming weapon, or better.", test: () => false },
+    { id: "heartfind", name: "Heartfire", desc: "Find a Heartfire weapon in the field. One fight in three hundred.", test: () => false },
+    { id: "spectral", name: "Neither Here Nor There", desc: "Claim the Spectral Dagger of Rahdaria.", hidden: true, test: () => false },
+    { id: "phased", name: "Thirty-Four", desc: "Land a Phase Strike.", test: () => false },
+    { id: "company", name: "Hold the Wall", desc: "Break a full company, armoured captains and all.", test: () => false },
+    { id: "chest", name: "Put Away Safe", desc: "Buy the Warden's Weapon Chest at level 40.", test: () => false },
+    { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
     { id: "lv25", name: "Ringed Heartwood", desc: "Reach level 25.", test: () => lv() >= 25, prog: () => [Math.min(25, lv()), 25] },
     { id: "lv40", name: "Forty Rings", desc: "Reach level 40, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
@@ -2049,7 +2078,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       ids: ["rslantern", "rslight", "rsbright", "rsmael", "rsvoyage"] },
     { id: "inquiries", name: "The Seven Inquiries", ver: "4", desc: "Rahdaria, deeper: seven inquiries, three ways through the blockade, and what waits under the cisterns.",
       ids: ["gardenprot", "supplyg", "crimeb", "keeper", "intercept", "unmask", "masterdet", "eyerh", "savior", "doctor",
-        "def1", "def2", "def3", "def4", "wallsheld", "campapart", "treaty", "curator", "ashes"] }
+        "def1", "def2", "def3", "def4", "wallsheld", "campapart", "treaty", "curator", "ashes"] },
+    { id: "arms", name: "Arms of the Road", ver: "5", desc: "Weapons to swap into your hand, and weapons found in the field, from Ashen to Heartfire.",
+      ids: ["armed", "fieldarms", "rootfind", "gloamfind", "heartfind", "spectral", "phased", "ghosted", "chest", "company"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2177,6 +2208,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
   // ---------- sheet ----------
   const ICONS = {
+    bow: '<svg viewBox="0 0 26 26"><path d="M8 2c9 4 9 18 0 22" fill="none" stroke="#8a6a42" stroke-width="2.4" stroke-linecap="round"/><path d="M8 2v22" stroke="#d8d0bc" stroke-width=".9"/><path d="M5 13h16" stroke="#b9c0c4" stroke-width="1.4"/><path d="M21 13l-3-2v4z" fill="#b9c0c4"/><path d="M5 13l-2-2M5 13l-2 2" stroke="#79ab92" stroke-width="1.2"/></svg>',
+    chest: '<svg viewBox="0 0 26 26"><rect x="3" y="10" width="20" height="12" rx="1.5" fill="#6b4a2b" stroke="#3b2816"/><path d="M3 11c0-5 4-7 10-7s10 2 10 7z" fill="#80583a" stroke="#3b2816"/><path d="M3 11h20M8 4.6v17.4M18 4.6v17.4" stroke="#cfa850" stroke-width="1.4"/><rect x="11" y="11" width="4" height="5" rx="1" fill="#cfa850"/></svg>',
+    dagger: '<svg viewBox="0 0 26 26"><path d="M13 2l2.2 3.5v9.5h-4.4V5.5z" fill="#cdd5dc"/><path d="M8 15h10M13 15v7" stroke="#8a7a62" stroke-width="2.2" stroke-linecap="round"/><circle cx="13" cy="23" r="1.6" fill="#cfa850"/></svg>',
+    spectral: '<svg viewBox="0 0 26 26"><path d="M13 1.5l2.4 4v10h-4.8v-10z" fill="#d9ccff" opacity=".85"/><path d="M13 3c1 3 1 7 0 11" stroke="#fff" stroke-width=".8" opacity=".7"/><path d="M8 15.5h10M13 15.5v6.5" stroke="#b9a3e3" stroke-width="2.2" stroke-linecap="round"/><circle cx="13" cy="23" r="1.8" fill="#f0b43c"/></svg>',
     spear: '<svg viewBox="0 0 26 26"><rect x="12" y="7" width="2" height="17" rx="1" fill="#8a7a62" transform="rotate(25 13 15)"/><path d="M17 2l2 6-3 1z" fill="#b9c0c4"/></svg>',
     maul: '<svg viewBox="0 0 26 26"><rect x="12" y="9" width="2.4" height="15" rx="1" fill="#8a7a62"/><rect x="6" y="3" width="14" height="7" rx="2" fill="#8f8a80" stroke="#55514a"/></svg>',
     rapier: '<svg viewBox="0 0 26 26"><path d="M20 3l1.5 1.5-12 12-1.5-1.5z" fill="#d6dde0"/><path d="M6 14l6 6M7 21l-2 2" stroke="#cfa850" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -2227,8 +2262,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
     if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
     if (S.axe) items.push(["axe", "axe", "Vaelric's Axe <span class='gems'><i></i><i></i><i></i></span>",
-      (wpnKey() !== "axe" ? "On your back. " : arms().length ? "In your hand. " : "") + (S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft.") + (S.dull ? " The blade is pitted by slime." : "")]);
+      (wpnKey() !== "axe" ? "On your back. " : hasArms() ? "In your hand. " : "") + (S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft.") + (S.dull ? " The blade is pitted by slime." : "")]);
     weaponItems(items);
+    chestItems(items);
     if (S.shield && S.pitted) items.push(["shield", "shield", "Pauldron Shield", "Pitted by slug slime. No AC bonus until someone mends it."]);
     else if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
     if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
@@ -2281,8 +2317,22 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       li.innerHTML = ICONS[icon] + '<span><span class="name">' + name + '</span><span class="desc">' + desc + "</span></span>";
       const wk = weaponBtn(key);
       if (wk) {
-        const b = el("button", "use", "Wield it" + '<span class="tag">main hand</span>');
-        b.type = "button"; b.onclick = () => wield(wk);
+        const b = el("button", "use", (FOE.on ? "Swap to it" : "Wield it") + '<span class="tag">' + (!FOE.on ? "main hand" : !onHarness(wk) ? "from the pack · costs your next swing" : FOE.swapT === FOE.turn ? "second swap · it gets advantage" : "free this turn") + "</span>");
+        b.type = "button"; b.onclick = () => { const n = swapTo(wk); if (n) toastNote(n); };
+        li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
+      }
+      if (!FOE.on && key.startsWith("arm-") && S.axe) {
+        const hk = key.slice(4), on = harness().includes(hk);
+        if (on || harness().length < harnCap()) {
+          const b = el("button", "use", (on ? "Stow it" : "Ready it") + '<span class="tag">' + (on ? "off the harness, into the pack" : "onto the harness · " + harness().length + " of " + harnCap()) + "</span>");
+          b.type = "button"; b.onclick = () => harnToggle(hk);
+          li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
+        }
+      }
+      const cb = chestBtn(key);
+      if (cb) {
+        const b = el("button", "use", cb[0] + '<span class="tag">' + cb[1] + "</span>");
+        b.type = "button"; b.onclick = cb[2];
         li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
       }
       const u = usable.get(key);
@@ -2371,6 +2421,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         box.appendChild(b);
       });
       // In a fight, every prompt carries the quick-hands item button.
+      swapAttach(box, null);
       detach = beltAttach(box, box, main ? () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (detach) detach(); resolve(BELT_WON); } : null);
       add(box);
     });
@@ -2400,7 +2451,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (adv && dis) { adv = dis = false; }
     const atk = FOE.on && target === "AC";
     const cb = atk ? Math.min(2, FOE.chain) : 0;
-    const gu = atk ? gearHit() : 0, ru = atk ? adaptHit() : 0;
+    let gu = atk ? gearHit() : 0; const ru = atk ? adaptHit() : 0;
     mod += cb + gu + ru;
     const cob = coCheck(label);
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
@@ -2429,6 +2480,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const rollBtn = el("button", "primary", cta); rollBtn.type = "button";
       ctrl.appendChild(rollBtn);
       if (atk && !FOE.rounds) detach = beltAttach(card, ctrl, null);
+      if (atk) swapAttach(ctrl, () => {
+        const g = gearHit(); mod += g - gu; gu = g;
+        card.querySelector(".meta").innerHTML = ["d20 " + fmt(mod) + (cb ? ' <span class="combo-tag">(combo +' + cb + ")</span>" : "") + (gu ? ' <span class="combo-tag">(gear +' + gu + ")</span>" : "")].concat(metaBits.slice(1)).join(" · ");
+      });
       scrollNext = true;
       add(card);
 
@@ -2436,6 +2491,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (detach) { detach(); detach = null; }
         ctrl.innerHTML = "";
         out.innerHTML = "&nbsp;";
+        if (atk && FOE.lost) {
+          FOE.lost = false;
+          out.innerHTML = "<b class='bad'>No swing</b> · you're still dragging it out of your pack.";
+          scrollNext = true; await wait(450);
+          resolve({ ok: false, kept: 2, total: 0 }); return;
+        }
         const vals = dies.map(() => d(20));
         await Promise.all(dies.map((x, i) => spin(x, vals[i])));
         let ki = 0;
@@ -2493,8 +2554,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
   // An enemy attack you react to.
   function enemyAttack({ label, foe, bonus, dis = false, adv = false, cta }) {
+    if (FOE.on && FOE.ether > 0) {
+      FOE.ether--;
+      return (async () => {
+        await mech(label + ": it goes straight through you, like a hand through smoke." + (FOE.ether ? " (Ethereal: " + FOE.ether + " more.)" : " You come back into yourself, solid again."), "loot");
+        grant("ghosted");
+        if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
+        return false;
+      })();
+    }
     if (FOE.on && FOE.blind > 0 && !dis) { FOE.blind--; dis = true; label += " (half-blind)"; }
     if (FOE.on && FOE.prone) { FOE.prone = false; adv = true; label += " (you're down on one knee)"; }
+    if (FOE.on && FOE.flub) { FOE.flub = false; adv = true; label += " (you're caught mid-swap)"; }
     if (FOE.on && FOE.pitted > 0) { FOE.pitted--; bonus -= 2; label += " (climbing out, −2)"; }
     if (FOE.on && wxFoe()) { bonus += wxFoe(); label += " (" + WX[S.wx.k].name.toLowerCase() + " " + fmt(wxFoe()) + ")"; }
     if (FOE.on && FOE.lvd && foeAtkUp()) bonus += foeAtkUp();
@@ -2613,24 +2684,324 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     spear: { name: "Hollowpine Spear", icon: "spear", die: [1, 10, 2], hit: 1, price: 24, fx: "1d10 + 2, +1 to hit. Long reach: your first blow in each fight lands +1d4 before they close." },
     maul: { name: "Cairnstone Maul", icon: "maul", die: [2, 6, 2], hit: -1, price: 30, fx: "2d6 + 2, −1 to hit. Slow and brutal: a Rootbreaker with it lands +4 more." },
     rapier: { name: "Wasp-Needle Rapier", icon: "rapier", die: [1, 6, 3], hit: 2, price: 26, fx: "1d6 + 3, +2 to hit. Light and quick: it finds gaps the axe can't." },
-    brand: { name: "Cinderbrand", icon: "brand", die: [1, 8, 2], hit: 0, price: 36, fx: "1d8 + 2. A sword with a coal in the fuller: every hit sears for +1d4 fire." }
+    brand: { name: "Cinderbrand", icon: "brand", die: [1, 8, 2], hit: 0, price: 36, fx: "1d8 + 2. A sword with a coal in the fuller: every hit sears for +1d4 fire." },
+    bow: { name: "Thornwood Longbow", icon: "bow", die: [1, 8, 2], hit: 1, price: 40, ac: ["onslaught"], fx: "1d8 + 2, +1 to hit. <b>Onslaught</b>: once a fight, loose three arrows at once, each finding its own target." }
   };
   const arms = () => (S.arms = S.arms || []);
-  const wpnKey = () => (S.axe && S.wpn && S.wpn !== "axe" && WEAPONS[S.wpn] && arms().includes(S.wpn)) ? S.wpn : "axe";
-  const wpnHit = () => S.axe ? WEAPONS[wpnKey()].hit : 0;
+  // The shop weapons' tricks, as traits, so field weapons can carry the same ones.
+  const SHOP_TR = { spear: ["first"], maul: ["crush"], brand: ["fire"], bow: ["first"] };
+
+  // ---------- field weapons: found after fights, in five qualities ----------
+  // Won fights can drop a weapon. Five qualities, each with its own colour (deliberately not the
+  // grey/white/green/blue/purple/orange other games use): Ashen, Tempered, Rootbound, Gloaming and
+  // Heartfire. Better ones hit harder, carry traits (always on) and actives (once a fight, used
+  // with quick hands). Heartfire drops 0.34% of the time, with a safety net: every won fight
+  // without one adds 0.05%, and the 200th dry fight in a row always drops one.
+  const ARM_TIERS = {
+    ashen: { name: "Ashen", rank: 0, dmg: -1, hit: 0, tr: 0, ac: 0, odds: 12, sell: 2 },
+    tempered: { name: "Tempered", rank: 1, dmg: 0, hit: 0, tr: 0, ac: 0, odds: 8, sell: 5 },
+    rootbound: { name: "Rootbound", rank: 2, dmg: 1, hit: 0, tr: 1, ac: 0, odds: 4, sell: 12 },
+    gloaming: { name: "Gloaming", rank: 3, dmg: 2, hit: 1, tr: 1, ac: 1, odds: 1.5, sell: 30 },
+    heartfire: { name: "Heartfire", rank: 4, dmg: 3, hit: 1, tr: 2, ac: 1, odds: 0.34, sell: 80 }
+  };
+  const PITY_STEP = 0.05, PITY_CAP = 200, LOOT_MAX = 6;
+  const ARM_BASES = {
+    dagger: { name: "Dagger", icon: "dagger", die: [1, 4, 2], hit: 2 },
+    hatchet: { name: "Hatchet", icon: "axe", die: [1, 6, 2], hit: 1 },
+    spear: { name: "Spear", icon: "spear", die: [1, 10, 1], hit: 1 },
+    sword: { name: "Sword", icon: "rapier", die: [1, 8, 2], hit: 0 },
+    maul: { name: "Maul", icon: "maul", die: [2, 6, 1], hit: -1 },
+    glaive: { name: "Glaive", icon: "spear", die: [1, 12, 1], hit: -1 },
+    bow: { name: "Bow", icon: "bow", die: [1, 8, 1], hit: 1 }
+  };
+  const ARM_TR = {
+    first: "Reach: your first blow each fight lands +1d4.",
+    fire: "Searing: every hit burns for +1d4 fire.",
+    crush: "Crushing: a Rootbreaker lands +4 more.",
+    keen: "Keen: +1d6 against a foe under half its health.",
+    drink: "Thirsting: every hit gives you back 1d3 HP."
+  };
+  const ARM_AC = {
+    phase: { name: "Phase Strike", fx: "once a fight, the blade slips through armour and flesh alike for 34 damage" },
+    ether: { name: "Become Ethereal", fx: "once a fight, the next two blows at you pass straight through" },
+    flare: { name: "Heartflare", fx: "once a fight, a burst of fire for 3d6 that blinds its next attack" },
+    mend: { name: "Sap Mend", fx: "once a fight, the grip bleeds warm sap into your hand for 2d6 + 2 HP" },
+    hush: { name: "Gloam Veil", fx: "once a fight, dusk pours off the blade: its next two attacks have disadvantage" },
+    onslaught: { name: "Onslaught", fx: "once a fight, loose three arrows at once, each finding its own target" }
+  };
+  const ARM_NAMES = {
+    ashen: ["Pitted", "Notched", "Rust-flecked", "Bent", "Scorched"],
+    tempered: ["Sound", "Well-kept", "Drover's", "Watchman's", "Plain"],
+    rootbound: ["Thornwake", "Mossgrip", "Barkbitten", "Briarhook", "Rootsung"],
+    gloaming: ["Duskwhisper", "Vesper", "Owl-light", "Lastlight", "Gloamtongue"],
+    heartfire: ["Emberheart", "Suncore", "Kindlewrath", "Hearthbrand", "Coalcrown"]
+  };
+  const ARM_PLACES = ["of the Hushfen", "of Carrowmere", "of Lastwell", "of Sulmara", "of Thrumhold", "of Ammaret", "of Kedge", "of Rahdaria", "of the Ember Root"];
+  const armLoot = () => {
+    S.armLoot = S.armLoot || [];
+    const held = chestUids();
+    if (held.size && S.armLoot.some(x => held.has(x.uid))) S.armLoot = S.armLoot.filter(x => !held.has(x.uid));
+    return S.armLoot;
+  };
+  const newUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  // ---------- the Warden's Weapon Chest ----------
+  // Sold by Hobb Tallis (or Mattie Gorse in Rahdaria) once you reach level 40, for 1,000 gold. It's
+  // stored apart from every save, so it's shared by all three save slots, and nothing that happens
+  // to a run (a death, a replay from your last rest, Rahdaria Falls) touches what's in it.
+  // Six places. A weapon in the chest isn't carried; take it out from the Bag to wield it again.
+  const CHEST_KEY = KEY + "-chest", CHEST_MAX = 6, CHEST_COST = 1000;
+  function chest() {
+    try { const c = JSON.parse(localStorage.getItem(CHEST_KEY) || "null"); if (c && Array.isArray(c.items)) return c; } catch (e) {}
+    return { owned: false, items: [] };
+  }
+  function chestPut(c) { try { localStorage.setItem(CHEST_KEY, JSON.stringify(c)); } catch (e) {} }
+  const chestOwned = () => chest().owned;
+  function chestUids() { const c = chest(); return new Set(c.owned ? c.items.map(x => x.uid).filter(Boolean) : []); }
+  function chestBank(k) {
+    const c = chest(), L = lootOf(k);
+    if (!c.owned || !L || c.items.length >= CHEST_MAX || FOE.on || k === wpnKey()) return;
+    if (!L.uid) L.uid = newUid();
+    c.items.push(Object.assign({}, L)); chestPut(c);
+    S.armLoot = S.armLoot.filter(x => x !== L);
+    renderSheet(); if (started) save();
+  }
+  function chestTake(i) {
+    const c = chest(), L = c.items[i];
+    if (!L || FOE.on || armLoot().length >= LOOT_MAX) return;
+    c.items.splice(i, 1); chestPut(c);
+    S.lootN = (S.lootN || 0) + 1;
+    S.armLoot.push(Object.assign({}, L, { id: S.lootN })); harnAdd("L" + S.lootN);
+    renderSheet(); if (started) save();
+  }
+  function chestItems(items) {
+    const c = chest();
+    if (!c.owned) return;
+    items.push(["chest", "chest", "Warden's Weapon Chest", c.items.length + " of " + CHEST_MAX + " places used. Shared by all your save slots: what's in it is safe whatever happens to this run. Bank a found weapon from the Bag (not mid-fight, not the one in your hand)."]);
+    c.items.forEach((L, i) => {
+      const T = ARM_TIERS[L.t];
+      items.push(["chest-" + i + "-" + (L.uid || i), L.icon || ARM_BASES[L.b].icon, '<span class="q q-' + L.t + '">' + L.n + "</span>", '<span class="q q-tier q-' + L.t + '">' + T.name + "</span> · In the Weapon Chest."]);
+    });
+  }
+  // The Bag's chest buttons for one item row: [label, tag, onclick] or null.
+  function chestBtn(key) {
+    const c = chest();
+    if (!c.owned || FOE.on) return null;
+    if (key.startsWith("arm-L") && c.items.length < CHEST_MAX) return ["Bank it", "into the chest", () => chestBank(key.slice(4))];
+    const m = /^chest-(\d+)-/.exec(key);
+    if (m) return armLoot().length < LOOT_MAX ? ["Take it out", "back in your pack", () => chestTake(+m[1])] : null;
+    return null;
+  }
+  async function chestOffer(where) {
+    if (chestOwned() || lv() < LV_MAX || S.coins < CHEST_COST) return false;
+    const c = await choose([{ key: "y", label: "Buy the Warden's Weapon Chest", tag: CHEST_COST + " gold · 6 places, safe through any death, shared by all your save slots" }, { key: "n", label: "Not now", plain: true }]);
+    if (c !== "y") return false;
+    S.coins -= CHEST_COST;
+    const C = chest(); C.owned = true; chestPut(C);
+    renderSheet(); if (started) save();
+    grant("chest");
+    await mech("Gain the <b>Warden's Weapon Chest</b> (" + CHEST_COST + " gold). Bank found weapons into it from the Bag. Whatever's in it is safe through any death or replay, and every one of your save slots can reach it.", "loot");
+    return true;
+  }
+  async function chestStall(C) {
+    if (chestOwned() || lv() < LV_MAX || S.coins < CHEST_COST || S.chestSeen === C.slug) return;
+    S.chestSeen = C.slug;
+    await say("Hobb Tallis has something new on the cart: an iron-bound chest with warden's oak leaves burned into the lid. \"For somebody who's come a long way,\" he says, and looks you up and down. \"You have. Whatever you put in this stays put. Fire, flood, the Bloom, your own death. I've seen it.\"");
+    await chestOffer();
+  }
+  const lootOf = (k) => typeof k === "string" && k[0] === "L" ? armLoot().find(x => "L" + x.id === k) : null;
+  const armPick = (a) => a[d(a.length) - 1];
+  function wDef(k) {
+    if (WEAPONS[k]) return Object.assign({ tr: SHOP_TR[k] || [], ac: [] }, WEAPONS[k]);
+    const L = lootOf(k);
+    if (!L) return WEAPONS.axe;
+    const B = ARM_BASES[L.b], T = ARM_TIERS[L.t];
+    const die = L.die || [B.die[0], B.die[1], Math.max(0, B.die[2] + T.dmg)];
+    const hit = L.hit != null ? L.hit : B.hit + T.hit;
+    const fx = die[0] + "d" + die[1] + (die[2] ? " + " + die[2] : "") + (hit ? ", " + fmt(hit) + " to hit" : "") + "." +
+      (L.tr || []).map(t => " " + ARM_TR[t]).join("") + (L.ac || []).map(a => " <b>" + ARM_AC[a].name + "</b>: " + ARM_AC[a].fx + ".").join("") + (L.lore ? " " + L.lore : "");
+    return { name: L.n, icon: L.icon || B.icon, die, hit, tr: L.tr || [], ac: L.ac || [], t: L.t, fx, found: true };
+  }
+  const armName = (k) => { const W = wDef(k); return W.t ? '<span class="q q-' + W.t + '">' + W.name + "</span>" : W.name; };
+  const wTier = (k) => { const W = wDef(k); return W.t ? '<span class="q q-tier q-' + W.t + '">' + ARM_TIERS[W.t].name + "</span> · " : ""; };
+  const owns = (k) => k === "axe" || arms().includes(k) || !!lootOf(k);
+  const wpnKey = () => (S.axe && S.wpn && S.wpn !== "axe" && owns(S.wpn)) ? S.wpn : "axe";
+  const wpnHit = () => S.axe ? wDef(wpnKey()).hit : 0;
+  const hasArms = () => arms().length > 0 || armLoot().length > 0;
   function wield(k) {
-    if (k !== "axe" && !arms().includes(k)) return;
+    if (!owns(k)) return;
     S.wpn = k; renderSheet(); if (started) save();
+    if (k !== "axe") grant("armed");
   }
   function weaponItems(items) {
-    if (!S.axe || !arms().length) return;
-    const cur = wpnKey();
-    if (cur !== "axe") items.push(["wpn", WEAPONS[cur].icon, "Main hand: " + WEAPONS[cur].name, WEAPONS[cur].fx]);
-    arms().filter(k => k !== cur).forEach(k => items.push(["arm-" + k, WEAPONS[k].icon, WEAPONS[k].name, "On your back. " + WEAPONS[k].fx]));
+    if (!S.axe || !hasArms()) return;
+    const cur = wpnKey(), all = arms().concat(armLoot().map(x => "L" + x.id));
+    if (cur !== "axe") items.push(["wpn", wDef(cur).icon, "Main hand: " + armName(cur), wTier(cur) + wDef(cur).fx]);
+    all.filter(k => k !== cur).forEach(k => items.push(["arm-" + k, wDef(k).icon, armName(k), wTier(k) + (harness().includes(k) ? "On your harness (" + harness().length + " of " + harnCap() + "). " : "In your pack. ") + wDef(k).fx]));
+  }
+  // A weapon's worth for the carry limit: quality first, then its average blow.
+  const wScore = (k) => { const W = wDef(k); return (W.t ? ARM_TIERS[W.t].rank : 1) * 100 + W.die[0] * (W.die[1] + 1) / 2 + W.die[2] + W.hit * 2 + W.tr.length * 3; };
+  function makeLoot(t) {
+    const b = armPick(Object.keys(ARM_BASES)), B = ARM_BASES[b], T = ARM_TIERS[t];
+    const trs = Object.keys(ARM_TR).filter(x => !(b === "spear" && x === "first")), tr = [];
+    while (tr.length < T.tr) { const x = armPick(trs); if (!tr.includes(x)) tr.push(x); }
+    const ac = !T.ac ? [] : b === "bow" ? ["onslaught"] : [armPick(Object.keys(ARM_AC).filter(x => x !== "onslaught"))];
+    const n = T.rank <= 1 ? armPick(ARM_NAMES[t]) + " " + B.name : T.rank === 2 ? armPick(ARM_NAMES[t]) + " " + B.name : armPick(ARM_NAMES[t]) + ", " + B.name + " " + armPick(ARM_PLACES);
+    S.lootN = (S.lootN || 0) + 1;
+    return { id: S.lootN, uid: newUid(), b, t, n, tr, ac };
+  }
+  function gainLoot(L) {
+    armLoot().push(L); harnAdd("L" + L.id);
+    const out = [];
+    while (armLoot().length > LOOT_MAX) {
+      const cand = armLoot().filter(x => "L" + x.id !== wpnKey() && !x.keep).sort((a, b) => wScore("L" + a.id) - wScore("L" + b.id))[0];
+      if (!cand) break;
+      S.armLoot = armLoot().filter(x => x !== cand);
+      const g = ARM_TIERS[cand.t].sell; S.coins += g; out.push(armName("L" + cand.id) + " (" + g + " gold)");
+    }
+    if (L.t !== "ashen" && L.t !== "tempered") grant("rootfind");
+    if (ARM_TIERS[L.t].rank >= 3) grant("gloamfind");
+    grant("fieldarms");
+    return out;
+  }
+  // Rolled once per won fight (foe down). Returns the spoils line, or "".
+  function lootDrop() {
+    if (!S.axe) return "";
+    S.pity = (S.pity || 0) + 1;
+    const hf = S.pity >= PITY_CAP ? 100 : ARM_TIERS.heartfire.odds + PITY_STEP * (S.pity - 1);
+    let r = Math.random() * 100, t = null;
+    if (r < hf) t = "heartfire";
+    else {
+      r = Math.random() * 100;
+      for (const k of ["gloaming", "rootbound", "tempered", "ashen"]) { if (r < ARM_TIERS[k].odds) { t = k; break; } r -= ARM_TIERS[k].odds; }
+    }
+    if (!t) return "";
+    if (t === "heartfire") { S.pity = 0; grant("heartfind"); }
+    const L = makeLoot(t), sold = gainLoot(L);
+    const k = "L" + L.id;
+    if (ARM_TIERS[t].rank >= 3) SND.cheers && SND.cheers(0.6);
+    return (ARM_TIERS[t].rank >= 3 ? "something catches the light in the wreck: " : "there's a weapon in the mess: ") + wTier(k) + "<b>" + armName(k) + "</b> (" + wDef(k).fx + " Wield it from the Bag.)" +
+      (sold.length ? " Your pack won't take more than " + LOOT_MAX + " found weapons, so you sell off " + sold.join(", ") + " to the next peddler on the road" : "");
+  }
+  // The Curator's vault: the Spectral Dagger of Rahdaria, always.
+  async function spectralDagger() {
+    if (!S.axe || armLoot().some(x => x.spec) || (chestOwned() && chest().items.some(x => x.spec))) return;
+    S.lootN = (S.lootN || 0) + 1;
+    const L = { id: S.lootN, uid: newUid(), b: "dagger", t: "heartfire", n: "Spectral Dagger of Rahdaria", icon: "spectral", die: [1, 6, 4], hit: 2, tr: [], ac: ["phase", "ether"], spec: true, keep: true,
+      lore: "Half of it isn't here: the blade is there when you look at it, and gone at the corner of your eye." };
+    const sold = gainLoot(L);
+    grant("spectral");
+    await say("On the stand where the Curator knelt, beside his little book, there's a dagger you can see through. Not glass: it's as if somebody drew a dagger on the air in pale ink and forgot to finish it. When you close your hand on the grip, it's solid. When you let go, your fingers pass through it.");
+    await mech("<span>" + wTier("L" + L.id) + "Gain the <b>" + armName("L" + L.id) + "</b>. " + wDef("L" + L.id).fx + (sold.length ? " (You sell off " + sold.join(", ") + " to make room.)" : "") + "</span>", "loot find q-heartfire");
+    const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep what you're holding", plain: true }]);
+    if (c === "y") { wield("L" + L.id); await mech("<span>Main hand: " + armName("L" + L.id) + ". Its actives are on quick hands: Phase Strike for 34, and Become Ethereal.</span>"); }
+  }
+  // The actives on your main hand that you haven't used this fight, for quick hands.
+  function wpnActives(o) {
+    if (!S.axe || !FOE.on) return;
+    const W = wDef(wpnKey());
+    (W.ac || []).forEach(a => { if (!(FOE.wUsed || []).includes(wpnKey() + ":" + a)) o.push({ key: "wa-" + a, label: ARM_AC[a].name + " (" + W.name + ")", tag: a === "phase" ? (FOE.unit ? "drops one" : "34 damage") + " · once a fight" : a === "onslaught" ? (FOE.unit ? "up to 3 targets" : "3 arrows, 3d6") + " · once a fight" : a === "ether" ? "next 2 blows pass through · once a fight" : "once a fight" }); });
+  }
+  async function wpnActive(a, t, mult, main) {
+    (FOE.wUsed = FOE.wUsed || []).push(wpnKey() + ":" + a);
+    if (a === "phase") {
+      await say("The blade goes pale as smoke, and you don't so much strike as step the dagger through the space where " + (FOE.unit ? "they are" : "it is") + ".");
+      if (FOE.unit) { await beltHurt(1, 6, Math.max(1, mult), "Phase Strike", main); return; }
+      let total = Math.max(1, Math.round(34 * mult)), held = "";
+      if (!main && total >= FOE.hp) { total = Math.max(0, FOE.hp - 1); held = " It staggers, but it's still up."; }
+      FOE.hp = Math.max(0, FOE.hp - total); renderFoe(); if (total) foePop("−" + total, true);
+      await mech("Phase Strike: it ignores armour and lands " + (mult > 1 ? "34, perfect, ×1.5 = " : mult < 1 ? "34, fumbled, half = " : "") + total + "." + held + " " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+      grant("phased");
+    } else if (a === "ether") {
+      FOE.ether = t === "perfect" ? 3 : t === "fumble" ? 1 : 2;
+      await say("You let go of yourself, a little. Your hands go thin as breath, and you can see the floor through your boots.");
+      await mech("Ethereal: the next " + (FOE.ether > 1 ? FOE.ether + " blows" : "blow") + " at you " + (FOE.ether > 1 ? "pass" : "passes") + " straight through.", "loot");
+    } else if (a === "flare") {
+      await say("The blade flares like a coal you blew on.");
+      await beltHurt(3, 6, mult, "Heartflare", main);
+      if (t !== "fumble") FOE.blind = Math.max(FOE.blind, 1);
+    } else if (a === "mend") {
+      await beltMend(Math.max(1, Math.floor((d(6) + d(6) + 2) * mult)), "Warm sap seeps out of the grip and into the cuts on your hand, and spreads.");
+    } else if (a === "onslaught") {
+      await say("You pull three arrows from the quiver in one grab, nock them fanned across the string, and let them all go at once.");
+      if (FOE.F && FOE.F.volley) await FOE.F.volley(t, main);
+      else if (FOE.unit) {
+        const n = Math.min(FOE.hp, t === "fumble" ? 1 : t === "perfect" ? 3 : 2), keep = main ? n : Math.min(n, FOE.hp - 1);
+        if (keep > 0) foeHit(keep);
+        await mech("Onslaught: three arrows, three targets. " + (keep > 1 ? keep + " of them go down." : keep === 1 ? "One goes down." : "They scatter.") + (t === "fumble" ? " (Fumbled: the others go wide.)" : ""), "loot");
+      } else {
+        const rolls = [d(6), d(6), d(6)], raw = rolls.reduce((x, y) => x + y, 0);
+        let total = Math.max(1, Math.floor(raw * mult)), held = "";
+        if (!main && total >= FOE.hp) { total = Math.max(0, FOE.hp - 1); held = " It staggers, but it's still up."; }
+        FOE.hp = Math.max(0, FOE.hp - total); renderFoe(); if (total) foePop("−" + total);
+        await mech("Onslaught: three arrows, each in a different gap: 3d6 → " + rolls.join(" + ") + " = " + raw + (mult > 1 ? ", perfect ×1.5 = " + total : mult < 1 ? ", fumbled, half = " + total : "") + "." + held + " " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+      }
+    } else if (a === "hush") {
+      FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : t === "perfect" ? 3 : 2);
+      await mech("Gloam Veil: dusk pours off the blade. " + (FOE.blind > 1 ? "Its next " + FOE.blind + " attacks have" : "Its next attack has") + " disadvantage.", "loot");
+    }
+  }
+  // A brief note over the Bag (for a swap made from it mid-fight).
+  function toastNote(t) {
+    const n = el("div", "swap-toast", t); document.body.appendChild(n);
+    setTimeout(() => n.remove(), 2600);
+  }
+  // ---------- the weapon harness: what you can reach mid-fight ----------
+  // Four weapons ride ready on your harness (five from level 20, six at level 40), plus the axe,
+  // which is always within reach. In a fight, a swap to a harness weapon is free once a turn; a
+  // second swap in the same turn gives the foe advantage on its next attack (you're caught mid-swap);
+  // a weapon from your pack costs your next swing while you dig it out. Each weapon's active works
+  // once a fight, so swapping between them is how you chain them.
+  const harnCap = () => 4 + (lv() >= 20 ? 1 : 0) + (lv() >= LV_MAX ? 1 : 0);
+  function harness() {
+    if (!Array.isArray(S.harn)) S.harn = arms().concat(armLoot().map(x => "L" + x.id)).slice(0, harnCap());
+    S.harn = S.harn.filter((k, i, a) => k !== "axe" && owns(k) && a.indexOf(k) === i).slice(0, harnCap());
+    return S.harn;
+  }
+  const onHarness = (k) => k === "axe" || k === wpnKey() || harness().includes(k);
+  function harnAdd(k) { const h = harness(); if (!h.includes(k) && h.length < harnCap()) h.push(k); }
+  function harnToggle(k) {
+    if (FOE.on) return;
+    const h = harness();
+    if (h.includes(k)) S.harn = h.filter(x => x !== k); else if (h.length < harnCap()) h.push(k);
+    renderSheet(); if (started) save();
+  }
+  // Swap in a fight (or just wield, out of one). Returns a short note on what it cost.
+  function swapTo(k) {
+    if (!owns(k) || k === wpnKey()) return "";
+    if (!FOE.on) { wield(k); return ""; }
+    let note;
+    if (!onHarness(k)) { FOE.lost = true; note = "Out of the pack: it costs your next swing."; }
+    else if (FOE.swapT === FOE.turn) { FOE.flub = true; note = "Second swap this turn: it gets advantage on its next attack."; }
+    else note = "Swapped. Free this turn.";
+    FOE.swapT = FOE.turn;
+    wield(k);
+    return note;
+  }
+  // The Swap button on fight prompts: opens a row of everything you can reach, harness first.
+  function swapAttach(row, after) {
+    if (!FOE.on || !S.axe || !hasArms()) return;
+    const btn = el("button", "swap-btn plain", "Swap weapon" + '<span class="tag">' + armName(wpnKey()) + " in hand</span>");
+    btn.type = "button";
+    const tray = el("div", "swap-tray"); tray.hidden = true;
+    const note = el("p", "swap-note", "");
+    const paint = () => {
+      tray.innerHTML = "";
+      const all = ["axe"].concat(harness()).concat(arms().concat(armLoot().map(x => "L" + x.id)).filter(k => !harness().includes(k)));
+      all.filter(k => k !== wpnKey()).forEach(k => {
+        const free = onHarness(k), twice = free && FOE.swapT === FOE.turn;
+        const b = el("button", "plain" + (free ? "" : " pack"), armName(k) + '<span class="tag">' + (!free ? "from the pack · costs your next swing" : twice ? "second swap · it gets advantage" : "harness · free") + "</span>");
+        b.type = "button";
+        b.onclick = () => { note.textContent = swapTo(k); btn.innerHTML = "Swap weapon" + '<span class="tag">' + armName(wpnKey()) + " in hand</span>"; tray.hidden = true; if (after) after(); };
+        tray.appendChild(b);
+      });
+    };
+    btn.onclick = () => { paint(); tray.hidden = !tray.hidden; };
+    row.append(btn, tray, note);
   }
   // The swap buttons in the Bag: every weapon you own that isn't in your hand.
   function weaponBtn(key) {
-    if (!S.axe || !arms().length) return null;
+    if (!S.axe || !hasArms()) return null;
     const k = key === "axe" ? "axe" : key.startsWith("arm-") ? key.slice(4) : null;
     if (!k || k === wpnKey()) return null;
     return k;
@@ -2640,11 +3011,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function wpnStrike(count, sides, bonus, label) {
     const k = wpnKey();
     if (k === "axe" || !/^Axe damage/.test(label)) return null;
-    const W = WEAPONS[k];
+    const W = wDef(k);
     let b = bonus - WEAPONS.axe.die[2] + W.die[2];
     if (/\(dulled\)/.test(label)) { b += 1; label = label.replace(" (dulled)", ""); }
     if (/\(honed\)/.test(label)) { b -= 1; label = label.replace(" (honed)", ""); }
-    return { count: W.die[0], sides: W.die[1], bonus: b, label: label.replace(/^Axe damage/, W.name + " damage"), k };
+    return { count: W.die[0], sides: W.die[1], bonus: b, label: label.replace(/^Axe damage/, W.name + " damage"), k, tr: W.tr };
   }
   async function armoury(C) {
     const left = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
@@ -2658,7 +3029,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await buyWeapon(c, WEAPONS[c].price, "Hobb wraps the grip fresh for you and won't take a tip.");
   }
   async function buyWeapon(k, price, line) {
-    S.coins -= price; arms().push(k); renderSheet();
+    S.coins -= price; arms().push(k); harnAdd(k); renderSheet();
     await mech("Gain <b>" + WEAPONS[k].name + "</b> (" + price + " gold). " + WEAPONS[k].fx + " " + line, "loot");
     const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep the axe in hand", plain: true }]);
     if (c === "y") { wield(k); await mech("Main hand: <b>" + WEAPONS[k].name + "</b>. The axe goes on your back, where it can still keep you alive."); }
@@ -2933,7 +3304,33 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
     if (r === "back") return;
     roamFight = true;
-    try { await meetBeast(r, { roam: true }); } finally { roamFight = false; }
+    // What you meet: usually one creature, sometimes a pack of them, and with the Cascades running,
+    // now and then a whole Cascade-drowned company with its armoured captains.
+    const roll = d(6);
+    try {
+      if (cascadeOn() && roll === 6) await cascadeCompany(r);
+      else await meetBeast(r, { roam: true, pack: roll >= 4 });
+    } finally { roamFight = false; }
+  }
+  async function cascadeCompany(reg) {
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>A Cascade-drowned company</h2>");
+    scrollNext = true; add(h);
+    await say("Black water is falling upward off the road ahead in a rope as thick as a tower, and under it, standing in ranks as if somebody forgot to dismiss them three hundred years ago, there's a company: ten of them, soaked through and silver-eyed, and in front of them two in plate gone green with the Cascade, with drowned plumes.");
+    await say("The captains turn their heads together. The ranks close up.");
+    const c = await choose([{ key: "fight", label: "Fight the company", tag: "a full company · 2 armoured captains · Lv " + lv() + " Nightmares" }, { key: "leave", label: "Go round", plain: true }]);
+    if (c === "leave") { await say("You go the long way, through the brush, and hear them marking time behind you on the road for a long while."); light(back); return; }
+    const names = [["Cascade-Captain Aldous Merrow", "Cascade-Captain Ines Varl"], ["Cascade-Captain Brannoc Seyle", "Cascade-Captain Hollis Drane"], ["Cascade-Captain Edda Quarrel", "Cascade-Captain Moss Ivory"]][d(3) - 1];
+    const F = await companyFight({
+      soldiers: 10, captains: names, capHp: 24, capThem: "them",
+      capWhy: "The captain's sword comes down with three hundred years of drill behind it.", capMiss: "Your blow slides off Cascade-green plate, and the ranks shove you back.",
+      F: { name: "A Cascade-drowned company", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", who: "the drowned company", whoShort: "Company", hitWhy: "A drowned soldier's blade opens your arm.", miss: "The blade cuts black water out of the air.", hitLine: "One of them comes apart into falling water.", road: true }
+    });
+    light(back);
+    if (F.fled) return;
+    grant("company");
+    await gold(3, 6 + 4, "Their pay-chests are still on the baggage cart, three hundred years late.");
+    xpGain(60);
   }
   async function roamSeek() {
     const left = relicsLeft();
@@ -3022,14 +3419,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
+  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
@@ -3116,9 +3513,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     let { total, txt, rb } = await comboDamage(count, sides, bonus, label);
     if (w) {
       const add = [];
-      if (w.k === "spear" && !FOE.reach) { FOE.reach = true; const r = d(4); total += r; add.push("+" + r + " reach"); }
-      if (w.k === "brand") { const r = d(4); total += r; add.push("+" + r + " fire"); }
-      if (w.k === "maul" && rb) { total += 4; add.push("+4 maul"); }
+      const tr = w.tr || [];
+      if (tr.includes("first") && !FOE.reach) { FOE.reach = true; const r = d(4); total += r; add.push("+" + r + " reach"); }
+      if (tr.includes("fire")) { const r = d(4); total += r; add.push("+" + r + " fire"); }
+      if (tr.includes("crush") && rb) { total += 4; add.push("+4 crushing"); }
+      if (tr.includes("keen") && FOE.hp < FOE.max / 2) { const r = d(6); total += r; add.push("+" + r + " keen"); }
+      if (tr.includes("drink") && S.hp > 0) { const r = Math.min(d(3), hpCap() - S.hp); if (r > 0) { S.hp += r; renderSheet(); add.push("you drink back " + r + " HP"); } }
       if (add.length) txt += " (" + add.join(", ") + ": " + total + " in all.)";
     }
     FOE.hp = Math.max(0, FOE.hp - total);
@@ -3176,6 +3576,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     trapBelt(o);
     if (S.cullet) o.push({ key: "cullet", label: "Fling a fistful of cullet", tag: "its next attack is half-blind · " + S.cullet + " left" });
     waxItems(o);
+    wpnActives(o);
     return o;
   }
   // The timing catch. Resolves "perfect", "clean" or "fumble".
@@ -3291,6 +3692,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (t === "fumble") await mech("It goes wide. Only a little of it finds the eyes.", "hurt");
       else { FOE.blind = Math.max(FOE.blind, t === "perfect" ? 2 : 1); await mech("Half-blind: " + (t === "perfect" ? "the next two attacks against you have" : "the next attack against you has") + " disadvantage.", "loot"); }
     } else if (key === "wax" || /^print\d$/.test(key)) await waxUse(key, mult, t);
+    else if (key.startsWith("wa-")) await wpnActive(key.slice(3), t, mult, main);
     renderSheet();
     await mech(t === "perfect" ? "Perfect timing: your hands are free again next turn." : "Your next item is ready in " + BELT_CD + " turns.");
   }
@@ -3375,6 +3777,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!got.extra) bits.push("a loose leaf of old vellum turns up in the mess, written in a cramped teaching hand (Scroll of Acquisition: " + S.leaves + " of " + LEAVES + " leaves)");
     if (down && S.mimic && (S.wax || 0) < WAX_MAX && d(cascadeOn() ? 2 : 4) === 1) { S.wax = (S.wax || 0) + 1; bits.push("there's a lump of grey Mockwax caught in a seam of " + (FOE.unit ? "their" : "its") + " hide (" + S.wax + " now)"); }
     if (bits.length) add(el("p", "mech loot", "Spoils: " + bits.join(", and ") + "."));
+    const lt = down ? lootDrop() : "";
+    if (lt) add(el("p", "mech loot find", "<span>Found: " + lt + ".</span>"));
   }
   async function spoilsTurnIn() {
     // With Trapcraft and a schematic, you keep metal and cloth for parts (up to a pack's worth) and sell the rest.
@@ -3654,6 +4058,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (i >= 5 && c.burr === null) await meetBurr(i);
     if (i === C.from && POSTS[C.slug] && c.post !== C.slug && !c.merc) await hirePost(C);
     if (i === C.from && S.axe) await armoury(C);
+    if (i === C.from && S.axe) await chestStall(C);
     if (i === C.from && coAll().length > 2 && !(c.party && c.party.length === 2 && c.party.every(id => coAll().includes(id)))) await rxParty();
   }
 
@@ -8357,7 +8762,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       if (F.before) { await F.before(st); if (FOE.hp <= 0) break; }
-      const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : "Swing the axe", tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
+      const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with the " + wDef(wpnKey()).name, tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
@@ -8917,7 +9322,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   // A creature of the region on the road. roam: walked into on the roads back (you can let it go);
   // forced: it won't let you slip past. Once the Cascades wake, every creature is a Nightmare.
-  async function meetBeast(reg, { roam = false, forced = false } = {}) {
+  async function meetBeast(reg, { roam = false, forced = false, pack = false } = {}) {
     S.met = S.met || [];
     const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
     const from = unmet.length ? unmet : pool, B = from[d(from.length) - 1];
@@ -8925,7 +9330,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const isNew = !(J.beasts && J.beasts[B.id]);
     beastLog(B, false);
     const back = document.body.dataset.light;
-    const nm = cascadeOn(), nmName = (nm ? "Nightmare " : "") + B.name;
+    const nm = cascadeOn(), many = pack && !B.heads ? 2 + d(2) : 0, nmName = (many ? "A pack of " + many + " " : "") + (nm ? "Nightmare " : "") + B.name;
     const h = el("div", "part-head sub", '<span class="num">' + (roam ? "The roads back" : "On the road") + " · " + REGIONS[reg] + "</span><h2>" + nmName + "</h2>");
     scrollNext = true; add(h);
     await wxRoad(reg);
@@ -8949,7 +9354,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const q = QUIRKS[B.quirk] || {};
     const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
       stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
-    if (B.heads) { F.heads = B.heads; F.unit = B.unit; } else F.hp = B.hp;
+    if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
+    if (many) await say("And it isn't alone. There are " + many + " of them, and they spread out to come at you from different sides.");
     F.terrain = roadTerrain(reg);
     if (F.terrain) await say("Off to one side there's " + F.terrain[0] + ", and it doesn't look as solid as it should. You could bring it down on " + (B.heads ? "them" : "it") + ".");
     const tells = hasMark("tells");
@@ -12765,10 +13171,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const c = await choose([
         { key: "scale", label: "A Rahdarian scale shirt", tag: priceTag(30) + " · +1 AC", show: !hasGear("scale") && S.coins >= rhPrice(30) },
         { key: "whet", label: "Have her hone and balance the axe", tag: priceTag(15) + " · +1 axe damage", show: S.axe && !S.whet && S.coins >= rhPrice(15), plain: true },
+        { key: "chest", label: "Ask about the iron-bound chest under her bench", tag: CHEST_COST + " gold · level 40", show: S.axe && !chestOwned() && lv() >= LV_MAX && S.coins >= CHEST_COST, plain: true },
         ...Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k)).map(k => ({ key: "w-" + k, label: "Buy the " + WEAPONS[k].name + " off her rack", tag: priceTag(WEAPONS[k].price) + " · " + WEAPONS[k].fx, show: S.axe && S.coins >= rhPrice(WEAPONS[k].price), plain: true })),
         { key: "done", label: "Leave the smithy", plain: true }
       ]);
       if (c === "done") return;
+      if (c === "chest") { await say("Mattie drags an iron-bound chest out from under the bench. \"Warden's work,\" she says. \"Older than the walls. What goes in comes out, whatever happens to you.\""); await chestOffer(); continue; }
       if (String(c).startsWith("w-")) { const k = c.slice(2); await buyWeapon(k, rhPrice(WEAPONS[k].price), "Mattie tests the edge on her thumbnail and nods."); continue; }
       if (c === "scale") { S.coins -= rhPrice(30); S.gear.push("scale"); renderSheet(); await mech("Mattie laces you into a shirt of overlapping bronze scales, each one cut from a melted-down garden ornament. \"That was a fountain,\" she says, tapping one. \"Bronze frog. Ugly thing.\" Gain the <b>Rahdarian Scale Shirt</b>: +1 AC. " + rhPrice(30) + " gold.", "loot"); }
       if (c === "whet") { S.coins -= rhPrice(15); S.whet = true; renderSheet(); await mech("Mattie takes the axe, looks at it for a long while, and says, \"Who made this?\" She hones it on a wheel of garden stone and rebalances the haft with a ring of lead. Your axe does +1 damage. " + rhPrice(15) + " gold.", "loot"); }
@@ -13194,6 +13602,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
             { key: "sortie", label: "Lead a sortie from the land gate", tag: "fight · soldiers −" + sortieN(), show: !night && R.sol > 0 },
             { key: "raid", label: "Raid their supply road", tag: "Stealth DC 13 · crates −" + (15 + (hasGear("vkey") ? 5 : 0)) + "ish", show: night && R.crates > 0 },
             { key: "sabo", label: "The sabotage mission", tag: "once · plan it well", show: !R.branch },
+            { key: "wallco", label: "Hold the sea wall against a landing company", tag: "once · a full company with armoured captains", show: !night && R.sol > 0 && !R.hv.company },
             { key: "keel", label: "Bring General Keel to battle", tag: "the Anchor", show: genOpen("keel") },
             { key: "thole", label: "Bring General Thole to battle", tag: "the Siege-Wright", show: genOpen("thole") },
             { key: "sault", label: "Bring General Sault to battle", tag: "the Brinewife", show: genOpen("sault") },
@@ -13211,6 +13620,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (c === "sortie") await sortie();
         if (c === "raid") await supplyRaid();
         if (c === "sabo") await sabotageMission();
+        if (c === "wallco") await seaWall();
         if (c === "keel" || c === "thole" || c === "sault") await generalFight(c, false);
         if (c === "rally") await rally();
         if (c === "trap") await rhTrap();
@@ -13250,6 +13660,92 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("The trap takes " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", n ? "loot" : "hurt");
   }
   const sortieN = () => 12 + rh().militia + (hasGear("horn") ? 4 : 0) + (rx() && rx().keeper ? 4 : 0) + (rx() && rx().path === "military" ? 6 : 0);
+  // ---------- company battles: a full company, with armoured captains ----------
+  // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
+  // armoured captains, each with their own health, who hit harder and steady the line (+1 to hit for
+  // the soldiers while any captain stands). Your swing goes at the soldiers; to reach a captain you
+  // have to fight your way to them against plate (AC 17, and the plate takes 2 off every blow).
+  // A bow's Onslaught sends each of its three arrows at its own target, soldier or captain.
+  const CAPT_AC = 17, CAPT_PLATE = 2;
+  async function companyFight(o) {
+    const caps = o.captains.map(n => { const m = Math.max(1, Math.round(o.capHp * (1 + (foeMult() - 1) / 2))); return { name: n, hp: m, max: m }; });
+    const alive = () => caps.filter(c => c.hp > 0);
+    const soldiers = () => Math.max(0, FOE.hp - alive().length);
+    const F = BATHYR(Object.assign({ heads: o.soldiers + caps.length, unit: "standing" }, o.F));
+    const capDown = async (c, how) => {
+      c.hp = 0; foeHit(1);
+      await say(how + " " + c.name + " goes down in a crash of plate" + (alive().length ? "." : ", and the last of the line's backbone goes with " + (o.capThem || "them") + "."));
+      if (!alive().length && soldiers() > 0) await mech("No captains left: the soldiers lose the +1 to hit that the captains gave them.", "loot");
+    };
+    async function capHit(c, total, label, pierce) {
+      const cut = pierce ? total : Math.max(1, total - CAPT_PLATE);
+      c.hp = Math.max(0, c.hp - cut);
+      foePop("−" + cut);
+      await mech(label + (pierce || total === cut ? "" : " (the plate takes " + (total - cut) + ")") + ": " + c.name + (c.hp ? ": " + c.hp + " of " + c.max + " HP left." : " is down."));
+      if (!c.hp) await capDown(c, "");
+    }
+    // Onslaught: three arrows, each at its own target. One always seeks a captain if any stand.
+    async function volley(t, main) {
+      const n = t === "fumble" ? 1 : 3, out = [];
+      for (let i = 0; i < n; i++) {
+        const live = alive();
+        if (live.length && (i === n - 1 || !soldiers())) {
+          const c = live[0], r = d(6) + 2 + (t === "perfect" ? d(6) : 0);
+          out.push("one finds the gap at " + c.name + "'s gorget");
+          await capHit(c, r, "Onslaught arrow at " + c.name + ": 1d6 + 2" + (t === "perfect" ? " + 1d6 perfect" : "") + " = " + r + ", through the gap", true);
+        } else if (soldiers() > (main ? 0 : 1)) { foeHit(1); out.push("one drops a soldier"); }
+      }
+      await mech("Onslaught: " + (out.length ? out.join(", ") : "they all go wide") + "." + (t === "fumble" ? " (Fumbled: only one arrow flew true.)" : ""), "loot");
+    }
+    F.noAtk = () => soldiers() === 0;
+    F.extra = () => alive().map(c => ({ key: "cap-" + caps.indexOf(c), label: "Fight your way to " + c.name, tag: "armoured captain · AC " + CAPT_AC + " · " + c.hp + " of " + c.max + " HP", plain: true }));
+    F.onExtra = async (k, st) => {
+      if (!String(k).startsWith("cap-")) return;
+      const c = caps[+k.slice(4)];
+      if (!c || !c.hp) return;
+      const a = await check({ label: "Attack on " + c.name + " (through the line, against plate)" + (rxHit() ? " (Reaver)" : ""), mod: (S.dull ? 4 : 5) + rxHit(), dc: CAPT_AC, target: "AC", cta: "Strike" });
+      if (!a.ok) { await say(o.capMiss || "Your blow skids off a pauldron, and the soldiers close round their captain again."); return; }
+      const w = wpnStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg(), "Axe damage") || { count: 1, sides: 8, bonus: (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg(), label: "Axe damage", tr: [] };
+      const rolls = Array.from({ length: w.count }, () => d(w.sides));
+      let total = rolls.reduce((x, y) => x + y, 0) + w.bonus + dmgUp(), extra = "";
+      if ((w.tr || []).includes("fire")) { const f = d(4); total += f; extra = " + " + f + " fire"; }
+      await capHit(c, total, w.label + ": " + w.count + "d" + w.sides + " + " + (w.bonus + dmgUp()) + " → " + rolls.join(" + ") + extra + " = " + total, false);
+    };
+    F.before = async (st) => {
+      if (FOE.F && !FOE.F.volley) FOE.F.volley = volley;
+      // A blow that went through the last soldier carries on into a captain.
+      while (alive().length > FOE.hp) { const c = alive()[0]; c.hp = 0; await say("Your blow carries on through the last of the line and into " + c.name + ", who goes down."); }
+      F.atk = o.F.atk + (alive().length ? 1 : 0);
+      if (st.round === 1) await mech("The company: " + soldiers() + " soldiers and " + caps.length + " armoured captains (" + caps.map(c => c.name).join(", ") + "). Your swing goes at the soldiers; reach a captain from the fight menu. While a captain stands, the soldiers get +1 to hit.", "loot");
+    };
+    F.turn = async (st) => {
+      const sw = Math.min(soldiers(), 2);
+      for (let i = 0; i < sw; i++) await foeSwing(F, st);
+      for (const c of alive()) await foeSwing(F, st, { atk: o.F.atk + 2, n: 1, s: 10, label: c.name + " attacks", why: o.capWhy || "The captain's blade comes down two-handed." });
+      st.evade = false; return "done";
+    };
+    await hkFight(F);
+    return F;
+  }
+  // The Rahdaria siege: a Bathyr landing company comes over the sea wall.
+  async function seaWall() {
+    const R = rh();
+    R.hv.company = true;
+    await say("At slack water, the sea under the wall goes quiet in the wrong way, and then twelve Bathyr come up out of it at once, up the weed on the stones on hooks and lines, the whole landing company, and over the parapet. Behind them, two in plate the colour of a drowned bell climb more slowly: the shield-captains.");
+    await say("\"Hold the wall!\" somebody yells, and then everybody's yelling it, and you're in the middle of it with your back to the sea.");
+    const F = await companyFight({
+      soldiers: 12, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them",
+      capWhy: "The shield-captain's broad blade comes down like a dropped gate.", capMiss: "Your blow rings off drowned-bell plate, and the soldiers shove you back from their captain.",
+      F: { name: "The landing company", ac: 13, atk: 4, n: 1, s: 8, who: "the landing company", whoShort: "Bathyr", hitWhy: "A Bathyr bar catches you across the ribs.", miss: "The bar rings off the parapet.", hitLine: "One of them goes back over the parapet into the sea." }
+    });
+    if (F.fled) return;
+    const n = Math.min(R.sol, 20); R.sol -= n; renderSheet();
+    await say("The last of them goes back over the wall into the water, and the sea closes over the place like a door.");
+    await mech("The landing company is broken. Their soldiers ashore lose heart: " + n + " fewer Bathyr. Soldiers: " + R.sol + ".", "loot");
+    grant("company");
+    await threeCheers("The whole sea wall, from the Lily to the harbour mouth:");
+    await standing(4, "The wall held.");
+  }
   async function sortie() {
     const R = rh();
     await say("You go out of the land gate at the head of " + (R.militia >= 6 ? "a crowd of terrace folk with slings and garden forks, and " : "") + "a company of the garrison, thin and grey and furious, straight at the nearest trench.");
@@ -15330,6 +15826,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await hkFight(F);
     await say("The Curator goes down on his knees in front of his lamp, and the light stops folding round him, and he's only an old man with ink on his nails, very tired, three hundred years tired. \"Ah,\" he says. \"Well. Interrupted again.\" And then there's nobody there: a scholar's coat, gone green at the seams, and a little book, and a pinch of grey dust that hums, faintly, in five lines, and then doesn't.");
     grant("curator");
+    await spectralDagger();
     const c = await choose([
       { key: "seal", label: "Seal the Vault for good", tag: "Mattie Gorse and forty masons" },
       { key: "lamp", label: "Give the Relicsong lamp to the Speaker for the Deep", tag: "it might light the Drowned Light again", plain: true },
