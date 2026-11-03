@@ -95,4 +95,6 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 
 ## Status
 
+**Main-hand weapons.** Besides Vaelric's Axe, you can buy the Hollowpine Spear, the Cairnstone Maul, the Wasp-Needle Rapier and the Cinderbrand from the travelling armourer Hobb Tallis at the start of each chapter, or from Mattie Gorse in Rahdaria. Swap between them any time from the Bag. In Rahdaria, solving a case, closing an inquiry, breaking the blight, beating a General or winning the siege earns you **three cheers** from the city.
+
 Parts I to LXII are complete. The story ends in Rahdaria, with the blockade broken and the Speaker for the Deep asking you to come down under the western sea, where the Drowned Light is going out. Part LXIII is still to come.

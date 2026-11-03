@@ -327,6 +327,14 @@ body.intro-open { overflow: hidden; }
 .puzzle .hint, .puzzle .status { font-family: var(--label); font-size: .85rem; letter-spacing: .04em; color: var(--muted); line-height: 1.45; }
 .puzzle .status { color: var(--ink); min-height: 1.4em; }
 .puzzle .pctrl { display: flex; flex-wrap: wrap; gap: 10px; }
+.cheers { margin: 4px 0 22px; padding: 12px 16px; border: 1px solid #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: linear-gradient(90deg, rgba(207,168,80,.10), rgba(207,168,80,0) 80%), var(--panel); display: grid; gap: 6px; }
+.cheers-who { margin: 0; font-style: italic; color: var(--muted); font-size: .95rem; }
+.cheers-row { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.cheers-row li { display: flex; gap: 10px; align-items: baseline; font-family: var(--label); letter-spacing: .08em; animation: rise .4s ease both; }
+.cheers-row li span { color: var(--muted); font-size: .88rem; }
+.cheers-row li b { color: var(--gold); font-size: 1.05rem; }
+.cheers-row li.big b { font-size: 1.35rem; text-shadow: 0 0 14px rgba(207,168,80,.45); }
+@media (prefers-reduced-motion: reduce) { .cheers-row li { animation: none; } }
 .bgcard .bg-row { display: grid; gap: 6px; margin: 8px 0; }
 .bg-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 .bg-opt { display: grid; gap: 2px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: .9rem; max-width: 100%; }
@@ -971,6 +979,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <li>The Map button beside your journal opens a hand-drawn map of the realm. The fog lifts off each region as you reach it, and a red mark shows where you are.</li>
       <li>In a fight, your foe's health shows on the sheet. Land hits in a row to build a combo: +1 to hit for each, +2 damage on the second, and the third is a Rootbreaker that doubles your damage dice. A miss breaks the chain.</li>
       <li>You name your adventurer when you begin, and the people you meet will use it. You won't walk alone for long: friends join your company, and their bond grows with every third fight you win together and with an evening at camp at the end of each chapter. At the start of most chapters you can hire one sellsword for that chapter, and one who serves you long enough will swear to you and stop charging. Your company softens up foes and catches blows, but the killing blow is always yours.</li>
+      <li>Once you have Vaelric's axe, a travelling armourer at the start of each chapter sells other main-hand weapons: a spear, a maul, a rapier and a burning sword, each swinging differently. Swap between them any time with the Wield button in your Bag. The axe stays on your back, and it keeps you alive whatever you're holding.</li>
       <li>Sound is off to start. Turn it on here or from your items for a quiet bed of sound in each region, and the Hesk songs sung out loud.</li>
       <li>Once a fight, when a blow leaves you at 23% of your HP or less, you can dig in: stop the sweeping marker on the root to heal and harden your guard. You have 3 footholds to dig in with, and one comes back each new chapter. On the road you'll meet creatures of the realm, each with its own trick. Your journal keeps a bestiary of every one you've met, and filling it earns marks that help you on the road in every journey after.</li>
     </ul>
@@ -1498,10 +1507,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         for (let i = 0; i < 9; i++) blip(sfx, 160 + Math.random() * 120, { type: "triangle", a: 0.002, dec: 0.08, vol: 0.06, at: 0.9 + i * 0.07 + Math.random() * 0.05 });
       },
       // A cheer: a crowd's roar, rising, with a few bright notes on top.
-      cheers() {
+      cheers(v = 1) {
         if (!live()) return;
-        hiss(sfx, { f: 900, q: 0.6, a: 0.3, dec: 1.6, vol: 0.1 });
-        [0, 2, 4].forEach((n, k) => blip(sfx, 392 * Math.pow(2, n / 12), { a: 0.02, dec: 0.5, vol: 0.05, at: 0.2 + k * 0.12 }));
+        hiss(sfx, { f: 900, q: 0.6, a: 0.3, dec: 1.6, vol: 0.1 * v });
+        [0, 2, 4].forEach((n, k) => blip(sfx, 392 * Math.pow(2, n / 12), { a: 0.02, dec: 0.5, vol: 0.05 * v, at: 0.2 + k * 0.12 }));
       }
     };
   })();
@@ -2169,6 +2178,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
   // ---------- sheet ----------
   const ICONS = {
+    spear: '<svg viewBox="0 0 26 26"><rect x="12" y="7" width="2" height="17" rx="1" fill="#8a7a62" transform="rotate(25 13 15)"/><path d="M17 2l2 6-3 1z" fill="#b9c0c4"/></svg>',
+    maul: '<svg viewBox="0 0 26 26"><rect x="12" y="9" width="2.4" height="15" rx="1" fill="#8a7a62"/><rect x="6" y="3" width="14" height="7" rx="2" fill="#8f8a80" stroke="#55514a"/></svg>',
+    rapier: '<svg viewBox="0 0 26 26"><path d="M20 3l1.5 1.5-12 12-1.5-1.5z" fill="#d6dde0"/><path d="M6 14l6 6M7 21l-2 2" stroke="#cfa850" stroke-width="2" stroke-linecap="round"/></svg>',
+    brand: '<svg viewBox="0 0 26 26"><path d="M13 2l2.5 4v11h-5V6z" fill="#c9b9a0"/><path d="M13 4c2 3 2 6 0 9c-2-3-2-6 0-9z" fill="#d9503a" opacity=".8"/><path d="M8 17h10M13 17v6" stroke="#cfa850" stroke-width="2" stroke-linecap="round"/></svg>',
     paw: '<svg viewBox="0 0 26 26"><ellipse cx="13" cy="17" rx="5" ry="4.2" fill="#b08a48"/><ellipse cx="7" cy="11" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="11" cy="7.5" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="15.5" cy="7.5" rx="2" ry="2.6" fill="#cfa850"/><ellipse cx="19.4" cy="11" rx="2" ry="2.6" fill="#cfa850"/></svg>',
     merc: '<svg viewBox="0 0 26 26"><path d="M13 3l7 3v6c0 5-3 8.5-7 11-4-2.5-7-6-7-11V6z" fill="#5d6b70" stroke="#b9c0c4" stroke-width="1.2"/><path d="M13 7v12M9 11h8" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     torch: '<svg viewBox="0 0 26 26"><path d="M13 3c3 3 3 6 0 9c-3-3-3-6 0-9z" fill="#d68c34"/><rect x="11.5" y="12" width="3" height="11" rx="1" fill="#7a5a3a"/></svg>',
@@ -2215,7 +2228,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
     if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
     if (S.axe) items.push(["axe", "axe", "Vaelric's Axe <span class='gems'><i></i><i></i><i></i></span>",
-      (S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft.") + (S.dull ? " The blade is pitted by slime." : "")]);
+      (wpnKey() !== "axe" ? "On your back. " : arms().length ? "In your hand. " : "") + (S.gemsSpent ? "The gems have flared this encounter." : "Once per encounter: extra radiant damage, burns webbing within 10 ft.") + (S.dull ? " The blade is pitted by slime." : "")]);
+    weaponItems(items);
     if (S.shield && S.pitted) items.push(["shield", "shield", "Pauldron Shield", "Pitted by slug slime. No AC bonus until someone mends it."]);
     else if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
     if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
@@ -2266,6 +2280,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (!lastItems.has(key) && lastItems.size + 1 > 0 && started) li.className = "new";
       if (key === "axe" && S.gemsSpent) li.classList.add("spent");
       li.innerHTML = ICONS[icon] + '<span><span class="name">' + name + '</span><span class="desc">' + desc + "</span></span>";
+      const wk = weaponBtn(key);
+      if (wk) {
+        const b = el("button", "use", "Wield it" + '<span class="tag">main hand</span>');
+        b.type = "button"; b.onclick = () => wield(wk);
+        li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
+      }
       const u = usable.get(key);
       if (u) {
         const b = el("button", "use belt-btn", u.label.split(" ")[0] + " it now" + '<span class="tag">' + u.tag + "</span>");
@@ -2583,7 +2603,68 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
   const adaptHit = () => FOE.on && S.adapt ? (FOE.read >= 5 ? 2 : FOE.read >= 1 ? 1 : 0) : 0;
   const adaptAC = () => FOE.on && S.adapt ? FOE.adapt + (FOE.read >= 3 ? 1 : 0) : 0;
-  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0);
+  // ---------- main-hand weapons ----------
+  // Vaelric's Axe is where you start, and it never leaves you: even with another weapon in your hand,
+  // the axe on your back still holds you at 1 HP and its gems still flare. Other weapons change your
+  // swing: how hard it lands and how easily it finds a gap. Buy them from the travelling armourer at
+  // the start of a chapter (or from Mattie Gorse in Rahdaria), then swap any time from the Bag.
+  // They change your own weapon blows (the "Axe damage" strikes); everything else stays as it is.
+  const WEAPONS = {
+    axe: { name: "Vaelric's Axe", icon: "axe", die: [1, 8, 3], hit: 0, fx: "1d8 + 3. The warden's axe. Its gems and its hold on your life stay with you whatever you wield." },
+    spear: { name: "Hollowpine Spear", icon: "spear", die: [1, 10, 2], hit: 1, price: 24, fx: "1d10 + 2, +1 to hit. Long reach: your first blow in each fight lands +1d4 before they close." },
+    maul: { name: "Cairnstone Maul", icon: "maul", die: [2, 6, 2], hit: -1, price: 30, fx: "2d6 + 2, −1 to hit. Slow and brutal: a Rootbreaker with it lands +4 more." },
+    rapier: { name: "Wasp-Needle Rapier", icon: "rapier", die: [1, 6, 3], hit: 2, price: 26, fx: "1d6 + 3, +2 to hit. Light and quick: it finds gaps the axe can't." },
+    brand: { name: "Cinderbrand", icon: "brand", die: [1, 8, 2], hit: 0, price: 36, fx: "1d8 + 2. A sword with a coal in the fuller: every hit sears for +1d4 fire." }
+  };
+  const arms = () => (S.arms = S.arms || []);
+  const wpnKey = () => (S.axe && S.wpn && S.wpn !== "axe" && WEAPONS[S.wpn] && arms().includes(S.wpn)) ? S.wpn : "axe";
+  const wpnHit = () => S.axe ? WEAPONS[wpnKey()].hit : 0;
+  function wield(k) {
+    if (k !== "axe" && !arms().includes(k)) return;
+    S.wpn = k; renderSheet(); if (started) save();
+  }
+  function weaponItems(items) {
+    if (!S.axe || !arms().length) return;
+    const cur = wpnKey();
+    if (cur !== "axe") items.push(["wpn", WEAPONS[cur].icon, "Main hand: " + WEAPONS[cur].name, WEAPONS[cur].fx]);
+    arms().filter(k => k !== cur).forEach(k => items.push(["arm-" + k, WEAPONS[k].icon, WEAPONS[k].name, "On your back. " + WEAPONS[k].fx]));
+  }
+  // The swap buttons in the Bag: every weapon you own that isn't in your hand.
+  function weaponBtn(key) {
+    if (!S.axe || !arms().length) return null;
+    const k = key === "axe" ? "axe" : key.startsWith("arm-") ? key.slice(4) : null;
+    if (!k || k === wpnKey()) return null;
+    return k;
+  }
+  // Your blows with another weapon in hand: swap the axe's dice for the weapon's, keep every other
+  // bonus (levels, backgrounds, Rahdaria's professions), and add the weapon's own trick.
+  function wpnStrike(count, sides, bonus, label) {
+    const k = wpnKey();
+    if (k === "axe" || !/^Axe damage/.test(label)) return null;
+    const W = WEAPONS[k];
+    let b = bonus - WEAPONS.axe.die[2] + W.die[2];
+    if (/\(dulled\)/.test(label)) { b += 1; label = label.replace(" (dulled)", ""); }
+    if (/\(honed\)/.test(label)) { b -= 1; label = label.replace(" (honed)", ""); }
+    return { count: W.die[0], sides: W.die[1], bonus: b, label: label.replace(/^Axe damage/, W.name + " damage"), k };
+  }
+  async function armoury(C) {
+    const left = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
+    if (!left.length || S.armSeen === C.slug) return;
+    S.armSeen = C.slug;
+    const can = left.filter(k => S.coins >= WEAPONS[k].price);
+    if (!can.length) return;
+    await say("Where the road comes in, a travelling armourer called Hobb Tallis has his cart drawn up, with a rack of blades on the tailboard under oilcloth. \"Never seen an axe like that,\" he says. \"Wouldn't swap it. But a body likes a choice.\"");
+    const c = await choose(can.map(k => ({ key: k, label: "Buy the " + WEAPONS[k].name, tag: WEAPONS[k].price + " gold · " + WEAPONS[k].fx, plain: true })).concat([{ key: "no", label: "Not today", plain: true }]));
+    if (c === "no") return;
+    await buyWeapon(c, WEAPONS[c].price, "Hobb wraps the grip fresh for you and won't take a tip.");
+  }
+  async function buyWeapon(k, price, line) {
+    S.coins -= price; arms().push(k); renderSheet();
+    await mech("Gain <b>" + WEAPONS[k].name + "</b> (" + price + " gold). " + WEAPONS[k].fx + " " + line, "loot");
+    const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep the axe in hand", plain: true }]);
+    if (c === "y") { wield(k); await mech("Main hand: <b>" + WEAPONS[k].name + "</b>. The axe goes on your back, where it can still keep you alive."); }
+  }
+  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0) + wpnHit();
   const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0);
   const lvNewsQ = () => (S.lvNews = S.lvNews || []);
   // A save from before levels gets the XP a player would have earned on the way to its part.
@@ -2942,14 +3023,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
+  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
@@ -3031,7 +3112,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   // Strike the foe on the meter. Returns the damage dealt.
   async function foeStrike(count, sides, bonus, label) {
-    const { total, txt, rb } = await comboDamage(count, sides, bonus, label);
+    const w = wpnStrike(count, sides, bonus, label);
+    if (w) ({ count, sides, bonus, label } = w);
+    let { total, txt, rb } = await comboDamage(count, sides, bonus, label);
+    if (w) {
+      const add = [];
+      if (w.k === "spear" && !FOE.reach) { FOE.reach = true; const r = d(4); total += r; add.push("+" + r + " reach"); }
+      if (w.k === "brand") { const r = d(4); total += r; add.push("+" + r + " fire"); }
+      if (w.k === "maul" && rb) { total += 4; add.push("+4 maul"); }
+      if (add.length) txt += " (" + add.join(", ") + ": " + total + " in all.)";
+    }
     FOE.hp = Math.max(0, FOE.hp - total);
     renderFoe();
     foePop("−" + total, rb);
@@ -3564,6 +3654,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (SOLO.has(C.slug)) return;
     if (i >= 5 && c.burr === null) await meetBurr(i);
     if (i === C.from && POSTS[C.slug] && c.post !== C.slug && !c.merc) await hirePost(C);
+    if (i === C.from && S.axe) await armoury(C);
     if (i === C.from && coAll().length > 2 && !(c.party && c.party.length === 2 && c.party.every(id => coAll().includes(id)))) await rxParty();
   }
 
@@ -12153,6 +12244,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     R.solved[C.id] = true; renderSheet();
     if (typeof xpGain === "function") xpGain(120);
     await mech("Case solved: <b>" + C.name + "</b>.", "loot");
+    await threeCheers("Word gets out of the Steward's Hall before you do. The crowd on the steps sends it up:");
     await CASE_DONE[C.id]();
     return true;
   }
@@ -12674,9 +12766,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const c = await choose([
         { key: "scale", label: "A Rahdarian scale shirt", tag: priceTag(30) + " · +1 AC", show: !hasGear("scale") && S.coins >= rhPrice(30) },
         { key: "whet", label: "Have her hone and balance the axe", tag: priceTag(15) + " · +1 axe damage", show: S.axe && !S.whet && S.coins >= rhPrice(15), plain: true },
+        ...Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k)).map(k => ({ key: "w-" + k, label: "Buy the " + WEAPONS[k].name + " off her rack", tag: priceTag(WEAPONS[k].price) + " · " + WEAPONS[k].fx, show: S.axe && S.coins >= rhPrice(WEAPONS[k].price), plain: true })),
         { key: "done", label: "Leave the smithy", plain: true }
       ]);
       if (c === "done") return;
+      if (String(c).startsWith("w-")) { const k = c.slice(2); await buyWeapon(k, rhPrice(WEAPONS[k].price), "Mattie tests the edge on her thumbnail and nods."); continue; }
       if (c === "scale") { S.coins -= rhPrice(30); S.gear.push("scale"); renderSheet(); await mech("Mattie laces you into a shirt of overlapping bronze scales, each one cut from a melted-down garden ornament. \"That was a fountain,\" she says, tapping one. \"Bronze frog. Ugly thing.\" Gain the <b>Rahdarian Scale Shirt</b>: +1 AC. " + rhPrice(30) + " gold.", "loot"); }
       if (c === "whet") { S.coins -= rhPrice(15); S.whet = true; renderSheet(); await mech("Mattie takes the axe, looks at it for a long while, and says, \"Who made this?\" She hones it on a wheel of garden stone and rebalances the haft with a ring of lead. Your axe does +1 damage. " + rhPrice(15) + " gold.", "loot"); }
     }
@@ -12767,6 +12861,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       S.gear.push("sweet"); renderSheet();
       if (lantern()) await say("At your belt, the Lantern of Rahdaria flares, once, as bright as noon. Sabine stares at it. \"Where did you get one of the old lamps?\" she says. \"They were all lost, my grandmother said. Lost under the water.\" There's no water anywhere near Rahdaria, and you both look at the lantern, and neither of you says anything else.");
       await mech("Gain <b>the Sweetwater Phial</b>. " + GEAR.sweet.desc, "loot");
+      await threeCheers("Up and down the seven terraces, the gardeners lean on their spades and give you a salute:");
       await feed("blight", 3, "The blight is broken. The gardens will feed the city again, slowly.");
       await standing(12, "The whole city can see the green coming back on the terraces.");
     } else await mech("The blight is only half broken. Come back to the Hanging Gardens to finish it.", "hurt");
@@ -13044,6 +13139,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         R.solved[6] = true; R.vantry = "caught"; renderSheet();
         if (typeof xpGain === "function") xpGain(150);
         await mech("Case solved: <b>The Key to the Cisterns</b>.", "loot");
+        await threeCheers("The whole Council chamber is on its feet, and the gallery with it:");
         await say("You put it on the table one thing at a time: the four keys, and which three never left their owners. The letters A.V. in the Saltwife's ledger, against cartloads of grain. " + (hasClue("c6c") ? "And from a drawer in his own office, a letter pressed in Bathyr lead, and his cistern key, with the brine still in its teeth." : "And the grey crust on the cistern grates, which only a key could have let in."));
         await say("Aurel Vantry doesn't run. He looks round the hall at all the thin faces, and for a moment he looks honestly puzzled. \"They were going to win anyway,\" he says. \"Anyone could see that. I was going to get some of us out. Some of us who mattered. The Brinewife promised.\"", "voice");
         await say("Nerys Aldane has him taken down to the cells. Then she sends Odile Moorcant and forty gardeners to the address in the Saltwife's ledger, and they come back at noon with the news that the Master of Granaries had a granary of his own: a whole warehouse behind the harbour, sealed, with grain in it to the rafters.");
@@ -13353,6 +13449,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (!last) { const a = Math.min(R.sol, 10), b = Math.min(R.crates, 10); R.sol -= a; R.crates -= b; await mech("Her brine wagons go into the river. Soldiers: " + R.sol + ". Crates: " + R.crates + ".", "loot"); await hunger(-1, "With the Brinewife gone, the gardeners stop being afraid of the water."); }
     }
     R.gens.push(k); renderSheet();
+    await threeCheers("A General is down. The garrison on the walls beat their shields and roar it out:");
     if (X && X.path) await rxMom(-12, "A General has fallen.");
     if (k === "sault" && X && !lore("fragment")) await loreFind("fragment");
   }
@@ -13366,6 +13463,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("On the morning of the fourth day of the blockade, there's no drum. There's no anything. When the sun comes up, the Bathyr camp is quiet, and the black fleet has drawn back from the harbour mouth, and a single Bathyr is walking up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
       await say("The Marshal looks at you. \"That's never happened,\" he says. \"Not once, in twelve days.\"", "voice");
       grant("rhearly");
+      await threeCheers("The blockade is broken. The whole city comes up onto the walls to watch the envoy walk in:");
       if (typeof xpGain === "function") xpGain(300);
     } else {
       light("dusk");
@@ -13387,6 +13485,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await say("They have no Generals left to lead them, and they come anyway. You meet the last of them at the top of the ladders on the Third Terrace, where they're giddy and slow.");
         await hkFight(giddy(BATHYR({ name: "The last of the Bathyr", heads: 3, unit: "Bathyr|Bathyr" })));
       }
+      await threeCheers("The last ladder falls. From one end of the walls to the other:");
       await say("By noon it's over. The Bathyr still on the walls sit down where they are, one after another, and tap their bars on the stones, and stop. The ones in the trenches walk down to the river and stand in it. The engines stand where they've stopped, smoking.");
       await say("And then, in the afternoon, a single Bathyr walks up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
     }
@@ -13432,6 +13531,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say(obj.map(([ok, t]) => (ok ? "✓ " : "· ") + t).join("<br>"));
     if (obj.every(o => o[0])) {
       grant("rhall");
+      await threeCheers("Every page of the casebook closed. Nerys Aldane herself leads it, from the top of the Steward's Hall steps:");
       if (typeof xpGain === "function") xpGain(300);
       await say("\"Every page,\" she says. She closes it, and puts her hand flat on it. \"The old Inquirer never got every page. Not in thirty years.\" She takes off her own chain, with the High Steward's key on it, and puts it round your neck. \"That opens every door in Rahdaria. Including mine.\"", "voice");
       S.maxHp += 4; S.hp = S.maxHp; renderSheet();
@@ -13459,6 +13559,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // battlefield professions (each a mini-game), enemy momentum (at 100%, Rahdaria falls), the volley
   // every 12 turns, retreat, the Force (the Breaking Hand), Cascade storms and firestorms, Adaptive
   // Reasoning ranks II–IV, the Defender of Rahdaria tiers, and the Relicsong Vault under the cisterns.
+  // Three cheers: when you complete an objective in Rahdaria, whoever's nearest salutes you,
+  // "hip, hip, hooray" three times, the last the loudest, with a crowd's roar under each.
+  async function threeCheers(who) {
+    const box = el("div", "cheers", '<p class="cheers-who">' + who + '</p><ol class="cheers-row"></ol>');
+    const row = box.querySelector("ol");
+    scrollNext = true; add(box);
+    for (let i = 0; i < 3; i++) {
+      await wait(i ? 650 : 250);
+      const li = el("li", i === 2 ? "big" : "", "<span>Hip, hip!</span><b>" + (i === 2 ? "HOORAY!" : "Hooray!") + "</b>");
+      row.appendChild(li);
+      SND.cheers && SND.cheers(i === 2 ? 1.4 : 1);
+    }
+    await wait(500);
+  }
   function rxRecap(R) {
     const X = R && R.x;
     if (!X) return [];
@@ -14283,6 +14397,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     X.q[n] = 3; renderSheet();
     if (typeof xpGain === "function") xpGain(200);
     await mech("Inquiry closed: <b>" + roman(n) + ". " + I.name + "</b>.", "loot");
+    await threeCheers(n >= 5 ? "Along the wall-walk, the garrison raise their spears for the Inquirer:" : "The terrace folk have heard. From every doorway on the Stair:");
     grant(I.feat);
     if (n === 1) { X.gp = true; await mech("<b>Garden Protector.</b> Every way you feed the city saves a tenth more lives, and Lysa's herb recipes are on sale at the stalls: the Gardener's Remedy.", "loot"); }
     if (n === 2) { S.coins += 15; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("<b>Supply Guardian.</b> Every vendor in Rahdaria knocks off another 5%, and the hill farmers press a purse (15 gold) and a Draught of Mending on you. Raids find more in the wagons.", "loot"); }
