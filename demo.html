@@ -555,6 +555,11 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .belt.ready .belt-note::before { content: "● "; }
 button.belt-btn { border-style: dashed; }
 button.belt-btn:not(:disabled) { border-color: var(--gold); }
+.gun-svg { width: 100%; max-width: 460px; height: auto; display: block; background: #12100d; border: 1px solid var(--line); border-radius: 4px; }
+.gun-row { display: grid; grid-template-columns: 7.5em 1fr 4.5em; gap: 8px; align-items: center; max-width: 460px; margin: 6px 0; font-size: .9rem; }
+.gun-row input[type=range] { width: 100%; accent-color: var(--gold); }
+.gun-read { font-variant-numeric: tabular-nums; color: var(--gold); }
+.gun-log { font-size: .85rem; margin: 6px 0 0; padding-left: 1.1em; max-width: 460px; }
 .belt-track .dig-zone { overflow: visible; }
 .belt-sweet { position: absolute; top: 0; bottom: 0; background: rgba(255, 210, 122, .55); box-shadow: 0 0 10px rgba(255, 210, 122, .6); }
 .inv-toggle.belt-ready::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px rgba(255, 210, 122, .8); vertical-align: middle; }
@@ -1728,6 +1733,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           (x.end === "finished" ? "Finished" : "Part " + roman(x.furthest + 1)) + "</td><td>" + dur(x.ms) + '</td><td class="opt">' + x.deaths + "</td></tr>").join("") +
         "</tbody></table></section>";
     }
+    if (J.gun && J.gun.shots) h += "<section><h3>The wall gun</h3><p>" + J.gun.direct + " direct hit" + (J.gun.direct === 1 ? "" : "s") + " from " + J.gun.shots + " shot" + (J.gun.shots === 1 ? "" : "s") + (J.gun.best ? ". Best: a direct hit on shot " + J.gun.best : "") + ".</p></section>";
     const bz = J.beasts || {}, metN = BEASTS.filter(b => bz[b.id]).length;
     h += "<section><h3>Bestiary · " + metN + " of " + BEASTS.length + " met</h3>" +
       '<p class="j-sub">Creatures of the realm turn up on the road between parts. Each one you meet is written here, across every journey.</p>' + marksList(metN) + '<div class="beasts">' +
@@ -2061,6 +2067,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "spectral", name: "Neither Here Nor There", desc: "Claim the Spectral Dagger of Rahdaria.", hidden: true, test: () => false },
     { id: "phased", name: "Thirty-Four", desc: "Land a Phase Strike.", test: () => false },
     { id: "company", name: "Hold the Wall", desc: "Break a full company, armoured captains and all.", test: () => false },
+    { id: "gunfirst", name: "First Blood from the Walls", desc: "Score a direct hit with the wall gun.", test: () => !!(J.gun && J.gun.direct) },
+    { id: "guneye", name: "Gunner's Eye", desc: "Score a direct hit with the wall gun on your first shot.", test: () => !!(J.gun && J.gun.best === 1) },
+    { id: "gunmaster", name: "Master Gunner", desc: "Score 10 direct hits with the wall gun, across every journey. The reward: the Quickening Shawl.", test: () => !!(J.gun && J.gun.direct >= 10), prog: () => [Math.min(10, (J.gun && J.gun.direct) || 0), 10] },
     { id: "chest", name: "Put Away Safe", desc: "Buy the Warden's Weapon Chest at level 40.", test: () => false },
     { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
@@ -3335,7 +3344,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           await say(S.cascade ? "You go back to where they started and stop holding them shut. All over the realm, the black water starts falling upward again." : "You stand at the head of the Cascades and sing the Underdream's own lullaby back down into it. One by one, all over the realm, the black ropes thin and stop.");
           await mech(S.cascade ? "The Cascades run. Every creature is a Nightmare again, and the roads pay double gold." : "The Cascades are still. Creatures are what they were (still matched to your level).", S.cascade ? "hurt" : "loot");
         } else if (c === "rest") {
-          S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+          S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
           await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
           await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
         } else if (c === "journal") jOpen();
@@ -3403,14 +3412,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (c === "leave") break;
       if (c === "sanct") {
         rested = true;
-        const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; renderSheet();
+        const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(T.kind === "sanctuary" && T.reg === "corrach" ? "Sister Wren burns sage over you, binds what needs binding, and makes you sleep on a white terrace in the sun." : "You sleep in the quiet, and nothing comes for you, and you wake up feeling like yourself.");
         await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
         if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
       } else if (c === "inn") {
         rested = true;
-        S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+        S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
       } else if (c === "potion") { S.coins -= 8; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (8 gold).", "loot"); }
@@ -3471,7 +3480,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (c === "leave") { await say("You go the long way, through the brush, and hear them marking time behind you on the road for a long while."); light(back); return; }
     const names = [["Cascade-Captain Aldous Merrow", "Cascade-Captain Ines Varl"], ["Cascade-Captain Brannoc Seyle", "Cascade-Captain Hollis Drane"], ["Cascade-Captain Edda Quarrel", "Cascade-Captain Moss Ivory"]][d(3) - 1];
     const F = await companyFight({
-      soldiers: 10, captains: names, capHp: 24, capThem: "them",
+      soldiers: 10, captains: names, capHp: 24, capThem: "them", cover: "a drowned baggage cart on its side",
       capMiss: "Your blow slides off Cascade-green plate, and the ranks shove you back.",
       F: { name: "A Cascade-drowned company", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", who: "the drowned company", whoShort: "Company", hitWhy: "A drowned soldier's blade opens your arm.", miss: "The blade cuts black water out of the air.", hitLine: "One of them comes apart into falling water.", road: true }
     });
@@ -3776,6 +3785,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.potions) o.push({ key: "potion", label: "Gulp a Draught of Mending", tag: "+" + quickHeal(8) + " HP · " + S.potions + " left" });
     if (S.elixirs) o.push({ key: "elixir", label: "Gulp an Elixir of Health", tag: "+" + quickHeal(15) + " HP · " + S.elixirs + " left" });
     if (S.moss) o.push({ key: "moss", label: "Slap on a gravemoss poultice", tag: "2d6 HP · " + S.moss + " left" });
+    if (S.dress) o.push({ key: "dress", label: "Bind a field dressing", tag: "1d8 + 2 HP · " + S.dress + " left" });
     if (S.herbs && S.sick) o.push({ key: "herbs", label: "Chew a sprig of feverfew", tag: "cures ooze sickness" });
     if (S.tea && S.bloom && !S.molt) o.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1" });
     if (S.saltroot && S.hk && !S.molt && !FOE.salt) o.push({ key: "saltroot", label: "Chew raw saltroot", tag: "your next Bloom save this fight holds" });
@@ -3866,6 +3876,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     else if (key === "potion" || key === "elixir") {
       if (key === "elixir") S.elixirs--; else S.potions--;
       await beltMend(Math.max(1, Math.floor(quickHeal(key === "elixir" ? 15 : 8) * mult)), t === "fumble" ? "The stopper sticks and half of it goes down your chin." : key === "elixir" ? "You get the elixir down in two swallows. Iron and clover." : "One long pull on the horn, bitter as bark.");
+    } else if (key === "dress") {
+      S.dress--;
+      await beltMend(Math.max(1, Math.floor((d(8) + 2) * mult)), t === "fumble" ? "The dressing slips while you knot it, and only half holds." : "You slap a field dressing on the worst of it and knot it tight with your teeth.");
     } else if (key === "moss") {
       S.moss--;
       await beltMend(Math.max(1, Math.floor((d(6) + d(6)) * mult)), t === "fumble" ? "You slap the poultice on crooked, and most of it falls off." : "You slap the gravemoss onto the worst cut and clamp it with your elbow.");
@@ -4152,9 +4165,25 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + "." + (dealt < total ? " " + coName(id) + " leaves the last of it to you." : "") + " " + FOE.name + ": " + FOE.hp + " HP left.", "loot");
     }
   }
+  // Mob fights: after one of your blows lands, each companion who strikes takes one of the pack
+  // (once a fight each), never the last one.
+  async function coMob() {
+    if (!FOE.on || !FOE.unit || FOE.hp <= 1) return;
+    FOE.co = FOE.co || {};
+    for (const id of company()) {
+      if (FOE.co["mob-" + id] || FOE.hp <= 1) continue;
+      const ok = id === "burr" ? bondOf("burr") >= 1 : id === "tyra" ? bondOf("tyra") >= 2 && !/^Hesper Coyle/.test(FOE.name) : ["wenna", "odran", "talia", "harrow", "stone"].includes(id);
+      if (!ok) continue;
+      FOE.co["mob-" + id] = true; foeHit(1);
+      await say({ burr: "Burr takes one of them down by the leg and worries it until it stops.", tyra: "Tyra's knife finds one of them, quietly, from behind.", wenna: "A bolt from Wenna drops one of them where it stands.", odran: "Odran Vey puts his shield into one of them and walks over it.", talia: "Talia Ash is suddenly among them, and then one fewer of them.", harrow: "Harrow cuts one of them down with a garrison sword.", stone: "Captain Stone's shield-rim takes one of them across the throat." }[id]);
+      await mech(coName(id) + " takes one. " + FOE.name + ": " + FOE.hp + " left.", "loot");
+    }
+  }
   // The first blow you take in a fight (two, with Odran sworn) can be caught and halved.
   function coBlock(total) {
     if (!FOE.on || total < 2) return null;
+    const pst = FOE.F && FOE.F.st;
+    if (pst && pst.pavise > 0) { pst.pavise--; return { cut: Math.floor(total / 2), line: "The blow slams into your planted pavise" + (pst.pavise ? "" : ", and splits it top to bottom") }; }
     FOE.co = FOE.co || {};
     const here = company();
     const can = [
@@ -4892,10 +4921,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { key: "iron", label: "Buy scrap iron", tag: "4 gold · 2 iron · you have " + S.iron, show: S.coins >= 4, plain: true },
         { key: "mine", label: M ? "Pack a " + M.name : "", tag: M ? "1 iron + " + M.cost + " gold for " + M.fill + " · Dexterity DC 12 · " + M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") : "", show: !!M && S.iron >= 1 && S.coins >= (M ? M.cost : 0) },
         { key: "cal", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · 18+ makes a fine bag", show: S.iron >= 2 },
+        { key: "dress", label: "Roll a field dressing", tag: (salv().cloth >= 2 ? "2 cloth scraps" : "3 gold for linen") + " · heals 1d8 + 2 from your belt · you have " + (S.dress || 0), show: salv().cloth >= 2 || S.coins >= 3, plain: true },
+        { key: "pavise", label: "Buy a pavise", tag: "15 gold · a tall shield you plant in a fight: halves your next 3 hits, or stops a whole volley · you have " + (S.pavise || 0), show: S.coins >= 15, plain: true },
         { key: "done", label: "Leave the bench", plain: true }
       ]);
       if (c === "done") return;
       if (c === "iron") { S.coins -= 4; S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron. 4 gold.", "loot"); }
+      if (c === "dress") { if (salv().cloth >= 2) salv().cloth -= 2; else S.coins -= 3; S.dress = (S.dress || 0) + 1; renderSheet(); await mech("A field dressing: a pad, a roll of linen and a smear of salve. You have " + S.dress + ".", "loot"); }
+      if (c === "pavise") { S.coins -= 15; S.pavise = (S.pavise || 0) + 1; renderSheet(); await mech("A pavise: a tall shield of planked oak with a spike at the foot, to plant in the ground and crouch behind. You have " + S.pavise + ".", "loot"); }
       if (c === "mine") {
         S.iron--; S.coins -= M.cost; renderSheet();
         const r = await check({ label: "Dexterity check (packing the " + M.name + ")", mod: 2, dc: 12, cta: "Pack it" });
@@ -6539,6 +6572,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (sc.fire + sc.poison + sc.frost) items.push(["scrolls", "scroll", "Snare Rune Scrolls", "Emberbite ×" + sc.fire + " (fire), Blightbloom ×" + sc.poison + " (poison), Rimefang ×" + sc.frost + " (frost). Lay one as a mine in a company battle: Arcana DC 12."]);
     if (S.blank || S.ink) items.push(["ink", "scroll", "Scribing Kit", (S.blank || 0) + " blank parchment, " + (S.ink || 0) + " measures of ink."]);
     if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes. 2 to a bag of caltrops."]);
+    if (S.dress) items.push(["dress", "herb", "Field Dressings ×" + S.dress, "Bind one from your belt mid-fight: 1d8 + 2 HP."]);
+    if (S.shawl) items.push(["shawl", "blessing", "The Quickening Shawl", (S.shawl.charge ? "Ready. " : "Spent: rest at an inn or a sanctuary to recharge it. ") + "In a fight: 3 turns where nothing answers you (2 against captains and the greatest foes), then you're winded."]);
+    if (S.pavise) items.push(["pavise", "shield", "Pavise ×" + S.pavise, "Plant it in a fight: it halves your next 3 hits, or stops a whole volley, then it's done."]);
     const rm = rmineKeys();
     if (rm.length) items.push(["rmines", "caltrop", "Mines", rm.map(k => REGION_MINES[k].name + " ×" + rmines()[k]).join(", ") + ". Lay one in any fight."]);
     if (calTotal()) items.push(["cal", "caltrop", "Caltrops", (S.calFine ? S.calFine + " fine" : "") + (S.calFine && S.calCrude ? ", " : "") + (S.calCrude ? S.calCrude + " crude" : "") + ". Scatter a bag in a company battle and the soldiers go down on the points."]);
@@ -9104,6 +9140,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (hasGear("drum") && F.hesk && !st.used.drum) opts.push({ key: "drum", label: "Play the stilling beat", tag: "they lose a turn", plain: true });
       if (F.hesk && S.song >= 2 && !st.used.discord) opts.push({ key: "discord", label: "Sing a discord into their blade", tag: "Wisdom DC 13", plain: true });
       if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
+      if (S.pavise && !st.used.pavise) opts.push({ key: "pavise", label: "Plant the pavise", tag: "halves your next 3 hits, or stops a whole volley · " + S.pavise + " left · costs your turn", plain: true });
+      if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
+      if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
@@ -9119,6 +9158,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           if (F.heads) {
             const n = Math.min(FOE.hp, await comboHeads(FOE.hp - 1)); foeHit(n);
             await say(n > 1 ? "You go through the first and into the second, and both of their chest-drums stop at once." : (F.hitLine || "One of them folds up like a dropped coat and stops singing."));
+            if (!F.company) await coMob();
           } else {
             if (glaive) { await foeStrike(1, 10, 3, "Glaive damage"); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
             else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
@@ -9162,6 +9202,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
         await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
         await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
+      } else if (c === "pavise") {
+        st.used.pavise = true; S.pavise--; st.pavise = 3; renderSheet();
+        await say("You drive the pavise's spike into the ground and get your shoulder behind it.");
+        await mech("Pavise planted: your next 3 hits are halved, or it stops one whole volley.", "loot");
+      } else if (c === "quick") {
+        S.shawl.charge = 0; renderSheet();
+        st.quick = F.company || (!F.heads && FOE.max >= 45) ? 2 : 3; st.quickJust = true;
+        await say("You pull the Quickening Shawl round your shoulders, and the world goes thick and slow, like honey poured in winter. Blades hang in the air. Dust stops falling. You don't.");
+        await mech("Quickening: " + st.quick + " turns where nothing answers you.", "loot");
+      } else if (c === "breath") {
+        st.used.breath = true;
+        const n = d(6) + Math.floor(lv() / 5), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+        await say("You give ground, get your back to something, and make yourself breathe: in, and out, and in.");
+        await mech("Catch your breath: regain " + (S.hp - b) + " HP.", "loot");
       } else if (c === "evade") {
         st.evade = true;
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
@@ -9169,6 +9223,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
+      if (st.quick > 0) {
+        if (st.quickJust) { st.quickJust = false; continue; }
+        st.quick--;
+        if (st.quick > 0) { await mech("Quickening: " + st.quick + " turn" + (st.quick > 1 ? "s" : "") + " left.", "loot"); continue; }
+        st.winded = true;
+        await say("The world comes back all at once, loud, and you're gasping like you've run a mile.");
+        await mech("Winded: its next swing has advantage.", "hurt");
+        continue;
+      }
       if (st.stilled) { st.stilled = false; await say(F.hesk ? "They stand frozen for a breath, listening to something they last heard as children." : "It hesitates."); continue; }
       if (F.turn && (await F.turn(st)) === "done") continue;
       const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
@@ -9202,7 +9265,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       st.split--;
       if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return false; }
     }
-    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, cta: "Brace" });
+    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis, adv: !!st.winded, cta: "Brace" });
+    st.winded = false;
     if (hit) {
       if (st.soft && F.hesk && S.hp > 0) { const lost = S.hp; await hurt(n, s, type, o.why || F.hitWhy); const back = Math.min(2, lost - Math.max(0, S.hp)); if (back > 0 && S.hp > 0) { S.hp = Math.min(S.maxHp, S.hp + back); renderSheet(); await mech("The softened blade does " + back + " less.", "loot"); } }
       else await hurt(n, s, type, o.why || F.hitWhy);
@@ -14044,6 +14108,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
             { key: "sortie", label: "Lead a sortie from the land gate", tag: "fight · soldiers −" + sortieN(), show: !night && R.sol > 0 },
             { key: "raid", label: "Raid their supply road", tag: "Stealth DC 13 · crates −" + (15 + (hasGear("vkey") ? 5 : 0)) + "ish", show: night && R.crates > 0 },
             { key: "sabo", label: "The sabotage mission", tag: "once · plan it well", show: !R.branch },
+            { key: "gun", label: "Man the wall gun", tag: "once a watch · range it, lay it, fire · a direct hit wrecks a siege tower", show: R.sol > 0 && !R.hv["gun" + R.day2 + "-" + R.watch], plain: true },
             { key: "wallco", label: "Hold the sea wall against a landing company", tag: "once · a full company with armoured captains", show: !night && R.sol > 0 && !R.hv.company },
             { key: "keel", label: "Bring General Keel to battle", tag: "the Anchor", show: genOpen("keel") },
             { key: "thole", label: "Bring General Thole to battle", tag: "the Siege-Wright", show: genOpen("thole") },
@@ -14063,11 +14128,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (c === "raid") await supplyRaid();
         if (c === "sabo") await sabotageMission();
         if (c === "wallco") await seaWall();
+        if (c === "gun") await rhGun();
         if (c === "keel" || c === "thole" || c === "sault") await generalFight(c, false);
         if (c === "rally") await rally();
         if (c === "trap") await rhTrap();
         if (String(c).startsWith("x-")) { if (!(await rxInvDo(c))) await rxSiegeDo(c); }
-        if (c === "inn") { const b = S.hp; S.coins -= rhPrice(6); S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet(); await mech("Bel Amory keeps your bed under the eaves. " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot"); }
+        if (c === "inn") { if (S.shawl) S.shawl.charge = 1; const b = S.hp; S.coins -= rhPrice(6); S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet(); await mech("Bel Amory keeps your bed under the eaves. " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot"); }
         if (c === "wall") { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + d(4)); renderSheet(); await mech("You sleep in a guard-niche on the wall with the Bathyr drum in the stones under you. Regain " + (S.hp - b) + " HP.", "loot"); }
         if (R.militia >= 6 && R.sol > 0) { const k = Math.min(R.sol, 4); R.sol -= k; renderSheet(); await mech("The terrace militia harry the trenches with slings and dropped stones from the high walls: " + k + " Bathyr down. Soldiers: " + R.sol + ".", "loot"); }
         if (R.crates > 40 && !R.hv["bomb" + R.day2 + R.watch] && rx().ambush) { R.hv["bomb" + R.day2 + R.watch] = true; await mech("The spies' maps showed you where their engines are ranged: you're never where the stones come down.", "loot"); }
@@ -14102,6 +14168,132 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("The trap takes " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", n ? "loot" : "hurt");
   }
   const sortieN = () => 12 + rh().militia + (hasGear("horn") ? 4 : 0) + (rx() && rx().keeper ? 4 : 0) + (rx() && rx().path === "military" ? 6 : 0);
+
+  // ---------- the wall gun: a ranged test of skill ----------
+  // 1. Range it: a timing catch on the sighting staff. Perfect reads within ±5 paces, clean ±15,
+  //    a fumble ±40. 2. Lay the gun: elevation (5–60°), powder (1–4 scoops) and traverse (±4°).
+  // 3. Read the pennant: wind along the line of fire (pushes long or short) and across it (pushes
+  //    left or right), and it shifts between shots. 4. Fire: the arc is drawn and the spotter calls
+  //    the fall of shot. The barrel heats (+2.5% muzzle speed a shot) and the target closes 10–20
+  //    paces a shot. Direct hit = within 8 paces long/short and 5 across; near = within 25 and 12.
+  // Returns { direct, near, shots }. J.gun keeps your best across journeys.
+  function wallGun({ title = "The wall gun", target = "the siege tower", shots = 4, dist = null } = {}) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title, "First range " + target + " through the sighting staff: stop the marker in the gold. Then set the elevation, the powder and the traverse, watch the pennant, and fire. The spotter will call where each shot falls. The barrel heats as you fire, and " + target + " keeps coming.");
+      let D = dist || 220 + d(200), lat = (d(9) - 5) * 2;
+      let wind = { along: d(9) - 5, across: d(9) - 5 };
+      const out = { direct: 0, near: 0, shots: 0 };
+      let fired = 0, err = 40, reading = 0;
+      // stage 1: range-finder
+      const track = el("div", "dig-track belt-track"), zone = el("div", "dig-zone"), sweet = el("div", "belt-sweet"), mark = el("div", "dig-mark");
+      zone.appendChild(sweet); track.append(zone, mark); P.body.append(track);
+      const wide = 26, notch = 6, at = 8 + Math.random() * (84 - wide), sAt = (wide - notch) / 2;
+      zone.style.left = at + "%"; zone.style.width = wide + "%";
+      sweet.style.left = sAt / wide * 100 + "%"; sweet.style.width = notch / wide * 100 + "%";
+      let pos = 0, dir = 1, live = true, raf = 0, last = performance.now();
+      const speed = reduced ? 55 : 95;
+      function step(now) { const dt = Math.min(64, now - last); last = now; if (live) { pos += dir * speed * dt / 1000; if (pos >= 100) { pos = 100; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; } mark.style.left = pos + "%"; } raf = requestAnimationFrame(step); }
+      raf = requestAnimationFrame(step);
+      const rb = pbtn("Take the reading", "primary"); P.ctrl.appendChild(rb);
+      rb.onclick = () => {
+        if (!live) return;
+        live = false; rb.disabled = true; cancelAnimationFrame(raf);
+        const r = pos >= at + sAt - 1 && pos <= at + sAt + notch + 1 ? "perfect" : pos >= at - 1 && pos <= at + wide + 1 ? "clean" : "fumble";
+        err = r === "perfect" ? 5 : r === "clean" ? 15 : 40;
+        reading = Math.round(D + (Math.random() * 2 - 1) * err);
+        track.classList.add(r === "fumble" ? "slip" : "held");
+        track.remove(); rb.remove();
+        layGun(r);
+      };
+      function layGun(r) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 460 170"); svg.setAttribute("class", "gun-svg"); svg.setAttribute("role", "img");
+        P.body.appendChild(svg);
+        const info = el("div", "gun-read"); P.body.appendChild(info);
+        const mk = (lab, min, max, val, stepV, fmtV) => {
+          const row = el("label", "gun-row"); const inp = document.createElement("input");
+          inp.type = "range"; inp.min = min; inp.max = max; inp.step = stepV; inp.value = val;
+          const v = el("span", "gun-read", fmtV(val));
+          inp.oninput = () => { v.textContent = fmtV(+inp.value); };
+          row.append(el("span", "", lab), inp, v); P.body.appendChild(row); return inp;
+        };
+        const elev = mk("Elevation", 5, 60, 30, 0.5, x => x + "°");
+        const pow = mk("Powder", 1, 4, 2, 1, x => x + (x > 1 ? " scoops" : " scoop"));
+        const trav = mk("Traverse", -4, 4, 0, 0.1, x => (x > 0 ? "R " : x < 0 ? "L " : "") + Math.abs(x).toFixed(1) + "°");
+        const log = el("ol", "gun-log"); P.body.appendChild(log);
+        const fire = pbtn("Fire", "primary"), stand = pbtn("Stand down"); P.ctrl.append(fire, stand);
+        const pennant = () => (wind.along === 0 && wind.across === 0 ? "the pennant hangs dead" : "the pennant streams " + (wind.along ? (wind.along > 0 ? "out toward the target" : "back toward you") + " (" + Math.abs(wind.along) + ")" : "") + (wind.along && wind.across ? " and " : "") + (wind.across ? (wind.across > 0 ? "to the right" : "to the left") + " (" + Math.abs(wind.across) + ")" : ""));
+        function draw(arc) {
+          const sc = 440 / 620;
+          let h = '<line x1="0" y1="150" x2="460" y2="150" stroke="#5d4824"/>';
+          h += '<rect x="6" y="138" width="14" height="12" fill="#8a7a5a"/>';
+          const tx = 10 + D * sc;
+          h += '<rect x="' + (tx - 5) + '" y="112" width="10" height="38" fill="#b0443a"/><text x="' + tx + '" y="106" fill="#e7dec9" font-size="10" text-anchor="middle">target</text>';
+          if (arc) h += '<polyline fill="none" stroke="#ffd27a" stroke-width="1.5" points="' + arc.map(([x, y]) => (10 + x * sc).toFixed(1) + "," + (150 - y * sc).toFixed(1)).join(" ") + '"/>';
+          h += '<text x="8" y="16" fill="#cfa850" font-size="11">Reading: ' + reading + " paces (±" + err + ") · " + pennant() + " · shots left " + (shots - fired) + "</text>";
+          svg.innerHTML = h;
+          svg.setAttribute("aria-label", "Range " + reading + " paces, plus or minus " + err + ". " + pennant() + ".");
+        }
+        info.textContent = r === "perfect" ? "A clean, sharp reading." : r === "clean" ? "A fair reading." : "The staff wobbled. The reading is rough.";
+        draw(null);
+        stand.onclick = () => finish();
+        fire.onclick = () => {
+          fired++; out.shots++;
+          const th = +elev.value * Math.PI / 180, v = (34 + 10 * +pow.value) * (1 + 0.025 * (fired - 1)) * (0.985 + Math.random() * 0.03);
+          const t = 2 * v * Math.sin(th) / 9.8;
+          const range = v * v * Math.sin(2 * th) / 9.8 + wind.along * t * 0.9;
+          const side = Math.tan(+trav.value * Math.PI / 180) * range + wind.across * t * 0.8;
+          const arc = []; for (let i = 0; i <= 24; i++) { const tt = t * i / 24; arc.push([range * i / 24, Math.max(0, v * Math.sin(th) * tt - 4.9 * tt * tt) * (range > 0 ? 1 : 0)]); }
+          draw(arc);
+          const dl = Math.round(range - D), ds = Math.round(side - lat);
+          const call = (Math.abs(dl) <= 2 ? "dead on the range" : Math.abs(dl) + " paces " + (dl > 0 ? "long" : "short")) + ", " + (Math.abs(ds) <= 1 ? "dead on the line" : Math.abs(ds) + " paces " + (ds > 0 ? "right" : "left"));
+          let res = "miss";
+          if (Math.abs(dl) <= 8 && Math.abs(ds) <= 5) { res = "direct"; out.direct++; }
+          else if (Math.abs(dl) <= 25 && Math.abs(ds) <= 12) { res = "near"; out.near++; }
+          log.appendChild(el("li", "", (res === "direct" ? "<b>Direct hit!</b> " : res === "near" ? "Near miss: splinters fly. " : "") + "Spotter: \"" + call + ".\""));
+          if (res === "direct" || fired >= shots) { fire.disabled = true; setTimeout(finish, 900); return; }
+          D = Math.max(80, D - 10 - d(10));
+          wind = { along: Math.max(-6, Math.min(6, wind.along + d(3) - 2)), across: Math.max(-6, Math.min(6, wind.across + d(3) - 2)) };
+          P.status.textContent = "The barrel's hotter. " + target[0].toUpperCase() + target.slice(1) + " closes in.";
+          setTimeout(() => draw(arc), 50);
+        };
+      }
+      function finish() {
+        P.end(); scrollNext = true;
+        J.gun = J.gun || { shots: 0, direct: 0, best: 0 };
+        J.gun.shots += out.shots; J.gun.direct += out.direct;
+        if (out.direct && (!J.gun.best || out.shots < J.gun.best)) J.gun.best = out.shots;
+        jSave();
+        if (out.direct) grant("gunfirst");
+        if (out.direct && out.shots === 1) grant("guneye");
+        if (J.gun.direct >= 10) grant("gunmaster");
+        resolve(out);
+      }
+    });
+  }
+  // The Quickening Shawl: the reward for Master Gunner (10 direct hits across journeys).
+  async function shawlCheck() {
+    if (S.shawl || !(J.gun && J.gun.direct >= 10)) return;
+    S.shawl = { charge: 1 }; renderSheet();
+    await say("When the smoke clears, the old gunner's widow is waiting at the foot of the wall stair with something folded over her arm: a shawl of grey wool so fine it looks like fog, with a hem stitched in silver. \"His,\" she says. \"He'd want it on somebody who can shoot. It makes the world slow down round you. Not for long.\"");
+    await mech("Gain the <b>Quickening Shawl</b>: once, draw it round you in a fight for 3 turns where nothing answers you (2 against captains and the greatest foes). Then you're winded. It recharges when you rest at an inn or a sanctuary.", "loot");
+  }
+  async function rhGun() {
+    const R = rh();
+    R.hv["gun" + R.day2 + "-" + R.watch] = true;
+    await say("The wall gun squats in its embrasure on the land wall: a bronze barrel as long as a boat, green with sea air, with a powder chest and a rammer and a gunner's boy asleep against the wheel. Out on the land road, a Bathyr siege tower is creeping toward the walls on rollers, with men and sea-things pushing it.");
+    const r = await wallGun({ title: "The wall gun", target: "the siege tower", shots: 4 });
+    if (r.direct) {
+      const n = Math.min(R.sol, 8 + d(6)); R.sol -= n; renderSheet();
+      await say("The ball takes the tower square in its middle storey, and the whole thing leans, and keeps leaning, and comes down across the road in a burst of splinters and screaming.");
+      await mech("Direct hit! The siege tower is wrecked: " + n + " Bathyr down. Soldiers: " + R.sol + ".", "loot");
+      await standing(2, "Half the city saw the tower come down.");
+    } else if (r.near) {
+      const n = Math.min(R.sol, 2 + d(3)); R.sol -= n; renderSheet();
+      await mech("Near misses throw splinters through the pushers: " + n + " Bathyr down, but the tower rolls back out of range to be patched. Soldiers: " + R.sol + ".", "loot");
+    } else await mech(r.shots ? "Every shot goes wide. The tower rolls on, and the gunner's boy looks at his feet." : "You stand the gun down.", r.shots ? "hurt" : "");
+    await shawlCheck();
+  }
   // ---------- company battles: a full company, with armoured captains ----------
   // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
   // armoured captains, each with their own health, who don't attack you but steady the line (+1 to hit for
@@ -14134,7 +14326,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     flank: { call: "Flank!", what: "three soldiers come at you this round, not two", ans: "Put your back to the wall", tag: "only one can reach you, and you drop one who overreaches · costs your turn" },
     ranks: { call: "Close ranks!", what: "the line closes round the captains: you can't reach them this round", ans: "Feint at the gap", tag: "Wisdom DC 12 · a swing at a captain with advantage · costs your turn" },
     drum: { call: "Drum the advance!", what: "next round they charge: +2 to hit and three swings", ans: "Set your feet", tag: "the charge breaks on you before it lands · costs your turn" },
-    charge: { call: "Charge!", what: "three swings at +2 to hit", ans: null }
+    charge: { call: "Charge!", what: "three swings at +2 to hit", ans: null },
+    volley: { call: "Loose!", what: "their bowmen loose a volley at you this round: four arrows", ans: "Take cover (or plant a pavise)", tag: "" }
   };
   async function companyFight(o) {
     const caps = o.captains.map(n => { const m = Math.max(1, Math.round(o.capHp * (1 + (foeMult() - 1) / 2))); return { name: n, hp: m, max: m }; });
@@ -14144,7 +14337,46 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const baseAc = F.ac; F.company = true;
     // order: this round's order; last: the one before; drill: the company's combo links;
     // stagger: soldiers lose this round's swings; reach: only this many soldiers can reach you; braced: the coming charge is broken.
-    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0 };
+    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0, stance: null, hunt: null, out: {}, coverT: 0, coverHp: 3 };
+    // Cover: the field has one piece (o.cover). Taking cover costs your swing and lasts 2 of their
+    // turns: arrows can't reach you, and soldiers attack at disadvantage. It takes 3 volleys or
+    // charges before it's matchwood. Volleys: a captain calls "Loose!" while 3+ soldiers stand,
+    // and the bowmen loose four arrows (1d6 each) that turn. Cover or a planted pavise stops them all.
+    const coverName = o.cover || "an overturned cart";
+    // ---- your company on the field ----
+    // At the start you set a stance: hold (they guard you: one fewer soldier reaches you), press
+    // (they cut into the ranks: better odds), or captains (the blades go for the captains' gorgets).
+    // Each round, after any mines, every companion with you acts. A captain may order a strike at one
+    // of them ("Cut down the dog!"): answer it (Cover them, costs your swing) or they sit out next round.
+    const field = () => company().filter(id => !(G.out[id] >= stRound));
+    let stRound = 0;
+    const FIELD = {
+      burr: { drop: () => 2 + Math.floor(bondOf("burr") / 2), line: "Burr hits a soldier at the knees and drags him down, snarling, and doesn't let go until he stops moving." },
+      tyra: { drop: () => bondOf("tyra") >= 2 ? 3 : 2, cap: () => d(6) + 2, line: "Tyra is somewhere in the ranks, and then one of them folds up quietly round her knife.", capLine: "Tyra comes up under a captain's arm and finds the gap at the gorget" },
+      wenna: { drop: () => sworn("wenna") ? 4 : 3, cap: () => d(8) + (sworn("wenna") ? 3 : 1), line: "A flat <i>thock</i> from behind you, and a soldier goes over with a bolt in him.", capLine: "Wenna's bolt finds the slot in a captain's visor" },
+      odran: { drop: () => 2, guard: true, line: "Odran Vey shoves a soldier off the line with the edge of his shield and walks over him." },
+      caddock: { heal: () => d(4) + (sworn("caddock") ? 1 : 0), line: "Mother Caddock is at your elbow in a lull, and something cold and stinging goes on the worst cut." },
+      stone: { drop: () => 2, guard: true, line: "Captain Stone holds the gap beside you with his dented shield and puts a soldier down behind it." },
+      talia: { drop: () => 3, cap: () => d(6) + 1, line: "Talia Ash goes through the second rank like a rumour, and a soldier sits down and doesn't get up.", capLine: "Talia's knife goes in under a captain's pauldron" },
+      harrow: { drop: () => 3, two: true, line: "Lucan Harrow wades into the ranks with a garrison sword in both hands and nothing left to lose." },
+      lysa: { heal: () => d(4) + 1, line: "Lysa presses a poultice of garden simples onto your arm and ties it off with her teeth." },
+      rowan: { drill: true, line: "Rowan Crest shouts the captains' next count a beat before they do, and the Drill keeps stumbling on it." }
+    };
+    async function fieldAct(st) {
+      for (const id of field()) {
+        const A = FIELD[id];
+        if (!A || FOE.hp <= 0) continue;
+        if (A.heal) { if (S.hp < S.maxHp && (st.round % 2 === 0 || G.stance === "hold")) { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + A.heal()); renderSheet(); await say(A.line); await mech(coName(id) + ": regain " + (S.hp - b) + " HP.", "loot"); } continue; }
+        if (A.drill) { if (G.drill > 1) { G.drill = 1; await say(A.line); await mech("Their Drill drops to 1.", "loot"); } continue; }
+        const cap = alive()[0];
+        if (A.cap && cap && (G.stance === "caps" || soldiers() <= 0) && (st.round % 2 === 1 || soldiers() <= 0)) { await capHit(cap, A.cap(), A.capLine, true); continue; }
+        if (soldiers() <= 0) continue;
+        if (d(6) <= A.drop() + (G.stance === "press" ? 1 : 0)) {
+          const n = Math.min(soldiers(), A.two && d(2) === 2 ? 2 : 1); foeHit(n);
+          await say(A.line); await mech(coName(id) + ": " + n + " down.", "loot");
+        }
+      }
+    }
     const showDrill = () => mech("Their Drill: " + "●".repeat(G.drill) + "○".repeat(DRILL_MAX - G.drill) + (G.drill >= DRILL_MAX ? " · the next hit is a crushing blow" : G.drill >= 2 ? " · you can try a combo breaker" : ""), G.drill >= 2 ? "hurt" : "loot");
     const capDown = async (c, how) => {
       c.hp = 0; foeHit(1);
@@ -14175,8 +14407,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     F.noAtk = () => soldiers() === 0;
     F.extra = () => {
       const out = [];
-      const ord = G.order && CAP_ORDERS[G.order];
-      if (ord && ord.ans) out.push({ key: "answer", label: ord.ans, tag: "answers \"" + ord.call + "\" · " + ord.tag, plain: true });
+      const ord = G.order === "hunt" ? huntOrder(G.hunt) : G.order && CAP_ORDERS[G.order];
+      if (G.coverT <= 0 && G.coverHp > 0) out.push({ key: "cover", label: "Take cover behind " + coverName, tag: (G.order === "volley" ? "answers \"Loose!\" · " : "") + "2 of their turns: arrows can't reach you, soldiers attack at disadvantage · costs your turn", plain: true });
+      if (ord && ord.ans && G.order !== "volley") out.push({ key: "answer", label: ord.ans, tag: "answers \"" + ord.call + "\" · " + ord.tag, plain: true });
       if (G.drill >= 2 && soldiers() > 0) out.push({ key: "breaker", label: "Combo breaker", tag: "DC " + (11 + G.drill) + " · snap their Drill, stagger the soldiers, +1 to your combo · costs your turn", plain: true });
       if (calTotal() && !st0.usedCal && soldiers() > 0) out.push({ key: "cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 2 down a turn" : "crude: 1 down a turn") + " for 3 turns, the rest at −1 · costs your turn", plain: true });
       if (S.scrolls && soldiers() > 0) Object.keys(MINES).filter(k => S.scrolls[k] > 0).forEach(k => out.push({ key: "mine-" + k, label: "Lay " + MINES[k].name, tag: { fire: "1d3+1 down", poison: "1d3 down, the rest −1 to hit", frost: "1d2 down, they lose their swings" }[k] + " · Arcana DC 12 · " + S.scrolls[k] + " left · costs your turn", plain: true }));
@@ -14188,6 +14421,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     F.onExtra = async (k, st) => {
       if (k === "breaker") return breaker();
       if (k === "out") return fightOut(st);
+      if (k === "cover") { G.coverT = 2; await say("You get down behind " + coverName + ", with your back to it and your axe across your knees."); await mech("In cover for their next 2 turns.", "loot"); return; }
       if (k === "cal") return scatter();
       if (String(k).startsWith("mine-")) return layMine(k.slice(5));
       if (String(k).startsWith("rmine-")) return layRegional(k.slice(6));
@@ -14262,6 +14496,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         G.snap = soldiers(); st.fled = true;
       } else await say("They close the gap before you reach it, and you're back in the middle of them.");
     }
+    const huntOrder = (id) => ({ call: "Cut down " + (id === "burr" ? "the dog" : coName(id)) + "!", what: "three of them break off to go for " + coName(id) + ", who'll be out of the fight next round if nobody covers", ans: "Cover " + coName(id), tag: "you put yourself between them · " + coName(id) + " fights on, and gets a free blow in · costs your turn" });
     async function breaker() {
       const dc = 11 + G.drill;
       await say("You see the rhythm of it, the step-and-cut they've drilled ten thousand times, and you step into the beat instead of away from it.");
@@ -14291,6 +14526,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const c = alive()[0];
         if (r.ok && c) { await say("You go hard for the left, the line shifts left to meet you, and you're already going right, through the hole they just made."); await capAttack(c, true); }
         else await say("They don't take the feint. The line stays shut.");
+      } else if (ord === "hunt") {
+        const id = G.hunt; G.order = null;
+        await say("You get between " + coName(id) + " and the three of them, and they find you there instead.");
+        if (soldiers() > 0) { foeHit(1); await say(id === "burr" ? "Burr comes round your legs and takes the nearest one down." : coName(id) + " uses the moment and drops the nearest one."); }
+        await mech(coName(id) + " is covered, and fights on.", "loot");
       } else if (ord === "drum") {
         G.braced = true;
         await say("You take a step back, find hard ground, plant your feet and wait for them with the axe low.");
@@ -14312,6 +14552,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       while (alive().length > FOE.hp) { const c = alive()[0]; c.hp = 0; await say("Your blow carries on through the last of the line and into " + c.name + ", who goes down."); }
       F.atk = o.F.atk + (alive().length ? 1 : 0) - (G.cal > 0 ? 1 : 0) - G.rot;
       if (st.round === 1) await mech("The company: " + soldiers() + " soldiers and " + caps.length + " armoured captains (" + caps.map(c => c.name).join(", ") + "). Your swing goes at the soldiers; reach a captain from the fight menu. The captains don't attack you themselves: they command. Each round a captain calls an order, and each order has an answer. While a captain stands, the soldiers get +1 to hit and can build their Drill.", "loot");
+      stRound = st.round;
+      if (st.round === 1 && company().length) {
+        await say("Your company is with you: " + company().map(coName).join(" and ") + ".");
+        G.stance = await choose([
+          { key: "hold", label: "Hold the line", tag: "they guard you: one fewer soldier reaches you each round" },
+          { key: "press", label: "Press the ranks", tag: "they cut into the soldiers: better odds of dropping one each round", plain: true },
+          { key: "caps", label: "Go for the captains", tag: "the blades and bolts go for the captains' gorgets, through the plate", plain: true }
+        ]);
+      }
       // The captains call this round's order.
       G.stagger = false; G.reach = 0; F.ac = baseAc;
       if (!G.halved && soldiers() > 0 && soldiers() <= o.soldiers / 2) {
@@ -14327,8 +14576,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       }
       if (soldiers() <= 0) return;
       if (G.last === "drum") G.order = "charge";
-      else { const pool = ["wall", "flank", "ranks", "drum"].filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
-      const ord = CAP_ORDERS[G.order], who = alive()[d(alive().length) - 1].name;
+      else { const pool = ["wall", "flank", "ranks", "drum"].concat(field().length && st.round > 1 ? ["hunt"] : []).concat(soldiers() >= 3 ? ["volley"] : []).filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
+      if (G.order === "hunt") { const f = field(); G.hunt = f[d(f.length) - 1]; }
+      const ord = G.order === "hunt" ? huntOrder(G.hunt) : CAP_ORDERS[G.order], who = alive()[d(alive().length) - 1].name;
       if (G.order === "wall") F.ac = baseAc + 3;
       if (G.order === "charge" && G.braced) {
         G.braced = false; G.order = null;
@@ -14343,15 +14593,36 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     };
     F.turn = async (st) => {
       if (await blowUp()) G.stagger = true;
-      if (soldiers() <= 0) { st.evade = false; return "done"; }
-      if (G.stagger) { G.stagger = false; await say("The soldiers are still getting their feet back under them."); st.evade = false; return "done"; }
+      if (G.order === "hunt" && G.hunt) { G.out[G.hunt] = st.round + 1; await say("Three of them go for " + coName(G.hunt) + " and drive " + (G.hunt === "burr" ? "him" : "them") + " back out of the line."); await mech(coName(G.hunt) + " is out of the fight next round.", "hurt"); G.order = null; }
+      await fieldAct(st);
+      if (soldiers() <= 0) { st.evade = false; G.coverT = Math.max(0, G.coverT - 1); return "done"; }
+      if (G.order === "volley") {
+        G.order = null;
+        await say("The bowmen at the back draw together, and the air goes thick with it.");
+        if (G.coverT > 0) {
+          G.coverHp--;
+          await say("Four arrows go into " + coverName + " in front of your face, <i>thock thock thock thock</i>." + (G.coverHp ? "" : " The last one splits it, and it's matchwood."));
+          await mech("The volley is stopped by your cover." + (G.coverHp ? "" : " Your cover is gone."), "loot");
+          if (!G.coverHp) G.coverT = 0;
+        } else if (st.pavise > 0) {
+          st.pavise = 0;
+          await say("The whole volley sticks in your pavise like quills in a hedgehog, and the oak splits down the middle.");
+          await mech("The pavise stops the volley, and it's done.", "loot");
+        } else {
+          for (let i = 0; i < 4 && S.hp > 0 && !st.fled; i++) await foeSwing(F, st, { n: 1, s: 6, type: "piercing", label: "Arrow " + (i + 1) + " of 4", why: "An arrow comes down out of the sky and into you." });
+        }
+      }
+      if (G.stagger) { G.stagger = false; G.coverT = Math.max(0, G.coverT - 1); await say("The soldiers are still getting their feet back under them."); st.evade = false; return "done"; }
       const charge = G.order === "charge";
       let sw = Math.min(soldiers(), charge || G.order === "flank" ? 3 : 2);
       if (G.reach) sw = Math.min(sw, G.reach);
+      if (G.stance === "hold" && field().length) sw = Math.max(1, sw - 1);
+      const inCover = G.coverT > 0;
+      if (field().some(id => FIELD[id] && FIELD[id].guard)) sw = Math.max(1, sw - (G.stance === "hold" ? 0 : 1));
       G.snap = soldiers();
       for (let i = 0; i < sw; i++) {
         const crush = G.drill >= DRILL_MAX;
-        const hit = await foeSwing(F, st, Object.assign(charge ? { atk: F.atk + 2 } : {}, crush ? { n: (F.n || 1) * 2, label: "The Drill closes: a crushing blow", why: "They've driven you into exactly the place the drill was built for, and the blow comes down with the whole rank behind it." } : {}));
+        const hit = await foeSwing(F, st, Object.assign(charge ? { atk: F.atk + 2 } : {}, inCover ? { dis: true } : {}, crush ? { n: (F.n || 1) * 2, label: "The Drill closes: a crushing blow", why: "They've driven you into exactly the place the drill was built for, and the blow comes down with the whole rank behind it." } : {}));
         if (crush) { G.drill = 0; if (hit) await mech("The Drill is spent.", "hurt"); continue; }
         if (hit && alive().length) G.drill = Math.min(DRILL_MAX, G.drill + 1);
         else if (!hit && G.drill) { G.drill = 0; await mech("A miss: their Drill breaks.", "loot"); continue; }
@@ -14360,7 +14631,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       }
       // Captains don't swing at you any more (Adrian found them hitting too hard): they stand back
       // and command, steadying the line, and only fight back as plate and health.
-      st.evade = false; return "done";
+      G.coverT = Math.max(0, G.coverT - 1); st.evade = false; return "done";
     };
     await hkFight(F);
     F.broken = Math.max(0, o.soldiers - (F.fled && G.snap != null ? G.snap : soldiers()));
@@ -14371,9 +14642,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const R = rh();
     R.hv.company = true;
     await say("At slack water, the sea under the wall goes quiet in the wrong way, and then twelve Bathyr come up out of it at once, up the weed on the stones on hooks and lines, the whole landing company, and over the parapet. Behind them, two in plate the colour of a drowned bell climb more slowly: the shield-captains.");
+    let boats = 0;
+    const g = await choose([{ key: "gun", label: "Swing the wall gun onto their boats first", tag: "the gun emplacement · range it, lay it, fire · each direct hit sinks a boat" }, { key: "no", label: "No time: meet them at the parapet", plain: true }]);
+    if (g === "gun") {
+      const r = await wallGun({ title: "The gun emplacement", target: "the landing boats", shots: 3, dist: 120 + d(120) });
+      boats = r.direct ? 4 : r.near ? 2 : 0;
+      if (boats) await mech((r.direct ? "Direct hit! A boat goes down with everyone in it" : "A near miss swamps a boat") + ": " + boats + " fewer Bathyr come over the wall.", "loot");
+      await shawlCheck();
+    }
     await say("\"Hold the wall!\" somebody yells, and then everybody's yelling it, and you're in the middle of it with your back to the sea.");
     const F = await companyFight({
-      soldiers: 12, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them",
+      soldiers: 12 - boats, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them", cover: "a merlon of the sea wall",
       capMiss: "Your blow rings off drowned-bell plate, and the soldiers shove you back from their captain.",
       F: { name: "The landing company", ac: 13, atk: 4, n: 1, s: 8, who: "the landing company", whoShort: "Bathyr", hitWhy: "A Bathyr bar catches you across the ribs.", miss: "The bar rings off the parapet.", hitLine: "One of them goes back over the parapet into the sea." }
     });
