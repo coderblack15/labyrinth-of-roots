@@ -555,6 +555,11 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .belt.ready .belt-note::before { content: "● "; }
 button.belt-btn { border-style: dashed; }
 button.belt-btn:not(:disabled) { border-color: var(--gold); }
+.gun-svg { width: 100%; max-width: 460px; height: auto; display: block; background: #12100d; border: 1px solid var(--line); border-radius: 4px; }
+.gun-row { display: grid; grid-template-columns: 7.5em 1fr 4.5em; gap: 8px; align-items: center; max-width: 460px; margin: 6px 0; font-size: .9rem; }
+.gun-row input[type=range] { width: 100%; accent-color: var(--gold); }
+.gun-read { font-variant-numeric: tabular-nums; color: var(--gold); }
+.gun-log { font-size: .85rem; margin: 6px 0 0; padding-left: 1.1em; max-width: 460px; }
 .belt-track .dig-zone { overflow: visible; }
 .belt-sweet { position: absolute; top: 0; bottom: 0; background: rgba(255, 210, 122, .55); box-shadow: 0 0 10px rgba(255, 210, 122, .6); }
 .inv-toggle.belt-ready::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px rgba(255, 210, 122, .8); vertical-align: middle; }
@@ -1727,6 +1732,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           (x.end === "finished" ? "Finished" : "Part " + roman(x.furthest + 1)) + "</td><td>" + dur(x.ms) + '</td><td class="opt">' + x.deaths + "</td></tr>").join("") +
         "</tbody></table></section>";
     }
+    if (J.gun && J.gun.shots) h += "<section><h3>The wall gun</h3><p>" + J.gun.direct + " direct hit" + (J.gun.direct === 1 ? "" : "s") + " from " + J.gun.shots + " shot" + (J.gun.shots === 1 ? "" : "s") + (J.gun.best ? ". Best: a direct hit on shot " + J.gun.best : "") + ".</p></section>";
     const bz = J.beasts || {}, metN = BEASTS.filter(b => bz[b.id]).length;
     h += "<section><h3>Bestiary · " + metN + " of " + BEASTS.length + " met</h3>" +
       '<p class="j-sub">Creatures of the realm turn up on the road between parts. Each one you meet is written here, across every journey.</p>' + marksList(metN) + '<div class="beasts">' +
@@ -2060,6 +2066,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "spectral", name: "Neither Here Nor There", desc: "Claim the Spectral Dagger of Rahdaria.", hidden: true, test: () => false },
     { id: "phased", name: "Thirty-Four", desc: "Land a Phase Strike.", test: () => false },
     { id: "company", name: "Hold the Wall", desc: "Break a full company, armoured captains and all.", test: () => false },
+    { id: "gunfirst", name: "First Blood from the Walls", desc: "Score a direct hit with the wall gun.", test: () => !!(J.gun && J.gun.direct) },
+    { id: "guneye", name: "Gunner's Eye", desc: "Score a direct hit with the wall gun on your first shot.", test: () => !!(J.gun && J.gun.best === 1) },
+    { id: "gunmaster", name: "Master Gunner", desc: "Score 10 direct hits with the wall gun, across every journey.", test: () => !!(J.gun && J.gun.direct >= 10), prog: () => [Math.min(10, (J.gun && J.gun.direct) || 0), 10] },
     { id: "chest", name: "Put Away Safe", desc: "Buy the Warden's Weapon Chest at level 40.", test: () => false },
     { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
@@ -14081,6 +14090,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
             { key: "sortie", label: "Lead a sortie from the land gate", tag: "fight · soldiers −" + sortieN(), show: !night && R.sol > 0 },
             { key: "raid", label: "Raid their supply road", tag: "Stealth DC 13 · crates −" + (15 + (hasGear("vkey") ? 5 : 0)) + "ish", show: night && R.crates > 0 },
             { key: "sabo", label: "The sabotage mission", tag: "once · plan it well", show: !R.branch },
+            { key: "gun", label: "Man the wall gun", tag: "once a watch · range it, lay it, fire · a direct hit wrecks a siege tower", show: R.sol > 0 && !R.hv["gun" + R.day2 + "-" + R.watch], plain: true },
             { key: "wallco", label: "Hold the sea wall against a landing company", tag: "once · a full company with armoured captains", show: !night && R.sol > 0 && !R.hv.company },
             { key: "keel", label: "Bring General Keel to battle", tag: "the Anchor", show: genOpen("keel") },
             { key: "thole", label: "Bring General Thole to battle", tag: "the Siege-Wright", show: genOpen("thole") },
@@ -14100,6 +14110,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (c === "raid") await supplyRaid();
         if (c === "sabo") await sabotageMission();
         if (c === "wallco") await seaWall();
+        if (c === "gun") await rhGun();
         if (c === "keel" || c === "thole" || c === "sault") await generalFight(c, false);
         if (c === "rally") await rally();
         if (c === "trap") await rhTrap();
@@ -14139,6 +14150,124 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("The trap takes " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", n ? "loot" : "hurt");
   }
   const sortieN = () => 12 + rh().militia + (hasGear("horn") ? 4 : 0) + (rx() && rx().keeper ? 4 : 0) + (rx() && rx().path === "military" ? 6 : 0);
+
+  // ---------- the wall gun: a ranged test of skill ----------
+  // 1. Range it: a timing catch on the sighting staff. Perfect reads within ±5 paces, clean ±15,
+  //    a fumble ±40. 2. Lay the gun: elevation (5–60°), powder (1–4 scoops) and traverse (±4°).
+  // 3. Read the pennant: wind along the line of fire (pushes long or short) and across it (pushes
+  //    left or right), and it shifts between shots. 4. Fire: the arc is drawn and the spotter calls
+  //    the fall of shot. The barrel heats (+2.5% muzzle speed a shot) and the target closes 10–20
+  //    paces a shot. Direct hit = within 8 paces long/short and 5 across; near = within 25 and 12.
+  // Returns { direct, near, shots }. J.gun keeps your best across journeys.
+  function wallGun({ title = "The wall gun", target = "the siege tower", shots = 4, dist = null } = {}) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title, "First range " + target + " through the sighting staff: stop the marker in the gold. Then set the elevation, the powder and the traverse, watch the pennant, and fire. The spotter will call where each shot falls. The barrel heats as you fire, and " + target + " keeps coming.");
+      let D = dist || 220 + d(200), lat = (d(9) - 5) * 2;
+      let wind = { along: d(9) - 5, across: d(9) - 5 };
+      const out = { direct: 0, near: 0, shots: 0 };
+      let fired = 0, err = 40, reading = 0;
+      // stage 1: range-finder
+      const track = el("div", "dig-track belt-track"), zone = el("div", "dig-zone"), sweet = el("div", "belt-sweet"), mark = el("div", "dig-mark");
+      zone.appendChild(sweet); track.append(zone, mark); P.body.append(track);
+      const wide = 26, notch = 6, at = 8 + Math.random() * (84 - wide), sAt = (wide - notch) / 2;
+      zone.style.left = at + "%"; zone.style.width = wide + "%";
+      sweet.style.left = sAt / wide * 100 + "%"; sweet.style.width = notch / wide * 100 + "%";
+      let pos = 0, dir = 1, live = true, raf = 0, last = performance.now();
+      const speed = reduced ? 55 : 95;
+      function step(now) { const dt = Math.min(64, now - last); last = now; if (live) { pos += dir * speed * dt / 1000; if (pos >= 100) { pos = 100; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; } mark.style.left = pos + "%"; } raf = requestAnimationFrame(step); }
+      raf = requestAnimationFrame(step);
+      const rb = pbtn("Take the reading", "primary"); P.ctrl.appendChild(rb);
+      rb.onclick = () => {
+        if (!live) return;
+        live = false; rb.disabled = true; cancelAnimationFrame(raf);
+        const r = pos >= at + sAt - 1 && pos <= at + sAt + notch + 1 ? "perfect" : pos >= at - 1 && pos <= at + wide + 1 ? "clean" : "fumble";
+        err = r === "perfect" ? 5 : r === "clean" ? 15 : 40;
+        reading = Math.round(D + (Math.random() * 2 - 1) * err);
+        track.classList.add(r === "fumble" ? "slip" : "held");
+        track.remove(); rb.remove();
+        layGun(r);
+      };
+      function layGun(r) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 460 170"); svg.setAttribute("class", "gun-svg"); svg.setAttribute("role", "img");
+        P.body.appendChild(svg);
+        const info = el("div", "gun-read"); P.body.appendChild(info);
+        const mk = (lab, min, max, val, stepV, fmtV) => {
+          const row = el("label", "gun-row"); const inp = document.createElement("input");
+          inp.type = "range"; inp.min = min; inp.max = max; inp.step = stepV; inp.value = val;
+          const v = el("span", "gun-read", fmtV(val));
+          inp.oninput = () => { v.textContent = fmtV(+inp.value); };
+          row.append(el("span", "", lab), inp, v); P.body.appendChild(row); return inp;
+        };
+        const elev = mk("Elevation", 5, 60, 30, 0.5, x => x + "°");
+        const pow = mk("Powder", 1, 4, 2, 1, x => x + (x > 1 ? " scoops" : " scoop"));
+        const trav = mk("Traverse", -4, 4, 0, 0.1, x => (x > 0 ? "R " : x < 0 ? "L " : "") + Math.abs(x).toFixed(1) + "°");
+        const log = el("ol", "gun-log"); P.body.appendChild(log);
+        const fire = pbtn("Fire", "primary"), stand = pbtn("Stand down"); P.ctrl.append(fire, stand);
+        const pennant = () => (wind.along === 0 && wind.across === 0 ? "the pennant hangs dead" : "the pennant streams " + (wind.along ? (wind.along > 0 ? "out toward the target" : "back toward you") + " (" + Math.abs(wind.along) + ")" : "") + (wind.along && wind.across ? " and " : "") + (wind.across ? (wind.across > 0 ? "to the right" : "to the left") + " (" + Math.abs(wind.across) + ")" : ""));
+        function draw(arc) {
+          const sc = 440 / 620;
+          let h = '<line x1="0" y1="150" x2="460" y2="150" stroke="#5d4824"/>';
+          h += '<rect x="6" y="138" width="14" height="12" fill="#8a7a5a"/>';
+          const tx = 10 + D * sc;
+          h += '<rect x="' + (tx - 5) + '" y="112" width="10" height="38" fill="#b0443a"/><text x="' + tx + '" y="106" fill="#e7dec9" font-size="10" text-anchor="middle">target</text>';
+          if (arc) h += '<polyline fill="none" stroke="#ffd27a" stroke-width="1.5" points="' + arc.map(([x, y]) => (10 + x * sc).toFixed(1) + "," + (150 - y * sc).toFixed(1)).join(" ") + '"/>';
+          h += '<text x="8" y="16" fill="#cfa850" font-size="11">Reading: ' + reading + " paces (±" + err + ") · " + pennant() + " · shots left " + (shots - fired) + "</text>";
+          svg.innerHTML = h;
+          svg.setAttribute("aria-label", "Range " + reading + " paces, plus or minus " + err + ". " + pennant() + ".");
+        }
+        info.textContent = r === "perfect" ? "A clean, sharp reading." : r === "clean" ? "A fair reading." : "The staff wobbled. The reading is rough.";
+        draw(null);
+        stand.onclick = () => finish();
+        fire.onclick = () => {
+          fired++; out.shots++;
+          const th = +elev.value * Math.PI / 180, v = (34 + 10 * +pow.value) * (1 + 0.025 * (fired - 1)) * (0.985 + Math.random() * 0.03);
+          const t = 2 * v * Math.sin(th) / 9.8;
+          const range = v * v * Math.sin(2 * th) / 9.8 + wind.along * t * 0.9;
+          const side = Math.tan(+trav.value * Math.PI / 180) * range + wind.across * t * 0.8;
+          const arc = []; for (let i = 0; i <= 24; i++) { const tt = t * i / 24; arc.push([range * i / 24, Math.max(0, v * Math.sin(th) * tt - 4.9 * tt * tt) * (range > 0 ? 1 : 0)]); }
+          draw(arc);
+          const dl = Math.round(range - D), ds = Math.round(side - lat);
+          const call = (Math.abs(dl) <= 2 ? "dead on the range" : Math.abs(dl) + " paces " + (dl > 0 ? "long" : "short")) + ", " + (Math.abs(ds) <= 1 ? "dead on the line" : Math.abs(ds) + " paces " + (ds > 0 ? "right" : "left"));
+          let res = "miss";
+          if (Math.abs(dl) <= 8 && Math.abs(ds) <= 5) { res = "direct"; out.direct++; }
+          else if (Math.abs(dl) <= 25 && Math.abs(ds) <= 12) { res = "near"; out.near++; }
+          log.appendChild(el("li", "", (res === "direct" ? "<b>Direct hit!</b> " : res === "near" ? "Near miss: splinters fly. " : "") + "Spotter: \"" + call + ".\""));
+          if (res === "direct" || fired >= shots) { fire.disabled = true; setTimeout(finish, 900); return; }
+          D = Math.max(80, D - 10 - d(10));
+          wind = { along: Math.max(-6, Math.min(6, wind.along + d(3) - 2)), across: Math.max(-6, Math.min(6, wind.across + d(3) - 2)) };
+          P.status.textContent = "The barrel's hotter. " + target[0].toUpperCase() + target.slice(1) + " closes in.";
+          setTimeout(() => draw(arc), 50);
+        };
+      }
+      function finish() {
+        P.end(); scrollNext = true;
+        J.gun = J.gun || { shots: 0, direct: 0, best: 0 };
+        J.gun.shots += out.shots; J.gun.direct += out.direct;
+        if (out.direct && (!J.gun.best || out.shots < J.gun.best)) J.gun.best = out.shots;
+        jSave();
+        if (out.direct) grant("gunfirst");
+        if (out.direct && out.shots === 1) grant("guneye");
+        if (J.gun.direct >= 10) grant("gunmaster");
+        resolve(out);
+      }
+    });
+  }
+  async function rhGun() {
+    const R = rh();
+    R.hv["gun" + R.day2 + "-" + R.watch] = true;
+    await say("The wall gun squats in its embrasure on the land wall: a bronze barrel as long as a boat, green with sea air, with a powder chest and a rammer and a gunner's boy asleep against the wheel. Out on the land road, a Bathyr siege tower is creeping toward the walls on rollers, with men and sea-things pushing it.");
+    const r = await wallGun({ title: "The wall gun", target: "the siege tower", shots: 4 });
+    if (r.direct) {
+      const n = Math.min(R.sol, 8 + d(6)); R.sol -= n; renderSheet();
+      await say("The ball takes the tower square in its middle storey, and the whole thing leans, and keeps leaning, and comes down across the road in a burst of splinters and screaming.");
+      await mech("Direct hit! The siege tower is wrecked: " + n + " Bathyr down. Soldiers: " + R.sol + ".", "loot");
+      await standing(2, "Half the city saw the tower come down.");
+    } else if (r.near) {
+      const n = Math.min(R.sol, 2 + d(3)); R.sol -= n; renderSheet();
+      await mech("Near misses throw splinters through the pushers: " + n + " Bathyr down, but the tower rolls back out of range to be patched. Soldiers: " + R.sol + ".", "loot");
+    } else await mech(r.shots ? "Every shot goes wide. The tower rolls on, and the gunner's boy looks at his feet." : "You stand the gun down.", r.shots ? "hurt" : "");
+  }
   // ---------- company battles: a full company, with armoured captains ----------
   // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
   // armoured captains, each with their own health, who don't attack you but steady the line (+1 to hit for
@@ -14487,9 +14616,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const R = rh();
     R.hv.company = true;
     await say("At slack water, the sea under the wall goes quiet in the wrong way, and then twelve Bathyr come up out of it at once, up the weed on the stones on hooks and lines, the whole landing company, and over the parapet. Behind them, two in plate the colour of a drowned bell climb more slowly: the shield-captains.");
+    let boats = 0;
+    const g = await choose([{ key: "gun", label: "Swing the wall gun onto their boats first", tag: "the gun emplacement · range it, lay it, fire · each direct hit sinks a boat" }, { key: "no", label: "No time: meet them at the parapet", plain: true }]);
+    if (g === "gun") {
+      const r = await wallGun({ title: "The gun emplacement", target: "the landing boats", shots: 3, dist: 120 + d(120) });
+      boats = r.direct ? 4 : r.near ? 2 : 0;
+      if (boats) await mech((r.direct ? "Direct hit! A boat goes down with everyone in it" : "A near miss swamps a boat") + ": " + boats + " fewer Bathyr come over the wall.", "loot");
+    }
     await say("\"Hold the wall!\" somebody yells, and then everybody's yelling it, and you're in the middle of it with your back to the sea.");
     const F = await companyFight({
-      soldiers: 12, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them", cover: "a merlon of the sea wall",
+      soldiers: 12 - boats, captains: ["Shield-Captain Orrun Velle", "Shield-Captain Ysra Coombe"], capHp: 22, capThem: "them", cover: "a merlon of the sea wall",
       capMiss: "Your blow rings off drowned-bell plate, and the soldiers shove you back from their captain.",
       F: { name: "The landing company", ac: 13, atk: 4, n: 1, s: 8, who: "the landing company", whoShort: "Bathyr", hitWhy: "A Bathyr bar catches you across the ribs.", miss: "The bar rings off the parapet.", hitLine: "One of them goes back over the parapet into the sea." }
     });
