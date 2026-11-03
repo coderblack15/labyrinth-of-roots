@@ -95,6 +95,12 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 
 ## Status
 
-**Main-hand weapons.** Besides Vaelric's Axe, you can buy the Hollowpine Spear, the Cairnstone Maul, the Wasp-Needle Rapier and the Cinderbrand from the travelling armourer Hobb Tallis at the start of each chapter, or from Mattie Gorse in Rahdaria. Swap between them any time from the Bag. In Rahdaria, solving a case, closing an inquiry, breaking the blight, beating a General or winning the siege earns you **three cheers** from the city.
+**Main-hand weapons.** Besides Vaelric's Axe, you can buy the Hollowpine Spear, the Cairnstone Maul, the Wasp-Needle Rapier and the Cinderbrand from the travelling armourer Hobb Tallis at the start of each chapter, or from Mattie Gorse in Rahdaria. The Thornwood Longbow (40 gold) carries **Onslaught**: once a fight, three arrows at once, each finding its own target (up to three foes in a group fight, or 3d6 on a single foe). Bows also drop in the field. Swap between them any time from the Bag. In Rahdaria, solving a case, closing an inquiry, breaking the blight, beating a General or winning the siege earns you **three cheers** from the city.
+
+**Field weapons.** Won fights can drop weapons in five qualities of our own: Ashen (smoke grey, 12%), Tempered (bronze, 8%), Rootbound (verdigris, 4%), Gloaming (lavender, 1.5%) and Heartfire (ember gold, 0.34%). Heartfire has a safety net: each won fight without one adds 0.05%, and the 200th dry fight always drops one. Better weapons carry traits (Reach, Searing, Crushing, Keen, Thirsting) and a once-a-fight active fired with quick hands (Phase Strike, Become Ethereal, Heartflare, Sap Mend, Gloam Veil). The Curator's vault always holds the **Spectral Dagger of Rahdaria** (1d6 + 4, +2 to hit, Phase Strike for 34, Become Ethereal). You carry six found weapons; past that, the worst is sold.
+
+**The weapon harness.** Four weapons ride ready (five at level 20, six at level 40), plus the axe. In a fight, Swap weapon to one is free once a turn, a second swap gives the foe advantage on its next attack, and a weapon from the pack costs your next swing.
+
+**The Warden's Weapon Chest.** At level 40, Hobb Tallis or Mattie Gorse sells it for 1,000 gold. Six places, kept apart from every save, so it's shared by all three slots and nothing that happens to a run (death, a replay from your last rest, Rahdaria Falls) touches it.
 
 Parts I to LXII are complete. The story ends in Rahdaria, with the blockade broken and the Speaker for the Deep asking you to come down under the western sea, where the Drowned Light is going out. Part LXIII is still to come.
