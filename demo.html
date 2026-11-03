@@ -4152,6 +4152,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + "." + (dealt < total ? " " + coName(id) + " leaves the last of it to you." : "") + " " + FOE.name + ": " + FOE.hp + " HP left.", "loot");
     }
   }
+  // Mob fights: after one of your blows lands, each companion who strikes takes one of the pack
+  // (once a fight each), never the last one.
+  async function coMob() {
+    if (!FOE.on || !FOE.unit || FOE.hp <= 1) return;
+    FOE.co = FOE.co || {};
+    for (const id of company()) {
+      if (FOE.co["mob-" + id] || FOE.hp <= 1) continue;
+      const ok = id === "burr" ? bondOf("burr") >= 1 : id === "tyra" ? bondOf("tyra") >= 2 && !/^Hesper Coyle/.test(FOE.name) : ["wenna", "odran", "talia", "harrow", "stone"].includes(id);
+      if (!ok) continue;
+      FOE.co["mob-" + id] = true; foeHit(1);
+      await say({ burr: "Burr takes one of them down by the leg and worries it until it stops.", tyra: "Tyra's knife finds one of them, quietly, from behind.", wenna: "A bolt from Wenna drops one of them where it stands.", odran: "Odran Vey puts his shield into one of them and walks over it.", talia: "Talia Ash is suddenly among them, and then one fewer of them.", harrow: "Harrow cuts one of them down with a garrison sword.", stone: "Captain Stone's shield-rim takes one of them across the throat." }[id]);
+      await mech(coName(id) + " takes one. " + FOE.name + ": " + FOE.hp + " left.", "loot");
+    }
+  }
   // The first blow you take in a fight (two, with Odran sworn) can be caught and halved.
   function coBlock(total) {
     if (!FOE.on || total < 2) return null;
@@ -9119,6 +9133,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           if (F.heads) {
             const n = Math.min(FOE.hp, await comboHeads(FOE.hp - 1)); foeHit(n);
             await say(n > 1 ? "You go through the first and into the second, and both of their chest-drums stop at once." : (F.hitLine || "One of them folds up like a dropped coat and stops singing."));
+            if (!F.company) await coMob();
           } else {
             if (glaive) { await foeStrike(1, 10, 3, "Glaive damage"); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
             else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
@@ -14144,7 +14159,41 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const baseAc = F.ac; F.company = true;
     // order: this round's order; last: the one before; drill: the company's combo links;
     // stagger: soldiers lose this round's swings; reach: only this many soldiers can reach you; braced: the coming charge is broken.
-    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0 };
+    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0, stance: null, hunt: null, out: {} };
+    // ---- your company on the field ----
+    // At the start you set a stance: hold (they guard you: one fewer soldier reaches you), press
+    // (they cut into the ranks: better odds), or captains (the blades go for the captains' gorgets).
+    // Each round, after any mines, every companion with you acts. A captain may order a strike at one
+    // of them ("Cut down the dog!"): answer it (Cover them, costs your swing) or they sit out next round.
+    const field = () => company().filter(id => !(G.out[id] >= stRound));
+    let stRound = 0;
+    const FIELD = {
+      burr: { drop: () => 2 + Math.floor(bondOf("burr") / 2), line: "Burr hits a soldier at the knees and drags him down, snarling, and doesn't let go until he stops moving." },
+      tyra: { drop: () => bondOf("tyra") >= 2 ? 3 : 2, cap: () => d(6) + 2, line: "Tyra is somewhere in the ranks, and then one of them folds up quietly round her knife.", capLine: "Tyra comes up under a captain's arm and finds the gap at the gorget" },
+      wenna: { drop: () => sworn("wenna") ? 4 : 3, cap: () => d(8) + (sworn("wenna") ? 3 : 1), line: "A flat <i>thock</i> from behind you, and a soldier goes over with a bolt in him.", capLine: "Wenna's bolt finds the slot in a captain's visor" },
+      odran: { drop: () => 2, guard: true, line: "Odran Vey shoves a soldier off the line with the edge of his shield and walks over him." },
+      caddock: { heal: () => d(4) + (sworn("caddock") ? 1 : 0), line: "Mother Caddock is at your elbow in a lull, and something cold and stinging goes on the worst cut." },
+      stone: { drop: () => 2, guard: true, line: "Captain Stone holds the gap beside you with his dented shield and puts a soldier down behind it." },
+      talia: { drop: () => 3, cap: () => d(6) + 1, line: "Talia Ash goes through the second rank like a rumour, and a soldier sits down and doesn't get up.", capLine: "Talia's knife goes in under a captain's pauldron" },
+      harrow: { drop: () => 3, two: true, line: "Lucan Harrow wades into the ranks with a garrison sword in both hands and nothing left to lose." },
+      lysa: { heal: () => d(4) + 1, line: "Lysa presses a poultice of garden simples onto your arm and ties it off with her teeth." },
+      rowan: { drill: true, line: "Rowan Crest shouts the captains' next count a beat before they do, and the Drill keeps stumbling on it." }
+    };
+    async function fieldAct(st) {
+      for (const id of field()) {
+        const A = FIELD[id];
+        if (!A || FOE.hp <= 0) continue;
+        if (A.heal) { if (S.hp < S.maxHp && st.round % 2 === 0) { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + A.heal()); renderSheet(); await say(A.line); await mech(coName(id) + ": regain " + (S.hp - b) + " HP.", "loot"); } continue; }
+        if (A.drill) { if (G.drill > 1) { G.drill = 1; await say(A.line); await mech("Their Drill drops to 1.", "loot"); } continue; }
+        const cap = alive()[0];
+        if (A.cap && cap && (G.stance === "caps" || soldiers() <= 0) && (st.round % 2 === 1 || soldiers() <= 0)) { await capHit(cap, A.cap(), A.capLine, true); continue; }
+        if (soldiers() <= 0) continue;
+        if (d(6) <= A.drop() + (G.stance === "press" ? 1 : 0)) {
+          const n = Math.min(soldiers(), A.two && d(2) === 2 ? 2 : 1); foeHit(n);
+          await say(A.line); await mech(coName(id) + ": " + n + " down.", "loot");
+        }
+      }
+    }
     const showDrill = () => mech("Their Drill: " + "●".repeat(G.drill) + "○".repeat(DRILL_MAX - G.drill) + (G.drill >= DRILL_MAX ? " · the next hit is a crushing blow" : G.drill >= 2 ? " · you can try a combo breaker" : ""), G.drill >= 2 ? "hurt" : "loot");
     const capDown = async (c, how) => {
       c.hp = 0; foeHit(1);
@@ -14175,7 +14224,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     F.noAtk = () => soldiers() === 0;
     F.extra = () => {
       const out = [];
-      const ord = G.order && CAP_ORDERS[G.order];
+      const ord = G.order === "hunt" ? huntOrder(G.hunt) : G.order && CAP_ORDERS[G.order];
       if (ord && ord.ans) out.push({ key: "answer", label: ord.ans, tag: "answers \"" + ord.call + "\" · " + ord.tag, plain: true });
       if (G.drill >= 2 && soldiers() > 0) out.push({ key: "breaker", label: "Combo breaker", tag: "DC " + (11 + G.drill) + " · snap their Drill, stagger the soldiers, +1 to your combo · costs your turn", plain: true });
       if (calTotal() && !st0.usedCal && soldiers() > 0) out.push({ key: "cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 2 down a turn" : "crude: 1 down a turn") + " for 3 turns, the rest at −1 · costs your turn", plain: true });
@@ -14262,6 +14311,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         G.snap = soldiers(); st.fled = true;
       } else await say("They close the gap before you reach it, and you're back in the middle of them.");
     }
+    const huntOrder = (id) => ({ call: "Cut down " + (id === "burr" ? "the dog" : coName(id)) + "!", what: "three of them break off to go for " + coName(id) + ", who'll be out of the fight next round if nobody covers", ans: "Cover " + coName(id), tag: "you put yourself between them · " + coName(id) + " fights on, and gets a free blow in · costs your turn" });
     async function breaker() {
       const dc = 11 + G.drill;
       await say("You see the rhythm of it, the step-and-cut they've drilled ten thousand times, and you step into the beat instead of away from it.");
@@ -14291,6 +14341,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const c = alive()[0];
         if (r.ok && c) { await say("You go hard for the left, the line shifts left to meet you, and you're already going right, through the hole they just made."); await capAttack(c, true); }
         else await say("They don't take the feint. The line stays shut.");
+      } else if (ord === "hunt") {
+        const id = G.hunt; G.order = null;
+        await say("You get between " + coName(id) + " and the three of them, and they find you there instead.");
+        if (soldiers() > 0) { foeHit(1); await say(id === "burr" ? "Burr comes round your legs and takes the nearest one down." : coName(id) + " uses the moment and drops the nearest one."); }
+        await mech(coName(id) + " is covered, and fights on.", "loot");
       } else if (ord === "drum") {
         G.braced = true;
         await say("You take a step back, find hard ground, plant your feet and wait for them with the axe low.");
@@ -14312,6 +14367,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       while (alive().length > FOE.hp) { const c = alive()[0]; c.hp = 0; await say("Your blow carries on through the last of the line and into " + c.name + ", who goes down."); }
       F.atk = o.F.atk + (alive().length ? 1 : 0) - (G.cal > 0 ? 1 : 0) - G.rot;
       if (st.round === 1) await mech("The company: " + soldiers() + " soldiers and " + caps.length + " armoured captains (" + caps.map(c => c.name).join(", ") + "). Your swing goes at the soldiers; reach a captain from the fight menu. The captains don't attack you themselves: they command. Each round a captain calls an order, and each order has an answer. While a captain stands, the soldiers get +1 to hit and can build their Drill.", "loot");
+      stRound = st.round;
+      if (st.round === 1 && company().length) {
+        await say("Your company is with you: " + company().map(coName).join(" and ") + ".");
+        G.stance = await choose([
+          { key: "hold", label: "Hold the line", tag: "they guard you: one fewer soldier reaches you each round" },
+          { key: "press", label: "Press the ranks", tag: "they cut into the soldiers: better odds of dropping one each round", plain: true },
+          { key: "caps", label: "Go for the captains", tag: "the blades and bolts go for the captains' gorgets, through the plate", plain: true }
+        ]);
+      }
       // The captains call this round's order.
       G.stagger = false; G.reach = 0; F.ac = baseAc;
       if (!G.halved && soldiers() > 0 && soldiers() <= o.soldiers / 2) {
@@ -14327,8 +14391,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       }
       if (soldiers() <= 0) return;
       if (G.last === "drum") G.order = "charge";
-      else { const pool = ["wall", "flank", "ranks", "drum"].filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
-      const ord = CAP_ORDERS[G.order], who = alive()[d(alive().length) - 1].name;
+      else { const pool = ["wall", "flank", "ranks", "drum"].concat(field().length && st.round > 1 ? ["hunt"] : []).filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
+      if (G.order === "hunt") { const f = field(); G.hunt = f[d(f.length) - 1]; }
+      const ord = G.order === "hunt" ? huntOrder(G.hunt) : CAP_ORDERS[G.order], who = alive()[d(alive().length) - 1].name;
       if (G.order === "wall") F.ac = baseAc + 3;
       if (G.order === "charge" && G.braced) {
         G.braced = false; G.order = null;
@@ -14343,11 +14408,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     };
     F.turn = async (st) => {
       if (await blowUp()) G.stagger = true;
+      if (G.order === "hunt" && G.hunt) { G.out[G.hunt] = st.round + 1; await say("Three of them go for " + coName(G.hunt) + " and drive " + (G.hunt === "burr" ? "him" : "them") + " back out of the line."); await mech(coName(G.hunt) + " is out of the fight next round.", "hurt"); G.order = null; }
+      await fieldAct(st);
       if (soldiers() <= 0) { st.evade = false; return "done"; }
       if (G.stagger) { G.stagger = false; await say("The soldiers are still getting their feet back under them."); st.evade = false; return "done"; }
       const charge = G.order === "charge";
       let sw = Math.min(soldiers(), charge || G.order === "flank" ? 3 : 2);
       if (G.reach) sw = Math.min(sw, G.reach);
+      if (G.stance === "hold" && field().length) sw = Math.max(1, sw - 1);
+      if (field().some(id => FIELD[id] && FIELD[id].guard)) sw = Math.max(1, sw - (G.stance === "hold" ? 0 : 1));
       G.snap = soldiers();
       for (let i = 0; i < sw; i++) {
         const crush = G.drill >= DRILL_MAX;
