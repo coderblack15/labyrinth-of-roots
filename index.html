@@ -513,6 +513,18 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .foe.nightmare .foe-name { color: #c79cf0; }
 .foe.nightmare .foe-lv { color: #c79cf0; border-color: #6c4a8c; }
 .foe.nightmare .foebar .now { background: linear-gradient(90deg, #3e1f5c, #9b5cd6); }
+/* Nightmare dread and Cascade threads */
+.dread { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dread[hidden] { display: none; }
+.dpips { display: inline-flex; gap: 3px; }
+.dpips i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #8a6bb0; display: inline-block; background: transparent; transition: background .2s; }
+.dpips i.on { background: #9b5cd6; box-shadow: 0 0 5px rgba(155, 92, 214, .7); }
+.dread.deep .dpips i.on { background: #d65c9b; border-color: #d65c9b; }
+.threads { display: inline-flex; gap: 3px; align-items: center; }
+.threads::before { content: "Threads"; font-family: var(--label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.threads:empty { display: none; }
+.threads i { width: 2px; height: 12px; background: #c9d2dc; box-shadow: 0 0 4px rgba(201, 210, 220, .8); display: inline-block; }
+.threads i.cut { background: transparent; box-shadow: none; border-left: 1px dashed var(--muted); height: 6px; }
 /* experience and levels */
 .xp { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center; position: relative; }
 .xpbar { grid-column: 1 / -1; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; border: 1px solid var(--line); }
@@ -1113,6 +1125,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
+      <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
     </div>
     <div class="abilities">
@@ -2450,7 +2463,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (FOE.on && target === "AC" && FOE.digAdv) { FOE.digAdv = false; adv = true; }
     if (adv && dis) { adv = dis = false; }
     const atk = FOE.on && target === "AC";
-    const cb = atk ? Math.min(2, FOE.chain) : 0;
+    const cb = atk ? Math.min(FOE.dread >= DREAD_CAP ? 1 : 2, FOE.chain) : 0;
     let gu = atk ? gearHit() : 0; const ru = atk ? adaptHit() : 0;
     mod += cb + gu + ru;
     const cob = coCheck(label);
@@ -2665,9 +2678,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const lvDmg = () => Math.floor(lvk() / 6);
   const lvAC = () => Math.floor(lvk() / 12);
   const cascadeOn = () => !!S.cascade;
-  const foeMult = () => (1 + 0.035 * lvk()) * (cascadeOn() ? 1.25 : 1);
-  const foeAtkUp = () => Math.floor(lvk() / 8) + (cascadeOn() ? 2 : 0);
-  const foeDmgUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? 2 : 0);
+  const NM_HP = 1.1;
+  const foeMult = () => (1 + 0.035 * lvk()) * (cascadeOn() ? NM_HP : 1);
+  // A road Nightmare's +2 to hit and +2 damage run down its Cascade threads: cut them and the bonus goes.
+  const nmUp = () => FOE.on && FOE.threadsMax ? Math.round(2 * FOE.threads / FOE.threadsMax) : 2;
+  const foeAtkUp = () => Math.floor(lvk() / 8) + (cascadeOn() ? nmUp() : 0);
+  const foeDmgUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? nmUp() : 0);
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -3182,7 +3198,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await say("Every creature dreams, and bad dreams are heavy. For a thousand years they sank down through the roots to the Undermoon, which drank them the way any moon drinks a sea. " + (S.um && S.um.ending === "rise" ? "But the Undermoon is in the sky now." : "But you've been down there and moved things, and the cage has a different weight in it now.") + " And dreams fall toward the heaviest thing nearby. You have forty rings in your heartgrain. You have become very heavy indeed.");
         await say("So now the realm's nightmares are falling toward you. People are calling them the Cascades. Anything that drinks from one wakes up as the thing it was most afraid of.");
         if (vaelricSpeaks()) await voice("\"I felt them start,\" Vaelric says, very quietly. \"Every one of them is running the same way. Somewhere they all fall from one place. Find it, before it finds you.\"");
-        await mech("<b>The Cascades</b> have woken. Every creature you fight is now a <b>Nightmare</b>: a quarter tougher, +2 to hit and +2 damage, and worth more. The Cascades have washed hidden things loose in the old places. " + (S.roam ? "Search for them from the roads back, and find where the Cascades fall from." : "When the story so far is done, take the roads back to search for them, and to find where the Cascades fall from."), "hurt");
+        await mech("<b>The Cascades</b> have woken. Every creature you fight is now a <b>Nightmare</b>: tougher, +2 to hit and +2 damage, and worth more. Nightmares bring <b>Dread</b>, are tied to the Cascades by silver threads you can cut, and at half health they turn into the thing they fear. The Cascades have washed hidden things loose in the old places. " + (S.roam ? "Search for them from the roads back, and find where the Cascades fall from." : "When the story so far is done, take the roads back to search for them, and to find where the Cascades fall from."), "hurt");
         light("dusk");
       }
     }
@@ -3199,7 +3215,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.mimic) items.push(["mimic", "mask", "Mimic", "Copy a foe's blow with Mockwax mid-fight and your next hit deals it too. Print book: " + ((S.prints || []).length ? S.prints.map(P => P.from + " (" + printTag(P) + ")").join("; ") : "empty") + "."]);
     if (S.mimic || S.wax) items.push(["wax", "vial", "Mockwax ×" + (S.wax || 0), "Tallow-moth wax with a memory. Press it into a fresh wound to take the print of the blow."]);
     Object.keys(RELICS).forEach(r => { const R = RELICS[r]; if (relic(R.key)) items.push(["relic-" + R.key, R.icon, R.name, R.fx]); });
-    if (cascadeOn()) items.push(["cascade", "sick", "The Cascades", "Every creature is a Nightmare: a quarter tougher, +2 to hit, +2 damage." + (S.underdream ? " You can still them, or open them again, from the roads back." : " Somewhere they all fall from one place.")]);
+    if (cascadeOn()) items.push(["cascade", "sick", "The Cascades", "Every creature is a Nightmare: tougher, +2 to hit and +2 damage while its Cascade threads hold. Its hits and its stare build Dread; at 6 Dread you're Overtaken and lose the fight. At half health it turns into the creature it fears." + (S.underdream ? " You can still them, or open them again, from the roads back." : " Somewhere they all fall from one place.")]);
   }
 
   // ---------- the roads back, the hidden things, and the Underdream ----------
@@ -3523,14 +3539,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false };
+  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false };
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
@@ -3564,7 +3580,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     $("comboPips").querySelectorAll("i").forEach((p, i) => p.classList.toggle("on", i < c));
     $("comboBox").classList.toggle("ready", c >= 2);
     renderBelt();
-    $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : "+2 to hit · next hit is a Rootbreaker";
+    $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : (FOE.dread >= DREAD_CAP ? "+1 to hit (dread) · next hit is a Rootbreaker" : "+2 to hit · next hit is a Rootbreaker");
+    renderDread();
   }
   // On phones the sheet is a sticky top bar, so scroll targets need to clear its real height.
   function sheetH() { const sh = $("sheet"); if (sh) document.documentElement.style.setProperty("--sheet-h", sh.offsetHeight + "px"); }
@@ -3604,7 +3621,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     for (let i = 0; i < n; i++) { const r = d(sides); rolls.push(r); total += r; }
     const extra = k === 2 ? 2 : rb ? 4 : 0;
     total += extra;
-    if (rb) { await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo"); grant("rootbreaker"); }
+    if (rb) { await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo"); grant("rootbreaker"); await dreadEase(2, "The Rootbreaker lands, and the dread loosens its grip"); }
     if (FOE.on && FOE.mimic) total += await mimicLands();
     const mim = total - bonus - extra - rolls.reduce((a, b) => a + b, 0);
     let txt = label + ": " + n + "d" + sides + (bonus ? " + " + bonus : "") + (extra ? " + " + extra + " combo" : "") + (mim ? " + mimic" : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + (extra ? " + " + extra : "") + (mim ? " + " + mim : "") + " = " + total + ".";
@@ -3646,9 +3663,66 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   async function comboHeads(spare = 0) {
     const k = comboLanded();
     if (k < 3) return 1;
+    await dreadEase(2, "The Rootbreaker lands, and the dread loosens its grip");
     if (spare > 0) { await mech("Rootbreaker! Three hits in a row, and the blow carries through into a second one.", "combo"); return 2; }
     await mech("Rootbreaker! Three hits in a row, and the blow lands with everything you have.", "combo");
     return 1;
+  }
+
+  // ---------- Nightmare dread ----------
+  // In a road fight with a Nightmare, Dread runs from 0 to 6 under the foe's meter. Its hits (+1),
+  // a failed look-away (+2) and its turn into its feared shape (+1) raise it, but only while it still
+  // has a Cascade thread. At 2 your combo tops out at +1 to hit; at 4 your hands shake (the quick-hands
+  // notch narrows and the dig-in marker runs faster); at 6 you're Overtaken: the axe keeps you alive,
+  // but the fight is lost. A Rootbreaker takes off 2, a perfect quick-hands use 1, and digging in
+  // clears it. The heartgrain wards off the first point each fight.
+  const DREAD_MAX = 6, DREAD_CAP = 2, DREAD_SHAKE = 4;
+  function renderDread() {
+    const box = $("dreadBox");
+    if (!box) return;
+    box.hidden = !(FOE.on && FOE.dreadOn);
+    if (box.hidden) return;
+    const v = FOE.dread;
+    $("dreadPips").querySelectorAll("i").forEach((p, i) => p.classList.toggle("on", i < v));
+    box.classList.toggle("deep", v >= DREAD_SHAKE);
+    $("threadPips").innerHTML = Array.from({ length: FOE.threadsMax }, (_, i) => '<i class="' + (i < FOE.threads ? "" : "cut") + '"></i>').join("");
+    $("dreadNote").textContent = v >= DREAD_SHAKE ? "your hands shake · " + (DREAD_MAX - v) + " more and you're Overtaken" : v >= DREAD_CAP ? "combo capped at +1 to hit" : FOE.threads ? "6 and you're Overtaken" : "its threads are cut";
+  }
+  async function dreadAdd(n, why) {
+    if (!FOE.on || !FOE.dreadOn || n <= 0 || !FOE.F) return;
+    if (FOE.ward) { FOE.ward = false; n--; await mech("The heartgrain's rings slow the dread down: it takes 1 less.", "loot"); if (n <= 0) return; }
+    const was = FOE.dread;
+    if (was + n >= DREAD_MAX && !FOE.tyraSteady && company().includes("tyra") && bondOf("tyra") >= 2) {
+      FOE.tyraSteady = true;
+      await say("Tyra's hand closes on the back of your collar. \"Hey. Look at me, not at it. You're here. I've got you.\" Her voice is the only thing in the world that's the right shape.");
+      n = Math.max(0, DREAD_MAX - 2 - was);
+      await mech("Tyra steadies you (once a fight): the dread stops short of Overtaking you.", "loot");
+      if (n <= 0) { renderFoe(); return; }
+    }
+    FOE.dread = Math.min(DREAD_MAX, was + n);
+    renderFoe();
+    const v = FOE.dread;
+    await mech(why + ": Dread " + v + " of " + DREAD_MAX + "." + (was < DREAD_CAP && v >= DREAD_CAP && v < DREAD_SHAKE ? " Your combo can only build to +1 to hit now." : "") + (was < DREAD_SHAKE && v >= DREAD_SHAKE && v < DREAD_MAX ? " Your hands are shaking: quick hands and digging in are harder." : ""), "hurt");
+    if (was < DREAD_SHAKE && v >= DREAD_SHAKE && v < DREAD_MAX && !FOE.burrFroze && company().includes("burr")) {
+      FOE.co = FOE.co || {};
+      FOE.burrFroze = { s: !!FOE.co.burr, b: !!FOE.co.burrB }; FOE.co.burr = FOE.co.burrB = true;
+      await say("Burr stops dead with his hackles up, staring at something beside the Nightmare that isn't there. He doesn't hear you. He's shaking.");
+      await mech("Burr is frozen by the dread: no bite, no block, until you spend a turn calling him back.", "hurt");
+    }
+    if (v >= DREAD_MAX) { const st = FOE.F.st; st.overtaken = true; st.fled = true; }
+  }
+  // Calling Burr back out of the dread costs your turn, and his weight against your leg steadies you.
+  async function burrCall() {
+    const f = FOE.burrFroze; FOE.burrFroze = true; FOE.co = FOE.co || {};
+    FOE.co.burr = f && f.s; FOE.co.burrB = f && f.b;
+    await say("You crouch and say his name, low, the way you do at camp, and hold out your hand. It takes three tries. Then his nose is in your palm, and he's leaning his whole weight against your leg, and he's himself again.");
+    await dreadEase(1, "Burr's back, and so are you, a little");
+  }
+  async function dreadEase(n, why) {
+    if (!FOE.on || !FOE.dreadOn || FOE.dread <= 0) return;
+    FOE.dread = Math.max(0, FOE.dread - n);
+    renderFoe();
+    await mech(why + ": Dread " + FOE.dread + " of " + DREAD_MAX + ".", "loot");
   }
 
   // ---------- quick hands: using an item mid-fight ----------
@@ -3687,7 +3761,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function beltGame(label) {
     return new Promise(resolve => {
       const waited = FOE.beltAt == null ? 0 : Math.min(2, FOE.turn - FOE.beltAt - BELT_CD);
-      const wide = 30, notch = 7 + waited * 4;
+      const wide = 30, notch = Math.max(3, 7 + waited * 4 - (FOE.dread >= DREAD_SHAKE ? 3 : 0));
       const P = puzzleBox("Quick hands", label + ". Stop the marker in the gold for a clean use, on the bright notch for a perfect one. A fumble only half works." + (waited > 0 ? " You waited for your moment: the notch is wider." : ""));
       const track = el("div", "dig-track belt-track"), zone = el("div", "dig-zone"), sweet = el("div", "belt-sweet"), mark = el("div", "dig-mark");
       track.setAttribute("aria-hidden", "true");
@@ -3755,6 +3829,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const t = await beltGame(it.label);
     const mult = t === "perfect" ? 1.5 : t === "fumble" ? 0.5 : 1;
     FOE.beltAt = FOE.turn - (t === "perfect" ? 1 : 0);
+    if (t === "perfect") await dreadEase(1, "Your hands are steady, and steady hands push the dread back");
     if (key.startsWith("trap-")) await trapThrow(key.slice(5), t, mult, main);
     else if (key === "potion" || key === "elixir") {
       if (key === "elixir") S.elixirs--; else S.potions--;
@@ -3881,7 +3956,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!got.extra) bits.push("a loose leaf of old vellum turns up in the mess, written in a cramped teaching hand (Scroll of Acquisition: " + S.leaves + " of " + LEAVES + " leaves)");
     if (down && S.mimic && (S.wax || 0) < WAX_MAX && d(cascadeOn() ? 2 : 4) === 1) { S.wax = (S.wax || 0) + 1; bits.push("there's a lump of grey Mockwax caught in a seam of " + (FOE.unit ? "their" : "its") + " hide (" + S.wax + " now)"); }
     if (bits.length) add(el("p", "mech loot", "Spoils: " + bits.join(", and ") + "."));
-    const lt = down ? lootDrop() : "";
+    const lt = down ? (lootDrop() || (FOE.unbound ? lootDrop() : "")) : "";
     if (lt) add(el("p", "mech loot find", "<span>Found: " + lt + ".</span>"));
   }
   async function spoilsTurnIn() {
@@ -8843,7 +8918,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // F: { name, hp | heads+unit, ac, atk, n, s, type, bloom (save DC or 0), hesk, who, hitWhy, miss, turn(st), before(st) }
   async function hkFight(F) {
     const back = document.body.dataset.light;
-    if (F.heads) foeStart(F.name, F.heads, { unit: F.unit }); else foeStart(F.name, F.hp);
+    const left = F.hpLeft ? { hp: F.hpLeft } : {};
+    if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
     S.gemsSpent = false; renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: false };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade;
@@ -8861,11 +8937,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if ((F.road || F.trapOk) && FOE.hp > 0) await trapOpen(F, st);
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     if (!F.terrain && (S.arRank || 0) >= 3 && typeof sabotage === "function" && d(3) > 1) { F.terrain = OBS_TERRAIN[d(OBS_TERRAIN.length) - 1]; await mech("Adaptive Reasoning: you see it before the fight starts. " + F.terrain[0][0].toUpperCase() + F.terrain[0].slice(1) + " is loose. You could bring it down on " + (F.heads ? "them" : "it") + ".", "loot"); }
-    while (FOE.hp > 0) {
+    if (F.setup) await F.setup(st);
+    while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
-      if (F.before) { await F.before(st); if (FOE.hp <= 0) break; }
+      if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
       const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with the " + wDef(wpnKey()).name, tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
@@ -8945,6 +9022,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       for (let i = 0; i < swings; i++) await foeSwing(F, st);
       st.evade = false;
     }
+    F.overtaken = !!st.overtaken;
     F.fled = !!st.fled;
     foeEnd(!!st.fled);
     light(back);
@@ -8959,6 +9037,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const EVADE = 65;
   const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade();
   async function foeSwing(F, st, o = {}) {
+    if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0) - (F.road && hasMark("tally") ? 1 : 0);
     if (st.evade) {
@@ -8975,6 +9054,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (st.soft && F.hesk && S.hp > 0) { const lost = S.hp; await hurt(n, s, type, o.why || F.hitWhy); const back = Math.min(2, lost - Math.max(0, S.hp)); if (back > 0 && S.hp > 0) { S.hp = Math.min(S.maxHp, S.hp + back); renderSheet(); await mech("The softened blade does " + back + " less.", "loot"); } }
       else await hurt(n, s, type, o.why || F.hitWhy);
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
+      if (FOE.dreadOn && FOE.threads > 0) await dreadAdd(1, "Its blow lands, and the Cascade-water in it gets under your skin");
     } else if (F.miss) await say(F.miss);
     return hit;
   }
@@ -9011,7 +9091,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       let tries = 0, held = 0, pos = 0, dir = 1, at = 0, live = true, raf = 0, last = performance.now();
       const place = () => { at = 6 + Math.random() * (88 - wide); zone.style.left = at + "%"; zone.style.width = wide + "%"; };
       // Percent of the bar per second; each try is a little faster.
-      const speed = () => (reduced ? 45 : 70) * (1 + tries * 0.18) * (S.grain ? 0.85 : 1);
+      const speed = () => (reduced ? 45 : 70) * (1 + tries * 0.18) * (S.grain ? 0.85 : 1) * (FOE.dread >= DREAD_SHAKE ? 1.25 : 1);
       function step(now) {
         const dt = Math.min(64, now - last); last = now;
         if (live) {
@@ -9061,6 +9141,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (n === 0) await mech("You dug in, but the ground gave nothing back. " + (got ? "Regain " + got + " HP." : "You're too far gone to heal."), got ? "loot" : "hurt");
     else await mech("Dug in: " + n + " of 3 roots held. " + (got ? "Regain " + got + " HP" : "You're too far gone to heal") + ", +" + FOE.dig + " AC for the rest of this fight" + (FOE.digAdv ? ", and advantage on your next attack" : "") + ".", "loot");
     await mech("Footholds left: " + S.digs + " of " + DIG_MAX + ". One comes back with each new chapter.");
+    if (FOE.dreadOn && FOE.dread > 0) { FOE.dread = 0; renderFoe(); await mech("With your feet in the ground, the dread drains out of you: Dread 0.", "loot"); }
     if (!S.grain) await giftGrain();
   }
 
@@ -9210,6 +9291,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const stats = (B.heads ? B.heads + " " + B.unit.split("|")[1] : B.hp + " HP") + " · AC " + B.ac + " · hits for " + B.n + "d" + B.s + " " + B.type;
     return '<div class="beast"><div class="bh"><span class="bn">' + B.name + '</span><span class="bs">' + REGIONS[B.region] + " · " + stats + "</span></div>" +
       "<p><b>" + B.ability[0] + ".</b> " + B.ability[1] + "</p><p><b>Tactic.</b> " + B.tactic + '</p><p class="bl">' + B.lore + "</p>" +
+      (tally && tally.fear && FEARS[B.id] ? "<p><b>Feared shape.</b> As a Nightmare it fears the " + beastById(FEARS[B.id]).name + ", and at half health it turns into one, keeping its own trick.</p>" : "") +
       (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + "</p>" : "") + "</div>";
   }
   function beastLog(B, beaten) {
@@ -9359,6 +9441,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
   };
 
+  // ---------- Nightmare fears ----------
+  // Every creature has a fear: another creature of the realm. A Nightmare at half health turns into
+  // what it fears, keeping its own trick and taking on the other's. Packs and head-count fights skip
+  // fears that heal (they'd raise the dead). Duneskimmers and gibbet crows don't flee as Nightmares:
+  // they're more afraid of what they're turning into than of you.
+  const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
+    cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab" };
+  const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
+  const beastById = (id) => BEASTS.find(b => b.id === id);
+
   // ---------- bestiary marks: rewards for filling the bestiary ----------
   // Marks are earned across every journey (from the journal's J.beasts), at a quarter, half, three
   // quarters and all of BEASTS. Thresholds are fractions, so new creatures raise them automatically,
@@ -9429,22 +9521,26 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   async function meetBeast(reg, { roam = false, forced = false, pack = false } = {}) {
     S.met = S.met || [];
     const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
-    const from = unmet.length ? unmet : pool, B = from[d(from.length) - 1];
+    const haunt = cascadeOn() && S.haunt && S.haunt.reg === reg ? S.haunt : null;
+    if (haunt) { S.haunt = null; pack = !!haunt.pack; }
+    const from = unmet.length ? unmet : pool, B = haunt ? beastById(haunt.id) : from[d(from.length) - 1];
     if (!S.met.includes(B.id)) S.met.push(B.id);
     const isNew = !(J.beasts && J.beasts[B.id]);
     beastLog(B, false);
     const back = document.body.dataset.light;
-    const nm = cascadeOn(), many = pack && !B.heads ? 2 + d(2) : 0, nmName = (many ? "A pack of " + many + " " : "") + (nm ? "Nightmare " : "") + B.name;
+    const nm = cascadeOn(), many = haunt && haunt.pack ? haunt.pack : pack && !B.heads ? 2 + d(2) : 0, nmName = (many ? "A pack of " + many + " " : "") + (nm ? "Nightmare " : "") + B.name;
     const h = el("div", "part-head sub", '<span class="num">' + (roam ? "The roads back" : "On the road") + " · " + REGIONS[reg] + "</span><h2>" + nmName + "</h2>");
     scrollNext = true; add(h);
     await wxRoad(reg);
-    await say(B.intro);
-    if (nm && B.heads) await say(["They've been drinking from a Cascade. Their outlines won't hold still: each of them keeps trying on the shape of whatever it was most afraid of, and keeping the worst parts.", "Black water runs up off them in threads, toward the sky. Their eyes have all gone the same silver as the Cascades' edges, and they all look at you at once.", "There are too many of them, somehow, even when you count. The Cascade they drank from has filled them up with something that wasn't theirs."][d(3) - 1]);
+    if (haunt) await say("It's the one that Overtook you. It has been waiting on this road, and the wounds you gave it haven't closed.");
+    else await say(B.intro);
+    if (haunt) {}
+    else if (nm && B.heads) await say(["They've been drinking from a Cascade. Their outlines won't hold still: each of them keeps trying on the shape of whatever it was most afraid of, and keeping the worst parts.", "Black water runs up off them in threads, toward the sky. Their eyes have all gone the same silver as the Cascades' edges, and they all look at you at once.", "There are too many of them, somehow, even when you count. The Cascade they drank from has filled them up with something that wasn't theirs."][d(3) - 1]);
     else if (nm) await say(["It has been drinking from a Cascade. Its outline won't hold still: it keeps trying on the shape of whatever it was most afraid of, and keeping the worst parts.", "Black water runs up off it in threads, toward the sky. Its eyes have gone the silver of the Cascades' edges, and they look at you as if they've dreamed about you.", "It's bigger than it should be, and there's too much of it in places, as if a nightmare had been poured into it and nobody stopped when it was full."][d(3) - 1]);
     add(el("div", "", beastCard(B)));
     if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
     const sneak = 3 + (S.shadow ? 2 : 0) + (hasMark("roadwise") ? 2 : 0) + wxSneak();
-    const c = forced ? "fight" : await choose([{ key: "fight", label: "Fight", tag: "Lv " + lv() + (nm ? " Nightmare" : "") }, roam ? { key: "leave", label: "Let it go", plain: true } : { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
+    const c = forced || haunt ? "fight" : await choose([{ key: "fight", label: "Fight", tag: "Lv " + lv() + (nm ? " Nightmare" : "") }, roam ? { key: "leave", label: "Let it go", plain: true } : { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
     if (c === "leave") { await say("You step off the road and let it pass."); light(back); return; }
     let spotted = false;
     if (c === "slip") {
@@ -9455,11 +9551,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const r = await check({ label: "Perception check (which stone is wrong?)", mod: 2, dc: B.notice, cta: "Look" });
       spotted = r.ok;
     }
-    const q = QUIRKS[B.quirk] || {};
+    const q = nm && NM_NOFLEE.includes(B.quirk) ? {} : QUIRKS[B.quirk] || {};
     const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
       stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
     if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
-    if (many) await say("And it isn't alone. There are " + many + " of them, and they spread out to come at you from different sides.");
+    if (haunt) F.hpLeft = haunt.hp;
+    if (many && !haunt) await say("And it isn't alone. There are " + many + " of them, and they spread out to come at you from different sides.");
     F.terrain = roadTerrain(reg);
     if (F.terrain) await say("Off to one side there's " + F.terrain[0] + ", and it doesn't look as solid as it should. You could bring it down on " + (B.heads ? "them" : "it") + ".");
     const tells = hasMark("tells");
@@ -9469,18 +9566,73 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     };
     if (q.turn) F.turn = (st) => q.turn(F, st);
     if (nm) {
+      const fearB = beastById(FEARS[B.id]), fearQ = fearB && !((F.heads) && FEAR_HEALS.includes(fearB.quirk)) ? QUIRKS[fearB.quirk] : null;
+      const threads = haunt ? haunt.threads : d(3);
+      F.setup = async () => {
+        FOE.dreadOn = true; FOE.ward = !!S.grain; FOE.threadsMax = haunt ? haunt.max : threads; FOE.threads = threads; renderFoe();
+        if (!haunt) await say(threads > 1 ? threads + " silver threads run up off it into the sky, taut, humming. The Cascade is holding it up like a puppet." : "One silver thread runs up off it into the sky, taut, humming. The Cascade is holding it up like a puppet.");
+        await mech("<b>Dread</b> builds as it hurts you; at " + DREAD_MAX + " you're Overtaken and lose the fight. Rootbreakers, perfect quick hands and digging in push it back. Each <b>Cascade thread</b> you cut takes away part of its Nightmare strength" + (FOE.threads ? ": " + FOE.threads + " left" : "") + ". Cut them all and it's only itself, and leaves more behind.", "hurt");
+        if (fearQ && S.adapt) await mech("Adaptive Reasoning: you can see what it's afraid of. It fears the <b>" + fearB.name + "</b>, and if you hurt it badly enough it will turn into one. (" + fearB.ability[0] + ": " + fearB.ability[1] + ")", "loot");
+      };
+      F.extra = () => (FOE.threads > 0 ? [{ key: "thread", label: "Cut a Cascade thread", tag: "attack at −2, no damage · " + FOE.threads + " of " + FOE.threadsMax + " left", plain: true }] : [])
+        .concat(FOE.burrFroze && FOE.burrFroze !== true ? [{ key: "burr", label: "Call Burr back", tag: "costs your turn · −1 Dread", plain: true }] : []);
+      F.onExtra = async (c, st) => {
+        if (c === "burr") { await burrCall(); return; }
+        if (c !== "thread") return;
+        const a = await check({ label: "Cut a Cascade thread", mod: (S.dull ? 4 : 5) + rxHit() - 2, dc: F.ac, target: "AC", adv: st.adv, cta: "Cut" });
+        st.adv = false;
+        if (!a.ok) { await say("Your blade passes under the thread. It hums on."); return; }
+        FOE.threads--; renderFoe();
+        if (FOE.threads > 0) { await say("The thread parts with a sound like a harp string, and the cut end whips away up into the sky. It sags a little."); await mech("Thread cut: " + FOE.threads + " left. Its Nightmare bonus is now +" + nmUp() + " to hit and damage.", "loot"); }
+        else {
+          FOE.unbound = true;
+          await say("The last thread goes. Whatever was holding it up lets go, and for a moment it just stands there, smaller, blinking, as if it had woken up somewhere it doesn't know.");
+          await mech("Every thread is cut: no more Nightmare bonus, and no more Dread from it. Beat it now and it leaves twice the chance of a weapon.", "loot");
+        }
+      };
       const inner = F.before;
       F.before = async (st) => {
-        if (st.round > 1 && st.round % 3 === 1 && FOE.hp > 0) {
+        if (st.round > 1 && st.round % 3 === 1 && FOE.hp > 0 && FOE.threads > 0) {
           await say("It shows you something. You don't know how: it just turns, and for a moment you're looking at the worst thing that ever happened to you.");
           const w = await check({ label: "Wisdom save (the Nightmare's dread)", mod: 2 + lvAC(), dc: 14, cta: "Look away" });
-          if (!w.ok) await hurt(1, 6, "psychic", "You can't stop seeing it.");
+          if (!w.ok) { await hurt(1, 6, "psychic", "You can't stop seeing it."); await dreadAdd(2, "You couldn't look away"); if (st.fled) return; }
+          else await say("You look at the ground, at your hands, at anything else, until it passes.");
         }
         if (inner) await inner(st);
+        if (fearQ && !F.turned && FOE.hp > 0 && FOE.hp <= FOE.max / 2) {
+          if (!F.warned) {
+            F.warned = true;
+            await say("Its outline starts to bulge and slide. Something is pushing up from inside it, something with the shape of a " + fearB.name.toLowerCase().replace(/s$/, "") + ".");
+            await mech("It's turning into what it fears. Next round it becomes a " + fearB.name + " as well.", "hurt");
+          } else {
+            F.turned = true;
+            if (fearB.quirk === "harden") { F.baseAc = F.ac; F.lastHp = FOE.hp; }
+            if (fearB.quirk === "thief") F.stolen = F.stolen || 0;
+            J.beasts = J.beasts || {}; (J.beasts[B.id] = J.beasts[B.id] || { met: 0, beaten: 0 }).fear = true; jSave();
+            await say(["It stops being only " + F.who + ". It has become the thing it was most afraid of, and kept everything it was.", "It splits along a seam you hadn't seen, and what steps out is the thing it feared, wearing its old shape like a coat."][d(2) - 1]);
+            await mech("Feared shape: it's part " + fearB.name + " now. " + fearB.ability[0] + ": " + fearB.ability[1] + " Your bestiary records its fear.", "hurt");
+            if (FOE.threads > 0) await dreadAdd(1, "Watching it turn");
+            if (st.fled) return;
+          }
+        }
+        if (F.turned && fearQ.before) await fearQ.before(F, st);
+      };
+      const ownTurn = F.turn;
+      F.turn = async (st) => {
+        if (F.turned && fearQ.turn && (await fearQ.turn(F, st)) === "done") return "done";
+        if (ownTurn) return ownTurn(st);
       };
     }
     await hkFight(F);
     light(back);
+    if (F.overtaken) {
+      S.haunt = { reg, id: B.id, hp: Math.max(1, FOE.hp), threads: FOE.threads, max: FOE.threadsMax, pack: many };
+      const lost = Math.floor((S.coins || 0) / 2); S.coins -= lost;
+      await say("The dread closes over your head like water. You don't fall: the axe won't let you. But you stop being able to tell which way is up, or which of you is real, and when the world comes back you're lying at the side of the road with the light gone wrong.");
+      await say("It's still out there. You can feel it, the way you feel a step that isn't where it should be.");
+      await mech("<b>Overtaken.</b> You lose this fight and its spoils" + (lost ? ", and half the gold you were carrying (" + lost + ") is gone from your purse when you wake; banked gold is safe" : "") + ". It's waiting for you on the roads of " + REGIONS[reg] + " with " + S.haunt.hp + (F.heads ? " " + F.unit.split("|").slice(S.haunt.hp === 1 ? 0 : -1)[0] : " HP") + " left, and you'll meet it there next.", "hurt");
+      renderSheet(); return;
+    }
     const tier = TIER[reg];
     if (F.fled === "thief") { await mech("The sandpicker got away with " + F.stolen + " gold.", "hurt"); return; }
     if (F.stolen) { S.coins += F.stolen; renderSheet(); await mech("You take back the " + F.stolen + " gold it lifted from you.", "loot"); }
@@ -9491,6 +9643,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
     if (hasMark("measure")) await gold(1, 6, "You know where its kind hide what they carry.");
+    if (haunt) await gold(2, 6, "You finish what it started. Something heavy lets go of you.");
     if (roam) await gold(nm ? 2 : 1, 6 + tier, nm ? "The Cascade-water on it has set hard into black pearls, and tinkers pay well for those." : "Word gets round that the road's clear, and somebody pays you for it.");
   }
 
