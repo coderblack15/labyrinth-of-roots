@@ -3278,6 +3278,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const left = relicsLeft().length, cap = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (cap ? " · gold" : " · XP and gold") },
+          { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "seek", label: "Search the old places for what was hidden", tag: left + " of " + roamRegions().filter(r => RELICS[r]).length + " still hidden", plain: true, show: cap && left > 0 },
           { key: "head", label: S.underdream ? "Go back to where the Cascades fall from" : "Follow the Cascades to where they fall from", tag: "the Underdream", plain: true, show: cap },
           { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
@@ -3285,6 +3286,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           { key: "journal", label: "Open your journal", plain: true }
         ]);
         if (c === "walk") await roamWalk();
+        else if (c === "town") await townPick();
         else if (c === "seek") await roamSeek();
         else if (c === "head") await roamUnderdream();
         else if (c === "toggle") {
@@ -3299,6 +3301,108 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         save();
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); }
     }
+  }
+  // ---------- towns and sanctuaries on the roads back ----------
+  // Every cleared region keeps its towns and its quiet places. From the roads back you can go into
+  // any of them: an inn, a market, a smith, a bank, a library, a bar, and the sanctuaries, where you
+  // can rest for nothing and be healed of what the road gave you.
+  const TOWNS = {
+    roots: [{ name: "The Library of Roots", kind: "sanctuary", has: ["sanctum", "library"], intro: "The Library of Roots is as you left it: shelves grown out of the living wood, and the smell of old paper and rain. Nobody else has been here. Nobody ever does come here." }],
+    desert: [{ name: "The Hollow Hands' den", kind: "town", has: ["inn", "market", "bar"], intro: "The Hollow Hands still keep their den under the dunes, and they still remember you. Somebody pours you a cup of something strong before you've sat down." }],
+    fen: [{ name: "The Glade", kind: "sanctuary", has: ["sanctum"], intro: "The Glade is still green in the middle of the mire, as if the Hushfen has agreed to leave this one place alone. The water here is clear enough to drink." }],
+    mere: [{ name: "Carrowmere landing", kind: "town", has: ["inn", "market"], intro: "At the landing, people are building again with stone pulled out of the drowned town. There's an inn now, of a sort: a barge with a roof on it and a fire in a tin." }],
+    lastwell: [{ name: "Lastwell", kind: "town", has: ["inn", "market", "smith"], intro: "Lastwell's doors are open in the daytime now. The bell in the Belfry rings the hours instead of warnings, and children chase each other round the well." }],
+    glass: [{ name: "Sulmara", kind: "town", has: ["inn", "market", "smith", "library", "bar"], intro: "Sulmara under its glass sky: the Cracked Lantern, the Vitreous Library, the Slag & Siphon, and a hundred glaziers' shops. Nobody's looking for you any more. Mostly." }],
+    corrach: [
+      { name: "Ashgate", kind: "town", has: ["inn", "market", "smith", "bank"], intro: "Ashgate's square is busy again, salt carts and copper carts, and the Coffer-House door stands open in the hill. Somebody has painted over the old bounties on the Reckoning Board." },
+      { name: "Vellum Rest", kind: "sanctuary", has: ["sanctum", "healer"], intro: "Vellum Rest: white terraces, slow people, vinegar and smoke. Sister Wren looks up from her burners and nods as if you only left this morning." }
+    ],
+    noon: [
+      { name: "Ammaret", kind: "town", has: ["market", "bar"], intro: "Ammaret is still bright, but the light has a slant to it now, and the Lidless sell more shadows than they used to. Their market is louder than you remember." },
+      { name: "The Temple of the Kept Noon", kind: "sanctuary", has: ["sanctum"], intro: "The Temple of the Kept Noon is quiet and full of warm light. The keepers leave you a mat and a bowl of water and don't ask what you've been doing." }
+    ],
+    undermoon: [{ name: "Kedge", kind: "town", has: ["inn", "market"], intro: "Kedge rides its moorings in the slow pull of the Undermoon. The Moored hand you a kinstone at the gate out of habit, so your feet stay down." }],
+    rahdaria: [
+      { name: "Rahdaria", kind: "town", has: ["inn", "market", "smith", "bar", "bank"], intro: "Rahdaria's terraces are green again from the walls to the Lily. The Pressed Rose has a sign out, Mattie Gorse's hammer rings, and people know your face in the street." },
+      { name: "The hanging gardens", kind: "sanctuary", has: ["sanctum"], intro: "High on the terraces, the hanging gardens are clean again: figs, vines, water running down stone channels. Keeper Sabine Orr lets you sleep under the trees." }
+    ]
+  };
+  const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t)));
+  async function townPick() {
+    const list = townsOpen();
+    const c = await choose(list.map((t, i) => ({ key: String(i), label: t.name, tag: REGIONS[t.reg] + " · " + (t.kind === "sanctuary" ? "sanctuary" : "town"), plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    if (c === "back") return;
+    await townVisit(list[+c]);
+  }
+  async function townVisit(T) {
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[T.reg] + "</span><h2>" + T.name + "</h2>");
+    scrollNext = true; add(h);
+    light(T.kind === "sanctuary" ? "gems" : "dusk");
+    await say(T.intro);
+    const has = (k) => T.has.includes(k);
+    let rested = false, drank = false;
+    for (;;) {
+      const smithLeft = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
+      const skillsLeft = Object.keys(SKILLS).filter(k => !hasSkill(k));
+      const c = await choose([
+        { key: "sanct", label: "Rest in the sanctuary", tag: "free · full HP, footholds, and the road's sicknesses eased", show: has("sanctum") && !rested },
+        { key: "inn", label: "Take a room at the inn", tag: "8 gold · full HP and a foothold back", show: has("inn") && !rested && S.coins >= 8 && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+        { key: "potion", label: "Buy a Draught of Mending", tag: "8 gold · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= 8, plain: true },
+        { key: "elixir", label: "Buy an Elixir of Health", tag: "20 gold · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= 20, plain: true },
+        { key: "sell", label: "Sell your salvage", tag: salvWorth() + " gold", show: has("market") && salvWorth() > 0, plain: true },
+        { key: "smith", label: "Visit the smith", tag: smithLeft.length ? "weapons and honing" : "honing", show: has("smith") && S.axe && (smithLeft.length > 0 || !S.whet), plain: true },
+        { key: "bank", label: "The bank", tag: S.bank && S.bank.open ? (S.bank.bal || 0) + " gold on deposit" : "15 gold to open an account", show: has("bank"), plain: true },
+        { key: "library", label: "Browse the library", tag: "30 gold · learn a skill", show: has("library") && skillsLeft.length > 0 && S.coins >= 30, plain: true },
+        { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: "10 gold", show: has("healer") && !hasSkill("mend") && S.coins >= 10, plain: true },
+        { key: "bar", label: "Buy a round and listen", tag: "2 gold · rumours", show: has("bar") && !drank && S.coins >= 2, plain: true },
+        { key: "leave", label: "Back to the road", plain: true }
+      ]);
+      if (c === "leave") break;
+      if (c === "sanct") {
+        rested = true;
+        const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; renderSheet();
+        await say(T.kind === "sanctuary" && T.reg === "corrach" ? "Sister Wren burns sage over you, binds what needs binding, and makes you sleep on a white terrace in the sun." : "You sleep in the quiet, and nothing comes for you, and you wake up feeling like yourself.");
+        await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
+        if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
+        if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
+      } else if (c === "inn") {
+        rested = true;
+        S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+        await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
+        await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
+      } else if (c === "potion") { S.coins -= 8; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (8 gold).", "loot"); }
+      else if (c === "elixir") { S.coins -= 20; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (20 gold).", "loot"); }
+      else if (c === "sell") { const n = salvWorth(), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("You sell your salvage (" + what + "). Gain " + n + " gold.", "loot"); }
+      else if (c === "smith") {
+        const k = await choose(smithLeft.filter(w => S.coins >= WEAPONS[w].price).map(w => ({ key: w, label: "Buy the " + WEAPONS[w].name, tag: WEAPONS[w].price + " gold · " + WEAPONS[w].fx, plain: true }))
+          .concat([{ key: "whet", label: "Have the axe honed and balanced", tag: "15 gold · +1 axe damage", show: !S.whet && S.coins >= 15, plain: true }, { key: "no", label: "Nothing today", plain: true }]));
+        if (k === "whet") { S.coins -= 15; S.whet = true; renderSheet(); await mech("The smith hones the axe until it shaves the hair off your arm. +1 axe damage, for good.", "loot"); }
+        else if (k !== "no") await buyWeapon(k, WEAPONS[k].price, "The smith tests the edge on a thumbnail and nods.");
+      } else if (c === "bank") {
+        S.bank = S.bank || { open: false, bal: 0 };
+        const k = await choose([
+          { key: "open", label: "Open an account", tag: "15 gold", show: !S.bank.open && S.coins >= 15 },
+          { key: "dall", label: "Deposit everything", tag: S.coins + " gold", show: S.bank.open && S.coins > 0 },
+          { key: "wall", label: "Withdraw everything", tag: S.bank.bal + " gold", show: S.bank.open && S.bank.bal > 0, plain: true },
+          { key: "no", label: "Leave the bank", plain: true }]);
+        if (k === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await mech("Account opened (15 gold). Gold on deposit is safe whatever happens to you.", "loot"); }
+        if (k === "dall") { const n = S.coins; S.coins = 0; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold.", "loot"); }
+        if (k === "wall") { const n = S.bank.bal; S.bank.bal = 0; S.coins += n; renderSheet(); await mech("You withdraw " + n + " gold. In your purse: " + S.coins + " gold.", "loot"); }
+      } else if (c === "library") {
+        const k = await choose(skillsLeft.map((x, i) => ({ key: x, label: SKILLS[x].name, tag: SKILLS[x].desc, plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
+        if (k !== "no") { S.coins -= 30; if (!S.skills) S.skills = []; await learnSkill(k, "You buy the book (30 gold) and read it through twice in a corner of the reading room."); }
+      } else if (c === "healer") {
+        S.coins -= 10; if (!S.skills) S.skills = [];
+        await learnSkill("mend", "Sister Wren shows you how: pressure first, then the knot. 10 gold.");
+      } else if (c === "bar") {
+        drank = true; S.coins -= 2; renderSheet();
+        const left = relicsLeft();
+        await say(left.length ? "Somebody at the next table has seen something odd: " + RELICS[left[d(left.length) - 1]].hint + ". They say it like a joke. It isn't one." : cascadeOn() ? "Everybody's talking about the Cascades: companies of the drowned seen marching on the old roads, captains in green plate, nobody knows whose." : "Nobody has much news. The roads are quieter than they were, and that suits everybody.");
+      }
+      save();
+    }
+    light(back);
   }
   async function roamWalk() {
     const regs = roamRegions();
