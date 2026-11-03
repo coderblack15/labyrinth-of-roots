@@ -2069,7 +2069,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "company", name: "Hold the Wall", desc: "Break a full company, armoured captains and all.", test: () => false },
     { id: "gunfirst", name: "First Blood from the Walls", desc: "Score a direct hit with the wall gun.", test: () => !!(J.gun && J.gun.direct) },
     { id: "guneye", name: "Gunner's Eye", desc: "Score a direct hit with the wall gun on your first shot.", test: () => !!(J.gun && J.gun.best === 1) },
-    { id: "gunmaster", name: "Master Gunner", desc: "Score 10 direct hits with the wall gun, across every journey.", test: () => !!(J.gun && J.gun.direct >= 10), prog: () => [Math.min(10, (J.gun && J.gun.direct) || 0), 10] },
+    { id: "gunmaster", name: "Master Gunner", desc: "Score 10 direct hits with the wall gun, across every journey. The reward: the Quickening Shawl.", test: () => !!(J.gun && J.gun.direct >= 10), prog: () => [Math.min(10, (J.gun && J.gun.direct) || 0), 10] },
     { id: "chest", name: "Put Away Safe", desc: "Buy the Warden's Weapon Chest at level 40.", test: () => false },
     { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
@@ -3344,7 +3344,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           await say(S.cascade ? "You go back to where they started and stop holding them shut. All over the realm, the black water starts falling upward again." : "You stand at the head of the Cascades and sing the Underdream's own lullaby back down into it. One by one, all over the realm, the black ropes thin and stop.");
           await mech(S.cascade ? "The Cascades run. Every creature is a Nightmare again, and the roads pay double gold." : "The Cascades are still. Creatures are what they were (still matched to your level).", S.cascade ? "hurt" : "loot");
         } else if (c === "rest") {
-          S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+          S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
           await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
           await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
         } else if (c === "journal") jOpen();
@@ -3412,14 +3412,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (c === "leave") break;
       if (c === "sanct") {
         rested = true;
-        const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; renderSheet();
+        const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(T.kind === "sanctuary" && T.reg === "corrach" ? "Sister Wren burns sage over you, binds what needs binding, and makes you sleep on a white terrace in the sun." : "You sleep in the quiet, and nothing comes for you, and you wake up feeling like yourself.");
         await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
         if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
       } else if (c === "inn") {
         rested = true;
-        S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); renderSheet();
+        S.coins -= 8; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
       } else if (c === "potion") { S.coins -= 8; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (8 gold).", "loot"); }
@@ -6573,6 +6573,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.blank || S.ink) items.push(["ink", "scroll", "Scribing Kit", (S.blank || 0) + " blank parchment, " + (S.ink || 0) + " measures of ink."]);
     if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes. 2 to a bag of caltrops."]);
     if (S.dress) items.push(["dress", "herb", "Field Dressings ×" + S.dress, "Bind one from your belt mid-fight: 1d8 + 2 HP."]);
+    if (S.shawl) items.push(["shawl", "blessing", "The Quickening Shawl", (S.shawl.charge ? "Ready. " : "Spent: rest at an inn or a sanctuary to recharge it. ") + "In a fight: 3 turns where nothing answers you (2 against captains and the greatest foes), then you're winded."]);
     if (S.pavise) items.push(["pavise", "shield", "Pavise ×" + S.pavise, "Plant it in a fight: it halves your next 3 hits, or stops a whole volley, then it's done."]);
     const rm = rmineKeys();
     if (rm.length) items.push(["rmines", "caltrop", "Mines", rm.map(k => REGION_MINES[k].name + " ×" + rmines()[k]).join(", ") + ". Lay one in any fight."]);
@@ -9140,6 +9141,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (F.hesk && S.song >= 2 && !st.used.discord) opts.push({ key: "discord", label: "Sing a discord into their blade", tag: "Wisdom DC 13", plain: true });
       if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
       if (S.pavise && !st.used.pavise) opts.push({ key: "pavise", label: "Plant the pavise", tag: "halves your next 3 hits, or stops a whole volley · " + S.pavise + " left · costs your turn", plain: true });
+      if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
@@ -9204,6 +9206,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         st.used.pavise = true; S.pavise--; st.pavise = 3; renderSheet();
         await say("You drive the pavise's spike into the ground and get your shoulder behind it.");
         await mech("Pavise planted: your next 3 hits are halved, or it stops one whole volley.", "loot");
+      } else if (c === "quick") {
+        S.shawl.charge = 0; renderSheet();
+        st.quick = F.company || (!F.heads && FOE.max >= 45) ? 2 : 3; st.quickJust = true;
+        await say("You pull the Quickening Shawl round your shoulders, and the world goes thick and slow, like honey poured in winter. Blades hang in the air. Dust stops falling. You don't.");
+        await mech("Quickening: " + st.quick + " turns where nothing answers you.", "loot");
       } else if (c === "breath") {
         st.used.breath = true;
         const n = d(6) + Math.floor(lv() / 5), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
@@ -9216,6 +9223,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
+      if (st.quick > 0) {
+        if (st.quickJust) { st.quickJust = false; continue; }
+        st.quick--;
+        if (st.quick > 0) { await mech("Quickening: " + st.quick + " turn" + (st.quick > 1 ? "s" : "") + " left.", "loot"); continue; }
+        st.winded = true;
+        await say("The world comes back all at once, loud, and you're gasping like you've run a mile.");
+        await mech("Winded: its next swing has advantage.", "hurt");
+        continue;
+      }
       if (st.stilled) { st.stilled = false; await say(F.hesk ? "They stand frozen for a breath, listening to something they last heard as children." : "It hesitates."); continue; }
       if (F.turn && (await F.turn(st)) === "done") continue;
       const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
@@ -9249,7 +9265,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       st.split--;
       if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return false; }
     }
-    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis, cta: "Brace" });
+    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis, adv: !!st.winded, cta: "Brace" });
+    st.winded = false;
     if (hit) {
       if (st.soft && F.hesk && S.hp > 0) { const lost = S.hp; await hurt(n, s, type, o.why || F.hitWhy); const back = Math.min(2, lost - Math.max(0, S.hp)); if (back > 0 && S.hp > 0) { S.hp = Math.min(S.maxHp, S.hp + back); renderSheet(); await mech("The softened blade does " + back + " less.", "loot"); } }
       else await hurt(n, s, type, o.why || F.hitWhy);
@@ -14116,7 +14133,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (c === "rally") await rally();
         if (c === "trap") await rhTrap();
         if (String(c).startsWith("x-")) { if (!(await rxInvDo(c))) await rxSiegeDo(c); }
-        if (c === "inn") { const b = S.hp; S.coins -= rhPrice(6); S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet(); await mech("Bel Amory keeps your bed under the eaves. " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot"); }
+        if (c === "inn") { if (S.shawl) S.shawl.charge = 1; const b = S.hp; S.coins -= rhPrice(6); S.hp = Math.min(S.maxHp, S.hp + d(6) + d(6) + 2); renderSheet(); await mech("Bel Amory keeps your bed under the eaves. " + rhPrice(6) + " gold. Regain " + (S.hp - b) + " HP.", "loot"); }
         if (c === "wall") { const b = S.hp; S.hp = Math.min(S.maxHp, S.hp + d(4)); renderSheet(); await mech("You sleep in a guard-niche on the wall with the Bathyr drum in the stones under you. Regain " + (S.hp - b) + " HP.", "loot"); }
         if (R.militia >= 6 && R.sol > 0) { const k = Math.min(R.sol, 4); R.sol -= k; renderSheet(); await mech("The terrace militia harry the trenches with slings and dropped stones from the high walls: " + k + " Bathyr down. Soldiers: " + R.sol + ".", "loot"); }
         if (R.crates > 40 && !R.hv["bomb" + R.day2 + R.watch] && rx().ambush) { R.hv["bomb" + R.day2 + R.watch] = true; await mech("The spies' maps showed you where their engines are ranged: you're never where the stones come down.", "loot"); }
@@ -14254,6 +14271,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       }
     });
   }
+  // The Quickening Shawl: the reward for Master Gunner (10 direct hits across journeys).
+  async function shawlCheck() {
+    if (S.shawl || !(J.gun && J.gun.direct >= 10)) return;
+    S.shawl = { charge: 1 }; renderSheet();
+    await say("When the smoke clears, the old gunner's widow is waiting at the foot of the wall stair with something folded over her arm: a shawl of grey wool so fine it looks like fog, with a hem stitched in silver. \"His,\" she says. \"He'd want it on somebody who can shoot. It makes the world slow down round you. Not for long.\"");
+    await mech("Gain the <b>Quickening Shawl</b>: once, draw it round you in a fight for 3 turns where nothing answers you (2 against captains and the greatest foes). Then you're winded. It recharges when you rest at an inn or a sanctuary.", "loot");
+  }
   async function rhGun() {
     const R = rh();
     R.hv["gun" + R.day2 + "-" + R.watch] = true;
@@ -14268,6 +14292,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const n = Math.min(R.sol, 2 + d(3)); R.sol -= n; renderSheet();
       await mech("Near misses throw splinters through the pushers: " + n + " Bathyr down, but the tower rolls back out of range to be patched. Soldiers: " + R.sol + ".", "loot");
     } else await mech(r.shots ? "Every shot goes wide. The tower rolls on, and the gunner's boy looks at his feet." : "You stand the gun down.", r.shots ? "hurt" : "");
+    await shawlCheck();
   }
   // ---------- company battles: a full company, with armoured captains ----------
   // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
@@ -14623,6 +14648,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const r = await wallGun({ title: "The gun emplacement", target: "the landing boats", shots: 3, dist: 120 + d(120) });
       boats = r.direct ? 4 : r.near ? 2 : 0;
       if (boats) await mech((r.direct ? "Direct hit! A boat goes down with everyone in it" : "A near miss swamps a boat") + ": " + boats + " fewer Bathyr come over the wall.", "loot");
+      await shawlCheck();
     }
     await say("\"Hold the wall!\" somebody yells, and then everybody's yelling it, and you're in the middle of it with your back to the sea.");
     const F = await companyFight({
