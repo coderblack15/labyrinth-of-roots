@@ -30,6 +30,18 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 `TIP_URL` (the Support the creator link) and `FULL_URL` (where the demo's "Play the full game" button goes) are set near the top of the script in `index.html`.
 
+## Playtesting
+
+`tools/playtest.js` plays the game by itself in a headless browser: it reads each scene, picks choices (preferring ones it hasn't tried), rolls the dice and pokes at the puzzles, and stops with a report if the page throws a script error, leaves nothing to press (a soft-lock), or freezes (it records where). It saves the game at the start of every part, so one chapter can be replayed from its first part. It needs Playwright (`npm i playwright`).
+
+```
+node tools/playtest.js --seed 1                      # a whole run (about 5,000-10,000 clicks)
+node tools/playtest.js --seed 2 --from playtest-1/save-part24.json --stop 28   # just Lastwell's end
+node tools/playtest.js --seed 3 --from playtest-1/save-part24.json --prefer "Climb the bell rope|Leave the rafters"
+```
+
+Run a few seeds after any change, and after adding a chapter.
+
 ## What's in the game
 
 - **A WARNING screen** that greets every visitor. Press *ENTER* to go in.
@@ -105,5 +117,9 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 **Towns and sanctuaries on the roads back.** After the story so far, every cleared region keeps its towns and quiet places, and you can visit any of them from the roads back: inns, markets (potions, elixirs, salvage), smiths (weapons and honing), banks in Ashgate and Rahdaria, the Library of Roots and the Vitreous Library (learn a skill for 30 gold), Sister Wren's Field Mending at Vellum Rest, bars for rumours, and sanctuaries (the Glade, Vellum Rest, the Temple of the Kept Noon, the hanging gardens, the Library of Roots) where you rest for free and the road's sicknesses are eased.
 
 **The Warden's Weapon Chest.** At level 40, Hobb Tallis or Mattie Gorse sells it for 1,000 gold. Six places, kept apart from every save, so it's shared by all three slots and nothing that happens to a run (death, a replay from your last rest, Rahdaria Falls) touches it.
+
+**First-time tips.** The first time a system turns up (fights and combos, fight moves, the axe holding you at 1 HP, quick hands, weapon swaps, digging in, spoils, levels, your company, weather, road creatures, company battles, volleys and cover, mines and caltrops, the trapper's kit), a short note explains it. Tips are remembered per browser across all three slots, and the journal's **Field guide** lists every one you've seen, with a switch to stop new ones.
+
+**Mines in a fight.** You can set two mines in any one fight (rune mines and regional mines together), and caltrops once. When a captain goes down in a company battle, one or two soldiers run.
 
 Parts I to LXII are complete. The story ends in Rahdaria, with the blockade broken and the Speaker for the Deep asking you to come down under the western sea, where the Drowned Light is going out. Part LXIII is still to come.
