@@ -316,6 +316,11 @@ body.intro-open { overflow: hidden; }
 .story .mech.hurt::before { content: "✕"; color: var(--ember); }
 .story .mech.loot { color: var(--gold); }
 .story .mech.loot::before { content: "✦"; }
+.story .tipcard { margin: 0 0 1em; padding: 9px 12px; border: 1px dashed #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: rgba(207,168,80,.06); font-family: var(--label); font-size: .86rem; letter-spacing: .02em; line-height: 1.5; color: var(--ink); }
+.story .tipcard .tip-k { display: block; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: 2px; }
+.journal dl.tips { margin: 0; display: grid; gap: 6px; }
+.journal dl.tips dt { font-weight: 700; color: var(--gold); }
+.journal dl.tips dd { margin: 0 0 4px; color: var(--muted); font-size: .9rem; }
 .fade { animation: rise .6s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
@@ -1726,6 +1731,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
     h += achSection();
+    h += tipSection();
     h += linkSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -1742,6 +1748,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     body.innerHTML = h;
     const rt = $("jRecapToggle");
     if (rt) rt.onclick = () => { setRecapOff(!recapOff()); jRender(); };
+    const tt = $("jTipToggle");
+    if (tt) tt.onclick = () => { tipState.off = !tipState.off; tipSave(); jRender(); };
   }
   function jOpen() {
     jRender();
@@ -2433,6 +2441,46 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   function light(v) { document.body.dataset.light = v; }
 
+  // ---------- first-time tips ----------
+  // A short "how this works" note the first time each system turns up. What you've seen is kept
+  // per browser, across every save slot (it's what you know, not what your adventurer knows), and
+  // the journal's Field guide lists every tip seen so far, with a switch to turn them off.
+  // New systems: add a TIPS entry and call tip("key") where the system first appears.
+  const TIP_KEY = "labyrinth-of-roots-tips";
+  const TIPS = {
+    fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
+    menu: ["Fight moves", "In a fight like this you pick a move each round. <b>Evade</b> gives up your swing for a chance to slip every attack that round, and <b>Catch your breath</b> heals once a fight. Anything marked \"no roll\" always lands."],
+    axe: ["The axe holds you", "At 0 HP Vaelric's axe holds you up at 1, and you lose nothing. Your journal counts these as close calls. The Pale Bloom, later, is the one thing it can't reach through."],
+    belt: ["Quick hands", "<b>Use an item</b> is free, on top of your move, and comes back every second turn. Stop the marker in the gold to use it cleanly, or on the bright notch for half as much again. Waiting longer widens the notch."],
+    swap: ["Swapping weapons", "A weapon on your harness swaps in for free once a turn. A second swap in the same turn gives the foe advantage, and one pulled out of the pack costs your next swing. Set your harness from the Bag."],
+    dig: ["Digging in", "Once a fight, when you're down to about a quarter of your HP, you dig in: catch the root up to three times to heal and harden your guard. You carry 3 footholds, and one comes back each chapter."],
+    spoils: ["Spoils", "Every fight you live through leaves a leaf of the Scroll of Acquisition, and four leaves teach you a new skill. Salvage from foes you put down is sold for you as the next part starts."],
+    level: ["Levels", "Parts, chapters, passed checks and won fights all earn XP, up to level 40. Foes grow with you, so a level buys you more tricks rather than an easy ride: Adaptive Reasoning at 5, Mimic at 8."],
+    company: ["Your company", "Each companion lands one blow a fight, after your first, and always leaves the kill to you. Bond grows with every third fight won together and with an evening at camp at each chapter's end."],
+    weather: ["Weather", "Weather rolls on the road between parts and changes fights for both sides. The line above says how, and your sheet shows what's in the air."],
+    beast: ["Creatures of the road", "Between parts, the realm's own creatures turn up. Fight for XP and spoils, or slip past. Each one you meet goes in your journal's bestiary with its trick, and filling it earns marks."],
+    battle: ["Company battles", "Captains don't strike. They shout orders, and the soldiers carry them out. Each order has an answer in your options. Watch their <b>Drill</b>: at 3 the next hit is crushing, so try a <b>combo breaker</b> at 2. Drop a captain and the line starts to run. <b>Fight your way out</b> is always there."],
+    cover: ["Volleys and cover", "When a captain calls \"Loose!\" the bowmen fire four arrows that turn. Cover or a planted pavise stops the whole volley. Cover lasts two of their turns and splinters after three volleys or charges."],
+    mines: ["Mines and caltrops", "Setting a mine or scattering caltrops costs your turn and pays off over the rounds after: mines blow when the foe comes onto them, and caltrops bite for three rounds. Both are at their best against a pack or a whole company. You can set two mines in a fight, at most."],
+    bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
+  };
+  const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
+  const tipSave = () => { try { localStorage.setItem(TIP_KEY, JSON.stringify(tipState)); } catch (e) {} };
+  function tip(k) {
+    const T = TIPS[k];
+    if (!T || tipState.seen[k] || !started) return;
+    tipState.seen[k] = Date.now(); tipSave();
+    if (tipState.off) return;
+    add(el("aside", "tipcard", '<span class="tip-k">First time · ' + T[0] + "</span>" + T[1]));
+  }
+  function tipSection() {
+    const seen = Object.keys(TIPS).filter(k => tipState.seen[k]);
+    return '<section><h3>Field guide · ' + seen.length + " of " + Object.keys(TIPS).length + "</h3>" +
+      '<p class="j-sub">A short note shows the first time each part of the game turns up. Every one you\'ve seen is kept here.</p>' +
+      (seen.length ? '<dl class="tips">' + seen.map(k => "<dt>" + TIPS[k][0] + "</dt><dd>" + TIPS[k][1] + "</dd>").join("") + "</dl>" : '<p class="j-empty">None yet.</p>') +
+      '<p class="j-note">' + (tipState.off ? "New tips are turned off. " : "") + '<button class="ghost" type="button" id="jTipToggle">' + (tipState.off ? "Show new tips" : "Stop showing new tips") + "</button></p></section>";
+  }
+
   function choose(opts) {
     const main = FOE.menu; FOE.menu = false;
     return new Promise(resolve => {
@@ -2662,6 +2710,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
     if (saved) jCount("close");
     renderSheet();
+    if (saved === true) tip("axe");
     await mech(txt, "hurt");
     if (saved === "ring") await say("The world goes black, and then the grey shell ring on your finger cracks clean through with a sound like a seed splitting, and you're breathing again, on your knees, with 1 HP. <i>Wake, and wake again.</i>");
     else if (saved) {
@@ -3036,6 +3085,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     btn.type = "button";
     const tray = el("div", "swap-tray"); tray.hidden = true;
     const note = el("p", "swap-note", "");
+    tip("swap");
     const paint = () => {
       tray.innerHTML = "";
       const all = ["axe"].concat(harness()).concat(arms().concat(armLoot().map(x => "L" + x.id)).filter(k => !harness().includes(k)));
@@ -3211,6 +3261,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
   // ---------- level news: scenes for what a level teaches ----------
   async function lvNews() {
+    if (lv() > LV_MIN) tip("level");
     const q = S.lvNews || [];
     while (q.length) {
       const [what, L] = q.shift();
@@ -3592,6 +3643,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
     renderFoe(true);
+    if (!unit) tip("fight");
   }
   function foeEnd(lost) { if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
@@ -3944,6 +3996,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     };
     paint();
     row.appendChild(btn);
+    tip("belt");
     const run = async (key) => {
       if (!beltReady()) return;
       beltHook = null; renderSheet();
@@ -4005,6 +4058,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (lt) add(el("p", "mech loot find", "<span>Found: " + lt + ".</span>"));
   }
   async function spoilsTurnIn() {
+    if ((S.leaves || 0) > 0 || salvWorth() > 0) tip("spoils");
     // With Trapcraft and a schematic, you keep metal and cloth for parts (up to a pack's worth) and sell the rest.
     if (keepsSalvage() && salvWorth() > 0) {
       const v = salv(), sold = { cloth: Math.max(0, v.cloth - KEEP_CAP.cloth), metal: Math.max(0, v.metal - KEEP_CAP.metal), spore: v.spore };
@@ -4161,6 +4215,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
       const dealt = Math.min(total, FOE.hp - 1);
       FOE.hp -= dealt; renderFoe(); foePop("−" + dealt);
+      tip("company");
       await say(line + ".");
       await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + "." + (dealt < total ? " " + coName(id) + " leaves the last of it to you." : "") + " " + FOE.name + ": " + FOE.hp + " HP left.", "loot");
     }
@@ -4430,6 +4485,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     S.wx = k || quake ? { k: k || "", quake: !!quake } : null;
     wxPaint();
     if (line) await say(line);
+    if (S.wx && started) tip("weather");
     if (S.wx && started) await mech("Weather: " + (k ? WX[k].name : "still air") + (quake ? ", with tremors" : "") + ". " + (k ? WX[k].fx : "") + (quake ? " Tremors: the ground heaves now and then mid-fight, and loose structures give way more easily." : ""));
   }
   // The road between parts rolls its weather from the region.
@@ -4673,6 +4729,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const buy = tinker && S.coins >= 7;
       if (!o.length && !buy) { if (!first) break; if (!force) break; await mech("Your kit: nothing you can make right now (" + salv().metal + " metal, " + salv().cloth + " cloth, " + tc().ins + " insights)."); break; }
       if (first) await say("You unroll your trapper's kit on a flat stone: the schematics, the pliers, the coil of wire, the jar of pins.");
+      if (first) tip("bench");
       first = false;
       await mech("Your kit: " + salv().metal + " metal, " + salv().cloth + " cloth, " + tc().ins + " insight" + (tc().ins === 1 ? "" : "s") + ".");
       if (buy) o.push({ key: "buy", label: "Buy 2 scrap metal from the tinker", tag: "7 gold", plain: true });
@@ -4910,6 +4967,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     rahdaria: { name: "Pitch-pot", fill: "Bathyr pitch and lamp oil", cost: 12, dice: [3, 8], type: "fire", fx: "bleed", fxTxt: "the pitch keeps burning: 1d4 a round for 3 rounds" }
   };
   const rmines = () => S.rmines || (S.rmines = {});
+  // Mines are strong for their price, so a fight takes at most MINE_CAP of them (rune mines and
+  // regional mines together). Caltrops are once a fight on their own.
+  const MINE_CAP = 2;
   const rmineKeys = () => Object.keys(REGION_MINES).filter(k => (rmines()[k] || 0) > 0);
   // The bench: a town's own mine, caltrops, and scrap iron to make both.
   async function mineBench(reg, who) {
@@ -4948,7 +5008,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (F.company) return [];
     const o = [];
     if (calTotal() && !st.used.cal) o.push({ key: "mun-cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 1d6 a round" + (F.heads ? ", one drops each round" : "") : "crude: 1d4 a round") + ", −1 to hit, 3 rounds · costs your turn", plain: true });
-    rmineKeys().forEach(k => { const M = REGION_MINES[k]; o.push({ key: "mun-" + k, label: "Lay a " + M.name, tag: M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") + " · Dex DC 11 to draw " + (F.heads ? "them" : "it") + " onto it · " + rmines()[k] + " left · costs your turn", plain: true }); });
+    if ((st.mines || 0) < MINE_CAP) rmineKeys().forEach(k => { const M = REGION_MINES[k]; o.push({ key: "mun-" + k, label: "Lay a " + M.name, tag: M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") + " · Dex DC 11 to draw " + (F.heads ? "them" : "it") + " onto it · " + rmines()[k] + " left · costs your turn", plain: true }); });
     return o;
   }
   async function munFightDo(c, F, st) {
@@ -4965,7 +5025,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!String(c).startsWith("mun-")) return false;
     const k = c.slice(4), M = REGION_MINES[k];
     if (!M || !(rmines()[k] > 0)) return true;
-    rmines()[k]--; renderSheet();
+    rmines()[k]--; st.mines = (st.mines || 0) + 1; renderSheet();
     await say("You set the " + M.name + " in the ground and step back past it, so that the only way to you is over it.");
     const r = await check({ label: "Dexterity check (drawing " + (F.heads ? "them" : "it") + " onto the " + M.name + ")", mod: 3, dc: 11, cta: "Give ground" });
     if (!r.ok) { await say((F.heads ? "They go" : "It goes") + " round it. The " + M.name + " sits there, wasted, until you kick it into a ditch."); return true; }
@@ -7360,10 +7420,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           await hurt(2, 6, "bludgeoning", "The board breaks. You fall through the rafters, hit a beam, and go into the grey up to your chest.");
           await sicken(13, "It gets in your mouth.");
           await noise(3, "The splash rolls round the church.");
-          await say("You drag yourself out, shaking, with the ooze sliding off you in sheets, and climb the rope again. You know one more rotten board now.");
+          await say("You drag yourself out, shaking, with the ooze sliding off you in sheets. You know one more rotten board now.");
+          const up = await choose([
+            { key: "up", label: "Climb the rope again", tag: "the rafters remember what you learned" },
+            { key: "down", label: "Leave the rafters", tag: "try another way from the loft", plain: true }
+          ]);
+          if (up === "down") break;
           const k2 = await check({ label: "Athletics check: climb again", mod: 3, dc: 12, cta: "Climb" });
           if (!k2.ok) await hurt(1, 4, "bludgeoning", "Your slick hands slip on the rope.");
         }
+        if (!got) continue;
         await say("You lie flat on the last beam and haul the cage up on its chain hand over hand, and unlatch it.");
       } else {
         let iced = false;
@@ -9146,6 +9212,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
+      if (opts.some(o => /^mun-/.test(o.key))) tip("mines");
+      if (!F.company) tip("menu");
       FOE.menu = true;
       const c = await choose(opts);
       if (c === BELT_WON) break;
@@ -9345,6 +9413,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (digsLeft() <= 0) { await mech("You'd dig in here if you had anything left to dig in with. You've no footholds left; one comes back with each new chapter.", "hurt"); return; }
     S.digs = digsLeft() - 1;
     grant("dig");
+    tip("dig");
     await say(["You're nearly done, and your body knows it before you do. You stop backing up. You set your heels into the ground and reach down for something to hold on to.",
       "Everything has gone quiet and far away. You plant your feet, bend your knees, and dig in, the way a tree does when the wind finally means it."][d(2) - 1]);
     const n = await digGame();
@@ -9736,6 +9805,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // A creature of the region on the road. roam: walked into on the roads back (you can let it go);
   // forced: it won't let you slip past. Once the Cascades wake, every creature is a Nightmare.
   async function meetBeast(reg, { roam = false, forced = false, pack = false } = {}) {
+    tip("beast");
     S.met = S.met || [];
     const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
     const haunt = cascadeOn() && S.haunt && S.haunt.reg === reg ? S.haunt : null;
@@ -14381,7 +14451,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const capDown = async (c, how) => {
       c.hp = 0; foeHit(1);
       await say(how + " " + c.name + " goes down in a crash of plate" + (alive().length ? "." : ", and the last of the line's backbone goes with " + (o.capThem || "them") + "."));
-      if (soldiers() > 0) { const n = Math.min(d(3), soldiers()); foeHit(n); await say(n > 1 ? "Seeing that, " + n + " of the soldiers throw down their weapons and run." : "Seeing that, one of the soldiers throws down his weapon and runs."); await mech("The line breaks: " + n + " routed.", "loot"); }
+      if (soldiers() > 0) { const n = Math.min(d(2), soldiers()); foeHit(n); await say(n > 1 ? "Seeing that, " + n + " of the soldiers throw down their weapons and run." : "Seeing that, one of the soldiers throws down his weapon and runs."); await mech("The line breaks: " + n + " routed.", "loot"); }
       if (!alive().length && soldiers() > 0) await mech("No captains left: the soldiers lose the +1 to hit that the captains gave them.", "loot");
     };
     async function capHit(c, total, label, pierce) {
@@ -14412,9 +14482,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (ord && ord.ans && G.order !== "volley") out.push({ key: "answer", label: ord.ans, tag: "answers \"" + ord.call + "\" · " + ord.tag, plain: true });
       if (G.drill >= 2 && soldiers() > 0) out.push({ key: "breaker", label: "Combo breaker", tag: "DC " + (11 + G.drill) + " · snap their Drill, stagger the soldiers, +1 to your combo · costs your turn", plain: true });
       if (calTotal() && !st0.usedCal && soldiers() > 0) out.push({ key: "cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 2 down a turn" : "crude: 1 down a turn") + " for 3 turns, the rest at −1 · costs your turn", plain: true });
-      if (S.scrolls && soldiers() > 0) Object.keys(MINES).filter(k => S.scrolls[k] > 0).forEach(k => out.push({ key: "mine-" + k, label: "Lay " + MINES[k].name, tag: { fire: "1d3+1 down", poison: "1d3 down, the rest −1 to hit", frost: "1d2 down, they lose their swings" }[k] + " · Arcana DC 12 · " + S.scrolls[k] + " left · costs your turn", plain: true }));
-      if (soldiers() > 0) rmineKeys().forEach(k => { const M = REGION_MINES[k]; out.push({ key: "rmine-" + k, label: "Set a " + M.name, tag: (M.dice[0] >= 3 ? "1d3+1" : "1d3") + " down" + (M.fx === "still" ? ", they lose their swings" : M.fx === "blind" || M.fx === "soft" ? ", the rest −1 to hit" : "") + " · " + rmines()[k] + " left · costs your turn", plain: true }); });
+      const mineRoom = (G.laid || 0) < MINE_CAP;
+      if (S.scrolls && soldiers() > 0 && mineRoom) Object.keys(MINES).filter(k => S.scrolls[k] > 0).forEach(k => out.push({ key: "mine-" + k, label: "Lay " + MINES[k].name, tag: { fire: "1d3+1 down", poison: "1d3 down, the rest −1 to hit", frost: "1d2 down, they lose their swings" }[k] + " · Arcana DC 12 · " + S.scrolls[k] + " left · costs your turn", plain: true }));
+      if (soldiers() > 0 && mineRoom) rmineKeys().forEach(k => { const M = REGION_MINES[k]; out.push({ key: "rmine-" + k, label: "Set a " + M.name, tag: (M.dice[0] >= 3 ? "1d3+1" : "1d3") + " down" + (M.fx === "still" ? ", they lose their swings" : M.fx === "blind" || M.fx === "soft" ? ", the rest −1 to hit" : "") + " · " + rmines()[k] + " left · costs your turn", plain: true }); });
       out.push({ key: "out", label: "Fight your way out", tag: "Dexterity DC " + outDc() + " · cut one down as you go · ends the fight", plain: true });
+      tip("battle");
+      if (G.order === "volley") tip("cover");
+      if (out.some(o => /^(cal|mine-|rmine-)/.test(o.key))) tip("mines");
       if (G.order !== "ranks") alive().forEach(c => out.push({ key: "cap-" + caps.indexOf(c), label: "Fight your way to " + c.name, tag: "armoured captain · AC " + CAPT_AC + " · " + c.hp + " of " + c.max + " HP", plain: true }));
       return out;
     };
@@ -14442,7 +14516,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     async function layMine(k) {
       const m = MINES[k];
       if (!m || !(S.scrolls && S.scrolls[k] > 0)) return;
-      S.scrolls[k]--; renderSheet();
+      S.scrolls[k]--; G.laid = (G.laid || 0) + 1; renderSheet();
       const r = await check({ label: "Arcana check: lay the " + m.name + " rune", mod: 2, dc: 12, adv: !!S.snare, cta: "Unroll and trace" });
       if (r.ok) { G.mines.push(k); await mech(m.name + " is armed in the ground in front of you. It goes off when they next come at you.", "loot"); }
       else { const [n, sd] = m.dice; await hurt(Math.max(1, n - 1), sd, m.type, "The rune bites the hand that traced it. " + m.name + " goes off under you."); }
@@ -14450,7 +14524,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     async function layRegional(k) {
       const M = REGION_MINES[k];
       if (!M || !(rmines()[k] > 0)) return;
-      rmines()[k]--; renderSheet();
+      rmines()[k]--; G.laid = (G.laid || 0) + 1; renderSheet();
       G.mines.push("r:" + k);
       await say("You set the " + M.name + " in the ground in front of you, where the front rank will have to come.");
       await mech(M.name + " is set. It goes off when they next come at you.", "loot");
