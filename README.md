@@ -101,6 +101,8 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 
 **The weapon harness.** Four weapons ride ready (five at level 20, six at level 40), plus the axe. In a fight, Swap weapon to one is free once a turn, a second swap gives the foe advantage on its next attack, and a weapon from the pack costs your next swing.
 
+**Towns and sanctuaries on the roads back.** After the story so far, every cleared region keeps its towns and quiet places, and you can visit any of them from the roads back: inns, markets (potions, elixirs, salvage), smiths (weapons and honing), banks in Ashgate and Rahdaria, the Library of Roots and the Vitreous Library (learn a skill for 30 gold), Sister Wren's Field Mending at Vellum Rest, bars for rumours, and sanctuaries (the Glade, Vellum Rest, the Temple of the Kept Noon, the hanging gardens, the Library of Roots) where you rest for free and the road's sicknesses are eased.
+
 **The Warden's Weapon Chest.** At level 40, Hobb Tallis or Mattie Gorse sells it for 1,000 gold. Six places, kept apart from every save, so it's shared by all three slots and nothing that happens to a run (death, a replay from your last rest, Rahdaria Falls) touches it.
 
 Parts I to LXII are complete. The story ends in Rahdaria, with the blockade broken and the Speaker for the Deep asking you to come down under the western sea, where the Drowned Light is going out. Part LXIII is still to come.
