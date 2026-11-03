@@ -327,6 +327,14 @@ body.intro-open { overflow: hidden; }
 .puzzle .hint, .puzzle .status { font-family: var(--label); font-size: .85rem; letter-spacing: .04em; color: var(--muted); line-height: 1.45; }
 .puzzle .status { color: var(--ink); min-height: 1.4em; }
 .puzzle .pctrl { display: flex; flex-wrap: wrap; gap: 10px; }
+.cheers { margin: 4px 0 22px; padding: 12px 16px; border: 1px solid #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: linear-gradient(90deg, rgba(207,168,80,.10), rgba(207,168,80,0) 80%), var(--panel); display: grid; gap: 6px; }
+.cheers-who { margin: 0; font-style: italic; color: var(--muted); font-size: .95rem; }
+.cheers-row { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.cheers-row li { display: flex; gap: 10px; align-items: baseline; font-family: var(--label); letter-spacing: .08em; animation: rise .4s ease both; }
+.cheers-row li span { color: var(--muted); font-size: .88rem; }
+.cheers-row li b { color: var(--gold); font-size: 1.05rem; }
+.cheers-row li.big b { font-size: 1.35rem; text-shadow: 0 0 14px rgba(207,168,80,.45); }
+@media (prefers-reduced-motion: reduce) { .cheers-row li { animation: none; } }
 .bgcard .bg-row { display: grid; gap: 6px; margin: 8px 0; }
 .bg-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 .bg-opt { display: grid; gap: 2px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: .9rem; max-width: 100%; }
@@ -1498,10 +1506,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         for (let i = 0; i < 9; i++) blip(sfx, 160 + Math.random() * 120, { type: "triangle", a: 0.002, dec: 0.08, vol: 0.06, at: 0.9 + i * 0.07 + Math.random() * 0.05 });
       },
       // A cheer: a crowd's roar, rising, with a few bright notes on top.
-      cheers() {
+      cheers(v = 1) {
         if (!live()) return;
-        hiss(sfx, { f: 900, q: 0.6, a: 0.3, dec: 1.6, vol: 0.1 });
-        [0, 2, 4].forEach((n, k) => blip(sfx, 392 * Math.pow(2, n / 12), { a: 0.02, dec: 0.5, vol: 0.05, at: 0.2 + k * 0.12 }));
+        hiss(sfx, { f: 900, q: 0.6, a: 0.3, dec: 1.6, vol: 0.1 * v });
+        [0, 2, 4].forEach((n, k) => blip(sfx, 392 * Math.pow(2, n / 12), { a: 0.02, dec: 0.5, vol: 0.05 * v, at: 0.2 + k * 0.12 }));
       }
     };
   })();
@@ -12153,6 +12161,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     R.solved[C.id] = true; renderSheet();
     if (typeof xpGain === "function") xpGain(120);
     await mech("Case solved: <b>" + C.name + "</b>.", "loot");
+    await threeCheers("Word gets out of the Steward's Hall before you do. The crowd on the steps sends it up:");
     await CASE_DONE[C.id]();
     return true;
   }
@@ -12767,6 +12776,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       S.gear.push("sweet"); renderSheet();
       if (lantern()) await say("At your belt, the Lantern of Rahdaria flares, once, as bright as noon. Sabine stares at it. \"Where did you get one of the old lamps?\" she says. \"They were all lost, my grandmother said. Lost under the water.\" There's no water anywhere near Rahdaria, and you both look at the lantern, and neither of you says anything else.");
       await mech("Gain <b>the Sweetwater Phial</b>. " + GEAR.sweet.desc, "loot");
+      await threeCheers("Up and down the seven terraces, the gardeners lean on their spades and give you a salute:");
       await feed("blight", 3, "The blight is broken. The gardens will feed the city again, slowly.");
       await standing(12, "The whole city can see the green coming back on the terraces.");
     } else await mech("The blight is only half broken. Come back to the Hanging Gardens to finish it.", "hurt");
@@ -13044,6 +13054,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         R.solved[6] = true; R.vantry = "caught"; renderSheet();
         if (typeof xpGain === "function") xpGain(150);
         await mech("Case solved: <b>The Key to the Cisterns</b>.", "loot");
+        await threeCheers("The whole Council chamber is on its feet, and the gallery with it:");
         await say("You put it on the table one thing at a time: the four keys, and which three never left their owners. The letters A.V. in the Saltwife's ledger, against cartloads of grain. " + (hasClue("c6c") ? "And from a drawer in his own office, a letter pressed in Bathyr lead, and his cistern key, with the brine still in its teeth." : "And the grey crust on the cistern grates, which only a key could have let in."));
         await say("Aurel Vantry doesn't run. He looks round the hall at all the thin faces, and for a moment he looks honestly puzzled. \"They were going to win anyway,\" he says. \"Anyone could see that. I was going to get some of us out. Some of us who mattered. The Brinewife promised.\"", "voice");
         await say("Nerys Aldane has him taken down to the cells. Then she sends Odile Moorcant and forty gardeners to the address in the Saltwife's ledger, and they come back at noon with the news that the Master of Granaries had a granary of his own: a whole warehouse behind the harbour, sealed, with grain in it to the rafters.");
@@ -13353,6 +13364,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (!last) { const a = Math.min(R.sol, 10), b = Math.min(R.crates, 10); R.sol -= a; R.crates -= b; await mech("Her brine wagons go into the river. Soldiers: " + R.sol + ". Crates: " + R.crates + ".", "loot"); await hunger(-1, "With the Brinewife gone, the gardeners stop being afraid of the water."); }
     }
     R.gens.push(k); renderSheet();
+    await threeCheers("A General is down. The garrison on the walls beat their shields and roar it out:");
     if (X && X.path) await rxMom(-12, "A General has fallen.");
     if (k === "sault" && X && !lore("fragment")) await loreFind("fragment");
   }
@@ -13366,6 +13378,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("On the morning of the fourth day of the blockade, there's no drum. There's no anything. When the sun comes up, the Bathyr camp is quiet, and the black fleet has drawn back from the harbour mouth, and a single Bathyr is walking up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
       await say("The Marshal looks at you. \"That's never happened,\" he says. \"Not once, in twelve days.\"", "voice");
       grant("rhearly");
+      await threeCheers("The blockade is broken. The whole city comes up onto the walls to watch the envoy walk in:");
       if (typeof xpGain === "function") xpGain(300);
     } else {
       light("dusk");
@@ -13387,6 +13400,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await say("They have no Generals left to lead them, and they come anyway. You meet the last of them at the top of the ladders on the Third Terrace, where they're giddy and slow.");
         await hkFight(giddy(BATHYR({ name: "The last of the Bathyr", heads: 3, unit: "Bathyr|Bathyr" })));
       }
+      await threeCheers("The last ladder falls. From one end of the walls to the other:");
       await say("By noon it's over. The Bathyr still on the walls sit down where they are, one after another, and tap their bars on the stones, and stop. The ones in the trenches walk down to the river and stand in it. The engines stand where they've stopped, smoking.");
       await say("And then, in the afternoon, a single Bathyr walks up the river road to the land gate with his hands open and a tablet of lead held up in front of him.");
     }
@@ -13432,6 +13446,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say(obj.map(([ok, t]) => (ok ? "✓ " : "· ") + t).join("<br>"));
     if (obj.every(o => o[0])) {
       grant("rhall");
+      await threeCheers("Every page of the casebook closed. Nerys Aldane herself leads it, from the top of the Steward's Hall steps:");
       if (typeof xpGain === "function") xpGain(300);
       await say("\"Every page,\" she says. She closes it, and puts her hand flat on it. \"The old Inquirer never got every page. Not in thirty years.\" She takes off her own chain, with the High Steward's key on it, and puts it round your neck. \"That opens every door in Rahdaria. Including mine.\"", "voice");
       S.maxHp += 4; S.hp = S.maxHp; renderSheet();
@@ -13459,6 +13474,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // battlefield professions (each a mini-game), enemy momentum (at 100%, Rahdaria falls), the volley
   // every 12 turns, retreat, the Force (the Breaking Hand), Cascade storms and firestorms, Adaptive
   // Reasoning ranks II–IV, the Defender of Rahdaria tiers, and the Relicsong Vault under the cisterns.
+  // Three cheers: when you complete an objective in Rahdaria, whoever's nearest salutes you,
+  // "hip, hip, hooray" three times, the last the loudest, with a crowd's roar under each.
+  async function threeCheers(who) {
+    const box = el("div", "cheers", '<p class="cheers-who">' + who + '</p><ol class="cheers-row"></ol>');
+    const row = box.querySelector("ol");
+    scrollNext = true; add(box);
+    for (let i = 0; i < 3; i++) {
+      await wait(i ? 650 : 250);
+      const li = el("li", i === 2 ? "big" : "", "<span>Hip, hip!</span><b>" + (i === 2 ? "HOORAY!" : "Hooray!") + "</b>");
+      row.appendChild(li);
+      SND.cheers && SND.cheers(i === 2 ? 1.4 : 1);
+    }
+    await wait(500);
+  }
   function rxRecap(R) {
     const X = R && R.x;
     if (!X) return [];
@@ -14283,6 +14312,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     X.q[n] = 3; renderSheet();
     if (typeof xpGain === "function") xpGain(200);
     await mech("Inquiry closed: <b>" + roman(n) + ". " + I.name + "</b>.", "loot");
+    await threeCheers(n >= 5 ? "Along the wall-walk, the garrison raise their spears for the Inquirer:" : "The terrace folk have heard. From every doorway on the Stair:");
     grant(I.feat);
     if (n === 1) { X.gp = true; await mech("<b>Garden Protector.</b> Every way you feed the city saves a tenth more lives, and Lysa's herb recipes are on sale at the stalls: the Gardener's Remedy.", "loot"); }
     if (n === 2) { S.coins += 15; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("<b>Supply Guardian.</b> Every vendor in Rahdaria knocks off another 5%, and the hill farmers press a purse (15 gold) and a Draught of Mending on you. Raids find more in the wagons.", "loot"); }
