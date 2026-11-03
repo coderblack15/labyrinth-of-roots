@@ -2342,6 +2342,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           b.type = "button"; b.onclick = () => harnToggle(hk);
           li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b);
         }
+        if (armPartable(hk)) {
+          const w = armWorth(hk);
+          const sb = el("button", "use", 'Sell it<span class="tag">' + w.gold + " gold</span>"); sb.type = "button"; sb.onclick = () => armPart(hk, false);
+          const xb = el("button", "use", 'Scrap it<span class="tag">' + w.iron + " scrap iron</span>"); xb.type = "button"; xb.onclick = () => armPart(hk, true);
+          li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(sb); li.lastElementChild.appendChild(xb);
+        }
       }
       const cb = chestBtn(key);
       if (cb) {
@@ -2721,7 +2727,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     gloaming: { name: "Gloaming", rank: 3, dmg: 2, hit: 1, tr: 1, ac: 1, odds: 1.5, sell: 30 },
     heartfire: { name: "Heartfire", rank: 4, dmg: 3, hit: 1, tr: 2, ac: 1, odds: 0.34, sell: 80 }
   };
-  const PITY_STEP = 0.05, PITY_CAP = 200, LOOT_MAX = 6;
+  // No cap on how many found weapons you carry (Adrian): sell or scrap the ones you don't want from the Bag.
+  const PITY_STEP = 0.05, PITY_CAP = 200, LOOT_MAX = Infinity;
   const ARM_BASES = {
     dagger: { name: "Dagger", icon: "dagger", die: [1, 4, 2], hit: 2 },
     hatchet: { name: "Hatchet", icon: "axe", die: [1, 6, 2], hit: 1 },
@@ -2838,6 +2845,23 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const fx = die[0] + "d" + die[1] + (die[2] ? " + " + die[2] : "") + (hit ? ", " + fmt(hit) + " to hit" : "") + "." +
       (L.tr || []).map(t => " " + ARM_TR[t]).join("") + (L.ac || []).map(a => " <b>" + ARM_AC[a].name + "</b>: " + ARM_AC[a].fx + ".").join("") + (L.lore ? " " + L.lore : "");
     return { name: L.n, icon: L.icon || B.icon, die, hit, tr: L.tr || [], ac: L.ac || [], t: L.t, fx, found: true };
+  }
+  // Selling and scrapping from the Bag (not mid-fight, not your main hand, not keepsakes).
+  // Sell: a found weapon at its quality's price, a bought one at half what it cost. Scrap: metal
+  // scraps as scrap iron for the mine-maker's bench (quality rank + 1; 2 for a bought weapon).
+  function armWorth(k) {
+    const L = lootOf(k);
+    if (L) return { gold: ARM_TIERS[L.t].sell, iron: ARM_TIERS[L.t].rank + 1 };
+    return { gold: Math.floor((WEAPONS[k] ? WEAPONS[k].price : 0) / 2), iron: 2 };
+  }
+  const armPartable = (k) => S.axe && !FOE.on && k !== "axe" && k !== wpnKey() && owns(k) && !(lootOf(k) && lootOf(k).keep);
+  function armPart(k, scrap) {
+    if (!armPartable(k)) return;
+    const w = armWorth(k), nm = wDef(k).name;
+    if (lootOf(k)) S.armLoot = armLoot().filter(x => "L" + x.id !== k); else S.arms = arms().filter(x => x !== k);
+    if (scrap) S.iron = (S.iron || 0) + w.iron; else S.coins += w.gold;
+    renderSheet(); if (started) save();
+    toastNote(scrap ? nm + " broken down for " + w.iron + " scrap iron." : nm + " sold for " + w.gold + " gold.");
   }
   const armName = (k) => { const W = wDef(k); return W.t ? '<span class="q q-' + W.t + '">' + W.name + "</span>" : W.name; };
   const wTier = (k) => { const W = wDef(k); return W.t ? '<span class="q q-tier q-' + W.t + '">' + ARM_TIERS[W.t].name + "</span> · " : ""; };
@@ -3372,6 +3396,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { key: "library", label: "Browse the library", tag: "30 gold · learn a skill", show: has("library") && skillsLeft.length > 0 && S.coins >= 30, plain: true },
         { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: "10 gold", show: has("healer") && !hasSkill("mend") && S.coins >= 10, plain: true },
         { key: "bar", label: "Buy a round and listen", tag: "2 gold · rumours", show: has("bar") && !drank && S.coins >= 2, plain: true },
+        { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: "Back to the road", plain: true }
       ]);
       if (c === "leave") break;
@@ -3411,6 +3436,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       } else if (c === "healer") {
         S.coins -= 10; if (!S.skills) S.skills = [];
         await learnSkill("mend", "Sister Wren shows you how: pressure first, then the knot. 10 gold.");
+      } else if (c === "bench") {
+        await mineBench(T.reg, "Somebody in " + T.name + " keeps a bench for it: the local way of packing a mine, out of " + REGION_MINES[T.reg].fill + ", and a forge for caltrops.");
       } else if (c === "bar") {
         drank = true; S.coins -= 2; renderSheet();
         const left = relicsLeft();
@@ -4831,14 +4858,122 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     else await mech("It comes down a step behind it. The dust hangs there between you.", "hurt");
   }
   // Extra fight options hkFight offers from these systems.
-  function tcFightOpts(F, st) {
+  // ---------- regional mines and caltrops, everywhere ----------
+  // Every region has its own mine, packed from what that country has lying about. Make them at the
+  // mine-maker's bench in any town on the roads back (and at the Brazier in Rahdaria): 1 iron + the
+  // filling's price, Dexterity DC 12. Caltrops can be forged at any bench too (2 iron). In any fight
+  // that runs on hkFight you can lay a mine (Dex DC 11 to draw it onto it; it goes off at once) or
+  // scatter caltrops (once a fight: −1 to hit and 1d4 a round for 3 rounds; a fine bag 1d6 and a
+  // head a round in mob fights). Company battles take regional mines too (see companyFight).
+  // fx: still = loses its next turn · blind = −2 to hit for the fight · soft = −1 AC for the fight ·
+  // bleed = 1d4 a round for 3 rounds · shade = double against shades.
+  const REGION_MINES = {
+    roots: { name: "Rootsnare", fill: "a fist of living labyrinth root", cost: 8, dice: [2, 6], type: "piercing", fx: "still", fxTxt: "roots hold it: it loses its next turn" },
+    desert: { name: "Glasswind", fill: "furnace sand that fuses into splinters", cost: 10, dice: [3, 6], type: "slashing", fx: "blind", fxTxt: "glass in its eyes: −2 to hit for the fight" },
+    fen: { name: "Marsh-lamp", fill: "a bladder of fen gas", cost: 10, dice: [3, 6], type: "fire", fx: "bleed", fxTxt: "it burns: 1d4 a round for 3 rounds" },
+    mere: { name: "Drowned Bell", fill: "a shard of a bell from the drowned town", cost: 12, dice: [2, 8], type: "thunder", fx: "still", fxTxt: "the toll stuns it: it loses its next turn" },
+    lastwell: { name: "Hob-iron", fill: "Lastwell nails packed in black powder", cost: 10, dice: [3, 6], type: "piercing", fx: "bleed", fxTxt: "nails in it: 1d4 a round for 3 rounds" },
+    glass: { name: "Slagburst", fill: "glass slag in a clay shell", cost: 12, dice: [3, 8], type: "fire", fx: null, fxTxt: "" },
+    corrach: { name: "Spore-pod", fill: "a ripe Hesk spore pod", cost: 12, dice: [2, 6], type: "poison", fx: "soft", fxTxt: "the spores rot its hide: −1 AC for the fight" },
+    noon: { name: "Noonflash", fill: "a stoppered splinter of the Kept Noon", cost: 14, dice: [3, 8], type: "radiant", fx: "shade", fxTxt: "double against shades" },
+    undermoon: { name: "Tidepull", fill: "a cracked kinstone", cost: 14, dice: [2, 8], type: "bludgeoning", fx: "blind", fxTxt: "it comes unmoored: −2 to hit for the fight" },
+    rahdaria: { name: "Pitch-pot", fill: "Bathyr pitch and lamp oil", cost: 12, dice: [3, 8], type: "fire", fx: "bleed", fxTxt: "the pitch keeps burning: 1d4 a round for 3 rounds" }
+  };
+  const rmines = () => S.rmines || (S.rmines = {});
+  const rmineKeys = () => Object.keys(REGION_MINES).filter(k => (rmines()[k] || 0) > 0);
+  // The bench: a town's own mine, caltrops, and scrap iron to make both.
+  async function mineBench(reg, who) {
+    S.iron = S.iron || 0; S.calFine = S.calFine || 0; S.calCrude = S.calCrude || 0;
+    const M = REGION_MINES[reg];
+    if (who) await say(who);
+    for (;;) {
+      const c = await choose([
+        { key: "iron", label: "Buy scrap iron", tag: "4 gold · 2 iron · you have " + S.iron, show: S.coins >= 4, plain: true },
+        { key: "mine", label: M ? "Pack a " + M.name : "", tag: M ? "1 iron + " + M.cost + " gold for " + M.fill + " · Dexterity DC 12 · " + M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") : "", show: !!M && S.iron >= 1 && S.coins >= (M ? M.cost : 0) },
+        { key: "cal", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · 18+ makes a fine bag", show: S.iron >= 2 },
+        { key: "done", label: "Leave the bench", plain: true }
+      ]);
+      if (c === "done") return;
+      if (c === "iron") { S.coins -= 4; S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron. 4 gold.", "loot"); }
+      if (c === "mine") {
+        S.iron--; S.coins -= M.cost; renderSheet();
+        const r = await check({ label: "Dexterity check (packing the " + M.name + ")", mod: 2, dc: 12, cta: "Pack it" });
+        if (r.ok) { rmines()[reg] = (rmines()[reg] || 0) + 1; renderSheet(); await mech("A " + M.name + ", packed with " + M.fill + ". You have " + rmines()[reg] + ".", "loot"); }
+        else await hurt(1, 4, M.type, "The filling goes off in your hands, a small one, but enough. The iron's ruined.");
+      }
+      if (c === "cal") {
+        S.iron -= 2; renderSheet();
+        const r = await check({ label: "Dexterity check (the caltrop knot)", mod: 2, dc: 12, cta: "Hammer" });
+        if (!r.ok) { S.iron++; renderSheet(); await say("The points come out bent. You save a piece of the iron."); }
+        else if (r.total >= 18) { S.calFine++; renderSheet(); await mech("Fine caltrops: four needle points, barbed.", "loot"); }
+        else { S.calCrude++; renderSheet(); await mech("Crude caltrops.", "loot"); }
+      }
+    }
+  }
+  function munFightOpts(F, st) {
+    if (F.company) return [];
     const o = [];
+    if (calTotal() && !st.used.cal) o.push({ key: "mun-cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 1d6 a round" + (F.heads ? ", one drops each round" : "") : "crude: 1d4 a round") + ", −1 to hit, 3 rounds · costs your turn", plain: true });
+    rmineKeys().forEach(k => { const M = REGION_MINES[k]; o.push({ key: "mun-" + k, label: "Lay a " + M.name, tag: M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") + " · Dex DC 11 to draw " + (F.heads ? "them" : "it") + " onto it · " + rmines()[k] + " left · costs your turn", plain: true }); });
+    return o;
+  }
+  async function munFightDo(c, F, st) {
+    if (c === "mun-cal") {
+      st.used.cal = true;
+      const fine = (S.calFine || 0) > 0;
+      if (fine) S.calFine--; else S.calCrude--;
+      renderSheet();
+      st.cal = { n: 3, fine }; F.atk -= 1;
+      await say("You fling a bag of caltrops across the ground between you and " + F.who + ".");
+      await mech((fine ? "Fine" : "Crude") + " caltrops: −1 to hit and " + (fine ? "1d6" : "1d4") + " a round for 3 rounds.", "loot");
+      return true;
+    }
+    if (!String(c).startsWith("mun-")) return false;
+    const k = c.slice(4), M = REGION_MINES[k];
+    if (!M || !(rmines()[k] > 0)) return true;
+    rmines()[k]--; renderSheet();
+    await say("You set the " + M.name + " in the ground and step back past it, so that the only way to you is over it.");
+    const r = await check({ label: "Dexterity check (drawing " + (F.heads ? "them" : "it") + " onto the " + M.name + ")", mod: 3, dc: 11, cta: "Give ground" });
+    if (!r.ok) { await say((F.heads ? "They go" : "It goes") + " round it. The " + M.name + " sits there, wasted, until you kick it into a ditch."); return true; }
+    await mineHits(k, F, st);
+    return true;
+  }
+  async function mineHits(k, F, st) {
+    const M = REGION_MINES[k];
+    let [n, sd] = M.dice;
+    if (M.fx === "shade" && F.shade) n *= 2;
+    await say("The " + M.name + " goes off under " + (F.heads ? "them" : "it") + ".");
+    if (F.heads) { const h = Math.min(FOE.hp, d(2) + (n >= 3 ? 1 : 0)); foeHit(h); await mech(M.name + ": " + h + " down.", "loot"); }
+    else await foeBurst(n, sd, 0, M.name);
+    if (FOE.hp <= 0) return;
+    if (M.fx === "still") { st.stilled = true; }
+    if (M.fx === "blind") { F.atk -= 2; await mech((F.heads ? "They fight" : "It fights") + " at −2 to hit for the rest of the fight.", "loot"); }
+    if (M.fx === "soft") { F.ac -= 1; await mech("Its AC drops by 1 for the rest of the fight.", "loot"); }
+    if (M.fx === "bleed") st.burn = 3;
+  }
+  // Each round, before your move: caltrops and burning take their toll.
+  async function munRound(F, st) {
+    if (st.burn > 0 && FOE.hp > 0) {
+      st.burn--;
+      if (F.heads) { if (d(2) === 2) { foeHit(1); await mech("One of them goes down, still burning.", "loot"); } }
+      else await foeBurst(1, 4, 0, "It's still burning");
+    }
+    if (st.cal && st.cal.n > 0 && FOE.hp > 0) {
+      st.cal.n--;
+      if (F.heads) { if (st.cal.fine || d(2) === 2) { foeHit(1); await mech("One of them comes down on the caltrops and stays down.", "loot"); } }
+      else await foeBurst(1, st.cal.fine ? 6 : 4, 0, "The caltrops");
+      if (!st.cal.n) { F.atk += 1; await mech("The caltrops are trodden flat.", "loot"); }
+    }
+  }
+  function tcFightOpts(F, st) {
+    const o = munFightOpts(F, st);
     if (F.terrain && !st.used.drop) o.push({ key: "tc-drop", label: "Bring " + F.terrain[0] + " down on " + (F.heads ? "them" : "it"), tag: "sabotage · costs your turn", plain: true });
     const m = mediumIn();
     if (m && tcPerk("quick") && (F.road || F.trapOk) && !st.used.trap) o.push({ key: "tc-set", label: "Set the " + SCHEMS[m].name, tag: "Quick Set · costs your turn · its next attack never lands", plain: true });
     return o;
   }
   async function tcFightDo(c, F, st) {
+    if (await munFightDo(c, F, st)) return true;
     if (c === "tc-drop") { await fightDrop(F, st); return true; }
     if (c === "tc-set") { st.used.trap = true; await say("You give ground, three steps back, and the trap is already there under your heel."); await trapSpring(mediumIn(), F, st); if (FOE.hp > 0) st.stilled = true; return true; }
     return false;
@@ -6403,10 +6538,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (sc.fire + sc.poison + sc.frost) items.push(["scrolls", "scroll", "Snare Rune Scrolls", "Emberbite ×" + sc.fire + " (fire), Blightbloom ×" + sc.poison + " (poison), Rimefang ×" + sc.frost + " (frost). Lay one as a mine in a company battle: Arcana DC 12."]);
     if (S.blank || S.ink) items.push(["ink", "scroll", "Scribing Kit", (S.blank || 0) + " blank parchment, " + (S.ink || 0) + " measures of ink."]);
     if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes. 2 to a bag of caltrops."]);
+    const rm = rmineKeys();
+    if (rm.length) items.push(["rmines", "caltrop", "Mines", rm.map(k => REGION_MINES[k].name + " ×" + rmines()[k]).join(", ") + ". Lay one in any fight."]);
     if (calTotal()) items.push(["cal", "caltrop", "Caltrops", (S.calFine ? S.calFine + " fine" : "") + (S.calFine && S.calCrude ? ", " : "") + (S.calCrude ? S.calCrude + " crude" : "") + ". Scatter a bag in a company battle and the soldiers go down on the points."]);
   }
   function lastwellItems(items) {
     if (!S.lw) return munitionItems(items);
+    if (rmineKeys().length) items.push(["rmines", "caltrop", "Mines", rmineKeys().map(k => REGION_MINES[k].name + " ×" + rmines()[k]).join(", ") + ". Lay one in any fight."]);
     const sc = S.scrolls;
     if (sc.fire + sc.poison + sc.frost) items.push(["scrolls", "scroll", "Snare Rune Scrolls", "Emberbite ×" + sc.fire + " (fire), Blightbloom ×" + sc.poison + " (poison), Rimefang ×" + sc.frost + " (frost). Each one lays a mine. Placing it takes an Arcana check, DC 12."]);
     if (S.blank || S.ink) items.push(["ink", "scroll", "Ilse's Scribing Kit", S.blank + " blank parchment, " + S.ink + " measures of ooze ink."]);
@@ -8955,6 +9093,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       st.round++; fightTurn();
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
+      await munRound(F, st); if (FOE.hp <= 0) break;
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
       const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with the " + wDef(wpnKey()).name, tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
@@ -9026,7 +9165,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         st.evade = true;
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
       }
-      else if (String(c).startsWith("tc-")) await tcFightDo(c, F, st);
+      else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
       if (st.stilled) { st.stilled = false; await say(F.hesk ? "They stand frozen for a breath, listening to something they last heard as children." : "It hesitates."); continue; }
@@ -13448,12 +13587,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { key: "forge", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · 18+ makes a fine bag", show: S.iron >= 2 },
         { key: "kit", label: "Buy parchment and ink from the Archive window", tag: priceTag(6) + " · 2 blank + 1 ink", show: S.coins >= rhPrice(6), plain: true },
         { key: "scribe", label: "Scribe rune mines", tag: S.blank + " blank, " + S.ink + " ink", show: S.blank > 0 && S.ink > 0 },
+        { key: "pitch", label: "Pack Pitch-pots", tag: "Rahdaria's own mine: Bathyr pitch and lamp oil", plain: true },
         { key: "done", label: "Leave the bench", plain: true }
       ]);
       if (c === "done") return;
       if (c === "iron") { S.coins -= rhPrice(4); S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron: a hoop off a water-butt and a fistful of horseshoe nails. " + rhPrice(4) + " gold.", "loot"); }
       if (c === "kit") { S.coins -= rhPrice(6); S.blank += 2; S.ink += 1; renderSheet(); await mech("Two sheets of parchment and a measure of lamp-black ink. " + rhPrice(6) + " gold.", "loot"); }
       if (c === "scribe") await scribe();
+      if (c === "pitch") await mineBench("rahdaria");
       if (c === "forge") {
         S.iron -= 2; renderSheet();
         const r = await check({ label: "Dexterity check (the caltrop knot)", mod: 2, dc: 12, cta: "Hammer" });
@@ -13999,7 +14140,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const alive = () => caps.filter(c => c.hp > 0);
     const soldiers = () => Math.max(0, FOE.hp - alive().length);
     const F = BATHYR(Object.assign({ heads: o.soldiers + caps.length, unit: "standing" }, o.F));
-    const baseAc = F.ac;
+    const baseAc = F.ac; F.company = true;
     // order: this round's order; last: the one before; drill: the company's combo links;
     // stagger: soldiers lose this round's swings; reach: only this many soldiers can reach you; braced: the coming charge is broken.
     const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0 };
@@ -14038,6 +14179,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (G.drill >= 2 && soldiers() > 0) out.push({ key: "breaker", label: "Combo breaker", tag: "DC " + (11 + G.drill) + " · snap their Drill, stagger the soldiers, +1 to your combo · costs your turn", plain: true });
       if (calTotal() && !st0.usedCal && soldiers() > 0) out.push({ key: "cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 2 down a turn" : "crude: 1 down a turn") + " for 3 turns, the rest at −1 · costs your turn", plain: true });
       if (S.scrolls && soldiers() > 0) Object.keys(MINES).filter(k => S.scrolls[k] > 0).forEach(k => out.push({ key: "mine-" + k, label: "Lay " + MINES[k].name, tag: { fire: "1d3+1 down", poison: "1d3 down, the rest −1 to hit", frost: "1d2 down, they lose their swings" }[k] + " · Arcana DC 12 · " + S.scrolls[k] + " left · costs your turn", plain: true }));
+      if (soldiers() > 0) rmineKeys().forEach(k => { const M = REGION_MINES[k]; out.push({ key: "rmine-" + k, label: "Set a " + M.name, tag: (M.dice[0] >= 3 ? "1d3+1" : "1d3") + " down" + (M.fx === "still" ? ", they lose their swings" : M.fx === "blind" || M.fx === "soft" ? ", the rest −1 to hit" : "") + " · " + rmines()[k] + " left · costs your turn", plain: true }); });
       out.push({ key: "out", label: "Fight your way out", tag: "Dexterity DC " + outDc() + " · cut one down as you go · ends the fight", plain: true });
       if (G.order !== "ranks") alive().forEach(c => out.push({ key: "cap-" + caps.indexOf(c), label: "Fight your way to " + c.name, tag: "armoured captain · AC " + CAPT_AC + " · " + c.hp + " of " + c.max + " HP", plain: true }));
       return out;
@@ -14047,6 +14189,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (k === "out") return fightOut(st);
       if (k === "cal") return scatter();
       if (String(k).startsWith("mine-")) return layMine(k.slice(5));
+      if (String(k).startsWith("rmine-")) return layRegional(k.slice(6));
       if (k === "answer") return answer(st);
       if (!String(k).startsWith("cap-")) return;
       const c = caps[+k.slice(4)];
@@ -14069,11 +14212,28 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (r.ok) { G.mines.push(k); await mech(m.name + " is armed in the ground in front of you. It goes off when they next come at you.", "loot"); }
       else { const [n, sd] = m.dice; await hurt(Math.max(1, n - 1), sd, m.type, "The rune bites the hand that traced it. " + m.name + " goes off under you."); }
     }
+    async function layRegional(k) {
+      const M = REGION_MINES[k];
+      if (!M || !(rmines()[k] > 0)) return;
+      rmines()[k]--; renderSheet();
+      G.mines.push("r:" + k);
+      await say("You set the " + M.name + " in the ground in front of you, where the front rank will have to come.");
+      await mech(M.name + " is set. It goes off when they next come at you.", "loot");
+    }
     // Runs at the start of their turn: armed mines go off, then the caltrops take their toll.
     async function blowUp() {
       let freeze = false;
       for (const k of G.mines.splice(0)) {
         if (soldiers() <= 0) break;
+        if (k.startsWith("r:")) {
+          const M = REGION_MINES[k.slice(2)], n = Math.min(soldiers(), d(3) + (M.dice[0] >= 3 ? 1 : 0));
+          foeHit(n);
+          await say("The front rank comes over the " + M.name + ", and it goes off under them.");
+          if (M.fx === "still") freeze = true;
+          if (M.fx === "blind" || M.fx === "soft") G.rot = Math.min(2, G.rot + 1);
+          await mech(M.name + ": " + n + " down" + (M.fx === "still" ? ", and the rest lose this round's swings" : M.fx === "blind" || M.fx === "soft" ? ", and the rest fight at −" + G.rot + " to hit" : "") + ".", "loot");
+          continue;
+        }
         const n = Math.min(soldiers(), k === "fire" ? d(3) + 1 : k === "poison" ? d(3) : d(2));
         foeHit(n);
         await say(k === "fire" ? "The front rank steps on the Emberbite rune, and the ground under them turns to fire." : k === "poison" ? "The Blightbloom rune goes off in a cloud the colour of a bruise, and the soldiers in it start coughing and don't stop." : "The Rimefang rune goes off, and the front rank freezes where it stands, white to the knees.");
