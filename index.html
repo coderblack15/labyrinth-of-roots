@@ -236,6 +236,11 @@ body.intro-open { overflow: hidden; }
 .vitals { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; }
 .hpbar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
 .hpbar span { display: block; height: 100%; background: var(--ember); transition: width .5s ease; }
+.bleed-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e0796a; letter-spacing: .02em; }
+.bleed-row[hidden] { display: none; }
+.bleed-row .drop { width: 8px; height: 11px; background: #c0392b; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; transform: rotate(180deg); flex: none; animation: drip 1.6s ease-in-out infinite; }
+@keyframes drip { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .bleed-row .drop { animation: none; } }
 .stat-label { font-family: var(--label); font-size: .78rem; letter-spacing: .1em; color: var(--muted); }
 .stat-val { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
 .abilities { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
@@ -801,6 +806,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .vitals { grid-template-columns: repeat(6, auto); justify-content: start; gap: 4px 8px; }
   .vitals .stat-val { margin-right: 10px; }
   .vitals .hpbar { order: 1; }
+  .vitals .bleed-row { order: 2; }
   .inv { gap: 8px; }
   .inv li { grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
   .inv svg { width: 20px; height: 20px; }
@@ -1041,6 +1047,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-label">HP</span>
       <span class="stat-val" id="hpVal">24 / 24</span>
       <div class="hpbar" style="grid-column: 1 / -1"><span id="hpBar" style="width:100%"></span></div>
+      <div class="bleed-row" id="bleedVal" hidden></div>
       <span class="stat-label">Armor class</span>
       <span class="stat-val" id="acVal">13</span>
       <span class="stat-label">Purse</span>
@@ -2076,6 +2083,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "company", name: "Hold the Wall", desc: "Break a full company, armoured captains and all.", test: () => false },
     { id: "gunfirst", name: "First Blood from the Walls", desc: "Score a direct hit with the wall gun.", test: () => !!(J.gun && J.gun.direct) },
     { id: "guneye", name: "Gunner's Eye", desc: "Score a direct hit with the wall gun on your first shot.", test: () => !!(J.gun && J.gun.best === 1) },
+    { id: "staunch", name: "Pressure, Then the Knot", desc: "Stop bleeding 10 times, across every journey.", test: () => (J.staunch || 0) >= 10, prog: () => [Math.min(10, J.staunch || 0), 10] },
     { id: "gunmaster", name: "Master Gunner", desc: "Score 10 direct hits with the wall gun, across every journey. The reward: the Quickening Shawl.", test: () => !!(J.gun && J.gun.direct >= 10), prog: () => [Math.min(10, (J.gun && J.gun.direct) || 0), 10] },
     { id: "chest", name: "Put Away Safe", desc: "Buy the Warden's Weapon Chest at level 40.", test: () => false },
     { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
@@ -2286,6 +2294,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
+    renderBleed();
     $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
     renderXp();
@@ -2448,6 +2457,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
+    bleed: ["Bleeding", "Cuts and stabs can open a wound that bleeds at the start of every round (it shows under your HP). A <b>bandage</b> stops it: free from the Bag with quick hands, or as your move. Still bleeding after the fight? Bandage it then, or tie it off and lose one more round. Spare cloth scraps get rolled into bandages between parts."],
     menu: ["Fight moves", "In a fight like this you pick a move each round. <b>Evade</b> gives up your swing for a chance to slip every attack that round, and <b>Catch your breath</b> heals once a fight. Anything marked \"no roll\" always lands."],
     axe: ["The axe holds you", "At 0 HP Vaelric's axe holds you up at 1, and you lose nothing. Your journal counts these as close calls. The Pale Bloom, later, is the one thing it can't reach through."],
     belt: ["Quick hands", "<b>Use an item</b> is free, on top of your move, and comes back every second turn. Stop the marker in the gold to use it cleanly, or on the bright notch for half as much again. Waiting longer widens the notch."],
@@ -2480,7 +2490,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<p class="j-note">' + (tipState.off ? "New tips are turned off. " : "") + '<button class="ghost" type="button" id="jTipToggle">' + (tipState.off ? "Show new tips" : "Stop showing new tips") + "</button></p></section>";
   }
 
+  // Before any choice outside a fight, a bleed left open from the fight gets dealt with.
   function choose(opts) {
+    if (bleedPending()) return bleedSettle().then(() => chooseRaw(opts));
+    return chooseRaw(opts);
+  }
+  function chooseRaw(opts) {
     const main = FOE.menu; FOE.menu = false;
     return new Promise(resolve => {
       const box = el("div", "choices");
@@ -2630,7 +2645,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
 
   // An enemy attack you react to.
-  function enemyAttack({ label, foe, bonus, dis = false, adv = false, cta }) {
+  function enemyAttack(o) {
+    if (FOE.on && bleeds().length && FOE.bledAt !== FOE.turn) return bleedTick().then(() => enemyAttack1(o));
+    return enemyAttack1(o);
+  }
+  function enemyAttack1({ label, foe, bonus, dis = false, adv = false, cta }) {
     if (FOE.on && FOE.ether > 0) {
       FOE.ether--;
       return (async () => {
@@ -2671,6 +2690,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (n === 2) { ki = (dis ? vals[0] <= vals[1] : vals[0] >= vals[1]) ? 0 : 1; dies[1 - ki].classList.add("dropped"); }
         const kept = vals[ki];
         const hit = kept === 20 || (kept !== 1 && kept + bonus >= ac);
+        if (FOE.on) FOE.crit = hit && kept === 20;
         out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
         if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
         scrollNext = true;
@@ -2716,6 +2736,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (S.axe) await voice('"Not yet," Vaelric hisses from the blade. "I told you. You will not perish here." Red warmth floods your chest, and you stay on your feet with 1 HP.');
       else await say("Your vision swims and your knees buckle, but something stubborn in you refuses to fall. You stay standing with 1 HP.");
     }
+    const crit = FOE.crit; FOE.crit = false;
+    if (FOE.on && S.hp > 0 && total > 0 && !saved) await bleedMaybe(type, sides, crit);
     if (FOE.on && !FOE.dug && S.hp > 0 && S.hp / S.maxHp <= DIG_AT) await digIn();
     return total;
   }
@@ -2731,24 +2753,27 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- experience and levels ----------
   // You start at level 3 (the sheet always said so) and can climb to 40. XP comes from fights you
   // come through, parts and chapters you finish, and checks you pass. Every level is +2 max HP and a
-  // little healing; every 9 levels +1 to hit, every 6 +1 damage, every 12 +1 AC. Foes are scaled to
+  // little healing; every 9 levels +1 to hit, every 3 +1 damage, every 12 +1 AC. Foes are scaled to
   // your level when they step onto the meter (more HP, a harder swing, harder hits), so the story's
-  // fights stay fights. Head-count mobs keep their numbers. Level 5 teaches Adaptive Reasoning,
+  // fights stay fights. Balance (2026-11-04, tuned with a fight simulator against the playtest
+  // bot's levels): foes swing +1 every 6 levels and hit +1 harder every 4, and your damage grows
+  // +1 every 3, so an ordinary fight costs about a fifth of your HP over 3 to 4 rounds at any
+  // level (it was under a tenth after the Glade), and the last bosses take 7 to 9 rounds, not 10 to 12. Head-count mobs keep their numbers. Level 5 teaches Adaptive Reasoning,
   // level 8 teaches Mimic, and level 40 wakes the Cascades (see the roads back, further down).
   const LV_MIN = 3, LV_MAX = 40, WAX_MAX = 9, PART_XP = 40, CHAPTER_XP = 200;
   const xpNeed = (L) => 60 + 10 * (L - LV_MIN);
   const lv = () => Math.min(LV_MAX, Math.max(LV_MIN, S.lv || LV_MIN));
   const lvk = () => lv() - LV_MIN;
   const lvHit = () => Math.floor(lvk() / 9);
-  const lvDmg = () => Math.floor(lvk() / 6);
+  const lvDmg = () => Math.floor(lvk() / 3);
   const lvAC = () => Math.floor(lvk() / 12);
   const cascadeOn = () => !!S.cascade;
   const NM_HP = 1.1;
   const foeMult = () => (1 + 0.035 * lvk()) * (cascadeOn() ? NM_HP : 1);
   // A road Nightmare's +2 to hit and +2 damage run down its Cascade threads: cut them and the bonus goes.
   const nmUp = () => FOE.on && FOE.threadsMax ? Math.round(2 * FOE.threads / FOE.threadsMax) : 2;
-  const foeAtkUp = () => Math.floor(lvk() / 8) + (cascadeOn() ? nmUp() : 0);
-  const foeDmgUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? nmUp() : 0);
+  const foeAtkUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? nmUp() : 0);
+  const foeDmgUp = () => Math.floor(lvk() / 4) + (cascadeOn() ? nmUp() : 0);
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -3175,7 +3200,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function lvPerks(L) {
     const k = L - LV_MIN, p = ["+2 max HP"];
     if (k % 9 === 0) p.push("+1 to hit");
-    if (k % 6 === 0) p.push("+1 damage");
+    if (k % 3 === 0) p.push("+1 damage");
     if (k % 12 === 0) p.push("+1 AC");
     if (L === 5) p.push("learned Adaptive Reasoning");
     if (L === 8) p.push("learned Mimic, with 3 Mockwax");
@@ -3450,6 +3475,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { key: "inn", label: "Take a room at the inn", tag: "8 gold · full HP and a foothold back", show: has("inn") && !rested && S.coins >= 8 && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
         { key: "potion", label: "Buy a Draught of Mending", tag: "8 gold · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= 8, plain: true },
         { key: "elixir", label: "Buy an Elixir of Health", tag: "20 gold · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= 20, plain: true },
+        { key: "band", label: "Buy two bandages", tag: "5 gold · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= 5, plain: true },
         { key: "sell", label: "Sell your salvage", tag: salvWorth() + " gold", show: has("market") && salvWorth() > 0, plain: true },
         { key: "smith", label: "Visit the smith", tag: smithLeft.length ? "weapons and honing" : "honing", show: has("smith") && S.axe && (smithLeft.length > 0 || !S.whet), plain: true },
         { key: "bank", label: "The bank", tag: S.bank && S.bank.open ? (S.bank.bal || 0) + " gold on deposit" : "15 gold to open an account", show: has("bank"), plain: true },
@@ -3474,6 +3500,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". Spent 8 gold.", "loot");
       } else if (c === "potion") { S.coins -= 8; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (8 gold).", "loot"); }
       else if (c === "elixir") { S.coins -= 20; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (20 gold).", "loot"); }
+      else if (c === "band") { S.coins -= 5; S.dress = (S.dress || 0) + 2; S.bandGift = true; renderSheet(); await mech("Gain two bandages (5 gold). You have " + S.dress + ".", "loot"); }
       else if (c === "sell") { const n = salvWorth(), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("You sell your salvage (" + what + "). Gain " + n + " gold.", "loot"); }
       else if (c === "smith") {
         const k = await choose(smithLeft.filter(w => S.coins >= WEAPONS[w].price).map(w => ({ key: w, label: "Buy the " + WEAPONS[w].name, tag: WEAPONS[w].price + " gold · " + WEAPONS[w].fx, plain: true }))
@@ -3630,14 +3657,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (damage dice doubled, +4) that spends the combo. A miss breaks it. Spells and gem bursts that
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
-  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false };
+  const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, crit: false, bleedPct: 0, bledAt: -1 };
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1 });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     jCount("fights");
@@ -3817,6 +3844,103 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech(why + ": Dread " + FOE.dread + " of " + DREAD_MAX + ".", "loot");
   }
 
+  // ---------- bleeds ----------
+  // A cutting or stabbing blow (slashing or piercing) can open a bleed: 1 in 4, always on a natural
+  // 20, and 1 in 2 from foes with long blades, hooks or teeth (F.bleed / B.bleed). Each open wound
+  // bleeds at the start of every round you're still fighting: 1d4 for a light one, 1d6 if the blow
+  // came from a heavy weapon (a d8 or bigger) once you're level 9, plus 1 for every 9 levels. Up to 3 wounds at once;
+  // a fourth deepens the lightest. Bleeding never takes you below 1 HP by itself.
+  // A bandage stops all of it: from the Bag with quick hands (free; a fumble only closes the worst
+  // wound), or "Bandage the bleeding" as your move in a menu fight (never slips). Field Mending's
+  // binding stops it too. Still bleeding when the fight's over? Bandage it then, or tie it off with
+  // a strip of cloth and lose one more round of it. Bandages are the field dressings: rolled for you
+  // from spare cloth scraps between parts (up to 3), sold in town markets and at the bench, and the
+  // first bleed finds you 2.
+  const BLEED_MAX = 3, BLEED_PCT = 25, BLEED_DEEP = 50, BAND_AUTO = 3;
+  const bleeds = () => (S.bleed = S.bleed || []);
+  const lvBleed = () => Math.floor(lvk() / 9);
+  const bleedTxt = () => { const b = bleeds(), n4 = b.filter(x => x === 4).length, n6 = b.length - n4; return [n6 ? n6 + "d6" : "", n4 ? n4 + "d4" : ""].filter(Boolean).join(" + ") + (lvBleed() ? " + " + lvBleed() : ""); };
+  function renderBleed() {
+    const e = $("bleedVal");
+    if (!e) return;
+    const b = bleeds();
+    e.hidden = !b.length;
+    if (b.length) e.innerHTML = '<span class="drop" aria-hidden="true"></span>Bleeding · ' + b.length + (b.length > 1 ? " wounds" : " wound") + " · " + bleedTxt() + " a round";
+  }
+  // After a blow lands: does it open a wound? sides = the blow's die.
+  async function bleedMaybe(type, sides, crit) {
+    if (!FOE.on || S.hp <= 0 || !(type === "slashing" || type === "piercing")) return;
+    let pct = FOE.bleedPct || BLEED_PCT;
+    if (rxBleed(type)) pct = Math.floor(pct / 2);
+    if (!crit && d(100) > pct) return;
+    const die = sides >= 8 && lv() >= 9 ? 6 : 4, b = bleeds(), was = b.length;
+    if (b.length < BLEED_MAX) b.push(die);
+    else { b.sort((x, y) => x - y); b[0] = b[0] >= die ? 6 : die; }
+    b.sort((x, y) => y - x);
+    renderBleed();
+    if (!S.bandGift) {
+      S.bandGift = true; S.dress = (S.dress || 0) + 2; renderSheet();
+      await mech("It opens a wound" + (crit ? " (a natural 20 always does)" : "") + ", and you're bleeding: " + bleedTxt() + " at the start of every round until you stop it. At the bottom of your pack you find two rolled bandages you'd forgotten about.", "hurt");
+      tip("bleed");
+      return;
+    }
+    await mech((crit ? "A natural 20, and it" : "It") + " opens " + (was ? "another wound" : "a wound") + (die === 6 ? ", a deep one" : "") + ". Bleeding: " + bleedTxt() + " a round." + (S.dress ? " A bandage stops it." : " You've no bandages."), "hurt");
+  }
+  // At the start of a round (once a turn): every open wound bleeds.
+  async function bleedTick() {
+    const b = bleeds();
+    if (!b.length || !FOE.on || FOE.bledAt === FOE.turn || S.hp <= 0) return;
+    FOE.bledAt = FOE.turn;
+    const rolls = b.map(x => d(x)), n = rolls.reduce((a, x) => a + x, 0) + lvBleed();
+    const before = S.hp;
+    S.hp = Math.max(1, S.hp - n); renderSheet();
+    await mech("You're bleeding: " + bleedTxt() + " → " + (rolls.length > 1 || lvBleed() ? rolls.join(" + ") + (lvBleed() ? " + " + lvBleed() : "") + " = " : "") + n + "." + (before - S.hp < n ? " It can't take your last HP." : "") + " " + S.hp + " HP left.", "hurt");
+    if (FOE.on && !FOE.dug && S.hp / S.maxHp <= DIG_AT) await digIn();
+  }
+  // all = true closes every wound; otherwise just the worst one.
+  async function bleedStop(why, all = true) {
+    const b = bleeds();
+    if (!b.length) return false;
+    if (all) b.length = 0; else b.shift();
+    renderBleed();
+    J.staunch = (J.staunch || 0) + 1; jSave();
+    await mech(why + (b.length ? " One wound is closed; still bleeding: " + bleedTxt() + " a round." : " The bleeding stops."), "loot");
+    if (J.staunch >= 10) grant("staunch");
+    return true;
+  }
+  // Out of the fight and still bleeding: bandage it, or tie it off and lose one more round of it.
+  let bleedBusy = false;
+  const bleedPending = () => !FOE.on && !bleedBusy && started && !!S.bleed && S.bleed.length > 0;
+  async function bleedSettle() {
+    bleedBusy = true;
+    try {
+      if (S.hp <= 0) { S.bleed = []; renderBleed(); return; }
+      if (hasSkill("mend")) { await bleedStop("Field Mending: once it's quiet, you bind the bleeding properly, the way Wren showed you: pressure first, then the knot."); return; }
+      await say("The fight's over, but you're still bleeding.");
+      const c = await chooseRaw([
+        { key: "band", label: "Bandage it", tag: "1 bandage · stops it, and 1d8 + 2 HP · you have " + (S.dress || 0), show: (S.dress || 0) > 0 },
+        { key: "tie", label: "Tie it off with a strip of cloth", tag: "free · you bleed one more round first (" + bleedTxt() + ")", plain: (S.dress || 0) > 0 }
+      ]);
+      if (c === "band") {
+        S.dress--; const n = d(8) + 2, b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+        await bleedStop("You sit down, clean it, and bandage it tight. Regain " + (S.hp - b) + " HP.");
+      } else {
+        const rolls = bleeds().map(x => d(x)), n = rolls.reduce((a, x) => a + x, 0) + lvBleed(), b = S.hp;
+        S.hp = Math.max(1, S.hp - n); renderSheet();
+        await bleedStop("You tear a strip off your shirt and knot it hard, and lose " + (b - S.hp) + " HP before it holds.");
+      }
+    } finally { bleedBusy = false; }
+  }
+  // Between parts: spare cloth scraps become bandages (2 scraps each), up to BAND_AUTO carried.
+  async function bandRoll() {
+    if (!S.bandGift) return;
+    let n = 0;
+    while ((S.dress || 0) < BAND_AUTO && salv().cloth >= 2) { salv().cloth -= 2; S.dress = (S.dress || 0) + 1; n++; }
+    if (!n) return;
+    renderSheet();
+    await mech("On the way, you tear your cleanest cloth scraps into strips and roll " + (n > 1 ? n + " bandages" : "a bandage") + ". You have " + S.dress + ".", "loot");
+  }
+
   // ---------- quick hands: using an item mid-fight ----------
   // Once every two turns you can reach into your pack mid-fight and use something, on top of your
   // action. Using it is a timing catch: stop the marker in the gold for a clean use, on the bright
@@ -3836,7 +3960,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.potions) o.push({ key: "potion", label: "Gulp a Draught of Mending", tag: "+" + quickHeal(8) + " HP · " + S.potions + " left" });
     if (S.elixirs) o.push({ key: "elixir", label: "Gulp an Elixir of Health", tag: "+" + quickHeal(15) + " HP · " + S.elixirs + " left" });
     if (S.moss) o.push({ key: "moss", label: "Slap on a gravemoss poultice", tag: "2d6 HP · " + S.moss + " left" });
-    if (S.dress) o.push({ key: "dress", label: "Bind a field dressing", tag: "1d8 + 2 HP · " + S.dress + " left" });
+    if (S.dress) o.push({ key: "dress", label: bleeds().length ? "Bandage the bleeding" : "Bind a bandage", tag: "1d8 + 2 HP" + (bleeds().length ? ", stops the bleeding" : "") + " · " + S.dress + " left" });
     if (S.herbs && S.sick) o.push({ key: "herbs", label: "Chew a sprig of feverfew", tag: "cures ooze sickness" });
     if (S.tea && S.bloom && !S.molt) o.push({ key: "tea", label: "Gulp saltroot tea", tag: "Bloom −1" });
     if (S.saltroot && S.hk && !S.molt && !FOE.salt) o.push({ key: "saltroot", label: "Chew raw saltroot", tag: "your next Bloom save this fight holds" });
@@ -3929,7 +4053,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await beltMend(Math.max(1, Math.floor(quickHeal(key === "elixir" ? 15 : 8) * mult)), t === "fumble" ? "The stopper sticks and half of it goes down your chin." : key === "elixir" ? "You get the elixir down in two swallows. Iron and clover." : "One long pull on the horn, bitter as bark.");
     } else if (key === "dress") {
       S.dress--;
-      await beltMend(Math.max(1, Math.floor((d(8) + 2) * mult)), t === "fumble" ? "The dressing slips while you knot it, and only half holds." : "You slap a field dressing on the worst of it and knot it tight with your teeth.");
+      await beltMend(Math.max(1, Math.floor((d(8) + 2) * mult)), t === "fumble" ? "The bandage slips while you knot it, and only half holds." : "You slap a bandage on the worst of it and knot it tight with your teeth.");
+      if (bleeds().length) await bleedStop(t === "fumble" ? "It only stops the worst of it." : "The bandage holds.", t !== "fumble");
     } else if (key === "moss") {
       S.moss--;
       await beltMend(Math.max(1, Math.floor((d(6) + d(6)) * mult)), t === "fumble" ? "You slap the poultice on crooked, and most of it falls off." : "You slap the gravemoss onto the worst cut and clamp it with your elbow.");
@@ -4058,6 +4183,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   async function spoilsTurnIn() {
     if ((S.leaves || 0) > 0 || salvWorth() > 0) tip("spoils");
+    await bandRoll();
     // With Trapcraft and a schematic, you keep metal and cloth for parts (up to a pack's worth) and sell the rest.
     if (keepsSalvage() && salvWorth() > 0) {
       const v = salv(), sold = { cloth: Math.max(0, v.cloth - KEEP_CAP.cloth), metal: Math.max(0, v.metal - KEEP_CAP.metal), spore: v.spore };
@@ -4980,13 +5106,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         { key: "iron", label: "Buy scrap iron", tag: "4 gold · 2 iron · you have " + S.iron, show: S.coins >= 4, plain: true },
         { key: "mine", label: M ? "Pack a " + M.name : "", tag: M ? "1 iron + " + M.cost + " gold for " + M.fill + " · Dexterity DC 12 · " + M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") : "", show: !!M && S.iron >= 1 && S.coins >= (M ? M.cost : 0) },
         { key: "cal", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · 18+ makes a fine bag", show: S.iron >= 2 },
-        { key: "dress", label: "Roll a field dressing", tag: (salv().cloth >= 2 ? "2 cloth scraps" : "3 gold for linen") + " · heals 1d8 + 2 from your belt · you have " + (S.dress || 0), show: salv().cloth >= 2 || S.coins >= 3, plain: true },
+        { key: "dress", label: "Roll a bandage", tag: (salv().cloth >= 2 ? "2 cloth scraps" : "3 gold for linen") + " · stops bleeding and heals 1d8 + 2 · you have " + (S.dress || 0), show: salv().cloth >= 2 || S.coins >= 3, plain: true },
         { key: "pavise", label: "Buy a pavise", tag: "15 gold · a tall shield you plant in a fight: halves your next 3 hits, or stops a whole volley · you have " + (S.pavise || 0), show: S.coins >= 15, plain: true },
         { key: "done", label: "Leave the bench", plain: true }
       ]);
       if (c === "done") return;
       if (c === "iron") { S.coins -= 4; S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron. 4 gold.", "loot"); }
-      if (c === "dress") { if (salv().cloth >= 2) salv().cloth -= 2; else S.coins -= 3; S.dress = (S.dress || 0) + 1; renderSheet(); await mech("A field dressing: a pad, a roll of linen and a smear of salve. You have " + S.dress + ".", "loot"); }
+      if (c === "dress") { if (salv().cloth >= 2) salv().cloth -= 2; else S.coins -= 3; S.dress = (S.dress || 0) + 1; renderSheet(); await mech("A bandage: a pad, a roll of linen and a smear of salve. You have " + S.dress + ".", "loot"); }
       if (c === "pavise") { S.coins -= 15; S.pavise = (S.pavise || 0) + 1; renderSheet(); await mech("A pavise: a tall shield of planked oak with a spike at the foot, to plant in the ground and crouch behind. You have " + S.pavise + ".", "loot"); }
       if (c === "mine") {
         S.iron--; S.coins -= M.cost; renderSheet();
@@ -6631,7 +6757,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (sc.fire + sc.poison + sc.frost) items.push(["scrolls", "scroll", "Snare Rune Scrolls", "Emberbite ×" + sc.fire + " (fire), Blightbloom ×" + sc.poison + " (poison), Rimefang ×" + sc.frost + " (frost). Lay one as a mine in a company battle: Arcana DC 12."]);
     if (S.blank || S.ink) items.push(["ink", "scroll", "Scribing Kit", (S.blank || 0) + " blank parchment, " + (S.ink || 0) + " measures of ink."]);
     if (S.iron) items.push(["iron", "caltrop", "Scrap Iron ×" + S.iron, "Nails, hoops and horseshoes. 2 to a bag of caltrops."]);
-    if (S.dress) items.push(["dress", "herb", "Field Dressings ×" + S.dress, "Bind one from your belt mid-fight: 1d8 + 2 HP."]);
+    if (S.dress) items.push(["dress", "herb", "Bandages ×" + S.dress, "Bind one mid-fight with quick hands (free) or as your move: 1d8 + 2 HP, and it stops bleeding."]);
     if (S.shawl) items.push(["shawl", "blessing", "The Quickening Shawl", (S.shawl.charge ? "Ready. " : "Spent: rest at an inn or a sanctuary to recharge it. ") + "In a fight: 3 turns where nothing answers you (2 against captains and the greatest foes), then you're winded."]);
     if (S.pavise) items.push(["pavise", "shield", "Pavise ×" + S.pavise, "Plant it in a fight: it halves your next 3 hits, or stops a whole volley, then it's done."]);
     const rm = rmineKeys();
@@ -9085,7 +9211,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     $("hkDrum").textContent = S.drum + " / 10";
     $("hkDrumBar").style.width = Math.min(100, S.drum * 10) + "%";
     $("hkTime").textContent = S.hd > 3 ? "Mount Corrach" : "Day " + S.hd + " · " + (HK_SLOTS[S.hs] || "Dawn");
-    $("hkBank").textContent = S.bank.open ? S.bank.bal + " gp" : "No account";
+    $("hkBank").textContent = S.bank && S.bank.open ? S.bank.bal + " gp" : "No account";
     $("hkRank").textContent = rank();
     $("hkSong").textContent = S.song + " / 3";
   }
@@ -9162,7 +9288,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("torch");
     await say("You wake on a straw pallet in a whitewashed room that smells of vinegar and smoke. Sister Wren is sitting beside you, doing nothing, which is how you know it was close.");
     await say("\"They brought you in on a door,\" she says. \"You weren't breathing. I burned the Bloom back as far as it would go, which isn't out. Somebody went through your purse while you were lying in the road.\"" + (gift ? " She puts a stoppered horn in your hand. \"And take this. I'd rather not do it twice.\"" : ""), "voice");
-    await mech("You died. You wake at Vellum Rest with full HP and the Bloom at stage " + S.bloom + ". You lost " + lost + " gold from your purse" + (S.bank.open ? " (your Coffer-House account is untouched)" : "") + ". The part begins again from your last rest. Deaths so far: " + S.deaths + ".", "hurt");
+    await mech("You died. You wake at Vellum Rest with full HP and the Bloom at stage " + S.bloom + ". You lost " + lost + " gold from your purse" + (S.bank && S.bank.open ? " (your Coffer-House account is untouched)" : "") + ". The part begins again from your last rest. Deaths so far: " + S.deaths + ".", "hurt");
     if (!(S.skills || []).includes("mend")) await say("\"And come and see me when you're up,\" Wren adds. \"Ten gold and an afternoon, and I'll teach you to bind your own cuts. Cheaper than this.\"", "voice");
     await go("Get up");
   }
@@ -9175,7 +9301,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
     S.gemsSpent = false; renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: false };
-    FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade;
+    FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
     if (hasGear("bow")) {
@@ -9193,6 +9319,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (F.setup) await F.setup(st);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
+      await bleedTick();
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       await munRound(F, st); if (FOE.hp <= 0) break;
@@ -9204,7 +9331,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (hasGear("mirror") && !st.used.mirror) opts.push({ key: "mirror", label: "Draw Mirrorwake", tag: "two copies of you", plain: true });
       if (hasGear("drum") && F.hesk && !st.used.drum) opts.push({ key: "drum", label: "Play the stilling beat", tag: "they lose a turn", plain: true });
       if (F.hesk && S.song >= 2 && !st.used.discord) opts.push({ key: "discord", label: "Sing a discord into their blade", tag: "Wisdom DC 13", plain: true });
-      if (hasSkill("mend") && (st.used.mend || 0) < 2 && S.hp < S.maxHp) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
+      if (hasSkill("mend") && (st.used.mend || 0) < 2 && (S.hp < S.maxHp || bleeds().length)) opts.push({ key: "mend", label: "Bind your wounds", tag: "Field Mending · 1d8 + 2 HP" + (bleeds().length ? ", stops the bleeding" : "") + " · " + (2 - (st.used.mend || 0)) + " left · costs your turn", plain: true });
+      if (bleeds().length && S.dress) opts.push({ key: "band", label: "Bandage the bleeding", tag: "1 bandage · stops " + bleedTxt() + " a round, and 1d8 + 2 HP · costs your turn · " + S.dress + " left", plain: true });
       if (S.pavise && !st.used.pavise) opts.push({ key: "pavise", label: "Plant the pavise", tag: "halves your next 3 hits, or stops a whole volley · " + S.pavise + " left · costs your turn", plain: true });
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
@@ -9269,6 +9397,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
         await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
         await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
+        if (bleeds().length) await bleedStop("And the binding holds the bleeding shut.");
+      } else if (c === "band") {
+        S.dress--; const n = d(8) + 2, before = S.hp;
+        S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+        await say("You give ground, clamp the wound with your palm, and wind a bandage round it with your teeth on one end, eyes up the whole time.");
+        await bleedStop("Bandaged: regain " + (S.hp - before) + " HP.");
       } else if (c === "pavise") {
         st.used.pavise = true; S.pavise--; st.pavise = 3; renderSheet();
         await say("You drive the pavise's spike into the ground and get your shoulder behind it.");
@@ -9509,7 +9643,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       lore: "Lastwell's ditch-reeves once kept the drains clear and the roads safe. Now they keep the roads, and charge for it. They never work alone for long.",
       intro: "A man in a reeve's rotten tabard climbs out of the drainage ditch with a billhook in one hand and a cow horn on a cord round his neck. \"Toll,\" he says, and doesn't name a price.",
       who: "the ditch-reeve", hitWhy: "The billhook catches you across the ribs.", miss: "The billhook bites the fence post beside you." },
-    { id: "cutter", name: "Glass-cutter", region: "glass", quirk: "mirror", hp: 17, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
+    { id: "cutter", bleed: BLEED_DEEP, name: "Glass-cutter", region: "glass", quirk: "mirror", hp: 17, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
       ability: ["Mirror cloak", "Its cloak is sewn with mirror shards. Some rounds it splits into reflections, and its AC goes up by 5 until the round ends."],
       tactic: "When it splits, don't swing: Evade, heal, or throw a blast that doesn't need a roll. Strike when there's only one of it.",
       lore: "Sulmaran footpads who sew offcuts from the glassworks into their cloaks. In the white noon light they're a dozen people at once, and none of them are where they seem.",
@@ -9521,7 +9655,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       lore: "Glassmakers' guard dogs, bred near the furnaces until their bellies glow. The ones that got loose live on the slag heaps outside the walls.",
       intro: "Heat comes off the slag heap like a breath, and then the slag heap breathes: a broad dog with a belly that glows orange through its skin climbs down toward you.",
       who: "the kiln-mastiff", hitWhy: "Hot jaws close on your arm.", miss: "Its teeth clack shut, and you smell scorched hair." },
-    { id: "lurker", name: "Scree-lurker", region: "corrach", quirk: "ambush", hp: 18, ac: 14, atk: 5, n: 1, s: 10, type: "piercing", notice: 15,
+    { id: "lurker", bleed: BLEED_DEEP, name: "Scree-lurker", region: "corrach", quirk: "ambush", hp: 18, ac: 14, atk: 5, n: 1, s: 10, type: "piercing", notice: 15,
       ability: ["Ambush", "It lies flat under the loose shale. If you don't spot it, it strikes before you can act."],
       tactic: "Look before you climb. Spot it and you get advantage on your first swing.",
       lore: "A flat grey thing like a paving stone with legs, that lies under the shale on Corrach's slopes for weeks at a time. The Hesk drone to the scree before they cross it, to wake them.",
@@ -9533,7 +9667,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       lore: "Mites that live in empty Hesk sleep-cradles and eat the shed husks. They're the reason the Hesk seal their cradles, and the reason they sing to them.",
       intro: "You pass a row of old cracked sleep-cradles in the rock, and something inside the nearest one rustles. Pale mites the size of a fist come pouring out over the lip.",
       who: "the mites", hitWhy: "Mandibles sink into your ankle, and it goes cold.", miss: "A mite scrabbles at your boot and falls back.", hitLine: "One pops under the axe like a dry seed pod." },
-    { id: "shearer", name: "Shade-shearer", region: "noon", quirk: "shear", hp: 18, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
+    { id: "shearer", bleed: BLEED_DEEP, name: "Shade-shearer", region: "noon", quirk: "shear", hp: 18, ac: 13, atk: 5, n: 1, s: 6, type: "slashing", notice: 14,
       ability: ["Shear", "Every hit also snips your shadow. Two snips and it cuts a whole length away. Kill it and the length comes back to you."],
       tactic: "Evade while it's ahead, and finish it: whatever it cuts, it carries. Oriel's Shadow Needle keeps its blades out of your shadow altogether.",
       lore: "Tall, pale scavengers that walk Ammaret's drains on stilt legs, with blades for fingers. The Lidless leave them alone, because they only ever take shadows, and shadows can be bought back.",
@@ -9545,7 +9679,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       lore: "Shadows that were cut and never sold, gone feral in the dark corners of Ammaret. They're cold, and they want what you've got: a shadow with somebody still attached to it.",
       intro: "In a dim alley out of the lens-light, your shadow has company. Three more shadows on the wall beside it, with nobody to cast them, and they're turning toward you.",
       who: "the cutshades", hitWhy: "A cold hand that is only a shape closes on you, and something warm goes out of you.", miss: "It passes through the place you just were, like a draught.", hitLine: "It tears like wet paper and blows away." },
-    { id: "kiteeel", name: "Kite-eel", region: "undermoon", quirk: "tug", hp: 16, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", notice: 13,
+    { id: "kiteeel", bleed: BLEED_DEEP, name: "Kite-eel", region: "undermoon", quirk: "tug", hp: 16, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", notice: 13,
       ability: ["Tug", "Every hit also hooks one of your kinstones and pulls it away. Kill it and you get them back."],
       tactic: "End it fast, before you're too light to swing. If you're adrift, the Tether-Line keeps your footing; a gem flare or a spell doesn't care how much you weigh.",
       lore: "Long, flat, see-through eels that swim through the air of the hollow in the Lift, steering with fins like sails. They line their nests with stolen stones, and the Moored say a kite-eel's nest is the richest place in Kedge.",
@@ -9575,7 +9709,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!met) return '<div class="beast unmet"><div class="bh"><span class="bn">Not yet met</span><span class="bs">' + REGIONS[B.region] + "</span></div></div>";
     const stats = (B.heads ? B.heads + " " + B.unit.split("|")[1] : B.hp + " HP") + " · AC " + B.ac + " · hits for " + B.n + "d" + B.s + " " + B.type;
     return '<div class="beast"><div class="bh"><span class="bn">' + B.name + '</span><span class="bs">' + REGIONS[B.region] + " · " + stats + "</span></div>" +
-      "<p><b>" + B.ability[0] + ".</b> " + B.ability[1] + "</p><p><b>Tactic.</b> " + B.tactic + '</p><p class="bl">' + B.lore + "</p>" +
+      "<p><b>" + B.ability[0] + ".</b> " + B.ability[1] + "</p>" + (B.bleed ? "<p><b>Bleeder.</b> Its hits open a bleeding wound 1 time in 2. Carry bandages.</p>" : "") + "<p><b>Tactic.</b> " + B.tactic + '</p><p class="bl">' + B.lore + "</p>" +
       (tally && tally.fear && FEARS[B.id] ? "<p><b>Feared shape.</b> As a Nightmare it fears the " + beastById(FEARS[B.id]).name + ", and at half health it turns into one, keeping its own trick.</p>" : "") +
       (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + "</p>" : "") + "</div>";
   }
@@ -9838,7 +9972,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       spotted = r.ok;
     }
     const q = nm && NM_NOFLEE.includes(B.quirk) ? {} : QUIRKS[B.quirk] || {};
-    const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
+    const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, bleed: B.bleed || 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
       stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
     if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
     if (haunt) F.hpLeft = haunt.hp;
@@ -16533,7 +16667,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const target = company().includes("rowan") || X.ally === "rowan" ? "Inspector Holt" : "Rowan Crest";
     await say("Whoever gets close to the spies dies: that's how they've lasted. So you sit up in the dark with " + target + ", and wait.");
     await say("She comes at the second bell, down through the skylight on a rope without a sound: <b>Veil</b>. Grey wrappings, two long knives, and eyes that don't look at you at all. They look at " + target + ".");
-    const F = retreatable({ name: "Veil", hp: 32, ac: 15, atk: 6, n: 1, s: 6, type: "piercing", bloom: 0, hesk: false, who: "Veil", whoShort: "Veil", hitWhy: "A knife you never saw opens you up.", miss: "The knife goes into the doorframe and comes out again.", hitLine: "Veil makes no sound at all, which is worse." });
+    const F = retreatable({ name: "Veil", bleed: BLEED_DEEP, hp: 32, ac: 15, atk: 6, n: 1, s: 6, type: "piercing", bloom: 0, hesk: false, who: "Veil", whoShort: "Veil", hitWhy: "A knife you never saw opens you up.", miss: "The knife goes into the doorframe and comes out again.", hitLine: "Veil makes no sound at all, which is worse." });
     F.turn = async (st) => { const hit = await foeSwing(F, st); if (hit) { const r = await check({ label: "Constitution save (the knife was oiled)", mod: 2, dc: 13, cta: "Hold on" }); if (!r.ok) await hurt(1, 6, "poison", "The poison goes up your arm like cold water."); } if (FOE.hp > 0 && st.round % 2 === 0) await foeSwing(F, st, { label: "Veil's second knife" }); st.evade = false; return "done"; };
     await hkFight(F);
     if (F.fled) { await say(target + " is dead by the time you get back up the stairs. Veil is gone."); await rxMom(6, "The city hears its investigators are being murdered."); X.spies.veil = "dead"; await rxSpiesDone(); return; }
