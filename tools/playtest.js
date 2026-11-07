@@ -108,6 +108,9 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
       if (r.part >= stopPart) break;
     }
     partSteps++;
+    // Pronoun tokens ({he}, {g:a|b|c}) should never reach the page unresolved.
+    const tok = /\{(g:[^{}]*|[Hh](?:e|im|is|ers|imself|e's|e'd|e'll))\}/.exec(r.tail + " " + r.labels.join(" "));
+    if (tok) { console.log("UNRESOLVED TOKEN " + tok[0] + " at S.part " + r.part + ": " + r.tail.slice(-200)); errors.push("token " + tok[0]); }
     if (!r.labels.length) {
       if (++idle > 60) { console.log("SOFT-LOCK at S.part " + r.part + ": nothing to press for 6 seconds.\n" + r.tail); log.write("SOFT-LOCK\n" + r.tail + "\n"); return finish(2); }
       await page.waitForTimeout(100); continue;
