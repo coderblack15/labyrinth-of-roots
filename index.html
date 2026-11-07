@@ -1926,6 +1926,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "58", name: "The Commoner's Almanac", date: "7 Nov 2026", items: [
+      "The world talks about the time of year now. Mud and full ditches in spring, tariff arguments and sleeping guards in summer, leaf-drifted shrines and orchard lights in autumn, frozen wells and lamp-oil stockpiles in winter, on the roads and in the towns.",
+      "Festival oddities: contradictory elders and beribboned oxen at the Root-Waking, cursed turnips and dangerous vegetable judging at the Fair of Full Barns, strangers' stories and shy bandits on the Night of Lamps, and the fox who gets the soup at the Long Candle.",
+      "When a month turns, one line says so: <i>The hedges have flowered. The first frost touched the road.</i>",
+      "<b>Treasure rumours</b> at the bar, a different one every month. Some are true, some are nonsense, and you only find out by going to look.",
+      "<b>Byways with history</b> on the Blood-bought Roads: the Beggar's Mile, King's Regret, Crooked Mercy Road, the Long Apology and Halfpenny Hill. Everybody also has their own explanation for the roads' name.",
+      "<b>The Commoner's Almanac</b>, 3 gold at any market: a proverb, a prediction, a joke and some gossip for every month, and the gossip carries on from month to month.",
+      "<b>Once a year</b> in the towns: the wandering storyteller on the Night of Lamps, the Golden Pig race in Hayfire, the merchant of useless luxuries in Smokewind, and the annual argument in Ironfrost, which picks up exactly where it left off.",
+      "A signpost, a missing goat and the captain of the watch join the dry remarks. Four new pursuits in the set <b>The Commoner's Almanac</b>."] },
     { ver: "57", name: "The Turning Year", date: "7 Nov 2026", items: [
       "The realm keeps a calendar now: twelve months of twelve days, from Sapwake in the spring to Candlewait at the bottom of the winter, and a six-day week that ends on market day. The date sits under your purse, and the journal has a page for it.",
       "Time is weather, not a deadline. Every part moves the clock on, the road between kingdoms takes days, and a rest runs on to morning. Nothing ever runs out, and nothing is missed for exploring.",
@@ -2398,6 +2407,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "calnight", name: "Road After Dark", desc: "Win five fights with gangs at night on the Blood-bought Roads.", test: () => !!S.cal && (S.cal.night || 0) >= 5, prog: () => [Math.min(5, S.cal ? S.cal.night || 0 : 0), 5] },
     { id: "calmarket", name: "Market Day", desc: "Buy something at a town's stalls on market day, or at the Fair of Full Barns.", test: () => false },
     { id: "calyear", name: "A Year and a Day", desc: "Be on the road a year and a day on one journey.", test: () => !!S.cal && Math.floor(S.cal.t / 4) >= CAL_YEAR, prog: () => [Math.min(CAL_YEAR + 1, S.cal ? Math.floor(S.cal.t / 4) + 1 : 1), CAL_YEAR + 1] },
+    { id: "calalmanac", name: "Never Once Wrong", desc: "Buy the Commoner's Almanac from a town market.", test: () => false },
+    { id: "calonce", name: "Once a Year", desc: "See all four things that happen once a year in the towns, on one journey.", test: () => !!S.cal && (S.cal.onceSeen || []).length >= 4, prog: () => [Math.min(4, S.cal ? (S.cal.onceSeen || []).length : 0), 4] },
+    { id: "calrumour", name: "Some True, Some Nonsense", desc: "Follow up a treasure rumour that was true, and one that wasn't.", test: () => !!S.cal && (S.cal.rTrue || 0) >= 1 && (S.cal.rFalse || 0) >= 1 },
+    { id: "calbyways", name: "Roads With History", desc: "Walk all five named byways of the Blood-bought Roads on one journey.", test: () => !!S.cal && (S.cal.byways || []).length >= CAL_BYWAYS.length, prog: () => [Math.min(CAL_BYWAYS.length, S.cal ? (S.cal.byways || []).length : 0), CAL_BYWAYS.length] },
     { id: "drycritic", name: "Everyone's a Critic", desc: "Get ten of Burr's opinions on one journey.", test: () => !!S.dry && S.dry.burr >= 10, prog: () => [Math.min(10, S.dry ? S.dry.burr : 0), 10] },
     { id: "bnweave", name: "The High Weave", desc: "Climb the Needle and break the High Weave, and take Threadfang.", test: () => false },
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
@@ -2436,7 +2449,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "dry", name: "Dry Company", ver: "13", desc: "Deadpan townsfolk, innkeepers, shopkeepers, gangs and roads, and Burr's opinions of all of them.",
       ids: ["drycrowd", "drycritic"] },
     { id: "calendar", name: "The Turning Year", ver: "14", desc: "Days, months and seasons: market days, four festivals, winter tolls and night on the Blood-bought Roads.",
-      ids: ["calseasons", "calfairs", "calnight", "calmarket", "calyear"] }
+      ids: ["calseasons", "calfairs", "calnight", "calmarket", "calyear"] },
+    { id: "almanac", name: "The Commoner's Almanac", ver: "15", desc: "Seasonal folklore: rumours by the month, byways with reputations, the Almanac and four things that happen once a year.",
+      ids: ["calalmanac", "calonce", "calrumour", "calbyways"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2655,6 +2670,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     bnItems(items);
     lvItems(items);
     cwItems(items);
+    calItems(items);
     linkItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
@@ -4258,6 +4274,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function calSeen() { const C = cal(), s = CAL_SEASONS[calSeason()]; C.seen = C.seen || []; if (!C.seen.includes(s)) C.seen.push(s); }
   // A line when the season turns, a festival starts, or a winter comes round, once each.
   async function calNews() {
+    await calMonthNote();
     const C = cal(), s = calSeason(), F = calFair(), key = calYear() + ":" + s + ":" + (F ? F.id : "");
     if (C.said === key) return;
     const was = (C.said || "").split(":");
@@ -4278,6 +4295,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech(word + " days on the road" + (from && to && from !== to ? " from " + from + " to " + to : "") + ". It's " + calDate() + " now, in " + CAL_SEASONS[calSeason()].toLowerCase() + ".");
     tip("calendar");
     await calNews();
+    if (d(2) === 1) { const t = quip("calSeason", { key: calSeason() }); if (t) await say(t, "dry"); }
   }
   function calSection(rs) {
     if (!rs || !rs.cal) return "";
@@ -4292,7 +4310,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<table><thead><tr><th>Season</th><th>Months</th><th>Festival</th></tr></thead><tbody>' + CAL_SEASONS.map((s, i) => {
         const F = CAL_FAIRS.find(x => Math.floor(x.m / 3) === i);
         return "<tr><td>" + s + "</td><td>" + CAL_MONTHS.slice(i * 3, i * 3 + 3).join(", ") + "</td><td><b>" + F.name.replace(/^the /, "The ") + "</b>, " + ordinal(F.d) + "–" + ordinal(F.d + 1) + " " + CAL_MONTHS[F.m] + ". " + F.what + " In towns: " + F.fx + "." + (i === 3 ? " All winter, tolls cost half as much again." : "") + "</td></tr>";
-      }).join("") + "</tbody></table></section>";
+      }).join("") + "</tbody></table>" +
+      '<p style="margin-top:10px"><b>Once a year, in the towns:</b> ' + CAL_ONCE.map(O => O.name + " (" + O.when + ")" + ((C.onceSeen || []).includes(O.id) ? " ✓" : "")).join("; ") + ".</p>" +
+      ((C.byways || []).length ? '<p class="j-sub">Byways walked: ' + C.byways.join(", ") + ".</p>" : "") +
+      (C.almanac ? '<p class="j-note" style="margin-top:8px">' + almanacEntry(calMonth(day)) + "</p>" : '<p class="j-sub">The Commoner\'s Almanac sells for 3 gold at any town market.</p>') + "</section>";
   }
   // Join a town's festival, once a festival a year.
   async function calJoin(T, F) {
@@ -4319,6 +4340,202 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       S.hp = S.maxHp; S.digs = DIG_MAX; renderSheet();
       calTo(0);
       await mech("Dawn, and the candle still burning. Full HP and every foothold back.", "loot");
+    }
+    achCheck();
+  }
+  // ---------- the calendar's folklore: the world commenting on the time of year ----------
+  // All atmosphere. Seasonal lines on the roads and in towns, festival oddities, a one-line note when
+  // the month turns, month-by-month treasure rumours at the bar (some true, some nonsense), named
+  // byways with reputations, the Commoner's Almanac, and four things that happen once a year.
+  const CAL_SEASON_LINES = {
+    0: ["The ditches either side of the road are full to the brim, and the road is doing its best to join them.",
+      "A farmer stops you to complain about the mud. You agree that it's muddy. He seems let down that you didn't argue.",
+      "Every traveller you pass tells you this year's harvest will be blessed. A woman with a cart of last year's turnips says they told her that last year.",
+      "There are lambs in the field by the road, standing on everything that will hold them, and some things that won't."],
+    1: ["Two merchants at a well are arguing about caravan tariffs. They were arguing before you got there and show no sign of needing you.",
+      "An inn by the road has its prices chalked by the door: ALE, 2 COPPER. COLD ALE, 5 COPPER. COLD ALE, ASKED NICELY, 6.",
+      "The guard at the bridge is asleep in the shade of his own shield. You walk past quietly, out of respect for the shade.",
+      "Dust on the road, dust on the hedges, and dust on a man at the roadside selling feather dusters."],
+    2: ["A roadside shrine is half under a drift of fallen leaves. Somebody has swept a little path to the offering bowl, and no further.",
+      "A hunter at a crossroads is selling pelts. You don't recognise one of them. When pressed, neither does he.",
+      "In the village they say there are lights in the old orchard at night. Nobody owns the orchard. Nobody goes to look.",
+      "Geese go over, south, very loudly, as if somebody had asked them to explain themselves."],
+    3: ["The well in the square has frozen solid. A boy is trying to break it with a bucket. The bucket is losing.",
+      "People on the road walk in bunches now, close together, and look you over hard before they let you fall in with them.",
+      "Every house you pass has a stack of lamp-oil jars by the door, as though the dark were laying siege.",
+      "Your breath goes ahead of you along the road, as if it wants to get there first."]
+  };
+  const CAL_FAIR_LINES = {
+    rootwake: ["An elder with a ribbon round his hat gives you directions to the well, and then directions to the well the other way. He's very sure both times.",
+      "Children have tied ribbons all over the oxen. The oxen bear it with great dignity.",
+      "Somebody mentions last year's Root-Waking, and the whole street goes quiet, and then everybody starts talking about the weather at once."],
+    lamps: ["The road out of town is lined with lanterns as far as you can see, and on past that.",
+      "Strangers sit together round a fire in the square, telling stories, and nobody asks anybody's name.",
+      "There are no bandits about tonight. Everybody's awake and the roads are lit, and bandits, it turns out, are shy."],
+    barns: ["The vegetable judging is held in the church, and it's the most dangerous thing you've seen all year. A woman is weeping over a marrow.",
+      "A merchant is selling a giant turnip cheap because, he says, it's cursed. Asked how, he says it keeps getting bigger.",
+      "The stalls hand out free samples to anybody who walks past slowly enough. You walk past very slowly."],
+    candle: ["A man goes down the street at dusk with a taper, lighting the candle in any window that hasn't got one. He's done it for forty years and has views on wicks.",
+      "The innkeeper has put a bowl of soup on the step for whoever's out in the cold. A fox has it. Nobody minds."]
+  };
+  // One line as a month turns, on the road back or after a night's rest.
+  const CAL_MONTH_NOTE = ["The year turns quietly.", "The ditches are full, and the roads are worse.", "The hedges have flowered.",
+    "The days are long enough to waste, and people do.", "The fields smell of cut hay, and there's nobody in them.", "The light lingers on the road long after supper.",
+    "The nights grow longer.", "The last leaves finally surrendered.", "Every chimney in the valley is going.",
+    "The first frost touched the road.", "The ruts have frozen as hard as iron.", "The year sits by the candle, and waits."];
+  // The Commoner's Almanac: a proverb, a prediction, a joke and some gossip for every month.
+  const ALMANAC = [
+    { p: "A wet spring foretells either prosperity or mud.", r: "The scholars remain divided.", j: "Q: What did the ditch say to the road? A: Come in, the water's lovely.", g: "The miller's son is courting the smith's daughter, and the smith knows, and is sharpening things." },
+    { p: "Mud on the boot is worth two in the bed.", r: "This month a stranger will ask you the way. You will not know it.", j: "A man lost a boot in the mud last Mudtide. He went back for it this year. He's still there.", g: "The toll-keeper at the ford has bought a second hat. Nobody knows what he's planning." },
+    { p: "Plant in Greenshoot, reap in Gleaning, complain in between.", r: "A cloud shaped like a sheep will be seen. Then a sheep shaped like a cloud.", j: "Why did the farmer plant his money? He wanted the bank to grow.", g: "The widow Pell has been seen walking out with two different gentlemen, and neither of them has been seen since." },
+    { p: "Make hay while the sun shines, and hide while the haymakers look for help.", r: "It will be hot. It will then be, briefly, hotter.", j: "The guards at the east gate have asked for shade. They've been given a smaller sun.", g: "The baker's ovens went out for a whole day, and he says it was the heat, and everybody says it was the cider." },
+    { p: "A hayrick never gossips, but it hears everything.", r: "Somebody will find a needle in a haystack this month and won't be pleased about where.", j: "What's the difference between a haymaker and a bandit? The bandit gets a lunch break.", g: "The priest's goat has eaten the parish register, and so nobody in the parish is legally married any more." },
+    { p: "Long light, short tempers.", r: "A lamp will be lit for a stranger, and the stranger will turn out to be a moth.", j: "A traveller asked an innkeeper how long the evenings were. \"About as long as your bill,\" he said.", g: "The Night of Lamps committee has fallen out over the colour of the paper, again, for the eleventh year." },
+    { p: "The gleaner who looks down finds barley. The gleaner who looks up finds trouble.", r: "Prices will fall at the Fair. Then they will fall on somebody's foot.", j: "The champion marrow at last year's fair is still being talked about. Mostly by the marrow's owner.", g: "Somebody switched the labels at the vegetable judging, and the second-best turnip took first place, and everybody knows who." },
+    { p: "Every leaf falls, but not every leaf is in a hurry.", r: "A shrine will be swept. It will then be unswept, by the wind.", j: "Why do the leaves leave? Because the trees keep shaking them off.", g: "The orchard lights were the smith's daughter and the miller's son. The smith is still sharpening things." },
+    { p: "Where there's smoke, there's a charcoal-burner wanting paying.", r: "A chimney will catch fire. The chimney will be fine. The cat will not forgive anyone.", j: "A charcoal-burner was asked if business was good. \"It's picking up,\" he said, \"and then it's all going up.\"", g: "The new toll-keeper at the ford is the old toll-keeper's twin, and nobody has seen the old one." },
+    { p: "First frost, last chance to mend the roof.", r: "Somebody will fall on the ice and say they meant to.", j: "What do you call a bandit in a snowdrift? Found, in spring.", g: "The innkeeper at the crossroads has started watering the ale, and blames the frost, because it's frozen." },
+    { p: "Iron frost, iron ground, iron will to stay in bed.", r: "A well will freeze. A boy will try to break it with a bucket. The bucket will lose.", j: "It's so cold the toll-keepers are charging for breath.", g: "The miller's son and the smith's daughter are to be married in spring. The smith has put his whetstone away. Mostly." },
+    { p: "A candle in the window is worth two in the shop.", r: "The year will end. Another will start. The scholars are confident about this one.", j: "How many people does it take to keep the Long Candle burning? One to trim it and eleven to tell him he's doing it wrong.", g: "Old Hedda is a hundred this month, and says the secret is never once having walked the Blood-bought Roads." }
+  ];
+  // Treasure rumours at the bar, one a month: some are true, and some are nonsense.
+  const CAL_RUMOURS = [
+    { ok: true, t: "When the spring floods go down, the old wells give up coins. Folk dropped them in for luck for a hundred years, and the flood stirs up the silt.", find: "You lower a bucket into the old well behind the ruins, and bring up silt, a frog, and a fistful of green coins." },
+    { ok: true, t: "A paymaster's chest went into the Mudtide mire on the Ransom Run, years back, and every spring the mud gives a few coins of it back.", find: "Where the road dips into the mire, the mud has spat coins up all along the verge, like seeds." },
+    { ok: false, t: "Bees in the old shrines make honey that tastes of gold. Find the hive and you find the gold.", fail: "You find the hive. The honey tastes of honey. The bees have views about you finding it." },
+    { ok: false, t: "On the longest day, the shadow of the third milestone points straight at a buried purse.", fail: "It points at the fourth milestone. You dig there anyway, and find the third milestone's shadow, which is all a milestone has to give." },
+    { ok: true, t: "The old armies paid their men in the fields, and haymakers still turn up coins in the stubble.", find: "Half a day in the stubble behind the haymakers, and you come out scratched to the knee with a purse of old army pay." },
+    { ok: true, t: "In the low water of high summer, a barge that sank at the ferry shows her ribs, and some of her cargo.", find: "The barge is there, ribs and all, and so is a lockbox somebody else missed." },
+    { ok: false, t: "Whoever finds the first sheaf of the gleaning finds a silver penny bound into it.", fail: "You find the first sheaf. There's a mouse bound into it, by its own choice, and it wants you to leave." },
+    { ok: true, t: "At sunset in Leafdrop, the shadow of the Cairnwright's old marker-stone points at buried silver. His crews hid their wages from him there.", find: "At sunset the marker-stone's shadow runs out long across the field, and where it ends there's a pot in the ground, and silver in the pot." },
+    { ok: false, t: "The smoke from the charcoal-burners' fires bends towards hidden things.", fail: "The smoke bends towards the charcoal-burner, who wants to know what you're doing in his clearing." },
+    { ok: true, t: "Frost won't settle over a buried cache. Something warm in the ground keeps it off.", find: "In the white field there's one dark square that the frost won't touch, and under it a box wrapped in fleece." },
+    { ok: true, t: "In Ironfrost the tarn freezes over, and you can walk out to the island where the smugglers kept their stash.", find: "The ice holds. The smugglers' hut on the island is empty, apart from the loose board under the bunk." },
+    { ok: true, t: "Tracks last longer in the snow. Whoever's been at a cache lately leaves you a path straight to it.", find: "Fresh tracks lead from the road to a hollow oak, and back. In the oak is somebody's winter savings. They should have walked backwards." }
+  ];
+  // Named byways along the Blood-bought Roads, each with a reputation.
+  const CAL_BYWAYS = [
+    ["The Beggar's Mile", "Nobody remembers why it's called that. Several people will tell you anyway, and none of the stories have a beggar in them."],
+    ["King's Regret", "Three kings are said to have taken it, one after another, and regretted it. Nobody agrees what they regretted. The road isn't saying."],
+    ["Crooked Mercy Road", "Famous for its roadside shrines: one every hundred yards, each to somebody different, some of them very small somebodies."],
+    ["The Long Apology", "It goes a long way round to get somewhere quite close, and every milestone on it says SORRY in very old letters."],
+    ["Halfpenny Hill", "There was a toll at the top once, of a halfpenny. The tollhouse is gone, but people still leave a halfpenny on the stone, just in case."]
+  ];
+  const CAL_NAME_WHY = [
+    "A drover tells you they're called the Blood-bought Roads because the convicts who cut them were paid in blood. Whose, he doesn't say.",
+    "A woman at a well says it's because the first toll was a drop of blood from every traveller, and the road has been collecting ever since.",
+    "A tinker says it's a mistranslation. It used to be the Bud-bought Roads, after a merchant called Bud. He can't say anything else about Bud.",
+    "A guard says the name's to keep travellers careful. \"Call it the Pleasant Roads,\" he says, \"and see how long anybody lasts.\"",
+    "A child tells you very seriously that the roads drink blood at night, and that's why they're red. The roads are grey. The child is undeterred."
+  ];
+  // Four things that come round once a year in the towns, on fixed dates.
+  const CAL_ONCE = [
+    { id: "teller", name: "The wandering storyteller", when: "during the Night of Lamps", on: () => calFairOn("lamps"), label: "Listen to the wandering storyteller", tag: "once a year · a story by lamplight" },
+    { id: "pig", name: "The Golden Pig race", m: 4, d: 3, when: "the 3rd–4th of Hayfire", label: "Watch the Golden Pig race", tag: "once a year · a bet of 5 gold" },
+    { id: "luxury", name: "The merchant of useless luxuries", m: 8, d: 7, when: "the 7th–8th of Smokewind", label: "Look at the useless luxuries", tag: "once a year · nothing you need" },
+    { id: "argue", name: "The annual argument", m: 10, d: 2, when: "the 2nd–3rd of Ironfrost", label: "Listen to the annual argument", tag: "once a year · it resumes where it left off" }
+  ];
+  const calOnceOn = (O) => O.on ? O.on() : calMonth() === O.m && (calDom() === O.d || calDom() === O.d + 1);
+  const calOnceDone = (O) => !!(cal().once || {})[calYear() + ":" + O.id];
+  const LUXURIES = [["a gilded spoon for soup that has gone cold", 25], ["a silk cushion for a horse", 30], ["a bottle of very old air, from a very old cellar", 20], ["a portrait of the merchant, by the merchant", 15]];
+  const ARGUMENT = [
+    ["\"As I was saying...\"", "\"That was last year.\"", "\"And I have not finished.\""],
+    ["\"...which is why the river was never the problem.\"", "\"Nobody said the river was the problem.\"", "\"You were going to. I could see it in your face. Last year.\""],
+    ["\"Before you start, I've thought about the river.\"", "\"I never started.\"", "\"Then I'll start. The river...\""],
+    ["\"I'll concede the river.\"", "The whole bar goes silent.", "\"But not the bridge.\""]
+  ];
+  async function calMonthNote() {
+    const C = cal(), mo = Math.floor(calDay() / CAL_MD);
+    if (C.mo === mo) return;
+    const first = C.mo === undefined;
+    C.mo = mo;
+    if (first) return;
+    await mech("<i>" + CAL_MONTH_NOTE[calMonth()] + "</i> It's " + CAL_MONTHS[calMonth()] + ".");
+    if (C.almanac) await mech(almanacEntry(calMonth()), "loot");
+  }
+  const almanacEntry = (m) => { const A = ALMANAC[m]; return "<b>The Commoner's Almanac · " + CAL_MONTHS[m] + "</b><br>" + A.p + "<br><i>Prediction:</i> " + A.r + "<br><i>For a laugh:</i> " + A.j + "<br><i>Heard about the place:</i> " + A.g; };
+  function calItems(items) {
+    if (S.cal && S.cal.almanac) items.push(["almanac", "book", "The Commoner's Almanac", "A proverb, a prediction, a joke and some gossip for every month. This month (" + CAL_MONTHS[calMonth()] + "): " + ALMANAC[calMonth()].p]);
+    if (S.cal && S.cal.curios && S.cal.curios.length) items.push(["curios", "ring", "Useless luxuries", "You own " + S.cal.curios.join(", ") + ". None of it does anything. That's the point, the merchant said."]);
+  }
+  // On the roads: now and then, a line for the season or the name of the road.
+  async function calWayside() {
+    if (d(100) <= 30) { const t = quip("calSeason", { key: calSeason() }); if (t) await say(t, "dry"); }
+  }
+  async function calRoadLore() {
+    const C = cal();
+    if (d(3) === 1) {
+      const B = CAL_BYWAYS[d(CAL_BYWAYS.length) - 1];
+      C.byways = C.byways || [];
+      await say("Part of the way runs along <b>" + B[0] + "</b>. " + B[1], "dry");
+      if (!C.byways.includes(B[0])) C.byways.push(B[0]);
+    } else if (d(4) === 1) { const t = quip("calName"); if (t) await say(t, "dry"); }
+    else await calWayside();
+  }
+  // In town: the bar's rumour for the month, and following it up.
+  async function calRumour() {
+    const C = cal(), key = calYear() + ":" + calMonth();
+    C.rum = C.rum || {};
+    if (C.rum[key]) return false;
+    C.rum[key] = 1;
+    const R = CAL_RUMOURS[calMonth()];
+    await say("A woman at the bar leans over and tells you, in the voice people use for the weather, about " + CAL_MONTHS[calMonth()] + "'s treasure. " + R.t);
+    const c = await choose([{ key: "go", label: "Go and look", tag: "it'll take a watch · it might even be true" }, { key: "no", label: "Thank her, and forget it", plain: true }]);
+    if (c === "no") return true;
+    calPass(1);
+    if (R.ok) {
+      const g = 8 + d(8) + lv(); S.coins += g; C.rTrue = (C.rTrue || 0) + 1;
+      const pot = d(3) === 1; if (pot) S.potions = (S.potions || 0) + 1;
+      renderSheet();
+      await say(R.find);
+      await mech("It was true. Gain " + g + " gold" + (pot ? ", and a Draught of Mending somebody hid with it" : "") + ".", "loot");
+    } else {
+      C.rFalse = (C.rFalse || 0) + 1;
+      await say(R.fail, "dry");
+      await mech("It was nonsense. You lose a watch, and gain a story.");
+    }
+    achCheck();
+    return true;
+  }
+  // In town: the once-a-year happenings.
+  async function calOnce(O) {
+    const C = cal();
+    C.once = C.once || {}; C.once[calYear() + ":" + O.id] = 1;
+    C.onceSeen = C.onceSeen || []; if (!C.onceSeen.includes(O.id)) C.onceSeen.push(O.id);
+    if (O.id === "teller") {
+      await say("The storyteller only comes on the Night of Lamps. Nobody knows where he goes the rest of the year, and he says that's the first story, and he never tells it.");
+      await say(["He tells the one about the convict who cut the first mile of the Blood-bought Roads and then walked down it, all the way, and kept walking, and is walking still, and is the reason the milestones are always a little further apart than they should be.",
+        "He tells the one about the toll-keeper who charged Death a copper to cross his bridge, and Death paid, and the toll-keeper has been very careful ever since to keep that copper in his pocket.",
+        "He tells the one about the two kingdoms that fought over a road for a hundred years, until somebody walked it and found it went nowhere at all, and both kingdoms kept fighting, on principle."][d(3) - 1]);
+      xpGain(15);
+      await mech("Everyone round the fire goes quiet at the end, the way you do. +15 XP.", "loot");
+    } else if (O.id === "pig") {
+      const pigs = ["Lady Bristle", "Old Gammon", "The Reverend", "Sudden Margery"];
+      await say("Once a year, on the 3rd of Hayfire, they paint a pig gold and race it against three that aren't, round the green, and the whole town bets on it. Nobody remembers why. The golden one has never won.");
+      const c = await choose(pigs.map((p, i) => ({ key: String(i), label: "Five gold on " + p, tag: i === 0 ? "the golden pig" : "", show: S.coins >= 5, plain: i > 0 })).concat([{ key: "no", label: "Just watch", plain: true }]));
+      const win = d(4) - 1;
+      await say("They're off. " + pigs[win] + " wins it by a snout" + (win === 0 ? ", and the whole town gasps, and an old man faints, and somebody says the world's ending." : ", and Lady Bristle, golden and dignified, comes in last, as is traditional."));
+      if (c !== "no") {
+        S.coins -= 5;
+        if (+c === win) { S.coins += win === 0 ? 40 : 15; await mech("Your pig won. Gain " + (win === 0 ? 40 : 15) + " gold.", "loot"); }
+        else await mech("Your pig did not win. Your pig did not seem to mind.", "hurt");
+        renderSheet();
+      }
+    } else if (O.id === "luxury") {
+      await say("Once a year a merchant in a velvet coat comes through with a cart of things nobody needs, and sells every one of them.");
+      const left = LUXURIES.filter(([n]) => !(C.curios || []).includes(n));
+      const c = await choose(left.map(([n, p], i) => ({ key: String(i), label: "Buy " + n, tag: p + " gold · it does nothing", show: S.coins >= p, plain: i > 0 })).concat([{ key: "no", label: "Admire them, and keep your money", plain: true }]));
+      if (c !== "no") {
+        const [n, p] = left[+c]; S.coins -= p; C.curios = (C.curios || []).concat([n]); renderSheet();
+        await say("\"An excellent choice,\" the merchant says. \"It will never let you down, because it will never be asked to do anything.\"");
+        await mech("You own " + n + ". It does nothing at all.", "loot");
+      } else await say("\"Next year,\" the merchant says, with total confidence.");
+    } else if (O.id === "argue") {
+      const n = C.argue || 0, L = ARGUMENT[Math.min(n, ARGUMENT.length - 1)];
+      C.argue = n + 1;
+      await say("Once a year, on the 2nd of Ironfrost, two old men take the same two stools at the end of the bar and pick up an argument exactly where they left it twelve months ago. People come from three villages to listen.");
+      for (const line of L) await say(line, "voice");
+      await say(n >= ARGUMENT.length - 1 ? "Nobody has ever heard them get further than this." : "And that's all you'll get until next year.", "dry");
     }
     achCheck();
   }
@@ -4366,6 +4583,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // quip(pool, key) picks a line you haven't heard yet (S.dry.seen) and counts it (S.dry.n, S.dry.burr).
   // New chapters add a DRY.wayside entry (by chapter slug) and a DRY.town entry (by region).
   const DRY = {
+    calSeason: CAL_SEASON_LINES, calFair: CAL_FAIR_LINES, calName: CAL_NAME_WHY,
     wayside: {
       labyrinth: [
         "Scratched into a root at head height: TURN BACK. Under it, in a different hand: I DID. IT'S THE SAME THIS WAY.",
@@ -4510,7 +4728,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       "The barman polishes the same cup the whole time you're there. When you leave, it's no cleaner.",
       "Two farmers are arguing whether a goose can be a guard dog. It goes on for some time. The goose, from the sound of it, is winning.",
       "\"{He} killed a hundred men with that axe,\" a drinker says, nodding at you. \"Mostly with the axe,\" his friend says. \"A few with a chair.\"",
-      "A child at the door whispers to her friend that you're the one from the stories. Her friend looks at you for a while. \"{He's} shorter,\" he says."
+      "A child at the door whispers to her friend that you're the one from the stories. Her friend looks at you for a while. \"{He's} shorter,\" he says.",
+      "The captain of the watch comes in and takes his helmet off. \"Bandits again?\" the barman asks. \"No.\" \"Good.\" \"Tax collectors.\" There's a pause. \"...Bandits would have been good.\""
     ],
     buy: [
       "The seller watches you heft it, and then, tactfully, looks away.",
@@ -4526,7 +4745,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       "A cart goes by with a family in the back, every one of them holding a spear. The littlest one waves at you. Her spear waves too.",
       "Somebody has painted a gang's mark on a milestone, and somebody else has painted a smaller, ruder mark beside it. Neither of them is likely still alive, but the argument goes on.",
       "Two merchants on the road are arguing over whose turn it is to be robbed first. They ask you to settle it. You decline.",
-      "A milestone has been worn smooth on one side by travellers leaning on it. You lean on it too. It's very comfortable. You can see why the road's so slow."
+      "A milestone has been worn smooth on one side by travellers leaning on it. You lean on it too. It's very comfortable. You can see why the road's so slow.",
+      "A signpost at a crossroads. One arm says EAST: CIVILISATION. The other says WEST: SLIGHTLY DIFFERENT CIVILISATION.",
+      "On a village notice board: MISSING GOAT. ANSWERS TO \"YOUR GRACE.\" DOES NOT ANSWER TO \"GOAT.\""
     ],
     // Gang banter before a fight and after one. Every line is a function of the gang (G).
     gang: [
@@ -4616,7 +4837,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const MP = (n) => mp(n), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
     const candle = fair && fair.id === "candle", lamps = fair && fair.id === "lamps";
     const innFee = () => candle ? 0 : innCost();
-    if (town && fair) await say(fair.intro);
+    if (town && fair) { await say(fair.intro); await dryLine("calFair", { key: fair.id, chance: 70 }); }
+    else if (town) await dryLine("calSeason", { key: calSeason(), chance: 35 });
     else if (town && calMarket() && has("market")) await say("It's market day. The street is all stalls and shouting, and the prices are down, because everybody else's are.");
     for (;;) {
       const smithLeft = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
@@ -4624,6 +4846,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const c = await choose([
         { key: "sanct", label: "Rest in the sanctuary", tag: "free · full HP, footholds, and the road's sicknesses eased", show: has("sanctum") && !rested },
         { key: "purse", label: "Tell them about your fights", tag: "Contender " + CT_NAMES[ctRank()] + " · the town's purse", show: ctPurseOk(T) },
+        ...CAL_ONCE.map(O => ({ key: "once:" + O.id, label: O.label, tag: O.tag, show: town && calOnceOn(O) && !calOnceDone(O) })),
+        { key: "almanac", label: "Buy the Commoner's Almanac", tag: mp(3) + " gold · a proverb, a prediction, a joke and some gossip every month", show: has("market") && !cal().almanac && S.coins >= mp(3), plain: true },
         { key: "fair", label: fair ? fair.join : "", tag: fair ? fair.name.replace(/^the /, "") + " · " + fair.tag : "", show: !!fair && !(cal().fairs || {})[calYear() + ":" + fair.id] },
         { key: "inn", label: "Take a room at the inn", tag: (candle ? "free for the Long Candle" : innCost() ? innCost() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innFee() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
         { key: "potion", label: "Buy a Draught of Mending", tag: MP(8) + " gold" + mOff + " · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= MP(8), plain: true },
@@ -4641,6 +4865,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       ]);
       if (c === "leave") break;
       if (c === "fair") await calJoin(T, fair);
+      if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
+      if (c === "almanac") {
+        const p = mp(3); S.coins -= p; cal().almanac = true; calBuy(); renderSheet(); grant("calalmanac");
+        await say("It's a thin book on rough paper, much thumbed, with a woodcut of a man pointing at the sky on the front. The stallholder says it's never once been wrong, because it's careful.");
+        await mech(almanacEntry(calMonth()), "loot");
+      }
       if (c === "sanct") {
         rested = true; calDawn();
         const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; if (S.shawl) S.shawl.charge = 1; renderSheet();
@@ -4648,6 +4878,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
         if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
+        await calMonthNote();
       } else if (c === "inn") {
         rested = true; calDawn();
         const fee = innFee();
@@ -4655,6 +4886,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await say(candle ? "The landlord won't take your money. \"Not on the Long Candle,\" she says. \"Nobody pays to come in out of the cold tonight. They pay double tomorrow.\"" : !fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house."), "loot");
         await dryLine("inn", { chance: 50 });
+        await calMonthNote();
       } else if (c === "purse") await ctPurse(T);
       else if (c === "roof") { roofed = true; (bn().roof = bn().roof || {})[T.reg + ":" + T.name] = bn().cw; await roofClimb(T); }
       else if (c === "potion") { const p = MP(8); calBuy(); S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
@@ -4688,6 +4920,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await mineBench(T.reg, "Somebody in " + T.name + " keeps a bench for it: the local way of packing a mine, out of " + REGION_MINES[T.reg].fill + ", and a forge for caltrops.");
       } else if (c === "bar") {
         drank = true; if (ctRank() < 2 && !lamps) S.coins -= P(2); renderSheet();
+        if (await calRumour()) { save(); continue; }
         const left = relicsLeft(), unbroken = ROAD_GANGS.filter(G => roamRegions().includes(G.r) && !bn().beat[G.id]);
         if (unbroken.length && d(2) === 1) { const G = unbroken[d(unbroken.length) - 1]; await say("Somebody at the bar has a story about " + G.n + ", who work the roads round " + REGIONS[G.r] + ". " + G.how); }
         else await say(left.length ? "Somebody at the next table has seen something odd: " + RELICS[left[d(left.length) - 1]].hint + ". They say it like a joke. It isn't one." : cascadeOn() ? "Everybody's talking about the Cascades: companies of the drowned seen marching on the old roads, captains in green plate, nobody knows whose." : "Nobody has much news. The roads are quieter than they were, and that suits everybody.");
@@ -4701,6 +4934,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const regs = roamRegions();
     const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
     if (r === "back") return;
+    await calWayside();
     roamFight = true;
     // What you meet: usually one creature, sometimes a pack of them, and with the Cascades running,
     // now and then a whole Cascade-drowned company with its armoured captains.
@@ -21205,6 +21439,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await roadsLore();
     if (!B.walked[a + "-" + b]) { B.walked[a + "-" + b] = 1; if (T.lore) { add(el("div", "part-head sub", '<span class="num">The Blood-bought Roads</span><h2>' + T.name + "</h2>")); await say(T.lore); } }
     await dryLine("road", { chance: 35 });
+    await calRoadLore();
     achCheck();
     roamFight = true;
     try {
