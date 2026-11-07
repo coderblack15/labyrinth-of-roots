@@ -417,6 +417,14 @@ body.intro-open { overflow: hidden; }
 .pgrid button.rot { background: #2a1512; border-color: var(--ember); color: var(--ember); }
 .pgrid button.seen { color: var(--ink); background: #1f2a23; }
 .pgrid button.goal { border-style: dashed; border-color: var(--gold); }
+.ring .face.cw-face { width: 44px; height: 44px; font-size: 1.15rem; }
+.cw-lock { gap: 6px; }
+.cw-lock .ring button { padding: 4px 10px; }
+.cw-edge { display: grid; place-items: center; color: var(--gold); font-size: 1rem; }
+.cw-road button { font-size: 1.6rem; font-family: monospace; }
+.cw-w button { width: 40px; height: 48px; font-size: 1rem; }
+.cw-w button small { display: block; font-size: .58rem; color: var(--muted); line-height: 1; }
+@media (max-width: 480px) { .pgrid.cw-w { grid-template-columns: repeat(5, 40px) !important; } }
 .pgrid button.here { border-color: var(--verdigris); background: #1d3329; box-shadow: 0 0 0 2px var(--verdigris) inset; }
 .rings { display: flex; flex-wrap: wrap; gap: 12px; }
 .ring { display: grid; gap: 6px; justify-items: center; }
@@ -1889,6 +1897,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     h += achSection();
     h += tipSection();
     h += linkSection();
+    h += cwSection(rs);
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
         J.past.slice(0, 8).map(x => "<tr><td>" + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + "</td><td>" +
@@ -1911,6 +1920,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "55", name: "The Cairnwright's Wages", date: "7 Nov 2026", items: [
+      "A treasure hunt on the roads back. Meet <b>Nan Ferrier</b> at the inn, with the list of three hundred navvies Merrit Sallow, the Cairnwright, never paid for laying Empress Adrianna's roads.",
+      "Seven milestones in seven lands, each its own puzzle: a road cipher, a culvert of channel-stones, a toll-scale with one false weight, three foremen and a liar, and more. Each gives a mile-mark for your ledger, and the map marks every stone you read.",
+      "A rival on the same hunt, Ambrose Penhallow, and the Toll-House lock at Rahdaria's land gate, which wants all seven marks in the order its riddle names them.",
+      "The cache: <b>Empress Adrianna's Champion Set</b> (+2 AC, +8 max HP, +1 to hit, +1 damage, +10 Evade), twelve healing vials, caltrops, two medium traps and 500 gold. Caltrops now work in any fight from the belt.",
+      "Then the navvies' wages: carry them to Nan, and the roads-back inns never charge you again, or keep them. Eight pursuits in a new set, The Cairnwright's Wages."] },
     { ver: "54", name: "All our own", date: "7 Nov 2026", items: ["The Scroll of Misty Step is now the <b>Scroll of Silver Mist</b>, so every name in the realm is the game's own. It works exactly as before, and a scroll you already carry is renamed for you."] },
     { ver: "53", name: "The Blood-bought Roads", date: "7 Nov 2026", items: [
       "The roads between the kingdoms have a name now: the <b>Blood-bought Roads</b>. Convicts cut them in chains, and every milestone has somebody under it. The gangs are the Gangs of the Blood-bought Roads, and the top road name is Terror of the Blood-bought Roads.",
@@ -2146,7 +2161,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
       '<g mask="url(#mpFog)"><rect width="600" height="420" fill="#a7a597"/><rect width="600" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
       (st.reached.includes("tithe") ? '<text x="22" y="70" class="mp-label mp-unk" transform="rotate(-90 22 70)">Uncharted</text>' : st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
-      labels + mapStones(st) + you +
+      labels + mapStones(st) + cwMapLayer(st) + you +
       '<g transform="translate(556 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
       '<path d="M0 -22l4 16-4 4z" fill="' + INK + '"/><text y="-26" class="mp-label" font-size="11">N</text></g>' +
@@ -2307,6 +2322,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "rsbright", name: "The Lantern Comes Home", desc: "End the blight in the Hanging Gardens with the Lantern of Rahdaria in your bag.", test: () => lantern() && S.rh && S.rh.blight },
     { id: "rsmael", name: "Into the Maelstrom", desc: "Calm a Storm in Relicsong on Maelstrom, the hardest setting. Both games must be played on the same site.", test: () => { const w = rsWins(); return !!(w && w.diffs && w.diffs.maelstrom); } },
     { id: "rsvoyage", name: "The Long Voyage", desc: "Save Rahdaria here, then win a whole Voyage in Relicsong. Both games must be played on the same site.", test: () => { const w = rsWins(); return !!(J.link && J.link.garden && w && w.voyage); } },
+    { id: "cw1", name: "Mile Nought", desc: "Read the first of the Cairnwright's milestones, in the Library of Roots.", test: () => false },
+    { id: "cwread", name: "Surveyor's Eye", desc: "Read all seven of the Cairnwright's milestones without forcing a single one.", test: () => false },
+    { id: "cwlucky", name: "One Weighing", desc: "Find the Floating Mile's false weight after only one weighing.", hidden: true, test: () => false },
+    { id: "cwwarn", name: "A Hand Up", desc: "Warn a rival off the sump on the Carrowmere causeway.", test: () => false },
+    { id: "cwlock", name: "Seven Tumblers", desc: "Open the Toll-House lock with your first haul.", test: () => false },
+    { id: "cwchamp", name: "Champion of the Road", desc: "Claim Empress Adrianna's Champion Set from the Cairnwright's cache.", test: () => false },
+    { id: "cwpaid", name: "Paid in Full", desc: "Carry the navvies' wages to Nan Ferrier, two hundred years late.", test: () => false },
+    { id: "cwkeep", name: "Finders Keepers", desc: "Keep the navvies' wages for yourself.", hidden: true, test: () => false },
     { id: "stone1", name: "Charcoal Fingers", desc: "Take your first rubbing of a Deafstone.", test: () => stonesN() >= 1 },
     { id: "stoneclean", name: "A Clean Rubbing", desc: "Take a rubbing of a Deafstone without a single smudge.", test: () => STONE_ALL.some(T => S.stones && S.stones[T.id] && S.stones[T.id].g === 3) },
     { id: "stoneset", name: "A Founding Remembered", desc: "Find all three Deafstones of one region.", test: () => Object.keys(STONES).some(r => regionDone(r)) },
@@ -2381,7 +2404,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "gangs", name: "Gangs of the Blood-bought Roads", ver: "10", desc: "Fifty bandit gangs on the roads between kingdoms, a road name, the Contender, and the High Weave.",
       ids: ["bnfirst", "bnten", "bnall", "bnyield", "bnwarden", "bnking", "bnterror", "ct5", "bnweave"] },
     { id: "bloodroads", name: "The Blood-bought Roads", ver: "11", desc: "Eleven named stretches between the kingdoms: monster country, sellsword roads, conquered land and blood-tolls.",
-      ids: ["bnwar", "bnbridge", "bnchase", "bnescort", "bnreclaim", "bnpeddler", "bnstretch"] }
+      ids: ["bnwar", "bnbridge", "bnchase", "bnescort", "bnreclaim", "bnpeddler", "bnstretch"] },
+    { id: "wages", name: "The Cairnwright's Wages", ver: "12", desc: "A treasure hunt on the roads back: seven milestones, seven puzzles, and Empress Adrianna's champion's chest.",
+      ids: ["cw1", "cwread", "cwlucky", "cwwarn", "cwlock", "cwchamp", "cwpaid", "cwkeep"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2550,7 +2575,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0);
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0);
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
@@ -2598,6 +2623,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     pzItems(items);
     bnItems(items);
     lvItems(items);
+    cwItems(items);
     linkItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
     jSheet(items);
@@ -3482,8 +3508,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep the axe in hand", plain: true }]);
     if (c === "y") { wield(k); await mech("Main hand: <b>" + WEAPONS[k].name + "</b>. The axe goes on your back, where it can still keep you alive."); }
   }
-  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0) + wpnHit();
-  const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0);
+  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0) + wpnHit() + (S.champ ? 1 : 0);
+  const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0) + (S.champ ? 1 : 0);
   const lvNewsQ = () => (S.lvNews = S.lvNews || []);
   // A save from before levels gets the XP a player would have earned on the way to its part.
   function lvInit(v) {
@@ -4085,10 +4111,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
+          { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
           { key: "seek", label: "Search the old places for what was hidden", tag: left + " of " + roamRegions().filter(r => RELICS[r]).length + " still hidden", plain: true, show: cap && left > 0 },
           { key: "head", label: S.underdream ? "Go back to where the Cascades fall from" : "Follow the Cascades to where they fall from", tag: "the Underdream", plain: true, show: cap },
           { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
-          { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · " + (ctRank() >= 3 ? "free for a Contender" : cp(8) + " gold"), plain: true, show: (ctRank() >= 3 || S.coins >= cp(8)) && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+          { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · " + (innCost() ? innCost() + " gold" : ctRank() >= 3 ? "free for a Contender" : "free"), plain: true, show: S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
           { key: "journal", label: "Open your journal", plain: true }
         ]);
         if (c === "walk") await roamWalk();
@@ -4096,6 +4123,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         else if (c === "roads") await bnRoads();
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
+        else if (c === "cw") await cwHub();
         else if (c === "seek") await roamSeek();
         else if (c === "stones") await stoneRoads();
         else if (c === "head") await roamUnderdream();
@@ -4104,10 +4132,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           await say(S.cascade ? "You go back to where they started and stop holding them shut. All over the realm, the black water starts falling upward again." : "You stand at the head of the Cascades and sing the Underdream's own lullaby back down into it. One by one, all over the realm, the black ropes thin and stop.");
           await mech(S.cascade ? "The Cascades run. Every creature is a Nightmare again, and the roads pay double gold." : "The Cascades are still. Creatures are what they were (still matched to your level).", S.cascade ? "hurt" : "loot");
         } else if (c === "rest") {
-          const fee = ctRank() >= 3 ? 0 : cp(8);
-          S.coins -= fee; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
+          const ic = innCost(); S.coins -= ic; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
           await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
-          await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house, for a Contender."), "loot");
+          await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". " + (ic ? "Spent " + ic + " gold." : ctRank() >= 3 ? "On the house, for a Contender." : "The landlord won't take your money: the navvies' wages are paid."), "loot");
         } else if (c === "journal") jOpen();
         save();
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); }
@@ -4172,7 +4199,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const c = await choose([
         { key: "sanct", label: "Rest in the sanctuary", tag: "free · full HP, footholds, and the road's sicknesses eased", show: has("sanctum") && !rested },
         { key: "purse", label: "Tell them about your fights", tag: "Contender " + CT_NAMES[ctRank()] + " · the town's purse", show: ctPurseOk(T) },
-        { key: "inn", label: "Take a room at the inn", tag: (free ? "free for a Contender" : P(8) + " gold" + cOff) + " · full HP and a foothold back", show: has("inn") && !rested && (free || S.coins >= P(8)) && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+        { key: "inn", label: "Take a room at the inn", tag: (innCost() ? innCost() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
         { key: "potion", label: "Buy a Draught of Mending", tag: P(8) + " gold" + cOff + " · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= P(8), plain: true },
         { key: "elixir", label: "Buy an Elixir of Health", tag: P(20) + " gold" + cOff + " · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= P(20), plain: true },
         { key: "band", label: "Buy two bandages", tag: P(5) + " gold" + cOff + " · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= P(5), plain: true },
@@ -4196,9 +4223,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
       } else if (c === "inn") {
         rested = true;
-        const fee = free ? 0 : P(8);
+        const fee = innCost();
         S.coins -= fee; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
-        await say(free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
+        await say(!fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house."), "loot");
       } else if (c === "purse") await ctPurse(T);
       else if (c === "roof") { roofed = true; (bn().roof = bn().roof || {})[T.reg + ":" + T.name] = bn().cw; await roofClimb(T); }
@@ -4356,6 +4383,534 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await mech("It lets go of your shape again. Gained 25 gold and 1 Mockwax.", "loot");
     }
     light(back);
+  }
+
+  // ---------- the Cairnwright's Wages: a treasure hunt on the roads back ----------
+  // Two hundred years ago Merrit Sallow, the Cairnwright, laid Empress Adrianna's roads with three
+  // hundred navvies. The Empress sent their wages, and her own champion's armour for whoever laid the
+  // last stone. Sallow paid nobody. Old and sick with it, he cut a confession into seven of his own
+  // milestones, each one pointing to the next, and the last to the Toll-House at Rahdaria's land gate.
+  // Each milestone is a puzzle (a force fallback means you can't get stuck) and gives a mile-mark, a
+  // digit rolled when you read it. The Toll-House lock wants all seven marks, in the order its riddle
+  // names the stones, not the order you found them. State: S.cw. Open on the roads back at any level.
+  const CW_ORDER = ["fen", "mere", "undermoon", "desert", "corrach", "glass", "roots"];
+  const CW_RIDDLE = {
+    fen: "the mile a false weight gave up",
+    mere: "the mile the honest foreman stood on",
+    undermoon: "the mile that hangs and never falls",
+    desert: "the mile the sand ate",
+    corrach: "the mile they sang into the rock",
+    glass: "the mile the sun reads backwards",
+    roots: "the mile with nothing before it"
+  };
+  const CW_CACHE = [176, 340];
+  const cwX = () => (S.cw = S.cw || { met: false, n: 0, marks: {}, forced: 0, amb: "", tries: 0, done: false, wages: "" });
+  const cwRegsOk = () => { const have = roamRegions(); return CW_STONES.every(W => have.includes(W.reg)) && have.includes("rahdaria"); };
+  const cwOpen = () => S.roam && cwRegsOk() && !(S.cw && S.cw.done);
+  const champ = () => !!S.champ;
+  const cwPaid = () => !!(S.cw && S.cw.wages === "paid");
+  const innCost = () => (cwPaid() || ctRank() >= 3 ? 0 : cp(8));
+  function cwHead(where, title) {
+    const h = el("div", "part-head sub", '<span class="num">The Cairnwright\'s Wages · ' + where + "</span><h2>" + title + "</h2>");
+    scrollNext = true; add(h);
+  }
+  function cwLedger(X) {
+    return CW_STONES.filter(W => X.marks[W.reg] != null).map(W => W.name + " (" + REGIONS[W.reg] + "): <b>" + X.marks[W.reg] + "</b>").join(" · ") || "nothing yet";
+  }
+  async function cwMeet() {
+    const X = cwX();
+    cwHead("The roads back", "Three Hundred Names");
+    light("dusk");
+    await say("The inn is a roadside place with a low roof, and the woman at the corner table has been watching you since you came in. She's very old, and very straight, and she has a book open in front of her that isn't a book at all: it's a list. Names, three hundred of them, in a dozen different hands, some of them two hundred years old.");
+    await say("\"<b>Nan Ferrier</b>,\" she says, before you can ask. \"You're the one who goes into the old places. Sit down. I've been waiting for somebody like you since I was nine.\"", "voice");
+    await say("She turns the list round. \"Every road you've walked in this realm, Empress Adrianna paid for. Every stone of them, three hundred navvies laid, under a road-builder called <b>Merrit Sallow</b>. The Cairnwright, they called him. The Empress sent their wages, a chest of silver, and her own champion's armour besides, for whoever laid the last stone of the last road. That was the custom then.\"");
+    await say("\"Sallow paid nobody. Not a penny. He said the chest was robbed on the road. The navvies went home to starve, and my great-great-grandmother was one of them, and this is the list they kept, so that one day somebody would be paid.\" She taps a line at the bottom, in fresh ink: her own name.");
+    await say("\"When he was old and dying, Sallow had it on his conscience. He cut a confession into seven of his milestones, each one pointing to the next, and the last pointing to where he put it all. Nobody ever found the first. It's in a place nobody goes.\" She looks at you over her spectacles. \"The Library of Roots. Mile Nought.\"");
+    const c = await choose([{ key: "yes", label: "Say you'll find it", tag: "a treasure hunt · seven milestones and a cache" }, { key: "no", label: "Not now", plain: true }]);
+    if (c === "no") { await say("\"I've waited this long,\" Nan says, and goes back to her list. \"I'll be here.\""); return false; }
+    X.met = true;
+    await say("Nan nods once, as if a debt has been entered in a book. She gives you a rubbing taken from the lintel of the ruined Toll-House at Rahdaria's land gate, where Sallow's last road ends. Somebody pressed charcoal over the stone a hundred years ago. It says: <i>I OWE THEM. ASK MILE NOUGHT.</i>");
+    await mech("Began <b>The Cairnwright's Wages</b>. Seven milestones, each a puzzle, each with a mile-mark cut under it. Your ledger keeps the marks (in your items and your journal), and the map marks every stone you read. The Toll-House will want all seven.", "loot");
+    renderSheet();
+    return true;
+  }
+  async function cwHub() {
+    const X = cwX();
+    if (!X.met && !(await cwMeet())) return;
+    const W = CW_STONES[X.n];
+    const c = await choose([
+      { key: "stone", label: W ? "Find the next milestone: " + W.name : "", tag: W ? REGIONS[W.reg] + " · " + W.where : "", show: !!W },
+      { key: "cache", label: X.tries ? "Go back to the Toll-House" : "Go to the Toll-House at Rahdaria's land gate", tag: "the Cairnwright's cache", show: !W },
+      { key: "ledger", label: "Read your ledger", tag: X.n + " of 7 marks", plain: true },
+      { key: "back", label: "Not now", plain: true }
+    ]);
+    if (c === "stone") await cwStone(X.n);
+    else if (c === "cache") await cwCache();
+    else if (c === "ledger") await mech("Your ledger: " + cwLedger(X) + "." + (W ? " Next: " + W.name + ", " + W.where + "." : " Sallow's riddle is on the Toll-House door."));
+  }
+  async function cwStone(i) {
+    const X = cwX(), W = CW_STONES[i], back = document.body.dataset.light;
+    cwHead(REGIONS[W.reg], W.name);
+    light(W.light || "dusk");
+    for (const p of W.intro) await say(p);
+    let ok = await W.play();
+    if (!ok) {
+      await say(W.failSay);
+      const k = await check({ label: W.force, mod: 4 + gearHit(), dc: 15, cta: "Try" });
+      if (!k.ok) {
+        await say(W.foeSay || "The noise brings something out of the dark, and it doesn't want to share.");
+        roamFight = true;
+        try { await meetBeast(W.reg, { forced: true }); } finally { roamFight = false; }
+        await say("With that dealt with, you get the milestone clear in the end.");
+      }
+      X.forced++;
+    }
+    if (W.after) await W.after(ok);
+    const mark = d(9);
+    X.marks[W.reg] = mark; X.n = i + 1;
+    light("gems");
+    await say(W.found);
+    SND.cheers && SND.cheers(0.6);
+    const g = ok ? 15 : 6;
+    S.coins += g; renderSheet();
+    const next = CW_STONES[i + 1];
+    await mech("Read <b>" + W.name + "</b> (" + X.n + " of 7). Cut under it, the mile-mark <b>" + mark + "</b>: it's in your ledger. " + (ok ? "" : "You had to force it. ") + "Gain " + g + " gold tucked behind the stone." + (next ? " Next: " + next.name + ", " + next.where + "." : " The last stone points to the Toll-House at Rahdaria's land gate."), "loot");
+    xpGain(40);
+    if (i === 0) grant("cw1");
+    if (X.n === 7 && !X.forced) grant("cwread");
+    light(back);
+    save();
+  }
+
+  // Mile Nought: a four-dial road cipher. Each letter is shifted by one of the dials, in turn.
+  function cwCipherPuzzle({ plain, key }) {
+    return new Promise(resolve => {
+      const P = puzzleBox("Mile Nought", "The inscription is in Sallow's road-cipher. Four dials sit over it; the 1st letter is shifted by the 1st dial, the 2nd by the 2nd, the 3rd by the 3rd, the 4th by the 4th, and round again from the 5th. Turn the dials until the stone reads true. Sallow keyed it to the one thing he gave his life to: four letters.");
+      const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ", K = key.split("").map(ch => A.indexOf(ch));
+      let li = 0;
+      const enc = plain.split("").map(ch => { const p = A.indexOf(ch); if (p < 0) return ch; const o = A[(p + K[li % 4]) % 26]; li++; return o; }).join("");
+      const dial = K.map(() => d(26) - 1);
+      if (dial.every((v, j) => v === K[j])) dial[0] = (dial[0] + 1) % 26;
+      const encEl = el("div", "rh-enc", enc), readEl = el("div", "rh-read", ""), rings = el("div", "rings");
+      const faces = dial.map((_, j) => {
+        const r = el("div", "ring"), up = pbtn("▲"), f = el("div", "face cw-face", ""), dn = pbtn("▼");
+        up.setAttribute("aria-label", "Dial " + (j + 1) + " forward"); dn.setAttribute("aria-label", "Dial " + (j + 1) + " back");
+        up.onclick = () => { dial[j] = (dial[j] + 1) % 26; draw(); };
+        dn.onclick = () => { dial[j] = (dial[j] + 25) % 26; draw(); };
+        r.append(up, f, dn); rings.appendChild(r); return f;
+      });
+      P.body.append(encEl, rings, readEl);
+      const force = pbtn("Take a rubbing and work it out the slow way"); P.ctrl.appendChild(force);
+      function draw() {
+        faces.forEach((f, j) => f.textContent = A[dial[j]]);
+        let j = 0;
+        readEl.textContent = enc.split("").map(ch => { const c = A.indexOf(ch); if (c < 0) return ch; const o = A[(c - dial[j % 4] + 26) % 26]; j++; return o; }).join("");
+        const ok = dial.every((v, k) => v === K[k]);
+        readEl.classList.toggle("ok", ok);
+        if (ok) { P.end(); P.status.textContent = "The stone reads true."; setTimeout(() => resolve(true), 700); }
+      }
+      force.onclick = () => { P.end(); resolve(false); };
+      draw();
+    });
+  }
+  // The Sand-Eaten Mile: turn the culvert stones until one channel runs from the inlet to the outfall.
+  function cwRoadPuzzle() {
+    return new Promise(resolve => {
+      const P = puzzleBox("The culvert stones", "Under the buried milestone, the old road's culvert is a grid of carved channel-stones, turned every which way by the dunes. Tap a stone to turn it a quarter. Run one channel from the inlet (▶ on the left) to the outfall (▶ on the right), and the sand will drain out through it.");
+      const R = 4, C = 4, DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+      const cells = Array.from({ length: R * C }, () => ({ t: d(2) === 1 ? "s" : "c", k: d(4) - 1 }));
+      let y = d(R) - 1, from = 3;
+      const r0 = y;
+      for (let x = 0; x < C; x++) {
+        const t = d(R) - 1;
+        const put = (out) => { const need = [from, out]; const s = (from + 2) % 4 === out; cells[y * C + x] = { t: s ? "s" : "c", k: 0, need }; };
+        while (y !== t) { const dir = t > y ? 2 : 0; put(dir); from = (dir + 2) % 4; y += dir === 2 ? 1 : -1; }
+        put(1); from = 3;
+      }
+      const r1 = y;
+      const dirs = (c) => c.t === "s" ? [(1 + c.k) % 4, (3 + c.k) % 4] : [c.k % 4, (c.k + 1) % 4];
+      cells.forEach(c => { c.k = d(4) - 1; });
+      const glyph = (c) => c.t === "s" ? (c.k % 2 ? "║" : "═") : ["╚", "╔", "╗", "╝"][c.k];
+      const grid = el("div", "pgrid cw-road"); grid.style.gridTemplateColumns = "28px repeat(" + C + ", 52px) 28px";
+      const btns = [];
+      for (let yy = 0; yy < R; yy++) {
+        grid.appendChild(el("span", "cw-edge", yy === r0 ? "▶" : ""));
+        for (let x = 0; x < C; x++) {
+          const i = yy * C + x, b = pbtn(""); b.setAttribute("aria-label", "Channel stone, row " + (yy + 1) + ", column " + (x + 1));
+          b.onclick = () => { cells[i].k = (cells[i].k + 1) % 4; turns++; draw(); };
+          grid.appendChild(b); btns.push(b);
+        }
+        grid.appendChild(el("span", "cw-edge", yy === r1 ? "▶" : ""));
+      }
+      P.body.appendChild(grid);
+      const force = pbtn("Dig the stone out by hand"); P.ctrl.appendChild(force);
+      let turns = 0;
+      function trace() {
+        const lit = new Set(); let yy = r0, x = 0, f = 3;
+        for (let n = 0; n < R * C + 1; n++) {
+          const c = cells[yy * C + x], ds = dirs(c);
+          if (!ds.includes(f)) return { lit, ok: false };
+          lit.add(yy * C + x);
+          const out = ds[0] === f ? ds[1] : ds[0];
+          if (out === 1 && x === C - 1) return { lit, ok: yy === r1 };
+          const ny = yy + DY[out], nx = x + DX[out];
+          if (ny < 0 || ny >= R || nx < 0 || nx >= C || lit.has(ny * C + nx)) return { lit, ok: false };
+          yy = ny; x = nx; f = (out + 2) % 4;
+        }
+        return { lit, ok: false };
+      }
+      function draw() {
+        const tr = trace();
+        btns.forEach((b, i) => { b.textContent = glyph(cells[i]); b.classList.toggle("on", tr.lit.has(i)); });
+        P.status.textContent = tr.ok ? "The channel runs clear. Sand pours away under you like water." : "The sand runs " + tr.lit.size + " stone" + (tr.lit.size === 1 ? "" : "s") + " in · " + turns + " turns";
+        if (tr.ok) { P.end(); setTimeout(() => resolve(true), 700); }
+      }
+      if (trace().ok) cells[r0 * C].k = (cells[r0 * C].k + 1) % 4;
+      force.onclick = () => { P.end(); resolve(false); };
+      draw();
+    });
+  }
+  // The Floating Mile: nine toll-weights, one of them false (heavier). Two weighings on the old scale.
+  function cwScalePuzzle() {
+    return new Promise(resolve => {
+      const P = puzzleBox("The toll-scale", "Nine lead toll-weights in the stone's box, all alike. One is false: hollow, and packed with something heavier. Tap a weight to put it in the left pan, again for the right, again to take it out, then weigh. The beam is rotten: it will bear two weighings. Then name the false weight.");
+      const heavy = d(9) - 1, pan = Array(9).fill(0);
+      let weighs = 0, picking = false;
+      const grid = el("div", "pgrid cw-w"); grid.style.gridTemplateColumns = "repeat(9, 40px)";
+      const btns = pan.map((_, i) => { const b = pbtn(""); b.setAttribute("aria-label", "Weight " + (i + 1)); b.onclick = () => tap(i); grid.appendChild(b); return b; });
+      const log = el("div", "rh-hist", "");
+      P.body.append(grid, log);
+      const wb = pbtn("Weigh", "primary"), nb = pbtn("Name the false weight"), force = pbtn("Wrestle the stone off the raft instead");
+      P.ctrl.append(wb, nb, force);
+      function tap(i) {
+        if (picking) { P.end(); const ok = i === heavy; btns[heavy].classList.add("on"); if (!ok) btns[i].classList.add("rot"); P.status.textContent = ok ? "You break it open: the false weight is packed with the next clue." : "Ordinary lead. The raft lurches as you lean on it."; setTimeout(() => resolve({ ok, weighs }), 900); return; }
+        pan[i] = (pan[i] + 1) % 3; draw();
+      }
+      function draw() {
+        btns.forEach((b, i) => { b.innerHTML = (i + 1) + "<small>" + (picking ? "" : ["", "left", "right"][pan[i]]) + "</small>"; b.classList.toggle("on", !picking && pan[i] === 1); b.classList.toggle("seen", !picking && pan[i] === 2); });
+        const l = pan.filter(v => v === 1).length, r = pan.filter(v => v === 2).length;
+        wb.disabled = picking || weighs >= 2 || !l || !r;
+        nb.disabled = picking;
+        if (!picking) P.status.textContent = "Left pan: " + l + " · right pan: " + r + " · " + (2 - weighs) + " weighing" + (2 - weighs === 1 ? "" : "s") + " left";
+      }
+      wb.onclick = () => {
+        const side = (s) => pan.map((v, i) => v === s ? i : -1).filter(i => i >= 0);
+        const L = side(1), Rr = side(2), wl = L.length * 10 + (L.includes(heavy) ? 1 : 0), wr = Rr.length * 10 + (Rr.includes(heavy) ? 1 : 0);
+        weighs++;
+        log.innerHTML += "Weighing " + weighs + ": " + L.map(i => i + 1).join(", ") + " against " + Rr.map(i => i + 1).join(", ") + ": " + (wl > wr ? "the left pan sinks." : wr > wl ? "the right pan sinks." : "the beam hangs level.") + "<br>";
+        pan.fill(0);
+        if (weighs >= 2) { picking = true; P.status.textContent = "The beam cracks. Tap the false weight."; }
+        draw();
+      };
+      nb.onclick = () => { picking = true; P.status.textContent = "Tap the false weight."; draw(); };
+      force.onclick = () => { P.end(); resolve({ ok: false, weighs }); };
+      draw();
+    });
+  }
+  // The Foremen's Mile: three drowned statues, three sentences, a rule. Pick the right plinth.
+  const CW_LIARS = [
+    { rule: "Only one of the three foremen tells the truth.", say: (a, b, c) => [[a, "The stone is not under me."], [b, "The stone is under " + a + "."], [c, b + " is lying."]], right: 0 },
+    { rule: "Only one of the three foremen tells the truth.", say: (a, b, c) => [[a, "The stone is under me."], [b, "It isn't under " + a + "."], [c, "It isn't under me."]], right: 2 },
+    { rule: "The stone is under the one foreman who tells the truth.", say: (a, b, c) => [[a, b + " is lying."], [b, c + " is lying."], [c, a + " and " + b + " are both lying."]], right: 1 }
+  ];
+  async function cwLiarPuzzle() {
+    const names = ["Harl Ditton", "Bess Mallory", "Joss Wether"].sort(() => Math.random() - 0.5);
+    const V = CW_LIARS[d(CW_LIARS.length) - 1], lines = V.say(...names);
+    const P = puzzleBox("The three foremen", "Cut into the causeway in front of them: <i>" + V.rule + " The milestone is under one of us.</i>");
+    P.body.innerHTML = '<ul class="rh-clues">' + lines.map(([who, s]) => "<li><b>" + who + "</b>: \"" + s + "\"</li>").join("") + "</ul>";
+    P.end();
+    const c = await choose(names.map((n, i) => ({ key: String(i), label: "Dig under " + n, plain: i > 0 })).concat([{ key: "force", label: "Lever every plinth up, one by one", tag: "slow, and loud", plain: true }]));
+    if (c === "force") return { ok: false };
+    const ok = +c === V.right;
+    if (!ok) await say("Under " + names[+c] + "'s plinth there's only a sump, black and deep, and the causeway stone tips you into it to the waist.");
+    return { ok, right: names[V.right] };
+  }
+  // The Mirrored Mile: four lens-rings, six sun-signs, no sign twice. Hold it to the sun and count.
+  function cwGlassPuzzle() {
+    return new Promise(resolve => {
+      const G = ["☉", "☾", "✦", "◈", "≋", "△"], tries = 8;
+      const P = puzzleBox("The mirrored lens", "The milestone is a pane of witness glass in a brass collar of four lens-rings, each cut with six sun-signs (" + G.join(" ") + "). Sallow used each sign once. Set the rings and hold the pane up to the sun: a <b>lit</b> ring has the right sign in the right place, a <b>glimmer</b> is a right sign in the wrong ring. " + tries + " holds before the sun moves off the pane.");
+      const pool = G.map((_, i) => i).sort(() => Math.random() - 0.5), secret = pool.slice(0, 4);
+      const cur = [0, 1, 2, 3];
+      let used = 0;
+      const rings = el("div", "rings"), hist = el("div", "rh-hist", "");
+      const faces = cur.map((_, j) => {
+        const r = el("div", "ring"), up = pbtn("▲"), f = el("div", "face cw-face", ""), dn = pbtn("▼");
+        up.setAttribute("aria-label", "Ring " + (j + 1) + " forward"); dn.setAttribute("aria-label", "Ring " + (j + 1) + " back");
+        up.onclick = () => { cur[j] = (cur[j] + 1) % 6; draw(); };
+        dn.onclick = () => { cur[j] = (cur[j] + 5) % 6; draw(); };
+        r.append(up, f, dn); rings.appendChild(r); return f;
+      });
+      P.body.append(rings, hist);
+      const hold = pbtn("Hold it to the sun", "primary"), force = pbtn("Break the collar off"); P.ctrl.append(hold, force);
+      function draw() { faces.forEach((f, j) => f.textContent = G[cur[j]]); P.status.textContent = (tries - used) + " holds left"; }
+      hold.onclick = () => {
+        used++;
+        const lit = cur.filter((v, j) => v === secret[j]).length;
+        const glim = cur.filter((v, j) => v !== secret[j] && secret.includes(v)).filter((v, j, a) => a.indexOf(v) === j).length;
+        hist.innerHTML += cur.map(v => G[v]).join(" ") + " · " + lit + " lit, " + glim + " glimmer<br>";
+        if (lit === 4) { P.end(); P.status.textContent = "The pane floods with light, and the writing on it turns the right way round."; setTimeout(() => resolve(true), 800); return; }
+        if (used >= tries) { P.end(); P.status.textContent = "The sun slides off the pane."; setTimeout(() => resolve(false), 700); return; }
+        draw();
+      };
+      force.onclick = () => { P.end(); resolve(false); };
+      draw();
+    });
+  }
+  // The Sung Mile: walk the mile-stones right or down; the miles you walk must add up to the carved total.
+  function cwPathPuzzle() {
+    return new Promise(resolve => {
+      const N = 5, num = Array.from({ length: N * N }, () => d(9));
+      const steps = ["r", "r", "r", "r", "d", "d", "d", "d"].sort(() => Math.random() - 0.5);
+      let y = 0, x = 0, target = num[0];
+      steps.forEach(s => { if (s === "r") x++; else y++; target += num[y * N + x]; });
+      const walks = 4;
+      const P = puzzleBox("The sung mile", "The Hesk sang Sallow's stone into the rock, and the way to it is a floor of small mile-stones, each cut with a number. Start at the top left; step only right or down; end at the bottom right. The miles you walk must add up to <b>" + target + "</b>, the number sung over the arch. " + walks + " walks before the hum in the rock gets too loud.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + N + ", 52px)";
+      const btns = num.map((v, i) => { const b = pbtn(String(v)); b.setAttribute("aria-label", "Mile-stone " + v + ", row " + (Math.floor(i / N) + 1) + ", column " + (i % N + 1)); b.onclick = () => step(i); grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const again = pbtn("Start the walk again"), force = pbtn("Cut through the rock instead"); P.ctrl.append(again, force);
+      let pos = 0, sum = num[0], trod = [0], fails = 0;
+      function draw() {
+        btns.forEach((b, i) => {
+          const r = Math.floor(i / N), c = i % N, pr = Math.floor(pos / N), pc = pos % N;
+          b.classList.toggle("on", trod.includes(i)); b.classList.toggle("here", i === pos); b.classList.toggle("goal", i === N * N - 1);
+          b.disabled = !((r === pr && c === pc + 1) || (c === pc && r === pr + 1));
+        });
+        P.status.textContent = "Miles walked: " + sum + " of " + target + " · " + (walks - fails) + " walk" + (walks - fails === 1 ? "" : "s") + " left";
+      }
+      function step(i) {
+        pos = i; sum += num[i]; trod.push(i); draw();
+        if (pos !== N * N - 1) return;
+        if (sum === target) { P.end(); P.status.textContent = "The rock hums your total back to you, and a seam opens in it."; setTimeout(() => resolve(true), 800); return; }
+        fails++;
+        if (fails >= walks) { P.end(); P.status.textContent = sum + " miles. The hum in the rock rises to a whine, and the seam stays shut."; setTimeout(() => resolve(false), 800); return; }
+        P.status.textContent = sum + " miles, not " + target + ". The rock hums, louder. Start again.";
+        btns.forEach(b => b.disabled = true);
+      }
+      again.onclick = () => { pos = 0; sum = num[0]; trod = [0]; draw(); };
+      force.onclick = () => { P.end(); resolve(false); };
+      draw();
+    });
+  }
+  // The Hanging Mile: hang kinstones on the counter-chain until it balances the milestone exactly.
+  function cwHangPuzzle() {
+    return new Promise(resolve => {
+      const w = []; while (w.length < 7) { const v = 2 + d(13); if (!w.includes(v)) w.push(v); }
+      const pick = w.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 3 + (d(2) - 1));
+      const target = pick.reduce((a, i) => a + w[i], 0), hangs = 5;
+      const P = puzzleBox("The counter-chain", "Sallow's milestone hangs in the Undermoon's pull on a chain over a wheel, and the other end of the chain hangs empty. Hang kinstones on the empty end until it weighs exactly what the stone weighs, <b>" + target + " stone-weight</b>, cut on the wheel, and the milestone will come level with the ledge. Tap kinstones to put them on the chain or take them off, then let go. " + hangs + " tries before the old chain gives.");
+      const on = Array(7).fill(false);
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(7, 52px)";
+      const btns = w.map((v, i) => { const b = pbtn(String(v)); b.setAttribute("aria-label", "Kinstone of weight " + v); b.onclick = () => { on[i] = !on[i]; draw(); }; grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const go_ = pbtn("Let go of the chain", "primary"), force = pbtn("Climb the chain to it instead"); P.ctrl.append(go_, force);
+      let used = 0;
+      const sum = () => w.reduce((a, v, i) => a + (on[i] ? v : 0), 0);
+      function draw() { btns.forEach((b, i) => { b.classList.toggle("on", on[i]); b.setAttribute("aria-pressed", on[i]); }); P.status.textContent = "On the chain: " + sum() + " of " + target + " · " + (hangs - used) + " tries left"; go_.disabled = !on.some(Boolean); }
+      go_.onclick = () => {
+        used++; const s = sum();
+        if (s === target) { P.end(); P.status.textContent = "The chain hangs still, and the milestone swings in level with the ledge."; setTimeout(() => resolve(true), 800); return; }
+        if (used >= hangs) { P.end(); P.status.textContent = "A link opens with a sound like a bell, and the counter-chain goes up into the dark."; setTimeout(() => resolve(false), 800); return; }
+        draw();
+        P.status.textContent = (s > target ? "Too heavy: the milestone rises past the ledge." : "Too light: the milestone sinks below the ledge.") + " " + (hangs - used) + " tries left.";
+      };
+      force.onclick = () => { P.end(); resolve(false); };
+      draw();
+    });
+  }
+  // The Toll-House lock: seven dials, set in the riddle's order from your ledger. Three hauls a day.
+  function cwLockPuzzle(X, hint) {
+    return new Promise(resolve => {
+      const hauls = 3;
+      const P = puzzleBox("The Toll-House lock", "Seven brass dials, 0 to 9, in an iron door in the floor. Over them, Sallow's riddle: <ol class=\"rh-clues\">" +
+        CW_ORDER.map((r, i) => "<li>" + (i === 0 ? "First, " : i === 6 ? "And last, " : "Then ") + CW_RIDDLE[r] + ".</li>").join("") + "</ol>Your ledger: " + cwLedger(X) + "." + (hint ? " " + hint : "") + " The bar will stand " + hauls + " hauls before the lock seizes for the day.");
+      const dial = Array(7).fill(0), rings = el("div", "rings cw-lock");
+      const faces = dial.map((_, j) => {
+        const r = el("div", "ring"), up = pbtn("▲"), f = el("div", "face cw-face", ""), dn = pbtn("▼");
+        up.setAttribute("aria-label", "Dial " + (j + 1) + " up"); dn.setAttribute("aria-label", "Dial " + (j + 1) + " down");
+        up.onclick = () => { dial[j] = (dial[j] + 1) % 10; draw(); };
+        dn.onclick = () => { dial[j] = (dial[j] + 9) % 10; draw(); };
+        r.append(up, f, dn); rings.appendChild(r); return f;
+      });
+      P.body.appendChild(rings);
+      const haul = pbtn("Haul the bar", "primary"), leave = pbtn("Come back another day"); P.ctrl.append(haul, leave);
+      let used = 0;
+      function draw() { faces.forEach((f, j) => f.textContent = dial[j]); }
+      haul.onclick = () => {
+        used++;
+        const n = dial.filter((v, j) => v === X.marks[CW_ORDER[j]]).length;
+        if (n === 7) { P.end(); P.status.textContent = "Seven tumblers fall, one after another, and the bar slides back on its own."; setTimeout(() => resolve({ ok: true, used }), 900); return; }
+        if (used >= hauls) { P.end(); P.status.textContent = n + " tumblers catch, and then the lock seizes solid."; setTimeout(() => resolve({ ok: false, used }), 900); return; }
+        P.status.textContent = n + " tumbler" + (n === 1 ? " catches" : "s catch") + ". " + (hauls - used) + " haul" + (hauls - used === 1 ? "" : "s") + " left.";
+      };
+      leave.onclick = () => { P.end(); resolve({ ok: false, used, left: true }); };
+      draw();
+    });
+  }
+
+  const CW_STONES = [
+    { reg: "roots", name: "Mile Nought", where: "in the Library of Roots", xy: [216, 278], light: "torch",
+      intro: ["The Library of Roots is as quiet as it ever was. You'd walked past the stone a dozen times: a squat grey post by the door, half grown over with living wood, that you took for a hitching-post. Under the moss there's a zero, and under that, four little brass dials set into the top, and a band of letters that make no sense at all."],
+      play: () => cwCipherPuzzle({ plain: "SEEK THE MILE THE SAND ATE", key: "ROAD" }),
+      failSay: "You copy the letters onto your sleeve and sit down with them under the reading lamp, and try every shift there is.", force: "Investigation check (the slow way)",
+      found: "<i>SEEK THE MILE THE SAND ATE.</i> Under it, smaller, in a hand that shakes: <i>I took their pay. I was going to give it back. I kept telling myself I was going to give it back.</i>" },
+    { reg: "desert", name: "The Sand-Eaten Mile", where: "under a dune in the Burning Sands", xy: [298, 296], light: "sun",
+      intro: ["Out on the old Empress's road, where the Burning Sands took it back, a single post sticks up out of a dune with a carved hand on it, pointing down. The Hollow Hands say it's been pointing down for as long as anybody has crossed the desert.", "You dig, and a yard down you hit stone: the lid of the road's own culvert, and a grid of channel-stones under it, every one turned the wrong way."],
+      play: () => cwRoadPuzzle(),
+      failSay: "You give up on the culvert and start digging the milestone out with your hands, and the sand runs back in as fast as you move it.", force: "Athletics check (digging in the heat)",
+      foeSay: "Your digging shakes the dune, and something that lives under it comes up to see what's shaking.",
+      found: "The milestone comes up out of the sand as the channel drains it. <i>THE NEXT MILE FLOATS. THE HUSHFEN KEPT IT FOR ME. I PAID THE MIRE TO KEEP IT.</i> And under that: <i>Two hundred and ten of them had children.</i>" },
+    { reg: "fen", name: "The Floating Mile", where: "on a reed raft in the Hushfen", xy: [142, 172], light: "dark",
+      intro: ["In the Hushfen, where the old causeway goes under, there's a raft of bound reeds that has never rotted, moored by a chain to nothing. On it stands a milestone, and beside the milestone, a toll-scale and a box of nine lead weights."],
+      play: async () => { const r = await cwScalePuzzle(); if (r.ok && r.weighs <= 1) grant("cwlucky"); return r.ok; },
+      failSay: "The raft rolls under you. You grab the milestone round its middle, and the two of you go into the black water together.", force: "Athletics check (hauling it ashore)",
+      foeSay: "Something in the water was waiting for exactly this.",
+      found: "Inside the false weight, rolled tight in oilcloth, is a strip of lead with letters punched in it: <i>THE NEXT MILE IS UNDER AN HONEST MAN, ON THE CAUSEWAY TO CARROWMERE. I HAD THREE FOREMEN. TWO OF THEM HELPED ME.</i>" },
+    { reg: "mere", name: "The Foremen's Mile", where: "on the drowned causeway to Carrowmere", xy: [254, 132], light: "dusk",
+      intro: ["On the drowned causeway to Carrowmere, three statues stand up to their knees in the lake: Sallow's foremen, cut life-size in grey stone, with their names on their belts. The causeway's flags in front of them are carved with three sentences, one each.", "There's somebody else here. A tall young man in a surveyor's coat is wading out toward the statues with a spade over his shoulder, reading from a little book."],
+      play: async () => { const r = await cwLiarPuzzle(); cwX().right = r.right || ""; return r.ok; },
+      failSay: "You start with the nearest plinth and work along, levering each one up with the axe-haft, and the noise carries all the way across the lake.", force: "Strength check (levering up plinths)",
+      after: async () => {
+        const X = cwX();
+        await say("The young man in the surveyor's coat has reached the statues too. He's set his spade under the wrong plinth, the one with the sump under it, and he's leaning his whole weight on it.");
+        const c = await choose([{ key: "warn", label: "Shout a warning", tag: "it's his hunt too" }, { key: "let", label: "Let him find out", plain: true }]);
+        if (c === "warn") {
+          X.amb = "warned"; grant("cwwarn");
+          await say("He jumps back just as the flag tips into the black. He stands there dripping and white, and then laughs. \"<b>Ambrose Penhallow</b>,\" he says. \"My great-great-grandfather was Sallow's clerk. He kept the books, the ones that said the chest was robbed. I've been trying to put that right.\" He shows you the little book: the clerk's own. \"I owe you. When you get to the end of this, I'll be there, and I'll have something you need.\"", "voice");
+        } else {
+          X.amb = "sunk";
+          await say("The flag tips, and the young man goes into the sump to the chest with a yell. By the time he's climbed out, swearing, you're already reading the stone. He looks at you, and at the stone, and at you again, and says nothing at all. You'll see him again.");
+        }
+      },
+      found: "The milestone under the honest foreman's plinth says: <i>THE NEXT MILE IS IN SULMARA, IN THE GLASS. THE SUN READS IT BACKWARDS.</i> And then: <i>I bought a house with their pay. I couldn't sleep in it.</i>" },
+    { reg: "glass", name: "The Mirrored Mile", where: "in a glaziers' hall in Sulmara", xy: [448, 256], light: "gems",
+      intro: ["In Sulmara, in the oldest glaziers' hall, there's a pane of witness glass in a brass collar that the glaziers have never been able to sell, because the writing on it is backwards and nobody can make it say anything. The guildmaster lets you look at it for two gold and a promise."],
+      play: () => cwGlassPuzzle(),
+      failSay: "You take the axe-haft to the collar, and the whole hall comes running.", force: "Sleight of Hand check (getting the pane out whole)",
+      foeSay: "The racket brings more than glaziers.",
+      found: "The pane, the right way round at last, shows the road up to Mount Corrach, and a line over it: <i>THE NEXT MILE THE HESK SANG INTO THE ROCK FOR ME. THEY SANG IT SHUT WHEN I DIDN'T PAY THEM EITHER.</i>" },
+    { reg: "corrach", name: "The Sung Mile", where: "in the rock above Ashgate", xy: [470, 152], light: "torch",
+      intro: ["Above Ashgate, where the old Empress's road switchbacks up toward Thrumhold, there's an arch in the rock that the Hesk call the Debt-Door. They say it's a stone that was sung shut, and only sung numbers will open it. The floor under the arch is set with small square stones, each cut with a number."],
+      play: () => cwPathPuzzle(),
+      failSay: "You set the axe to the rock beside the arch and start cutting, the slow way.", force: "Athletics check (cutting through)",
+      foeSay: "The noise brings something down off the slopes.",
+      found: "In the seam, a milestone no bigger than a loaf, cut in Sallow's shaking hand: <i>THE LAST MILE HANGS UNDER THE MOON THAT IS UNDER THE WORLD. I SENT IT DOWN WHERE NO ONE WOULD LOOK.</i>" },
+    { reg: "undermoon", name: "The Hanging Mile", where: "on a chain in the Undermoon", xy: [216, 360], light: "dark",
+      intro: ["Under Kedge, off the side of the Lift, an old chain goes over a wheel bolted into the dark, and a milestone hangs from one end of it, turning slowly, out of reach. The other end of the chain hangs empty, with hooks. The Moored keep kinstones in a niche by the wheel and don't know why."],
+      play: () => cwHangPuzzle(),
+      failSay: "You go up the chain hand over hand, with nothing under you but the Undermoon's pull.", force: "Athletics check (climbing the chain)",
+      foeSay: "Something that lives on the chains thinks you're dinner.",
+      found: "The last milestone, swung in at last: <i>THE TOLL-HOUSE AT THE LAND GATE OF RAHDARIA, WHERE MY LAST ROAD ENDS. ASK THE LOCK FOR WHAT I OWE, IN THE ORDER I WRONGED THEM.</i>" }
+  ];
+
+  async function cwCache() {
+    const X = cwX(), back = document.body.dataset.light;
+    cwHead("Rahdaria", "The Toll-House");
+    light("dusk");
+    if (!X.tries) {
+      await say("The Toll-House stands where the Empress's last road meets Rahdaria's land gate: four walls and no roof, and a lintel that still says what Nan's rubbing says. <i>I OWE THEM.</i> The floor inside is flagged, and in the middle of it there's an iron door with seven brass dials in it, and a riddle cut around the edge.");
+    } else await say("The Toll-House is as you left it. The lock has loosened again overnight.");
+    let hint = "";
+    if (X.amb === "warned") {
+      if (!X.ambDone) await say("Ambrose Penhallow is sitting on the lintel-stone with his clerk's book open on his knee. \"I said I'd be here,\" he says. \"My great-great-grandfather wrote down what order Sallow cheated them in. He just didn't know what it was for.\"", "voice");
+      X.ambDone = true;
+      hint = "Ambrose's clerk-book says: the false weight was in the Hushfen, and the honest foreman was " + (X.right || "the one who told the truth") + ", on the Carrowmere causeway.";
+    } else if (!X.ambDone) {
+      X.ambDone = true;
+      await say("There are four men with spades in the Toll-House, and a fifth in a surveyor's coat sitting on the iron door with his arms folded. " + (X.amb === "sunk" ? "It's the young man from the causeway, still with lake-weed on his boots." : "He has a clerk's book in his lap.") + " \"<b>Ambrose Penhallow</b>,\" he says. \"Sallow's clerk was my great-great-grandfather. This is mine.\"", "voice");
+      const c = await choose([
+        { key: "talk", label: "Tell him what it's for", tag: "Persuasion DC 16" },
+        { key: "pay", label: "Pay him to walk away", tag: "50 gold", show: S.coins >= 50, plain: true },
+        { key: "fight", label: "Move him off it", tag: "a fight", plain: true }
+      ]);
+      if (c === "talk") {
+        const r = await check({ label: "Persuasion check (Nan's list)", mod: 3, dc: 16, cta: "Show him the names" });
+        if (r.ok) { await say("You show him Nan's list. He reads all three hundred names, every one, and then he gets up off the door. \"Go on, then,\" he says, and sends his diggers home."); X.amb = "won"; }
+        else { await say("\"A list of names,\" he says. \"I've got a book of them too.\" His diggers pick up their spades."); await cwDiggers(); }
+      } else if (c === "pay") { S.coins -= 50; renderSheet(); await say("He counts it twice and goes. \"Clerks,\" he says, at the door. \"We always get paid.\""); }
+      else await cwDiggers();
+    }
+    const r = await cwLockPuzzle(X, hint);
+    if (!r.ok) {
+      X.tries++;
+      await say(r.left ? "You leave the dials where they are and go out into the air to think." : "The lock seizes. It'll loosen again by tomorrow.");
+      light(back); save(); return;
+    }
+    if (!X.tries && r.used === 1) grant("cwlock");
+    light("gems");
+    await say("The iron door swings up on its own counterweight, and under it there's a stair, and at the bottom of the stair there's a vault the size of a small chapel, dry as a bone, and two chests.");
+    await say("The first chest is the Empress's. It has her seal on it, an eagle holding a road in its claws, and Sallow never even broke it. Inside, folded in oiled silk, is a champion's armour in dark steel chased with gold: helm, cuirass, vambraces and greaves, and stacked around it the champion's stores, the way the Empress sent them, for whoever laid the last stone.");
+    await threeCheers("Under the Toll-House, Empress Adrianna's champion's chest. Nan Ferrier would have cheered herself hoarse.");
+    S.champ = true; S.maxHp += 8; S.hp += 8;
+    S.potions = (S.potions || 0) + 12;
+    S.calFine = (S.calFine || 0) + 3;
+    tc().kit.log = kitN("log") + 1; tc().kit.pit = kitN("pit") + 1;
+    S.coins += 500;
+    renderSheet();
+    await mech("Gain <b>Empress Adrianna's Champion Set</b>: helm and cuirass (+2 AC, +8 max HP), vambraces (+1 to hit), greaves (+10% to Evade), and the champion's favour for the whole set (+1 damage on every hit).", "loot");
+    await mech("Gain 12 healing vials (Draughts of Mending), 3 bags of fine caltrops (scatter them in any fight with quick hands), 2 medium traps (a Swing-Log and a Stake Pit, set before a road fight), and the Empress's purse: <b>500 gold</b>.", "loot");
+    grant("cwchamp");
+    await say("The second chest is Sallow's. It's a plain strongbox, and inside it are the navvies' wages, three hundred little paper rolls of road-silver, each one with a name written on it in Sallow's hand. He did mean to give it back. He never did.");
+    const c = await choose([
+      { key: "pay", label: "Carry the wages to Nan Ferrier", tag: "every name on her list gets paid" },
+      { key: "keep", label: "Keep the wages", tag: "250 gold", plain: true }
+    ]);
+    if (c === "pay") {
+      X.wages = "paid"; grant("cwpaid");
+      await say("It takes Nan a month to find the families, and she won't let you help after the first week. In the end she comes to find you on the road, and she doesn't say anything. She puts her list in your hands. Every name on it has a tick beside it, in fresh ink, the last one her own.");
+      await say("After that, every innkeeper on the old roads seems to be some navvy's grandchild. None of them will take your money.");
+      await mech("The wages are paid. Gain <b>Nan Ferrier's list</b>: inns on the roads back are free from now on.", "loot");
+    } else {
+      X.wages = "kept"; S.coins += 250; grant("cwkeep");
+      await say("You break the paper rolls open one by one and pour the road-silver into your purse, and you try not to read the names.");
+      await mech("Gain 250 gold.", "loot");
+    }
+    X.done = true;
+    jMap("The Cairnwright's Wages");
+    xpGain(200);
+    renderSheet();
+    light(back);
+    save();
+  }
+  async function cwDiggers() {
+    const F = { name: "Ambrose Penhallow's diggers", hp: 34, ac: 13, atk: 5, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the diggers",
+      hitWhy: "A spade catches you flat across the ribs.", miss: "A spade rings off the flags.", hitLine: "A digger drops his spade and decides he's been paid enough." };
+    roamFight = true;
+    try { await hkFight(F); } finally { roamFight = false; }
+    cwX().amb = "beaten";
+    await say("Ambrose picks himself up off the floor, gathers his diggers, and goes, with his book under his arm.");
+  }
+  function cwItems(items) {
+    const X = S.cw;
+    if (X && X.met && !X.done) items.push(["cw-ledger", "writ", "The Cairnwright's ledger", "Milestones read: " + X.n + " of 7. Mile-marks: " + cwLedger(X) + "." + (CW_STONES[X.n] ? " Next: " + CW_STONES[X.n].name + ", " + CW_STONES[X.n].where + "." : " Next: the Toll-House at Rahdaria's land gate.")]);
+    if (X && X.wages === "paid") items.push(["cw-list", "writ", "Nan Ferrier's list", "Three hundred names, every one ticked. Inns on the roads back won't take your money."]);
+    if (champ()) items.push(["champ", "shield", "Empress Adrianna's Champion Set", "Dark steel chased with gold, made for whoever laid the last stone of the Empress's roads. Helm and cuirass: +2 AC, +8 max HP. Vambraces: +1 to hit. Greaves: +10% to Evade. The whole set: +1 damage on every hit."]);
+  }
+  function cwSection(rs) {
+    const X = rs && rs.cw;
+    if (!X || !X.met) return "";
+    return "<section><h3>The Cairnwright's Wages · " + (X.done ? "found" : X.n + " of 7 milestones") + "</h3>" +
+      '<p class="j-sub">Merrit Sallow never paid the navvies who laid Empress Adrianna\'s roads. He hid their wages, and the Empress\'s champion\'s chest, and cut the way to them into seven milestones. Nan Ferrier keeps the list of their names.</p>' +
+      '<ul class="marks">' + CW_STONES.map(W => {
+        const m = X.marks[W.reg];
+        return '<li class="' + (m != null ? "won" : "") + '"><span class="mk"></span><span><b>' + W.name + "</b> · " + (m != null ? REGIONS[W.reg] + ". Mile-mark <b>" + m + "</b>." : "Not yet read.") + "</span></li>";
+      }).join("") +
+      '<li class="' + (X.done ? "won" : "") + '"><span class="mk"></span><span><b>The Toll-House</b> · ' + (X.done ? "Opened. " + (X.wages === "paid" ? "The wages are paid." : "You kept the wages.") : X.n >= 7 ? "The lock wants all seven marks, in the riddle's order." : "At Rahdaria's land gate.") + "</span></li></ul></section>";
+  }
+  function cwMapLayer(st) {
+    const X = st.rs && st.rs.cw;
+    if (!X || !X.met) return "";
+    const got = CW_STONES.filter(W => X.marks[W.reg] != null);
+    let h = "";
+    if (got.length > 1) h += '<path d="' + mapPath(got.map(W => W.xy)) + '" fill="none" stroke="#8a6a1e" stroke-width="1.4" stroke-dasharray="2 4"/>';
+    got.forEach(W => { h += '<g transform="translate(' + W.xy[0] + " " + W.xy[1] + ')"><path d="M-5 6v-9a5 5 0 0 1 10 0v9z" fill="' + PAPER + '" stroke="#8a6a1e" stroke-width="1.3"/><text y="4" font-size="7" text-anchor="middle" fill="#5a4410" font-weight="700">' + X.marks[W.reg] + "</text></g>"; });
+    if (got.length === 7) {
+      const [x, y] = CW_CACHE;
+      h += '<path d="' + mapPath([got[6].xy, CW_CACHE]) + '" fill="none" stroke="#8a6a1e" stroke-width="1.4" stroke-dasharray="2 4"/>' +
+        '<g transform="translate(' + x + " " + y + ')"><path d="M-6 -6l12 12M6 -6l-12 12" stroke="' + (X.done ? "#8a6a1e" : "#a3281c") + '" stroke-width="2.6" stroke-linecap="round"/><text y="-9" font-size="8" text-anchor="middle" class="mp-label">' + (X.done ? "the Toll-House" : "the Cairnwright's cache") + "</text></g>";
+    }
+    return "<g>" + h + "</g>";
   }
 
   // ---------- enemy meter and combos ----------
@@ -4677,6 +5232,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.nk && S.nk.jars) o.push({ key: "jar", label: "Smash a noon-jar", tag: (heads ? "drops one" : FOE.shade ? "4d6 radiant" : "2d6 radiant") + " · " + S.nk.jars + " left" });
     if (S.um && S.um.milk) o.push({ key: "milk", label: "Gulp a phial of moonmilk", tag: "2d8 + 2 HP · " + S.um.milk + " left" });
     trapBelt(o);
+    if (calTotal() && !S.lw) o.push({ key: "cal", label: "Scatter caltrops", tag: (heads ? "they're" : "it's") + " slowed: next 2 attacks at −2 · " + calTotal() + " bag" + (calTotal() > 1 ? "s" : "") });
     if (S.cullet) o.push({ key: "cullet", label: "Fling a fistful of cullet", tag: "its next attack is half-blind · " + S.cullet + " left" });
     waxItems(o);
     wpnActives(o);
@@ -4799,6 +5355,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("You fling a fistful of scrap glass at " + (FOE.unit ? "their" : "its") + " face.");
       if (t === "fumble") await mech("It goes wide. Only a little of it finds the eyes.", "hurt");
       else { FOE.blind = Math.max(FOE.blind, t === "perfect" ? 2 : 1); await mech("Half-blind: " + (t === "perfect" ? "the next two attacks against you have" : "the next attack against you has") + " disadvantage.", "loot"); }
+    } else if (key === "cal") {
+      if (S.calFine) S.calFine--; else S.calCrude--; renderSheet();
+      await say("You fling the caltrops in a hissing arc across the ground between you.");
+      FOE.pitted = Math.max(FOE.pitted || 0, t === "perfect" ? 3 : t === "fumble" ? 1 : 2);
+      await mech("Slowed, picking through the iron: " + (FOE.pitted > 1 ? "the next " + FOE.pitted + " attacks against you are" : "the next attack against you is") + " at −2.", "loot");
     } else if (key === "wax" || /^print\d$/.test(key)) await waxUse(key, mult, t);
     else if (key.startsWith("wa-")) await wpnActive(key.slice(3), t, mult, main);
     renderSheet();
@@ -10214,7 +10775,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade();
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0);
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
