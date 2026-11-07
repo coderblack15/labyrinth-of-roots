@@ -1086,6 +1086,69 @@ Six groups to get to the stair, each costing Sea-Sky: the stair-wardens (1, and 
 
 Severine: twenty-nine more of the Hushed wait at **Stillwater**, where the order began and Ilka Moth is buried. "You'd better go and talk to them before they decide to whisper." End card is Part LXX.
 
+## The Black Tithe: the Stillwater Reach (Parts LXX–LXXVI)
+
+The player is caught between both sides: pressed into a pirate crew, they choose whether to rise in it, sell it to the hunters, or break the bargain behind it. Tone: grim and salty.
+
+**The Skerra** (original race): a sea people who live their whole lives afloat and call the land "a grave that's waiting". Tall, narrow, grey-green, with salt crusted white at every joint; black eyes. They can taste a lie on your breath, sweet as rot. Each carries a **count-rope**, a knot for each of their dead, tied in the knot that was that person's. They keep nine **Articles**, cut into the left forearm and rubbed with salt. The ninth: *the drowned you remember can find you, so the sea takes all our dead.*
+
+**The Tithe Fleet**: forty Skerran ships of the Stillwater Reach. Every ship that crosses gives a tenth of its cargo and a tenth of its crew (drawn by knucklebones, one dipped in pitch). Its lord is **Seld Varrick, the Salt King**, genial and generous, who remembers none of his crimes. **The bargain**: thirty years ago he agreed with the Hushwright's people that no ship comes within ten miles of Stillwater; in return the **Quiet Passengers** (Hushed in grey) ride every ship and whisper away the crews' memory of the drowned. He sold them his Fleet's grief, and then they made him forget he had.
+
+**The Saltwrit**: pirate hunters out of Rahdaria under **Commodore Idris Malloway** (flagship *the Patience*, gallows-and-anchor flag). They hang pirates in iron cages on the **Gibbet Skerries**, pressed men with them.
+
+*(State: S.pz. The **Tide-count**, 8 days to the Black Tithe, is the clock; errands, repairs and a failed storm spend it, and days left are an edge in the last fight. **Name in the crew** 0–10 (Pressed, Landsman, Hand, Able hand, Trusted, the crew's choice). **The Saltwrit** 0–10. **Share** under the Articles, paid at Raftmark.)*
+
+*(**Pirate tricks**, kept in S.tricks for every fight after, once a fight each: Belaying pin (1d6 + 2, no roll, half the time it's dazed), Boarding hook (advantage on your next swing, its next blow at disadvantage), Powder flash (2d6 + 2 fire, two of a pack), Salt in the eyes (its next two blows miss), Run up the black (Intimidation: a pack breaks, a lone foe is shaken, −2 to hit).)*
+
+*(**Plunder**, S.plunder, on the roads back: raid caravans (run up the black or fight a small company; take a tenth for +1 or all for +2 and double gold). Tiers: 3 a road-raider (easier to make them give up), 8 a Black Name (+25% gold), 15 Terror of the Reach (running up the black needs no roll). With the Saltwrit's pardon you hunt road-raiders for bounties instead.)*
+
+### Part LXX: The Tithe Taken
+
+Out of Rahdaria on Benno Sleat's cog *Marigold*. In fog, a count-bell: the *Widow's Tally*, Captain **Orla Tennick**, hung all down her sides with count-ropes. Meet the boarders at the rail (fight), talk (Persuasion, truth only), or hide. The drawing of the bones: draw like everyone (Orla takes you anyway, for the axe), take the black bone from Wil the cabin boy (name +1), or palm it (Sleight of Hand; a cheat). Ninian Rooke reads the Articles: sign in your own arm (a cut and salt), or refuse and be keelhauled (Constitution DC 13; name +2).
+
+### Part LXXI: Before the Mast
+
+**Pell Ashby**, a pressed clerk, is the Saltwrit's man aboard: listen (Saltwrit +2, a scrap of signal-book), put him off, or tell Ninian (he goes over the side on a count-rope; name +2). **Errands**, a day each, each teaching a trick and maybe winning a sworn hand:
+- **Hawl Ostrey**, bosun: the pin-rail. Five sails, five pins each working one or two; match the call in the throws given. (Belaying pin.)
+- **Gannet**, powder-boy, about ten: eight cartridges, one heavy with damp, two weighings on a balance. (Powder flash.)
+- **Dace Mallory**, pressed fiddler and card-cheat: **Bones**, call the total of six bones (three yours, three his) or call Liar; first to two hands. (Salt in the eyes.)
+- **Marrow-Jen**, harpooner: a brackray comes over the rail; spot it first to win her. (Boarding hook.)
+- **Ninian Rooke**, quartermaster: divide a prize by the Articles (the sea's tenth, then shares: captain 2, quartermaster 1½, bosun 1½, twelve hands, the dead man 1). (Run up the black.)
+That night the **Quiet Passengers** whisper a dead topman, Hollin, out of the crew's heads. Ask Ninian (Insight) to learn the bargain.
+
+### Part LXXII: The Prize
+
+The *Good Intent* of Sulmara runs into **the Teeth**: steer a grid of rocks where the tide sets you a square after every move, on a repeating tide-table. The bow-chaser (the wall gun) for her rudder. Board her (a company fight; sworn hands and a hit thin the defenders). The tithe of her crew: hold the cup, speak for them (Persuasion DC 15), or, with Ninian sworn, have the two sign the Articles instead (the fourth Article). Saltwrit dispatches: read them (a signal-book page, Saltwrit +1) or give them to Orla (name +1).
+
+### Part LXXIII: The Skimmer
+
+Forty gold gone from the dead man's share. Four suspects (Teague Fallow the cook, Old Saul the sailmaker, Ishe Varn a Skerran topman, Corwin Hask the gunner); the skimmer lies, everyone else tells the truth. Two variants. Name the right one (name +2; ask for the lash, not the sea), refuse, or send an honest hand to the sea. Then a storm: the pin-rail again, with two lines fouled.
+
+### Part LXXIV: Raftmark
+
+A ring of a hundred lashed hulks round a floating black **tally-stone**, in the lee of Stillwater. Shares paid. The Salt King's court; his ledger (Investigation) shows the bargain. Malloway is two days off with nine ships and means to burn everyone. The choice:
+- **Rise**: a vote under the first Article (name + 2 per sworn hand + the bone + the keel; 11 of 20 wins and Orla gives you her count-rope), or a duel with Orla.
+- **Sell**: the Saltwrit signal from the Raftmark light. Two hoists seen and what they meant; work out that a hoist is read *when, what, to whom*, and send *the enemy · come in · at night*.
+- **Burn**: retie Ninian's brother's knot on her count-rope from memory, and she remembers him.
+
+### Part LXXV: The Black Tithe
+
+- **Rise**: send the cup back empty; the Saltwrit attack; a broadside at *the Patience*, then board her. Malloway on his knees: hang him (Plunder +2), set him adrift, or press him into the crew.
+- **Sell**: the Saltwrit burn Raftmark; fight the Salt King's guard, then **Seld Varrick**. Malloway's pardon and 80 gold; plead for the pressed men (Dace and Gannet). Dawn on the Gibbet Skerries.
+- **Burn**: on the tally-stone, ask the Fleet who its knots are for. Fight the Quiet Passengers (fewer with Severine's Hush-Cord). Retie a count-rope; the names go round the ring. Varrick remembers everything and begs to forget: hush him with the cord, or don't. The Fleet goes home.
+
+### Part LXXVI: Stillwater
+
+An island of white cliffs in a mile of perfectly still, soundless water. Row in alone (Wisdom DC 13). On the headland, a single grave with a lamp burning beside it in daylight; on the wall, twenty-nine Hushed in grey. Rewards: rise +5 max HP and Plunder +5; sell the pardon; burn +3 max HP and a count-rope.
+
+### Hook
+
+End card Part LXXVII: Ilka Moth's grave, and the twenty-nine of the Hushed watching you come.
+
+### Also in this release
+
+Level cap 50 (LV_MAX); everything that woke at 40 still wakes at 40 (LV_GATE: the Cascades, the chest, the hidden relics, the sixth harness place). Two new road creatures: the **Brackray** (jolt: every third round, 3d6 unless you get out of the way) and **Wreck-gulls** (mob: three strike while three are left, and they bleed you). Three Deafstones (The First Article, The Salt King's Debt, Ilka's Shepherd's Mark), a relic (The First Knot), Raftmark and a sanctuary on the roads back, the Smoke-pot mine, and the pursuit set "The Black Tithe" (ver 9).
+
 ## The Deafstones: lore tablets
 
 A fallen light wakes to loud voices, so the first wardens, the Whisperers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
