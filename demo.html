@@ -437,6 +437,21 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .rh-rota b { flex: 1 1 100%; font-family: var(--label); font-size: .86rem; }
 .rh-rota button { padding: 6px 10px; font-size: .8rem; }
 .rh-rota button.on, .puzzle .pctrl button.on { background: #3b3018; border-color: var(--gold); color: var(--gold); }
+.sd-taps { min-height: 2.2em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-family: var(--label); }
+.sd-g { display: inline-flex; gap: 5px; align-items: center; letter-spacing: 0; }
+.sd-g b { color: var(--gold); font-weight: 400; }
+.sd-g i { color: var(--muted); font-style: normal; padding: 0 3px; }
+.sd-gone { color: var(--muted); font-size: .85rem; }
+.sd-words { font-size: 1rem; }
+.sd-mine { border-top: 1px dashed var(--line); padding-top: 6px; }
+.sd-pal { display: flex; flex-wrap: wrap; gap: 6px; }
+.sd-pal button small { display: block; font-size: .7rem; margin-top: 2px; }
+.sd-num { display: grid; place-items: center; font-family: var(--label); font-size: .8rem; color: var(--muted); height: 22px; }
+.pgrid .sd-num { height: auto; min-height: 22px; }
+.sd-cell { height: 30px; border: 1px solid var(--line); border-radius: 4px; display: grid; place-items: center; color: var(--gold); }
+.sd-cell.band { background: #1d3329; border-color: var(--verdigris); }
+.sd-cell.on { box-shadow: 0 0 10px rgba(207, 168, 80, .4); }
+.st-card.st-stone blockquote { font-style: normal; }
 .rh-clues { margin: 0; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
 .rh-hist { font-family: var(--label); font-size: .85rem; line-height: 1.6; color: var(--muted); }
 .rh-read { font-family: var(--label); font-size: .88rem; letter-spacing: .06em; overflow-wrap: anywhere; }
@@ -1184,6 +1199,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-label hk-x" id="rhSiegeL" hidden>Blockade</span>
       <span class="stat-val hk-x" id="rhSiege" hidden></span>
     </div>
+    <div class="lw" id="sdBox" hidden>
+      <span class="stat-label">The Sea-Sky</span>
+      <span class="stat-val" id="sdSky">9 / 10</span>
+      <div class="huntbar"><span id="sdSkyBar" style="width:90%"></span></div>
+      <span class="note" id="sdSkyNote"></span>
+      <span class="stat-label">Sounding</span>
+      <span class="stat-val" id="sdWords">0 of 8</span>
+      <span class="stat-label hk-x">The Bathyr</span>
+      <span class="stat-val hk-x" id="sdTrust">Mistrusted</span>
+      <span class="stat-label hk-x">Forgotten</span>
+      <span class="stat-val hk-x" id="sdForgot">nothing</span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -1331,8 +1358,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const slotKey = (n) => n === 1 ? KEY : KEY + "-s" + n;
   let SLOT = (() => { try { const n = +localStorage.getItem(SLOT_KEY); return SAVE_SLOTS.includes(n) ? n : 1; } catch (e) { return 1; } })();
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
-  function save() { S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; return lvInit(v); } catch (e) { return null; } }
+  let sdNoSave = false; // the Inside the Axe memory isn't saved
+  function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; return lvInit(v); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1530,6 +1558,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         every(sc, 4, 10, () => { const f = rnd(1400, 2200); blip(sc.out, f, { type: "triangle", dec: 0.35, vol: 0.035, bend: 0.7 }); blip(sc.out, f * 0.92, { type: "triangle", dec: 0.3, vol: 0.03, bend: 0.75, at: 0.28 }); });
         every(sc, 3.2, 3.8, () => { hiss(sc.out, { f: 70, q: 4, a: 0.01, dec: 0.6, vol: 0.09, to: 45 }); });
         every(sc, 9, 18, () => hiss(sc.out, { f: 600, q: 1.5, a: 0.4, dec: 1.4, vol: 0.03, to: 300 }));
+      },
+      sounding(sc) {    // under the Sea-Sky: the weight of water overhead, slow pressure, taps on stone far off, the Light's low ring
+        drone(sc, [29, 36, 41], { cut: 220, vol: 0.05, wob: 0.02 });
+        wind(sc, { type: "lowpass", cut: 380, q: 0.7, vol: 0.05, sweep: 180, rate: 0.03 });
+        every(sc, 2.5, 6, () => { const n = 2 + Math.floor(Math.random() * 3), gap = Math.random() < 0.5 ? 0.18 : 0.4; for (let i = 0; i < n; i++) blip(sc.out, rnd(180, 260), { type: "triangle", a: 0.002, dec: 0.09, vol: 0.04, at: i * gap }); });
+        every(sc, 14, 30, () => bell(sc.out, hz(pick([55, 58, 62])), 0.014, 7));
       }
     };
 
@@ -1620,6 +1654,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         hiss(sfx, { f: 2400, q: 2, a: 0.5, dec: 0.5, vol: 0.12, to: 900 });
         for (let i = 0; i < 9; i++) blip(sfx, 160 + Math.random() * 120, { type: "triangle", a: 0.002, dec: 0.08, vol: 0.06, at: 0.9 + i * 0.07 + Math.random() * 0.05 });
       },
+      // Bathyr Sounding: "." a quick tap, "-" a long press, "|" a rest between words.
+      tap(pat) {
+        if (!live()) return;
+        let t = 0;
+        for (const c of pat) { if (c === "|") { t += 0.3; continue; } blip(sfx, c === "-" ? 150 : 230, { type: "triangle", a: 0.002, dec: c === "-" ? 0.28 : 0.08, vol: 0.09, at: t }); t += c === "-" ? 0.34 : 0.17; }
+      },
       // A cheer: a crowd's roar, rising, with a few bright notes on top.
       cheers(v = 1) {
         if (!live()) return;
@@ -1637,10 +1677,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     ["The Labyrinth of Roots", "labyrinth", 0, 5], ["The Burning Sands", "desert", 6, 9], ["The Hushfen", "hushfen", 10, 16],
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
     ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
-    ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61]
+    ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
+    ["The Sounding", "sounding", 62, 68]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan"]);
+  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1889,7 +1930,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     rahdaria: { at: [92, 316], clear: [[92, 322, 58], [54, 378, 32]],
       road: [[196, 300], [150, 312], [114, 318]],
       art: [["terraces", 92, 320, 1], ["fleet", 54, 376, .9]],
-      labels: [["Rahdaria", 90, 356, 14, ""], ["the Bathyr fleet", 62, 402, 9, "s"]] }
+      labels: [["Rahdaria", 90, 356, 14, ""], ["the Bathyr fleet", 62, 402, 9, "s"]] },
+    sounding: { at: [46, 266], clear: [[46, 270, 38], [64, 300, 22]],
+      under: [[78, 332], [62, 306], [50, 284]],
+      art: [["bowl", 46, 268, .9]],
+      labels: [["Bathyrra", 46, 300, 11, "u"]] }
   };
   const MAP_SEEN = "lor-map-seen";
   const INK = "#3b2a18", INK2 = "#6b5434", PAPER = "#dcc8a0", WATER = "#5d7774", GLASS = "#5f9a84", AMBER = "#c58a2c";
@@ -1942,6 +1987,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<path d="M-26 -14h16v-6h-16zM28 -14h16v-6h-16z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1" transform="translate(-8 0)"/>'
   };
   Object.assign(MAP_ART, {
+    bowl: () => '<ellipse rx="28" ry="17" fill="' + WATER + '" fill-opacity=".3" stroke="' + INK + '" stroke-width="1.3"/>' +
+      '<ellipse rx="17" ry="9" fill="' + PAPER + '" stroke="' + INK2 + '" stroke-width="1" stroke-dasharray="3 2"/>' +
+      '<path d="M0 4v-11" stroke="' + INK + '" stroke-width="1.6"/><circle cy="-10" r="3.4" fill="' + AMBER + '" fill-opacity=".85" stroke="' + INK + '" stroke-width=".8"/>' +
+      '<path d="M-24 -9q4-3 8 0M12 -11q4-3 8 0M-8 13q4-3 8 0" fill="none" stroke="' + WATER + '" stroke-width="1"/>',
     terraces: () => '<g stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round" fill="' + PAPER + '">' +
       '<path d="M-26 12h52v-6h-44v-6h36v-6h-28v-6h20v-5h-12"/></g>' +
       '<g fill="' + GLASS + '" fill-opacity=".55"><ellipse cx="-18" cy="5" rx="5" ry="2.4"/><ellipse cx="14" cy="-1" rx="5" ry="2.2"/><ellipse cx="-6" cy="-7" rx="4" ry="2"/><ellipse cx="4" cy="-13" rx="3" ry="1.8"/></g>' +
@@ -2022,7 +2071,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<rect width="600" height="420" fill="url(#mpStain)"/><rect width="600" height="420" fill="#000" filter="url(#mpGrain)"/>' +
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
       '<g mask="url(#mpFog)"><rect width="600" height="420" fill="#a7a597"/><rect width="600" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
-      '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>' +
+      (st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
       labels + mapStones(st) + you +
       '<g transform="translate(556 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
@@ -2047,7 +2096,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const got = st.reached.includes(c.slug);
       return "<li" + (got ? "" : ' class="fog"') + "><span>" + (got ? esc(c.name) : "Under the fog") + "</span><small>Parts " + roman(c.from + 1) + "–" + roman(c.to + 1) + "</small></li>";
     }).join("") + '<li class="fog"><span>Uncharted</span><small>Part ' + roman(CHAPTERS[CHAPTERS.length - 1].to + 2) + " and beyond</small></li></ol>";
-    h += '<p class="j-note">' + (innerWidth <= 600 ? "Swipe the map sideways to see all of it. " : "") + 'Each slot keeps its own map. ' + (left ? "Fog lifts as you reach each new chapter. " : "") + "The western sea is still blank.</p>";
+    h += '<p class="j-note">' + (innerWidth <= 600 ? "Swipe the map sideways to see all of it. " : "") + 'Each slot keeps its own map. ' + (left ? "Fog lifts as you reach each new chapter. " : "") + (st.reached.includes("sounding") ? "Under the western sea there's Bathyrra. Past it, the sea is still blank." : "The western sea is still blank.") + "</p>";
     $("mapBody").innerHTML = h;
     mapMarkSeen(st.reached.filter(s => MAP[s]));
     mapNudge();
@@ -2190,7 +2239,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "stone10", name: "Ten Stones", desc: "Find 10 Deafstones on one journey.", prog: () => [Math.min(10, stonesN()), 10], test: () => stonesN() >= 10 },
     { id: "stonestand", name: "Left Standing", desc: "Leave 10 Deafstones standing for whoever comes next.", prog: () => [Math.min(10, STONE_ALL.filter(T => S.stones && S.stones[T.id] && !S.stones[T.id].pry).length), 10], test: () => STONE_ALL.filter(T => S.stones && S.stones[T.id] && !S.stones[T.id].pry).length >= 10 },
     { id: "stone20", name: "Twenty Stones", desc: "Find 20 Deafstones on one journey.", prog: () => [Math.min(20, stonesN()), 20], test: () => stonesN() >= 20 },
-    { id: "stone30", name: "Deaf to the Hush", desc: "Find all 30 Deafstones on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
+    { id: "sdstairs", name: "Sound Footing", desc: "Come down the Sea-Stair into Bathyrra without one step giving under you.", test: () => false },
+    { id: "sdwords", name: "Fluent in Stone", desc: "Learn all eight words of the Bathyr Sounding.", test: () => !!(S.sd && S.sd.words.length >= 8) },
+    { id: "sdtruths", name: "Two Truths", desc: "In the Hall of Lead, read all three Two Truths without a wrong answer.", test: () => false },
+    { id: "sdname", name: "Wood Can't Hear", desc: "Inside the axe, cut the Senn girl's name where nobody will read it.", test: () => false },
+    { id: "sdhushed", name: "Every Voice", desc: "Argue down all five of the Hushed at the foot of the Drowned Light.", test: () => false },
+    { id: "sdall", name: "Nobody Left Under", desc: "Get every group in Bathyrra to the stair before the sky comes down.", test: () => false },
+    { id: "sdsound", name: "The Sounding", desc: "Sound the Drowned Light, and take the Bathyr's note.", test: () => false },
+    { id: "sdhush", name: "Let It Sleep", desc: "Let the Drowned Light be hushed for good.", test: () => false },
+    { id: "sdvael", name: "His Last Whisper", desc: "Give Vaelric the Drowned Light to sing to.", test: () => false },
+    { id: "sdmind", name: "Nothing Forgotten", desc: "Finish The Sounding with nothing the Hushed took still missing.", on: "chapter", test: (c) => c.ch === "sounding" && S.sd && !S.sd.forgot.length },
+    { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -2211,7 +2270,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "arms", name: "Arms of the Road", ver: "5", desc: "Weapons to swap into your hand, and weapons found in the field, from Ashen to Heartfire.",
       ids: ["armed", "fieldarms", "rootfind", "gloamfind", "heartfind", "spectral", "phased", "ghosted", "chest", "company"] },
     { id: "deafstones", name: "The Deafstones", ver: "7", desc: "Thirty tablets the Whisperers couldn't hush, and the founding story of every land.",
-      ids: ["stone1", "stoneclean", "stoneset", "stone10", "stonestand", "stone20", "stone30"] }
+      ids: ["stone1", "stoneclean", "stoneset", "stone10", "stonestand", "stone20", "stone30"] },
+    { id: "sounding", name: "The Sounding", ver: "8", desc: "Under the western sea: the Bathyr tap language, the Hall of Lead, the Hushed, and the Drowned Light.",
+      ids: ["sdstairs", "sdwords", "sdtruths", "sdname", "sdhushed", "sdall", "sdsound", "sdhush", "sdvael", "sdmind"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2424,6 +2485,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     allyItems(items);
     rahItems(items);
     rxItems(items);
+    sdItems(items);
     lvItems(items);
     linkItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
@@ -2434,6 +2496,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     renderNoon();
     renderUnder();
     renderRah();
+    renderSd();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -2564,6 +2627,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     cover: ["Volleys and cover", "When a captain calls \"Loose!\" the bowmen fire four arrows that turn. Cover or a planted pavise stops the whole volley. Cover lasts two of their turns and splinters after three volleys or charges."],
     mines: ["Mines and caltrops", "Setting a mine or scattering caltrops costs your turn and pays off over the rounds after: mines blow when the foe comes onto them, and caltrops bite for three rounds. Both are at their best against a pack or a whole company. You can set two mines in a fight, at most."],
     stones: ["Deafstones", "Stone, lead and gold can't hear a whisper, so the people the old wardens hushed carved the truth into them. Rub the charcoal over every square and steer round the cracks. Each region has three stones, and finding all three gives +1 on checks there that aren't attacks. Missed ones wait on the roads back."],
+    sky: ["The Sea-Sky", "Under Bathyrra the sea hangs overhead, held up by the Drowned Light, and it's coming down. The Sea-Sky on your sheet is this chapter's clock: errands, wrong answers and slow work spend it. At 3 or less you fight knee-deep, and the evacuation at the end is paid for out of it."],
+    sounding: ["Sounding", "The Bathyr talk by tapping stone. A word is a short rhythm of <b>●</b> taps and <b>▬</b> presses; you feel it for a moment, then tap it back. Every word you learn goes in your Bag, with its rhythm. A tap weighs 1 and a press 2, which matters on their doors."],
+    forget: ["Forgetting", "The Hushed don't only hurt you, they make you forget: a fight move drops out of your options. In a fight you can try to remember, or a friend can remind you. Out of a fight, a Deafstone or the word <b>remember</b> brings one back."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -3466,8 +3532,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (1–3) decides how many words survive. S.stones = { id: { g, p, pry } } per slot; J.stones marks
   // what any journey has found. S.hh counts the quiet Hear or Hush choices (see hhScore).
   // New chapters: add a STONES entry under the region's TIER key, and a STONE_REG slug.
-  const STONE_REG = { roots: "labyrinth", desert: "desert", fen: "hushfen", mere: "carrowmere", lastwell: "lastwell", glass: "assize", corrach: "corrach", noon: "noon", undermoon: "undermoon", rahdaria: "rahdaria" };
-  const STONE_LAND = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria" };
+  const STONE_REG = { roots: "labyrinth", desert: "desert", fen: "hushfen", mere: "carrowmere", lastwell: "lastwell", glass: "assize", corrach: "corrach", noon: "noon", undermoon: "undermoon", rahdaria: "rahdaria", bathyrra: "sounding" };
+  const STONE_LAND = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra" };
   const SCRIPTS = {
     cord: ["Moored knot-cords", (p) => p >= 49], hesk: ["Hesk song-script", (p, s) => (s.song || 0) >= 1 || p >= 41],
     shade: ["Lidless shadow-script", (p) => p >= 43], lead: ["Bathyr pressed lead", (p) => p >= 57]
@@ -3588,6 +3654,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       { id: "h3", t: "Half a City", mat: "lead", sc: "lead", part: null, chk: ["Investigation", 14],
         where: "On the floor of the dry Lily cistern, beside the place the Inquirer's box lay, a second lead box has come to light, and inside it is a single tablet.",
         text: "The heavy ones did not come up to conquer. They came home, and nobody knew them. [[If the light under the sea goes out, the sea will come up the terraces, and Rahdaria will drown with its other half.]]" }
+    ],
+    bathyrra: [
+      { id: "b1", t: "What Fell into the Sea", mat: "lead", sc: "lead", part: 63, chk: ["Investigation", 14],
+        where: "In the Speaker's house, the hearthstone is a lead plate as wide as a door, worn smooth in the middle where a thousand years of feet have stood to get warm. At the edges, the dents are still sharp.",
+        text: "Two lights fell. One came down on the grass, and the soft-voiced ones caught it. One came down in the sea and opened it like a hand, and nobody caught it, so we did. [[It was frightened. We are heavy, and heavy things do not run. We sat with it.]]" },
+      { id: "b2", t: "The First Sounder", mat: "lead", sc: "lead", part: 64, chk: ["Perception", 14],
+        where: "In the Hall of Lead, one rack stands on its own, and on its end, where nobody would think to read, someone has pressed a single tablet into the frame itself.",
+        text: "Her name was Oud, and she laid her hands on the Light because nobody else would, and it was hot, and she kept them there. On the third day it tapped back. [[We are not its keepers. We are its company. Whoever forgets that will drown us.]]",
+        v: "\"Company,\" Vaelric says. \"Not keepers. We never once thought of that.\"" },
+      { id: "b3", t: "The Grey Thread", mat: "gold", part: null, chk: ["Investigation", 15],
+        where: "On the black glass hill where the Hushed camped, one of their stakes is still standing, and it isn't a stake. It's a gold plate, driven edge-first into the glass, with writing on both faces.",
+        text: "Severine, if you read this: I did what you asked, and sat with the old Sounder through the night, and in the morning he did not know his hands. I have pressed this in gold so that I cannot hush it out of myself. I don't want to forget that I did it. I think that is the only thing that will save us." }
     ]
   };
   const ILKA = { t: "Ilka's Stone", text: "My name is Ilka Moth, and I was a shepherd. I heard the moon coming three days before it fell. The Hesk taught me how to make a frightened thing sleep, and I did it, and it worked. Then I did it to a frightened village. Then to a curious one. Then to one that was only asking. I carved this after, on the island, where nobody can hear me. Whoever has found every stone: now you know what I did. Do better than I did. Listen first." };
@@ -3610,6 +3688,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     add({ truce: [2, 0], sleep: [0, 1], blast: [0, 2] }[s.ending2]);
     add(s.nk && { dusk: [2, 0], night: [1, 0], keep: [0, 1] }[s.nk.ending]);
     add(s.um && { rise: [1, 0], plant: [0, 1], vael: [0, 1] }[s.um.ending]);
+    add(s.sd && { sound: [2, 0], vael: [1, 0], hush: [0, 2] }[s.sd.ending]);
     return { hear, hush };
   }
   function hhWords(s) {
@@ -3714,6 +3793,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     scrollNext = true; add(card);
     if (T.sc && !knowsScript(T.sc, S)) await mech("Part of it is in " + SCRIPTS[T.sc][0] + ". Your journal will fill it in once you can read it.");
     if (T.v && vaelricSpeaks()) await voice(T.v);
+    if (sdOn()) await sdRemember("The stone can't forget, and for a moment, reading it, neither can you.");
     const k = await choose([
       { key: "leave", label: "Leave it standing for whoever comes next", tag: "you keep your rubbing" },
       { key: "pry", label: "Pry it up and look underneath", tag: "it'll break · something's under it", plain: true }
@@ -3732,7 +3812,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("Deafstones: " + n + " of " + STONE_ALL.length + ". The rubbing is in your journal.", "loot");
     if (regionDone(T.reg)) await mech("You have all three stones of " + STONE_LAND[T.reg] + ". Its founding story is whole, and you know this land now: +1 on checks that aren't attacks while you're here.", "loot");
     if (n === STONE_ALL.length) {
-      await say("With the last rubbing folded into your pack, you notice that the edges of all thirty, laid side by side in your head, make a shape: an island, far out past the western sea, and a name.");
+      await say("With the last rubbing folded into your pack, you notice that the edges of all of them, laid side by side in your head, make a shape: an island, far out past the western sea, and a name.");
       await mech("Every Deafstone found. Ilka's Stone is in your journal.", "loot");
     }
     renderSheet(); save(); achCheck();
@@ -3809,7 +3889,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     rahdaria: { key: "inqring", icon: "ring", name: "The First Inquirer's Ring", fx: "A bronze ring cut with an open eye, and the purse hidden with it: +4 max HP and 40 gold.", hint: "the dry cisterns under the Hanging Gardens",
       where: "In Rahdaria, a Cascade pours up out of the old Lily cistern under the Hanging Gardens, and the water that's been in it for a century goes up with it. The floor of the cistern is dry for the first time since it was cut.",
       find: "On the cistern floor, in a lead box gone white with age, are a bronze ring cut with an open eye, a purse, and a note in a square hand: <i>for whoever has my job next</i>. The first Inquirer of Rahdaria hid it here, three hundred years ago.",
-      on: () => { S.maxHp += 4; S.hp += 4; S.coins += 40; } }
+      on: () => { S.maxHp += 4; S.hp += 4; S.coins += 40; } },
+    bathyrra: { key: "knuckle", icon: "stone", name: "Oud's Knuckle", fx: "The first Sounder's tapping-stone, worn to the shape of her hand: +5 max HP and two Draughts of Mending tucked in the pouch with it.", hint: "the black glass hill where the Light came down",
+      where: "Under the western sea, a Cascade comes up through the black glass hill at the Drowned Light's foot, and where it runs, the glass has cracked open like ice on a pond.",
+      find: "In the crack, in a pouch of fish-leather gone hard as wood, there's a knuckle of black basalt worn into a hollow the exact shape of a fingertip. The Bathyr would know whose it was. Oud's, the first Sounder, who sat with the Light for three days before it answered.",
+      on: () => { S.maxHp += 5; S.hp += 5; S.potions = (S.potions || 0) + 2; } }
   };
   const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part));
   const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
@@ -3896,6 +3980,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     rahdaria: [
       { name: "Rahdaria", kind: "town", has: ["inn", "market", "smith", "bar", "bank"], intro: "Rahdaria's terraces are green again from the walls to the Lily. The Pressed Rose has a sign out, Mattie Gorse's hammer rings, and people know your face in the street." },
       { name: "The hanging gardens", kind: "sanctuary", has: ["sanctum"], intro: "High on the terraces, the hanging gardens are clean again: figs, vines, water running down stone channels. Keeper Sabine Orr lets you sleep under the trees." }
+    ],
+    bathyrra: [
+      { get name() { return S.sd && S.sd.ending === "hush" ? "The Bathyr camp on the salt flats" : "Bathyrra"; }, kind: "town", has: ["inn", "market", "smith"],
+        get intro() { return S.sd && S.sd.ending === "hush" ? "There's no Bathyrra any more, only sea. The Bathyr live on the salt flats north of Rahdaria now, in low lead-roofed houses carried up the stair a sheet at a time, and they still tap on their doorposts to each other, and stop when you go by, and start again." : "Down the Sea-Stair, under a sky of fish, Bathyrra ticks and clicks like a clock shop. The tapping stops when you come in, the way it always does, and then somebody taps <i>friend</i>, and it starts again."; } },
+      { get name() { return S.sd && S.sd.ending === "hush" ? "The Speaker's stone table" : "The foot of the Drowned Light"; }, kind: "sanctuary", has: ["sanctum"],
+        get intro() { return S.sd && S.sd.ending === "hush" ? "Mag carried the Speaker's stone table up the stair by herself, and it stands in the middle of the salt-flat camp now, with a fire beside it. Anybody can sit there. Nobody whispers." : "At the foot of the Drowned Light the black glass is warm, and the Light taps, slowly, all night long, and somebody always taps back. You sleep there like a child."; } }
     ]
   };
   const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t)));
@@ -4759,12 +4849,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     corrach: "In the caravan yard before the road north, the same three sellswords are eating soup out of one pot. Odran has the biggest spoon.",
     noon: "At the top of the deep stair, in the last of Thrumhold's lamplight, the same three sellswords are waiting. Odran has brought extra lamp oil. A great deal of extra lamp oil.",
     undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\"",
-    rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\""
+    rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\"",
+    sounding: "On the jetty where the Bathyr boats tie up, the same three sellswords are sitting on a crate of lamp oil. \"A city at the bottom of the sea,\" Wenna says. \"With no water in it. Somebody's going to fall off something.\""
   };
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
     if (!S.tyra) return false;
+    if (S.sd && S.sd.on) return !!S.sd.tyra;
     if (S.rh && S.rh.on) return !!S.rh.tyra;
     if (S.um && S.um.on) return !!S.um.tyra;
     if (S.nk && S.nk.on) return !!S.nk.tyra;
@@ -5073,7 +5165,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     roots: { k: [], quake: 20 }, desert: { k: ["heat", "heat", "wind"], quake: 0 }, fen: { k: ["fog", "rain", "fog"], quake: 0 },
     mere: { k: ["rain", "fog", "storm"], quake: 0 }, lastwell: { k: ["fog", "rain", "wind"], quake: 0 }, glass: { k: ["heat", "storm", "wind"], quake: 0 },
     corrach: { k: ["snow", "wind", "snow"], quake: 25 }, noon: { k: [], quake: 15 }, undermoon: { k: [], quake: 30 },
-    rahdaria: { k: ["rain", "storm", "wind", "heat", "fog"], quake: 15 }
+    rahdaria: { k: ["rain", "storm", "wind", "heat", "fog"], quake: 15 },
+    bathyrra: { k: ["rain", "fog"], quake: 20 }
   };
   const wxNow = () => S.wx || null;
   const wxIs = (k) => !!(S.wx && S.wx.k === k);
@@ -5537,7 +5630,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     corrach: [["a shelf of hanging icicle-stone", "small"], ["a loose scree slope", "large"]],
     noon: [["a sun-baked colonnade", "large"], ["a cracked bell-arch", "small"]],
     undermoon: [["a hanging tooth of moonstone", "large"], ["a rusted lift-cage on one chain", "small"]],
-    rahdaria: [["a siege-scarred watchtower", "large"], ["a terrace wall of the hanging gardens", "large"]]
+    rahdaria: [["a siege-scarred watchtower", "large"], ["a terrace wall of the hanging gardens", "large"]],
+    bathyrra: [["a lead-roofed drying shed", "large"], ["an arch of whale ribs", "small"]]
   };
   function roadTerrain(reg) {
     const L = ROAD_TERRAIN[reg];
@@ -5574,7 +5668,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     corrach: { name: "Spore-pod", fill: "a ripe Hesk spore pod", cost: 12, dice: [2, 6], type: "poison", fx: "soft", fxTxt: "the spores rot its hide: −1 AC for the fight" },
     noon: { name: "Noonflash", fill: "a stoppered splinter of the Kept Noon", cost: 14, dice: [3, 8], type: "radiant", fx: "shade", fxTxt: "double against shades" },
     undermoon: { name: "Tidepull", fill: "a cracked kinstone", cost: 14, dice: [2, 8], type: "bludgeoning", fx: "blind", fxTxt: "it comes unmoored: −2 to hit for the fight" },
-    rahdaria: { name: "Pitch-pot", fill: "Bathyr pitch and lamp oil", cost: 12, dice: [3, 8], type: "fire", fx: "bleed", fxTxt: "the pitch keeps burning: 1d4 a round for 3 rounds" }
+    rahdaria: { name: "Pitch-pot", fill: "Bathyr pitch and lamp oil", cost: 12, dice: [3, 8], type: "fire", fx: "bleed", fxTxt: "the pitch keeps burning: 1d4 a round for 3 rounds" },
+    bathyrra: { name: "Plummet", fill: "a Bathyr sounding-lead", cost: 14, dice: [3, 6], type: "bludgeoning", fx: "still", fxTxt: "it lands like a dropped anchor: it loses its next turn" }
   };
   const rmines = () => S.rmines || (S.rmines = {});
   // Mines are strong for their price, so a fight takes at most MINE_CAP of them (rune mines and
@@ -6508,7 +6603,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
 
   // ---------- the hushfen ----------
-  const vaelricSpeaks = () => S.axe && S.ending !== "return" && !S.vRooted;
+  const vaelricSpeaks = () => S.axe && S.ending !== "return" && !S.vRooted && !(S.sd && S.sd.ending === "vael");
   const fullHeal = async (why) => { S.hp = S.maxHp; renderSheet(); await mech(why + " You're back to full: " + S.hp + " HP.", "loot"); };
 
   async function partBounty() {
@@ -9825,6 +9920,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
+      sdFilter(opts, st);
       if (opts.some(o => /^mun-/.test(o.key))) tip("mines");
       if (!F.company) tip("menu");
       FOE.menu = true;
@@ -9908,6 +10004,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
       }
       else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
+      else if (String(c).startsWith("sd-")) await sdFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
       if (st.quick > 0) {
@@ -9938,7 +10035,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade();
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade();
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
@@ -10063,10 +10160,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -10188,7 +10285,19 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       tactic: "Break its grip when it comes, and don't let a long fight feed it. Fire and gem-light both make it let go.",
       lore: "When the brine killed the Hanging Gardens, something in the dead vines didn't die. Rotwreaths are knots of grey, salted vine that drag themselves along the terraces at night, looking for anything still green, and strangle it.",
       intro: "A heap of dead grey vines at the side of the path shifts as you pass, and lifts itself up on a dozen of its own stems, like a hand getting up off a table.",
-      who: "the rotwreath", hitWhy: "A grey vine whips across you, hard as wire.", miss: "The vines lash the stones.", hitLine: "Grey stems split and rain salt." }
+      who: "the rotwreath", hitWhy: "A grey vine whips across you, hard as wire.", miss: "The vines lash the stones.", hitLine: "Grey stems split and rain salt." },
+    { id: "wallgar", name: "Wall-gar", region: "bathyrra", quirk: "lunge", hp: 22, ac: 14, atk: 5, n: 1, s: 8, type: "piercing", notice: 13,
+      ability: ["Lunge", "Every second round it slides back into the wall of standing water, where no blade can reach it, then comes out like a thrown spear: 2d6. Make it miss and it hangs half out of the water, and your next swing has advantage."],
+      tactic: "Don't waste the round it's in the water: Evade, catch your breath, or use something that doesn't need a blade. Then make it pay for the miss.",
+      lore: "Long armoured fish with jaws like shears that live in the standing walls of the sea round Bathyrra and take whatever walks too close. The Bathyr can't swim, so nobody has ever caught one. They press its picture on their stair-steps as a warning.",
+      intro: "The water-wall beside you bulges, and something looks out of it: a long armoured head, jaws like shears, an eye like a coin. It watches you a moment. Then it comes out of the sea at you, all of it, the length of a boat.",
+      who: "the wall-gar", hitWhy: "Its shear-jaws close on you.", miss: "Its jaws snap shut a hand from your face.", hitLine: "The blade skids off its armour and finds the soft place under the gill." },
+    { id: "quietings", name: "Quietings", region: "bathyrra", quirk: "mute", heads: 4, unit: "quieting|quietings", ac: 12, atk: 4, n: 1, s: 4, type: "psychic", notice: 14,
+      ability: ["Mute", "Two strike each round while two or more are left. From the second round, one may settle on you, soft as ash, and you forget one of your fight moves for the rest of the fight."],
+      tactic: "Kill them fast, before they've taken what you need. A friend at your side can remind you, and so can trying hard to remember.",
+      lore: "Pale soft things like moths the size of a hand that came down into Bathyrra with the Hushed and breed in their grey tents. They eat sound. Where a swarm has settled, the Bathyr say, a house goes quiet for a week, and nobody in it can remember what they were going to say.",
+      intro: "It's very quiet in the street. Too quiet: the tapping has stopped. Then you see why. The air is full of pale soft wings, drifting toward you like ash off a fire, and where they pass, the sound goes out of things.",
+      who: "the quietings", hitWhy: "Soft wings brush your face, and something goes out of you with your breath.", miss: "They flutter past, silent.", hitLine: "It goes out like a pinched candle." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -10341,6 +10450,23 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         else { await hurt(1, 6, "bludgeoning", "It squeezes."); FOE.hp = Math.min(FOE.max, FOE.hp + 2); renderFoe(); await mech("It drinks from you: +2 HP (" + FOE.hp + " / " + FOE.max + ").", "hurt"); }
       }
     },
+    lunge: {
+      before: async (F, st) => {
+        st.under = st.round % 2 === 0 && FOE.hp > 0;
+        if (!F.noAtk) F.noAtk = (s) => !!s.under;
+        if (st.under) await say("It slides back into the wall of water, out of reach of your blade, and hangs there, watching you, gathering itself.");
+      },
+      turn: async (F, st) => {
+        if (!st.under) return null;
+        await say("It comes out of the water at you like a thrown spear.");
+        const hit = await foeSwing(F, st, { n: 2, s: 6, label: F.who + " lunges" });
+        if (!hit && FOE.hp > 0) { st.adv = true; await mech("It overshoots and hangs half out of the water, thrashing: advantage on your next swing.", "loot"); }
+        st.evade = false; return "done";
+      }
+    },
+    mute: {
+      before: async (F, st) => { if (st.round > 1 && FOE.hp > 0 && S.sd && d(3) === 1) await sdForget("One of them settles on you, soft as ash.", st); }
+    },
     hatch: {
       before: async (F, st) => { if (st.round > 1 && F.hatch > 0 && FOE.hp > 0 && d(2) === 1) { F.hatch--; FOE.hp++; FOE.max = Math.max(FOE.max, FOE.hp); renderFoe(); await mech("Another husk splits and a fresh mite crawls out: " + FOE.hp + " left.", "hurt"); } }
     }
@@ -10352,7 +10478,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // fears that heal (they'd raise the dead). Duneskimmers and gibbet crows don't flee as Nightmares:
   // they're more afraid of what they're turning into than of you.
   const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
-    cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab" };
+    cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
+    wallgar: "kiteeel", quietings: "cutshade" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
   const beastById = (id) => BEASTS.find(b => b.id === id);
 
@@ -15654,7 +15781,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("\"The Drowned Light,\" he says. \"Our people are still down there. Most of them. Under it, waiting. And it's going out.\" He doesn't look at you. \"You put one Light to bed. I don't suppose you'd come down and look at ours.\"", "voice");
     if (vaelricSpeaks()) await voice("\"Well,\" Vaelric says softly. \"We did say the sea was our business now.\"");
     R.on = false; R.done = true; R.phase = "done"; renderSheet();
-    await endCard();
+    await go("Go down to the sea with him");
   }
 
 
@@ -17542,6 +17669,836 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     return carried;
   }
 
+  // ======================= The Sounding: Bathyrra, under the western sea =======================
+  // Parts LXIII–LXIX (S.part 62–68). The Drowned Light holds the sea up over Bathyrra like a sky, and
+  // it's going out. The Hushed, the last of the Whisperers' order, have come down to hush it for good.
+  // State is S.sd (sd()):
+  //   sky     the Sea-Sky, 0–10, the chapter's clock. Errands, wrong answers, slipping past the Hushed
+  //           and the evacuation all spend it. At 3 or less you fight knee-deep (Evade −15%); at 0 the
+  //           sea is down round you (Evade −25%), and you get one try at the Sounding.
+  //   words   Sounding words learned (SD_WORDS keys), the Bathyr tap language. A short tap weighs 1 and
+  //           a long press 2; doors in the Hall of Lead ask for a phrase of a given weight.
+  //   forgot  fight moves the Hushed have whispered out of you (SD_FORGET keys). A Deafstone, a friend
+  //           in a fight, or sounding "remember" at a rest brings one back.
+  //   trust   how far the Bathyr trust you (0–6).  truths  Two Truths pairs solved clean.  qs  wrong answers
+  //   doubt   young Vaelric doubted at the Night of Senn (opens "Vaelric sings it"); name: he carved Wenlo's
+  //   hushed  { id: "argued" | "slipped" | "fought" } for the five Hushed at the Light's foot
+  //   saved   evacuated groups.  sev  "yield" | "beaten".  ending  "sound" | "hush" | "vael".
+  const sd = () => S.sd;
+  let sdLastPhrase = [];
+  const sdOn = () => !!(S.sd && S.sd.on);
+  const SD_SKY = 10;
+  const SD_WORDS = {
+    friend: ["friend", "..-"], open: ["open", "-."], deep: ["deep", "--"], light: ["light", ".-."],
+    home: ["home", "-.."], listen: ["listen", "...-"], remember: ["remember", ".--."], not: ["not", ".."]
+  };
+  const sdWeight = (pat) => [...pat].reduce((a, c) => a + (c === "-" ? 2 : c === "." ? 1 : 0), 0);
+  const sdKnows = (w) => !!(S.sd && S.sd.words.includes(w));
+  const sdPhrase = (ws) => ws.map(w => SD_WORDS[w][1]).join("|");
+  const SD_FORGET = { gems: "how to wake the gems", book: "the words in your books", shard: "how to raise the Sun-Shard", mirror: "how to draw Mirrorwake",
+    evade: "how to get out of the way", breath: "how to catch your breath", mend: "how to bind a wound", band: "how to tie a bandage", pavise: "how to plant the pavise", quick: "how the Quickening Shawl goes" };
+  function initSounding() {
+    const R = S.rh || {};
+    S.gear = S.gear || []; S.hh = S.hh || { hear: 0, hush: 0 };
+    S.sd = { on: true, sky: SD_SKY, words: [], forgot: [], trust: (R.tamsk === "kind" ? 1 : 0) + (R.early ? 1 : 0), truths: [], qs: 0, falls: 0,
+      doubt: false, name: false, hushed: {}, saved: [], sev: "", ending: "", errands: [], tyra: !!(S.tyra && (R.tyra || S.tyra.love)), done: false, skyEnd: 0 };
+    renderSheet();
+  }
+  const sdEvade = () => !sdOn() ? 0 : sd().sky <= 0 ? -25 : sd().sky <= 3 ? -15 : 0;
+  function renderSd() {
+    const box = $("sdBox");
+    if (!box) return;
+    box.hidden = !sdOn();
+    if (!sdOn()) return;
+    const D = sd();
+    $("sdSky").textContent = D.sky + " / " + SD_SKY;
+    $("sdSkyBar").style.width = D.sky * 10 + "%";
+    $("sdSkyNote").textContent = D.sky <= 0 ? "The sea is down. You're standing in it." : D.sky <= 3 ? "Low sky: you fight knee-deep (Evade −15%)." : D.sky <= 6 ? "The sky is sagging. Fish swim in it, close enough to touch." : "The Sea-Sky stands high over Bathyrra.";
+    $("sdWords").textContent = D.words.length + " of " + Object.keys(SD_WORDS).length;
+    $("sdTrust").textContent = ["Mistrusted", "Watched", "Tolerated", "Listened to", "Trusted", "Kin", "Kin"][Math.min(6, D.trust)];
+    $("sdForgot").textContent = D.forgot.length ? D.forgot.length + " forgotten" : "nothing";
+  }
+  function sdItems(items) {
+    if (!S.sd) return;
+    const D = sd();
+    if (D.on && D.words.length) items.push(["sdwords", "clue", "Sounding: " + D.words.length + " word" + (D.words.length > 1 ? "s" : ""),
+      "The Bathyr tap language. ● is a tap and ▬ a press (it weighs two); words are split by a rest. " + D.words.map(w => "<b>" + w + "</b> " + sdGlyph(SD_WORDS[w][1])).join(" · ")]);
+    if (D.on && D.forgot.length) items.push(["sdforgot", "shadow", "Forgotten", "The Hushed have whispered it out of you: " + D.forgot.map(k => SD_FORGET[k]).join(", ") + ". A Deafstone, a friend in a fight, or sounding <b>remember</b> at a rest brings it back."]);
+    if (D.ending === "sound") items.push(["sdnote", "token", "The Bathyr's Note", "The Speaker pressed it into lead for you: the first of the five notes a Listener is made from. The Bathyr have agreed to you."]);
+    if (D.ending === "vael") items.push(["sdquiet", "axe", "A quiet axe", "Vaelric sang the Drowned Light awake and spent himself doing it. The axe still holds you up at 1 HP. It doesn't speak."]);
+  }
+  Object.assign(GEAR, {
+    tapstone: { name: "The Speaker's Tapping-Stone", icon: "stone", desc: "A knuckle of black basalt worn smooth on one side. The Bathyr tap with it on any stone to be heard a long way off. One more look at a phrase when you're learning it." },
+    hushcord: { name: "Severine's Hush-Cord", icon: "tether", desc: "A grey cord knotted with nothing at all. Once a fight, whisper along it at a foe and it forgets what it was doing: it loses its next turn." }
+  });
+
+  // The tap glyphs: ● a tap, ▬ a press, / a rest between words.
+  function sdGlyph(pat) { return '<span class="sd-g">' + pat.split("").map(c => c === "|" ? '<i>/</i>' : c === "-" ? "<b>▬</b>" : "<b>●</b>").join("") + "</span>"; }
+  // The Sea-Sky comes down.
+  async function skyFall(n, why) {
+    const D = sd(); if (!D || !n) return;
+    const was = D.sky;
+    D.sky = Math.max(0, Math.min(SD_SKY, D.sky - n)); renderSheet();
+    if (D.sky === was) return;
+    await mech((why ? why + " " : "") + (n > 0 ? "The Sea-Sky comes down to " : "The Sea-Sky lifts to ") + D.sky + " of " + SD_SKY + "." + (n > 0 && was > 3 && D.sky <= 3 ? " It's low enough now that the bowl is filling: knee-deep, cold, and rising (Evade −15%)." : "") + (n > 0 && D.sky === 0 && was > 0 ? " The sea is down. You're standing in it to the waist (Evade −25%)." : ""), n > 0 ? "hurt" : "loot");
+  }
+  async function sdTrust(n, why) { const D = sd(); D.trust = Math.max(0, Math.min(6, D.trust + n)); renderSheet(); await mech(why + " The Bathyr's trust in you: <b>" + $("sdTrust").textContent + "</b>.", n > 0 ? "loot" : "hurt"); }
+  async function sdLearn(w, how) {
+    const D = sd(); if (D.words.includes(w)) return;
+    D.words.push(w); renderSheet();
+    await mech((how ? how + " " : "") + "You know the Sounding for <b>" + w + "</b>: " + sdGlyph(SD_WORDS[w][1]) + " (weight " + sdWeight(SD_WORDS[w][1]) + "). It's in your Bag.", "loot");
+    if (D.words.length === Object.keys(SD_WORDS).length) grant("sdwords");
+  }
+  async function sdForget(why, st) {
+    const D = sd();
+    const can = Object.keys(SD_FORGET).filter(k => !D.forgot.includes(k) && !(st && st.forgot && st.forgot.includes(k)));
+    if (!can.length) return;
+    const k = can[d(can.length) - 1];
+    if (st) { st.forgot = st.forgot || []; st.forgot.push(k); } else { D.forgot.push(k); D.ever = true; }
+    renderSheet(); tip("forget");
+    await mech((why ? why + " " : "") + "You've forgotten " + SD_FORGET[k] + (st ? " for the rest of this fight." : ". It's gone, as if you never knew it, until something reminds you."), "hurt");
+  }
+  async function sdRemember(why) {
+    const D = sd(); if (!D || !D.forgot.length) return false;
+    const k = D.forgot.shift(); renderSheet();
+    await mech((why ? why + " " : "") + "You remember " + SD_FORGET[k] + ". It comes back all at once, like a name on the tip of your tongue.", "loot");
+    return true;
+  }
+  // In a fight: forgotten moves drop out of the options, and there's a way to try to get them back.
+  function sdFilter(opts, st) {
+    const gone = [...new Set((sdOn() ? sd().forgot : []).concat(st.forgot || []))];
+    if (gone.length) {
+      for (let i = opts.length - 1; i >= 0; i--) if (gone.includes(opts[i].key)) opts.splice(i, 1);
+      opts.push({ key: "sd-recall", label: "Try to remember", tag: "Wisdom DC 13 · costs your turn · something's missing", plain: true });
+      const who = company()[0];
+      if (who && !st.used.remind) opts.push({ key: "sd-remind", label: coName(who) + " reminds you", tag: "no roll · once a fight · costs your turn", plain: true });
+    }
+    if (hasGear("hushcord") && !st.used.hush) opts.push({ key: "sd-hush", label: "Whisper along the Hush-Cord", tag: "it loses its next turn · once a fight", plain: true });
+  }
+  async function sdFightDo(c, F, st) {
+    const back = async () => {
+      if (st.forgot && st.forgot.length) { const k = st.forgot.shift(); await mech("You remember " + SD_FORGET[k] + ".", "loot"); renderSheet(); return; }
+      await sdRemember();
+    };
+    if (c === "sd-recall") {
+      const r = await check({ label: "Wisdom check (remembering)", mod: 2 + (S.sd && sd().words.includes("remember") ? 2 : 0), dc: 13, cta: "Remember" });
+      if (r.ok) await back(); else await say("It's there, just out of reach, like a word in a dream.");
+    } else if (c === "sd-remind") {
+      st.used.remind = true;
+      const who = company()[0];
+      await say(who === "burr" ? "Burr shoves his nose hard into your hand, the way he does when you've forgotten his supper, and all at once you remember." : who === "tyra" ? "\"You do this,\" Tyra says, and shows you with her hands, quickly, impatient. \"You always do this. Come on.\"" : coName(who) + " shouts it at you across the fight, and it comes back.");
+      await back();
+    } else if (c === "sd-hush") {
+      st.used.hush = true; st.stilled = true;
+      S.hh.hush++;
+      await say("You run the grey cord through your fingers and whisper along it, the way Severine did, and " + F.who + " stops, and blinks, and looks round as if it's walked into a room and can't think why.");
+    }
+  }
+
+  // ---------- Sounding: the tap language ----------
+  // A phrase is shown (or named), then hidden; you tap it back on the stone. Feedback says how many
+  // beats you had right from the start. show: how many times you can see it again; words: show the words, not the taps.
+  function tapGame({ title, hint, pat, tries = 3, show = 1, words = null }) {
+    return new Promise(resolve => {
+      if (hasGear("tapstone") && !words) show++;
+      const P = puzzleBox(title, hint);
+      const view = el("div", "sd-taps"), mine = el("div", "sd-taps sd-mine");
+      P.body.append(view, mine);
+      const bS = pbtn("Tap ●"), bL = pbtn("Press ▬"), bR = pbtn("Rest /"), bX = pbtn("Wipe it off"), go = pbtn("Sound it", "primary"), again = pbtn("Feel it again"), give = pbtn("Give it up");
+      P.ctrl.append(go, bS, bL, bR, bX);
+      if (!words) P.ctrl.append(again);
+      P.ctrl.append(give);
+      let cur = "", used = 0, done = false, left = show - 1;
+      const keys = [bS, bL, bR, bX, go];
+      const lock = (v) => { keys.forEach(b => b.disabled = v || done); again.disabled = v || done || left < 0; give.disabled = v || done; };
+      function hideIt() { if (done) return; view.innerHTML = '<span class="sd-gone">' + "· ".repeat(Math.max(3, pat.split("|").length * 3)) + "</span> gone back into the stone"; lock(false); draw(); }
+      function reveal() {
+        view.innerHTML = sdGlyph(pat); SND.tap && SND.tap(pat); lock(true);
+        setTimeout(hideIt, Math.min(4200, 1300 + 260 * pat.length));
+      }
+      function draw() {
+        mine.innerHTML = cur ? sdGlyph(cur) : '<span class="sd-gone">your hand on the stone</span>';
+        P.status.textContent = used + " of " + tries + " tries used";
+      }
+      const put = (ch) => { if (done) return; if (ch === "|" && (!cur || cur.endsWith("|"))) return; cur += ch; if (ch !== "|") SND.tap && SND.tap(ch); draw(); };
+      bS.onclick = () => put("."); bL.onclick = () => put("-"); bR.onclick = () => put("|");
+      bX.onclick = () => { if (!done) { cur = ""; draw(); } };
+      again.onclick = () => { if (done || left < 0) return; left--; reveal(); };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      go.onclick = () => {
+        if (done || !cur) return;
+        used++;
+        const mineP = cur.replace(/\|$/, "");
+        if (mineP === pat) { done = true; P.end(); view.innerHTML = sdGlyph(pat); P.status.textContent = "The stone hums under your hand: it heard you."; SND.door && SND.door(3, 0); setTimeout(() => resolve({ ok: true, used }), 700); return; }
+        let k = 0; while (k < pat.length && mineP[k] === pat[k]) k++;
+        const beats = pat.replace(/\|/g, "").length, right = pat.slice(0, k).replace(/\|/g, "").length;
+        if (used >= tries) { done = true; P.end(); view.innerHTML = sdGlyph(pat); P.status.textContent = "It was this. " + right + " of " + beats + " beats were right before you went wrong."; setTimeout(() => resolve({ ok: false, used }), 1000); return; }
+        P.status.textContent = "The stone stays dead. " + right + " of " + beats + " beats right before you went wrong. " + used + " of " + tries + " tries used.";
+        cur = "";
+        mine.innerHTML = '<span class="sd-gone">your hand on the stone</span>';
+      };
+      if (words) { view.innerHTML = '<span class="sd-words">' + words + "</span>"; lock(false); draw(); }
+      else { draw(); reveal(); }
+    });
+  }
+  // A Sounding lesson: learn the word if you can tap it back.
+  async function sdLesson(w, who, { tries = 3 } = {}) {
+    if (sdKnows(w)) return true;
+    tip("sounding");
+    const r = await tapGame({ title: "Sounding: " + w, hint: who + " taps <b>" + w + "</b> on the stone, slowly, twice, and puts your hand where hers was. Tap it back. ● is a quick tap and ▬ a long press; you'll only feel it for a moment.", pat: SD_WORDS[w][1], tries });
+    if (r.ok) { await sdLearn(w); return true; }
+    if (r.forced) { await say("You shake your head. Your hand doesn't know it yet."); return false; }
+    const c = await choose([{ key: "again", label: "Ask to be shown again", tag: "the Sea-Sky comes down 1" }, { key: "no", label: "Let it go", plain: true }]);
+    if (c === "no") return false;
+    await skyFall(1, "It takes a while.");
+    const r2 = await tapGame({ title: "Sounding: " + w + " (again)", hint: "Slower this time. Feel it, then tap it back.", pat: SD_WORDS[w][1], tries: 3, show: 2 });
+    if (r2.ok) { await sdLearn(w); return true; }
+    await say("It won't stay in your hand. Not today.");
+    return false;
+  }
+  // A lead door: compose a phrase from the words you know. Rules: need (words it must hold), weight
+  // (the sum of its taps), first/last, never (a word it mustn't hold), max words. Any phrase that keeps
+  // every rule opens it. Returns { ok, forced }.
+  function doorPuzzle({ title, hint, need = [], weight, first, last, never = [], max = 4, tries = 3 }) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title, hint);
+      const line = el("div", "sd-taps sd-mine"), pal = el("div", "sd-pal");
+      P.body.append(line, pal);
+      const known = Object.keys(SD_WORDS).filter(sdKnows);
+      const words = [];
+      let used = 0, done = false;
+      known.forEach(w => { const b = pbtn(w + ' <small>' + sdGlyph(SD_WORDS[w][1]) + "</small>"); b.onclick = () => { if (!done && words.length < max) { words.push(w); draw(); } }; pal.appendChild(b); });
+      if (!known.length) pal.appendChild(el("span", "sd-gone", "You don't know any Sounding yet."));
+      const go = pbtn("Sound it on the door", "primary"), back = pbtn("Take back the last word"), give = pbtn("Give it up");
+      P.ctrl.append(go, back, give);
+      function draw() { line.innerHTML = words.length ? words.map(w => "<b>" + w + "</b>").join(" / ") + " " + sdGlyph(sdPhrase(words)) : '<span class="sd-gone">your phrase</span>'; P.status.textContent = used + " of " + tries + " tries used"; }
+      back.onclick = () => { if (!done) { words.pop(); draw(); } };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      go.onclick = () => {
+        if (done || !words.length) return;
+        used++;
+        const wt = sdWeight(sdPhrase(words));
+        const why = need.filter(w => !words.includes(w)).length ? "The door wants a word you didn't give it." :
+          never.some(w => words.includes(w)) ? "The door shudders: there's a word in it the door won't hear." :
+          first && words[0] !== first ? "Right words, maybe, but it starts wrong." :
+          last && words[words.length - 1] !== last ? "It ends wrong." :
+          new Set(words).size < words.length ? "The Bathyr never say a word twice to a door." :
+          wt < weight ? "Too light: it doesn't move." : wt > weight ? "Too heavy: it grinds, and sticks." : "";
+        SND.tap && SND.tap(sdPhrase(words));
+        if (!why) { done = true; P.end(); sdLastPhrase = words.slice(); P.status.textContent = "The lead hums, deep in itself, and the door goes back into the wall."; setTimeout(() => resolve({ ok: true, used }), 800); return; }
+        if (used >= tries) { done = true; P.end(); P.status.textContent = why + " The door stays shut."; setTimeout(() => resolve({ ok: false, used }), 900); return; }
+        P.status.textContent = why + " " + used + " of " + tries + " tries used.";
+      };
+      draw();
+    });
+  }
+
+  // ---------- the Sea-Stair: stepping down where the stone is sound ----------
+  // A flight of 6 landings, 4 steps wide. Some steps are hollow. Each landing's count of hollow steps
+  // is pressed into its edge, and each column's count into the top. Tap a step to hear it (you have
+  // a few taps), or step onto the next landing beside where you stand. A hollow step drops you back.
+  function stairPuzzle({ taps = 5 } = {}) {
+    return new Promise(resolve => {
+      const R = 6, C = 4;
+      let hol;
+      for (let t = 0; t < 500; t++) {
+        hol = Array.from({ length: R }, () => { const n = d(3) === 1 ? 2 : 1, s = new Set(); while (s.size < n) s.add(d(C) - 1); return [...Array(C)].map((_, c) => s.has(c)); });
+        // a safe way down must exist
+        let reach = new Set([0, 1, 2, 3].filter(c => !hol[0][c]));
+        for (let r = 1; r < R && reach.size; r++) { const nx = new Set(); reach.forEach(c => [c - 1, c, c + 1].forEach(x => { if (x >= 0 && x < C && !hol[r][x]) nx.add(x); })); reach = nx; }
+        if (reach.size) break;
+      }
+      const P = puzzleBox("The Sea-Stair", "Six landings down the wall of standing water, four steps wide. Some steps are hollow: the sea has eaten them from behind. The Bathyr press the count of hollow steps into each landing's edge (right), and each column's count into the top. You can <b>tap</b> " + taps + " steps to hear them first (a solid step rings dull, a hollow one rings back). Then step down, one landing at a time, onto a step beside the one you're on.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + (C + 1) + ", 48px)";
+      const colN = [...Array(C)].map((_, c) => hol.filter(row => row[c]).length);
+      colN.forEach(n => grid.appendChild(el("span", "sd-num", "↓" + n)));
+      grid.appendChild(el("span", "sd-num", ""));
+      const known = hol.map(row => row.map(() => 0)); // 0 unknown, 1 solid, 2 hollow
+      const btns = [];
+      for (let r = 0; r < R; r++) {
+        btns[r] = [];
+        for (let c = 0; c < C; c++) { const b = pbtn(""); b.onclick = () => press(r, c); grid.appendChild(b); btns[r][c] = b; }
+        grid.appendChild(el("span", "sd-num", hol[r].filter(Boolean).length + "←"));
+      }
+      P.body.appendChild(grid);
+      let mode = "step", row = -1, col = -1, left = taps, falls = 0, done = false;
+      const tapB = pbtn("Tap to listen"), stepB = pbtn("Step down"), give = pbtn("Climb down the wall-rope instead");
+      P.ctrl.append(stepB, tapB, give);
+      function draw() {
+        for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+          const b = btns[r][c], k = known[r][c];
+          b.textContent = r === row && c === col ? "◆" : k === 2 ? "✕" : k === 1 ? "○" : "";
+          b.classList.toggle("here", r === row && c === col);
+          b.classList.toggle("rot", k === 2);
+          b.setAttribute("aria-label", "Landing " + (r + 1) + ", step " + (c + 1) + (k === 2 ? ", hollow" : k === 1 ? ", solid" : ""));
+        }
+        tapB.classList.toggle("on", mode === "tap"); stepB.classList.toggle("on", mode === "step");
+        tapB.disabled = done || left <= 0;
+        P.status.textContent = (row < 0 ? "You're at the top." : row === R - 1 ? "" : "You're on landing " + (row + 1) + ".") + " Taps left: " + left + ". Falls: " + falls + ".";
+      }
+      function press(r, c) {
+        if (done) return;
+        if (mode === "tap") {
+          if (left <= 0 || known[r][c]) return;
+          left--; known[r][c] = hol[r][c] ? 2 : 1; SND.tap && SND.tap(hol[r][c] ? "." : "-");
+          if (left <= 0) mode = "step";
+          draw(); return;
+        }
+        if (r !== row + 1 || (row >= 0 && Math.abs(c - col) > 1)) { P.status.textContent = "You can only step down onto the next landing, onto a step beside where you stand."; return; }
+        if (hol[r][c]) {
+          known[r][c] = 2; falls++; draw();
+          P.status.textContent = "The step gives under your boot and drops into the sea behind it. You catch the edge and haul back up. Falls: " + falls + ".";
+          return;
+        }
+        known[r][c] = 1; row = r; col = c; draw();
+        if (row === R - 1) { done = true; P.end(); P.status.textContent = "You step off the last landing onto the floor of the sea."; setTimeout(() => resolve({ ok: true, falls }), 800); }
+      }
+      tapB.onclick = () => { if (!done && left > 0) { mode = "tap"; draw(); } };
+      stepB.onclick = () => { if (!done) { mode = "step"; draw(); } };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true, falls }); };
+      draw();
+    });
+  }
+
+  // ---------- the hush: young Vaelric's breath, held in the band ----------
+  // Turn-based: the note drifts; breathe in or out to keep it inside the band. Eight breaths.
+  function hushPuzzle({ breaths = 8 } = {}) {
+    return new Promise(resolve => {
+      const P = puzzleBox("The hush", "Twelve wardens in a ring, whispering one note. Yours has to sit inside the others, not above them, not below. Each breath the night pulls your note one way or the other. Breathe in to lift it, out to lower it, or hold. Keep it in the band.");
+      const bar = el("div", "pgrid tones"); bar.style.gridTemplateColumns = "repeat(11, 26px)";
+      const cells = [...Array(11)].map((_, i) => { const s = el("span", "sd-cell" + (i >= 4 && i <= 6 ? " band" : ""), ""); bar.appendChild(s); return s; });
+      const hist = el("div", "lockhist");
+      P.body.append(bar, hist);
+      const up = pbtn("Breathe in ▲"), hold = pbtn("Hold", "primary"), down = pbtn("Breathe out ▼"), give = pbtn("Stop whispering");
+      P.ctrl.append(hold, up, down, give);
+      let pos = 5, n = 0, inBand = 0, done = false, drift = d(2) === 1 ? 1 : -1;
+      function draw() { cells.forEach((s, i) => { s.textContent = i === pos ? "◆" : ""; s.classList.toggle("on", i === pos); }); P.status.textContent = "Breath " + Math.min(n + 1, breaths) + " of " + breaths + " · in the band " + inBand + " times. The night is pulling " + (drift > 0 ? "up" : "down") + "."; }
+      function breathe(m) {
+        if (done) return;
+        pos = Math.max(0, Math.min(10, pos + m + drift * (n >= 5 ? 2 : 1)));
+        n++;
+        const ok = pos >= 4 && pos <= 6; if (ok) inBand++;
+        hist.appendChild(el("div", "", "Breath " + n + ": " + (ok ? "in the band" : pos > 6 ? "too high" : "too low")));
+        drift = d(3) === 1 ? -drift : drift;
+        if (n >= breaths) { done = true; P.end(); draw(); setTimeout(() => resolve({ held: inBand }), 600); return; }
+        draw();
+      }
+      up.onclick = () => breathe(1); down.onclick = () => breathe(-1); hold.onclick = () => breathe(0);
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ held: inBand, stopped: true }); };
+      draw();
+    });
+  }
+
+  const HUSHED = (o) => Object.assign({ ac: 13, atk: 5, n: 1, s: 6, type: "psychic", bloom: 0, hesk: false, who: "the Hushed", whoShort: "Hushed",
+    hitWhy: "A grey hand brushes your temple, and something goes out of you with the warmth.", miss: "The whisper goes past your ear like a moth.",
+    hitLine: "A Hushed folds down onto the stones and lies there, looking puzzled." }, o);
+  // Hushed blows can take a fight move out of your head for good (until you're reminded).
+  const withForget = (F, chance = 3) => Object.assign(F, {
+    turn: async (st) => {
+      const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
+      for (let i = 0; i < swings; i++) { if (await foeSwing(F, st) && d(chance) === 1) await sdForget("It whispers as it strikes.", null); }
+      st.evade = false; return "done";
+    }
+  });
+
+  // ---------- Part LXIII: the Sea-Stairs ----------
+  async function partSeaStairs() {
+    heading("LXIII", "The Sea-Stairs");
+    light("lake");
+    if (!S.sd) initSounding();
+    const D = sd(), R = S.rh || {};
+    await say("You go down to the sea on the first calm morning: you, the Speaker for the Deep" + (R.tamsk === "kind" ? ", Tamsk, who asked to come home" : "") + (D.tyra ? ", and Tyra, who says she isn't coming and is at the jetty before you" : "") + ". A Bathyr boat takes you out past the black fleet, two miles, to where the water goes dark blue and then darker, and the light under it flickers like a lamp in a draught.");
+    await say("The Speaker stands up in the bow and lifts his stick and brings it down three times on a lead plate fixed to the gunwale. You feel it in your teeth more than you hear it. Then, out of the water ahead of you, a stone stair rises: steps cut into the top of a wall, the wall coming up out of the sea like the back of something waking, dripping, until the boat is bumping against a landing.");
+    await say("You climb out onto it and look down the far side, and your stomach turns over.");
+    await say("There's no water on the far side. The sea stands back from the wall like a curtain held open, a sheer face of green-black water as high as a cliff, and the stair runs down the inside of it into the dark, and down there, a long way down, there's a floor. And a city. And in the middle of the city, a light.");
+    await say("A fish as long as a cart goes by on the other side of the water-wall, an arm's length from your face, and turns its round eye on you, and goes on.");
+    if (vaelricSpeaks()) await voice("\"I've seen a great many things,\" Vaelric says. \"I have never seen that.\"");
+    await say("\"Bathyrra,\" the Speaker says. \"Our sky is the sea. The Light holds it up. Every year it holds it up a little less.\" He points with his stick at the water over the city, and you see it: the green-black ceiling, hanging there over the bowl like a held breath, sagging in the middle the way old canvas sags.", "voice");
+    await mech("<b>The Sea-Sky</b> is " + D.sky + " of " + SD_SKY + " and it's this chapter's clock. Errands, wrong answers and slow work bring it down. At 3 or less you'll be fighting knee-deep (Evade −15%); at 0, the sea is down round you. Watch it on your sheet.");
+    tip("sky");
+    await say("\"The stair-wardens will want to know you're a friend,\" the Speaker says. \"They won't take my word. They'll want yours. In stone.\" He crouches, slow and heavy, and puts your palm flat on the landing beside his.", "voice");
+    await sdLesson("friend", "The Speaker");
+    await say("The stair goes down in landings. Some of the steps are dark and wet at the back where the sea has got into them, and there's no telling which from above.");
+    const r = await stairPuzzle({ taps: 5 + (hasMark("tells") ? 1 : 0) });
+    D.falls = r.falls || 0;
+    if (r.forced) {
+      const a = await check({ label: "Athletics check (down the wall-rope)", mod: 3, dc: 13, cta: "Climb" });
+      if (!a.ok) await hurt(2, 6, "bludgeoning", "The rope's slick with sea, and you come down the last of it a great deal faster than you meant to.");
+      else await say("You go down the rope hand under hand with the water-wall breathing cold on your back, and land on the sea floor in a crouch.");
+      D.falls = 9;
+    } else if (r.falls) {
+      await hurt(r.falls, 4, "bludgeoning", "Every step that gave under you left a bruise to remember it by.");
+    } else { await say("You come down the whole stair without putting a foot wrong, listening to the stone. At the bottom the Speaker looks at you for a long moment, and says nothing, and taps something on his own stick that you don't know yet."); grant("sdstairs"); }
+    light("dark");
+    await say("At the foot of the stair, on the floor of the sea, it's very quiet. The sand is dry. There are shells in it, and the bones of a whale, picked clean and white, arching over the path like the ribs of a hall. The Sea-Sky hangs over everything, so far up it's black, and the only light is the Light.");
+    await say("Two Bathyr stand at the foot of the stair with iron bars across their knees: stair-wardens, broad as doors, their grey skin marked with pale lines where the weight of their own bodies has creased it. They stand up when they see you. They've seen you before. They were at the siege.");
+    await say("One of them puts his bar down on the bottom step and taps it, hard, three ways, and waits.");
+    const k = sdKnows("friend")
+      ? await tapGame({ title: "The stair-wardens", hint: "The stair-warden waits. Answer him: tap <b>friend</b> on the step.", pat: SD_WORDS.friend[1], tries: 2, words: "Tap <b>friend</b>." })
+      : { ok: false };
+    if (k.ok) {
+      await say("He looks at the step a long time after you take your hand away. Then he lays his bar down flat across the stair, which you'll learn means <i>the way is open</i>, and steps back.");
+      await sdTrust(1, "You answered a stair-warden in his own tongue.");
+    } else {
+      await say(sdKnows("friend") ? "You get it wrong. The stair-warden's lip lifts off a row of flat grey teeth." : "You can't answer him. You don't know how.");
+      await say("\"They're with me,\" the Speaker says, and taps it for you, and the stair-wardens walk behind you all the way into the city with their bars on their shoulders, which isn't an honour guard.", "voice");
+    }
+    if (R.tamsk === "kind") await say("Tamsk drops onto his knees in the sand at the foot of the stair, puts both his hands flat on it, and stays there for a long time. When he gets up his face is wet. \"I'm heavy again,\" he says. \"I didn't know how much I missed it.\"");
+    await go("Walk into Bathyrra");
+  }
+
+  // ---------- Part LXIV: Bathyrra ----------
+  const SD_ERRANDS = {
+    press: { label: "Help at the lead-pressers' yard", word: "open", tag: "Strength DC 13 · learn a word" },
+    drill: { label: "Spar with the stair-wardens", word: "deep", tag: "a sparring bout · learn a word" },
+    cradle: { label: "Go to the cradle-house", word: "remember", tag: "Insight DC 13 · learn a word" },
+    drip: { label: "Walk the drip-lines with the catchers", word: "not", tag: "Perception DC 13 · learn a word" }
+  };
+  async function sdErrand(k) {
+    const D = sd();
+    D.errands.push(k);
+    if (k === "press") {
+      await say("The lead-pressers work in a yard roofed with lead, under a press as tall as a house: a beam of black oak with a stone on the end of it the size of a cart. You lay a sheet of soft lead on the bed, and a clerk sets the dents in it with a little hammer, and then everybody hauls on the rope together and the stone comes down and fixes it for a thousand years.");
+      await say("They're short a back today. Somebody's mother is sick. They look at you, and at your arms, and laugh in the slow Bathyr way, which is all in the shoulders.");
+      const r = await check({ label: "Strength check (on the press-rope)", mod: 3, dc: 13, cta: "Haul" });
+      if (r.ok) { await say("You haul with them, and the stone comes up, and comes down, and the whole yard feels it through the floor. The forewoman, Hessa, slaps you on the back and nearly knocks you flat."); await sdTrust(1, "You pulled your weight, in a city that cares about weight."); }
+      else await say("You haul with them until your arms give out, and they don't hold it against you. They just shift the rope along, and pull your share too.");
+      await sdLesson("open", "Hessa");
+    } else if (k === "drill") {
+      await say("The stair-wardens drill in a ring of whale ribs on the edge of the city: slow, terrible, two Bathyr leaning on each other with their shoulders like bulls until one goes over. One of them, Ulm, a young one with a scar across his scalp, has been staring at you since the stair. He was at the sea wall. He wants a bout.");
+      await hkFight(BATHYR({ name: "Ulm, a stair-warden", hp: 22, ac: 13, atk: 4, s: 6, hitWhy: "Ulm leans on you like a falling wall.", miss: "You slip out from under him, and he staggers.", hitLine: "Ulm grunts, and gives a foot of ground, which a Bathyr never does." }));
+      await say("When it's over he sits in the sand, breathing hard, and taps something on your boot with one finger. \"Deep,\" the Speaker translates. \"He says you've got a deep stance. It's the best thing they say.\"");
+      await sdTrust(1, "You stood up to a stair-warden.");
+      await sdLesson("deep", "Ulm");
+    } else if (k === "cradle") {
+      await say("The cradle-house is the oldest building in Bathyrra: lead walls a foot thick, and inside, forty Bathyr children asleep in stone cradles, because a Bathyr child can't sleep on anything soft. They're frightened. They can feel the sky. Every time a drop of it falls on the roof they wake up and tap for their mothers.");
+      await say("The keeper, an old woman called Grisk with no teeth, is going round them one by one, tapping each child's name on its cradle so it knows it's still there. She's slow. There are a lot of them.");
+      const r = await check({ label: "Insight check (which ones need her first?)", mod: 2, dc: 13, cta: "Watch them" });
+      if (r.ok) { await say("You watch them, and learn quickly which ones are only stirring and which ones are about to wake the room, and you steer her to those, and in an hour the cradle-house is asleep."); await sdTrust(1, "Grisk taps it on every doorpost on her way home: <i>{he}'s good with children.</i>"); }
+      else await say("You try to help, and wake two of them, and then the whole room. Grisk doesn't seem to mind. She starts again at the first cradle.");
+      await say("There's one child who doesn't wake when the sky drips. A boy, older than the rest. He lies with his eyes open. \"He was a Sounder's apprentice,\" Grisk taps, and the Speaker tells you. \"He forgot. All of it, the taps, his name, his mother. A quiet woman in grey sat with him for a night, and in the morning he'd forgotten.\"");
+      await sdLesson("remember", "Grisk");
+    } else if (k === "drip") {
+      await say("The drip-catchers walk the city in pairs with lead buckets on poles, under the places where the Sea-Sky is sagging, and catch what falls. It's salt and cold and there's more of it every day. They have a map of the drips pressed in lead, and they mark each new one with a dent.");
+      await say("The map is wrong. You can see it is: there's a line of new drips running straight across the city toward the Light, like footprints, and they aren't on it.");
+      const r = await check({ label: "Perception check (the line of drips)", mod: 2, dc: 13, cta: "Look up" });
+      if (r.ok) { await say("You follow the line with your eyes, up into the dark, and you see it: a thin grey thread hanging down out of the Sea-Sky, and another, and another, all running to the Light. Somebody has been <i>sewing</i> at the sky. The catchers stare at it and go very still."); await sdTrust(1, "You saw what the drip-catchers couldn't."); D.threads = true; }
+      else await say("You follow the drips across the city and lose them in the dark. The catchers mark the ones you found. They thank you, in the slow Bathyr way.");
+      await sdLesson("not", "The forewoman of the catchers");
+    }
+  }
+  async function partBathyrra() {
+    heading("LXIV", "Bathyrra");
+    light("lake");
+    const D = sd(), R = S.rh || {};
+    await say("Bathyrra is built for people who weigh three times what you do. The streets are paved with slabs you couldn't lift. The houses are low and square and roofed with lead, and their doors are stone, swung on stone pins, and every lintel is pressed with dents: names, and the names of the dead, and what the house is for.");
+    await say("And everywhere, everybody is tapping. Bathyr standing in doorways tap on the doorposts to each other across the street. A woman taps on a wall and somebody three streets away taps back. The whole city ticks and clicks like a clock shop. It's how they talk. Their voices, the Speaker tells you, are for strangers.");
+    await say("They stop when they see you. All of them. The tapping goes out down the street ahead of you like a candle being blown out, house by house, and starts again behind you, and you don't need to know the Sounding to know what it's saying: <i>that's {him}. The one from the walls. {He} killed our people.</i>");
+    if (R.early) await say("Some of them know you broke the blockade before the last assault. One old Bathyr steps out into the street and presses his forehead to the back of your hand, quickly, and goes back in.");
+    await say("The Speaker's house is the tallest in Bathyrra, which means it has a second floor. He sits you down at a stone table, and pours you something warm and salty, and tells you plainly.");
+    await say("\"I'm the last Sounder,\" he says. \"There were a hundred, when I was young. Every dawn, one of us went down to the Light and laid hands on its stone, and listened to what it wanted, and tapped back. It wasn't a prayer. It was a conversation. The Light was frightened, always, of the dark it fell out of. You talk to a frightened thing.\" He turns his cup on the table. \"Then the Sounders started to forget. One by one. They'd wake up, and they'd still know their names, but not the taps. Twelve years. Now there's me.\"", "voice");
+    await say("\"And I'm old,\" he says. \"And I've got Bathyrra to talk to. So I'm asking you to learn.\"", "voice");
+    await say("He teaches you three words that afternoon, at the stone table, with his heavy hand over yours.");
+    for (const w of ["light", "listen", "home"]) await sdLesson(w, "The Speaker", { tries: 3 });
+    await say("\"The rest you'll learn the way we all do,\" he says. \"From people. Go out. Be useful. The city will teach you if it decides to.\" He looks up, at the lead ceiling, and through it, at the sky. \"Don't take too long.\"", "voice");
+    await mech("<b>Errands.</b> Each one teaches you a word and can win the Bathyr's trust, and each one costs time: the Sea-Sky comes down 1. You can do as many as you dare, and stop whenever you like.");
+    for (;;) {
+      const left = Object.keys(SD_ERRANDS).filter(k => !D.errands.includes(k));
+      if (!left.length) break;
+      const c = await choose(left.map((k, i) => ({ key: k, label: SD_ERRANDS[k].label, tag: SD_ERRANDS[k].tag + " · Sea-Sky −1", plain: i > 0 })).concat([{ key: "stop", label: "Go back to the Speaker", tag: "Sea-Sky " + D.sky, plain: true }]));
+      if (c === "stop") break;
+      await skyFall(1, "The day goes by under a falling sky.");
+      await sdErrand(c);
+    }
+    await say("On your way back to the Speaker's house, a woman in grey falls in beside you in the market. She's small, and not a Bathyr, and her face is very kind. She asks you, softly, if you're tired. You are. She says you look it. She's so quiet. You lean in to hear her.");
+    await say("Then she's whispering, and you can't stop listening, and you feel something come loose in you like a tooth.");
+    await sdForget("The woman in grey is whispering into your ear.");
+    await say("Somebody shouts" + (D.tyra ? ": Tyra, with a knife in her hand" : "") + ", and the woman in grey steps back, and smiles at you, very sorry, and two more like her come out of the crowd.");
+    tip("forget");
+    await hkFight(withForget(HUSHED({ name: "The women in grey", heads: 3, unit: "Hushed|Hushed" }), 3));
+    await say("The last of them sits down in the street when you put her there and looks at her hands, and tells you, kindly, that it doesn't matter, that you'll forget this too. Then she gets up and walks away into the dark between two houses, and none of the Bathyr stop her. They're watching you.");
+    await say("\"The Hushed,\" the Speaker says, when you tell him. He's gone grey. \"They're here. Of course they're here. They've been here twelve years, sitting with my Sounders in the night.\" He gets up, heavily. \"Tomorrow, the Hall of Lead. If they've been at the Light, the Hall will know. The Hall knows everything we ever pressed.\"", "voice");
+    if (!S.sd.forgot.length) await mech("You've forgotten nothing. Yet.", "loot");
+    else await mech("What the Hushed take stays gone until something reminds you: a Deafstone, a friend's hand in a fight, or the word <b>remember</b> sounded at a rest.");
+    if (sdKnows("remember") && D.forgot.length) {
+      const c = await choose([{ key: "tap", label: "Sound \"remember\" on the Speaker's table before you sleep", tag: "tap it from memory" }, { key: "no", label: "Sleep", plain: true }]);
+      if (c === "tap") { const r = await tapGame({ title: "Remember", hint: "Tap <b>remember</b> on the stone table, the way Grisk does for the children.", pat: SD_WORDS.remember[1], tries: 2, words: "Tap <b>remember</b>." }); if (r.ok) await sdRemember("The stone hums under your hand."); else await say("You can't find it in your hand. You go to sleep with the gap still in you."); }
+    }
+    await heal(1, 8, "You sleep on a stone bed in the Speaker's house, which is better than it sounds.");
+    await go("Go to the Hall of Lead");
+  }
+
+  // ---------- Part LXV: the Hall of Lead, and the Two Truths ----------
+  // Each pair: a gold tablet (the Whisperers'), a lead one (the Bathyr's) and a witness the Hall keeps.
+  // Two questions each; the witness decides. A wrong answer brings the Sea-Sky down 1.
+  const SD_TRUTHS = [
+    { id: "founding", t: "The Founding of Rahdaria",
+      gold: "In the Year of the Second Harvest the wardens of Stillwater raised Rahdaria from the bare cliff. Forty masons of the order cut the first terrace in a single summer. The sea-folk came after, to carry water, and were glad to.",
+      lead: "In the year the grass died, sixty of the grass people and forty of us cut the first terrace together, and the screws that lift the water were ours. The soft-voiced ones came in the ninth year, and stayed one winter, and when they left, nobody remembered us.",
+      wit: "The Hall's tally-cord for Rahdaria's first terrace: one hundred knots, one for each pair of hands. Pressed on its tag: <i>the gold seal of Stillwater was first cut in the ninth year after the grass died.</i>",
+      qs: [{ q: "How many hands cut Rahdaria's first terrace?", a: ["Forty masons of the order", "Sixty of the grass people", "A hundred: both peoples together"], ok: 2 },
+           { q: "Can the gold tablet be as old as it claims?", a: ["Yes: the order founded the city", "No: its seal wasn't cut until the ninth year", "No: gold can't be carved"], ok: 1 }] },
+    { id: "log", t: "What Keeps the Light",
+      gold: "The Drowned Light is a wound in the sea that wakes at any sound. Only silence keeps it. Let no hand be laid on it, and no word be spoken near it.",
+      lead: "The Light sleeps when it is answered. Every dawn for nine hundred years a Sounder laid hands on its stone and tapped back to it, and it slept, and held the sea up over us.",
+      wit: "The Sounders' dawn-log, a lead roll as thick as a tree: nine hundred years of entries, one hand to a morning. Twelve years ago the hands begin to change every few days, and the entries go short and crooked. Each time a morning is blank, a later hand has pressed beside it: <i>the sky came down a hand's breadth.</i>",
+      qs: [{ q: "What has kept the Drowned Light asleep?", a: ["Silence", "Being answered, every dawn", "Nothing: it has always been failing"], ok: 1 },
+           { q: "Why is it failing now?", a: ["Something under the land changed", "The Sounders forgot how to answer it", "The siege woke it"], ok: 1 }] },
+    { id: "roll", t: "The Night of Senn",
+      gold: "The kingdom of Senn sank into the mire of its own wickedness, a hundred years ago. The order wept for it, and could do nothing.",
+      lead: "Twelve of the soft-voiced ones stood in a ring round Senn and whispered for one night, and in the morning the land was water. One of the twelve would not finish. He was young, and he had an axe. (Pressed by a Bathyr trader who was in Senn that night, selling lamp-oil.)",
+      wit: "The order's own roll of wardens, in gold, traded down from the surface for a lamp-flame of the Light: <i>For the Night of Senn, twelve.</i> Twelve names. The last one is struck through, hard, as if with a knife: <b>Vaelric</b>.",
+      qs: [{ q: "How did Senn sink?", a: ["Its own wickedness", "The order's hush", "The Drowned Light"], ok: 1 },
+           { q: "Who would not finish?", a: ["The Hushwright", "Vaelric", "The Bathyr trader"], ok: 1 }] }
+  ];
+  async function twoTruths(T) {
+    const D = sd();
+    const sub = el("div", "part-head sub", '<span class="num">Two Truths</span><h2>' + T.t + "</h2>");
+    scrollNext = true; add(sub);
+    add(el("div", "st-wrap", '<figure class="st-card st-gold"><figcaption><span>The Whisperers\' tablet</span><b>' + T.t + "</b></figcaption><blockquote>" + T.gold + "</blockquote></figure>" +
+      '<figure class="st-card st-lead"><figcaption><span>The Bathyr tablet</span><b>' + T.t + "</b></figcaption><blockquote>" + T.lead + "</blockquote></figure>" +
+      '<figure class="st-card st-stone"><figcaption><span>What the Hall keeps</span><b>The witness</b></figcaption><blockquote>' + T.wit + "</blockquote></figure>"));
+    let clean = true;
+    for (const Q of T.qs) {
+      await say("<b>" + Q.q + "</b>");
+      let tries = 0;
+      for (;;) {
+        const k = await choose(Q.a.map((a, i) => ({ key: String(i), label: a, plain: i > 0 })));
+        if (+k === Q.ok) { await say(tries ? "The Speaker nods, slowly." : "The Speaker taps the table once: yes."); break; }
+        tries++; clean = false; D.qs++;
+        await skyFall(1, "The Speaker shakes his head. You read it all again.");
+        if (tries >= 2) { await say("\"" + Q.a[Q.ok] + ",\" the Speaker says at last, and lays his finger on the line that says so.", "voice"); break; }
+      }
+    }
+    if (clean) { D.truths.push(T.id); await mech("Two Truths: <b>" + T.t + "</b> solved clean. You'll be able to use it.", "loot"); }
+    else { D.truths.push(T.id + "-"); await mech("Two Truths: <b>" + T.t + "</b>. You got there in the end.", ""); }
+    if (D.truths.filter(x => !/-$/.test(x)).length === SD_TRUTHS.length) grant("sdtruths");
+  }
+  const sdTruth = (id) => !!(S.sd && S.sd.truths.some(x => x === id || x === id + "-"));
+  async function partHallOfLead() {
+    heading("LXV", "The Hall of Lead");
+    light("dark");
+    const D = sd();
+    await say("The Hall of Lead is under the city: a long low cave the Bathyr have been filling for a thousand years with everything they ever pressed. Lead tablets stand on edge in racks like books, floor to ceiling, mile after mile into the dark, and the air smells of cold metal. There's no dust. Nothing in Bathyrra is light enough to be dust.");
+    await say("The doors are lead too, a foot thick, and they don't have locks. They have weights. A door opens when you sound the right phrase on it, and the right phrase is the one that weighs what the door weighs.");
+    await mech("<b>Lead doors.</b> A tap weighs 1 and a press weighs 2. Put a phrase together from the words you know, so that it keeps every rule on the door and weighs exactly what the door asks. Any phrase that does, opens it.");
+    const r1 = await doorPuzzle({ title: "The outer door", hint: "Pressed above the door, the Speaker reads: <i>Say who you are, and ask it to open. Weight: seven.</i>", need: ["friend", "open"], weight: 7, max: 3 });
+    if (!r1.ok) {
+      await say("The Speaker sounds it for you in the end, with a sigh, and the door rolls back. It's taken a while.");
+      await skyFall(1, "");
+    }
+    await say("Inside, the Speaker takes you to the oldest racks. \"Here,\" he says. \"Everything the surface forgot about us, and some things it got wrong on purpose.\" There are gold tablets mixed in with the lead: trophies, he says, bought off the surface over the centuries. The order's own records.");
+    await say("\"When two tablets disagree,\" the Speaker says, \"the Hall keeps a third thing. A witness. Something that was there. You read all three and you decide what happened. My Sounders did it for practice.\" He lays out the first three on the reading-stone. \"Practise.\"", "voice");
+    for (const T of SD_TRUTHS) await twoTruths(T);
+    await say("The last tablet lies on the reading-stone between you with the struck-out name on it, and the axe on your back is very quiet. Then it isn't. The gems flicker, once, all three, the way they never do unless something is near.");
+    if (vaelricSpeaks()) await voice("\"I was there,\" Vaelric says. Not to you. To himself. \"I was there.\"");
+    await say("The Speaker takes you further in, through a second door, to the rack where the Sounders kept the Light's own record: what it said back, every dawn, for nine hundred years.");
+    const r2 = await doorPuzzle({ title: "The Sounders' door", hint: "On this door: <i>The Light is in the deep, and the door hears no 'not'. Three words, never the same. Weight: eleven.</i>", need: ["light", "deep"], never: ["not"], weight: 11, max: 3 });
+    if (!r2.ok) {
+      const f = await check({ label: "Strength check (shoulder the door)", mod: 3, dc: 15, cta: "Shove" });
+      if (f.ok) await say("You put your shoulder to it, and the Speaker his, and it goes back an inch at a time, screaming.");
+      else { await hurt(1, 6, "bludgeoning", "It goes back in the end, mostly over your foot."); }
+      await skyFall(1, "It takes far too long.");
+    }
+    await say("In the Sounders' rack there's a single tablet on its own, pressed with a phrase over and over, top to bottom, by a hundred different hands. The Speaker touches it the way you'd touch a sleeping animal.");
+    await say("\"The Light's own word,\" he says. \"Its name, the nearest it has one. If it ever goes out, a Sounder sounds this on its stone, and it remembers what it is.\" He reads you the rule pressed at the top. \"<i>Begin with listening. Never say not. Let the Light hear its own word. Weight: thirteen.</i>\" He looks at you. \"I'll be too slow. You won't.\"", "voice");
+    await mech("Remember that: <b>begin with listen · never not · hold light · weight 13</b>. You'll need it at the Light.", "loot");
+    D.rule = true;
+    await go("Go back up into the city");
+  }
+
+  // ---------- Part LXVI: Inside the Axe ----------
+  // A playable memory: young Vaelric at the Night of Senn. Nothing here is saved: a reload starts the part again.
+  async function partInsideAxe() {
+    heading("LXVI", "Inside the Axe");
+    const D = sd(), back = { hp: S.hp };
+    sdNoSave = true;
+    try {
+      light("mire");
+      await say("You sleep that night in the Speaker's house with the axe on the floor beside the bed, and you dream, and it isn't your dream.");
+      await mech("<b>This is a memory.</b> You are Vaelric, a hundred years ago, nineteen years old, on the Night of Senn. Nothing that happens here can hurt you, and nothing here is saved.");
+      await say("You're young, and cold, and your feet hurt. You're standing on a hill above a kingdom you've never seen before tonight, with eleven other wardens in grey cloaks, in a ring around it: lamps in the valley, a river, a little castle on a rise with flags on it. Senn. It smells of hay and woodsmoke. Somebody down there is playing a fiddle badly.");
+      await say("The Hushwright walks the ring behind you. Edrys Fane: tall, grey, gentle, the kindest person you know. She put a hand on your shoulder at the gate of Stillwater when you were seven years old and took you in. She stops beside you now.");
+      await say("\"They found a stone,\" she says, in her soft voice. \"In the river. It had words on it. They've been reading it in the square for a week, and teaching it to their children. If they keep remembering, someone will come looking for what's under the world, and wake it, and everyone will die. Do you understand?\"", "voice");
+      const c1 = await choose([{ key: "yes", label: "\"I understand.\"" }, { key: "ask", label: "\"What did the stone say?\"", tag: "Insight DC 12", plain: true }]);
+      if (c1 === "ask") {
+        const r = await check({ label: "Insight check (Edrys Fane)", mod: 2, dc: 12, cta: "Watch her face" });
+        if (r.ok) { await say("She hesitates. Just for a breath. \"It said the order made the tree,\" she says. \"Which is true. And that the order made the desert, which is true. It was a very accurate stone.\" She smiles at you sadly. \"That's what makes it dangerous.\""); D.doubt = true; }
+        else await say("\"Nothing that would make you happier,\" she says, and squeezes your shoulder, and walks on round the ring.");
+      }
+      await say("The ring begins. Twelve voices, one note, so low it's more a feeling than a sound: a whisper that goes down the hill into the valley like mist, and into the houses, and into the people.");
+      const h = await hushPuzzle({ breaths: 8 });
+      if (h.stopped) { D.doubt = true; await say("You stop. You don't know why. Your mouth just closes. Nobody else notices: there are eleven of them, and the note goes on without you."); }
+      else if (h.held >= 6) await say("Your note sits in the others perfectly, the way she taught you, and you feel the valley go quiet under it. The fiddle stops in the middle of a tune. The lamps go out one by one, as if people are forgetting what they lit them for.");
+      else await say("Your note keeps slipping out of the band, high and then low, and every time it slips you hear the valley a little clearer: a dog, a door, a child asking a question. Edrys looks round at you once, and away.");
+      await say("Then somebody is coming up the hill. A girl, ten years old, in a nightdress and her father's boots, with a lantern. She's not asleep. She's walking straight up through the hush as if it were a mist she could see over, and she's looking at you, because you're the youngest, and she's crying.");
+      await say("\"Why are you doing this?\" she says. \"I'll forget my name. You're making everyone forget. I can feel it. I'm Wenlo. I'm Wenlo. I'll forget.\"", "voice");
+      const c2 = await choose([
+        { key: "hush", label: "Whisper to her too", tag: "the order's way" },
+        { key: "tell", label: "Tell her the truth, quickly, before it takes her", plain: true },
+        { key: "carve", label: "Cut her name into the haft of your axe, where nobody will ever read it", tag: "wood can't hear", plain: true }
+      ]);
+      if (c2 === "hush") {
+        S.hh.hush++;
+        await say("You kneel down in front of her and whisper, very gently, the way Edrys taught you, and her face goes smooth, and she looks at the lantern in her hand as if she doesn't know whose it is. Then she turns round and walks back down the hill into the dark.");
+      } else if (c2 === "tell") {
+        S.hh.hear++; D.doubt = true;
+        await say("\"They're hushing Senn,\" you tell her, fast. \"Because of the stone. Because they're afraid. It isn't your fault. Remember that. Your name is Wenlo, and it isn't your fault.\" She stares at you. Then the hush reaches her, and her face goes smooth, but she holds on to the lantern, tight, and doesn't let it go.");
+      } else {
+        S.hh.hear++; D.doubt = true; D.name = true;
+        await say("You pull your knife and turn the axe over in your hands, and under the leather of the grip, where nobody will ever look, you cut five letters into the wood as fast as you can: <b>WENLO</b>. Wood can't hear a whisper. She watches you do it. Then the hush reaches her, and her face goes smooth, and she walks back down the hill. But you've got it. Somebody's got it.");
+        grant("sdname");
+      }
+      await say("By midnight there's no kingdom of Senn. There's a valley full of people asleep on their feet, who don't know what a kingdom is. And then the ground under it, which was only ever held up by people remembering it was there, starts to go soft.");
+      await say("Edrys raises her hand for the last whisper: the one that makes the land forget it's land.");
+      const c3 = await choose([{ key: "finish", label: "Finish it with them" }, { key: "stop", label: "Don't", plain: true }]);
+      if (c3 === "stop") { D.doubt = true; S.hh.hear++; await say("You don't. You stand in the ring with your mouth shut and the eleven others whisper the last of it without you, and Senn goes down into the water with a sound like a sigh. Edrys turns and looks at you across the ring for a long time. She doesn't say anything. In the morning, when they write the roll, she strikes your name through with her own knife."); }
+      else { S.hh.hush++; await say("You whisper it with them, and Senn goes down into the water with a sound like a sigh, and the mire comes up over the castle flags. In the morning you can't remember what the fiddle was playing. You try for years."); }
+      light("lake");
+      await say("You wake up in the Speaker's house with your face wet and the axe in your arms. You don't remember picking it up.");
+      if (vaelricSpeaks()) {
+        await voice(D.doubt ? "\"That was the night,\" Vaelric says, after a long time. \"The night I started to doubt. I was nineteen. I never stopped doubting, after. I just never did anything about it.\" A pause. \"Until I met you.\"" : "\"I finished it,\" Vaelric says. \"Didn't I. In the end, I always finished it.\" His voice is very small. \"I'd forgotten that. I must have wanted to.\"");
+      }
+      if (D.name) await say("You unwind the old leather on the axe's grip with shaking fingers. Under it, worn almost smooth by a hundred years of hands, there are five letters cut into the wood. <b>WENLO</b>.");
+    } finally {
+      sdNoSave = false; S.hp = Math.max(1, Math.min(S.maxHp, back.hp)); renderSheet();
+    }
+    await go("Go down to the Light");
+  }
+
+  // ---------- Part LXVII: the Hushed ----------
+  const SD_HUSHED = [
+    { id: "cael", name: "Brother Cael Venn", belief: "\"The deep people are conquerors,\" he says. \"They came up out of the sea to take Rahdaria. They'll take the rest. Let their sky fall. It's their sky.\"", ev: "founding" },
+    { id: "oriel", name: "Sister Oriel of the Lamps", belief: "\"A light only sleeps in silence,\" she says, and means it with all her heart. \"Every sound wakes it. Every tap your Speaker taught you is a hammer on its door.\"", ev: "log" },
+    { id: "imre", name: "Warden Imre Dask", belief: "\"The order never drowned anybody,\" he says. He's old, and a soldier, and proud. \"Senn sank under its own wickedness. I was raised on that. My father was there.\"", ev: "roll" },
+    { id: "halve", name: "Mother Halve", belief: "She's very old, and cooks for the camp, and smiles at you without suspicion. \"I've never had a name but the one the order gave me,\" she says. \"They found me in the reeds, the night the fen came. I don't miss what I never had.\"", ev: "name" },
+    { id: "abery", name: "Lisle and Lorne Abery", belief: "Twins, young, bored, clever. \"Nobody remembers anything true anyway,\" Lisle says. \"So what's lost was never worth keeping,\" Lorne finishes. They've said it before. They like the sound of it.", ev: "stones" }
+  ];
+  const SD_EVIDENCE = {
+    founding: ["The tally-cord of Rahdaria's first terrace", () => sdTruth("founding"), "A hundred hands, both peoples. The city he means to save was half built by the people he wants to drown."],
+    log: ["The Sounders' dawn-log", () => sdTruth("log"), "Nine hundred years of answers, and the sky only fell on the mornings nobody answered."],
+    roll: ["The roll of wardens for the Night of Senn", () => sdTruth("roll"), "Twelve names, in the order's own gold, and one struck through."],
+    name: ["Wenlo's name, cut in the haft of your axe", () => !!(S.sd && S.sd.name), "You unwind the grip and show her the five letters a boy cut into the wood a hundred years ago, on a hill, while she watched."],
+    stones: ["The Deafstones you've rubbed", () => stonesN() >= 3, "Your rubbings, one after another: every one of them true, and every one of them somebody's."],
+    tamsk: ["Tamsk's Pressing", () => hasGear("knot"), "A lead tablet with a son's name on it and his mother's, which nobody whispered away."]
+  };
+  async function hushedMeet(H) {
+    const D = sd();
+    const sub = el("div", "part-head sub", '<span class="num">The Hushed</span><h2>' + H.name + "</h2>");
+    scrollNext = true; add(sub);
+    await say(H.belief);
+    const ev = Object.keys(SD_EVIDENCE).filter(k => SD_EVIDENCE[k][1]());
+    const c = await choose([
+      { key: "argue", label: "Argue with " + (H.id === "abery" ? "them" : H.id === "halve" || H.id === "oriel" ? "her" : "him"), tag: ev.length ? "show what you know · Persuasion" : "you've nothing to show · Persuasion DC 17", show: true },
+      { key: "slip", label: "Slip past", tag: "Stealth DC 14 · Sea-Sky −1", plain: true },
+      { key: "fight", label: "Put " + (H.id === "abery" ? "them" : H.id === "halve" || H.id === "oriel" ? "her" : "him") + " down", tag: "a fight · it whispers as it strikes", plain: true }
+    ]);
+    if (c === "argue") {
+      let k = null;
+      if (ev.length) k = await choose(ev.map((e, i) => ({ key: e, label: SD_EVIDENCE[e][0], plain: i > 0 })));
+      const right = k && (k === H.ev || (H.ev === "stones" && k === "tamsk"));
+      if (k) await say(SD_EVIDENCE[k][2]);
+      const r = await check({ label: "Persuasion check (" + H.name + ")" + (right ? " (it's the right thing to show)" : k ? " (it's not what this is about)" : ""), mod: 2 + Math.floor(D.trust / 2), dc: right ? 12 : k ? 16 : 17, adv: !!right, cta: "Argue" });
+      if (r.ok) {
+        D.hushed[H.id] = "argued"; S.hh.hear++;
+        await say({
+          cael: "Brother Cael looks at the knots a long time. \"A hundred,\" he says. \"Nobody ever told me.\" He sits down on the stones, and takes off his grey cloak, and folds it, and doesn't get up again.",
+          oriel: "Sister Oriel reads down the dawn-log, morning after morning, and her lips move, and when she gets to the blank ones she stops. \"We did that,\" she whispers. \"I did some of those. I sat with them in the night.\" She puts her hands over her mouth.",
+          imre: "Warden Imre Dask reads the roll twice. His father's name is on it. He stands very straight while he reads it, the way soldiers stand when they're told something they can't bear, and then he walks away into the dark without a word, and you hear him throw his staff into the sea-wall.",
+          halve: "Mother Halve looks at the letters. She doesn't say anything for a long time. Then she says, \"Wenlo,\" very quietly, trying it, the way you'd try on a coat you'd lost as a child. \"Wenlo.\" She starts to cry, and laughs, and can't stop either.",
+          abery: "The twins look at each other. It's the first time you've seen them do that. \"Well,\" Lisle says. \"That one's true,\" Lorne says. \"And that one,\" Lisle says. They go quiet. They aren't bored any more."
+        }[H.id]);
+        return "argued";
+      }
+      await say("It doesn't land. " + H.name + " looks at you with pity, and raises a hand, and starts to whisper, and the Hushed nearest come in round you.");
+    } else if (c === "slip") {
+      await skyFall(1, "You go the long way round, through the dark.");
+      const r = await check({ label: "Stealth check (past " + H.name + ")", mod: 3 + (S.shadow ? 2 : 0), dc: 14, cta: "Creep" });
+      if (r.ok) { D.hushed[H.id] = "slipped"; await say("You get past without being heard, which in a camp of people who only whisper is harder than it sounds."); return "slipped"; }
+      await say("A stone shifts under your boot. In that camp it sounds like a bell.");
+    }
+    D.hushed[H.id] = "fought"; S.hh.hush++;
+    await hkFight(withForget(HUSHED({ name: H.name + (H.id === "abery" ? "" : " and the Hushed"), heads: H.id === "abery" ? 2 : 3, unit: "Hushed|Hushed" }), 3));
+    await say("When it's over " + H.name + " sits in the sand with the others round " + (H.id === "abery" ? "them" : "them") + ", not hurt much, looking at you as if you've done something sad and very loud.");
+    return "fought";
+  }
+  async function partHushed() {
+    heading("LXVII", "The Hushed");
+    light("dark");
+    const D = sd();
+    await skyFall(1, "Overnight the sky sags another hand's breadth. You can hear the Light now, a thin high ringing, like a glass rubbed round its rim.");
+    await say("The Drowned Light stands in the middle of Bathyrra on a hill of black glass: a stone, a great rough egg of stone as tall as a tower, half sunk in the hill where it struck a thousand years ago, with the light coming out of the cracks in it. Close to, it isn't bright. It's flickering, like a coal in a grate that's nearly out. All round its foot, on the slope of the glass hill, there are grey tents. A camp. Very quiet.");
+    if (D.threads) await say("And the threads you saw from the drip-lines come down out of the Sea-Sky all round the camp, dozens of them, grey and fine, each one running to a stake in the glass. They're sewing the sky to the Light. When the Light goes out, the sky will come down on the stakes like a tent coming down.");
+    await say("There's a woman sitting on a camp stool at the very foot of the Light with her hand flat on its stone, whispering to it. She's grey-haired and straight-backed, in a plain grey coat, and she looks round when you come up the hill, and stands, and smiles at you as if she's been expecting you, because she has.");
+    await say("\"Severine Gall,\" she says. \"Hushwright, for what that's worth now. And you're the {g:man|woman|one} who held Rahdaria's walls. There are thirty of us left. You've met some.\" She looks at the axe. \"And him. Good evening, Vaelric. You won't remember me. I was a child at Stillwater when Edrys struck your name off.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"I remember everyone,\" Vaelric says. \"That was always the trouble.\"");
+    await say("She tells you her case, plainly, without trying to frighten you. You've seen what a waking light does: under the labyrinth, it nearly broke the world. A light that's gone dark can never wake. It's the only safe light there is. \"The sea comes down, and Bathyrra drowns, and that's a terrible thing,\" she says. \"I've wept for it. But the Bathyr can live on the surface now. Rahdaria gave them the salt flats. And I'll hush the siege out of Rahdaria's memory so they can live there in peace. Nobody will hate anybody. Nobody will remember why.\"", "voice");
+    await say("\"I'm not cruel,\" she says. \"I'm only sure.\"", "voice");
+    await mech("<b>The Hushed.</b> Five of them stand between you and the Light. Argue each one down with something you've learned (the right thing to show makes it easy), slip past, or fight. Everyone you argue down weakens Severine, because the hush needs every voice.");
+    let argued = 0;
+    for (const H of SD_HUSHED) { if ((await hushedMeet(H)) === "argued") argued++; }
+    if (argued === SD_HUSHED.length) grant("sdhushed");
+    await say("And then there's nobody between you and Severine Gall but the last few steps of the hill." + (argued ? " " + argued + " of her people are sitting on the glass behind you, not whispering. She has noticed. Her hand on the stone isn't quite steady." : ""));
+    const can = argued >= 4;
+    const c = await choose([
+      { key: "talk", label: "Tell her what the stones say", tag: can ? "Persuasion DC 14, with advantage" : "you need more of her people with you (" + argued + " of 4)", show: can },
+      { key: "fight", label: "Take her hand off the Light", tag: "a fight" + (argued ? " · she's weaker by " + argued + " voice" + (argued > 1 ? "s" : "") : ""), plain: can }
+    ]);
+    if (c === "talk") {
+      const r = await check({ label: "Persuasion check (Severine Gall)", mod: 2 + Math.floor(D.trust / 2), dc: 14, adv: true, cta: "Speak" });
+      if (r.ok) {
+        D.sev = "yield"; S.hh.hear++;
+        await say("You tell her. All of it: the hundred hands, the dawn-log, the struck-out name, the rubbings in your pack. " + (D.hushed.halve === "argued" ? "Mother Halve comes up the hill behind you and stands beside you and says, \"My name is Wenlo,\" and Severine closes her eyes." : "Her own people sit on the glass and listen to you tell it."));
+        await say("When you've finished she takes her hand off the stone. It leaves a grey print on it, like frost. \"Thirty years,\" she says. \"I was so sure.\" She sits back down on her stool, and folds her hands, and doesn't whisper again.", "voice");
+      } else await say("She hears you out. Then she says, \"I know,\" quite gently, and turns back to the stone, and starts to whisper, and every one of her people still standing turns toward you.");
+    }
+    if (D.sev !== "yield") {
+      D.sev = "beaten"; S.hh.hush++;
+      await say("Severine Gall doesn't fight like anyone you've fought. She doesn't strike. She talks, very softly, the whole time, and things go out of your head like birds out of a hedge.");
+      await hkFight(Object.assign(HUSHED({ name: "Severine Gall, the Hushwright", hp: Math.max(24, 70 - 10 * argued), ac: 15, atk: 6, n: 1, s: 8, who: "Severine", whoShort: "Severine",
+        hitWhy: "Severine's whisper gets in under your guard like cold water.", miss: "You don't listen. It's the hardest thing you've ever done.", hitLine: "Severine steps back, and for the first time she isn't smiling." }), {
+        before: async (st) => {
+          if (st.round % 2 || FOE.hp <= 0) return;
+          await say("She leans in, and whispers, and you feel it start to take something.");
+          if (sdKnows("remember")) {
+            const r = await tapGame({ title: "Hold on to it", hint: "Tap <b>remember</b> against the axe-haft, fast, before her whisper finishes.", pat: SD_WORDS.remember[1], tries: 1, words: "Tap <b>remember</b>." });
+            if (r.ok) { await say("You tap it against the haft, and hold on, and the thing she was taking stays where it is."); return; }
+          } else {
+            const w = await check({ label: "Wisdom save (Severine's hush)", mod: 2 + lvAC(), dc: 14, cta: "Hold on" });
+            if (w.ok) { await say("You hold on to it, whatever it was."); return; }
+          }
+          await sdForget("Severine's whisper finishes.", null);
+        }
+      }));
+      await say("When she goes down she goes down slowly, sitting on the glass with her hands in her lap, and looks up at you, more puzzled than hurt. \"Well,\" she says. \"That was loud.\"", "voice");
+    }
+    if (D.sev === "beaten" || D.sev === "yield") {
+      if (!S.gear.includes("hushcord")) S.gear.push("hushcord"); renderSheet();
+      await mech("Severine's grey cord falls from her wrist onto the glass. You take it: <b>" + GEAR.hushcord.name + "</b>. " + GEAR.hushcord.desc, "loot");
+    }
+    await say("But her hand was on the stone for three days before you came, and the order's whisper is in it now, all the way down. The Light gives a long low groan, like a ship's timbers. The cracks in it go dim. Overhead, all at once, every drip in Bathyrra becomes a trickle.");
+    await say("\"It's coming down,\" the Speaker says. \"Now. Tonight.\"", "voice");
+    await go("Run");
+  }
+
+  // ---------- Part LXVIII: the Sky Comes Down ----------
+  const SD_GROUPS = {
+    garrison: { name: "The stair-wardens' barracks", cost: () => 1, why: "Forty Bathyr soldiers who could carry four times their weight up a stair. Get them up first and every group after costs 1 less." },
+    cradle: { name: "The cradle-house", cost: () => sdKnows("remember") ? 1 : 2, why: "Forty sleeping children who'll only go with someone who taps their names. " + "(Knowing <b>remember</b> makes it faster.)" },
+    press: { name: "The lead-pressers' yard", cost: () => sdTruth("founding") ? 1 : 2, why: "The pressers won't leave the press. (If you read the founding true, you know the old cart-stair from the yard: faster.)" },
+    elders: { name: "The old Sounders' house", cost: () => sdKnows("home") ? 2 : 3, why: "Twenty very old Bathyr who forgot their taps and won't move for anyone they can't understand. (Knowing <b>home</b> helps.)" },
+    speaker: { name: "The Speaker's household", cost: () => 2, why: "His family, his grandchildren, the house's records. The Speaker won't go. He'll be at the Light." },
+    hushed: { name: "The Hushed you left on the hill", cost: () => 2, why: "Grey cloaks sitting on the glass. Some of them helped bring this down. They'll drown if nobody fetches them." }
+  };
+  async function partSkyDown() {
+    heading("LXVIII", "The Sky Comes Down");
+    light("lake");
+    const D = sd();
+    await say("The Sea-Sky comes down over Bathyrra the way snow comes off a roof: first a little, sliding, and then all of it. Not yet. But you can see it starting. The green-black ceiling is lower over the middle of the city than it was at noon, low enough now that the tops of the tallest houses are wet, and the water is running down the streets in sheets.");
+    await say("The stair is the only way out. There are eight thousand Bathyr in the city and most of them are already on it: a slow grey river of people going up the inside of the water-wall, carrying their children and their dead in lead boxes. But not everyone can get there by themselves.");
+    await mech("<b>The evacuation.</b> Every group you bring to the stair costs Sea-Sky. Whatever's left when you go to the Light is all the time you'll have there: the more sky you save for the end, the more tries you get at the Sounding. Choose who to fetch, and in what order. You can't fetch everyone.");
+    let carry = 0, fought = false;
+    for (;;) {
+      const left = Object.keys(SD_GROUPS).filter(k => !D.saved.includes(k));
+      const cost = (k) => Math.max(1, SD_GROUPS[k].cost() - carry);
+      const opts = left.map((k, i) => ({ key: k, label: "Fetch " + SD_GROUPS[k].name.replace(/^The /, "the "), tag: "Sea-Sky −" + cost(k) + (D.sky < cost(k) ? " · there isn't time" : ""), show: D.sky >= cost(k), plain: i > 0 }));
+      opts.push({ key: "go", label: "Go to the Light now", tag: "Sea-Sky " + D.sky + " left for the Sounding", plain: true });
+      if (left.length) await say(left.map(k => "<b>" + SD_GROUPS[k].name + "</b>: " + SD_GROUPS[k].why).join("<br>"));
+      const c = await choose(opts);
+      if (c === "go") break;
+      const n = cost(c);
+      await skyFall(n, "You run.");
+      D.saved.push(c);
+      if (c === "garrison") { carry = 1; await say("The stair-wardens come out of their barracks at a run, which you didn't know Bathyr could do, and Ulm is at the front of them. They take the old and the slow up on their backs, two at a time."); }
+      else if (c === "cradle") await say(sdKnows("remember") ? "You go down the rows tapping each child's name on its cradle, the way Grisk does, and they wake and know you and come. Grisk carries the last two herself." : "You carry them out two at a time while Grisk taps their names, and they cry the whole way, but they come.");
+      else if (c === "press") await say(sdTruth("founding") ? "You know the old cart-stair from the tally-cord's tag, behind the press, that the gardens' harvests came down a thousand years ago. Hessa didn't. She stares at you, and then at it, and then she gets her people moving." : "Hessa won't leave the press until you help her lever the last tablet off its bed, and then she carries it up the stair on her own back.");
+      else if (c === "elders") await say(sdKnows("home") ? "You tap <b>home</b> on the doorpost of the old Sounders' house, and twenty old faces come up one after another, like lamps being lit, and they get up, and follow you." : "They won't understand you, so you lead them by the hand, one by one, which takes a very long time.");
+      else if (c === "speaker") await say("The Speaker's grandchildren carry the house's records up the stair in a chain, hand to hand, and his wife, a tiny fierce woman called Mag, carries the stone table, by herself, because she says she's not leaving it.");
+      else if (c === "hushed") { S.hh.hear++; await say("You go back up the glass hill for the grey cloaks. Most of them come quietly. One of them asks you why. You don't have a good answer, so you give him the true one: because they'd drown."); }
+      if (!fought && D.saved.length === 2) {
+        fought = true;
+        await say("Halfway up the stair, the water-wall bulges, and something comes out of it at you, long and dark and all teeth, the way a pike comes out of weed.");
+        await meetBeast("bathyrra", { forced: true });
+      }
+      if (D.saved.length === Object.keys(SD_GROUPS).length) { grant("sdall"); await say("And there's nobody left in Bathyrra who can't get to the stair alone. You stand in the empty street with the water round your ankles and nothing to do but go to the Light."); break; }
+    }
+    D.skyEnd = D.sky;
+    await say("You run back down through the empty city to the hill of black glass. The water's at your ankles, then your knees. The Light is a dull red coal now, inside a ring of grey stakes, with the sea hanging over it so low you could throw a stone into it." + (D.sev === "yield" ? " Severine Gall is sitting at its foot where you left her. She looks up at you, and moves her stool out of the way." : ""));
+    await go("Climb the glass hill");
+  }
+
+  // ---------- Part LXIX: the Drowned Light ----------
+  async function partDrownedLight() {
+    heading("LXIX", "The Drowned Light");
+    light("dark");
+    const D = sd();
+    await say("The Speaker is there before you, with both his hands on the stone, tapping, very slowly. His hands are shaking. He looks round at you and you see that he's been doing it for an hour, and that it isn't working, because he's too slow, and the Light keeps losing the thread of him between one word and the next.");
+    await say("\"Now,\" he says. \"If you're going to.\"", "voice");
+    const tries = D.sky <= 0 ? 1 : 1 + Math.ceil(D.sky / 3);
+    const canSound = sdKnows("listen") && sdKnows("light");
+    const canVael = vaelricSpeaks() && D.doubt;
+    const opts = [
+      { key: "sound", label: "Sound it: lay your hands on the Light and answer it", tag: canSound ? "compose the Light's word, then tap it · " + tries + " tr" + (tries > 1 ? "ies" : "y") : "you'd need to know listen and light", show: canSound },
+      { key: "hush", label: "Let it be hushed", tag: "the sea is safe, and Bathyrra drowns", plain: canSound },
+      { key: "vael", label: "Give Vaelric the stone", tag: "he knows how to sing to frightened things · he won't come back", show: canVael, plain: true }
+    ];
+    if (canVael) await voice("\"Let me,\" Vaelric says. \"If you can't. I know how. I was taught to make things quiet, and I spent a hundred years doubting it. Let me do the other thing, once.\"");
+    let ending = "";
+    for (;;) {
+      const c = await choose(opts.filter(o => o.key !== "sound" || !D.tried));
+      if (c === "sound") {
+        D.tried = true;
+        const p = await doorPuzzle({ title: "The Light's word", hint: "The rule from the Sounders' rack: <i>Begin with listening. Never say not. Let the Light hear its own word. Weight: thirteen.</i>", need: ["listen", "light"], first: "listen", never: ["not"], weight: 13, max: 4, tries: 3 });
+        if (!p.ok) { await say("You can't make it come right. The Light gutters under your hands."); continue; }
+        await say("You have it. Now you have to say it to the Light, from memory, with your hands, and keep saying it until it hears.");
+        const r = await tapGame({ title: "The Sounding", hint: "Sound the Light's word on its stone: the phrase you just made. You won't see it again. " + (D.sky <= 0 ? "The sea is up to your chest. One try." : tries + " tries before the sky is down."), pat: sdPhrase(sdLastPhrase), tries, words: "<b>" + sdLastPhrase.join(" / ") + "</b>" });
+        if (r.ok) { ending = "sound"; break; }
+        await say("It doesn't hear you. The cracks go darker.");
+        continue;
+      }
+      ending = c; break;
+    }
+    D.ending = ending;
+    if (ending === "sound") {
+      S.hh.hear += 2;
+      light("noon");
+      await say("For a moment nothing. Then, under your hands, from very deep inside the stone, something taps back.");
+      await say("It's slow. It's enormous. It's the same phrase you gave it, given back, the way a child repeats a word to make sure of it. And then the light comes up through the cracks in it, red and then gold and then white, so bright you see the bones of your hands, and it's <i>loud</i>: a great deep ringing that you hear with your whole body, that goes out through Bathyrra and up the stair and up through the sea, and every Bathyr on the stair stops and turns round.");
+      await say("Overhead, the Sea-Sky stops. And then, slowly, as if it were being lifted on ten thousand hands, it goes back up.");
+      await skyFall(-SD_SKY, "");
+      await say("The Speaker is sitting in the water, laughing, the slow Bathyr laugh, all in the shoulders. \"Louder,\" he says. \"It's <i>louder</i>. The order had it wrong. It never wanted quiet. It wanted company.\"", "voice");
+      await say("He presses his forehead to the back of your hand. Then he takes a thin sheet of lead out of his coat, and his little hammer, and presses something into it, there on the hill, and folds your fingers round it. \"A note,\" he says. \"The Bathyr's note. For a Listener. You'll need five.\"", "voice");
+      S.maxHp += 4; S.hp = Math.min(S.maxHp, S.hp + 4);
+      if (!S.gear.includes("tapstone")) S.gear.push("tapstone");
+      renderSheet(); grant("sdsound");
+      await mech("<b>You Sounded the Drowned Light.</b> The Bathyr's Note is yours: the first of five a Listener is made from. +4 max HP. The Speaker gives you his <b>Tapping-Stone</b>.", "loot");
+    } else if (ending === "hush") {
+      S.hh.hush += 2;
+      await say("You take your hands off the stone." + (D.sev ? " Severine Gall gets up off the glass, slowly, and puts hers on it in their place, and whispers. The Speaker doesn't stop her. He just closes his eyes." : " The Speaker takes his off too, after a while, and closes his eyes."));
+      await say("The Light goes out like a lamp being turned down: red, then a dull brown, then nothing, a black egg of stone on a black hill. It's very quiet. It will never wake again. Nothing will ever wake it.");
+      await say("And the sea comes down.");
+      await say("You get up the stair ahead of it. Just. The last landings go under at your heels, and the water-wall closes behind you with a sound you feel in your back teeth, and at the top you climb out onto the boat in the morning sun, two miles off Rahdaria, with eight thousand Bathyr in boats all round you, and look down, and there's nothing there. Only sea.");
+      S.coins += 40; renderSheet(); grant("sdhush");
+      await mech("The Bathyr go up to the salt flats north of Rahdaria. The Speaker pays you from what he carried up the stair: 40 gold.", "loot");
+    } else if (ending === "vael") {
+      S.hh.hear++;
+      await say("You lay the axe on the stone, with the gems against it. For a while nothing. Then Vaelric begins to sing.");
+      await say("It isn't a whisper. It's the first time in a hundred years he hasn't whispered: an old man's voice, cracked and too loud and badly in tune, singing something you've never heard, a Senn song, maybe, the one the fiddle was playing that night. The gems blaze. The Light shivers under the blade and answers him, a deep slow ringing, and comes up through its cracks, gold and then white, and the Sea-Sky stops falling, and goes back up.");
+      await skyFall(-SD_SKY, "");
+      await say("He sings until there's nothing left in him to sing with. Then the axe is just an axe, lying on a stone in the light, with three red gems in it" + (D.name ? " and five letters under the grip." : "."));
+      await say("You pick it up. It's lighter than it was. It's warm. It's quiet.");
+      S.maxHp += 6; S.hp = S.maxHp; renderSheet(); grant("sdvael");
+      await mech("<b>Vaelric sang the Drowned Light awake.</b> The axe still holds you up at 1 HP, the way it always has. It doesn't speak. Whatever was left of him went into you: +6 max HP, healed to full.", "loot");
+    }
+    D.skyEnd = D.skyEnd || 0;
+    await say(D.sev === "yield" ? "Severine Gall goes up the stair with the Bathyr, on her own feet, with her hands empty. At the top she stops beside you." : "They carry Severine Gall up the stair on a door. At the top she asks to stop beside you.");
+    await say("\"There are twenty-nine more of us,\" she says. \"At Stillwater, where it began. Ilka Moth is buried there. They'll hear about this. They'll be very frightened.\" She looks at you, and at the axe. \"You'd better go and talk to them before they decide to whisper. Somebody should, who isn't sure.\"", "voice");
+    if (D.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits beside you on the gunwale of the boat with her boots dripping. \"A city at the bottom of the sea,\" she says. \"And a sky made of fish.\" She leans her head on your shoulder. \"Next time, we're going somewhere dry.\"" : "Tyra sits in the bottom of the boat with her knees up, wringing out her hair. \"Forty-four keys,\" she says. \"Forty-five. I took one off the Hall of Lead. It's very heavy.\"");
+    if (D.ending !== "vael" && vaelricSpeaks()) await voice("\"Stillwater,\" Vaelric says. \"I was seven. There was a gate, and a woman with a kind hand.\" A long pause. \"I'd like to see it again. I think. I'd like to see it from the outside.\"");
+    D.on = false; D.done = true; renderSheet();
+    await endCard();
+  }
+
   async function endCard() {
     await wait(300);
     const carried = carriedList();
@@ -17563,13 +18520,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done;
+    const SOUND = {
+      sound: "Under the western sea, the Drowned Light rings like a bell, the Sea-Sky stands high over Bathyrra, and the Bathyr have agreed to you: you carry their note.",
+      hush: "Under the western sea there's only sea. The Drowned Light is dark for good, and the Bathyr live on the salt flats north of Rahdaria.",
+      vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
+    };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Whisperers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_MAX + ", hidden things and the Cascades wake.</p>");
@@ -17675,6 +18637,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         R.phase !== "inv" || R.done ? "Your Standing in Rahdaria: " + rhTier(R.rep)[1] + "." : "",
         ...rxRecap(R)
       ];
+    },
+    sounding: (s) => {
+      const D = s.sd;
+      if (!D) return [s.part > 61 && "You went down the Sea-Stair with the Speaker for the Deep, to Bathyrra, the dry city under the western sea."];
+      const G = { garrison: "the stair-wardens", cradle: "the cradle-house", press: "the lead-pressers", elders: "the old Sounders", speaker: "the Speaker's household", hushed: "the Hushed" };
+      return [
+        "You went down the Sea-Stair with the Speaker for the Deep to Bathyrra, the dry city under the western sea, where the Drowned Light holds the sea up like a sky, and it was going out.",
+        D.words.length ? "You learned " + (D.words.length >= 8 ? "all eight words" : D.words.length + " word" + (D.words.length > 1 ? "s" : "")) + " of the Sounding, the Bathyr tap language." : "",
+        D.truths.length ? "In the Hall of Lead you read the Two Truths: Rahdaria was founded by both peoples, the Light slept when it was answered, and the order drowned Senn." : "",
+        s.part > 65 ? (D.name ? "Inside the axe you were young Vaelric on the Night of Senn, and you cut a girl's name, Wenlo, into the haft." : D.doubt ? "Inside the axe you were young Vaelric on the Night of Senn, and you doubted." : "Inside the axe you were young Vaelric on the Night of Senn, and you finished the hush.") : "",
+        D.sev ? (D.sev === "yield" ? "You talked Severine Gall, the Hushwright, down from the Light." : "You took Severine Gall's hand off the Light by force.") : "",
+        D.saved.length ? "When the sky came down you got " + D.saved.map(k => G[k]).join(", ") + " to the stair." : "",
+        D.ending ? { sound: "You Sounded the Drowned Light, and it rang, and the sky went back up. The Speaker gave you the Bathyr's note, the first of a Listener's five.", hush: "You let the Light be hushed. Bathyrra drowned, and the Bathyr went up to the salt flats.", vael: "Vaelric sang the Drowned Light awake, and spent himself doing it. The axe is quiet now." }[D.ending] : ""
+      ];
     }
   };
   function recapOff() { try { return localStorage.getItem(RECAP_OFF) === "1"; } catch (e) { return false; } }
@@ -17721,8 +18697,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
@@ -17753,7 +18729,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
       '<p class="big">The labyrinth goes deeper.</p>' +
-      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, a fallen moon under the labyrinth where you began, and a garden city besieged by people who came up out of the sea.</p>" +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, a fallen moon under the labyrinth where you began, a garden city besieged by people who came up out of the sea, and a dry city at the bottom of it, where the sky is made of water and it's coming down.</p>" +
       "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
       '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');
