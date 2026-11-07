@@ -452,6 +452,10 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .sd-cell.band { background: #1d3329; border-color: var(--verdigris); }
 .sd-cell.on { box-shadow: 0 0 10px rgba(207, 168, 80, .4); }
 .st-card.st-stone blockquote { font-style: normal; }
+.pz-row { width: 100%; max-width: 400px; }
+.sd-cell.pz-goal { background: #1d3329; border-color: var(--verdigris); }
+.pz-row .sd-cell { min-width: 0; font-size: .7rem; white-space: nowrap; overflow: hidden; padding: 0 2px; }
+.pgrid button small { display: block; font-size: .62rem; line-height: 1.1; }
 .rh-clues { margin: 0; padding-left: 1.2em; font-size: .9rem; line-height: 1.5; }
 .rh-hist { font-family: var(--label); font-size: .85rem; line-height: 1.6; color: var(--muted); }
 .rh-read { font-family: var(--label); font-size: .88rem; letter-spacing: .06em; overflow-wrap: anywhere; }
@@ -1211,6 +1215,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-label hk-x">Forgotten</span>
       <span class="stat-val hk-x" id="sdForgot">nothing</span>
     </div>
+    <div class="lw" id="pzBox" hidden>
+      <span class="stat-label">The Tide-count</span>
+      <span class="stat-val" id="pzDays">8 days</span>
+      <div class="huntbar"><span id="pzDaysBar" style="width:100%"></span></div>
+      <span class="note" id="pzDaysNote"></span>
+      <span class="stat-label">In the crew</span>
+      <span class="stat-val" id="pzRank">Pressed</span>
+      <span class="stat-label hk-x">The Saltwrit</span>
+      <span class="stat-val hk-x" id="pzWrit">Unknown to them</span>
+      <span class="stat-label hk-x">Your share</span>
+      <span class="stat-val hk-x" id="pzShare">0 gold</span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -1360,7 +1376,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   let sdNoSave = false; // the Inside the Axe memory isn't saved
   function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; return lvInit(v); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; return lvInit(v); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1564,6 +1580,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         wind(sc, { type: "lowpass", cut: 380, q: 0.7, vol: 0.05, sweep: 180, rate: 0.03 });
         every(sc, 2.5, 6, () => { const n = 2 + Math.floor(Math.random() * 3), gap = Math.random() < 0.5 ? 0.18 : 0.4; for (let i = 0; i < n; i++) blip(sc.out, rnd(180, 260), { type: "triangle", a: 0.002, dec: 0.09, vol: 0.04, at: i * gap }); });
         every(sc, 14, 30, () => bell(sc.out, hz(pick([55, 58, 62])), 0.014, 7));
+      },
+      tithe(sc) {       // the Reach: swell under the hull, wind in the rigging, timbers creaking, and the slow flat clank of a count-bell
+        drone(sc, [41, 49], { cut: 300, vol: 0.035, wob: 0.03 });
+        wind(sc, { type: "bandpass", cut: 700, q: 0.8, vol: 0.06, sweep: 400, rate: 0.05 });
+        every(sc, 3, 7, () => hiss(sc.out, { f: 260, q: 1, a: 0.6, dec: 1.6, vol: 0.05, to: 140 }));
+        every(sc, 2.2, 5, () => blip(sc.out, rnd(70, 110), { type: "sawtooth", a: 0.05, dec: 0.35, vol: 0.012, bend: 0.8 }));
+        every(sc, 9, 20, () => { for (let i = 0; i < 3; i++) blip(sc.out, 320, { type: "square", a: 0.002, dec: 0.12, vol: 0.02, at: i * 1.1 }); });
       }
     };
 
@@ -1678,10 +1701,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
     ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
-    ["The Sounding", "sounding", 62, 68]
+    ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet"]);
+  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -1934,7 +1957,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     sounding: { at: [46, 266], clear: [[46, 270, 38], [64, 300, 22]],
       under: [[78, 332], [62, 306], [50, 284]],
       art: [["bowl", 46, 268, .9]],
-      labels: [["Bathyrra", 46, 300, 11, "u"]] }
+      labels: [["Bathyrra", 46, 300, 11, "u"]] },
+    tithe: { at: [40, 196], parts: { 73: [70, 206], 74: [70, 206] }, clear: [[42, 196, 34], [70, 210, 22], [66, 250, 18]],
+      road: [[84, 300], [70, 262], [62, 228], [48, 204]],
+      art: [["hulks", 70, 208, .8], ["isle", 34, 186, .9]],
+      labels: [["Stillwater", 34, 166, 11, ""], ["Raftmark", 82, 232, 9, "s"]] }
   };
   const MAP_SEEN = "lor-map-seen";
   const INK = "#3b2a18", INK2 = "#6b5434", PAPER = "#dcc8a0", WATER = "#5d7774", GLASS = "#5f9a84", AMBER = "#c58a2c";
@@ -1987,6 +2014,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<path d="M-26 -14h16v-6h-16zM28 -14h16v-6h-16z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1" transform="translate(-8 0)"/>'
   };
   Object.assign(MAP_ART, {
+    hulks: () => '<g stroke="' + INK + '" stroke-width="1.1" fill="' + PAPER + '"><path d="M-22 2q6 6 14 0q-6-4-14 0zM-6 -6q6 6 14 0q-6-4-14 0zM8 4q6 6 14 0q-6-4-14 0z"/></g>' +
+      '<path d="M-15 2v-9M1 -6v-10M15 4v-8" stroke="' + INK + '" stroke-width="1"/><path d="M1 -16l6 3-6 3z" fill="' + INK + '"/>' +
+      '<circle r="15" fill="none" stroke="' + INK2 + '" stroke-width=".7" stroke-dasharray="2 2"/>',
+    isle: () => '<path d="M-18 6q2-12 12-14q10-4 16 2q8 4 6 12z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1.2"/>' +
+      '<path d="M-10 -2h14" stroke="' + INK2 + '" stroke-width="1.6"/><circle cx="10" cy="-6" r="1.8" fill="' + AMBER + '"/>' +
+      '<ellipse cx="0" cy="2" rx="26" ry="16" fill="none" stroke="' + WATER + '" stroke-width=".8"/>',
     bowl: () => '<ellipse rx="28" ry="17" fill="' + WATER + '" fill-opacity=".3" stroke="' + INK + '" stroke-width="1.3"/>' +
       '<ellipse rx="17" ry="9" fill="' + PAPER + '" stroke="' + INK2 + '" stroke-width="1" stroke-dasharray="3 2"/>' +
       '<path d="M0 4v-11" stroke="' + INK + '" stroke-width="1.6"/><circle cy="-10" r="3.4" fill="' + AMBER + '" fill-opacity=".85" stroke="' + INK + '" stroke-width=".8"/>' +
@@ -2071,7 +2104,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<rect width="600" height="420" fill="url(#mpStain)"/><rect width="600" height="420" fill="#000" filter="url(#mpGrain)"/>' +
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
       '<g mask="url(#mpFog)"><rect width="600" height="420" fill="#a7a597"/><rect width="600" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
-      (st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
+      (st.reached.includes("tithe") ? '<text x="22" y="70" class="mp-label mp-unk" transform="rotate(-90 22 70)">Uncharted</text>' : st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
       labels + mapStones(st) + you +
       '<g transform="translate(556 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
@@ -2096,7 +2129,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const got = st.reached.includes(c.slug);
       return "<li" + (got ? "" : ' class="fog"') + "><span>" + (got ? esc(c.name) : "Under the fog") + "</span><small>Parts " + roman(c.from + 1) + "–" + roman(c.to + 1) + "</small></li>";
     }).join("") + '<li class="fog"><span>Uncharted</span><small>Part ' + roman(CHAPTERS[CHAPTERS.length - 1].to + 2) + " and beyond</small></li></ol>";
-    h += '<p class="j-note">' + (innerWidth <= 600 ? "Swipe the map sideways to see all of it. " : "") + 'Each slot keeps its own map. ' + (left ? "Fog lifts as you reach each new chapter. " : "") + (st.reached.includes("sounding") ? "Under the western sea there's Bathyrra. Past it, the sea is still blank." : "The western sea is still blank.") + "</p>";
+    h += '<p class="j-note">' + (innerWidth <= 600 ? "Swipe the map sideways to see all of it. " : "") + 'Each slot keeps its own map. ' + (left ? "Fog lifts as you reach each new chapter. " : "") + (st.reached.includes("tithe") ? "Out on the Reach there's Stillwater. Past it, the sea is still blank." : st.reached.includes("sounding") ? "Under the western sea there's Bathyrra. Past it, the sea is still blank." : "The western sea is still blank.") + "</p>";
     $("mapBody").innerHTML = h;
     mapMarkSeen(st.reached.filter(s => MAP[s]));
     mapNudge();
@@ -2221,7 +2254,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "ghosted", name: "Through and Through", desc: "Let a blow pass straight through you while you're ethereal.", test: () => false },
     { id: "lv10", name: "Seasoned", desc: "Reach level 10.", test: () => lv() >= 10, prog: () => [Math.min(10, lv()), 10] },
     { id: "lv25", name: "Ringed Heartwood", desc: "Reach level 25.", test: () => lv() >= 25, prog: () => [Math.min(25, lv()), 25] },
-    { id: "lv40", name: "Forty Rings", desc: "Reach level 40, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
+    { id: "lv40", name: "Forty Rings", desc: "Reach level 40, where the Cascades wake.", test: () => lv() >= LV_GATE, prog: () => [Math.min(lv(), LV_GATE), LV_GATE] },
     { id: "read", name: "Read Like a Book", desc: "Read one kind of foe all the way (5 reads) with Adaptive Reasoning.", test: () => Object.values(S.reads || {}).some(n => n >= 5) },
     { id: "print", name: "Copycat", desc: "Copy a foe's blow with Mockwax.", test: () => false },
     { id: "prints", name: "Full Print Book", desc: "Keep three prints in your print book at once.", test: () => (S.prints || []).length >= 3 },
@@ -2249,6 +2282,19 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "sdhush", name: "Let It Sleep", desc: "Let the Drowned Light be hushed for good.", test: () => false },
     { id: "sdvael", name: "His Last Whisper", desc: "Give Vaelric the Drowned Light to sing to.", test: () => false },
     { id: "sdmind", name: "Nothing Forgotten", desc: "Finish The Sounding with nothing the Hushed took still missing.", on: "chapter", test: (c) => c.ch === "sounding" && S.sd && !S.sd.forgot.length },
+    { id: "pzsigned", name: "Signed in Salt", desc: "Sign the Tithe Fleet's Articles in your own arm.", test: () => false },
+    { id: "pzkeel", name: "Under the Keel", desc: "Refuse the Articles, and come up the other side.", test: () => false },
+    { id: "pzsails", name: "All Plain Sail", desc: "Match the bosun's call on the pin-rail in the fewest throws there are.", test: () => false },
+    { id: "pzbones", name: "Read the Bones", desc: "Beat Dace Mallory at Bones in the fo'c'sle.", test: () => false },
+    { id: "pzreckon", name: "Through the Teeth", desc: "Take the Widow's Tally through the Teeth without a scratch.", test: () => false },
+    { id: "pzskim", name: "The Skimmer", desc: "Name the skimmer by the dawn bell, and be right.", test: () => false },
+    { id: "pztricks", name: "Every Dirty Trick", desc: "Learn all five pirate tricks.", test: () => (S.tricks || []).length >= 5 },
+    { id: "pzcrew", name: "Sworn Hands", desc: "Have all five of the Widow's Tally's best sworn to you.", test: () => false },
+    { id: "pzrise", name: "Under the Black", desc: "Become captain of the Widow's Tally.", test: () => false },
+    { id: "pzsell", name: "The Saltwrit's Pardon", desc: "Sell the Tithe Fleet to the gibbets.", test: () => false },
+    { id: "pzburn", name: "Every Knot a Name", desc: "Give the Tithe Fleet its dead back.", test: () => false },
+    { id: "pzblack", name: "A Black Name", desc: "Raise your Plunder to 8 on the roads back.", test: () => (S.plunder || 0) >= 8, prog: () => [Math.min(8, S.plunder || 0), 8] },
+    { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
@@ -2272,7 +2318,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "deafstones", name: "The Deafstones", ver: "7", desc: "Thirty tablets the Whisperers couldn't hush, and the founding story of every land.",
       ids: ["stone1", "stoneclean", "stoneset", "stone10", "stonestand", "stone20", "stone30"] },
     { id: "sounding", name: "The Sounding", ver: "8", desc: "Under the western sea: the Bathyr tap language, the Hall of Lead, the Hushed, and the Drowned Light.",
-      ids: ["sdstairs", "sdwords", "sdtruths", "sdname", "sdhushed", "sdall", "sdsound", "sdhush", "sdvael", "sdmind"] }
+      ids: ["sdstairs", "sdwords", "sdtruths", "sdname", "sdhushed", "sdall", "sdsound", "sdhush", "sdvael", "sdmind"] },
+    { id: "tithe", name: "The Black Tithe", ver: "9", desc: "Pressed onto a Skerran raider on the Stillwater Reach: pirate tricks, the Articles, three ways to end the Fleet, Plunder on the roads back, and ten more levels.",
+      ids: ["pzsigned", "pzkeel", "pzsails", "pzbones", "pzreckon", "pzskim", "pztricks", "pzcrew", "pzrise", "pzsell", "pzburn", "pzblack", "lv50"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2486,6 +2534,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     rahItems(items);
     rxItems(items);
     sdItems(items);
+    pzItems(items);
     lvItems(items);
     linkItems(items);
     S.books.forEach((b, i) => items.push(["book" + i, "book", b, BOOKS.find(x => x.name === b)?.desc || ""]));
@@ -2497,6 +2546,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     renderUnder();
     renderRah();
     renderSd();
+    renderPz();
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -2619,7 +2669,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     swap: ["Swapping weapons", "A weapon on your harness swaps in for free once a turn. A second swap in the same turn gives the foe advantage, and one pulled out of the pack costs your next swing. Set your harness from the Bag."],
     dig: ["Digging in", "Once a fight, when you're down to about a quarter of your HP, you dig in: catch the root up to three times to heal and harden your guard. You carry 3 footholds, and one comes back each chapter."],
     spoils: ["Spoils", "Every fight you live through leaves a leaf of the Scroll of Acquisition, and four leaves teach you a new skill. Salvage from foes you put down is sold for you as the next part starts."],
-    level: ["Levels", "Parts, chapters, passed checks and won fights all earn XP, up to level 40. Foes grow with you, so a level buys you more tricks rather than an easy ride: Adaptive Reasoning at 5, Mimic at 8."],
+    level: ["Levels", "Parts, chapters, passed checks and won fights all earn XP, up to level 50. Foes grow with you, so a level buys you more tricks rather than an easy ride: Adaptive Reasoning at 5, Mimic at 8."],
     company: ["Your company", "Each companion lands one blow a fight, after your first, and always leaves the kill to you. Bond grows with every third fight won together and with an evening at camp at each chapter's end."],
     weather: ["Weather", "Weather rolls on the road between parts and changes fights for both sides. The line above says how, and your sheet shows what's in the air."],
     beast: ["Creatures of the road", "Between parts, the realm's own creatures turn up. Fight for XP and spoils, or slip past. Each one you meet goes in your journal's bestiary with its trick, and filling it earns marks."],
@@ -2630,6 +2680,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     sky: ["The Sea-Sky", "Under Bathyrra the sea hangs overhead, held up by the Drowned Light, and it's coming down. The Sea-Sky on your sheet is this chapter's clock: errands, wrong answers and slow work spend it. At 3 or less you fight knee-deep, and the evacuation at the end is paid for out of it."],
     sounding: ["Sounding", "The Bathyr talk by tapping stone. A word is a short rhythm of <b>●</b> taps and <b>▬</b> presses; you feel it for a moment, then tap it back. Every word you learn goes in your Bag, with its rhythm. A tap weighs 1 and a press 2, which matters on their doors."],
     forget: ["Forgetting", "The Hushed don't only hurt you, they make you forget: a fight move drops out of your options. In a fight you can try to remember, or a friend can remind you. Out of a fight, a Deafstone or the word <b>remember</b> brings one back."],
+    tithe: ["The Black Tithe", "Aboard the Widow's Tally the clock is the Tide-count: days until the Fleet gathers. Errands spend it, and whatever's left at the end is an edge in the last fight. Your name in the crew decides what they'll let you do. The Saltwrit, the pirate hunters, would like to hear from you too."],
+    tricks: ["Pirate tricks", "Tricks you learn from the crew go in every fight from now on, each once a fight: the belaying pin, the boarding hook, a powder flash, salt in the eyes, and running up the black. They don't cost a roll, mostly. They do cost your turn."],
+    plunder: ["Plunder", "On the roads back you can raid caravans (or, with the Saltwrit's pardon, hunt raiders). Raids raise your Plunder: at 3 caravans give up easier, at 8 you take a quarter more, and at 15 running up the black never needs a roll."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -2928,7 +2981,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // +1 every 3, so an ordinary fight costs about a fifth of your HP over 3 to 4 rounds at any
   // level (it was under a tenth after the Glade), and the last bosses take 7 to 9 rounds, not 10 to 12. Head-count mobs keep their numbers. Level 5 teaches Adaptive Reasoning,
   // level 8 teaches Mimic, and level 40 wakes the Cascades (see the roads back, further down).
-  const LV_MIN = 3, LV_MAX = 40, WAX_MAX = 9, PART_XP = 40, CHAPTER_XP = 200;
+  const LV_MIN = 3, LV_MAX = 50, LV_GATE = 40, WAX_MAX = 9, PART_XP = 40, CHAPTER_XP = 200;
   const xpNeed = (L) => 60 + 10 * (L - LV_MIN);
   const lv = () => Math.min(LV_MAX, Math.max(LV_MIN, S.lv || LV_MIN));
   const lvk = () => lv() - LV_MIN;
@@ -3068,7 +3121,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     return null;
   }
   async function chestOffer(where) {
-    if (chestOwned() || lv() < LV_MAX || S.coins < CHEST_COST) return false;
+    if (chestOwned() || lv() < LV_GATE || S.coins < CHEST_COST) return false;
     const c = await choose([{ key: "y", label: "Buy the Warden's Weapon Chest", tag: CHEST_COST + " gold · 6 places, safe through any death, shared by all your save slots" }, { key: "n", label: "Not now", plain: true }]);
     if (c !== "y") return false;
     S.coins -= CHEST_COST;
@@ -3079,7 +3132,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     return true;
   }
   async function chestStall(C) {
-    if (chestOwned() || lv() < LV_MAX || S.coins < CHEST_COST || S.chestSeen === C.slug) return;
+    if (chestOwned() || lv() < LV_GATE || S.coins < CHEST_COST || S.chestSeen === C.slug) return;
     S.chestSeen = C.slug;
     await say("Hobb Tallis has something new on the cart: an iron-bound chest with warden's oak leaves burned into the lid. \"For somebody who's come a long way,\" he says, and looks you up and down. \"You have. Whatever you put in this stays put. Fire, flood, the Bloom, your own death. I've seen it.\"");
     await chestOffer();
@@ -3244,7 +3297,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // second swap in the same turn gives the foe advantage on its next attack (you're caught mid-swap);
   // a weapon from your pack costs your next swing while you dig it out. Each weapon's active works
   // once a fight, so swapping between them is how you chain them.
-  const harnCap = () => 4 + (lv() >= 20 ? 1 : 0) + (lv() >= LV_MAX ? 1 : 0);
+  const harnCap = () => 4 + (lv() >= 20 ? 1 : 0) + (lv() >= LV_GATE ? 1 : 0);
   function harness() {
     if (!Array.isArray(S.harn)) S.harn = arms().concat(armLoot().map(x => "L" + x.id)).slice(0, harnCap());
     S.harn = S.harn.filter((k, i, a) => k !== "axe" && owns(k) && a.indexOf(k) === i).slice(0, harnCap());
@@ -3385,7 +3438,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (L === 5) { S.adapt = true; lvNewsQ().push(["adapt", L]); }
     if (L === 8) { S.mimic = true; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); lvNewsQ().push(["mimic", L]); }
     else if (L > 8 && L % 4 === 0) S.wax = Math.min(WAX_MAX, (S.wax || 0) + 1);
-    if (L === LV_MAX) { S.cascade = true; lvNewsQ().push(["cascade", L]); }
+    if (L === LV_GATE) { S.cascade = true; lvNewsQ().push(["cascade", L]); }
     stat("level-" + L, "Reached level " + L);
   }
   function lvPerks(L) {
@@ -3396,7 +3449,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (L === 5) p.push("learned Adaptive Reasoning");
     if (L === 8) p.push("learned Mimic, with 3 Mockwax");
     else if (L > 8 && L % 4 === 0) p.push("+1 Mockwax");
-    if (L === LV_MAX) p.push("the Cascades wake");
+    if (L === LV_GATE) p.push("the Cascades wake");
     return p.join(", ") + ". Foes rise to meet you.";
   }
   const LV_ICON = '<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#22301f" stroke="#cfa850" stroke-width="1.5"/><circle cx="17" cy="17" r="10" fill="none" stroke="#9fbf7a" stroke-width="1"/><circle cx="17" cy="17" r="6" fill="none" stroke="#9fbf7a" stroke-width="1"/><path d="M17 26V12M12 16l5-5 5 5" fill="none" stroke="#ffd27a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -3532,8 +3585,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // (1–3) decides how many words survive. S.stones = { id: { g, p, pry } } per slot; J.stones marks
   // what any journey has found. S.hh counts the quiet Hear or Hush choices (see hhScore).
   // New chapters: add a STONES entry under the region's TIER key, and a STONE_REG slug.
-  const STONE_REG = { roots: "labyrinth", desert: "desert", fen: "hushfen", mere: "carrowmere", lastwell: "lastwell", glass: "assize", corrach: "corrach", noon: "noon", undermoon: "undermoon", rahdaria: "rahdaria", bathyrra: "sounding" };
-  const STONE_LAND = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra" };
+  const STONE_REG = { roots: "labyrinth", desert: "desert", fen: "hushfen", mere: "carrowmere", lastwell: "lastwell", glass: "assize", corrach: "corrach", noon: "noon", undermoon: "undermoon", rahdaria: "rahdaria", bathyrra: "sounding", reach: "tithe" };
+  const STONE_LAND = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach" };
   const SCRIPTS = {
     cord: ["Moored knot-cords", (p) => p >= 49], hesk: ["Hesk song-script", (p, s) => (s.song || 0) >= 1 || p >= 41],
     shade: ["Lidless shadow-script", (p) => p >= 43], lead: ["Bathyr pressed lead", (p) => p >= 57]
@@ -3666,6 +3719,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       { id: "b3", t: "The Grey Thread", mat: "gold", part: null, chk: ["Investigation", 15],
         where: "On the black glass hill where the Hushed camped, one of their stakes is still standing, and it isn't a stake. It's a gold plate, driven edge-first into the glass, with writing on both faces.",
         text: "Severine, if you read this: I did what you asked, and sat with the old Sounder through the night, and in the morning he did not know his hands. I have pressed this in gold so that I cannot hush it out of myself. I don't want to forget that I did it. I think that is the only thing that will save us." }
+    ],
+    reach: [
+      { id: "r1", t: "The First Article", mat: "stone", part: 70, chk: ["Investigation", 15],
+        where: "In the ballast of the Widow's Tally, under a hundred years of shingle, the stone the ship was built round: a flat black slab with a hole bored through it for a cable, and the edges cut with marks.",
+        text: "We were fishers, and the land drove us off it with fire, and we swore we would not stand on it again until it said sorry. [[That was the whole of the first Article. The tithe came later, when we were angry, and the forgetting came later still, when we were ashamed.]]" },
+      { id: "r2", t: "The Salt King's Debt", mat: "gold", part: 73, chk: ["Perception", 15],
+        where: "On Raftmark's tally-stone, where the shares are paid, a gold plate has been beaten flat into the rock so long ago the salt has grown over it. Where your hand rubs the salt away, there's writing.",
+        text: "Paid to the Quiet: the names of our drowned, every one, for thirty years. Received: no ship near Stillwater, and peace in our hearts. Signed, Seld, who will not remember signing. [[Whoever reads this: he was a good man once, before he couldn't remember being anything else.]]" },
+      { id: "r3", t: "Ilka's Shepherd's Mark", mat: "stone", part: null, chk: ["Investigation", 16],
+        where: "On the Gibbet Skerries, where the Saltwrit's iron cages hang, the oldest rock has a mark cut into it that isn't a Saltwrit mark: a crook, like a shepherd's.",
+        text: "I came this way going out to the island, and I hushed the sea so it would let me cross. It is still hushed. I am sorry for that too. A sea that cannot make a sound cannot call for help." }
     ]
   };
   const ILKA = { t: "Ilka's Stone", text: "My name is Ilka Moth, and I was a shepherd. I heard the moon coming three days before it fell. The Hesk taught me how to make a frightened thing sleep, and I did it, and it worked. Then I did it to a frightened village. Then to a curious one. Then to one that was only asking. I carved this after, on the island, where nobody can hear me. Whoever has found every stone: now you know what I did. Do better than I did. Listen first." };
@@ -3689,6 +3753,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     add(s.nk && { dusk: [2, 0], night: [1, 0], keep: [0, 1] }[s.nk.ending]);
     add(s.um && { rise: [1, 0], plant: [0, 1], vael: [0, 1] }[s.um.ending]);
     add(s.sd && { sound: [2, 0], vael: [1, 0], hush: [0, 2] }[s.sd.ending]);
+    add(s.pz && { burn: [2, 0], rise: [0, 1], sell: [0, 1] }[s.pz.ending]);
     return { hear, hush };
   }
   function hhWords(s) {
@@ -3893,7 +3958,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     bathyrra: { key: "knuckle", icon: "stone", name: "Oud's Knuckle", fx: "The first Sounder's tapping-stone, worn to the shape of her hand: +5 max HP and two Draughts of Mending tucked in the pouch with it.", hint: "the black glass hill where the Light came down",
       where: "Under the western sea, a Cascade comes up through the black glass hill at the Drowned Light's foot, and where it runs, the glass has cracked open like ice on a pond.",
       find: "In the crack, in a pouch of fish-leather gone hard as wood, there's a knuckle of black basalt worn into a hollow the exact shape of a fingertip. The Bathyr would know whose it was. Oud's, the first Sounder, who sat with the Light for three days before it answered.",
-      on: () => { S.maxHp += 5; S.hp += 5; S.potions = (S.potions || 0) + 2; } }
+      on: () => { S.maxHp += 5; S.hp += 5; S.potions = (S.potions || 0) + 2; } },
+    reach: { key: "firstknot", icon: "tally", name: "The First Knot", fx: "The oldest knot of the oldest count-rope in the Fleet: +5 max HP and 50 gold of Raftmark silver.", hint: "the drowned hulks of Raftmark",
+      where: "On the Stillwater Reach, a Cascade pours up out of the sea in the middle of Raftmark's ring of dead ships, and the oldest hulk of all, the one the Skerra never speak of, rolls over in it and shows her keel.",
+      find: "Nailed to her keel, in a lead box gone white, there's a single knot of rope, tarred black, so old the rope has turned to something like stone, and a purse of old silver. The first knot the first Skerran ever tied for the first of their drowned.",
+      on: () => { S.maxHp += 5; S.hp += 5; S.coins += 50; } }
   };
   const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part));
   const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
@@ -3922,15 +3991,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     scrollNext = true; add(h);
     if (first) {
       await say("The roads you came down are still there behind you, and so are the things that live on them. Nothing in the realm has stopped growing just because you passed through.");
-      await mech("The roads back: walk any region you've cleared and fight what lives there, for XP and gold. Every foe is matched to your level. At level " + LV_MAX + ", things hidden in the old places come loose, and the Cascades wake.");
+      await mech("The roads back: walk any region you've cleared and fight what lives there, for XP and gold. Every foe is matched to your level. At level " + LV_GATE + ", things hidden in the old places come loose, and the Cascades wake.");
     } else await say("You're on the road again, at level " + lv() + ".");
     for (;;) {
       checkpoint();
       try {
         await lvNews();
-        const left = relicsLeft().length, cap = lv() >= LV_MAX;
+        const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
-          { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (cap ? " · gold" : " · XP and gold") },
+          { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
+          { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "seek", label: "Search the old places for what was hidden", tag: left + " of " + roamRegions().filter(r => RELICS[r]).length + " still hidden", plain: true, show: cap && left > 0 },
@@ -3940,6 +4010,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           { key: "journal", label: "Open your journal", plain: true }
         ]);
         if (c === "walk") await roamWalk();
+        else if (c === "raid") await roadRaid();
         else if (c === "town") await townPick();
         else if (c === "seek") await roamSeek();
         else if (c === "stones") await stoneRoads();
@@ -3986,6 +4057,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         get intro() { return S.sd && S.sd.ending === "hush" ? "There's no Bathyrra any more, only sea. The Bathyr live on the salt flats north of Rahdaria now, in low lead-roofed houses carried up the stair a sheet at a time, and they still tap on their doorposts to each other, and stop when you go by, and start again." : "Down the Sea-Stair, under a sky of fish, Bathyrra ticks and clicks like a clock shop. The tapping stops when you come in, the way it always does, and then somebody taps <i>friend</i>, and it starts again."; } },
       { get name() { return S.sd && S.sd.ending === "hush" ? "The Speaker's stone table" : "The foot of the Drowned Light"; }, kind: "sanctuary", has: ["sanctum"],
         get intro() { return S.sd && S.sd.ending === "hush" ? "Mag carried the Speaker's stone table up the stair by herself, and it stands in the middle of the salt-flat camp now, with a fire beside it. Anybody can sit there. Nobody whispers." : "At the foot of the Drowned Light the black glass is warm, and the Light taps, slowly, all night long, and somebody always taps back. You sleep there like a child."; } }
+    ],
+    reach: [
+      { get name() { return S.pz && S.pz.ending === "sell" ? "The Saltwrit station on the Gibbet Skerries" : "Raftmark"; }, kind: "town", has: ["inn", "market", "smith", "bar"],
+        get intro() { return S.pz && S.pz.ending === "sell" ? "Where Raftmark was, there's a Saltwrit station now, with a chandler and a tavern for the hunters, and the iron cages on the rocks outside the windows. Nobody looks at them. Everybody looks at you." : S.pz && S.pz.ending === "burn" ? "Raftmark is half the size it was, and quiet, and on every hulk that's left, somebody has hung a count-rope with the knots retied, and under each knot a name, on a strip of sail." : "Raftmark rides at anchor in the lee of Stillwater, a ring of a hundred lashed hulks, tar and smoke and Skerran music. When you come over the plank bridge, the whole market stops and touches its forehead to you. Captain."; } },
+      { get name() { return S.pz && S.pz.ending === "rise" ? "The Widow's Tally" : "The edge of the still water"; }, kind: "sanctuary", has: ["sanctum"],
+        get intro() { return S.pz && S.pz.ending === "rise" ? "Your ship. Hawl has your hammock slung, and Gannet has saved you a fish, and Ninian has the ledger out. Nobody takes a tithe aboard her any more." : "At the edge of the still water round Stillwater, nothing makes a sound, and nothing comes for you. You sleep in a boat on the glassy sea and wake up rested."; } }
     ]
   };
   const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t)));
@@ -4850,12 +4927,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     noon: "At the top of the deep stair, in the last of Thrumhold's lamplight, the same three sellswords are waiting. Odran has brought extra lamp oil. A great deal of extra lamp oil.",
     undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\"",
     rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\"",
-    sounding: "On the jetty where the Bathyr boats tie up, the same three sellswords are sitting on a crate of lamp oil. \"A city at the bottom of the sea,\" Wenna says. \"With no water in it. Somebody's going to fall off something.\""
+    sounding: "On the jetty where the Bathyr boats tie up, the same three sellswords are sitting on a crate of lamp oil. \"A city at the bottom of the sea,\" Wenna says. \"With no water in it. Somebody's going to fall off something.\"",
+    tithe: "On the Rahdaria quay, the same three sellswords are sitting on a coil of rope beside a cog called the <i>Marigold</i>. \"Stillwater?\" Odran says. \"Across the Reach? Nobody crosses the Reach.\" \"We'll come anyway,\" Wenna says. \"Somebody'll need to say they told you so.\""
   };
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
     if (!S.tyra) return false;
+    if (S.pz && S.pz.on) return !!S.pz.tyra;
     if (S.sd && S.sd.on) return !!S.sd.tyra;
     if (S.rh && S.rh.on) return !!S.rh.tyra;
     if (S.um && S.um.on) return !!S.um.tyra;
@@ -5166,7 +5245,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     mere: { k: ["rain", "fog", "storm"], quake: 0 }, lastwell: { k: ["fog", "rain", "wind"], quake: 0 }, glass: { k: ["heat", "storm", "wind"], quake: 0 },
     corrach: { k: ["snow", "wind", "snow"], quake: 25 }, noon: { k: [], quake: 15 }, undermoon: { k: [], quake: 30 },
     rahdaria: { k: ["rain", "storm", "wind", "heat", "fog"], quake: 15 },
-    bathyrra: { k: ["rain", "fog"], quake: 20 }
+    bathyrra: { k: ["rain", "fog"], quake: 20 },
+    reach: { k: ["fog", "storm", "wind", "rain"], quake: 0 }
   };
   const wxNow = () => S.wx || null;
   const wxIs = (k) => !!(S.wx && S.wx.k === k);
@@ -5631,7 +5711,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     noon: [["a sun-baked colonnade", "large"], ["a cracked bell-arch", "small"]],
     undermoon: [["a hanging tooth of moonstone", "large"], ["a rusted lift-cage on one chain", "small"]],
     rahdaria: [["a siege-scarred watchtower", "large"], ["a terrace wall of the hanging gardens", "large"]],
-    bathyrra: [["a lead-roofed drying shed", "large"], ["an arch of whale ribs", "small"]]
+    bathyrra: [["a lead-roofed drying shed", "large"], ["an arch of whale ribs", "small"]],
+    reach: [["a stack of lashed powder-kegs", "large"], ["a cargo-net of ballast stone, hanging from a yard", "small"]]
   };
   function roadTerrain(reg) {
     const L = ROAD_TERRAIN[reg];
@@ -5669,7 +5750,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     noon: { name: "Noonflash", fill: "a stoppered splinter of the Kept Noon", cost: 14, dice: [3, 8], type: "radiant", fx: "shade", fxTxt: "double against shades" },
     undermoon: { name: "Tidepull", fill: "a cracked kinstone", cost: 14, dice: [2, 8], type: "bludgeoning", fx: "blind", fxTxt: "it comes unmoored: −2 to hit for the fight" },
     rahdaria: { name: "Pitch-pot", fill: "Bathyr pitch and lamp oil", cost: 12, dice: [3, 8], type: "fire", fx: "bleed", fxTxt: "the pitch keeps burning: 1d4 a round for 3 rounds" },
-    bathyrra: { name: "Plummet", fill: "a Bathyr sounding-lead", cost: 14, dice: [3, 6], type: "bludgeoning", fx: "still", fxTxt: "it lands like a dropped anchor: it loses its next turn" }
+    bathyrra: { name: "Plummet", fill: "a Bathyr sounding-lead", cost: 14, dice: [3, 6], type: "bludgeoning", fx: "still", fxTxt: "it lands like a dropped anchor: it loses its next turn" },
+    reach: { name: "Smoke-pot", fill: "a pot of Skerran black powder and tarred oakum", cost: 14, dice: [3, 6], type: "fire", fx: "blind", fxTxt: "the black smoke blinds it: −2 to hit for the fight" }
   };
   const rmines = () => S.rmines || (S.rmines = {});
   // Mines are strong for their price, so a fight takes at most MINE_CAP of them (rune mines and
@@ -9921,6 +10003,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       tcFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       sdFilter(opts, st);
+      pzFilter(opts, st);
       if (opts.some(o => /^mun-/.test(o.key))) tip("mines");
       if (!F.company) tip("menu");
       FOE.menu = true;
@@ -10005,6 +10088,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       }
       else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
       else if (String(c).startsWith("sd-")) await sdFightDo(c, F, st);
+      else if (String(c).startsWith("pz-")) await pzFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
       if (st.quick > 0) {
@@ -10049,7 +10133,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       st.split--;
       if (d(3) > 1) { await say("It strikes one of your copies, which shatters into a spray of nothing. " + (st.split ? st.split + " more " + (st.split > 1 ? "attacks" : "attack") + " may miss you." : "The last copy is gone.")); return false; }
     }
-    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis, adv: !!st.winded, cta: "Brace" });
+    if (st.pzSalt > 0) { st.pzSalt--; await say("It swings blind, eyes streaming with salt, and the blow goes nowhere near you."); return false; }
+    if (st.pzShaken) bonus -= 2;
+    const pzDis = !!st.pzDis; st.pzDis = false;
+    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis, adv: !!st.winded, cta: "Brace" });
     st.winded = false;
     if (hit) {
       if (st.soft && F.hesk && S.hp > 0) { const lost = S.hp; await hurt(n, s, type, o.why || F.hitWhy); const back = Math.min(2, lost - Math.max(0, S.hp)); if (back > 0 && S.hp > 0) { S.hp = Math.min(S.maxHp, S.hp + back); renderSheet(); await mech("The softened blade does " + back + " less.", "loot"); } }
@@ -10160,10 +10247,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -10297,7 +10384,19 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       tactic: "Kill them fast, before they've taken what you need. A friend at your side can remind you, and so can trying hard to remember.",
       lore: "Pale soft things like moths the size of a hand that came down into Bathyrra with the Hushed and breed in their grey tents. They eat sound. Where a swarm has settled, the Bathyr say, a house goes quiet for a week, and nobody in it can remember what they were going to say.",
       intro: "It's very quiet in the street. Too quiet: the tapping has stopped. Then you see why. The air is full of pale soft wings, drifting toward you like ash off a fire, and where they pass, the sound goes out of things.",
-      who: "the quietings", hitWhy: "Soft wings brush your face, and something goes out of you with your breath.", miss: "They flutter past, silent.", hitLine: "It goes out like a pinched candle." }
+      who: "the quietings", hitWhy: "Soft wings brush your face, and something goes out of you with your breath.", miss: "They flutter past, silent.", hitLine: "It goes out like a pinched candle." },
+    { id: "brackray", name: "Brackray", region: "reach", quirk: "jolt", hp: 22, ac: 13, atk: 5, n: 1, s: 6, type: "lightning", notice: 13,
+      ability: ["Jolt", "Every third round its wings light up blue and it lets go: 3d6 lightning across everything near it. You see it coming at the start of the round, and that's the round to Evade."],
+      tactic: "Swing freely in the quiet rounds, and when the wings light, get out of the way. Evade, or a hook that throws its blow off, or salt in its eyes.",
+      lore: "Pale flat fish like cloaks, as wide as a door, that follow ships across the Reach for the scraps and sometimes come over the rail for the cook. The Skerra eat them, carefully, and use the dried wings for lanterns: they glow for a year.",
+      intro: "Something pale and flat comes up out of the water beside the road where it runs along the shore, and slides up over the shingle like a sheet blown off a line, its wing-edges flickering cold blue.",
+      who: "the brackray", hitWhy: "Its wing-edge lashes across you, and every muscle in your body locks.", miss: "Its wing slaps the stones, crackling.", hitLine: "Your blade goes through the soft pale meat of its wing." },
+    { id: "wreckgulls", name: "Wreck-gulls", region: "reach", quirk: "mob", heads: 5, unit: "gull|gulls", ac: 12, atk: 4, n: 1, s: 4, type: "piercing", notice: 12, bleed: 25,
+      ability: ["Mob", "While three or more are left, three of them strike each round instead of two, and their beaks open wounds that bleed."],
+      tactic: "Thin them out fast: anything that drops more than one at a time, a powder flash, a pack of caltrops. Below three, they're only gulls.",
+      lore: "Big grey gulls with hooked red beaks that live on the Gibbet Skerries and eat what the Saltwrit leave in the cages. They've learned that a person on their own is a meal that hasn't happened yet.",
+      intro: "A gull lands on a post ahead of you and looks at you with one yellow eye. Then another. Then the air is full of them, wheeling and screaming, and they come down at you all at once like a thrown net.",
+      who: "the wreck-gulls", hitWhy: "A hooked red beak rips a strip out of you.", miss: "Wings beat round your head, and miss.", hitLine: "A gull drops out of the air in a burst of grey feathers." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -10464,6 +10563,22 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         st.evade = false; return "done";
       }
     },
+    jolt: {
+      before: async (F, st) => { st.charge = st.round % 3 === 0 && FOE.hp > 0; if (st.charge) await say("Its wings light up along their edges, brighter and brighter, humming like a hive. It's going to let go this round. Get out of the way."); },
+      turn: async (F, st) => {
+        if (!st.charge) return null;
+        await say("It lets go: a crack of cold blue fire across everything near it.");
+        await foeSwing(F, st, { n: 3, s: 6, type: "lightning", label: F.who + " discharges" });
+        st.evade = false; return "done";
+      }
+    },
+    mob: {
+      turn: async (F, st) => {
+        if (FOE.hp < 3) return null;
+        for (let i = 0; i < 3; i++) await foeSwing(F, st);
+        st.evade = false; return "done";
+      }
+    },
     mute: {
       before: async (F, st) => { if (st.round > 1 && FOE.hp > 0 && S.sd && d(3) === 1) await sdForget("One of them settles on you, soft as ash.", st); }
     },
@@ -10479,7 +10594,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // they're more afraid of what they're turning into than of you.
   const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
     cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
-    wallgar: "kiteeel", quietings: "cutshade" };
+    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
   const beastById = (id) => BEASTS.find(b => b.id === id);
 
@@ -14493,7 +14608,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const c = await choose([
         { key: "scale", label: "A Rahdarian scale shirt", tag: priceTag(30) + " · +1 AC", show: !hasGear("scale") && S.coins >= rhPrice(30) },
         { key: "whet", label: "Have her hone and balance the axe", tag: priceTag(15) + " · +1 axe damage", show: S.axe && !S.whet && S.coins >= rhPrice(15), plain: true },
-        { key: "chest", label: "Ask about the iron-bound chest under her bench", tag: CHEST_COST + " gold · level 40", show: S.axe && !chestOwned() && lv() >= LV_MAX && S.coins >= CHEST_COST, plain: true },
+        { key: "chest", label: "Ask about the iron-bound chest under her bench", tag: CHEST_COST + " gold · level 40", show: S.axe && !chestOwned() && lv() >= LV_GATE && S.coins >= CHEST_COST, plain: true },
         ...Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k)).map(k => ({ key: "w-" + k, label: "Buy the " + WEAPONS[k].name + " off her rack", tag: priceTag(WEAPONS[k].price) + " · " + WEAPONS[k].fx, show: S.axe && S.coins >= rhPrice(WEAPONS[k].price), plain: true })),
         { key: "done", label: "Leave the smithy", plain: true }
       ]);
@@ -17966,7 +18081,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     return new Promise(resolve => {
       const P = puzzleBox("The hush", "Twelve wardens in a ring, whispering one note. Yours has to sit inside the others, not above them, not below. Each breath the night pulls your note one way or the other. Breathe in to lift it, out to lower it, or hold. Keep it in the band.");
       const bar = el("div", "pgrid tones"); bar.style.gridTemplateColumns = "repeat(11, 26px)";
-      const cells = [...Array(11)].map((_, i) => { const s = el("span", "sd-cell" + (i >= 4 && i <= 6 ? " band" : ""), ""); bar.appendChild(s); return s; });
+      const cells = [...Array(11)].map((_, i) => { const s = el("span", "sd-cell" + (i >= 4 && i <= 6 ? " pz-goal" : ""), ""); bar.appendChild(s); return s; });
       const hist = el("div", "lockhist");
       P.body.append(bar, hist);
       const up = pbtn("Breathe in ▲"), hold = pbtn("Hold", "primary"), down = pbtn("Breathe out ▼"), give = pbtn("Stop whispering");
@@ -18496,7 +18611,930 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (D.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits beside you on the gunwale of the boat with her boots dripping. \"A city at the bottom of the sea,\" she says. \"And a sky made of fish.\" She leans her head on your shoulder. \"Next time, we're going somewhere dry.\"" : "Tyra sits in the bottom of the boat with her knees up, wringing out her hair. \"Forty-four keys,\" she says. \"Forty-five. I took one off the Hall of Lead. It's very heavy.\"");
     if (D.ending !== "vael" && vaelricSpeaks()) await voice("\"Stillwater,\" Vaelric says. \"I was seven. There was a gate, and a woman with a kind hand.\" A long pause. \"I'd like to see it again. I think. I'd like to see it from the outside.\"");
     D.on = false; D.done = true; renderSheet();
+    await go("Sail for Stillwater");
+  }
+
+  // ======================= The Black Tithe: the Stillwater Reach =======================
+  // Parts LXX–LXXVI (S.part 69–75). On the way to Stillwater you're taken by the Tithe Fleet, Skerran
+  // raiders who take a tenth of every ship's cargo and a tenth of its crew, and pressed onto the
+  // Widow's Tally. Over the chapter you choose: rise in the crew, sell the Fleet to the Saltwrit
+  // (the pirate hunters), or break the bargain the Fleet has made with the Hushed of Stillwater.
+  // State is S.pz (pz()):
+  //   days    the Tide-count, 8 → 0: days until the Black Tithe gathers at Raftmark. Errands, repairs
+  //           and slow work spend it. Days left at the end are your edge in the last fight.
+  //   name    your name in the crew, 0–10 (Pressed … the crew's choice).  writ  the Saltwrit's favour, 0–10.
+  //   share   gold owed you under the Articles, paid out at Raftmark.  crew  hands sworn to you (PZ_CREW keys).
+  //   errands done.  keel  keelhauled.  prize  "lot" | "spoke" | "signed".  skim  "right" | "wrong" | "none".
+  //   pell    the Saltwrit's man aboard: "ally" | "cold" | "told".  key  signal-book pieces (0–2).
+  //   saw     saw the Quiet Passengers at work.  bargain  learned what the Fleet sold to the Hushed.
+  //   path / ending  "rise" | "sell" | "burn".
+  // Carried for good: S.tricks (pirate tricks, used in every fight) and S.plunder (your Plunder on
+  // the roads back: caravan raids, or for a Saltwrit man, hunting raiders).
+  const pz = () => S.pz;
+  const pzOn = () => !!(S.pz && S.pz.on);
+  const PZ_DAYS = 8;
+  const PZ_RANK = ["Pressed", "Pressed", "Landsman", "Landsman", "Hand", "Hand", "Able hand", "Able hand", "Trusted", "Trusted", "The crew's choice"];
+  const PZ_CREW = {
+    hawl: { name: "Hawl Ostrey", role: "bosun · Skerran", trick: "pin" },
+    gannet: { name: "Gannet", role: "powder-boy · Skerran", trick: "powder" },
+    dace: { name: "Dace Mallory", role: "pressed fiddler and card-cheat", trick: "salt" },
+    jen: { name: "Marrow-Jen", role: "harpooner · Skerran", trick: "hook" },
+    ninian: { name: "Ninian Rooke", role: "quartermaster · keeper of the Articles", trick: "black" }
+  };
+  const PZ_TRICKS = {
+    pin: ["Belaying pin", "Crack it with a belaying pin", "1d6 + 2, no roll · half the time it's dazed and loses its turn"],
+    hook: ["Boarding hook", "Hook and haul", "advantage on your next swing, and its next blow has disadvantage"],
+    powder: ["Powder flash", "Throw a powder flash", "2d6 + 2 fire, no roll · drops two of a pack"],
+    salt: ["Salt in the eyes", "Throw salt in its eyes", "its next two blows miss outright"],
+    black: ["Run up the black", "Run up the black", "Intimidation · a pack breaks and runs, a lone foe is shaken (−2 to hit)"]
+  };
+  const PL_TIERS = [[0, "Nobody's heard of you"], [3, "A road-raider"], [8, "A Black Name"], [15, "Terror of the Reach"]];
+  const plTier = (n = S.plunder || 0) => { let t = 0; PL_TIERS.forEach(([at], i) => { if (n >= at) t = i; }); return t; };
+  const pzHunter = () => !!(S.pz && S.pz.ending === "sell");
+  function initTithe() {
+    S.gear = S.gear || []; S.hh = S.hh || { hear: 0, hush: 0 }; S.tricks = S.tricks || [];
+    S.pz = { on: true, days: PZ_DAYS, name: 0, writ: 0, share: 0, crew: [], errands: [], keel: false, signed: false, prize: "", skim: "", pell: "", key: 0,
+      saw: false, bargain: false, path: "", ending: "", lot: "", malloway: "", varrick: "", tyra: !!(S.tyra && ((S.sd && S.sd.tyra) || S.tyra.love)), done: false };
+    renderSheet();
+  }
+  function renderPz() {
+    const box = $("pzBox");
+    if (!box) return;
+    box.hidden = !pzOn();
+    if (!pzOn()) return;
+    const P = pz();
+    $("pzDays").textContent = P.days + (P.days === 1 ? " day" : " days");
+    $("pzDaysBar").style.width = P.days / PZ_DAYS * 100 + "%";
+    $("pzDaysNote").textContent = P.days <= 0 ? "The Fleet is gathered. No time left." : P.days <= 2 ? "Raftmark is close: you can smell the tar." : "Days until the Black Tithe gathers at Raftmark.";
+    $("pzRank").textContent = PZ_RANK[Math.max(0, Math.min(10, P.name))];
+    $("pzWrit").textContent = P.writ <= 0 ? "Unknown to them" : P.writ <= 2 ? "A name in their book" : P.writ <= 5 ? "Their informer" : "Their creature";
+    $("pzShare").textContent = P.share + " gold";
+  }
+  function pzItems(items) {
+    const P = S.pz;
+    if ((S.tricks || []).length) items.push(["pztricks", "blade", "Pirate tricks: " + S.tricks.length + " of " + Object.keys(PZ_TRICKS).length,
+      "Learned aboard the Widow's Tally, and good in any fight, once each: " + S.tricks.map(k => "<b>" + PZ_TRICKS[k][0] + "</b> (" + PZ_TRICKS[k][2] + ")").join(" · ")]);
+    if (P && P.on && P.crew.length) items.push(["pzcrew", "merc", "Sworn hands: " + P.crew.length, "Aboard the Widow's Tally, these are with you whatever comes: " + P.crew.map(k => PZ_CREW[k].name + " (" + PZ_CREW[k].role + ")").join(", ") + "."]);
+    if (P && P.done) items.push(["plunder", "tally", "Plunder: " + PL_TIERS[plTier()][1], (pzHunter() ? "You carry the Saltwrit's pardon, and hunt raiders on the roads back. " : "On the roads back you can raid caravans. ") + "Plunder " + (S.plunder || 0) + ". Road-raider (3): caravans give up easier. A Black Name (8): a quarter more from every raid. Terror of the Reach (15): Run up the black never needs a roll."]);
+    if (P && P.ending === "sell") items.push(["pzpardon", "writ", "The Saltwrit's Letter", "A pardon under Commodore Malloway's seal, for whatever you did aboard the Widow's Tally. Bounties on the roads back pay a fifth more."]);
+    if (P && P.ending === "rise") items.push(["pzcap", "token", "The Captain's Count-Rope", "Orla Tennick's cord of knots, one for every soul the Widow's Tally ever took. It's yours now, and so is the count."]);
+  }
+  Object.assign(GEAR, {
+    countrope: { name: "A Skerran count-rope", icon: "tally", desc: "A cord of salt-stiff knots, one for each of a crew's dead. Retied, it remembers them. The Skerra won't strike first at anyone who carries one." }
+  });
+
+  async function pzName(n, why) { const P = pz(); P.name = Math.max(0, Math.min(10, P.name + n)); renderSheet(); await mech(why + " Your name in the crew: <b>" + $("pzRank").textContent + "</b>.", n > 0 ? "loot" : "hurt"); }
+  async function pzWrit(n, why) { const P = pz(); P.writ = Math.max(0, Math.min(10, P.writ + n)); renderSheet(); await mech(why + " With the Saltwrit you're <b>" + $("pzWrit").textContent.toLowerCase() + "</b>.", ""); }
+  async function pzDay(n, why) {
+    const P = pz(); if (!P || !n) return;
+    const was = P.days; P.days = Math.max(0, P.days - n); renderSheet();
+    if (P.days === was) return;
+    await mech((why ? why + " " : "") + "The Tide-count is down to " + P.days + (P.days === 1 ? " day" : " days") + "." + (P.days === 0 ? " There's no more time: the Fleet is gathering." : ""), "hurt");
+  }
+  async function pzShare(n, why) { const P = pz(); P.share += n; renderSheet(); await mech(why + " Your share under the Articles: " + P.share + " gold, paid at Raftmark.", "loot"); }
+  async function pzLearn(k, how) {
+    S.tricks = S.tricks || [];
+    if (S.tricks.includes(k)) return;
+    S.tricks.push(k); renderSheet(); tip("tricks");
+    await mech((how ? how + " " : "") + "You learn a pirate trick: <b>" + PZ_TRICKS[k][0] + "</b> (" + PZ_TRICKS[k][2] + "). It's yours in every fight from now on, once a fight.", "loot");
+    if (S.tricks.length >= Object.keys(PZ_TRICKS).length) grant("pztricks");
+  }
+  async function pzSwear(id) {
+    const P = pz(); if (P.crew.includes(id)) return;
+    P.crew.push(id); renderSheet();
+    await mech("<b>" + PZ_CREW[id].name + "</b> is sworn to you: whatever you do aboard the Widow's Tally, " + (id === "gannet" ? "the boy" : "they") + "'ll stand with you.", "loot");
+    if (P.crew.length >= Object.keys(PZ_CREW).length) grant("pzcrew");
+  }
+
+  // ---------- pirate tricks in a fight ----------
+  function pzFilter(opts, st) {
+    (S.tricks || []).forEach(k => { if (!st.used["pz" + k]) opts.push({ key: "pz-" + k, label: PZ_TRICKS[k][1], tag: "pirate trick · once a fight · " + PZ_TRICKS[k][2], plain: true }); });
+  }
+  async function pzFightDo(c, F, st) {
+    const k = c.slice(3); st.used["pz" + k] = true;
+    if (k === "pin") {
+      await say("You pull a belaying pin out of " + (pzOn() ? "the rail" : "your belt, where you've carried one since the Widow's Tally,") + " and bring it down on " + F.who + " the way Hawl showed you: short, hard, over the ear.");
+      if (F.heads) { foeHit(1); comboKeep(); await mech("One of them drops like a sack. Your combo holds.", "loot"); }
+      else { await foeBurst(1, 6, 2, "Belaying pin"); if (FOE.hp > 0 && d(2) === 1) { st.stilled = true; await mech("It's dazed: it loses its next turn.", "loot"); } }
+    } else if (k === "hook") {
+      st.adv = true; st.pzDis = true;
+      await say("You get the boarding hook round " + F.who + (F.heads ? "'s nearest" : "") + " and haul, and it comes stumbling in off balance, wide open.");
+      await mech("Advantage on your next swing, and its next blow has disadvantage.", "loot");
+    } else if (k === "powder") {
+      await say("You flick the cap off a paper of Gannet's powder, touch it to " + (S.axe ? "the gems" : "your flint") + ", and throw. It goes off in " + F.who + "'s face with a white flash and a stink of rotten eggs.");
+      if (F.heads) { const n = Math.min(2, FOE.hp); foeHit(n); comboKeep(); await mech("The flash drops " + (n > 1 ? "two of them" : "one of them") + ". Your combo holds.", "loot"); }
+      else await foeBurst(2, 6, 2, "Powder flash");
+    } else if (k === "salt") {
+      st.pzSalt = 2;
+      await say("You scoop a fistful of salt off " + (pzOn() ? "the deck" : "the pouch at your belt") + " and throw it, the way Dace taught you, dirty and low, straight into " + F.who + "'s eyes.");
+      await mech("Its next two blows miss outright.", "loot");
+    } else if (k === "black") {
+      const tier = plTier(), auto = tier >= 3;
+      await say("You stand up tall and let them see your face, and the way you hold the blade, and what you are: " + (pzHunter() ? "the one who sold the Tithe Fleet to the gibbets" : "the Tithe Fleet's own") + ".");
+      const r = auto ? { ok: true } : await check({ label: "Intimidation check (running up the black)", mod: 3 + tier + (F.road ? 1 : 0), dc: F.company ? 15 : 12, cta: "Glare" });
+      if (!r.ok) { await say(F.heads ? "They look at each other, and laugh, and come on." : "It isn't impressed."); return; }
+      if (F.heads) {
+        const n = Math.max(0, Math.min(d(3) + 1, FOE.hp - (F.company ? 2 : 1)));
+        if (n) { foeHit(n); comboKeep(); await mech((auto ? "Terror of the Reach: no roll needed. " : "") + n + " of them break and run.", "loot"); }
+        else { st.pzShaken = true; await mech("The last of them stand, but they're shaken: −2 to hit for the rest of the fight.", "loot"); }
+      } else { st.pzShaken = true; await mech((auto ? "Terror of the Reach: no roll needed. " : "") + "It's shaken: −2 to hit for the rest of the fight.", "loot"); }
+    }
+  }
+
+  // ---------- the sails: the right pins for the right canvas ----------
+  // Five sails, five belaying pins. Each pin works the lines of two sails (or one), and throwing it
+  // sets a furled sail or brings in a set one. Make the sails match the bosun's call in the moves
+  // given. hide: how many pins' lines are fouled (you don't know what they work until you try).
+  function sailsPuzzle({ title = "Make sail", hide = 0, spare = 2 } = {}) {
+    return new Promise(resolve => {
+      const SAILS = ["jib", "fore", "main", "mizzen", "spanker"];
+      const PINS = [[0, 1], [1, 2], [2, 3], [3, 4], [4]];
+      const order = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5); // pins are not in a tidy row on a real rail
+      let cur, goal, best;
+      const apply = (s, p) => { const t = s.slice(); PINS[p].forEach(i => t[i] = !t[i]); return t; };
+      const key = (s) => s.map(b => b ? 1 : 0).join("");
+      for (let t = 0; t < 200; t++) {
+        cur = SAILS.map(() => d(2) === 1); goal = cur.slice();
+        const n = 2 + d(3); for (let i = 0; i < n; i++) goal = apply(goal, d(5) - 1);
+        // fewest pins to the goal
+        const seen = { [key(cur)]: 0 }; let q = [cur]; best = key(cur) === key(goal) ? 0 : null;
+        while (q.length && best == null) { const nq = []; for (const s of q) for (let p = 0; p < 5; p++) { const x = apply(s, p), kx = key(x); if (seen[kx] == null) { seen[kx] = seen[key(s)] + 1; if (kx === key(goal)) best = seen[kx]; nq.push(x); } } q = nq; }
+        if (best >= 2) break;
+      }
+      const moves = best + spare;
+      const hidden = new Set(order.slice(0, hide));
+      const P = puzzleBox(title, "The bosun calls the sails he wants set, and you throw the pins. Every belaying pin works the lines of more than one sail" + (hide ? ", and in this weather " + hide + " of the lines are fouled, so you can't see where they lead until you throw them" : "") + ". Throwing a pin sets each furled sail it works, and brings in each one that's set. Match the call in " + moves + " throws.");
+      const row = el("div", "pgrid pz-row"); row.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
+      const cells = SAILS.map(n => { const s = el("span", "sd-cell", ""); row.appendChild(s); return s; });
+      const call = el("div", "pgrid pz-row"); call.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
+      const goalCells = SAILS.map(() => { const s = el("span", "sd-cell pz-goal", ""); call.appendChild(s); return s; });
+      P.body.append(el("div", "hint", "The sails now:"), row, el("div", "hint", "The bosun's call:"), call);
+      let used = 0, done = false;
+      const known = {};
+      const pinBtns = order.map((p, i) => {
+        const b = pbtn("");
+        b.onclick = () => { if (done) return; used++; known[p] = true; cur = apply(cur, p); SND.tap && SND.tap("-"); draw(); finish(); };
+        P.ctrl.appendChild(b); return [p, i, b];
+      });
+      const give = pbtn("Let the bosun do it"); P.ctrl.appendChild(give);
+      function draw() {
+        cells.forEach((s, i) => { s.textContent = (cur[i] ? "▲ " : "· ") + SAILS[i]; s.classList.toggle("on", cur[i]); });
+        goalCells.forEach((s, i) => { s.textContent = (goal[i] ? "▲ " : "· ") + SAILS[i]; });
+        pinBtns.forEach(([p, i, b]) => { b.innerHTML = "Pin " + (i + 1) + " <small>" + (hidden.has(p) && !known[p] ? "fouled" : PINS[p].map(x => SAILS[x]).join(" + ")) + "</small>"; });
+        P.status.textContent = used + " of " + moves + " throws.";
+      }
+      function finish() {
+        if (key(cur) === key(goal)) { done = true; P.end(); P.status.textContent = "The canvas fills with a crack like a shot, and the bosun nods once."; setTimeout(() => resolve({ ok: true, used, best }), 700); return; }
+        if (used >= moves) { done = true; P.end(); P.status.textContent = "Too slow. The bosun shoves you aside and does it himself, swearing."; setTimeout(() => resolve({ ok: false, used }), 900); }
+      }
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- the powder room: which cartridge is damp? ----------
+  // Eight cartridges, one heavy with damp. Two weighings on Gannet's little brass balance: put
+  // cartridges on the left or right pan (click to move them), weigh, then name the damp one.
+  function powderPuzzle({ weighs = 2 } = {}) {
+    return new Promise(resolve => {
+      const N = 8, damp = d(N) - 1;
+      const P = puzzleBox("The damp cartridge", "Eight paper cartridges, and one of them took the sea through a split seam: it's heavier than the rest, and it'll hang fire in a gun. Gannet's brass balance has two pans. Click a cartridge to put it on the left pan, again for the right, again to take it off. You get " + weighs + " weighings. Then name the damp one.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(4, 52px)";
+      const where = Array(N).fill(0); // 0 off, 1 left, 2 right
+      let used = 0, done = false, naming = false;
+      const hist = el("div", "lockhist");
+      const btns = [...Array(N)].map((_, i) => { const b = pbtn(""); b.onclick = () => press(i); grid.appendChild(b); return b; });
+      P.body.append(grid, hist);
+      const weigh = pbtn("Weigh", "primary"), name = pbtn("Name the damp one"), give = pbtn("Let Gannet sort it");
+      P.ctrl.append(weigh, name, give);
+      function draw() {
+        btns.forEach((b, i) => { b.innerHTML = (i + 1) + "<small>" + (naming ? "?" : ["", "left", "right"][where[i]]) + "</small>"; b.classList.toggle("on", !naming && where[i] > 0); });
+        weigh.disabled = done || used >= weighs; name.classList.toggle("on", naming);
+        P.status.textContent = naming ? "Click the cartridge you think is damp." : used + " of " + weighs + " weighings used.";
+      }
+      function press(i) {
+        if (done) return;
+        if (naming) {
+          done = true; P.end();
+          const ok = i === damp;
+          P.status.textContent = ok ? "Gannet slits it with his thumbnail and grey paste comes out. \"That's the one,\" he says." : "Gannet slits it: dry and black. He weighs the rest himself and finds it: number " + (damp + 1) + ".";
+          setTimeout(() => resolve({ ok, used }), 900); return;
+        }
+        where[i] = (where[i] + 1) % 3; draw();
+      }
+      weigh.onclick = () => {
+        if (done || used >= weighs) return;
+        const L = where.map((w, i) => w === 1 ? (i === damp ? 2 : 1) : 0).reduce((a, b) => a + b, 0), R = where.map((w, i) => w === 2 ? (i === damp ? 2 : 1) : 0).reduce((a, b) => a + b, 0);
+        const lc = where.filter(w => w === 1).length, rc = where.filter(w => w === 2).length;
+        used++;
+        const res = L > R ? "the left pan goes down" : R > L ? "the right pan goes down" : "the pans hang level";
+        hist.appendChild(el("div", "", "Weighing " + used + ": " + lc + " on the left (" + where.map((w, i) => w === 1 ? i + 1 : 0).filter(Boolean).join(", ") + ") against " + rc + " on the right (" + where.map((w, i) => w === 2 ? i + 1 : 0).filter(Boolean).join(", ") + "): " + res + "."));
+        draw();
+      };
+      name.onclick = () => { if (!done) { naming = !naming; draw(); } };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- Bones: the fo'c'sle bluffing game ----------
+  // You and Dace each roll three bones and see only your own. Take turns calling the total of all
+  // six: each call must be higher than the last. Instead of calling, you can say "Liar": the bones
+  // come up, and if the total is less than the call, the caller loses the hand. First to two hands.
+  function bonesGame({ who = "Dace", peek = false } = {}) {
+    return new Promise(resolve => {
+      const P = puzzleBox("Bones", "You and " + who + " each shake three bones in a cup and look at your own. Take turns calling what all six add up to, at least: each call must be higher than the last. Or call <b>Liar</b>, and the cups come up. If the six come to less than the call, whoever made it loses the hand. First to two hands." + (peek ? " You've a quick hand: once a game, you can try for a look at one of " + who + "'s bones." : ""));
+      const mine = el("div", "sd-taps"), log = el("div", "lockhist");
+      P.body.append(mine, log);
+      const up1 = pbtn("Call +1"), up2 = pbtn("Call +2"), up4 = pbtn("Call +4"), liar = pbtn("Liar!", "primary"), look = pbtn("Steal a look"), give = pbtn("Fold the game");
+      P.ctrl.append(up1, up2, up4, liar); if (peek) P.ctrl.append(look); P.ctrl.append(give);
+      let me = [], him = [], bid = 0, turn = "me", wins = 0, losses = 0, done = false, peeked = false, seen = null, last = "";
+      const sum = (a) => a.reduce((x, y) => x + y, 0);
+      const face = (n) => "⚀⚁⚂⚃⚄⚅"[n - 1];
+      function deal() { me = [d(6), d(6), d(6)]; him = [d(6), d(6), d(6)]; bid = 0; seen = null; last = ""; }
+      function draw() {
+        mine.innerHTML = "Your bones: <b>" + me.map(face).join(" ") + "</b> (" + sum(me) + ")" + (seen != null ? " · you saw one of theirs: " + face(seen) : "") + " · the call: <b>" + (bid || "none yet") + "</b> · hands " + wins + "–" + losses;
+        const can = !done && turn === "me";
+        [up1, up2, up4].forEach((b, i) => { const v = Math.max(bid, 5) + [1, 2, 4][i]; b.textContent = "Call " + v; b.disabled = !can || v > 36; });
+        liar.disabled = !can || !bid || last !== "him"; look.disabled = done || peeked; give.disabled = done;
+        P.status.textContent = done ? P.status.textContent : turn === "me" ? "Your call." : who + " is thinking.";
+      }
+      function hand(winner, why) {
+        log.appendChild(el("div", "", why));
+        if (winner === "me") wins++; else losses++;
+        if (wins >= 2 || losses >= 2) { done = true; P.end(); P.status.textContent = wins >= 2 ? who + " throws the cup down, and laughs, and pays." : who + " sweeps up the bones and grins."; draw(); setTimeout(() => resolve({ ok: wins >= 2, wins, losses }), 900); return; }
+        deal(); turn = (wins + losses) % 2 ? "him" : "me"; draw(); if (turn === "him") setTimeout(ai, 600);
+      }
+      function reveal(caller) {
+        const t = sum(me) + sum(him);
+        const callerWins = t >= bid;
+        const name = caller === "me" ? "you" : who;
+        const whyTxt = "Hand " + (wins + losses + 1) + ": " + name + " called " + bid + ". The bones: yours " + me.map(face).join("") + ", " + who + "'s " + him.map(face).join("") + " = " + t + ". " + (callerWins ? "The call stands." : "Liar.");
+        hand(callerWins ? caller : (caller === "me" ? "him" : "me"), whyTxt);
+      }
+      function ai() {
+        if (done || turn !== "him") return;
+        const s = sum(him), guess = s + 10.5 + (d(5) - 3);
+        if (bid && last === "me" && bid > guess + 1) { log.appendChild(el("div", "", who + " says, \"Liar.\"")); reveal("me"); return; }
+        bid = Math.max(bid + 1, Math.min(Math.round(s + 7 + d(4)), bid + d(3)));
+        if (bid > 36) bid = 36;
+        last = "him"; log.appendChild(el("div", "", who + " calls " + bid + ".")); turn = "me"; draw();
+      }
+      const call = (n) => { if (done || turn !== "me") return; bid = Math.max(bid, 5) + n; last = "me"; turn = "him"; draw(); setTimeout(ai, 600); };
+      up1.onclick = () => call(1); up2.onclick = () => call(2); up4.onclick = () => call(4);
+      liar.onclick = () => { if (done || turn !== "me" || !bid) return; log.appendChild(el("div", "", "You say, \"Liar.\"")); reveal("him"); };
+      look.onclick = async () => {
+        if (done || peeked) return; peeked = true;
+        if (d(20) + 3 >= 13) seen = him[d(3) - 1]; else log.appendChild(el("div", "", who + " catches your eye and tips the cup toward his chest. \"Naughty.\""));
+        draw();
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      deal(); draw();
+    });
+  }
+
+  // ---------- the reckoning: through the Teeth with the current setting ----------
+  // A grid of water with rocks in it. Each move, the ship goes a square the way you steer, and then
+  // the current sets it a square more, the way the tide-table says for that move. Touch a rock and
+  // you're thrown back where you were, with the hull stove in. Reach the cove before the moves run out.
+  function reckonPuzzle({ moves = 12 } = {}) {
+    return new Promise(resolve => {
+      const W = 7, H = 6, DIR = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0], "·": [0, 0] };
+      let rocks, start = [0, H - 1], goal = [W - 1, 0], tide;
+      const inb = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+      const step = (p, m, i) => {
+        const a = [p[0] + DIR[m][0], p[1] + DIR[m][1]];
+        if (!inb(a[0], a[1]) || rocks.has(a + "")) return null;
+        const t = DIR[tide[i % tide.length]], b = [a[0] + t[0], a[1] + t[1]];
+        if (!inb(b[0], b[1])) return a;
+        if (rocks.has(b + "")) return null;
+        return b;
+      };
+      for (let t = 0; t < 400; t++) {
+        rocks = new Set(); tide = [...Array(4)].map(() => ["E", "E", "N", "S", "·"][d(5) - 1]);
+        while (rocks.size < 9) { const x = d(W) - 1, y = d(H) - 1; if ((x === start[0] && y === start[1]) || (x === goal[0] && y === goal[1])) continue; rocks.add(x + "," + y); }
+        // the shortest way through
+        let q = [[start, 0]], seen = new Set([start + ",0"]), best = null;
+        while (q.length && best == null) { const nq = []; for (const [p, i] of q) for (const m of Object.keys(DIR)) { const n = step(p, m, i); if (!n) continue; if (n[0] === goal[0] && n[1] === goal[1]) { best = i + 1; break; } const k = n + "," + ((i + 1) % tide.length); if (!seen.has(k)) { seen.add(k); nq.push([n, i + 1]); } } q = nq; if (q.length && q[0][1] > moves) break; }
+        if (best && best <= moves - 3 && best >= 5) break;
+      }
+      const P = puzzleBox("The Teeth", "The prize has run in among the rocks the Skerra call the Teeth, and you have the wheel. Each move the ship goes one square the way you steer, and then the tide sets it one more, the way the tide-table says for that move (it repeats). Steer into a rock, or let the tide put you on one, and you're thrown back where you were with the hull stove in. Make the cove, top right, in " + moves + " moves.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + W + ", 40px)";
+      const cells = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const s = el("span", "sd-cell", ""); grid.appendChild(s); cells.push(s); }
+      const tideRow = el("div", "hint", "");
+      P.body.append(grid, tideRow);
+      let pos = start.slice(), i = 0, strikes = 0, done = false;
+      const arrows = { N: "↑", S: "↓", E: "→", W: "←", "·": "slack" };
+      const bs = ["N", "W", "E", "S", "·"].map(m => { const b = pbtn(m === "·" ? "Let her drift" : "Steer " + arrows[m]); b.onclick = () => go(m); P.ctrl.appendChild(b); return b; });
+      const give = pbtn("Give Ninian the wheel"); P.ctrl.appendChild(give);
+      function draw() {
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          const s = cells[y * W + x];
+          s.textContent = x === pos[0] && y === pos[1] ? "⛵" : rocks.has(x + "," + y) ? "▲" : x === goal[0] && y === goal[1] ? "⚓" : "";
+          s.classList.toggle("pz-goal", x === goal[0] && y === goal[1]); s.classList.toggle("on", x === pos[0] && y === pos[1]);
+        }
+        tideRow.innerHTML = "Tide-table: " + tide.map((t, k) => (k === i % tide.length ? "<b>" : "") + arrows[t] + (k === i % tide.length ? "</b>" : "")).join(" · ") + " (the bold one sets next)";
+        P.status.textContent = "Move " + i + " of " + moves + ". Hull stove in: " + strikes + ".";
+      }
+      function go(m) {
+        if (done) return;
+        const n = step(pos, m, i); i++;
+        if (!n) { strikes++; SND.tap && SND.tap("--"); P.status.textContent = "A crack and a shudder: she's struck. "; }
+        else pos = n;
+        draw();
+        if (pos[0] === goal[0] && pos[1] === goal[1]) { done = true; P.end(); P.status.textContent = "She comes round into the cove with a fathom to spare."; setTimeout(() => resolve({ ok: true, strikes }), 800); return; }
+        if (i >= moves) { done = true; P.end(); P.status.textContent = "Out of sea room. Ninian takes the wheel and brings her in, hard, scraping."; setTimeout(() => resolve({ ok: false, strikes: strikes + 1 }), 900); }
+      }
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true, strikes: strikes + 1 }); };
+      draw();
+    });
+  }
+
+  // ---------- the shares: dividing a prize by the Articles ----------
+  // A dial for an answer: −10, −1, +1, +10. Two tries for each question.
+  function dialAnswer({ title, hint, ans, start = 0 }) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title, hint);
+      const show = el("div", "sd-taps"); P.body.appendChild(show);
+      let v = start, tries = 0, done = false;
+      const bs = [[-10, "−10"], [-1, "−1"], [1, "+1"], [10, "+10"]].map(([n, t]) => { const b = pbtn(t); b.onclick = () => { if (!done) { v = Math.max(0, v + n); draw(); } }; return b; });
+      const ok = pbtn("That's it", "primary"), give = pbtn("Ask Ninian");
+      P.ctrl.append(ok, ...bs, give);
+      function draw() { show.innerHTML = "<b>" + v + "</b> gold"; P.status.textContent = tries + " of 2 tries used."; }
+      ok.onclick = () => {
+        if (done) return; tries++;
+        if (v === ans) { done = true; P.end(); P.status.textContent = "Ninian checks it on the ledger and makes a mark: right."; setTimeout(() => resolve({ ok: true, tries }), 700); return; }
+        if (tries >= 2) { done = true; P.end(); P.status.textContent = "Ninian shakes her head and writes " + ans + "."; setTimeout(() => resolve({ ok: false }), 900); return; }
+        P.status.textContent = (v > ans ? "Too much." : "Too little.") + " " + tries + " of 2 tries used.";
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- the signal: a Saltwrit hoist, worked out from two you've seen ----------
+  function flagPuzzle({ key = 0 } = {}) {
+    return new Promise(resolve => {
+      const FL = { red: ["🟥", "red"], blue: ["🟦", "blue"], black: ["⬛", "black"], gold: ["🟨", "gold"], white: ["⬜", "white"], green: ["🟩", "green"] };
+      const MEAN = { red: "the enemy", blue: "hold off", gold: "come in", black: "at dawn", white: "at night", green: "the pressed men" };
+      // Saltwrit hoists fly the time first, then what, then who: [time, action, subject]
+      const P = puzzleBox("The Saltwrit signal", "From the Raftmark light you can be seen for ten miles. You need to hoist three flags that say, in the Saltwrit's book: <b>the enemy · come in · at night</b>. You've seen two of their hoists, with what they meant:<br>🟦⬛🟥: <i>the enemy · hold off · at dawn</i><br>🟨🟩⬜: <i>the pressed men · come in · at night</i>" +
+        (key >= 1 ? "<br>Pell Ashby's scrap of the signal book: <i>“…for the hoist is read top to bottom as WHEN, then…”</i>" : "") + (key >= 2 ? "<br>The dispatch case: <i>“…WHAT is done, then to WHOM…”</i>" : "") + "<br>Hoist them top to bottom.");
+      const line = el("div", "sd-taps sd-mine"), pal = el("div", "sd-pal");
+      P.body.append(line, pal);
+      const goal = ["white", "gold", "red"];
+      let hoist = [], tries = 0, done = false;
+      Object.keys(FL).forEach(k => { const b = pbtn(FL[k][0] + " <small>" + FL[k][1] + "</small>"); b.onclick = () => { if (!done && hoist.length < 3) { hoist.push(k); draw(); } }; pal.appendChild(b); });
+      const go = pbtn("Hoist it", "primary"), back = pbtn("Haul one down"), give = pbtn("Give it up");
+      P.ctrl.append(go, back, give);
+      function draw() { line.innerHTML = hoist.length ? hoist.map(k => FL[k][0]).join(" ") : '<span class="sd-gone">the halyard, empty</span>'; P.status.textContent = tries + " of 3 tries used."; }
+      back.onclick = () => { if (!done) { hoist.pop(); draw(); } };
+      go.onclick = () => {
+        if (done || hoist.length < 3) return; tries++;
+        if (hoist.join() === goal.join()) { done = true; P.end(); P.status.textContent = "Far out in the dark, a lantern blinks three times: seen."; setTimeout(() => resolve({ ok: true, tries }), 800); return; }
+        const right = hoist.filter((k, i) => k === goal[i]).length;
+        if (tries >= 3) { done = true; P.end(); P.status.textContent = "Nothing answers. Whatever they read, it wasn't that."; setTimeout(() => resolve({ ok: false }), 900); return; }
+        P.status.textContent = "You hold it up to the light and read it as they would: " + hoist.map(k => MEAN[k]).join(" · ") + ". That's not it" + (right ? " (" + right + " in the right place)" : "") + ". " + tries + " of 3 tries used.";
+        hoist = []; line.innerHTML = '<span class="sd-gone">the halyard, empty</span>';
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- the count-ropes: retying what the Hushed untied ----------
+  function knotPuzzle({ len = 5, tries = 3, looks = 1 } = {}) {
+    return new Promise(resolve => {
+      const K = { eye: "◯", eight: "∞", hitch: "⌇", stop: "●" };
+      const ks = Object.keys(K), pat = [...Array(len)].map(() => ks[d(ks.length) - 1]);
+      const P = puzzleBox("The count-rope", "Every Skerran carries a count-rope: a knot for each of their dead, tied in the knot that was that person's. The Hushed untie them, a knot a night. Ninian remembers how this one went. She'll show you once, quickly. Tie it back.");
+      const view = el("div", "sd-taps"), mine = el("div", "sd-taps sd-mine"); P.body.append(view, mine);
+      const bs = ks.map(k => { const b = pbtn(K[k] + " <small>" + k + "</small>"); b.onclick = () => { if (!done && cur.length < len) { cur.push(k); draw(); } }; P.ctrl.appendChild(b); return b; });
+      const go = pbtn("Pull it tight", "primary"), wipe = pbtn("Pick it out"), again = pbtn("Ask to see it again"), give = pbtn("Give it up");
+      P.ctrl.prepend(go); P.ctrl.append(wipe, again, give);
+      let cur = [], used = 0, done = false, left = looks - 1;
+      const showIt = () => { view.innerHTML = "<b>" + pat.map(k => K[k]).join(" ") + "</b>"; again.disabled = true; setTimeout(() => { if (!done) { view.innerHTML = '<span class="sd-gone">she lets it fall slack</span>'; again.disabled = left < 0; } }, reduced ? 1500 : 2600); };
+      function draw() { mine.innerHTML = cur.length ? cur.map(k => K[k]).join(" ") : '<span class="sd-gone">bare rope</span>'; P.status.textContent = used + " of " + tries + " tries used."; }
+      wipe.onclick = () => { if (!done) { cur = []; draw(); } };
+      again.onclick = () => { if (done || left < 0) return; left--; showIt(); };
+      go.onclick = () => {
+        if (done || cur.length < len) return; used++;
+        if (cur.join() === pat.join()) { done = true; P.end(); view.innerHTML = "<b>" + pat.map(k => K[k]).join(" ") + "</b>"; P.status.textContent = "The rope lies right in your hands, and the Skerran it belongs to makes a sound like a hurt animal."; setTimeout(() => resolve({ ok: true }), 800); return; }
+        let k = 0; while (k < len && cur[k] === pat[k]) k++;
+        if (used >= tries) { done = true; P.end(); view.innerHTML = "<b>" + pat.map(x => K[x]).join(" ") + "</b>"; P.status.textContent = "It was this. " + k + " knots were right before you went wrong."; setTimeout(() => resolve({ ok: false }), 900); return; }
+        P.status.textContent = k + " knots right before you went wrong. " + used + " of " + tries + " tries used."; cur = []; mine.innerHTML = '<span class="sd-gone">bare rope</span>';
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw(); showIt();
+    });
+  }
+
+  const SKERRA = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Skerra", whoShort: "Skerra",
+    hitWhy: "A Skerran boarding-axe bites into you.", miss: "The axe buries itself in the rail beside you.",
+    hitLine: "A Skerran goes over the rail into the sea, without a sound, the way they all go." }, o);
+  const HUNTERS = (o) => Object.assign({ ac: 15, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Saltwrit", whoShort: "Saltwrit",
+    hitWhy: "A Saltwrit hanger opens your arm.", miss: "The hanger rings off the rail.",
+    hitLine: "A Saltwrit man sits down against the mast and doesn't get up." }, o);
+
+  // ---------- Part LXX: the Tithe Taken ----------
+  async function partTitheTaken() {
+    heading("LXX", "The Tithe Taken");
+    light("dusk");
+    if (!S.pz) initTithe();
+    const P = pz();
+    await say("Severine Gall drew you the way to Stillwater on the back of a tide-table: three days west-north-west out of Rahdaria, past the Gibbet Skerries, and across the water the charts call the Stillwater Reach, which nobody crosses if they can help it. \"Because of the Fleet,\" she said, and wouldn't say more.");
+    await say("You find a master who'll take you for twenty gold and no questions: Benno Sleat, of the cog <i>Marigold</i>, with a cargo of Rahdaria figs and twelve crew who all look like they'd rather be doing something else." + (P.tyra ? " Tyra comes aboard with a bag over her shoulder and says nothing about it, which is how you know she's frightened." : "") + (co().burr ? " Burr sits in the bows with his nose into the wind, sneezing at the salt." : ""));
+    await say("On the second morning there's fog, white and thick and very still, and somewhere in it a bell. Not a ship's bell: a slow, flat, cracked clank, like a cowbell, like something counting. Benno Sleat goes grey.");
+    await say("\"Tally,\" he says. \"That's a count-bell. Get down. Get everybody down. Oh, gods, it's the Fleet.\"", "voice");
+    light("dark");
+    await say("The ship comes out of the fog on your quarter so close you could spit on her: a long low black hull, tarred sails, and hung all down her sides, from rail to waterline, thousands of ropes, each one knotted all its length. As she comes alongside, grapnels arc over onto the <i>Marigold</i>'s rail, and the people on them come across.");
+    await say("They're not human. They're tall and narrow, and their skin is the grey-green of deep water, and at every joint, the wrists and knuckles and the corners of their jaws, it's crusted white with salt, like a rock above the tide-line. Their eyes are black all over. They don't shout. They come over the rail in silence, with boarding-axes, and the bell keeps clanking.");
+    await mech("<b>The Skerra.</b> A people who live their whole lives afloat, and think the land is a grave that's waiting. They can taste a lie on your breath, as sweet as rot, and they don't forgive one.");
+    const c = await choose([
+      { key: "fight", label: "Meet them at the rail", tag: "a fight" },
+      { key: "parley", label: "Put your hands up and talk", tag: "Persuasion DC 13 · tell the truth: they'll taste it", plain: true },
+      { key: "hide", label: "Get the crew down into the hold", tag: "Stealth DC 14", plain: true }
+    ]);
+    if (c === "fight") {
+      await hkFight(SKERRA({ name: "Skerran boarders", heads: 4, unit: "boarder|boarders" }));
+      await say("When the last of them goes over the rail, there are twenty more on the black ship's side waiting to come across, and none of them are in a hurry. A woman steps across onto the <i>Marigold</i>'s deck through the middle of them, and looks at the bodies, and at you.");
+      await pzName(1, "The Skerra respect a fight.");
+    } else if (c === "parley") {
+      const r = await check({ label: "Persuasion check (the truth, plainly)", mod: 3, dc: 13, cta: "Speak" });
+      if (r.ok) { await say("You tell them the truth: a cargo of figs, twelve tired sailors, and you, going to Stillwater on business of your own. The nearest Skerran breathes in, slowly, through her mouth, tasting it. Then she nods to someone behind her."); await pzName(1, "You didn't lie to them. They noticed."); }
+      else await say("You tell them the truth, but you're frightened, and it comes out sounding like a lie. The nearest Skerran wrinkles her nose and hits you, not hard, in the mouth.");
+    } else {
+      const r = await check({ label: "Stealth check (into the hold)", mod: 2, dc: 14, cta: "Hide" });
+      await say(r.ok ? "You get the crew down into the hold among the fig-crates in the dark. It makes no difference at all. They know exactly how many people a cog that size carries. They count you out, one at a time, up the ladder." : "You're halfway to the hatch when an axe-haft takes your legs out from under you.");
+    }
+    await say("The woman is tall even for a Skerran, and old, and the salt has grown so thick on her hands they look like coral. Round her neck, so many times it's a collar, there's a rope knotted all its length: a count-rope, you'll learn. Every knot a soul.");
+    await say("\"Orla Tennick,\" she says. \"Captain of the <i>Widow's Tally</i>, of the Tithe Fleet. The sea takes its share of everything that crosses the Reach, and we're the sea's hands. A tenth of the cargo.\" She looks along the line of the <i>Marigold</i>'s crew. \"And a tenth of the crew.\"", "voice");
+    await say("Thirteen of you, counting you" + (P.tyra ? ", and Tyra" : "") + ". Somebody brings a leather cup. In it are knucklebones, thirteen, and one of them has been dipped in pitch.");
+    const lot = await choose([
+      { key: "draw", label: "Draw your bone like everybody else" },
+      { key: "boy", label: "Take the black bone from the cabin boy who draws it", tag: "he's twelve", plain: true },
+      { key: "palm", label: "Palm the black bone out of the cup before anyone draws", tag: "Sleight of Hand DC 14 · the Skerra don't forgive a cheat", plain: true }
+    ]);
+    P.lot = lot;
+    if (lot === "draw") {
+      await say("You draw. It's white. The cabin boy, Wil, who's twelve, draws the black, and stands there holding it, and doesn't cry, and then does.");
+      await say("\"No,\" Orla Tennick says, before anyone can move. She's looking at you. At the axe. \"I'll take that one instead. The sea won't mind. It's had boys.\"", "voice");
+    } else if (lot === "boy") {
+      S.hh.hear++;
+      await say("Wil, the cabin boy, draws the black bone and stands there holding it. You take it out of his hand and hold it up. Orla Tennick looks at you for a long moment, and then, very slightly, smiles.");
+      await pzName(1, "The whole Fleet will hear you took a boy's bone.");
+    } else {
+      const r = await check({ label: "Sleight of Hand check (the black bone)", mod: 3 + (hasSkill("lock") ? 2 : 0), dc: 14, cta: "Palm it" });
+      if (r.ok) { await say("You get your fingers into the cup and the black bone up your sleeve, and nobody draws it, and for a moment the Skerra stand looking at twelve white bones, puzzled. Then Orla breathes in through her mouth and laughs, a dry sound like a rope running."); await say("\"Clever,\" she says. \"A cheat. I like a cheat on a crew, as long as it's not cheating me. The sea will take you, then.\"", "voice"); }
+      else { await say("Your fingers close on it and a salt-crusted hand closes on your wrist. Orla Tennick holds your hand up so everyone can see the black bone in it."); await pzName(-1, "They tasted that a mile off."); }
+    }
+    await say("They take you across to the <i>Widow's Tally</i> on a line, with your hands tied." + (P.tyra ? " Tyra kicks the first Skerran who touches her, and then the second, and they take her too, because she's obviously worth having." : "") + (co().burr ? " Burr jumps the gap after you before anyone can stop him. A Skerran picks him up by the scruff and looks at him, and puts him down. \"A dog's luck,\" she says. \"Keep him.\"" : "") + " Behind you the <i>Marigold</i> gets her grapnels back, a tenth lighter, and goes into the fog, and Benno Sleat doesn't look back.");
+    light("lake");
+    await say("On the black ship's deck, the quartermaster, a small, neat Skerran with ink on her salt-white fingers called Ninian Rooke, reads you the Articles. There are nine of them. Every Skerran on the ship has them on the inside of the left forearm, cut in the skin and rubbed with salt so the scars come up white: shares and duties and the tithe, and the last one, the ninth, <i>the drowned you remember can find you, so the sea takes all our dead</i>.");
+    await say("\"Sign,\" she says, and holds out a knife. \"Or don't. The Articles let you refuse. Nobody has, in a while. You go under the keel and if you come up the other side you're crew anyway, and you've a name for it.\"", "voice");
+    const s = await choose([{ key: "sign", label: "Sign the Articles in your own arm", tag: "a cut and a fistful of salt" }, { key: "keel", label: "Refuse", tag: "keelhauled · Constitution DC 13", plain: true }]);
+    if (s === "sign") {
+      P.signed = true; grant("pzsigned");
+      await hurt(1, 4, "slashing", "She makes the cut herself, nine short lines along your forearm, and rubs the salt in with her thumb, and it's worse than any fight.");
+      await pzName(1, "You signed in salt.");
+    } else {
+      P.keel = true;
+      await say("They tie a line round your chest and under your arms, and the other end goes under the ship, bow to stern, and they put you over the side.");
+      const r = await check({ label: "Constitution check (under the keel)", mod: 3, dc: 13, cta: "Hold your breath" });
+      if (r.ok) await hurt(1, 6, "slashing", "The barnacles on her hull open your back like a grater, but you keep your mouth shut all the way down and all the way along and all the way up.");
+      else await hurt(3, 6, "slashing", "Halfway along you breathe in the sea. You come up the other side half-drowned and skinned.");
+      grant("pzkeel");
+      await say("When they haul you over the rail, streaming blood and water, the crew are standing round in a ring, and one of them, a huge Skerran with a bosun's whistle, starts to bang his axe-haft on the deck, slowly. Then they all do.");
+      await pzName(2, "Nobody's refused and come up in years.");
+      P.signed = true;
+    }
+    await mech("<b>The Black Tithe.</b> In eight days the Fleet gathers at Raftmark, in the lee of Stillwater. The <b>Tide-count</b> on your sheet is the days left: errands and slow work spend them. Your <b>name in the crew</b> decides what they'll let you do, and there are other people at sea who'd like to hear from someone aboard a Tithe ship.");
+    tip("tithe");
+    await go("Go below");
+  }
+
+  // ---------- Part LXXI: Before the Mast ----------
+  const PZ_ERRANDS = {
+    hawl: { label: "Work the rigging with the bosun", tag: "a puzzle on the pin-rail · Hawl Ostrey" },
+    gannet: { label: "Help the powder-boy in the magazine", tag: "a weighing puzzle · Gannet" },
+    dace: { label: "Sit in on Bones in the fo'c'sle", tag: "a bluffing game · Dace Mallory" },
+    jen: { label: "Stand the harpoon watch", tag: "something's following the ship · Marrow-Jen" },
+    ninian: { label: "Help the quartermaster with the shares", tag: "sums by the Articles · Ninian Rooke" }
+  };
+  const PZ_SHARES = [[360, 18], [440, 22], [280, 14]];
+  async function pzErrand(k) {
+    const P = pz();
+    P.errands.push(k);
+    if (k === "hawl") {
+      await say("Hawl Ostrey is the bosun, and the biggest Skerran aboard: seven foot, with salt on him so thick at the shoulders it looks like armour, and a voice like a block running. He has no patience with landsmen. He has a little with you, because of the keel, or the bone.");
+      await say("\"The pins,\" he says, and puts your hand on the rail where twenty belaying pins stand in a row, each one holding the end of a line that goes up into the dark rigging. \"Every pin works two sails, or one. You throw it, they change. Learn which, and you're a sailor. Don't, and you're cargo.\"", "voice");
+      const r = await sailsPuzzle({ title: "Make sail", spare: 2 });
+      if (r.ok) { await say("The <i>Widow's Tally</i> heels over and goes, and Hawl slaps the rail. \"Again,\" he says, and then, after you've done it again, he pulls a belaying pin out of the rail and puts it in your hand, a foot of black oak heavy as a club. \"For fighting,\" he says. \"On a ship there's always one near. Over the ear. Short.\""); await pzLearn("pin"); await pzSwear("hawl"); await pzName(1, "The bosun's seen you work."); if (r.used === r.best) grant("pzsails"); }
+      else { await say("Hawl does it himself, in four throws, without looking. \"Cargo,\" he says, but he shows you the belaying pin anyway, the way you'd show a child a knife so they don't cut themselves on it."); await pzLearn("pin"); }
+    } else if (k === "gannet") {
+      await say("Gannet is the powder-boy: a Skerran child, maybe ten, with no salt on him yet but a crust at the corners of his mouth. He lives in the magazine, in the dark, among the kegs, and he's the only one aboard who's pleased to see you. He's never met anyone from the land. He wants to know if it's true it doesn't move.");
+      await say("\"One of these took the sea,\" he says, showing you eight paper cartridges on a tray. \"It'll be heavy. If it goes in a gun it hangs fire and the gun bursts and kills Corwin, and Corwin's all right. I can do it in two weighings. Can you?\"", "voice");
+      const r = await powderPuzzle({ weighs: 2 });
+      if (r.ok) { await say("Gannet is delighted. He shows you his best trick in return: a twist of fine powder in a paper, that goes off like a thunderclap if you touch a spark to it, and blinds whoever's nearest. \"For when they're too big,\" he says. \"Everyone's too big.\""); await pzLearn("powder"); await pzSwear("gannet"); }
+      else { await say("\"It's all right,\" Gannet says kindly. \"It took me ages.\" He shows you the powder twist anyway, because he wants to show somebody."); await pzLearn("powder"); }
+    } else if (k === "dace") {
+      await say("In the fo'c'sle, by a lamp, the crew are playing Bones: a game with knucklebones in leather cups, and calling, and lying, which is strange to watch among people who can taste a lie. \"They can't taste it in the bones,\" says the man running the game. \"That's the beauty of it.\"");
+      await say("He's not Skerran. He's a thin brown man with a fiddle on a string down his back and a knife-scar through one eyebrow: Dace Mallory, pressed off a Sulmara packet three years ago. He's been winning ever since. \"Sit down,\" he says. \"Lose me something.\"", "voice");
+      const r = await bonesGame({ who: "Dace", peek: hasSkill("cards") || hasSkill("lock") });
+      if (r.ok) { await say("Dace looks at the bones, and at you, and laughs till he has to wipe his eyes. \"Nobody does that,\" he says. \"All right. You've earned it. Come here.\" He teaches you something else, then: the dirty way, salt off the deck in a fist and into the eyes, the knee, the heel on the instep. \"Fair fights are for people who've got all day.\""); grant("pzbones"); await pzLearn("salt"); await pzSwear("dace"); await pzName(1, "The fo'c'sle saw you beat Dace."); }
+      else if (r.forced) await say("You get up and leave the game, and Dace calls something cheerful and rude after you.");
+      else { await say("Dace takes your stake with a sympathetic face. \"Don't feel bad,\" he says. \"I cheat.\" Then, because he likes you, he shows you the salt trick for nothing."); await pzLearn("salt"); }
+    } else if (k === "jen") {
+      await say("Something has been following the ship for two days: a long dark shape under the water off the quarter, keeping pace. The harpooner, Marrow-Jen, a Skerran woman with a lame leg and arms like hawsers, stands the watch for it with an iron in her fist. She doesn't talk. She points.");
+      const r = await check({ label: "Perception check (the shape in the wake)", mod: 2 + (bondOf("burr") >= 5 ? 1 : 0), dc: 13, cta: "Watch" });
+      await say(r.ok ? "You see it come up, before she does: a pale flat shape like a cloak in the water, and then the wings of it break the surface, and they're lit along the edges with cold blue fire." : "It comes up under the counter all at once, a pale flat shape like a cloak, wings lit blue along the edges, and slides up the side of the ship and over the rail onto the deck.");
+      const BR = { name: "A brackray", hp: 22, ac: 13, atk: 5, n: 1, s: 6, type: "lightning", bloom: 0, hesk: false, who: "the brackray", whoShort: "Brackray",
+        hitWhy: "Its wing-edge lashes across you, and every muscle in your body locks.", miss: "Its wing slaps the deck, crackling.", hitLine: "Your blade goes through the soft pale meat of its wing." };
+      BR.before = async (st) => { if (st.round === 1 && r.ok) { st.adv = true; await mech("You saw it first: advantage on your first swing.", "loot"); } await QUIRKS.jolt.before(BR, st); };
+      BR.turn = (st) => QUIRKS.jolt.turn(BR, st);
+      await hkFight(BR);
+      await say("Marrow-Jen limps over and puts her iron through it, to be sure. Then she shows you how she brought down the first one she ever killed, when she was a girl: not with the point, with the hook on the back of the iron, round the edge of it, and haul, so it comes to you wide open. She makes you do it, over and over, on a coil of rope, until you do it right.");
+      await pzLearn("hook");
+      if (r.ok) { await say("When you've got it, she taps her own chest, twice, and then yours. Ninian tells you later that it means <i>we stood the same watch</i>, and that Jen has said it to nobody aboard in eleven years."); await pzSwear("jen"); }
+    } else if (k === "ninian") {
+      const [prize, per] = PZ_SHARES[d(PZ_SHARES.length) - 1];
+      await say("Ninian Rooke keeps the Articles and the ledger, in a cabin no bigger than a cupboard, by the light of a fish-oil lamp. She's dividing the last prize. She looks at your arm, at the nine white scars, and pushes the ledger across.");
+      await say("\"The Articles,\" she says. \"A tenth off the top for the sea, before anything. Then by shares: the captain two, the quartermaster one and a half, the bosun one and a half, every hand one, and the dead man one, which goes in the ship's chest for his share of nothing. Twelve hands living. The prize was " + prize + " gold.\"", "voice");
+      const q1 = await dialAnswer({ title: "The sea's tenth", hint: "A tenth off the top of " + prize + " gold, for the sea. (It goes over the side, in a bag.)", ans: prize / 10 });
+      const q2 = await dialAnswer({ title: "A hand's share", hint: "What's left after the sea's tenth, split by shares: captain 2, quartermaster 1½, bosun 1½, twelve hands 1 each, the dead man 1. What's one hand's share?", ans: per });
+      const q3 = await dialAnswer({ title: "The quartermaster's share", hint: "And hers: one and a half shares.", ans: per * 3 / 2 });
+      const right = [q1, q2, q3].filter(x => x.ok).length;
+      await say(right === 3 ? "Ninian checks every line, and closes the ledger, and looks at you for a long moment. \"You can count,\" she says. \"Nobody on this ship can count but me. Do you know what that's like?\"" : "Ninian fixes your sums with a sigh, and shows you where you went wrong, patiently, like a teacher.", "voice");
+      await say("Then she shows you something that isn't in the Articles: how a Skerran crew runs up the black. Not the flag. The look. You stand up tall in the bow with the whole crew behind you and let the merchant see your face, and nine times in ten, she says, they strike their colours without a blow. \"It's cheaper,\" she says. \"Blood's expensive. It's in the ledger.\"");
+      await pzLearn("black");
+      if (right === 3) await pzSwear("ninian");
+      if (right >= 2) await pzName(1, "The quartermaster vouches for you.");
+    }
+  }
+  async function partBeforeMast() {
+    heading("LXXI", "Before the Mast");
+    light("lake");
+    const P = pz();
+    await say("The <i>Widow's Tally</i> is the strangest ship you've ever been on, and you've been on a ship that ran down a stair into the sea. Nobody aboard has stood on land in years. Some of them never have. They sleep in hammocks slung so close they touch, and they eat raw fish and salt, and they sing at the capstan in a language like gulls arguing, and every evening at dusk the whole crew stops whatever it's doing and touches the count-ropes hanging down the ship's side, one knot at a time, without a word.");
+    await say("There are eighty of them, and eleven of you: people pressed off ships like the <i>Marigold</i>, over the years, who signed. They're crew now. They have the scars. Most of them don't talk about where they came from. One of them, a quiet man with a clerk's hands called Pell Ashby, sits down next to you at the evening meal.");
+    await say("\"You're new,\" he says, very low, not looking at you. \"I'll be quick. I'm not crew. I'm the Saltwrit's. You know the Saltwrit? The hunters, out of Rahdaria. Commodore Malloway's people. They put me aboard a prize two years ago to be taken, on purpose, so there'd be someone on a Tithe ship. In six days the whole Fleet will be in one place for the Black Tithe. If Malloway knows where, it's the end of them.\" He puts a hard biscuit in his mouth. \"You could help. The Saltwrit pardon anyone who helps. Think about it.\"", "voice");
+    const c = await choose([
+      { key: "listen", label: "\"Tell me more.\"", tag: "the Saltwrit · Pell Ashby" },
+      { key: "cold", label: "\"I'll think about it.\"", plain: true },
+      { key: "told", label: "Tell Ninian what he said", tag: "the Articles say what's done with a spy", plain: true }
+    ]);
+    P.pell = c === "listen" ? "ally" : c;
+    if (c === "listen") {
+      await say("He tells you, in pieces, over the next days. The Saltwrit fly a signal-book of flags. If anybody aboard a Tithe ship can get a hoist up where the Commodore's ships can see it, the night of the Black Tithe, with the Fleet all lashed together at Raftmark, they'll come in and burn the lot. He slips you a scrap torn out of the signal-book, the size of a playing card.");
+      P.key++; await pzWrit(2, "You've a friend among the hunters.");
+    } else if (c === "told") {
+      S.hh.hush++;
+      await say("Ninian listens to you without a word. That night, Pell Ashby is brought up on deck with his hands tied, and the crew stand round, and Orla Tennick reads the eighth Article to him, and they tie him to a count-rope weighted with shot and put him over the side. He doesn't say anything. He looks at you, once.");
+      await pzName(2, "You kept the Articles, and the whole crew saw.");
+      await say("The Saltwrit will hear of it. Somebody always hears.");
+    } else await say("He nods as if he'd expected that, and doesn't speak to you again, but sometimes you catch him watching you.");
+    await mech("<b>Errands.</b> Each one takes a day off the Tide-count, can teach you a pirate trick, and can win a hand to your side. Tricks are yours for good, in every fight. Do as many as you dare; the days left over at the end are worth something too.");
+    for (;;) {
+      const left = Object.keys(PZ_ERRANDS).filter(k => !P.errands.includes(k));
+      if (!left.length || P.days <= 2) break;
+      const k = await choose(left.map((x, i) => ({ key: x, label: PZ_ERRANDS[x].label, tag: PZ_ERRANDS[x].tag + " · a day", plain: i > 0 })).concat([{ key: "stop", label: "Keep your head down", tag: P.days + " days on the Tide-count", plain: true }]));
+      if (k === "stop") break;
+      await pzDay(1, "The <i>Widow's Tally</i> runs on north-west.");
+      await pzErrand(k);
+    }
+    await say("On the fifth night a Skerran topman called Hollin dies. He was hurt in a fall from the yards and it went bad. They wrap him in his own hammock with a round-shot at his feet, at dusk, and the crew stand round, and Orla Tennick ties one more knot in the count-rope round her neck.");
+    await say("Then two people come up out of the after-cabin whom you've never seen on deck before. They wear grey. They're human. They walk along the line of the crew, slowly, and stop by each one, and lean in, and whisper, and one by one the Skerra close their eyes, and when they open them they look puzzled, and then peaceful, and go back to work. By the time the grey people get to the end of the line, nobody is looking at the hammock.");
+    await say("Gannet runs past you and nearly trips over it. \"Who's that?\" he says, and laughs, and runs on.");
+    if (vaelricSpeaks()) await voice("\"Hushed,\" Vaelric says, very quietly. \"On a pirate ship. Whispering away the dead.\" A pause. \"We used to call that mercy.\"");
+    P.saw = true;
+    const w = await choose([{ key: "watch", label: "Watch, and say nothing" }, { key: "ask", label: "Ask Ninian who they are", tag: "Insight DC 13", plain: true }]);
+    if (w === "ask") {
+      const r = await check({ label: "Insight check (Ninian)", mod: 2 + (P.crew.includes("ninian") ? 3 : 0), dc: 13, cta: "Ask" });
+      if (r.ok) { await say("\"The Quiet Passengers,\" Ninian says, after a long time. \"The Salt King's guests. They come from Stillwater. The ninth Article says the drowned you remember can find you. So they make sure we don't remember.\" She touches the count-rope at her own neck. \"There are knots on here I can't put a face to. I used to know all of them.\""); P.bargain = true; }
+      else await say("\"Passengers,\" Ninian says, and won't say anything else.");
+    }
+    await go("Up on deck: sail ho");
+  }
+
+  // ---------- Part LXXII: the Prize ----------
+  async function partPrize() {
+    heading("LXXII", "The Prize");
+    light("sun");
+    const P = pz();
+    await say("At first light the lookout sings out, and there she is: a fat three-masted merchantman, low in the water with cargo, flying the glass-and-sun of Sulmara. The <i>Good Intent</i>. She sees the black sails at the same moment you see hers, and runs, and the only way she can run is into the Teeth: a mile of black rocks sticking up out of the swell like a jaw.");
+    await say("\"She'll pile up in there,\" Hawl says. \"Or she knows the way.\" She knows the way. Orla Tennick looks round the deck and stops at you." + (P.name >= 3 ? " \"You,\" she says. \"Ninian says you can count. Take the wheel.\"" : " \"Ninian,\" she says. \"Take the wheel. The new one cons from the bow, and if we strike, it's on the new one's head.\""), "voice");
+    const r = await reckonPuzzle({ moves: 12 });
+    if (r.ok && !r.strikes) { grant("pzreckon"); await pzName(1, "Not a scratch on her, through the Teeth."); }
+    if (r.strikes) await pzDay(Math.min(2, r.strikes), "The carpenter spends " + (r.strikes > 1 ? "days" : "a day") + " on the hull.");
+    if (r.strikes >= 2) await hurt(1, 6, "bludgeoning", "One of the strikes threw you across the deck.");
+    await say("You come out of the Teeth behind her, close enough to see faces at her stern windows. \"The bow-chaser,\" Orla says. \"Somebody take her rudder off.\"", "voice");
+    const g = await wallGun({ title: "The bow-chaser", target: "the Good Intent's rudder", shots: 3, dist: 160 + d(80) });
+    if (g.direct) await say("The ball takes her rudder clean off at the post, and the <i>Good Intent</i> comes up into the wind with her sails all aback, helpless.");
+    else await say("You knock splinters off her stern, and she keeps running, but she's slower, and you're faster, and in an hour the grapnels are going over.");
+    const n = Math.max(4, 10 - (g.direct ? 2 : g.near ? 1 : 0) - P.crew.length);
+    if (P.crew.length) await say(P.crew.map(k => PZ_CREW[k].name).join(", ") + (P.crew.length > 1 ? " go" : " goes") + " across with you, and the <i>Good Intent</i>'s deck is a good deal emptier by the time you get your feet under you.");
+    const F = await companyFight({
+      soldiers: n, captains: ["Master Absalom Tey", "Mate Wenlock Harr"], capHp: 20, capThem: "them", cover: "a lashed stack of wine-casks",
+      capMiss: "Your blow slides off a merchant's breastplate, and the deckhands shove you back.",
+      F: { name: "The Good Intent's crew", ac: 13, atk: 4, n: 1, s: 6, type: "slashing", who: "the merchant crew", whoShort: "Crew", hitWhy: "A cargo-hook rips across you.", miss: "The cudgel bangs off the rail.", hitLine: "A deckhand throws down his cudgel and sits on the hatch with his hands on his head." }
+    });
+    if (F.fled) { await say("You go back over the rail to the black ship, and the Skerra take the <i>Good Intent</i> without you, in silence, and look at you afterwards."); await pzName(-1, "You ran from a merchantman."); }
+    else await say("Master Absalom Tey strikes his colours with his own hands, which are shaking, and stands at the foot of his own mast while the Skerra go down into his hold.");
+    await pzShare(30 + 5 * Math.max(0, P.name), "Wine, glass, copper, and silk.");
+    await say("And then Orla Tennick comes across, and stands on the <i>Good Intent</i>'s deck, and looks along the line of her crew: twenty men and women, and two boys. \"A tenth,\" she says.");
+    const t = await choose([
+      { key: "lot", label: "Hold the cup for the drawing, as the Articles say", tag: "two of them go over the side" },
+      { key: "spoke", label: "Speak for them", tag: "Persuasion DC 15 · Skerra taste lies, so mean it", plain: true },
+      { key: "signed", label: "Ask that the tithe sign the Articles instead of going to the sea", tag: P.crew.includes("ninian") ? "Ninian will back you" : "you'd need the quartermaster to back you", show: P.crew.includes("ninian"), plain: true }
+    ]);
+    P.prize = t;
+    if (t === "lot") {
+      S.hh.hush++;
+      await say("You hold the cup. Two black bones. A cook's mate called Esdras, and a woman you never learn the name of. They don't struggle. The Skerra tie them to the count-ropes, and Orla ties two knots, and they go over the side, and the <i>Good Intent</i>'s crew watch, and then don't watch.");
+      await pzName(1, "You held the cup without shaking.");
+    } else if (t === "spoke") {
+      const r = await check({ label: "Persuasion check (Orla Tennick)", mod: 2 + Math.floor(P.name / 3), dc: 15, cta: "Speak" });
+      if (r.ok) { S.hh.hear++; await say("You tell her it's a waste: that a tenth of a cargo is the sea's, and a tenth of a crew is just murder with a rope. Orla breathes it in, slowly, tasting it. \"You believe that,\" she says, surprised. \"All right. This once. The sea can have a tenth of the wine.\" They throw forty casks of red over the side, and the sea goes the colour of blood for a mile."); }
+      else { await say("Orla breathes it in, and shakes her head. \"You mean it,\" she says. \"But you're wrong.\" Two go over the side."); await pzName(-1, "The crew don't like a hand who argues the Articles."); }
+    } else {
+      S.hh.hear++;
+      await say("Ninian reads out the fourth Article, which nobody's used in thirty years: <i>a tithe that will sign may be taken into the crew in place of the sea</i>. Orla looks at the two whose bones came up black, a cook's mate and a woman with a scar on her lip, and shrugs. \"Then they sign,\" she says. They do. You hold their arms while Ninian makes the cuts.");
+    }
+    await say("In the master's cabin, in a lead-lined case under the bunk, there's a bundle of letters sealed with a gallows and an anchor: Saltwrit dispatches, being carried home to Rahdaria.");
+    const k = await choose([{ key: "read", label: "Read them, and keep them", tag: "the Saltwrit's business" }, { key: "give", label: "Give them to Orla", tag: "your name in the crew", plain: true }]);
+    if (k === "read") { P.key++; await say("Patrol rotas, a list of Tithe ships and their captains in a careful hand, and a page torn from a signal-book, explaining how a hoist is read. You put them inside your shirt."); await pzWrit(1, "You know how the Saltwrit talk to each other now."); }
+    else { await say("Orla breaks the seals, reads them, and laughs. \"Malloway,\" she says. \"Still counting our ships. One day he'll count to the end.\""); await pzName(1, "The captain saw you bring her the letters."); }
+    await go("Sail on");
+  }
+
+  // ---------- Part LXXIII: the Skimmer ----------
+  const PZ_SKIM = [
+    { thief: "ishe", lines: { teague: "\"It wasn't Saul. Saul couldn't steal a cold.\"", saul: "\"It was Ishe or Corwin. One of the two.\"", ishe: "\"Teague's lying.\"", corwin: "\"It wasn't me.\"" } },
+    { thief: "saul", lines: { teague: "\"Ishe was up in the tops all watch, where the chest isn't. I saw her.\"", saul: "\"It was Ishe or Corwin. One of the two.\"", ishe: "\"It wasn't Corwin.\"", corwin: "\"It wasn't me.\"" } }
+  ];
+  const PZ_SUSPECTS = { teague: "Teague Fallow, the cook", saul: "Old Saul, the sailmaker", ishe: "Ishe Varn, a Skerran topman", corwin: "Corwin Hask, the gunner" };
+  async function partSkimmer() {
+    heading("LXXIII", "The Skimmer");
+    light("torch");
+    const P = pz();
+    await say("Two nights out from Raftmark, Ninian counts the ship's chest, and counts it again, and goes to the captain. Forty gold has gone out of it since the <i>Good Intent</i>: a dead man's share, which under the Articles belongs to nobody, and the sea.");
+    await say("Orla Tennick has the whole middle watch brought up on deck by lamplight, four of them, the only ones who were below with the chest. \"Somebody here is a skimmer,\" she says. \"By the dawn bell, somebody names them, or the sea takes all four.\" She looks at you. \"You. You're new. You've no friends to lie for. You name them.\"", "voice");
+    const V = PZ_SKIM[d(PZ_SKIM.length) - 1];
+    await mech("<b>The skimmer.</b> Whoever took it is lying. Everybody else is telling the truth. That's all the Skerra need: they'd taste it in a moment if they weren't too angry to breathe. You'll have to work it out.");
+    await say(Object.keys(PZ_SUSPECTS).map(k => "<b>" + PZ_SUSPECTS[k] + "</b>: " + V.lines[k]).join("<br>"));
+    if (P.crew.includes("jen")) await say("Marrow-Jen, beside you, breathes in through her mouth while Corwin speaks, and touches your arm, and shakes her head very slightly: <i>he isn't lying</i>.");
+    const c = await choose(Object.keys(PZ_SUSPECTS).map((k, i) => ({ key: k, label: "Name " + PZ_SUSPECTS[k].split(",")[0], plain: i > 0 })).concat([{ key: "none", label: "Refuse to name anyone", tag: "the sea takes all four, unless you can talk her out of it", plain: true }]));
+    if (c === V.thief) {
+      P.skim = "right"; grant("pzskim");
+      await say("You say it. " + PZ_SUSPECTS[c].split(",")[0] + " goes white, and then, with the whole watch looking at " + (c === "ishe" ? "her" : "him") + ", tips out a boot, and forty gold comes out of it onto the deck.");
+      const m = await choose([{ key: "sea", label: "Let the Articles take their course" }, { key: "mercy", label: "Ask for the lash, not the sea", tag: "Persuasion DC 13", plain: true }]);
+      if (m === "mercy") {
+        const r = await check({ label: "Persuasion check (Orla Tennick)", mod: 2 + Math.floor(P.name / 3), dc: 13, cta: "Ask" });
+        if (r.ok) { S.hh.hear++; await say("Orla looks at you a long time. \"Forty lashes,\" she says. \"One for each.\" It's bad. It isn't the sea."); }
+        else { S.hh.hush++; await say("\"No,\" Orla says, and the sea has " + (c === "ishe" ? "her" : "him") + " before the dawn bell."); }
+      } else { S.hh.hush++; await say("The sea has " + (c === "ishe" ? "her" : "him") + " before the dawn bell."); }
+      await pzName(2, "You named the skimmer, and you were right.");
+    } else if (c === "none") {
+      P.skim = "none";
+      const r = await check({ label: "Persuasion check (one more night)", mod: 2 + Math.floor(P.name / 3), dc: 14, cta: "Argue" });
+      if (r.ok) { await say("You argue for one more night, and Orla gives it to you, and in the night the forty gold turns up again in the ship's chest, which tells nobody anything, and Orla lets it go."); }
+      else { S.hh.hush++; await say("\"Then the sea decides,\" Orla says. It takes two of them before Ninian finds the gold in " + PZ_SUSPECTS[V.thief].split(",")[0] + "'s boot."); await pzName(-1, "You wouldn't do the one thing she asked."); }
+    } else {
+      P.skim = "wrong"; S.hh.hush++;
+      await say("You name " + PZ_SUSPECTS[c].split(",")[0] + ". " + (c === "ishe" ? "She" : "He") + " stares at you. Orla breathes in, tasting it, and frowns, and shrugs, and gives the word. It's only afterwards, when " + PZ_SUSPECTS[V.thief].split(",")[0] + " is caught spending, that anybody knows you were wrong.");
+      await pzName(-2, "You sent an honest hand to the sea.");
+      await pzShare(-Math.min(P.share, 20), "Orla stops it out of your share.");
+    }
+    light("dark");
+    await say("The next night the Reach shows you why nobody crosses it. The storm comes out of the west with no warning, a black wall with lightning walking in it, and the sea gets up under the <i>Widow's Tally</i> like a horse.");
+    const st = await sailsPuzzle({ title: "Shorten sail in the storm", hide: 2, spare: 1 });
+    if (!st.ok) { await pzDay(1, "You lose a topmast and a day."); await hurt(2, 6, "bludgeoning", "A loose block swings out of the dark and takes you across the shoulders."); }
+    else { await say("You get the canvas in before it can take the masts out of her, and she rides it out under a scrap of storm-jib, with Hawl roaring at the wheel."); await pzName(1, "You kept the masts in her."); }
+    await go("Make for Raftmark");
+  }
+
+  // ---------- Part LXXIV: Raftmark ----------
+  async function partRaftmark() {
+    heading("LXXIV", "Raftmark");
+    light("dusk");
+    const P = pz();
+    await say("Raftmark lies in the lee of an island you can't see yet for the haze: Stillwater, Ninian says, and touches her arm. Raftmark itself is a town of a hundred dead ships lashed hull to hull in a great floating ring, with plank bridges between them and tarred shanties on their decks, and smoke, and Skerran music, and a market on the biggest hulk where everything the Fleet ever took is for sale.");
+    await say("All round it, at anchor, the Tithe Fleet: forty black ships. In the middle of the ring, a stone. A single great slab of black rock, floating, which shouldn't be possible: the tally-stone, where the shares are paid and the tithe is counted.");
+    await mech("Your share is paid on the tally-stone, in silver, by a Skerran who counts it twice: " + P.share + " gold.", "loot");
+    S.coins += Math.max(0, P.share); P.share = 0; renderSheet();
+    await say("The Salt King keeps his court on the biggest hulk of all, a warship so old her guns are green. Seld Varrick is a Skerran, enormous, laughing, generous, with a beard of salt crystals like a frozen waterfall. He pours wine for everyone. He hugs Orla. He hugs you, when he hears what you are. \"A landsman, pressed, and they haven't put you over yet!\" he roars. \"Good for you!\"");
+    await say("He talks about the old days, when the Fleet was small and hungry. He doesn't remember any of the bad things. Not one. You ask him, carefully, about the tithe of crews, the drowned, the count-ropes, and he looks at you with honest, friendly puzzlement, the way Gannet looked at the hammock. \"The sea takes its share,\" he says. \"That's all. It's always been that way. Hasn't it?\"");
+    await say("Behind his chair, in grey, stand the two Quiet Passengers from the <i>Widow's Tally</i>, and four more like them.");
+    if (!P.bargain) {
+      const r = await check({ label: "Investigation check (the Salt King's ledgers)", mod: 3 + (P.crew.includes("ninian") ? 2 : 0), dc: 14, cta: "Look" });
+      if (r.ok) { P.bargain = true; await say("Later, while the Salt King sleeps it off, you get into his cabin. In his own ledger, in his own hand, a page from thirty years ago: <i>agreed with the Hushwright's people. No ship of ours, or anyone's, comes within ten miles of Stillwater. In return, the Quiet Passengers. Nobody aboard any ship of the Fleet will ever again remember the drowned.</i> He sold them their own grief. And then they made him forget he'd sold it."); }
+    } else await say("You know what they are. You know what the Fleet bought from them: forgetting. And what it costs: nobody aboard any Tithe ship remembers the people they drowned. Not the ones they took, and not their own.");
+    if (P.bargain && vaelricSpeaks()) await voice("\"They keep the Reach empty, so nobody comes to Stillwater,\" Vaelric says. \"The order used to pay for walls with coin. They've found a cheaper wall.\"");
+    if (P.pell === "ally" || P.writ >= 3) await say("In the market, a man you don't know presses past you and says, without stopping, \"Malloway's two days off with nine ships. He means to burn all of it. Pressed men too. He can't tell you apart from here.\"");
+    await say("And you have to decide. In two days the Fleet will lie lashed together for the Black Tithe: every crew drawing bones, every ship giving up a tenth of its own to the sea, and the Quiet Passengers walking the line after.");
+    const canRise = P.name >= 6 || P.crew.length >= 3, canSell = P.writ >= 1 || P.key >= 1, canBurn = P.bargain;
+    const c = await choose([
+      { key: "rise", label: "Stand for captain of the Widow's Tally, under the Articles", tag: canRise ? "a vote of the crew · then the Fleet" : "you'd need a better name in the crew (Able hand), or three sworn hands", show: canRise },
+      { key: "sell", label: "Signal the Saltwrit from the Raftmark light", tag: canSell ? "a flag puzzle · the hunters come in" : "you've no way to talk to the Saltwrit", show: canSell, plain: true },
+      { key: "burn", label: "Break the Fleet's bargain with the Hushed", tag: canBurn ? "give the crews their dead back" : "you'd need to know what the bargain is", show: canBurn, plain: true },
+      { key: "duel", label: "Challenge Orla Tennick for the ship, blade to blade", tag: "the Articles allow it · a hard fight", show: !canRise, plain: true }
+    ]);
+    P.path = c === "duel" ? "rise" : c;
+    if (c === "rise" || c === "duel") await pzRise(c === "duel");
+    else if (c === "sell") await pzSell();
+    else await pzBurn();
+    await go("The Black Tithe");
+  }
+  async function pzRise(duel) {
+    const P = pz();
+    if (!duel) {
+      await say("Ninian reads the first Article on the deck at dusk, with the whole crew round her: <i>the captain is the crew's choice, and the crew may choose again</i>. Then everyone who wants you stands on the starboard side, and everyone who wants Orla on the port.");
+      const votes = P.name + 2 * P.crew.length + (P.lot === "boy" ? 2 : 0) + (P.keel ? 1 : 0);
+      await mech("The vote: " + votes + " of the crew's 20 voices stand with you. You need 11.", votes >= 11 ? "loot" : "");
+      if (votes >= 11) {
+        await say("Orla Tennick looks at the starboard side for a long moment. Then she unwinds the count-rope from round her neck, one turn at a time, and puts it over your head. \"It's heavy,\" she says. \"You'll find that out.\" And she goes and stands on the port side, alone, and then, after a while, walks over to starboard and stands with the rest.", "voice");
+        if (!S.gear.includes("countrope")) S.gear.push("countrope");
+        P.orla = "yield"; renderSheet(); return;
+      }
+      await say("It's not enough. Orla looks at the port side, and then at you, and draws the old boarding-axe from her belt. \"The Articles allow one more way,\" she says.", "voice");
+    } else await say("You say it on the open deck, so the whole crew hears. Orla Tennick doesn't seem surprised. She draws the old boarding-axe from her belt, and the crew make a ring.");
+    await hkFight(SKERRA({ name: "Orla Tennick, captain of the Widow's Tally", hp: duel ? 48 : 38, ac: 15, atk: 6, n: 1, s: 10, who: "Orla", whoShort: "Orla",
+      hitWhy: "Orla's axe comes round with forty years of the sea behind it.", miss: "She misses, by a finger, on purpose, to see what you'll do.", hitLine: "Orla gives a step, and the crew make a sound." }));
+    await say("When she goes down on the deck, she stays there, and unwinds the count-rope from round her neck and holds it up to you. \"It's heavy,\" she says. \"Take it.\"", "voice");
+    if (!S.gear.includes("countrope")) S.gear.push("countrope");
+    P.orla = "beaten"; renderSheet();
+    await pzName(2, "The crew's choice.");
+  }
+  async function pzSell() {
+    const P = pz();
+    await say("The Raftmark light is an old lantern-tower on the outermost hulk, kept by a deaf Skerran woman who sleeps through everything. In the flag-locker under it there are flags of every navy that ever sailed the Reach, taken off prizes.");
+    const r = await flagPuzzle({ key: P.key });
+    if (r.ok) { await pzWrit(3, "The Saltwrit have your signal."); P.sig = true; }
+    else { await say("Nothing answers. But in the morning there's a sail on the horizon that wasn't there before, watching, and you think maybe they read enough."); await pzWrit(1, "Maybe they saw."); }
+    await say("When you come down the tower, Dace Mallory is sitting at the foot of the ladder with his fiddle across his knees. He looks at you, and up at the light, and back." + (P.crew.includes("dace") ? " \"Well,\" he says. \"I was pressed too. Get me on the right side of the gibbet, and I never saw you.\"" : " He doesn't say anything. He gets up and walks away, and you don't know what he'll do."), "voice");
+  }
+  async function pzBurn() {
+    const P = pz();
+    await say("You go to Ninian first, because she can count, and she knows exactly what's missing. You tell her what the Salt King's ledger says. She sits very still in her cupboard of a cabin, with the lamp between you, and touches the count-rope at her neck, the knots she can't put faces to.");
+    await say("\"There's a way,\" she says at last. \"The ropes remember, even when we don't. Every knot is tied the way the dead one would have tied it. If somebody who knew them reties a knot the Passengers have picked out, it comes back. For a moment. Long enough.\" She puts her rope in your hands. \"I still know one. My brother's. He was my first. Help me.\"", "voice");
+    const r = await knotPuzzle({ len: 5, looks: 1 + (sdKnows("remember") ? 1 : 0) });
+    if (r.ok) { await say("Ninian holds the retied knot in both hands, and her face changes, slowly, the way a face changes when it's hit by something, and she says a name. \"Corran.\" She says it again. Then she gets up, and goes to find the others."); P.knot = true; }
+    else await say("You can't make it lie right, and the name stays gone. Ninian puts the rope back round her neck. \"Then we'll do it the hard way,\" she says. \"Out loud. With all of them listening.\"");
+    if (!S.gear.includes("countrope")) S.gear.push("countrope"); renderSheet();
+  }
+
+  // ---------- Part LXXV: the Black Tithe ----------
+  async function partBlackTithe() {
+    heading("LXXV", "The Black Tithe");
+    light("dark");
+    const P = pz(), edge = P.days;
+    await say("On the night of the Black Tithe the Fleet lies lashed together round the tally-stone, forty ships in a ring, lit by a thousand lamps, and every crew stands on its deck while the bones are drawn. The count-bells are going on every ship, slow, out of time with each other, like a field of cattle in the dark.");
+    if (edge) await mech("You have " + edge + (edge === 1 ? " day" : " days") + " left on the Tide-count: time you used getting ready. It'll tell.", "loot");
+    const crewTxt = P.crew.length ? P.crew.map(k => PZ_CREW[k].name).join(", ") : "";
+    if (P.path === "rise") {
+      await say("You stand on the quarterdeck of the <i>Widow's Tally</i> with the count-rope round your neck, and when the cup comes to your ship you send it back, empty. \"The <i>Tally</i>'s paid,\" you tell them. \"We pay no more.\" Across the ring, the Salt King laughs, and then stops laughing.");
+      await say("And then, out of the dark beyond the ring, the guns: nine ships, coming in fast under a gallows-and-anchor flag. The Saltwrit. Commodore Malloway has found Raftmark, and he doesn't care which ship is whose.");
+      await say("\"Cut us loose!\" you shout, and Hawl's axe comes down on the lashings, and the <i>Widow's Tally</i> swings out of the ring, the only ship in the Fleet with way on her, straight at the Saltwrit flagship, the <i>Patience</i>.");
+      const g = await wallGun({ title: "The broadside", target: "the Patience", shots: 3 + Math.min(2, edge), dist: 200 + d(120) });
+      const n = Math.max(4, 12 - P.crew.length - edge - (g.direct ? 3 : g.near ? 1 : 0));
+      await say("You put her alongside the <i>Patience</i> in the smoke, and go across with the boarding-axes" + (crewTxt ? ", " + crewTxt + " at your back" : "") + ".");
+      const F = await companyFight({ soldiers: n, captains: ["Commodore Idris Malloway", "Lieutenant Sabeth Crane"], capHp: 28, capThem: "them", cover: "the Patience's capstan",
+        capMiss: "Your blow rings off a Saltwrit officer's gorget, and the marines close up.", F: HUNTERS({ name: "The Saltwrit marines", hitWhy: "A Saltwrit boarding-pike takes you in the side." }) });
+      if (F.fled) await say("You're driven back to your own deck, but the <i>Patience</i> is burning, and the Saltwrit line breaks round her, and Malloway strikes his flag before the fire reaches his magazine.");
+      await say("Commodore Idris Malloway is brought to you on his knees on his own deck: a narrow grey man with a careful face, who has hanged four hundred people on the Gibbet Skerries, most of them pirates, and some of them not.");
+      const m = await choose([
+        { key: "hang", label: "Hang him from his own yard", tag: "Plunder +2" },
+        { key: "boat", label: "Put him in a boat and let the sea decide", plain: true },
+        { key: "press", label: "Press him into the crew, a tenth of the Patience's", tag: "the Articles allow it", plain: true }
+      ]);
+      P.malloway = m;
+      if (m === "hang") { S.hh.hush++; S.plunder = (S.plunder || 0) + 2; await say("He doesn't beg. He asks for a minute to write a letter, and you give it to him, and then he goes up."); }
+      else if (m === "boat") { S.hh.hear++; await say("You put him in the <i>Patience</i>'s jolly-boat with a cask of water and no oars. He looks at you as it drifts off, puzzled. \"Why?\" he says. You don't have a good answer."); }
+      else { await say("Ninian makes the cuts on his arm herself. He signs in a beautiful clerk's hand, and the salt makes him weep, and Hawl puts him to scrubbing the head."); }
+      P.ending = "rise"; grant("pzrise");
+    } else if (P.path === "sell") {
+      await say("You're on the deck of the <i>Widow's Tally</i> when the cup comes round, and you draw a white bone, and then the Saltwrit come in out of the dark, nine ships, under a gallows-and-anchor flag, " + (P.sig ? "exactly where your signal told them" : "guessing") + ".");
+      await say("Their guns open on the ring all at once, and the lashed ships can't move. It isn't a battle. It's a fire. You go across the plank bridges through the smoke toward the Salt King's hulk, because that's where the Commodore will want to be, and where the Quiet Passengers are, and because you want to be the one who's there.");
+      const n = Math.max(4, 11 - edge - (P.sig ? 2 : 0) - (P.writ >= 6 ? 2 : 0));
+      const F = await companyFight({ soldiers: n, captains: ["Captain Mord Ivery of the Fleet", "Captain Sallow Breck of the Fleet"], capHp: 24, capThem: "them", cover: "a stack of tarred hawsers",
+        capMiss: "Your blow slides off a Skerran captain's salt-crusted shoulder.", F: SKERRA({ name: "The Salt King's guard", who: "the Salt King's guard", whoShort: "Guard" }) });
+      if (F.fled) await say("You're driven back, but the hulk is burning round them, and they don't follow.");
+      await say("Seld Varrick, the Salt King, meets you on his own quarterdeck with a boarding-axe in each hand and fire behind him, and he's laughing, because he doesn't understand anything that's happening. He never has.");
+      await hkFight(SKERRA({ name: "Seld Varrick, the Salt King", hp: 52 - 3 * edge, ac: 15, atk: 6, n: 2, s: 6, who: "the Salt King", whoShort: "Salt King",
+        hitWhy: "Both his axes come down on you at once.", miss: "He misses, and laughs, and swings again.", hitLine: "The Salt King staggers, still laughing, salt cracking off his beard like ice." }));
+      P.varrick = "dead";
+      await say("When it's over, Commodore Idris Malloway comes aboard: a narrow grey man with a careful face, who has hanged four hundred people on the Gibbet Skerries. He looks at the dead Salt King, and at you. \"The pardon,\" he says, and holds out a letter under his seal. \"As promised. And the hanging's at dawn. All of them.\"", "voice");
+      const saved = [];
+      const c = await choose([{ key: "plead", label: "Ask him to spare the pressed men", tag: "Persuasion · the Saltwrit trust you " + (P.writ >= 4 ? "enough" : "a little") }, { key: "no", label: "Take the letter and say nothing", plain: true }]);
+      if (c === "plead") {
+        const r = await check({ label: "Persuasion check (Commodore Malloway)", mod: 2 + Math.floor(P.writ / 2), dc: 14, cta: "Plead" });
+        if (r.ok) { S.hh.hear++; await say("He looks at you for a long moment. \"The ones with land-skin,\" he says. \"And the children. The rest hang.\" Dace, and Gannet, and the eleven pressed off ships like the <i>Marigold</i>. It's not nothing."); saved.push("dace", "gannet"); }
+        else { S.hh.hush++; await say("\"A man who signs is a pirate,\" he says. \"I don't make exceptions. That's why it works.\""); }
+      } else S.hh.hush++;
+      await say("At dawn on the Gibbet Skerries the Saltwrit hang the Tithe Fleet, crew by crew, in the iron cages on the rocks. Orla Tennick. Hawl Ostrey. Ninian, with her ledger in her coat." + (saved.includes("gannet") ? "" : " Gannet, who wanted to know if it was true the land doesn't move.") + " The count-bells are quiet for the first time in a hundred years.");
+      S.coins += 80; S.plunder = S.plunder || 0; renderSheet();
+      await mech("The Saltwrit's pardon is yours, with 80 gold of bounty. On the roads back you can hunt raiders for the Saltwrit, and their bounties pay a fifth more.", "loot");
+      P.ending = "sell"; grant("pzsell");
+    } else {
+      await say("When the cup comes to the <i>Widow's Tally</i>, " + (P.knot ? "Ninian takes it from the Skerran holding it, and turns it over, and the bones fall on the deck. \"No,\" she says. \"Not till we've counted.\"" : "you take it, and turn it over, and the bones fall on the deck.") + " And you climb up onto the tally-stone in the middle of the ring, where the whole Fleet can see you, with a count-rope in your hands.");
+      await say("\"Who's this?\" you shout, and hold up a knot. Nobody knows. \"Who's this?\" Nobody. Forty crews standing on forty decks in the lamplight, looking at knots they tied themselves, and can't remember who for.");
+      await say("The Quiet Passengers come out of the Salt King's hulk, six of them, in grey, very calm. They walk toward the tally-stone across the plank bridges, whispering already, and wherever they pass, the Skerra close their eyes and smile.");
+      if (hasGear("hushcord")) await say("You take Severine's Hush-Cord off your wrist and hold it up so they can see it. They stop. They know what it is. They know whose it was.");
+      await hkFight(HUSHED({ name: "The Quiet Passengers", heads: hasGear("hushcord") ? 4 : 6, unit: "Passenger|Passengers", ac: 13, atk: 5, s: 6 }));
+      await say("When the last of them is sitting on the planks with their hands in their laps, you go back to the count-ropes. " + (P.knot ? "Ninian is already there, and Hawl, and Jen, going along the rope on the <i>Tally</i>'s side, retying the knots, the ones they still know, saying the names out loud." : "Nobody knows how to start, so you start: you pick up the nearest rope and untie a knot and tie it again, carefully, and say, \"Somebody tied this for somebody.\""));
+      const r = await knotPuzzle({ len: 6, looks: 1 + (sdKnows("remember") ? 1 : 0) + (P.crew.includes("ninian") ? 1 : 0) });
+      if (r.ok) await say("A Skerran woman on the next ship cries out, and holds her rope up, and says a name. Then another. It goes round the ring like fire through dry grass: names, called out loud from deck to deck, the drowned coming back one at a time, all of them, the Fleet's own and everyone they took, thirty years of them, and the Skerra weeping, and tearing at the salt on their arms, and remembering.");
+      else await say("It's slow. It's one name at a time, from the oldest Skerra, who remember the most. But it goes round the ring, and it doesn't stop, and by morning there are names being called from every deck.");
+      await say("Seld Varrick, the Salt King, sits on his quarterdeck with his face in his hands. He remembers all of it now. Everything he did, and everything he sold. He looks up at you. \"Make it go away,\" he says. \"Please. You've the cord. Make me forget again.\"", "voice");
+      const v = await choose([{ key: "hush", label: "Whisper along the Hush-Cord for him", tag: "he forgets again", show: hasGear("hushcord") }, { key: "no", label: "\"No.\"", plain: hasGear("hushcord") }]);
+      P.varrick = v;
+      if (v === "hush") { S.hh.hush++; await say("You whisper to him, and his face goes smooth, and he looks round at the weeping ships, puzzled, and pours himself some wine."); }
+      else { S.hh.hear++; await say("He sits with it until the sun comes up. Then he takes off his crown of salt, which is only salt, and drops it in the sea, and goes below, and nobody sees him again."); }
+      await say("By noon the Tithe Fleet is breaking up: ships cutting their lashings and making sail, north and south and east, toward ports that some of their crews haven't seen in thirty years, to tell somebody's mother. When the Saltwrit come over the horizon at dusk, there's nothing at Raftmark but empty hulks, and one black ship waiting for you.");
+      P.ending = "burn"; grant("pzburn");
+      S.plunder = (S.plunder || 0) + 1;
+    }
+    if (P.ending === "rise") S.plunder = (S.plunder || 0) + 5;
+    renderSheet();
+    await go("Make for Stillwater");
+  }
+
+  // ---------- Part LXXVI: Stillwater ----------
+  async function partStillwater() {
+    heading("LXXVI", "Stillwater");
+    light("lake");
+    const P = pz();
+    await say("Stillwater comes out of the haze in the morning: an island of white cliffs, and on the cliffs a long grey wall, and in the wall a gate. And all round it, for a mile, the sea is perfectly still. Not calm: still, like glass, like a held breath. The wind drops as you come into it. The waves stop. You can hear your own heart.");
+    await say(P.ending === "rise" ? "The <i>Widow's Tally</i> won't go any closer. The Skerra won't. \"That's land,\" Hawl says, and shudders all over, the salt on his shoulders cracking. So you take the jolly-boat, alone." : P.ending === "sell" ? "The Saltwrit cutter that brings you won't go any closer than the edge of the still water. \"Not paid for that,\" says her master. You take the jolly-boat alone." : "Ninian rows you in herself, on the <i>Widow's Tally</i>'s jolly-boat, with the count-rope coiled at her feet. At the edge of the still water she stops and ships her oars. \"I'll wait,\" she says. \"I've a lot to remember.\"");
+    await say("You row across the still water. The oars make no sound at all when they go in. Nothing does. You try saying your name aloud, and it comes out of your mouth and goes nowhere, like breath on a cold day.");
+    const r = await check({ label: "Wisdom check (the silence)", mod: 2 + (sdKnows("listen") ? 2 : 0), dc: 13, cta: "Keep rowing" });
+    if (r.ok) await say("You keep rowing. It's only silence. You've heard worse.");
+    else await hurt(1, 6, "psychic", "The silence gets into you, and for a while you forget why you're rowing, and then where, and then you remember, all at once, with a pain behind your eyes.");
+    if (vaelricSpeaks()) await voice("\"Stillwater,\" Vaelric says, and his voice is very small in the silence, and very old. \"The gate's the same. There was a woman standing in it, with a kind hand.\"");
+    await say("The boat grates on white shingle. Up the cliff-path, past the gate, on the headland, you can see a single stone standing on its own with a lamp burning beside it in daylight: a grave. And along the top of the wall, standing still in their grey, watching you come, twenty-nine people.");
+    const R = { rise: "+5 max HP", sell: "the Saltwrit's pardon", burn: "+3 max HP and a Skerran count-rope" };
+    if (P.ending === "rise") { S.maxHp += 5; S.hp = Math.min(S.maxHp, S.hp + 5); }
+    if (P.ending === "burn") { S.maxHp += 3; S.hp = Math.min(S.maxHp, S.hp + 3); }
+    await mech("<b>The Black Tithe is ended.</b> " + { rise: "You're captain of the Widow's Tally, and the Reach is yours.", sell: "The Tithe Fleet hangs on the Gibbet Skerries.", burn: "The Tithe Fleet remembers its dead, and is gone." }[P.ending] + " Gain " + R[P.ending] + ". Your Plunder on the roads back: " + PL_TIERS[plTier()][1] + " (" + (S.plunder || 0) + ").", "loot");
+    tip("plunder");
+    if (P.tyra) await say(S.tyra && S.tyra.love ? "Tyra climbs out of the boat after you onto the shingle and stands there, swaying, and grabs your arm. \"It doesn't move,\" she says. \"I'd forgotten. Don't let me go back on a ship for a year.\"" : "Tyra jumps out onto the shingle and stamps on it, twice, hard. \"Land,\" she says. \"Good.\"");
+    P.on = false; P.done = true; renderSheet();
     await endCard();
+  }
+
+  // ---------- the roads back: caravans, and raiders ----------
+  async function roadRaid() {
+    const hunt = pzHunter(), regs = roamRegions();
+    const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    if (r === "back") return;
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[r] + "</span><h2>" + (hunt ? "Raiders on the road" : "A caravan on the road") + "</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    const tier = plTier();
+    roamFight = true;
+    try {
+      if (hunt) {
+        await say("The Saltwrit post a bounty on every road now. This one: a band of road-raiders working the " + REGIONS[r] + " road, who've taken three carts in a month and left nobody to say what they looked like. You find their fire.");
+        await hkFight({ name: "Road-raiders", heads: 3 + d(2), unit: "raider|raiders", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "the raiders", whoShort: "Raiders",
+          hitWhy: "A raider's hanger opens your arm.", miss: "The blow goes wide in the firelight.", hitLine: "A raider goes down across the fire, scattering sparks." });
+        const n = Math.round((12 + lv()) * 1.2);
+        S.coins += n; renderSheet(); xpGain(30 + lv());
+        await mech("The Saltwrit's bounty, with the pardon's fifth on top: " + n + " gold.", "loot");
+        light(back); return;
+      }
+      const CARGO = ["salt and cloth", "copper and wine", "glass, packed in straw", "spice, and a strongbox"], cargo = CARGO[d(CARGO.length) - 1];
+      await say("A caravan comes along the " + REGIONS[r] + " road at dusk: four wagons of " + cargo + ", and guards walking beside them" + (tier >= 2 ? ", and when they see you on the road ahead, somebody shouts your name" : "") + ".");
+      const c = await choose([
+        { key: "black", label: "Run up the black: stand in the road and let them see you", tag: tier >= 3 ? "Terror of the Reach · they give up" : "Intimidation DC " + (15 - 2 * tier) },
+        { key: "fight", label: "Take it by force", tag: "a company fight · more gold", plain: true },
+        { key: "leave", label: "Let it pass", plain: true }
+      ]);
+      if (c === "leave") { await say("You let it go by. The guards watch you all the way past."); light(back); return; }
+      let gave = false, force = c === "fight";
+      if (c === "black") {
+        const k = tier >= 3 ? { ok: true } : await check({ label: "Intimidation check (running up the black)", mod: 3 + tier, dc: 15 - 2 * tier, cta: "Glare" });
+        if (k.ok) { gave = true; await say("The caravan-master looks at you, and at the way you stand, and puts down his sword, slowly, and steps back from the wagons."); }
+        else { force = true; await say("The caravan-master laughs at you, and the guards come on."); }
+      }
+      if (force) {
+        const F = await companyFight({ soldiers: 4 + 2 * tier, captains: ["The caravan-master"], capHp: 18, capThem: "him", cover: "an overturned wagon",
+          capMiss: "Your blow slides off the caravan-master's mail.",
+          F: { name: "The caravan guard", ac: 13, atk: 4, n: 1, s: 6, type: "slashing", road: true, who: "the guards", whoShort: "Guards", hitWhy: "A guard's spear finds you.", miss: "The spear goes past your ribs.", hitLine: "A guard throws down his spear and runs for the trees." } });
+        if (F.fled) { light(back); return; }
+      }
+      const t = await choose([{ key: "tenth", label: "Take a tenth, the sea's way", tag: "Plunder +1" }, { key: "all", label: "Take all of it", tag: "Plunder +2 · twice the gold", plain: true }]);
+      let n = (gave ? 10 : 16) + lv();
+      if (t === "all") n *= 2;
+      if (tier >= 2) n = Math.round(n * 1.25);
+      S.coins += n; S.plunder = (S.plunder || 0) + (t === "all" ? 2 : 1);
+      if (t === "all") S.hh.hush++;
+      renderSheet(); xpGain(25 + lv());
+      await mech("You take " + n + " gold" + (tier >= 2 ? " (a Black Name gets a quarter more)" : "") + ". Plunder: " + S.plunder + ", " + PL_TIERS[plTier()][1] + ".", "loot");
+      achCheck();
+    } finally { roamFight = false; }
+    light(back);
   }
 
   async function endCard() {
@@ -18520,21 +19558,26 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done;
+    const TITHE = {
+      rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
+      sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
+      burn: "On the Stillwater Reach, the Tithe Fleet has gone home, every crew calling the names of its dead."
+    };
     const SOUND = {
       sound: "Under the western sea, the Drowned Light rings like a bell, the Sea-Sky stands high over Bathyrra, and the Bathyr have agreed to you: you carry their note.",
       hush: "Under the western sea there's only sea. The Drowned Light is dark for good, and the Bathyr live on the salt flats north of Rahdaria.",
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Whisperers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Whisperers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Whisperers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
-      "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_MAX + ", hidden things and the Cascades wake.</p>");
+      "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
     scrollNext = true;
     add(box);
     $("againBtn").onclick = () => restart();
@@ -18638,6 +19681,21 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         ...rxRecap(R)
       ];
     },
+    tithe: (s) => {
+      const P = s.pz;
+      if (!P) return [s.part > 68 && "You set out from Rahdaria for Stillwater, across the Reach that nobody crosses."];
+      const C = { hawl: "Hawl the bosun", gannet: "Gannet the powder-boy", dace: "Dace Mallory", jen: "Marrow-Jen", ninian: "Ninian the quartermaster" };
+      return [
+        "On the way to Stillwater, the Tithe Fleet took your ship and a tenth of its crew, and the tenth was you. You were pressed aboard the Widow's Tally, a Skerran raider, under Captain Orla Tennick.",
+        P.keel ? "You refused the Articles, and they keelhauled you, and you came up the other side." : P.signed ? "You signed the Articles in your own arm, in salt." : "",
+        (s.tricks || []).length ? "The crew taught you " + s.tricks.length + " pirate trick" + (s.tricks.length > 1 ? "s" : "") + "." : "",
+        P.crew.length ? C[P.crew[0]] + (P.crew.length > 1 ? " and " + (P.crew.length - 1) + " more" : "") + " swore to stand with you." : "",
+        P.pell === "told" ? "You gave the Saltwrit's man aboard, Pell Ashby, to the Articles." : P.pell === "ally" ? "You listened to the Saltwrit's man aboard, Pell Ashby." : "",
+        P.skim === "right" ? "You named the skimmer, and you were right." : P.skim === "wrong" ? "You named the wrong hand as the skimmer." : "",
+        P.bargain ? "You learned what the Fleet sold the Hushed of Stillwater: the memory of everyone it ever drowned." : "",
+        P.ending ? { rise: "You became captain of the Widow's Tally, and beat the Saltwrit off Raftmark.", sell: "You signalled the Saltwrit, and they burned Raftmark, and hanged the Fleet on the Gibbet Skerries.", burn: "You gave the Fleet back its dead, knot by knot, and it broke up and went home." }[P.ending] : ""
+      ];
+    },
     sounding: (s) => {
       const D = s.sd;
       if (!D) return [s.part > 61 && "You went down the Sea-Stair with the Speaker for the Deep, to Bathyrra, the dry city under the western sea."];
@@ -18697,8 +19755,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
@@ -18729,7 +19787,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const box = el("section", "tbc",
       '<p class="eyebrow" style="margin:0">End of the free demo</p>' +
       '<p class="big">The labyrinth goes deeper.</p>' +
-      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, a fallen moon under the labyrinth where you began, a garden city besieged by people who came up out of the sea, and a dry city at the bottom of it, where the sky is made of water and it's coming down.</p>" +
+      "<p style='margin:0'>You have played " + DEMO_END + " of " + PARTS.length + " parts. The full game carries on for " + (PARTS.length - DEMO_END) + " more, through drowned castles, a hunted village, a city of glass, a mountain that sings, a buried city where it has been noon for six hundred years, a fallen moon under the labyrinth where you began, a garden city besieged by people who came up out of the sea, a dry city at the bottom of it, where the sky is made of water and it's coming down, and a pirate sea where the raiders take a tenth of every crew.</p>" +
       "<p style='margin:0;color:var(--muted)'>Your progress here is saved, with " + S.hp + " of " + S.maxHp + " HP and " + S.coins + " gold in your purse.</p>" +
       '<div class="actions"><a class="primary demo-full" href="' + FULL_URL + '" target="_blank" rel="noopener">Play the full game</a><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>');
