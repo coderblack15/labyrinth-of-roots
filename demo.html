@@ -1911,9 +1911,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
-    { ver: "53", name: "The Blood-bought Roads", date: "7 Nov 2026", items: ["The roads between the kingdoms have a name of their own now: the <b>Blood-bought Roads</b>. The gangs that work them are the Gangs of the Blood-bought Roads, and the top road name is Terror of the Blood-bought Roads."] },
+    { ver: "53", name: "The Blood-bought Roads", date: "7 Nov 2026", items: [
+      "The roads between the kingdoms have a name now: the <b>Blood-bought Roads</b>. Convicts cut them in chains, and every milestone has somebody under it. The gangs are the Gangs of the Blood-bought Roads, and the top road name is Terror of the Blood-bought Roads.",
+      "Eleven named stretches, each with its own nature: the Blood-Bought Way, the Red-Coin Road, the Widow's Tradeway, the Ransom Run, the Blood-Bought Pike, the Sellsword's Track, the Blood-Bought Mile, the Blood-Bought Run, the Gallows March, the Salt-Toll Stair and the Wreckers' Shore.",
+      "<b>Monster country</b>: a caravan with a body count, and something still eating it. <b>Sellsword roads</b>: sign on for half the profits, and meet a gang or a rival company (duel the captain, or stare him down). <b>Conquered land</b>: locals who want the road back; hear them out, pay the land-price, or force it. <b>Blood-tolls</b>: a gang holds the bridge; pay in coin or blood, duel their Wall for the toll-box, cut the ropes, or fight.",
+      "On any stretch: <b>gang wars</b> (pick a side, wait for the winner, or loot the dead), <b>chases</b> after a stolen wagon over three hard stretches, and the rare <b>Red-Coin Peddler</b>, who sells blades of the Blood-bought Roads and a map to the gangs' dens.",
+      "Seven more pursuits in a new set, The Blood-bought Roads, and a list of the stretches you've walked in the gang ledger."] },
     { ver: "52", name: "Gangs of the Blood-bought Roads", date: "7 Nov 2026", items: [
-      "Bandit gangs on the roads between kingdoms: between chapters in the story, on the new <b>Take the road between kingdoms</b> road on the roads back, and now and then while you walk the old roads.",
+      "Bandit gangs on the roads between kingdoms: between chapters in the story, on the roads back (now <b>Take the Blood-bought Roads</b>), and now and then while you walk the old roads.",
       "Fifty named gangs, each with its own painted mark, motto and dirty trick (ambushes, smoke-pots, nets, barbed steel, blood-oaths, light fingers, shield walls, old hexes, fire-arrows). Every gang is four: a Hexer (mage), a Shot (ranged), a Wall (tank) and a Knife (DPS). You pick who to go for, and the Wall stands in front of the rest.",
       "Every meeting rolls a different haul (strongboxes, payrolls, apothecaries' crates, arms carts, reliquaries) and a weapon of the gang's own, named for them, in the field qualities.",
       "Afterwards, tie them up for the watch, let them go for a cut (they may come back with a grudge), or take their colours. Your <b>road name</b> grows with Infamy, and you lean Roadwarden or Road-king. At Infamy 3 you can call gangs out by name to make them yield.",
@@ -2337,6 +2342,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "bnking", name: "Road-king", desc: "Lean Road-king: let gangs go for a cut.", test: () => !!S.bn && bnLean() === "Road-king" },
     { id: "bnterror", name: "Terror of the Blood-bought Roads", desc: "Reach Infamy 25.", test: () => !!S.bn && S.bn.inf >= 25, prog: () => [Math.min(25, S.bn ? S.bn.inf : 0), 25] },
     { id: "ct5", name: "Contender V", desc: "Win a hundred fights on one journey.", test: () => ctRank() >= 5, prog: () => [Math.min(100, S.bn ? S.bn.cw : 0), 100] },
+    { id: "bnwar", name: "Crows' Feast", desc: "Come through a gang war on the Blood-bought Roads.", test: () => false },
+    { id: "bnbridge", name: "Toll Paid in Steel", desc: "Win a toll bridge in a duel with its Wall.", test: () => false },
+    { id: "bnchase", name: "Run Them Down", desc: "Catch a gang and its stolen wagon clean, on all three stretches of the chase.", test: () => false },
+    { id: "bnescort", name: "Half the Profits", desc: "Finish a sellsword's contract on the Blood-bought Roads.", test: () => false },
+    { id: "bnreclaim", name: "They Remember", desc: "Hear the land-takers out, and walk on with their token.", test: () => false },
+    { id: "bnpeddler", name: "Red Coin", desc: "Buy something from the Red-Coin Peddler.", test: () => false },
+    { id: "bnstretch", name: "Every Mile Paid", desc: "Walk all eleven stretches of the Blood-bought Roads on one journey.", test: () => !!(S.bn && S.bn.walked) && Object.keys(STRETCHES).every(k => S.bn.walked[k]), prog: () => [Object.keys(STRETCHES).filter(k => S.bn && S.bn.walked && S.bn.walked[k]).length, Object.keys(STRETCHES).length] },
     { id: "bnweave", name: "The High Weave", desc: "Climb the Needle and break the High Weave, and take Threadfang.", test: () => false },
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
@@ -2366,7 +2378,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "tithe", name: "The Black Tithe", ver: "9", desc: "Pressed onto a Skerran raider on the Stillwater Reach: pirate tricks, the Articles, three ways to end the Fleet, Plunder on the roads back, and ten more levels.",
       ids: ["pzsigned", "pzkeel", "pzsails", "pzbones", "pzreckon", "pzskim", "pztricks", "pzcrew", "pzrise", "pzsell", "pzburn", "pzblack", "lv50"] },
     { id: "gangs", name: "Gangs of the Blood-bought Roads", ver: "10", desc: "Fifty bandit gangs on the roads between kingdoms, a road name, the Contender, and the High Weave.",
-      ids: ["bnfirst", "bnten", "bnall", "bnyield", "bnwarden", "bnking", "bnterror", "ct5", "bnweave"] }
+      ids: ["bnfirst", "bnten", "bnall", "bnyield", "bnwarden", "bnking", "bnterror", "ct5", "bnweave"] },
+    { id: "bloodroads", name: "The Blood-bought Roads", ver: "11", desc: "Eleven named stretches between the kingdoms: monster country, sellsword roads, conquered land and blood-tolls.",
+      ids: ["bnwar", "bnbridge", "bnchase", "bnescort", "bnreclaim", "bnpeddler", "bnstretch"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2731,6 +2745,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     tricks: ["Pirate tricks", "Tricks you learn from the crew go in every fight from now on, each once a fight: the belaying pin, the boarding hook, a powder flash, salt in the eyes, and running up the black. They don't cost a roll, mostly. They do cost your turn."],
     plunder: ["Plunder", "On the roads back you can raid caravans (or, with the Saltwrit's pardon, hunt raiders). Raids raise your Plunder: at 3 caravans give up easier, at 8 you take a quarter more, and at 15 running up the black never needs a roll."],
     gangs: ["Bandit gangs", "A gang is four: the <b>Hexer</b> heals and curses, the <b>Shot</b> shoots from the back, the <b>Wall</b> stands in front of the rest (+2 AC on anyone else while it's up), and the <b>Knife</b> hits hardest. Pick who to go for; your blows carry into the next one when your target drops. Afterwards, hand them in, let them go for a cut, or take their colours."],
+    bloodroads: ["The Blood-bought Roads", "Each stretch between two kingdoms has its own name and nature: monster country (caravans with a body count), sellsword roads (escort contracts), conquered land (locals who want it back) and blood-tolls (pay in coin or blood, or take the bridge). Gang wars and chases turn up on any of them, and the Red-Coin Peddler, now and then."],
     contender: ["Contender", "Every fight you win counts towards the Contender. Each rank takes a twentieth off in towns on the roads back, and every town pays a purse for your stories once you've won another fight. Rank III: free rooms. Rank V: free honing. Rank VI: a gift from the healer."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
@@ -4064,7 +4079,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
-          { key: "roads", label: "Take the road between kingdoms", tag: "bandit gangs · " + bnBroken() + " of " + ROAD_GANGS.length + " broken · " + bnTitle(), plain: true, show: roamRegions().length >= 2 },
+          { key: "roads", label: "Take the Blood-bought Roads", tag: "bandit gangs · " + bnBroken() + " of " + ROAD_GANGS.length + " broken · " + bnTitle(), plain: true, show: roamRegions().length >= 2 },
           { key: "weave", label: bn().weave === 2 ? "Climb the Needle again" : "Climb to the High Weave", tag: bn().weave === 2 ? "the Weave is empty now · the view" : "the legendary gang · a hard fight", plain: true, show: bn().weave === 1 },
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
@@ -19921,6 +19936,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       setAc();
     }
     F.setup = async (st) => {
+      if (o.frac && o.frac < 1) { FOE.hp = Math.max(1, Math.round(FOE.max * o.frac)); renderFoe(); }
       let acc = 0;
       M.forEach((m, i) => { m.max = m.hp = i === M.length - 1 ? FOE.max - acc : Math.max(1, Math.round(m.base * FOE.max / total)); acc += m.hp; });
       if (FOE.hp < FOE.max) { let cut = FOE.max - FOE.hp; for (const m of M) { const t = Math.min(m.hp - 1, cut); m.hp -= t; cut -= t; } }
@@ -20083,7 +20099,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       spotted = r.ok;
       if (spotted) await say("You catch " + bnName(G, "knife") + " moving at the edge of your eye, and turn to meet it.");
     }
-    const F = await bnFight(G, { grudge, spotted });
+    let den = false;
+    if (B.map && !B.beat[G.id] && !story) { B.map = false; den = true; await say("The Red-Coin Peddler's map was right. You find their den before they find you, and you're in among them while they're still eating."); }
+    const F = await bnFight(G, { grudge, spotted: spotted || den, frac: den ? 0.75 : 1, edge: den });
     light(back);
     if (F.fled || F.overtaken) { await say("You get clear of them, somehow. They let you go, laughing, and keep the cart."); return; }
     await bnWon(G, H, { grudge });
@@ -20132,25 +20150,288 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   const BN_STORY_CHANCE = 45;
   // On the roads back: the road between two kingdoms you've cleared.
+  // ---------- the Blood-bought Roads ----------
+  // The roads between the kingdoms, and why they're called that. Every stretch between two kingdoms has
+  // a name and a nature (Adrian's four: monster country, sellswords, conquered land, blood-tolls), and
+  // its own events: caravans with a body count, escort contracts, locals ambushing to take the land back,
+  // toll-bridge standoffs, gang wars, chases, and the Red-Coin Peddler, who only turns up now and then.
+  // S.bn.walked: stretches travelled (by key); S.bn.lore: the story of the name has been told.
+  const STRETCHES = {
+    "roots-desert": { name: "The Blood-Bought Way", kind: ["monsters", "tolls"], lore: "The oldest road in the realm, from the labyrinth's mouth out into the sands. The first wardens cut it, and the stones under the sand still have their marks on them. Something has always lived alongside it, and it has always been hungry." },
+    "desert-fen": { name: "The Red-Coin Road", kind: ["tolls", "mercs"], lore: "Caravans pay in red copper at every well along it, and the coins go round and round the same hands: the gangs take them from the merchants and spend them back at the wells." },
+    "fen-mere": { name: "The Widow's Tradeway", kind: ["monsters", "conquered"], lore: "A causeway of sunk logs across the Hushfen to the drowned lake. Every family who trades along it has a widow in it. The fen takes the drivers, and the drivers' wives drive on." },
+    "mere-lastwell": { name: "The Ransom Run", kind: ["conquered", "mercs"], lore: "Carrowmere's old soldiers cut it to march on Lastwell, a hundred years ago, and took hostages from every village on the way. The villages still take hostages back, from anyone who walks it." },
+    "lastwell-glass": { name: "The Blood-Bought Pike", kind: ["tolls", "mercs"], lore: "A paved road with a fort every ten miles, built by Sulmara to bring Lastwell's iron north. The forts were sold off one at a time when the money ran out, and every fort charges its own toll." },
+    "glass-corrach": { name: "The Sellsword's Track", kind: ["mercs", "monsters"], lore: "Up into the mountains, through scree and Hesk country. No merchant walks it without hired blades. Half the profit of every load goes to the sellswords, and the other half goes to whoever the sellswords didn't kill." },
+    "corrach-noon": { name: "The Blood-Bought Mile", kind: ["monsters", "conquered"], lore: "The one mile of the road down to Ammaret where the rock is hollow and the light gets in sideways. A safe road, people say, apart from that mile, and they say it the way you'd say a safe sea, apart from the storms." },
+    "noon-undermoon": { name: "The Blood-Bought Run", kind: ["tolls", "chase"], lore: "Down from the noon into the Undermoon, fast and steep, by tunnels nobody admits to having dug. Smugglers love it. Caravan-masters run it at a gallop, with their eyes shut." },
+    "undermoon-rahdaria": { name: "The Gallows March", kind: ["conquered", "mercs"], lore: "Rahdaria's army carved it through the borderland, and hanged a man at every milestone to keep it carved. The borderers have never stopped trying to take it back." },
+    "rahdaria-bathyrra": { name: "The Salt-Toll Stair", kind: ["tolls", "monsters"], lore: "The cliff road down to the Sea-Stair, where the brine-hounds hunt. There's a toll at the top and a toll at the bottom, and what's in between is free, if you can get through it." },
+    "bathyrra-reach": { name: "The Wreckers' Shore", kind: ["monsters", "chase"], lore: "The coast road north along the Reach, under the Gibbet Skerries, where the wreck-lights burn. Every wreck on that coast was somebody's cargo, and every cargo was somebody's road." }
+  };
+  const stretchOf = (a, b) => STRETCHES[a + "-" + b] || { name: "The road from " + REGIONS[a] + " to " + REGIONS[b], kind: ["monsters", "tolls"], lore: "" };
+  async function roadsLore() {
+    const B = bn();
+    if (B.lore) return;
+    B.lore = true;
+    await say("In the first inn you stop at, you ask the landlord why everyone calls them the Blood-bought Roads. He looks at you as if you've asked why water's wet.");
+    await say("\"Because they were,\" he says. \"Every road between the kingdoms. Convicts cut them, in chains, and the kingdoms paid for every mile with what was left of the convicts. Then the gangs paid for them again, and the caravans, and the sellswords, and the people who lived there first. There's a milestone every mile, and under every milestone there's somebody.\" He pours. \"The gangs say a road belongs to whoever bleeds for it last. Nobody's ever proved them wrong.\"");
+    await mech("<b>The Blood-bought Roads.</b> Every stretch between two kingdoms has its own name and nature: monster country, sellsword roads, conquered land, and blood-tolls. Each has its own trouble, and the gangs work all of them.", "loot");
+    tip("bloodroads");
+  }
   async function bnRoads() {
     const regs = roamRegions(), pairs = [];
     for (let i = 1; i < regs.length; i++) pairs.push([regs[i - 1], regs[i]]);
-    const r = await choose(pairs.map(([a, b], i) => ({ key: String(i), label: REGIONS[a] + " to " + REGIONS[b], tag: ROAD_GANGS.filter(G => G.r === a || G.r === b).filter(G => !bn().beat[G.id]).length + " gangs not yet broken on this road", plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    const B = bn();
+    B.walked = B.walked || {};
+    const r = await choose(pairs.map(([a, b], i) => { const T = stretchOf(a, b); return { key: String(i), label: T.name, tag: REGIONS[a] + " to " + REGIONS[b] + " · " + ROAD_GANGS.filter(G => G.r === a || G.r === b).filter(G => !B.beat[G.id]).length + " gangs not yet broken" + (B.walked[a + "-" + b] ? "" : " · not yet walked"), plain: i > 0 }; }).concat([{ key: "back", label: "Not now", plain: true }]));
     if (r === "back") return;
-    const [a, b] = pairs[+r];
+    const [a, b] = pairs[+r], T = stretchOf(a, b), label = T.name + " · " + REGIONS[a] + " to " + REGIONS[b];
+    await roadsLore();
+    if (!B.walked[a + "-" + b]) { B.walked[a + "-" + b] = 1; if (T.lore) { add(el("div", "part-head sub", '<span class="num">The Blood-bought Roads</span><h2>' + T.name + "</h2>")); await say(T.lore); } }
+    achCheck();
     roamFight = true;
     try {
-      const roll = d(10);
-      if (roll <= 7) await bnMeet([a, b], { label: "The road between kingdoms · " + REGIONS[a] + " to " + REGIONS[b] });
-      else if (roll <= 8) {
-        const h = el("div", "part-head sub", '<span class="num">The road between kingdoms · ' + REGIONS[a] + " to " + REGIONS[b] + "</span><h2>A cart in the ditch</h2>");
-        scrollNext = true; add(h);
-        await say("Somebody got here before you. A cart lies on its side in the ditch with its load gone and a gang's mark painted on the tailboard, still wet. Whoever did it left in a hurry, and left a little behind.");
-        await gold(2, 6, "In the straw under the cart:");
-        const w = bnWeapon(ROAD_GANGS.filter(G => G.r === a || G.r === b)[0] || ROAD_GANGS[0], false);
-        if (w && d(2) === 1) await mech("<span>And under the seat: " + w + "</span>", "loot find");
-      } else await meetBeast(d(2) === 1 ? a : b, { roam: true });
+      const roll = d(20);
+      if (roll <= 8) await bnMeet([a, b], { label });
+      else if (roll <= 10) await evGangWar([a, b], label);
+      else if (roll <= 15) { const k = T.kind[d(T.kind.length) - 1]; await ({ monsters: evMonsters, mercs: evEscort, conquered: evReclaim, tolls: evToll, chase: evChase }[k])([a, b], label); }
+      else if (roll === 16) await evChase([a, b], label);
+      else if (roll === 17) await evCart([a, b], label);
+      else if (roll === 18) await evPeddler([a, b], label);
+      else await meetBeast(d(2) === 1 ? a : b, { roam: true });
     } finally { roamFight = false; }
+  }
+  const evHead = (label, title) => { const h = el("div", "part-head sub", '<span class="num">' + label + "</span><h2>" + title + "</h2>"); scrollNext = true; add(h); light("dusk"); };
+  async function evCart(regs, label) {
+    evHead(label, "A cart in the ditch");
+    await say("Somebody got here before you. A cart lies on its side in the ditch with its load gone and a gang's mark painted on the tailboard, still wet. Whoever did it left in a hurry, and left a little behind.");
+    await gold(2, 6, "In the straw under the cart:");
+    const w = bnWeapon(ROAD_GANGS.filter(G => regs.includes(G.r))[0] || ROAD_GANGS[0], false);
+    if (w && d(2) === 1) await mech("<span>And under the seat: " + w + "</span>", "loot find");
+  }
+  // Monster country: a caravan with a body count, and something still eating it.
+  async function evMonsters(regs, label) {
+    const reg = regs[d(regs.length) - 1];
+    evHead(label, "The body count");
+    await say("There's a caravan stopped in the road ahead, three wagons in a ring, and men with spears standing on the wagon-beds. Two of them are already lying in the road, and something is dragging a third into the brush. The caravan-master sees you and shouts: \"Ten gold a head for anybody who'll stand with us!\"");
+    const c = await choose([{ key: "help", label: "Stand with the caravan", tag: "a creature of " + REGIONS[reg] + " · the caravan pays" }, { key: "no", label: "Leave them to it", plain: true }]);
+    if (c === "no") { await say("You go round, through the trees. Behind you, the screaming stops, and then the wagons start moving again. Fewer of them."); return; }
+    const haunt = S.haunt;
+    await meetBeast(reg, { roam: true, forced: true });
+    if (S.haunt && S.haunt !== haunt) return;
+    const g = 10 + d(10) + lv();
+    S.coins += g; renderSheet();
+    await say("When it's over the caravan-master counts the living, and pays you for every one of them. \"Every trip,\" he says, \"we lose somebody on this road. Every trip. This one, it was only three.\"");
+    await mech("The caravan pays " + g + " gold.", "loot");
+    if (d(3) === 1) { S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Their cook gives you a Draught of Mending from the stores.", "loot"); }
+  }
+  // Sellsword roads: sign on as a hired blade, and earn half the profits.
+  async function evEscort(regs, label) {
+    evHead(label, "Half the profits");
+    const pay = Math.round((24 + 2 * lv()) * (bnLean() === "Roadwarden" ? 1.15 : 1));
+    await say("At the waystation a merchant is hiring. She has six wagons of good cloth and no guards left: the last lot took the advance and ran. \"Half my profit on this load,\" she says, \"to whoever gets it to the other end. That's the going rate on this road. I hate this road.\"");
+    const c = await choose([{ key: "sign", label: "Sign on as her sellsword", tag: pay + " gold at the far end · there will be trouble" }, { key: "no", label: "Not this time", plain: true }]);
+    if (c === "no") { await say("She hires two boys with pitchforks instead. You hope it goes well for them."); return; }
+    await say("You walk beside the lead wagon for a day and a half. On the second evening, where the road goes down between high banks, the drivers go quiet, and then you see why.");
+    const r = d(3);
+    if (r === 1) {
+      await say("A rival company of sellswords is waiting in the cutting: five of them, in matching green, with a captain who has a scar across both lips. \"This is our contract,\" he says. \"She hired us first. Step away from the wagon.\"");
+      const k = await choose([{ key: "duel", label: "Settle it with the captain, one on one", tag: "a duel · the loser walks" }, { key: "talk", label: "Show him the contract and stare him down", tag: "Intimidation DC 14", plain: true }]);
+      let ok = false;
+      if (k === "talk") { const t = await check({ label: "Intimidation check (the contract)", mod: 3 + bnTier(), dc: 14, cta: "Stare" }); ok = t.ok; if (ok) await say("He looks at the contract, and at you, and at the bodies of whoever you've been fighting lately, which are somehow in your face. He takes his company and goes."); }
+      if (!ok) {
+        const F = { name: "Captain Dorran Vesk", hp: 24, ac: 15, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "Captain Vesk", hitWhy: "Vesk's sword comes in low and quick.", miss: "Vesk's blade rings off yours.", hitLine: "Vesk grunts and gives ground." };
+        await hkFight(F);
+        if (F.fled) { await say("You give it up. Vesk's company takes the wagons, and the merchant spits at both of you."); return; }
+        await say("Vesk yields with your point at his throat, and his company drifts off down the road behind him.");
+      }
+    } else {
+      const { G } = bnPick(regs), H = HAULS[d(HAULS.length) - 1];
+      await say(G.n + " are waiting in the cutting, all four of them, and they've already got a rope across the road.");
+      add(el("div", "", gangCard(G)));
+      bn().met[G.id] = (bn().met[G.id] || 0) + 1; bnLog(G, false);
+      const F = await bnFight(G);
+      if (F.fled || F.overtaken) { const half = Math.floor(pay / 2); S.coins += half; renderSheet(); await say("You get the merchant away, but not the wagons."); await mech("She pays you half, " + half + " gold, and looks as though she regrets that.", "hurt"); return; }
+      await bnWon(G, H);
+    }
+    S.coins += pay; B_esc(); renderSheet();
+    await say("At the far end, the merchant counts out half her profit into your hands, coin by coin, and doesn't enjoy any of it. \"Same time next month?\" she says.");
+    await mech("Contract paid: " + pay + " gold.", "loot");
+    grant("bnescort");
+  }
+  const B_esc = () => { const B = bn(); B.escorts = (B.escorts || 0) + 1; };
+  // Conquered land: the locals want it back.
+  async function evReclaim(regs, label) {
+    evHead(label, "The land-takers");
+    await say("Where the road crosses an old boundary ditch, there are people standing on the bank: farmers, mostly, with billhooks and flails and a couple of hunting bows. An old woman stands in front. \"This road was cut through our fields by an army,\" she says. \"We were here first. Everybody who walks it pays us, or bleeds for it. Which?\"");
+    const land = Math.max(4, Math.floor(S.coins / 12));
+    const c = await choose([
+      { key: "talk", label: "Hear her out, and ask what they want", tag: "Persuasion DC " + (bnLean() === "Roadwarden" ? 11 : 13) },
+      { key: "pay", label: "Pay the land-price", tag: land + " gold", plain: true, show: S.coins >= land },
+      { key: "fight", label: "Force the road", tag: "a crowd of them", plain: true }
+    ]);
+    if (c === "pay") { S.coins -= land; renderSheet(); await say("She takes it without thanks and steps out of the road. \"Mind the ditch,\" she says. \"My son's in it.\""); return; }
+    if (c === "talk") {
+      const k = await check({ label: "Persuasion check (the old woman)", mod: 3 + (S.bg === "historian" ? 2 : 0), dc: bnLean() === "Roadwarden" ? 11 : 13, cta: "Listen" });
+      if (k.ok) {
+        await say("You ask her name, and her grandmother's, and where the house was before the road went through it. She tells you, and the crowd behind her goes quiet listening, because nobody who walks the road has ever asked.");
+        await say("At the end of it she takes a little clay disc on a string from round her neck and puts it in your hand. \"Show that on this road,\" she says, \"and nobody of ours will touch you. And if you meet the people who cut it, tell them we remember.\"");
+        S.potions = (S.potions || 0) + 1; renderSheet();
+        await mech("The land-takers let you pass, and give you a Draught of Mending from their own stores.", "loot");
+        grant("bnreclaim");
+        return;
+      }
+      await say("You say the wrong thing. You can see it land. \"Another one,\" she says, and steps back, and the flails come up.");
+    }
+    const F = { name: "The land-takers", heads: 4 + d(2), unit: "land-taker|land-takers", ac: 12, atk: 4, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, road: true, who: "the land-takers", whoShort: "Land-takers",
+      hitWhy: "A flail comes round and finds your ribs.", miss: "The billhook bites the road.", hitLine: "A farmer goes down in the ditch, and the others drag him back." };
+    await hkFight(F);
+    if (F.fled) return;
+    await say("The rest scatter into the fields they say are theirs. You walk on down the road they say isn't yours, and neither of you is wrong.");
+    await gold(1, 6, "Somebody dropped a purse in the ditch.");
+  }
+  // Blood-tolls: the toll-bridge standoff.
+  async function evToll(regs, label) {
+    const { G } = bnPick(regs), H = HAULS[d(HAULS.length) - 1];
+    evHead(label, "The blood-toll bridge");
+    bn().met[G.id] = (bn().met[G.id] || 0) + 1; bnLog(G, false);
+    await say("The road crosses a gorge on a rope bridge, and " + G.n + " have taken the bridge. There's a table at this end, and a ledger, and " + bnName(G, "wall") + " sitting behind it with a meat-cleaver, and a sign nailed to the post: <i>TOLL. COIN OR BLOOD.</i>");
+    add(el("div", "", gangCard(G)));
+    const coin = Math.max(10, Math.floor(S.coins / 5));
+    const c = await choose([
+      { key: "coin", label: "Pay in coin", tag: coin + " gold", show: S.coins >= coin },
+      { key: "blood", label: "Pay in blood", tag: "a cut across the palm, and then some · about a quarter of your HP", plain: true },
+      { key: "duel", label: "Challenge " + bnName(G, "wall") + " to a duel for the bridge", tag: "one on one · win, and the toll-box is yours", plain: true },
+      { key: "ropes", label: S.grapple ? "Put Threadfang's line on the far side and cut the bridge out from under them" : "Get round and cut the bridge ropes", tag: S.grapple ? "half of them go into the gorge" : "Athletics DC 15 · half of them go into the gorge", plain: true },
+      { key: "fight", label: "Fight all four of them for it", plain: true }
+    ]);
+    if (c === "coin") { S.coins -= coin; renderSheet(); await say(bnName(G, "wall") + " writes your name in the ledger, wrong, and waves you over."); return; }
+    if (c === "blood") {
+      const n = Math.max(2, Math.floor(S.hp / 4)); S.hp = Math.max(1, S.hp - n); renderSheet();
+      await say(bnName(G, "wall") + " draws the cleaver across your palm, and holds your hand over a bowl until the bowl is as full as the toll says it has to be. \"Paid,\" says " + bnName(G, "wall") + ". \"The road remembers.\"");
+      await mech("You pay the blood-toll: " + n + " HP.", "hurt");
+      return;
+    }
+    if (c === "duel") {
+      await say(bnName(G, "wall") + " stands up, and keeps standing up for a while. The others make a ring. Nobody else will lift a hand. That's the law of the bridge.");
+      const F = { name: bnName(G, "wall") + ", the Wall", hp: 26, ac: 15, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: bnName(G, "wall"), hitWhy: "The cleaver comes down like a shutter.", miss: "The cleaver chops into the toll-table.", hitLine: bnName(G, "wall") + " roars and comes on anyway." };
+      await hkFight(F);
+      if (F.fled) { await say("You back off the bridge. They let you go, which is worse."); return; }
+      await say("When " + bnName(G, "wall") + " goes down, the others look at each other, and then " + bnName(G, "hexer") + " slides the toll-box across the table to you. That's the law of the bridge too.");
+      grant("bnbridge");
+      await bnHaul(G, { n: "the bridge's toll-box", gold: [4, 8] }, 1.2);
+      bn().inf += 2; renderSheet();
+      await mech("You won the bridge. Infamy +2 (" + bnRepLine() + ").", "loot");
+      return;
+    }
+    let frac = 1;
+    if (c === "ropes") {
+      const ok = S.grapple ? { ok: true } : await check({ label: "Athletics check (down the gorge wall to the ropes)", mod: 3 + Math.floor(lvk() / 8), dc: 15, cta: "Climb" });
+      if (ok.ok) { frac = 0.5; await say(S.grapple ? "The line catches on the far side. You swing out under the bridge, cut one rope and then the other, and the bridge drops out from under " + bnName(G, "shot") + " and half the toll-table. The rest come for you, furious." : "You get down under the near end and saw at the main rope until it parts. The bridge swings, and half of them go into the gorge, and the rest come back up it for you."); }
+      else await say("You slip, and they hear the stones go, and they're waiting at the top when you come back up.");
+    }
+    const F = await bnFight(G, { frac });
+    if (F.fled || F.overtaken) { await say("You get away from the bridge, somehow. They keep the toll."); return; }
+    await bnWon(G, H);
+  }
+  // Two gangs fighting each other over a stretch of road.
+  async function evGangWar(regs, label) {
+    const pool = ROAD_GANGS.filter(G => regs.includes(G.r));
+    const A = pool[d(pool.length) - 1], others = pool.filter(G => G !== A), Bg = others.length ? others[d(others.length) - 1] : ROAD_GANGS.filter(G => G !== A)[d(ROAD_GANGS.length - 1) - 1];
+    evHead(label, "A gang war");
+    [A, Bg].forEach(G => { bn().met[G.id] = (bn().met[G.id] || 0) + 1; bnLog(G, false); });
+    await say("You hear it before you see it: steel, and shouting, and somebody screaming the same name over and over. Round the bend, two gangs are fighting for the road, " + A.n + " and " + Bg.n + ", over a cart that's already on fire.");
+    add(el("div", "", gangCard(A)));
+    add(el("div", "", gangCard(Bg)));
+    const c = await choose([
+      { key: "a", label: "Side with " + A.n, tag: "fight " + Bg.n + " while they're already hurt" },
+      { key: "b", label: "Side with " + Bg.n, tag: "fight " + A.n + " while they're already hurt", plain: true },
+      { key: "wait", label: "Wait in the trees, and take on whoever wins", tag: "one gang, badly hurt · but they'll have the spoils", plain: true },
+      { key: "loot", label: "Let them kill each other, and pick over what's left", tag: "Stealth DC 13", plain: true }
+    ]);
+    const H = HAULS[d(HAULS.length) - 1];
+    if (c === "loot") {
+      const k = await check({ label: "Stealth check (in among the dead)", mod: 3 + (S.shadow ? 2 : 0), dc: 13, cta: "Creep" });
+      if (k.ok) { await say("When it's quiet you go down among them. Nobody's left standing to object."); await bnHaul(A, H, 0.8); return; }
+      await say("Somebody on the ground isn't as dead as the rest, and shouts. What's left of both gangs turns on you.");
+    }
+    const foe = c === "a" ? Bg : c === "b" ? A : d(2) === 1 ? A : Bg, ally = foe === A ? Bg : A;
+    if (c === "a" || c === "b") await say("You come out of the trees on " + ally.n + "'s side, and " + bnName(ally, "knife") + " looks at you once and grins and goes back to it.");
+    else await say(foe.n + " win, and stand there gasping among the dead, and then they see you.");
+    const F = await bnFight(foe, { frac: c === "wait" ? 0.4 : 0.6 });
+    if (F.fled || F.overtaken) { await say("You get clear. Behind you, " + foe.n + " hold the road."); return; }
+    await bnWon(foe, H);
+    if (c === "a" || c === "b") {
+      bn().fate[ally.id] = bn().fate[ally.id] || "ally";
+      const g = 8 + d(8) + Math.floor(lv() / 2); S.coins += g; renderSheet();
+      await say(bnName(ally, "hexer") + " binds your cuts while " + bnName(ally, "knife") + " counts out your share. \"You owe us nothing,\" " + bnName(ally, "knife") + " says. \"And we'll owe you once. Once.\"");
+      await mech(ally.n + " pay you " + g + " gold for the help.", "loot");
+    }
+    grant("bnwar");
+  }
+  // A chase: a gang running with a stolen cart, and a road that goes downhill.
+  async function evChase(regs, label) {
+    const { G } = bnPick(regs), H = HAULS[d(HAULS.length) - 1];
+    evHead(label, "The chase");
+    bn().met[G.id] = (bn().met[G.id] || 0) + 1; bnLog(G, false);
+    await say("A wagon comes round the bend behind you at a full gallop with " + G.n + " on the box and the real driver bouncing in the road behind it. \"Thieves!\" he's shouting. \"That's " + H.n + "! Somebody! Anybody!\" It goes past you close enough to touch.");
+    add(el("div", "", gangCard(G)));
+    const c = await choose([{ key: "run", label: "Go after them", tag: "three hard stretches of road · catch them before their den" }, { key: "no", label: "Let it go", plain: true }]);
+    if (c === "no") { await say("The driver sits down in the road and puts his head in his hands."); return; }
+    const legs = [
+      ["Athletics check (down the switchbacks on foot, cutting the corners)", "The road doubles back on itself down the hill. The wagon has to take the bends. You don't."],
+      ["Acrobatics check (onto the tailboard)", "You catch them at the bottom of the hill where the ford slows them, and jump for the tailboard."],
+      ["Strength check (haul back on the reins)", "You go over the load and up the back of the box, and get a hand on the reins past " + bnName(G, "shot") + "."]
+    ];
+    let won = 0;
+    for (const [lab, s] of legs) {
+      await say(s);
+      const k = await check({ label: lab, mod: 3 + Math.floor(lvk() / 8) + (S.grapple && /Athletics|Acrobatics/.test(lab) ? 2 : 0), dc: 13 + won, cta: "Go" });
+      if (k.ok) won++; else await hurt(1, 4, "bludgeoning", ["A loose stone turns your ankle.", "You hit the tailboard hard and hang on.", "An elbow catches you in the face."][legs.findIndex(x => x[0] === lab)]);
+    }
+    if (won === 3) {
+      await say("The horses come round in a spray of mud and the wagon goes over on its side, and " + G.n + " go everywhere. You're on your feet first.");
+      grant("bnchase");
+    } else if (won === 2) await say("The wagon slews to a stop at the edge of the trees, a hundred yards short of their den. They pile off it and turn on you.");
+    else { await say("They make the den, a cave in the bank with a fire in it, and you come in after them, out of breath, and they're ready."); }
+    const F = await bnFight(G, { frac: won === 3 ? 0.6 : won === 2 ? 0.85 : 1, spotted: true, edge: won === 3 });
+    if (F.fled || F.overtaken) { await say("They get away with it."); return; }
+    await bnWon(G, H);
+    const g = 6 + d(6) + Math.floor(lv() / 3); S.coins += g; renderSheet();
+    await mech("The driver catches up an hour later, and pays " + g + " gold to get his wagon back.", "loot");
+  }
+  // The Red-Coin Peddler, who walks every one of the Blood-bought Roads, and only turns up now and then.
+  async function evPeddler(regs, label) {
+    evHead(label, "The Red-Coin Peddler");
+    const first = !bn().peddler;
+    bn().peddler = (bn().peddler || 0) + 1;
+    await say(first ? "Sitting on a milestone at the side of the road there's a very old man with a pack on his back taller than he is, hung all over with things: blades, lamps, boots, a birdcage, a saddle. He's counting red copper coins from one hand to the other and back. \"Every road,\" he says, without looking up. \"Every mile. Everything anyone ever dropped on them, sooner or later, comes to me.\"" : "The Red-Coin Peddler is sitting on a milestone again, counting his coins. \"You again,\" he says, pleased. \"Still bleeding for the roads?\"");
+    if (first) await say("You ask who he is. \"The first convict who cut this road,\" he says, \"or his grandson, or a story about him. Pick the one you like. They all sell the same.\"");
+    const wPrice = cp(70 + lv() * 2), mapPrice = cp(25);
+    const c = await choose([
+      { key: "blade", label: "Buy a blade off the pack", tag: wPrice + " gold · Gloaming quality or better", show: S.coins >= wPrice },
+      { key: "map", label: "Buy a road-map marked with every gang's den", tag: mapPrice + " gold · your next road is a gang you haven't broken, at its den", plain: true, show: S.coins >= mapPrice && !bn().map },
+      { key: "trade", label: "Sell him your salvage", tag: salvWorth() + " gold, and a quarter more", plain: true, show: salvWorth() > 0 },
+      { key: "no", label: "Wish him good road", plain: true }
+    ]);
+    if (c === "blade") {
+      S.coins -= wPrice;
+      const t = Math.random() < 0.08 ? "heartfire" : "gloaming", L = makeLoot(t);
+      L.n = armPick(ARM_NAMES[t]) + " " + ARM_BASES[L.b].name + " of the Blood-bought Roads";
+      gainLoot(L); renderSheet();
+      await say("He unhooks one without looking, as if he's known all along which one is yours.");
+      await mech("<span>" + wTier("L" + L.id) + "Gain <b>" + armName("L" + L.id) + "</b> (" + wpnTxt(wDef("L" + L.id).fx) + ")</span>", "loot find q-" + t);
+      grant("bnpeddler");
+    } else if (c === "map") {
+      S.coins -= mapPrice; bn().map = true; renderSheet();
+      await say("He draws it for you on the back of a toll-ticket, from memory: every road, every den, with a little mark for each gang.");
+      await mech("The next time you take a road with a gang on it you haven't broken, you come on them at their den: they start hurt, and you get the first swing.", "loot");
+      grant("bnpeddler");
+    } else if (c === "trade") {
+      const n = Math.round(salvWorth() * 1.25), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet();
+      await mech("He takes your salvage (" + what + ") for " + n + " gold, in red copper.", "loot");
+    } else await say("\"Good road,\" he says back. \"There isn't one. But good road.\"");
   }
 
   // ---------- the High Weave ----------
@@ -20254,6 +20535,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     let h = "<section><h3>Gangs of the Blood-bought Roads · " + metN + " of " + GANGS.length + " met</h3>" +
       '<p class="j-sub">Gangs work the roads between the kingdoms: between chapters, and on the roads back. Each one has its mark, its four, and its trick. ' + beatN + " broken across every journey.</p>";
     if (S.bn && started) h += "<p>Your road name: <b>" + bnTitle() + "</b> · Infamy " + S.bn.inf + " · " + bnLean() + (ctRank() ? " · Contender " + CT_NAMES[ctRank()] + " (" + S.bn.cw + " wins)" : "") + (S.bn.weave === 1 ? " · the High Weave has sent for you" : "") + ".</p>";
+    if (S.bn && started && S.bn.walked) h += '<p class="j-sub">Stretches walked: ' + Object.keys(STRETCHES).map(k => S.bn.walked[k] ? "<b>" + STRETCHES[k].name + "</b>" : '<span style="opacity:.45">' + STRETCHES[k].name + "</span>").join(" · ") + "</p>";
     h += '<div class="gang-grid">' + GANGS.map(G => g[G.id] ? '<div class="gmark" title="' + G.n + '">' + gangSvg(G, 40) + "<span>" + G.n.replace(/^The /, "") + "</span><i>" + (g[G.id].beaten ? "broken " + g[G.id].beaten + "×" : "met") + "</i></div>"
       : '<div class="gmark unmet">' + gangSvg(G, 40, true) + "<span>" + (G.r === "high" ? "Look up" : REGIONS[G.r]) + "</span><i>not yet met</i></div>").join("") + "</div>";
     const met = GANGS.filter(G => g[G.id]);
