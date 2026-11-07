@@ -112,7 +112,8 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
     const tok = /\{(g:[^{}]*|[Hh](?:e|im|is|ers|imself|e's|e'd|e'll))\}/.exec(r.tail + " " + r.labels.join(" "));
     if (tok) { console.log("UNRESOLVED TOKEN " + tok[0] + " at S.part " + r.part + ": " + r.tail.slice(-200)); errors.push("token " + tok[0]); }
     if (!r.labels.length) {
-      if (++idle > 60) { console.log("SOFT-LOCK at S.part " + r.part + ": nothing to press for 6 seconds.\n" + r.tail); log.write("SOFT-LOCK\n" + r.tail + "\n"); return finish(2); }
+      // 10 seconds: the Thrice-Seen Man's last round (7 swaps) runs just over 6 before you can strike.
+      if (++idle > 100) { console.log("SOFT-LOCK at S.part " + r.part + ": nothing to press for 10 seconds.\n" + r.tail); log.write("SOFT-LOCK\n" + r.tail + "\n"); return finish(2); }
       await page.waitForTimeout(100); continue;
     }
     idle = 0;

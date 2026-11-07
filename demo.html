@@ -321,6 +321,7 @@ body.intro-open { overflow: hidden; }
 .story .mech.hurt::before { content: "✕"; color: var(--ember); }
 .story .mech.loot { color: var(--gold); }
 .story .mech.loot::before { content: "✦"; }
+.story p.dry { font-style: italic; color: var(--muted); }
 .story .tipcard { margin: 0 0 1em; padding: 9px 12px; border: 1px dashed #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: rgba(207,168,80,.06); font-family: var(--label); font-size: .86rem; letter-spacing: .02em; line-height: 1.5; color: var(--ink); }
 .story .tipcard .tip-k { display: block; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: 2px; }
 .journal dl.tips { margin: 0; display: grid; gap: 6px; }
@@ -1920,6 +1921,12 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "56", name: "Dry company", date: "7 Nov 2026", items: [
+      "The realm has a sense of humour now, a dry one, in small doses. Townsfolk, innkeepers, shopkeepers, smiths, bank clerks and the people at the bar all have something to say, and none of them smile while they say it.",
+      "Every chapter has a few <b>wayside moments</b> between its middle parts: notes scratched on roots, signs in the mire, a gull that outranks you. They keep clear of the big story beats.",
+      "Gangs talk before a fight and after losing one, and the Blood-bought Roads have their own milestones, signposts and passers-by.",
+      "<b>Burr</b> has opinions. He shares them all without making a sound.",
+      "Two new pursuits in the set <b>Dry Company</b>: Tough Crowd and Everyone's a Critic."] },
     { ver: "55", name: "The Cairnwright's Wages", date: "7 Nov 2026", items: [
       "A treasure hunt on the roads back. Meet <b>Nan Ferrier</b> at the inn, with the list of three hundred navvies Merrit Sallow, the Cairnwright, never paid for laying Empress Adrianna's roads.",
       "Seven milestones in seven lands, each its own puzzle: a road cipher, a culvert of channel-stones, a toll-scale with one false weight, three foremen and a liar, and more. Each gives a mile-mark for your ledger, and the map marks every stone you read.",
@@ -2373,6 +2380,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "bnreclaim", name: "They Remember", desc: "Hear the land-takers out, and walk on with their token.", test: () => false },
     { id: "bnpeddler", name: "Red Coin", desc: "Buy something from the Red-Coin Peddler.", test: () => false },
     { id: "bnstretch", name: "Every Mile Paid", desc: "Walk all eleven stretches of the Blood-bought Roads on one journey.", test: () => !!(S.bn && S.bn.walked) && Object.keys(STRETCHES).every(k => S.bn.walked[k]), prog: () => [Object.keys(STRETCHES).filter(k => S.bn && S.bn.walked && S.bn.walked[k]).length, Object.keys(STRETCHES).length] },
+    { id: "drycrowd", name: "Tough Crowd", desc: "Hear thirty dry remarks from the people (and dogs) of the realm on one journey.", test: () => !!S.dry && S.dry.n >= 30, prog: () => [Math.min(30, S.dry ? S.dry.n : 0), 30] },
+    { id: "drycritic", name: "Everyone's a Critic", desc: "Get ten of Burr's opinions on one journey.", test: () => !!S.dry && S.dry.burr >= 10, prog: () => [Math.min(10, S.dry ? S.dry.burr : 0), 10] },
     { id: "bnweave", name: "The High Weave", desc: "Climb the Needle and break the High Weave, and take Threadfang.", test: () => false },
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
@@ -2406,7 +2415,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "bloodroads", name: "The Blood-bought Roads", ver: "11", desc: "Eleven named stretches between the kingdoms: monster country, sellsword roads, conquered land and blood-tolls.",
       ids: ["bnwar", "bnbridge", "bnchase", "bnescort", "bnreclaim", "bnpeddler", "bnstretch"] },
     { id: "wages", name: "The Cairnwright's Wages", ver: "12", desc: "A treasure hunt on the roads back: seven milestones, seven puzzles, and Empress Adrianna's champion's chest.",
-      ids: ["cw1", "cwread", "cwlucky", "cwwarn", "cwlock", "cwchamp", "cwpaid", "cwkeep"] }
+      ids: ["cw1", "cwread", "cwlucky", "cwwarn", "cwlock", "cwchamp", "cwpaid", "cwkeep"] },
+    { id: "dry", name: "Dry Company", ver: "13", desc: "Deadpan townsfolk, innkeepers, shopkeepers, gangs and roads, and Burr's opinions of all of them.",
+      ids: ["drycrowd", "drycritic"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -3505,6 +3516,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   async function buyWeapon(k, price, line) {
     S.coins -= price; arms().push(k); harnAdd(k); renderSheet();
     await mech("Gain <b>" + WEAPONS[k].name + "</b> (" + price + " gold). " + WEAPONS[k].fx + " " + line, "loot");
+    await dryLine("buy", { chance: 30 });
     const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep the axe in hand", plain: true }]);
     if (c === "y") { wield(k); await mech("Main hand: <b>" + WEAPONS[k].name + "</b>. The axe goes on your back, where it can still keep you alive."); }
   }
@@ -4177,6 +4189,240 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         get intro() { return S.pz && S.pz.ending === "rise" ? "Your ship. Hawl has your hammock slung, and Gannet has saved you a fish, and Ninian has the ledger out. Nobody takes a tithe aboard her any more." : "At the edge of the still water round Stillwater, nothing makes a sound, and nothing comes for you. You sleep in a boat on the glassy sea and wake up rested."; } }
     ]
   };
+  // ---------- dry company: deadpan humour, in small doses ----------
+  // Adrian's ask: dry lines from townsfolk, innkeepers, shopkeepers and gang members, Burr's opinions,
+  // and the odd remark on the Blood-bought Roads. Kept out of the big story beats: wayside lines only
+  // turn up between the middle parts of a chapter (never its first or last part), at most once a part.
+  // quip(pool, key) picks a line you haven't heard yet (S.dry.seen) and counts it (S.dry.n, S.dry.burr).
+  // New chapters add a DRY.wayside entry (by chapter slug) and a DRY.town entry (by region).
+  const DRY = {
+    wayside: {
+      labyrinth: [
+        "Scratched into a root at head height: TURN BACK. Under it, in a different hand: I DID. IT'S THE SAME THIS WAY.",
+        "Somebody has left a map on the floor, weighted with a stone. It's a careful map of this exact spot, with an arrow and the words YOU ARE HERE. It's right, which doesn't help.",
+        "A skeleton sits against the wall with its legs crossed, looking comfortable. Under its hand there's a note: NOT DEAD, RESTING. The note is very old.",
+        "Carved into a root, a list: DAY 1, FINE. DAY 2, FINE. DAY 3, FINE. It goes on like that for a while, and then it stops, which is probably also fine."
+      ],
+      desert: [
+        "A camel-driver passes you on a dune and tells you it's hot. You agree. He seems relieved to have that settled, and goes on.",
+        "A water-seller at a well asks a silver for a cup. You say that's steep. \"It's the desert,\" he says. \"Everything's steep. Have you seen the dunes?\"",
+        "You pass a signpost buried in sand up to its last arm. The arm says THIS WAY. It points down.",
+        "An old man selling sand-goggles swears they keep out every grain. He is squinting very hard as he says it.",
+        "A lizard watches you from a rock all through your rest. When you get up, it moves onto your spot, which is warmer now. You've been useful to somebody."
+      ],
+      hushfen: [
+        "A sign stuck in the mud at an angle says DANGER: BOG. It's about halfway in.",
+        "A heron watches you wade past, knee-deep. It's standing in the same water on one leg and is completely dry. It doesn't explain.",
+        "There's a boot standing upright in the mire. You pull it out. Nobody's in it. You put it back, in case they come for it.",
+        "The frogs go quiet as you pass and start up again behind you, a little louder. You try not to take it personally."
+      ],
+      carrowmere: [
+        "A fisherman at the lake's edge tells you the castle drowned in a single night. \"Terrible,\" he says. \"Best fishing for miles, mind.\"",
+        "Long ago somebody nailed a notice to the castle gate: ALL VISITORS REPORT TO THE GUARDROOM. The guardroom is ten feet under the lake.",
+        "An eel looks out of a drowned window at you with the face of a householder disturbed at supper.",
+        "A boatman offers to row you out for two silver. Coming back is four. \"Demand,\" he says."
+      ],
+      lastwell: [
+        "On the door of a shut-up house: GONE TO MY SISTER'S. Underneath, smaller, in the same hand: I DON'T HAVE A SISTER. IT'S JUST WHAT YOU SAY.",
+        "A notice on the well: DO NOT DRINK AFTER DARK. Added below it: DO NOT BE OUT AFTER DARK. Added below that: HONESTLY, JUST STAY IN.",
+        "A chicken starts across the square, looks into the dark between the houses, and goes back. It seems to have the right idea.",
+        "On a fencepost somebody has kept a tally of quiet nights. It reaches four. Beside it: IT WAS FIVE, BUT I DIDN'T WANT TO SAY."
+      ],
+      assize: [
+        "A glazier's boy drops a pane in the street, and the whole street turns to look at him. \"It was already like that,\" he tells the city.",
+        "A clerk of the court hurries past you with a stack of papers, and comes back a moment later with the same stack, the other way up.",
+        "A sign in a shop window: WE CAN SEE YOU. A smaller sign under it: YOU CAN SEE US TOO. IT'S GLASS.",
+        "Two lawyers on a corner are arguing whether the sky counts as a window. A baker tells you they've been at it since the spring.",
+        "A drinker outside the Slag & Siphon tells you he's never once been called before the Glass Judge. He says it like a boast, and then looks round quickly, in case."
+      ],
+      corrach: [
+        "A miner tells you the Hesk sing to the fungus to make it grow. You ask what it sounds like. He hums a bit. It's terrible. \"Like that,\" he says, \"but they mean it.\"",
+        "A Hesk on the path stops, sings one long note at you, and moves on. A miner says it was a blessing or a remark about your smell. \"Could be both,\" he says.",
+        "A goat stands on a ledge no wider than your hand and looks at you as if you're the one in the wrong place.",
+        "On the Reckoning Board, among the bounties, somebody has pinned up a new one: WANTED, WHOEVER TOOK MY GOOD HAT. REWARD, THE HAT."
+      ],
+      noon: [
+        "You ask a stallholder in Ammaret when they close. \"At dusk,\" she says. Then, kindly: \"We've been open six hundred years.\"",
+        "A Lidless boy offers to sell you his shadow for a copper. You say you have one. He looks at yours and sniffs. \"Not a good one.\"",
+        "A man has sat under the same awning so long the shade has his shape in it. He tells you the trick is not to make any plans.",
+        "Over a doorway, a sign: BACK AT NOON. It is noon. They are not back."
+      ],
+      undermoon: [
+        "A Moored child drops her kinstone and drifts slowly up past your face, waving. Her mother catches her by the ankle without looking up from her mending.",
+        "A porter in Kedge tells you to keep your kinstone in an inside pocket. \"Lost a cousin that way,\" he says. \"He's fine. He's up there. We wave.\"",
+        "Somebody's selling umbrellas. You ask what for, down here. \"Things fall up,\" he says. \"Then they come down again.\"",
+        "The Lift-keeper tells you it's perfectly safe and has only stuck halfway the once. \"Three days,\" he says. \"Lovely view.\""
+      ],
+      rahdaria: [
+        "A fig-seller on the terraces says she's sold figs through three sieges. \"The first is the worst,\" she says. \"After that, you know to stock up on figs.\"",
+        "A watchman on the wall says he's seen one of the Bathyr up close. You ask what it looked like. He thinks for a long time. \"Wet,\" he says.",
+        "A crier in the square reads out the day's dead, the day's price of bread and the day's lost dogs, all in the same voice.",
+        "Chalked on the barracks wall: THE ENEMY IS LISTENING. Added under it: SAY SOMETHING NICE."
+      ],
+      sounding: [
+        "A Bathyr taps a long greeting at you on a doorpost. You tap back what you hope means hello. From the way the whole street stops, it didn't.",
+        "A shoal of fish passes overhead, slowly, every one of them looking down at you. You look up. They look away first.",
+        "A Bathyr mason shows you a crack in the Sea-Sky and taps that it's fine. Then he taps the crack, as if to check.",
+        "A child holds a bowl over her head in case of drips. Her mother tells her not to be silly. Her mother also has a bowl."
+      ],
+      tithe: [
+        "A deckhand tells you he's never been seasick in his life, and then excuses himself, briskly, over the rail.",
+        "The cook hands you a bowl of something grey. You ask what it is. \"Thursday,\" he says.",
+        "A gull lands on the rail, looks you in the eye and takes your biscuit. Nobody on deck reacts. Aboard this ship, the gull outranks you.",
+        "A sailor teaching you knots says there are a hundred and twelve. He shows you two, says the rest are much the same, and goes to his dinner.",
+        "There's a rule aboard: no whistling, it calls the wind. You ask what's wrong with wind, on a sailing ship. Nobody can quite remember."
+      ]
+    },
+    // Townsfolk on the roads back, by region. A function can return "" when the town isn't there any more.
+    town: {
+      roots: ["On the reading desk somebody has left a note: BACK SOON. The ink is about four hundred years old.",
+        "A book has fallen open on the floor at a chapter called <i>On Not Getting Lost</i>. You step over it."],
+      desert: ["A Hollow Hand asks if you've come to steal anything. You say no. She looks disappointed in you.",
+        "\"We don't keep valuables in the den,\" a Hollow Hand tells you. \"We keep them in other people's houses until we need them.\""],
+      fen: ["A frog sits on your boot and won't get off it. You're on its list now.",
+        "A heron watches you drink from the clear water, then drinks from exactly the same spot, as if to show you how it's done."],
+      mere: ["\"New houses,\" a builder says, slapping a wall of stone off the lakebed. \"Well. Old houses. New order.\"",
+        "A girl at the landing tells you the castle's haunted. Her brother tells you it isn't. They both tell you the fish are worse."],
+      lastwell: ["A man at the well tells you nobody's been taken in a year. He touches the wood of the bucket as he says it, and then, to be safe, the handle of your axe.",
+        "The children of Lastwell are playing a game called Belfry. One of them rings a pretend bell and everybody else hides. Nobody's ever found. They seem to like it that way."],
+      glass: ["A glazier sweeps up a broken pane outside his shop. \"Third this week,\" he says. \"Business is good.\"",
+        "Somebody has written NOT GUILTY on a pane in the square. Somebody else has written APPEALED under it."],
+      corrach: ["The Coffer-House clerk tells you the vault has never been robbed. He says it again, louder, towards the hill.",
+        "A Hesk hums at you in passing. A miner says it was either a greeting or a remark about your boots. \"Usually the boots,\" he says."],
+      noon: ["A Lidless trader offers you a shadow at a very fair price. You ask what you'd do with it. \"Stand in it,\" she says, as if you're simple.",
+        "\"What time is it?\" you ask somebody, out of habit. They look at the sun, then at you, with pity."],
+      undermoon: ["A Moored woman drops her kinstone, floats gently up to the eaves, and waits there, unbothered, while her son goes for a ladder.",
+        "\"Mind the step,\" a Moored porter says. There isn't a step. There's a drop, upwards."],
+      rahdaria: ["A fig-seller presses a fig on you for saving the city. Then she charges you for the second one.",
+        "Somebody has chalked a tally of the siege days on the wall. Under it, in another hand, is a tally of the days the fig-carts were late. It's longer."],
+      bathyrra: [() => S.sd && S.sd.ending === "hush" ? "" : "A fish swims past overhead, very slowly, looking down at you. You look up at it. The fish looks away first.",
+        "A Bathyr taps something at you on a doorpost. You tap back what you hope is \"good evening\". The Bathyr taps, very slowly, as if to a child, \"It's morning.\""],
+      reach: [() => S.pz && S.pz.ending === "sell" ? "" : "An old sailor tells you the sea gives and the sea takes. \"Mostly takes,\" he says. \"I'd not lend it money.\"",
+        () => S.pz && S.pz.ending === "sell" ? "" : "Raftmark hangs drowned men's boots on a line to dry, in case the men come back for them. None have yet. The boots are very dry."]
+    },
+    inn: [
+      "The landlord shows you up to a room with a view of a wall. \"Best view in the house,\" he says. \"Nothing's ever come over it.\"",
+      "\"Breakfast's at dawn,\" the innkeeper says. \"If you miss it, it was very good.\"",
+      "There's a sign over the bed: PLEASE DO NOT BLEED ON THE BLANKETS. Underneath, somebody has added: AGAIN.",
+      "\"We had an adventurer in that room last month,\" the landlady says. \"Lovely man. Left in a hurry, through the wall.\"",
+      "You ask for the quiet room. \"That one's over the taproom,\" the innkeeper says. \"The other one's over the pigs.\"",
+      "\"Any trouble in the night, ring the bell,\" the landlord says. \"I won't come, but you'll feel better.\"",
+      "The landlady looks at your axe, then at the low beams, then at you. \"Mind your head,\" she says. \"And everyone else's.\"",
+      "\"Sheets are clean,\" the innkeeper says. He thinks about it. \"Cleaner,\" he says."
+    ],
+    shop: [
+      "\"Very popular, those,\" the stallholder says. \"With the people who come back for more.\"",
+      "The stallholder wraps it in a twist of paper with great care, then drops it on the counter. \"Tested,\" she says.",
+      "\"No refunds,\" the merchant says. \"It isn't a rule. Nobody's ever come back to ask.\"",
+      "The sign on the stall says HONEST PRICES. A smaller sign under it says WITHIN REASON.",
+      "\"Will that be all?\" the shopkeeper says, in the voice of somebody who's already decided it will.",
+      "The merchant bites your coin, then turns it over and bites the other side, to be fair to it."
+    ],
+    sell: [
+      "The trader holds up a torn strap of your salvage. \"I'll give you a price for this,\" he says, \"and I'll try to keep a straight face.\"",
+      "\"Lot of blood on this,\" the trader says, turning your salvage over. \"Not yours, I hope. It doesn't change the price either way.\"",
+      "The trader weighs your salvage on a scale, frowns, and weighs it again on a different scale, which she seems to like better."
+    ],
+    smith: [
+      "The smith looks at your axe for a long time. \"Who did this to it,\" he says, and it isn't a question.",
+      "\"Sharp end goes towards them,\" the smith says. \"You'd be surprised.\"",
+      "The smith tells you it'll last you a lifetime. She looks at you as she says it, and you can see her doing the sum.",
+      "\"Don't touch the anvil,\" the smith says. \"It's hot.\" It isn't. You get the feeling it was a test, and that you passed, narrowly."
+    ],
+    bank: [
+      "The clerk counts it twice and writes it down three times. \"Once for you,\" he says, \"once for us, and once in case of fire.\"",
+      "\"Your gold is perfectly safe with us,\" the clerk says. \"It's you we can't promise anything about.\"",
+      "The strongroom door is a foot thick. The clerk points out, with some pride, that the window beside it is not."
+    ],
+    bar: [
+      "A drinker at the bar tells you the roads are dangerous. You thank him. He tells you again, in case.",
+      "An old woman by the fire says she's lived here sixty years and nothing's ever happened. Her friend reminds her about the fire, the flood and the war. \"Nothing much,\" she says.",
+      "The barman polishes the same cup the whole time you're there. When you leave, it's no cleaner.",
+      "Two farmers are arguing whether a goose can be a guard dog. It goes on for some time. The goose, from the sound of it, is winning.",
+      "\"{He} killed a hundred men with that axe,\" a drinker says, nodding at you. \"Mostly with the axe,\" his friend says. \"A few with a chair.\"",
+      "A child at the door whispers to her friend that you're the one from the stories. Her friend looks at you for a while. \"{He's} shorter,\" he says."
+    ],
+    buy: [
+      "The seller watches you heft it, and then, tactfully, looks away.",
+      "\"Careful with that,\" the seller says. \"My brother bought one. He's fine. He's careful.\"",
+      "\"Comes with a lifetime guarantee,\" the seller says. \"Yours.\""
+    ],
+    road: [
+      "A milestone says it's three miles to the next town. The next milestone, a mile on, says four.",
+      "A farmer leaning on a gate watches you go by. \"Bandits up ahead,\" he says. You thank him. \"Bandits back that way, too,\" he says. \"I'd stay here, if I were you. I am.\"",
+      "At a fork the signpost has both arms pointing the same way. Somebody has written on it in chalk: HONESTLY, EITHER.",
+      "A tinker coming the other way tells you the road ahead is perfectly quiet. He's running.",
+      "A tollhouse by the road has a sign: TOLL ONE COPPER. Under it: KEEPER AT LUNCH. Under that: KEEPER STILL AT LUNCH. There's moss on the sign.",
+      "A cart goes by with a family in the back, every one of them holding a spear. The littlest one waves at you. Her spear waves too.",
+      "Somebody has painted a gang's mark on a milestone, and somebody else has painted a smaller, ruder mark beside it. Neither of them is likely still alive, but the argument goes on.",
+      "Two merchants on the road are arguing over whose turn it is to be robbed first. They ask you to settle it. You decline.",
+      "A milestone has been worn smooth on one side by travellers leaning on it. You lean on it too. It's very comfortable. You can see why the road's so slow."
+    ],
+    // Gang banter before a fight and after one. Every line is a function of the gang (G).
+    gang: [
+      (G) => "\"Your money or your life,\" " + bnName(G, "wall") + " says. You ask which they'd prefer. It's clear from the silence that nobody's thought about it.",
+      (G) => "\"This is a robbery,\" " + bnName(G, "knife") + " says, in case there was any doubt. There wasn't, but it's good to be clear.",
+      (G) => bnName(G, "hexer") + " starts to curse you, forgets the middle of it, and finishes with a lot of conviction to make up.",
+      (G) => bnName(G, "shot") + " nocks an arrow, looks at you, and swaps it for a better one. It's almost a compliment.",
+      (G) => "\"We've heard of you,\" " + bnName(G, "knife") + " says. \"Not much. But a bit.\"",
+      (G) => "\"Nothing personal,\" " + bnName(G, "knife") + " says. \"We rob everybody. It's very fair.\"",
+      (G) => "Their banner is upside down. Nobody has told " + bnName(G, "wall") + ", who's holding it, and it doesn't seem the moment.",
+      (G) => bnName(G, "hexer") + " asks if you'd just hand it all over, to save time. \"We've another one of these at noon.\""
+    ],
+    gangDown: [
+      (G) => "As you go, " + bnName(G, "knife") + " calls after you that they'd like it known they were having an off day.",
+      (G) => "\"This has never happened before,\" " + bnName(G, "wall") + " says. \"It happened on Tuesday,\" says " + bnName(G, "shot") + ".",
+      (G) => bnName(G, "hexer") + " asks you, quite politely, not to tell the other gangs. \"We've a reputation,\" " + bnName(G, "hexer") + " says. You both look at it, lying in the road.",
+      (G) => "\"Same time next week?\" " + bnName(G, "knife") + " says. It's hard to tell if it's a joke. It's hard to tell if it's a threat.",
+      (G) => bnName(G, "shot") + " picks up a broken bow, looks at it, and puts it in the pack anyway. \"Sentimental,\" says " + bnName(G, "shot") + "."
+    ],
+    // Burr's opinions. He has a lot of them, and shares them all without making a sound.
+    burr: [
+      "Burr sniffs the stallholder's boots, finds nothing of interest in them, and lies down on them.",
+      "Burr watches you count your coins. He doesn't offer to help.",
+      "Burr barks once at a goose, then looks round as if it was somebody else.",
+      "Burr eats something off the road. You decide not to ask what. So, from his face, does he.",
+      "Burr sits down in the middle of the road and won't go on until you've both had a rest. You both have a rest.",
+      "Burr finds a stick about the size of a small tree and brings it most of the way.",
+      "Burr growls at a scarecrow for some time. The scarecrow wins.",
+      "Burr rolls in something. He looks very pleased with himself, which makes one of you.",
+      "A cat on a wall looks at Burr. Burr looks at the wall. Neither of them mentions it.",
+      "Burr's one good ear turns towards the kitchen and stays there for the rest of the visit.",
+      "Burr yawns, enormously, at the exact moment you finish speaking.",
+      "Burr steals a sausage from a stall. The stallholder looks at you. You pay for the sausage. Burr doesn't thank you.",
+      "Burr lies across the doorway, so that everybody coming in has to step over him. Several of them apologise to him.",
+      "Burr sniffs the place where the fight was, looks up at you, and sneezes. It might be a review."
+    ]
+  };
+  const dry = () => (S.dry = S.dry || { seen: {}, n: 0, burr: 0, part: -1 });
+  // A line from DRY[pool] (or DRY[pool][key]) you haven't heard yet, or "" when the dice say no.
+  function quip(pool, { key, chance = 100, G } = {}) {
+    let L = DRY[pool];
+    if (key != null) L = L && L[key];
+    if (!Array.isArray(L) || !L.length || d(100) > chance) return "";
+    const D = dry(), id = pool + (key != null ? ":" + key : ""), seen = (D.seen[id] = D.seen[id] || []);
+    const line = (k) => { const v = L[k]; return typeof v === "function" ? v(G) : v; };
+    let open = L.map((_, k) => k).filter(k => !seen.includes(k) && line(k));
+    if (!open.length) { seen.length = 0; open = L.map((_, k) => k).filter(k => line(k)); }
+    if (!open.length) return "";
+    const k = open[d(open.length) - 1];
+    seen.push(k); D.n++; if (pool === "burr") D.burr++;
+    return line(k);
+  }
+  const burrHere = () => company().includes("burr");
+  async function dryLine(pool, o) { const t = quip(pool, o); if (t) await say(t); }
+  async function burrLine(chance = 30) { if (burrHere()) await dryLine("burr", { chance }); }
+  // Between the middle parts of a chapter, now and then: something on the way, or Burr's opinion of it.
+  async function wayside(i) {
+    const C = CHAPTERS[chapterAt(i)];
+    if (!C || i <= C.from || i >= C.to || !S.axe || S.stripped || dry().part === i) return;
+    dry().part = i;
+    if (d(100) > 25) return;
+    if (burrHere() && d(5) <= 2) return burrLine(100);
+    const t = quip("wayside", { key: C.slug });
+    if (t) await say(t, "dry");
+  }
+
   const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t)));
   async function townPick() {
     const list = townsOpen();
@@ -4190,6 +4436,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     scrollNext = true; add(h);
     light(T.kind === "sanctuary" ? "gems" : "dusk");
     await say(T.intro);
+    if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
+    await burrLine(30);
     const has = (k) => T.has.includes(k);
     let rested = false, drank = false, roofed = false;
     const free = ctRank() >= 3, P = (n) => cp(n), cOff = ctOff() ? " (Contender)" : "";
@@ -4227,14 +4475,16 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         S.coins -= fee; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(!fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house."), "loot");
+        await dryLine("inn", { chance: 50 });
       } else if (c === "purse") await ctPurse(T);
       else if (c === "roof") { roofed = true; (bn().roof = bn().roof || {})[T.reg + ":" + T.name] = bn().cw; await roofClimb(T); }
-      else if (c === "potion") { const p = P(8); S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (" + p + " gold).", "loot"); }
-      else if (c === "elixir") { const p = P(20); S.coins -= p; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (" + p + " gold).", "loot"); }
-      else if (c === "band") { const p = P(5); S.coins -= p; S.dress = (S.dress || 0) + 2; S.bandGift = true; renderSheet(); await mech("Gain two bandages (" + p + " gold). You have " + S.dress + ".", "loot"); }
-      else if (c === "sell") { const n = salvWorth(), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("You sell your salvage (" + what + "). Gain " + n + " gold.", "loot"); }
+      else if (c === "potion") { const p = P(8); S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "elixir") { const p = P(20); S.coins -= p; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "band") { const p = P(5); S.coins -= p; S.dress = (S.dress || 0) + 2; S.bandGift = true; renderSheet(); await mech("Gain two bandages (" + p + " gold). You have " + S.dress + ".", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "sell") { const n = salvWorth(), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("You sell your salvage (" + what + "). Gain " + n + " gold.", "loot"); await dryLine("sell", { chance: 40 }); await burrLine(15); }
       else if (c === "smith") {
         const hone = ctRank() >= 5 ? 0 : P(15);
+        await dryLine("smith", { chance: 40 });
         const k = await choose(smithLeft.filter(w => S.coins >= P(WEAPONS[w].price)).map(w => ({ key: w, label: "Buy the " + WEAPONS[w].name, tag: P(WEAPONS[w].price) + " gold" + cOff + " · " + WEAPONS[w].fx, plain: true }))
           .concat([{ key: "whet", label: "Have the axe honed and balanced", tag: (hone ? hone + " gold" : "free for a Contender") + " · +1 axe damage", show: !S.whet && S.coins >= hone, plain: true }, { key: "no", label: "Nothing today", plain: true }]));
         if (k === "whet") { S.coins -= hone; S.whet = true; renderSheet(); await mech("The smith hones the axe until it shaves the hair off your arm. +1 axe damage, for good.", "loot"); }
@@ -4246,8 +4496,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           { key: "dall", label: "Deposit everything", tag: S.coins + " gold", show: S.bank.open && S.coins > 0 },
           { key: "wall", label: "Withdraw everything", tag: S.bank.bal + " gold", show: S.bank.open && S.bank.bal > 0, plain: true },
           { key: "no", label: "Leave the bank", plain: true }]);
-        if (k === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await mech("Account opened (15 gold). Gold on deposit is safe whatever happens to you.", "loot"); }
-        if (k === "dall") { const n = S.coins; S.coins = 0; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold.", "loot"); }
+        if (k === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await mech("Account opened (15 gold). Gold on deposit is safe whatever happens to you.", "loot"); await dryLine("bank", { chance: 60 }); }
+        if (k === "dall") { const n = S.coins; S.coins = 0; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold.", "loot"); await dryLine("bank", { chance: 30 }); }
         if (k === "wall") { const n = S.bank.bal; S.bank.bal = 0; S.coins += n; renderSheet(); await mech("You withdraw " + n + " gold. In your purse: " + S.coins + " gold.", "loot"); }
       } else if (c === "library") {
         const k = await choose(skillsLeft.map((x, i) => ({ key: x, label: SKILLS[x].name, tag: SKILLS[x].desc, plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
@@ -4262,6 +4512,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const left = relicsLeft(), unbroken = ROAD_GANGS.filter(G => roamRegions().includes(G.r) && !bn().beat[G.id]);
         if (unbroken.length && d(2) === 1) { const G = unbroken[d(unbroken.length) - 1]; await say("Somebody at the bar has a story about " + G.n + ", who work the roads round " + REGIONS[G.r] + ". " + G.how); }
         else await say(left.length ? "Somebody at the next table has seen something odd: " + RELICS[left[d(left.length) - 1]].hint + ". They say it like a joke. It isn't one." : cascadeOn() ? "Everybody's talking about the Cascades: companies of the drowned seen marching on the old roads, captains in green plate, nobody knows whose." : "Nobody has much news. The roads are quieter than they were, and that suits everybody.");
+        await dryLine("bar", { chance: 40 });
       }
       save();
     }
@@ -20624,6 +20875,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (grudge) await say("You know that mark. You let them go, last time, for a cut of what they had. They've spent it on better steel, and they've been asking after you on every road since.");
     else await say(BN_INTROS[d(BN_INTROS.length) - 1]);
     await say(G.how);
+    if (!grudge) await dryLine("gang", { G, chance: 45 });
     add(el("div", "", gangCard(G)));
     if (isNew) await mech("New mark in your gang ledger: " + G.n + ". Your journal keeps it.", "loot");
     await say("Behind them, half under a tarpaulin, there's " + H.n + ".");
@@ -20691,6 +20943,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     B.inf += first ? 2 : 1;
     renderSheet();
     await say(line);
+    await dryLine("gangDown", { G, chance: 40 });
+    await burrLine(25);
     await mech((first ? "You broke " + G.n + ". " : "") + "Infamy +" + ((first ? 2 : 1) + (f === "colours" ? 1 : 0)) + ". " + bnRepLine() + ". Gangs broken: " + bnBroken() + " of " + ROAD_GANGS.length + ".", "loot");
     grant("bnfirst");
     achCheck();
@@ -20751,6 +21005,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const [a, b] = pairs[+r], T = stretchOf(a, b), label = T.name + " · " + REGIONS[a] + " to " + REGIONS[b];
     await roadsLore();
     if (!B.walked[a + "-" + b]) { B.walked[a + "-" + b] = 1; if (T.lore) { add(el("div", "part-head sub", '<span class="num">The Blood-bought Roads</span><h2>' + T.name + "</h2>")); await say(T.lore); } }
+    await dryLine("road", { chance: 35 });
     achCheck();
     roamFight = true;
     try {
@@ -21346,7 +21601,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
-        try { await lvNews(); await bnStory(i); await wildEncounter(i); await wxSet(null); await PARTS[i](); await stoneAfter(i); break; }
+        try { await lvNews(); await wayside(i); await bnStory(i); await wildEncounter(i); await wxSet(null); await PARTS[i](); await stoneAfter(i); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
       xpGain(PART_XP + (CHAPTERS.some(c => c.to === i) ? CHAPTER_XP : 0));
