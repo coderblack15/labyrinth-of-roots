@@ -2504,7 +2504,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     return node;
   }
   function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
-  async function say(html, cls) { add(el("p", cls || "", html)); await wait(220); }
+  async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); await wait(220); }
   const voice = (html) => say(html, "voice spirit");
   const mech = (html, kind) => say(html, "mech" + (kind ? " " + kind : ""));
   function heading(num, title) {
@@ -2572,7 +2572,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const box = el("div", "choices");
       let detach = null;
       opts.filter(o => o.show !== false).forEach((o, i) => {
-        const b = el("button", i === 0 && !o.plain ? "primary" : "", o.label + (o.tag ? '<span class="tag">' + o.tag + "</span>" : ""));
+        const b = el("button", i === 0 && !o.plain ? "primary" : "", wpnTxt(o.label) + (o.tag ? '<span class="tag">' + wpnTxt(o.tag) + "</span>" : ""));
         b.type = "button";
         b.onclick = () => {
           box.querySelectorAll("button").forEach(x => x.disabled = true);
@@ -2641,8 +2641,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (dis) metaBits.push('<span class="dis">disadvantage</span>');
       const out = el("div", "out", "&nbsp;");
       const ctrl = el("div", "ctrl");
-      card.append(dice, el("div", "what", label), el("div", "meta", metaBits.join(" · ")), out, ctrl);
-      const rollBtn = el("button", "primary", cta); rollBtn.type = "button";
+      card.append(dice, el("div", "what", wpnTxt(label)), el("div", "meta", metaBits.join(" · ")), out, ctrl);
+      const rollBtn = el("button", "primary", wpnTxt(cta)); rollBtn.type = "button";
       ctrl.appendChild(rollBtn);
       if (atk && !FOE.rounds) detach = beltAttach(card, ctrl, null);
       if (atk) swapAttach(ctrl, () => {
@@ -2696,8 +2696,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       dice.append(mine, theirs);
       const out = el("div", "out", "&nbsp;");
       const ctrl = el("div", "ctrl");
-      card.append(dice, el("div", "what", label), el("div", "meta", "You d20 " + fmt(mod) + " · " + foe + " d20 " + fmt(foeMod) + " · ties go to you"), out, ctrl);
-      const b = el("button", "primary", cta); b.type = "button"; ctrl.appendChild(b);
+      card.append(dice, el("div", "what", wpnTxt(label)), el("div", "meta", "You d20 " + fmt(mod) + " · " + foe + " d20 " + fmt(foeMod) + " · ties go to you"), out, ctrl);
+      const b = el("button", "primary", wpnTxt(cta)); b.type = "button"; ctrl.appendChild(b);
       scrollNext = true;
       add(card);
       async function doRoll() {
@@ -2752,8 +2752,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       dies.forEach(x => dice.appendChild(x));
       const out = el("div", "out", "&nbsp;");
       const ctrl = el("div", "ctrl");
-      card.append(dice, el("div", "what", label), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "") + (adv ? ' · <span class="dis">it has advantage</span>' : "")), out, ctrl);
-      const b = el("button", "primary", cta); b.type = "button"; ctrl.appendChild(b);
+      card.append(dice, el("div", "what", wpnTxt(label)), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "") + (adv ? ' · <span class="dis">it has advantage</span>' : "")), out, ctrl);
+      const b = el("button", "primary", wpnTxt(cta)); b.type = "button"; ctrl.appendChild(b);
       scrollNext = true;
       if (FOE.on) card.classList.add("fr");
       add(card);
@@ -3216,6 +3216,29 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (/\(dulled\)/.test(label)) { b += 1; label = label.replace(" (dulled)", ""); }
     if (/\(honed\)/.test(label)) { b -= 1; label = label.replace(" (honed)", ""); }
     return { count: W.die[0], sides: W.die[1], bonus: b, label: label.replace(/^Axe damage/, W.name + " damage"), k, tr: W.tr };
+  }
+  // Fight text follows the weapon in your hand. The story was written for the axe, so with another
+  // weapon in hand, the fight's narration, buttons and roll labels swap "the axe" for what you're
+  // holding. Sentences about what the axe still does from your back (Vaelric's voice, the gems, the
+  // 1 HP hold, the warden's axe as a sign of who you are) are left alone, because those stay true.
+  const W_NOUN = { spear: "spear", maul: "maul", rapier: "rapier", brand: "sword", bow: "bow", dagger: "dagger", hatchet: "hatchet", sword: "sword", glaive: "glaive" };
+  function wNoun(k) {
+    const L = lootOf(k), b = L ? L.b : k;
+    return b === "bow" ? "arrow" : W_NOUN[b] || "blade";
+  }
+  const AXE_KEEP = /Vaelric|\bgems?\b|stones in the haft|on your back|won't let you|holds? you|keeps? you|1 HP|warden's axe|\ban axe\b|socket|the door|spirals/i;
+  function wpnTxt(html, force) {
+    if (typeof html !== "string" || !/axe/i.test(html) || !S.axe || wpnKey() === "axe" || !(FOE.on || force)) return html;
+    const k = wpnKey(), n = wNoun(k), N = n === "arrow" ? "Bow" : n[0].toUpperCase() + n.slice(1);
+    const swing = n === "arrow" ? "Loose an arrow from the " + wDef(k).name : "Strike with the " + wDef(k).name;
+    return html.split(/(?<=[.!?]["”]?\s)/).map(t => AXE_KEEP.test(t) ? t : t
+      .replace(/\bSwing the axe\b/g, swing)
+      .replace(/\bAxe attack\b/g, N + " attack")
+      .replace(/\b(the|your|The|Your) axe[-\s]haft\b/g, (m, a) => a + " " + n + "'s haft")
+      .replace(/\b(the|your|The|Your) axe's\b/g, (m, a) => a + " " + n + "'s")
+      .replace(/\b(the|your|my|The|Your|My) axe(?:-beard)?\b/g, (m, a) => a + " " + n)
+      .replace(/\blow axe\b/g, "low " + n)
+    ).join("");
   }
   async function armoury(C) {
     const left = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
@@ -3999,7 +4022,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!S.underdream) {
       await say("You follow them. It's easy: every Cascade in the realm leans a little, the way grass leans in a wind, and they all lean the same way. Three days on, you come over a ridge and see where.");
       await say("It's a hollow in the hills, perfectly round, and the Cascades all pour up out of the ground around its rim. In the middle there's a pool of the black water lying flat and still, the only still water in the realm. Something stands in it, up to the knee.");
-      await say("It's you. Not a reflection. It has your height and your stance and your scars, and it's holding a copy of your axe, and its eyes are the silver at the edge of the Cascades. It's every bad dream anyone ever had about you, poured into your shape, and it's had a long time to practise.");
+      await say(wpnTxt("It's you. Not a reflection. It has your height and your stance and your scars, and it's holding a copy of your axe, and its eyes are the silver at the edge of the Cascades. It's every bad dream anyone ever had about you, poured into your shape, and it's had a long time to practise.", true));
       if (vaelricSpeaks()) await voice("\"The Underdream,\" Vaelric breathes. \"A dream that learned to dream back. It's been watching you fight, the same as you've been watching them. Don't give it anything new.\"");
     } else await say("The hollow in the hills is as you left it. The black pool has filled again, and the thing standing in it has your face again.");
     const prints = S.prints || [];
@@ -6037,7 +6060,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await say("At the end of the stair stands a round door of black iron covered in the same druidic spirals as the labyrinth gate. In front of it waits the Warden Golem, nine feet of sandstone and bronze with a lantern of green fire for a heart. It was made to stop anyone who isn't a warden.");
     await voice("\"It knows me. It does not know you. Make it know you.\"");
     const opts = [
-      { key: "fight", label: "Raise the axe and fight" },
+      { key: "fight", label: wpnTxt("Raise the axe and fight", true) },
       { key: "gems", label: "Wake the gems first", show: S.axe && !S.gemsSpent },
       { key: "talk", label: "Speak Vaelric's name to it", tag: "Arcana", plain: true }
     ];
@@ -6965,7 +6988,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     } else {
       S.gemsSpent = false; renderSheet();
       const c = await choose([
-        { key: "axe", label: "Swing the axe" },
+        { key: "axe", label: wpnTxt("Swing the axe", true) },
         { key: "slam", label: "Shield Slam", tag: "no roll", show: !!S.shield, plain: true },
         { key: "gems", label: "Wake the gems", tag: "no roll", show: !!S.axe, plain: true }
       ]);
@@ -6973,7 +6996,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const a = await check({ label: "Attack roll", mod: S.dull ? 4 : 5, dc: 11, target: "AC", cta: "Strike" });
         if (!a.ok) { await hurt(1, 6, "slashing", "A halberd catches you across the arm."); await say("Your second swing lands."); }
       } else if (c === "gems") { S.gemsSpent = true; renderSheet(); }
-      await say(c === "slam" ? "You drive the shield into them, and they go over like rotten fence posts." : c === "gems" ? "The gems flare red, and the guards burn away like mist." : "The axe goes through all three halberds at once.");
+      await say(c === "slam" ? "You drive the shield into them, and they go over like rotten fence posts." : c === "gems" ? "The gems flare red, and the guards burn away like mist." : wpnTxt("The axe goes through all three halberds at once.", true));
       await say("The drowned guards crumble into rust and lake water.");
     }
     await say("Tobbin slides down off the statue, shivering. Up close he looks very young. He tells you everything, fast, because he's too cold to lie. The Magistrate has owned him since he was nine: a debt his mother died owing. He thought the treasury would buy him free. He sold the writ to Varro because he couldn't read it and Varro offered him a boat.");
@@ -7668,7 +7691,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
     const a = await check({ label: "Attack roll", mod: S.dull ? 4 : 5, dc: 14, target: "AC", dis: !fx.revealed, cta: "Strike" });
     if (a.ok) {
-      const { total, txt } = await comboDamage(1, 8, S.dull ? 2 : 3, S.axe ? "Axe" : "Knife");
+      const w = S.axe ? wpnStrike(1, 8, S.dull ? 2 : 3, "Axe damage" + (S.dull ? " (dulled)" : "")) : null;
+      const { total, txt } = w ? await comboDamage(w.count, w.sides, w.bonus, w.label) : await comboDamage(1, 8, S.dull ? 2 : 3, S.axe ? "Axe damage" : "Knife damage");
       await say(fx.revealed ? "The blade bites into the shape in the smoke." : "You swing at where the cold is and the blade meets something like a wet sack of sand.");
       await mech(txt);
       await wDamage(total, "It takes");
@@ -9314,7 +9338,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const used = {};
     const ac = () => fx.mantle ? 15 : 13;
     const atkMod = armed ? (S.dull ? 4 : 5) : 4;
-    const dmg = armed ? (S.axe ? [1, 8, S.dull ? 2 : 3, "Axe"] : [1, 6, 2, "Knife"]) : [1, 6, 2, "Baton"];
+    const dmg = armed ? (S.axe ? [1, 8, S.dull ? 2 : 3, "Axe damage" + (S.dull ? " (dulled)" : "")] : [1, 6, 2, "Knife"]) : [1, 6, 2, "Baton"];
     const crack = async () => { if (fx.mantle) { fx.mantle = false; await mech("Her glass mantle cracks right across. Your spells will reach her now, and she's easier to hit (AC 13).", "loot"); } };
     const spell = async (n, s, bonus, label) => {
       if (fx.mantle) {
