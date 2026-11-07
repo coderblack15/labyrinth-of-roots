@@ -655,6 +655,19 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .roll .out b.bad { color: #e68a76; }
 .roll .ctrl { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 2; }
 .roll .ctrl:empty { display: none; }
+/* Fight log: once the next turn starts, the last turn's rolls and picks shrink to one line each,
+   so a long fight doesn't stack a full-size box for every swing. */
+.roll.spent { padding: 6px 12px; margin: 2px 0 8px; gap: 0 10px; }
+.roll.spent .dice { grid-row: span 2; gap: 3px; }
+.roll.spent .die { width: 30px; height: 30px; }
+.roll.spent .die span { font-size: .78rem; padding-top: 2px; }
+.roll.spent .meta { display: none; }
+.roll.spent .what { font-size: .78rem; }
+.roll.spent .out { min-height: 0; font-size: .92rem; }
+.choices.spent { margin: 2px 0 6px; }
+.choices.spent > :not(.chosen) { display: none; }
+.choices.spent button.chosen { padding: 4px 12px; font-size: .9rem; }
+.choices.spent button.chosen .tag { display: none; }
 
 /* book shelf */
 .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin: 6px 0 22px; }
@@ -2543,6 +2556,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       '<p class="j-note">' + (tipState.off ? "New tips are turned off. " : "") + '<button class="ghost" type="button" id="jTipToggle">' + (tipState.off ? "Show new tips" : "Stop showing new tips") + "</button></p></section>";
   }
 
+  // Fight log: shrink every finished roll and pick from earlier turns of the fight (see .spent).
+  function fightCompact() {
+    const st = $("story");
+    if (st) st.querySelectorAll(".roll.fr:not(.spent), .choices.fc:not(.spent)").forEach(x => { if (x.matches(".roll") || x.querySelector(".chosen")) x.classList.add("spent"); });
+  }
   // Before any choice outside a fight, a bleed left open from the fight gets dealt with.
   function choose(opts) {
     if (bleedPending()) return bleedSettle().then(() => chooseRaw(opts));
@@ -2568,6 +2586,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       // In a fight, every prompt carries the quick-hands item button.
       swapAttach(box, null);
       detach = beltAttach(box, box, main ? () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (detach) detach(); resolve(BELT_WON); } : null);
+      if (FOE.on) { fightCompact(); box.classList.add("fc"); }
       add(box);
     });
   }
@@ -2631,6 +2650,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         card.querySelector(".meta").innerHTML = ["d20 " + fmt(mod) + (cb ? ' <span class="combo-tag">(combo +' + cb + ")</span>" : "") + (gu ? ' <span class="combo-tag">(gear +' + gu + ")</span>" : "")].concat(metaBits.slice(1)).join(" · ");
       });
       scrollNext = true;
+      if (atk) { if (!FOE.rounds) fightCompact(); card.classList.add("fr"); }
       add(card);
 
       async function doRoll() {
@@ -2735,6 +2755,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       card.append(dice, el("div", "what", wpnTxt(label)), el("div", "meta", foe + " d20 " + fmt(bonus) + " · your AC " + ac + (dis ? ' · <span class="adv">it has disadvantage</span>' : "") + (adv ? ' · <span class="dis">it has advantage</span>' : "")), out, ctrl);
       const b = el("button", "primary", wpnTxt(cta)); b.type = "button"; ctrl.appendChild(b);
       scrollNext = true;
+      if (FOE.on) card.classList.add("fr");
       add(card);
       b.onclick = async () => {
         ctrl.innerHTML = "";
