@@ -1036,6 +1036,56 @@ Built from Adrian's expanded design doc and the suspects list. Doc names were re
 
 The Speaker for the Deep: the Drowned Light under the western sea is going out, and the Bathyr still down there are waiting under it. "You put one Light to bed. I don't suppose you'd come down and look at ours." End card is Part LXIII.
 
+## The Sounding: Bathyrra (Parts LXIII–LXIX)
+
+The Speaker for the Deep takes the player out past the black fleet, two miles off Rahdaria, and raps a lead plate: a stair rises out of the sea. On its far side the water stands back like a curtain, and the stair runs down the inside of it to **Bathyrra**, the Bathyr city in a dry bowl on the sea floor. Overhead the sea hangs like a sky, held up by the **Drowned Light**, a stone as tall as a tower half sunk in a hill of black glass. It is going out.
+
+*(The **Sea-Sky**, 0–10, starts at 10 (breaking the blockade early earns a little more trust with the Bathyr instead). Errands, wrong answers in the Hall, slipping past the Hushed, and every group fetched in the evacuation bring it down. At 3 or less fights are knee-deep: Evade −15%. At 0, −25%, and one try at the Sounding.)*
+
+*(**Sounding**: the Bathyr talk by tapping stone. Eight words, each a rhythm of short taps (weight 1) and long presses (weight 2): friend ··−, open −·, deep −−, light ·−·, home −··, listen ···−, remember ·−−·, not ··. A word is shown for a moment, then the player taps it back. Lead doors open to any phrase of known words that keeps the door's rules and weighs exactly what the door asks.)*
+
+*(**Forgetting**: the Hushed make you forget fight moves (waking the gems, Evade, catching your breath, binding wounds and so on). In a fight: a Wisdom DC 13 check, or a companion reminds you once. Out of one: a Deafstone, or sounding "remember" at a rest.)*
+
+### Part LXIII: The Sea-Stairs
+
+The Speaker teaches *friend*. The **Sea-Stair**: six landings, four steps wide, some hollow. Hollow counts are pressed into each landing's edge and the top of each column; the player gets five taps to listen first, then steps down one landing at a time onto a step beside the last. A fall costs a bruise (1d4 each at the bottom). Or climb the wall-rope (Athletics DC 13). At the bottom the stair-wardens want *friend* tapped on the step: trust +1, or a sour escort.
+
+### Part LXIV: Bathyrra
+
+A city of lead roofs and stone doors that ticks like a clock shop, and stops when the player walks by. The Speaker is the last of a hundred **Sounders**, who answered the Light every dawn for nine hundred years until, over twelve years, they forgot how. He teaches *light*, *listen* and *home*. **Errands** (each Sea-Sky −1, each a word and a chance at trust): the lead-pressers' yard (Strength, *open*), sparring with Ulm the stair-warden (*deep*), the cradle-house with old Grisk (Insight, *remember*; the forgotten apprentice), the drip-lines (Perception, *not*; the grey threads sewn into the sky). In the market, a kind woman in grey whispers something out of the player: the Hushed. Fight three of them.
+
+### Part LXV: The Hall of Lead
+
+Lead doors: the outer door wants *friend* and *open*, weight 7. **Two Truths**: three pairs, each a Whisperers' gold tablet, a Bathyr lead one and a witness the Hall kept; two questions each, a wrong answer costs Sea-Sky.
+
+- *The Founding of Rahdaria*: a hundred hands, both peoples (the tally-cord); the gold tablet's seal wasn't cut until the ninth year.
+- *What Keeps the Light*: it slept when it was answered (the dawn-log); it's failing because the Sounders forgot.
+- *The Night of Senn*: the order's hush drowned it; the roll of wardens strikes through one name, **Vaelric**.
+
+The Sounders' door: *light* and *deep*, no *not*, three words, weight 11. Inside, the Light's own word and its rule: *begin with listen, never not, hold light, weight 13*.
+
+### Part LXVI: Inside the Axe
+
+A memory, not saved. The player is Vaelric at nineteen in the ring of twelve round Senn, under the Hushwright Edrys Fane. *The hush*: eight breaths, keep the note in the band. A girl with a lantern, **Wenlo**, walks up through it: hush her, tell her the truth, or cut her name into the axe's haft (wood can't hear). Then the last whisper: finish it, or don't. Any mercy is **Vaelric's doubt**, which opens his ending.
+
+### Part LXVII: The Hushed
+
+Severine Gall, the Hushwright, sits with her hand on the Light, whispering. Her case: a dark light can never wake. Five Hushed, each with a belief, each answered by one thing the player has learned: Brother Cael Venn (the founding), Sister Oriel of the Lamps (the dawn-log), Warden Imre Dask (the roll of wardens), Mother Halve (she is Wenlo; her name from the haft), the Abery twins (the Deafstones, or Tamsk's Pressing). Argue (Persuasion, easy with the right evidence), slip past (Stealth DC 14, Sea-Sky −1) or fight. Four argued down lets the player talk Severine down; otherwise fight her, weaker by every voice lost. Every second round she hushes: tap *remember* or forget something. Her Hush-Cord is the prize.
+
+### Part LXVIII: The Sky Comes Down
+
+Six groups to get to the stair, each costing Sea-Sky: the stair-wardens (1, and every later group costs 1 less), the cradle-house (1 with *remember*), the lead-pressers (1 if the founding was read true), the old Sounders (2 with *home*), the Speaker's household (2), the Hushed left on the hill (2). A Wall-gar comes out of the water-wall halfway up. Whatever sky is left is the number of tries at the Light.
+
+### Part LXIX: The Drowned Light
+
+- **Sound it**: compose the Light's word (listen, light and one more, weight 13), then tap it from memory. It taps back, and rings, and the sky goes up. The Speaker gives the **Bathyr's Note**, the first of a Listener's five, and his Tapping-Stone. +4 max HP.
+- **Let it be hushed**: the Light goes dark for good, Bathyrra drowns, the Bathyr go up to the salt flats. 40 gold.
+- **Let Vaelric sing it** (only if he doubted): he sings, aloud, for the first time in a hundred years, and spends himself. The axe still holds at 1 HP but never speaks again. +6 max HP.
+
+### Hook
+
+Severine: twenty-nine more of the Hushed wait at **Stillwater**, where the order began and Ilka Moth is buried. "You'd better go and talk to them before they decide to whisper." End card is Part LXX.
+
 ## The Deafstones: lore tablets
 
 A fallen light wakes to loud voices, so the first wardens, the Whisperers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
@@ -1106,6 +1156,6 @@ A fallen light wakes to loud voices, so the first wardens, the Whisperers (found
 
 ### Ilka's Stone
 
-*(Once all thirty are found.)* *"My name is Ilka Moth, and I was a shepherd. I heard the moon coming three days before it fell. The Hesk taught me how to make a frightened thing sleep, and I did it, and it worked. Then I did it to a frightened village. Then to a curious one. Then to one that was only asking. I carved this after, on the island, where nobody can hear me. Whoever has found every stone: now you know what I did. Do better than I did. Listen first."*
+*(Once every Deafstone is found.)* *"My name is Ilka Moth, and I was a shepherd. I heard the moon coming three days before it fell. The Hesk taught me how to make a frightened thing sleep, and I did it, and it worked. Then I did it to a frightened village. Then to a curious one. Then to one that was only asking. I carved this after, on the island, where nobody can hear me. Whoever has found every stone: now you know what I did. Do better than I did. Listen first."*
 
 *To be continued.*
