@@ -238,6 +238,9 @@ body.intro-open { overflow: hidden; }
 .hpbar span { display: block; height: 100%; background: var(--ember); transition: width .5s ease; }
 .bleed-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e0796a; letter-spacing: .02em; }
 .bleed-row[hidden] { display: none; }
+.cal-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--label); font-size: .78rem; letter-spacing: .06em; color: var(--muted); }
+.cal-row .cal-g { color: var(--gold); font-size: .9rem; line-height: 1; }
+.cal-row .cal-tag { color: var(--gold); border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; font-size: .72rem; }
 .bleed-row .drop { width: 8px; height: 11px; background: #c0392b; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; transform: rotate(180deg); flex: none; animation: drip 1.6s ease-in-out infinite; }
 @keyframes drip { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .bleed-row .drop { animation: none; } }
@@ -893,6 +896,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .vitals .stat-val { margin-right: 10px; }
   .vitals .hpbar { order: 1; }
   .vitals .bleed-row { order: 2; }
+  .vitals .cal-row { order: 3; font-size: .72rem; }
   .inv { gap: 8px; }
   .inv li { grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
   .inv svg { width: 20px; height: 20px; }
@@ -1138,6 +1142,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       <span class="stat-val" id="acVal">13</span>
       <span class="stat-label">Purse</span>
       <span class="stat-val" id="coinVal">12 gp</span>
+      <div class="cal-row" id="calVal"></div>
     </div>
     <div class="xp" id="xpBox">
       <span class="stat-label">Level</span>
@@ -1398,7 +1403,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   let sdNoSave = false; // the Inside the Axe memory isn't saved
   function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return lvInit(v); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1893,6 +1898,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
     h += newsSection();
+    h += calSection(rs);
     h += stoneSection();
     h += achSection();
     h += tipSection();
@@ -1920,6 +1926,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "57", name: "The Turning Year", date: "7 Nov 2026", items: [
+      "The realm keeps a calendar now: twelve months of twelve days, from Sapwake in the spring to Candlewait at the bottom of the winter, and a six-day week that ends on market day. The date sits under your purse, and the journal has a page for it.",
+      "Time is weather, not a deadline. Every part moves the clock on, the road between kingdoms takes days, and a rest runs on to morning. Nothing ever runs out, and nothing is missed for exploring.",
+      "<b>Night</b> on the Blood-bought Roads: the gangs lie in wait. Spot them in the dark or they strike first, but the night's take is a quarter fatter. On the roads back you can make camp and wait for dark, or sleep rough till morning.",
+      "<b>Market day</b> takes a fifth off the town stalls, and four <b>festivals</b> come round in the towns: the Root-Waking, the Night of Lamps (the roads are lit, and nobody ambushes anybody), the Fair of Full Barns (half price, and a sack-race) and the Long Candle (free rooms, and a night's watch).",
+      "<b>Winter</b> tolls cost half as much again, in coin or in blood.",
+      "Old saves pick up a date about where a new journey would be by now. Five new pursuits in the set <b>The Turning Year</b>."] },
     { ver: "56", name: "Dry company", date: "7 Nov 2026", items: [
       "The realm has a sense of humour now, a dry one, in small doses. Townsfolk, innkeepers, shopkeepers, smiths, bank clerks and the people at the bar all have something to say, and none of them smile while they say it.",
       "Every chapter has a few <b>wayside moments</b> between its middle parts: notes scratched on roots, signs in the mire, a gull that outranks you. They keep clear of the big story beats.",
@@ -2380,6 +2393,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "bnpeddler", name: "Red Coin", desc: "Buy something from the Red-Coin Peddler.", test: () => false },
     { id: "bnstretch", name: "Every Mile Paid", desc: "Walk all eleven stretches of the Blood-bought Roads on one journey.", test: () => !!(S.bn && S.bn.walked) && Object.keys(STRETCHES).every(k => S.bn.walked[k]), prog: () => [Object.keys(STRETCHES).filter(k => S.bn && S.bn.walked && S.bn.walked[k]).length, Object.keys(STRETCHES).length] },
     { id: "drycrowd", name: "Tough Crowd", desc: "Hear thirty dry remarks from the people (and dogs) of the realm on one journey.", test: () => !!S.dry && S.dry.n >= 30, prog: () => [Math.min(30, S.dry ? S.dry.n : 0), 30] },
+    { id: "calseasons", name: "The Turning Year", desc: "See all four seasons on one journey.", test: () => !!S.cal && (S.cal.seen || []).length >= 4, prog: () => [Math.min(4, S.cal ? (S.cal.seen || []).length : 0), 4] },
+    { id: "calfairs", name: "Fair Weather Friend", desc: "Join all four festivals in the towns on one journey.", test: () => !!S.cal && (S.cal.joined || []).length >= 4, prog: () => [Math.min(4, S.cal ? (S.cal.joined || []).length : 0), 4] },
+    { id: "calnight", name: "Road After Dark", desc: "Win five fights with gangs at night on the Blood-bought Roads.", test: () => !!S.cal && (S.cal.night || 0) >= 5, prog: () => [Math.min(5, S.cal ? S.cal.night || 0 : 0), 5] },
+    { id: "calmarket", name: "Market Day", desc: "Buy something at a town's stalls on market day, or at the Fair of Full Barns.", test: () => false },
+    { id: "calyear", name: "A Year and a Day", desc: "Be on the road a year and a day on one journey.", test: () => !!S.cal && Math.floor(S.cal.t / 4) >= CAL_YEAR, prog: () => [Math.min(CAL_YEAR + 1, S.cal ? Math.floor(S.cal.t / 4) + 1 : 1), CAL_YEAR + 1] },
     { id: "drycritic", name: "Everyone's a Critic", desc: "Get ten of Burr's opinions on one journey.", test: () => !!S.dry && S.dry.burr >= 10, prog: () => [Math.min(10, S.dry ? S.dry.burr : 0), 10] },
     { id: "bnweave", name: "The High Weave", desc: "Climb the Needle and break the High Weave, and take Threadfang.", test: () => false },
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
@@ -2416,7 +2434,9 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     { id: "wages", name: "The Cairnwright's Wages", ver: "12", desc: "A treasure hunt on the roads back: seven milestones, seven puzzles, and Empress Adrianna's champion's chest.",
       ids: ["cw1", "cwread", "cwlucky", "cwwarn", "cwlock", "cwchamp", "cwpaid", "cwkeep"] },
     { id: "dry", name: "Dry Company", ver: "13", desc: "Deadpan townsfolk, innkeepers, shopkeepers, gangs and roads, and Burr's opinions of all of them.",
-      ids: ["drycrowd", "drycritic"] }
+      ids: ["drycrowd", "drycritic"] },
+    { id: "calendar", name: "The Turning Year", ver: "14", desc: "Days, months and seasons: market days, four festivals, winter tolls and night on the Blood-bought Roads.",
+      ids: ["calseasons", "calfairs", "calnight", "calmarket", "calyear"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2594,6 +2614,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     renderBleed();
     $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
+    $("calVal").innerHTML = calLine();
     renderXp();
     const items = [];
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
@@ -2784,6 +2805,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     gangs: ["Bandit gangs", "A gang is four: the <b>Hexer</b> heals and curses, the <b>Shot</b> shoots from the back, the <b>Wall</b> stands in front of the rest (+2 AC on anyone else while it's up), and the <b>Knife</b> hits hardest. Pick who to go for; your blows carry into the next one when your target drops. Afterwards, hand them in, let them go for a cut, or take their colours."],
     bloodroads: ["The Blood-bought Roads", "Each stretch between two kingdoms has its own name and nature: monster country (caravans with a body count), sellsword roads (escort contracts), conquered land (locals who want it back) and blood-tolls (pay in coin or blood, or take the bridge). Gang wars and chases turn up on any of them, and the Red-Coin Peddler, now and then."],
     contender: ["Contender", "Every fight you win counts towards the Contender. Each rank takes a twentieth off in towns on the roads back, and every town pays a purse for your stories once you've won another fight. Rank III: free rooms. Rank V: free honing. Rank VI: a gift from the healer."],
+    calendar: ["The calendar", "Every part and every errand moves the clock on, the road between kingdoms takes days, and a rest runs on to morning. The date is under your purse. On the roads back, every sixth day is <b>market day</b> (town stalls a fifth cheaper), each season has a <b>festival</b> in the towns, <b>winter</b> tolls cost half as much again, and at <b>night</b> the gangs on the Blood-bought Roads lie in wait, with fatter purses. You can make camp and wait for dark, or for morning. Nothing ever runs out."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -4114,6 +4136,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       checkpoint();
       try {
         await lvNews();
+        await calNews();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
@@ -4127,8 +4150,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           { key: "head", label: S.underdream ? "Go back to where the Cascades fall from" : "Follow the Cascades to where they fall from", tag: "the Underdream", plain: true, show: cap },
           { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
           { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · " + (innCost() ? innCost() + " gold" : ctRank() >= 3 ? "free for a Contender" : "free"), plain: true, show: S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+          { key: "wait", label: calNight() ? "Sleep rough till morning" : "Make camp and wait for dark", tag: calNight() ? "a cold camp by the road · a few HP" : "it's " + CAL_WATCH[calWatch()].toLowerCase() + " · gangs on the Blood-bought Roads lie in wait at night, with fatter purses", plain: true },
           { key: "journal", label: "Open your journal", plain: true }
         ]);
+        // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
+        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2 }[c] || 0;
+        if (c === "wait") {
+          if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
+          else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
+        }
         if (c === "walk") await roamWalk();
         else if (c === "raid") await roadRaid();
         else if (c === "roads") await bnRoads();
@@ -4144,12 +4174,153 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
           await mech(S.cascade ? "The Cascades run. Every creature is a Nightmare again, and the roads pay double gold." : "The Cascades are still. Creatures are what they were (still matched to your level).", S.cascade ? "hurt" : "loot");
         } else if (c === "rest") {
           const ic = innCost(); S.coins -= ic; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
+          calTo(1);
           await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
           await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". " + (ic ? "Spent " + ic + " gold." : ctRank() >= 3 ? "On the house, for a Contender." : "The landlord won't take your money: the navvies' wages are paid."), "loot");
         } else if (c === "journal") jOpen();
+        if (took) calPass(took);
         save();
-      } catch (e) { if (e !== FALLEN) throw e; await roamFall(); }
+      } catch (e) { if (e !== FALLEN) throw e; await roamFall(); calTo(0); }
     }
+  }
+  // ---------- the calendar: days, months and seasons ----------
+  // Time is atmosphere, not a timer: nothing runs out and nothing is missed. Every part moves the clock
+  // on a watch (dawn, day, dusk, night), the journey between chapters takes days, and a rest takes
+  // you to the next morning. On the roads back every errand takes a watch or two. The realm's year
+  // has twelve months of twelve days, three to a season, and a six-day week whose sixth day is
+  // market day. Time changes a few things: night ambushes on the Blood-bought Roads (better hauls),
+  // cheaper stalls on market days, a festival each season in the towns, and dearer tolls in winter.
+  // State: S.cal = { t: watches since the first dawn, seen: seasons seen, fairs: festivals joined
+  // ("year:id"), joined: festival ids joined, night: night ambushes won, said: last notice shown }.
+  const CAL_WATCH = ["Dawn", "Day", "Dusk", "Night"];
+  const CAL_SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
+  const CAL_MONTHS = ["Sapwake", "Mudtide", "Greenshoot", "Tallsun", "Hayfire", "Longlight", "Gleaning", "Leafdrop", "Smokewind", "Rimewane", "Ironfrost", "Candlewait"];
+  const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
+  const CAL_MD = 12, CAL_YEAR = 144;
+  // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7];
+  // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
+  const CAL_FAIRS = [
+    { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
+      what: "Green ribbon on every door, and a seed planted at the roadside for every traveller who walked through in winter.",
+      join: "Plant a seed at the roadside", tag: "a gift from the town",
+      intro: "The town has green ribbon on every door and mud on every boot, and children going from house to house with baskets of seed. It's the Root-Waking." },
+    { id: "lamps", name: "the Night of Lamps", m: 5, d: 6, fx: "the roads are lit, so no night ambushes, and the first round at the bar is free",
+      what: "Lamps hung along every road between the kingdoms, all night, for the people the roads took.",
+      join: "Hang a lamp on the road for somebody", tag: "the town remembers its own",
+      intro: "Somebody is hanging paper lamps along the road into town, one on every post, each with a name written on it. It's the Night of Lamps." },
+    { id: "barns", name: "the Fair of Full Barns", m: 6, d: 11, fx: "market stalls at half price",
+      what: "The harvest in, the barns full, and everybody selling off what they can't fit in them.",
+      join: "Enter the sack-race", tag: "Athletics DC 13 · a prize",
+      intro: "There are trestles all down the street, piled with more than anybody could eat, and a man shouting prices that go down every time he shouts them. It's the Fair of Full Barns." },
+    { id: "candle", name: "the Long Candle", m: 11, d: 6, fx: "inns let rooms for nothing",
+      what: "One candle lit in every window at dusk and kept burning until dawn, and every door open to anyone out in the cold.",
+      join: "Sit up with the candle", tag: "keep the watch till dawn",
+      intro: "There's a candle in every window, and the inn door is propped open with a stone, though it's bitter out. It's the Long Candle." }
+  ];
+  function calDefault(v) {
+    // A save from before the calendar: put it about where a new journey would be by now.
+    const p = v.part || 0, k = chapterAt(p), C = CHAPTERS[k];
+    const days = CAL_TRAVEL.slice(0, k + 1).reduce((a, n) => a + n, 0) + Math.floor((p - C.from) / 2) + (v.roam ? 10 : 0);
+    return { t: days * 4 + 1, seen: [CAL_SEASONS[Math.floor((days % CAL_YEAR) / CAL_MD / 3)]], fairs: {}, joined: [], night: 0, said: "" };
+  }
+  function calInit(v) { if (v && !v.cal) v.cal = calDefault(v); return v; }
+  const cal = () => S.cal || (S.cal = calDefault(S));
+  const calDay = () => Math.floor(cal().t / 4);
+  const calWatch = () => cal().t % 4;
+  const calNight = () => calWatch() === 3;
+  const calMonth = (day = calDay()) => Math.floor((day % CAL_YEAR) / CAL_MD);
+  const calDom = (day = calDay()) => day % CAL_MD + 1;
+  const calSeason = (day = calDay()) => Math.floor(calMonth(day) / 3);
+  const calYear = (day = calDay()) => Math.floor(day / CAL_YEAR) + 1;
+  const calWinter = () => calSeason() === 3;
+  const calMarket = () => calDom() % 6 === 0;
+  const calFair = (day = calDay()) => CAL_FAIRS.find(F => F.m === calMonth(day) && (calDom(day) === F.d || calDom(day) === F.d + 1)) || null;
+  const calFairOn = (id) => { const F = calFair(); return !!F && F.id === id; };
+  const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+  const calDate = (day = calDay()) => "the " + ordinal(calDom(day)) + " of " + CAL_MONTHS[calMonth(day)];
+  // Winter tolls: half as much again.
+  const calToll = (n) => calWinter() ? Math.round(n * 1.5) : n;
+  // Market stalls: a fifth off on market day, half off at the Fair of Full Barns (after the Contender's cut).
+  const calShopOff = () => calFairOn("barns") ? 0.5 : calMarket() ? 0.2 : 0;
+  const calBuy = () => { if (calShopOff()) grant("calmarket"); };
+  const mp = (n) => Math.max(1, Math.round(cp(n) * (1 - calShopOff())));
+  const CAL_GLYPH = ["◒", "○", "◓", "●"];
+  function calLine() {
+    const F = calFair(), extra = F ? F.name.replace(/^the /, "The ") : calMarket() ? "Market day" : "";
+    return '<span class="cal-g" aria-hidden="true">' + CAL_GLYPH[calWatch()] + "</span><span>" + calDom() + " " + CAL_MONTHS[calMonth()] + " · " + CAL_SEASONS[calSeason()] +
+      (S.roam ? " · " + CAL_WATCH[calWatch()] : "") + "</span>" + (extra ? '<span class="cal-tag">' + extra + "</span>" : "");
+  }
+  // Move the clock on. Nothing happens because of it on its own: notices come from calNews().
+  function calPass(watches) { cal().t += Math.max(0, watches | 0); calSeen(); renderSheet(); }
+  function calDawn(days = 1) { const C = cal(); C.t = (Math.floor(C.t / 4) + days) * 4; calSeen(); renderSheet(); }
+  function calTo(w) { const C = cal(); let t = Math.floor(C.t / 4) * 4 + w; if (t <= C.t) t += 4; C.t = t; calSeen(); renderSheet(); }
+  function calSeen() { const C = cal(), s = CAL_SEASONS[calSeason()]; C.seen = C.seen || []; if (!C.seen.includes(s)) C.seen.push(s); }
+  // A line when the season turns, a festival starts, or a winter comes round, once each.
+  async function calNews() {
+    const C = cal(), s = calSeason(), F = calFair(), key = calYear() + ":" + s + ":" + (F ? F.id : "");
+    if (C.said === key) return;
+    const was = (C.said || "").split(":");
+    C.said = key;
+    if (!was[0]) return; // the first time round, just remember where we are
+    if (+was[1] !== s || +was[0] !== calYear()) {
+      await mech(["Spring on the roads: mud to the ankle, and green coming up through it.", "Summer: long days, short nights, and dust on everything.", "Autumn: the barns filling and the leaves coming down on the roads.",
+        "Winter has come to the realm. The roads freeze hard, and every toll-keeper on them puts his prices up by half."][s] + " It's " + calDate() + ".", "loot");
+      tip("calendar");
+    }
+    if (F && was[2] !== F.id && S.roam) await mech("<b>" + F.name.charAt(0).toUpperCase() + F.name.slice(1) + "</b>, for two days, in every town on the roads back: " + F.fx + ".", "loot");
+  }
+  // The road between chapters: days, not watches.
+  async function calJourney(k) {
+    const n = CAL_TRAVEL[k] || 6, from = REGIONS[regAt(k - 1)] || "", to = REGIONS[regAt(k)] || "";
+    calDawn(n);
+    const wd = ["Six", "Seven", "Eight", "Nine", "Ten"], word = ["", "One", "Two", "Three", "Four", "Five"].concat(wd)[n] || String(n);
+    await mech(word + " days on the road" + (from && to && from !== to ? " from " + from + " to " + to : "") + ". It's " + calDate() + " now, in " + CAL_SEASONS[calSeason()].toLowerCase() + ".");
+    tip("calendar");
+    await calNews();
+  }
+  function calSection(rs) {
+    if (!rs || !rs.cal) return "";
+    const C = rs.cal, day = Math.floor(C.t / 4), w = C.t % 4;
+    const dom = calDom(day), toMarket = dom % 6 === 0 ? 0 : 6 - dom % 6, now = calFair(day);
+    const next = CAL_FAIRS.filter(F => F !== now).map(F => { let at = Math.floor(day / CAL_YEAR) * CAL_YEAR + F.m * CAL_MD + F.d - 1; if (at < day) at += CAL_YEAR; return [F, at]; }).sort((a, b) => a[1] - b[1])[0];
+    return '<section><h3>The calendar · Slot ' + SLOT + "</h3>" +
+      "<p>" + ["Dawn", "Daytime", "Dusk", "Night"][w] + " on " + CAL_WEEK[day % 6] + ", " + calDate(day) + ", in " + CAL_SEASONS[calSeason(day)].toLowerCase() + ". Year " + calYear(day) + " of your journey, and " + (day + 1) + " day" + (day ? "s" : "") + " on the road.</p>" +
+      tiles([[toMarket ? toMarket : "today", toMarket ? "days to market" : "market day"], [now ? "now" : next[1] - day, now ? now.name.replace(/^the /, "") : "days to " + next[0].name.replace(/^the /, "")],
+        [(C.seen || []).length + " / 4", "seasons seen"], [(C.joined || []).length + " / 4", "festivals joined"], [C.night || 0, "night ambushes won"]]) +
+      '<p class="j-sub" style="margin-top:10px">Twelve months of twelve days, three to a season. The sixth day of every week is market day, and town stalls on the roads back take a fifth off. Every errand moves the clock on, a rest takes you to morning, and nothing ever runs out.</p>' +
+      '<table><thead><tr><th>Season</th><th>Months</th><th>Festival</th></tr></thead><tbody>' + CAL_SEASONS.map((s, i) => {
+        const F = CAL_FAIRS.find(x => Math.floor(x.m / 3) === i);
+        return "<tr><td>" + s + "</td><td>" + CAL_MONTHS.slice(i * 3, i * 3 + 3).join(", ") + "</td><td><b>" + F.name.replace(/^the /, "The ") + "</b>, " + ordinal(F.d) + "–" + ordinal(F.d + 1) + " " + CAL_MONTHS[F.m] + ". " + F.what + " In towns: " + F.fx + "." + (i === 3 ? " All winter, tolls cost half as much again." : "") + "</td></tr>";
+      }).join("") + "</tbody></table></section>";
+  }
+  // Join a town's festival, once a festival a year.
+  async function calJoin(T, F) {
+    const C = cal(), key = calYear() + ":" + F.id;
+    C.fairs = C.fairs || {}; C.fairs[key] = 1;
+    C.joined = C.joined || []; if (!C.joined.includes(F.id)) C.joined.push(F.id);
+    if (F.id === "rootwake") {
+      await say("A girl with a basket of seed-balls gives you one and points at the verge. You push it into the mud with your thumb. \"That's a pear tree,\" she says. \"Or a nettle. They don't label them.\" Her mother gives you a ribboned parcel from the doorstep.");
+      S.potions = (S.potions || 0) + 1; S.dress = (S.dress || 0) + 2; renderSheet();
+      await mech("A festival gift: a Draught of Mending and two bandages.", "loot");
+    } else if (F.id === "lamps") {
+      await say("They give you a paper lamp and a stub of candle and a name to write on it: a carter called Abel Thorne, who went out on the road forty years ago and didn't come back. You hang it on the milestone outside " + T.name + ", with all the others going away down the road in a line of little lights.");
+      const g = 6 + d(6) + Math.floor(lv() / 2); S.coins += g; xpGain(20); renderSheet();
+      await mech("Abel Thorne's granddaughter finds you afterwards and presses " + g + " gold on you, for the lamp. +20 XP.", "loot");
+    } else if (F.id === "barns") {
+      await say("The sack-race runs from the pump to the church door, about forty sacks in it, a goat in one of them.");
+      const r = await check({ label: "Athletics check (the sack-race)", mod: 3 + Math.floor(lv() / 10), dc: 13, cta: "Hop" });
+      const g = r.ok ? 15 + lv() : 4;
+      S.coins += g; if (r.ok) S.elixirs = (S.elixirs || 0) + 1; renderSheet();
+      await say(r.ok ? "You come in first by a sack's length. The goat comes in second and is said to have been robbed." : "You come in eleventh, behind the goat. Nobody says anything about it, at length.");
+      await mech(r.ok ? "The prize: " + g + " gold and an Elixir of Health." : "A consolation purse: " + g + " gold.", "loot");
+    } else if (F.id === "candle") {
+      await say("You sit up with the family who keep the candle at the inn, all night, taking turns to trim the wick. Nobody comes in from the cold. Around the middle of the night the old man says that's the point of it, and goes to sleep.");
+      S.hp = S.maxHp; S.digs = DIG_MAX; renderSheet();
+      calTo(0);
+      await mech("Dawn, and the candle still burning. Full HP and every foothold back.", "loot");
+    }
+    achCheck();
   }
   // ---------- towns and sanctuaries on the roads back ----------
   // Every cleared region keeps its towns and its quiet places. From the roads back you can go into
@@ -4440,46 +4611,55 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const has = (k) => T.has.includes(k);
     let rested = false, drank = false, roofed = false;
     const free = ctRank() >= 3, P = (n) => cp(n), cOff = ctOff() ? " (Contender)" : "";
+    // The calendar: market day and the festivals change the stalls, the inn and the bar.
+    const town = T.kind !== "sanctuary", fair = town ? calFair() : null;
+    const MP = (n) => mp(n), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
+    const candle = fair && fair.id === "candle", lamps = fair && fair.id === "lamps";
+    const innFee = () => candle ? 0 : innCost();
+    if (town && fair) await say(fair.intro);
+    else if (town && calMarket() && has("market")) await say("It's market day. The street is all stalls and shouting, and the prices are down, because everybody else's are.");
     for (;;) {
       const smithLeft = Object.keys(WEAPONS).filter(k => k !== "axe" && !arms().includes(k));
       const skillsLeft = Object.keys(SKILLS).filter(k => !hasSkill(k));
       const c = await choose([
         { key: "sanct", label: "Rest in the sanctuary", tag: "free · full HP, footholds, and the road's sicknesses eased", show: has("sanctum") && !rested },
         { key: "purse", label: "Tell them about your fights", tag: "Contender " + CT_NAMES[ctRank()] + " · the town's purse", show: ctPurseOk(T) },
-        { key: "inn", label: "Take a room at the inn", tag: (innCost() ? innCost() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
-        { key: "potion", label: "Buy a Draught of Mending", tag: P(8) + " gold" + cOff + " · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= P(8), plain: true },
-        { key: "elixir", label: "Buy an Elixir of Health", tag: P(20) + " gold" + cOff + " · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= P(20), plain: true },
-        { key: "band", label: "Buy two bandages", tag: P(5) + " gold" + cOff + " · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= P(5), plain: true },
+        { key: "fair", label: fair ? fair.join : "", tag: fair ? fair.name.replace(/^the /, "") + " · " + fair.tag : "", show: !!fair && !(cal().fairs || {})[calYear() + ":" + fair.id] },
+        { key: "inn", label: "Take a room at the inn", tag: (candle ? "free for the Long Candle" : innCost() ? innCost() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innFee() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+        { key: "potion", label: "Buy a Draught of Mending", tag: MP(8) + " gold" + mOff + " · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= MP(8), plain: true },
+        { key: "elixir", label: "Buy an Elixir of Health", tag: MP(20) + " gold" + mOff + " · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= MP(20), plain: true },
+        { key: "band", label: "Buy two bandages", tag: MP(5) + " gold" + mOff + " · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= MP(5), plain: true },
         { key: "sell", label: "Sell your salvage", tag: salvWorth() + " gold", show: has("market") && salvWorth() > 0, plain: true },
         { key: "smith", label: "Visit the smith", tag: smithLeft.length ? "weapons and honing" : "honing", show: has("smith") && S.axe && (smithLeft.length > 0 || !S.whet), plain: true },
         { key: "bank", label: "The bank", tag: S.bank && S.bank.open ? (S.bank.bal || 0) + " gold on deposit" : "15 gold to open an account", show: has("bank"), plain: true },
         { key: "library", label: "Browse the library", tag: P(30) + " gold" + cOff + " · learn a skill", show: has("library") && skillsLeft.length > 0 && S.coins >= P(30), plain: true },
         { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: P(10) + " gold" + cOff, show: has("healer") && !hasSkill("mend") && S.coins >= P(10), plain: true },
-        { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || S.coins >= P(2)), plain: true },
+        { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || lamps || S.coins >= P(2)), plain: true },
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: "Back to the road", plain: true }
       ]);
       if (c === "leave") break;
+      if (c === "fair") await calJoin(T, fair);
       if (c === "sanct") {
-        rested = true;
+        rested = true; calDawn();
         const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(T.kind === "sanctuary" && T.reg === "corrach" ? "Sister Wren burns sage over you, binds what needs binding, and makes you sleep on a white terrace in the sun." : "You sleep in the quiet, and nothing comes for you, and you wake up feeling like yourself.");
         await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
         if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
       } else if (c === "inn") {
-        rested = true;
-        const fee = innCost();
+        rested = true; calDawn();
+        const fee = innFee();
         S.coins -= fee; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
-        await say(!fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
+        await say(candle ? "The landlord won't take your money. \"Not on the Long Candle,\" she says. \"Nobody pays to come in out of the cold tonight. They pay double tomorrow.\"" : !fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house."), "loot");
         await dryLine("inn", { chance: 50 });
       } else if (c === "purse") await ctPurse(T);
       else if (c === "roof") { roofed = true; (bn().roof = bn().roof || {})[T.reg + ":" + T.name] = bn().cw; await roofClimb(T); }
-      else if (c === "potion") { const p = P(8); S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
-      else if (c === "elixir") { const p = P(20); S.coins -= p; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
-      else if (c === "band") { const p = P(5); S.coins -= p; S.dress = (S.dress || 0) + 2; S.bandGift = true; renderSheet(); await mech("Gain two bandages (" + p + " gold). You have " + S.dress + ".", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "potion") { const p = MP(8); calBuy(); S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("Gain a Draught of Mending (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "elixir") { const p = MP(20); calBuy(); S.coins -= p; S.elixirs = (S.elixirs || 0) + 1; renderSheet(); await mech("Gain an Elixir of Health (" + p + " gold).", "loot"); await dryLine("shop", { chance: 25 }); }
+      else if (c === "band") { const p = MP(5); calBuy(); S.coins -= p; S.dress = (S.dress || 0) + 2; S.bandGift = true; renderSheet(); await mech("Gain two bandages (" + p + " gold). You have " + S.dress + ".", "loot"); await dryLine("shop", { chance: 25 }); }
       else if (c === "sell") { const n = salvWorth(), what = salvList(salv()); S.coins += n; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("You sell your salvage (" + what + "). Gain " + n + " gold.", "loot"); await dryLine("sell", { chance: 40 }); await burrLine(15); }
       else if (c === "smith") {
         const hone = ctRank() >= 5 ? 0 : P(15);
@@ -4507,7 +4687,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       } else if (c === "bench") {
         await mineBench(T.reg, "Somebody in " + T.name + " keeps a bench for it: the local way of packing a mine, out of " + REGION_MINES[T.reg].fill + ", and a forge for caltrops.");
       } else if (c === "bar") {
-        drank = true; if (ctRank() < 2) S.coins -= P(2); renderSheet();
+        drank = true; if (ctRank() < 2 && !lamps) S.coins -= P(2); renderSheet();
         const left = relicsLeft(), unbroken = ROAD_GANGS.filter(G => roamRegions().includes(G.r) && !bn().beat[G.id]);
         if (unbroken.length && d(2) === 1) { const G = unbroken[d(unbroken.length) - 1]; await say("Somebody at the bar has a story about " + G.n + ", who work the roads round " + REGIONS[G.r] + ". " + G.how); }
         else await say(left.length ? "Somebody at the next table has seen something odd: " + RELICS[left[d(left.length) - 1]].hint + ". They say it like a joke. It isn't one." : cascadeOn() ? "Everybody's talking about the Cascades: companies of the drowned seen marching on the old roads, captains in green plate, nobody knows whose." : "Nobody has much news. The roads are quieter than they were, and that suits everybody.");
@@ -7790,7 +7970,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (S.dull) { S.dull = false; renderSheet(); await say("They hone the pits out of the axe, too."); }
     if (S.stoleClean) await say("About an hour after your talk, Varro notices what you took, and only laughs. \"Keep it. Anyone who can rob me in my own house has earned it.\"");
     await say("Varro does not let you leave. He never says so. There is always another dinner, another story, another map he wants to show you, and every time you mention the door, a storm comes up over the fen, or the stairs are flooded, or he simply isn't anywhere to be found. You eat well. You sleep in a bed with velvet curtains.");
-    await fullHeal("Two weeks of rest.");
+    calDawn(14); await fullHeal("Two weeks of rest.");
     await say("Fourteen days after you arrived, Varro wakes you before dawn. He is dressed for travel, and he doesn't smile. \"You should go now,\" he says. \"Today. East, toward the castle, or back to the coast. I don't mind which. But go.\"", "voice");
     await say("You ask him why. He won't say. He walks you up the black stair and out of the split trunk into the grey morning, and when you turn around to ask again, the split in the tree is closed, and there is only bark.");
     if (!S.writ) {
@@ -7847,7 +8027,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say("\"Which of us will you help?\" they ask, in one voice.", "voice");
       light("dusk");
       await say("You wake at dawn rested, and certain that something is watching the hollow.");
-      await fullHeal("A long rest.");
+      calDawn(); await fullHeal("A long rest.");
       S.dream = true;
       await mech("The dream sharpens you: advantage on initiative in the next scene.", "loot");
     } else {
@@ -12125,6 +12305,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
 
   async function hkSleep(room) {
+    calDawn();
     if (hasSkill("herb") && S.saltroot > 0) {
       const c = await choose([{ key: "brew", label: "Brew saltroot tea before you sleep", tag: "Herbcraft · Wisdom DC 12" }, { key: "no", label: "Just sleep", plain: true }]);
       if (c === "brew") {
@@ -12982,6 +13163,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   // The Lidless rent darkness by the bell: a shade-house is a room roofed with bought shadow.
   async function shadeRest(paid) {
+    calDawn();
     const N = nk();
     let h = paid ? d(6) + d(6) : d(4);
     if (N.shade <= 0) h = 0; else if (N.shade === 1) h = Math.max(1, Math.floor(h / 2));
@@ -20757,6 +20939,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await mech(roster());
       await pick(true);
       if (o.edge) st.adv = true;
+      if (o.night) await foeSwing(F, st, { atk: baseAtk + 1, n: 1, s: 8, label: bnName(G, "shot") + " shoots first, out of the dark", why: "A bolt you never saw comes out of the dark and into you." });
       if (tr === "ambush" && !o.spotted) {
         await say(bnName(G, "knife") + " was already behind you.");
         await foeSwing(F, st, { atk: baseAtk + 1, n: 1, s: 8, label: bnName(G, "knife") + " strikes first", why: "A blade comes out of nowhere and into you." });
@@ -20861,7 +21044,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     jSave();
   }
   // story: met between chapters (you can pay the toll or slip away); otherwise on the roads back.
-  async function bnMeet(regs, { story = false, label } = {}) {
+  async function bnMeet(regs, { story = false, label, night = false } = {}) {
     if (!S.axe) return;
     const B = bn(), { G, grudge } = bnPick(regs), H = HAULS[d(HAULS.length) - 1];
     B.met[G.id] = (B.met[G.id] || 0) + 1;
@@ -20870,7 +21053,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const back = document.body.dataset.light;
     const h = el("div", "part-head sub", '<span class="num">' + (label || "The road between kingdoms") + "</span><h2>" + G.n + "</h2>");
     scrollNext = true; add(h);
-    light("dusk");
+    light(night ? "moon" : "dusk");
+    if (night) await say(["Night on the Blood-bought Roads, and not much of a moon. The gangs like it that way.", "It's full dark, and the road is a pale line between black hedges. Something on it isn't a hedge.", "The milestones go by in the dark like teeth. Between two of them, somebody has put out their fire in a hurry."][d(3) - 1]);
     if (grudge) await say("You know that mark. You let them go, last time, for a cut of what they had. They've spent it on better steel, and they've been asking after you on every road since.");
     else await say(BN_INTROS[d(BN_INTROS.length) - 1]);
     await say(G.how);
@@ -20878,11 +21062,26 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     add(el("div", "", gangCard(G)));
     if (isNew) await mech("New mark in your gang ledger: " + G.n + ". Your journal keeps it.", "loot");
     await say("Behind them, half under a tarpaulin, there's " + H.n + ".");
-    const tier = bnTier(), callDc = 17 - 2 * tier + (grudge ? 3 : 0), toll = Math.max(3, Math.floor(S.coins / 10));
+    // A night ambush: see them in the dark, or they're on you before you can talk, pay or walk away.
+    if (night) {
+      tip("calendar");
+      const r = await check({ label: "Perception check (in the dark)", mod: 2 + (hasMark("roadwise") ? 2 : 0) + (S.lantern || S.torch ? 2 : 0), dc: 14, cta: "Look" });
+      if (!r.ok) {
+        await say("You don't see them until they're already moving: four shapes off the verge at once, and " + bnName(G, "shot") + " already drawing.");
+        await mech("A night ambush. No talking, no toll and no way round: they strike first. Win, and the night's take is a quarter fatter.", "hurt");
+        const F = await bnFight(G, { grudge, night: true, spotted: true });
+        light(back);
+        if (F.fled || F.overtaken) { await say("You get clear of them in the dark, somehow. They keep the cart, and the road."); return; }
+        await bnWon(G, H, { grudge, night: true });
+        return;
+      }
+      await say("You see them first, a glint of steel at the edge of the road, and they know you have. Nobody's ambushing anybody now.");
+    }
+    const tier = bnTier(), callDc = 17 - 2 * tier + (grudge ? 3 : 0), toll = calToll(Math.max(3, Math.floor(S.coins / 10)));
     const c = await choose([
       { key: "fight", label: "Fight them", tag: "four of them · Lv " + lv() + (grudge ? " · with a grudge" : "") },
       { key: "call", label: "Call them out by name", tag: "Intimidation DC " + callDc + " · " + bnTitle(), plain: true, show: tier >= 1 },
-      { key: "toll", label: "Pay their toll", tag: toll + " gold", plain: true, show: S.coins >= toll },
+      { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : ""), plain: true, show: S.coins >= toll },
       { key: "slip", label: "Slip off the road and round them", tag: "Stealth DC 14", plain: true, show: story },
       { key: "leave", label: "Turn back the way you came", plain: true, show: !story }
     ]);
@@ -20917,14 +21116,15 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const F = await bnFight(G, { grudge, spotted: spotted || den, frac: den ? 0.75 : 1, edge: den });
     light(back);
     if (F.fled || F.overtaken) { await say("You get clear of them, somehow. They let you go, laughing, and keep the cart."); return; }
-    await bnWon(G, H, { grudge });
+    await bnWon(G, H, { grudge, night });
   }
-  async function bnWon(G, H, { grudge = false } = {}) {
+  async function bnWon(G, H, { grudge = false, night = false } = {}) {
     const B = bn(), first = !B.beat[G.id];
     B.beat[G.id] = (B.beat[G.id] || 0) + 1;
     if (grudge) B.beat[G.id + ":grudge"] = 1;
     bnLog(G, true);
-    await bnHaul(G, H, grudge ? 1.5 : 1);
+    if (night) cal().night = (cal().night || 0) + 1;
+    await bnHaul(G, H, (grudge ? 1.5 : 1) * (night ? 1.25 : 1));
     const arms = 1 + (H.arms ? 1 : 0) + (grudge ? 1 : 0);
     for (let i = 0; i < arms; i++) { const w = bnWeapon(G, H.better || grudge); if (w) await mech("<span>Found on them: " + w + "</span>", "loot find"); }
     const bounty = Math.round((10 + lv()) * (bnLean() === "Roadwarden" ? 1.25 : 1) * (pzHunter() ? 1.2 : 1));
@@ -20961,7 +21161,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (d(100) > BN_STORY_CHANCE) return;
     const a = regAt(k - 1), b = regAt(k);
     if (!a || !b) return;
-    await bnMeet([a, b], { story: true, label: "The road between kingdoms · " + REGIONS[a] + " to " + REGIONS[b] });
+    await bnMeet([a, b], { story: true, night: d(3) === 1, label: "The road between kingdoms · " + REGIONS[a] + " to " + REGIONS[b] });
   }
   const BN_STORY_CHANCE = 45;
   // On the roads back: the road between two kingdoms you've cleared.
@@ -21008,8 +21208,8 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     achCheck();
     roamFight = true;
     try {
-      const roll = d(20);
-      if (roll <= 8) await bnMeet([a, b], { label });
+      const roll = d(20), night = calNight() && !calFairOn("lamps");
+      if (roll <= (night ? 12 : 8)) await bnMeet([a, b], { label, night });
       else if (roll <= 10) await evGangWar([a, b], label);
       else if (roll <= 15) { const k = T.kind[d(T.kind.length) - 1]; await ({ monsters: evMonsters, mercs: evEscort, conquered: evReclaim, tolls: evToll, chase: evChase }[k])([a, b], label); }
       else if (roll === 16) await evChase([a, b], label);
@@ -21018,7 +21218,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       else await meetBeast(d(2) === 1 ? a : b, { roam: true });
     } finally { roamFight = false; }
   }
-  const evHead = (label, title) => { const h = el("div", "part-head sub", '<span class="num">' + label + "</span><h2>" + title + "</h2>"); scrollNext = true; add(h); light("dusk"); };
+  const evHead = (label, title) => { const h = el("div", "part-head sub", '<span class="num">' + label + "</span><h2>" + title + "</h2>"); scrollNext = true; add(h); light(S.roam && calNight() ? "moon" : "dusk"); };
   async function evCart(regs, label) {
     evHead(label, "A cart in the ditch");
     await say("Somebody got here before you. A cart lies on its side in the ditch with its load gone and a gang's mark painted on the tailboard, still wet. Whoever did it left in a hurry, and left a little behind.");
@@ -21114,17 +21314,18 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     bn().met[G.id] = (bn().met[G.id] || 0) + 1; bnLog(G, false);
     await say("The road crosses a gorge on a rope bridge, and " + G.n + " have taken the bridge. There's a table at this end, and a ledger, and " + bnName(G, "wall") + " sitting behind it with a meat-cleaver, and a sign nailed to the post: <i>TOLL. COIN OR BLOOD.</i>");
     add(el("div", "", gangCard(G)));
-    const coin = Math.max(10, Math.floor(S.coins / 5));
+    const coin = calToll(Math.max(10, Math.floor(S.coins / 5))), wint = calWinter();
+    if (wint) await say("There's a second sign under the first, newer: <i>WINTER RATES.</i>");
     const c = await choose([
-      { key: "coin", label: "Pay in coin", tag: coin + " gold", show: S.coins >= coin },
-      { key: "blood", label: "Pay in blood", tag: "a cut across the palm, and then some · about a quarter of your HP", plain: true },
+      { key: "coin", label: "Pay in coin", tag: coin + " gold" + (wint ? " · the winter rate" : ""), show: S.coins >= coin },
+      { key: "blood", label: "Pay in blood", tag: "a cut across the palm, and then some · " + (wint ? "about a third of your HP, at the winter rate" : "about a quarter of your HP"), plain: true },
       { key: "duel", label: "Challenge " + bnName(G, "wall") + " to a duel for the bridge", tag: "one on one · win, and the toll-box is yours", plain: true },
       { key: "ropes", label: S.grapple ? "Put Threadfang's line on the far side and cut the bridge out from under them" : "Get round and cut the bridge ropes", tag: S.grapple ? "half of them go into the gorge" : "Athletics DC 15 · half of them go into the gorge", plain: true },
       { key: "fight", label: "Fight all four of them for it", plain: true }
     ]);
     if (c === "coin") { S.coins -= coin; renderSheet(); await say(bnName(G, "wall") + " writes your name in the ledger, wrong, and waves you over."); return; }
     if (c === "blood") {
-      const n = Math.max(2, Math.floor(S.hp / 4)); S.hp = Math.max(1, S.hp - n); renderSheet();
+      const n = calToll(Math.max(2, Math.floor(S.hp / 4))); S.hp = Math.max(1, S.hp - n); renderSheet();
       await say(bnName(G, "wall") + " draws the cleaver across your palm, and holds your hand over a bowl until the bowl is as full as the toll says it has to be. \"Paid,\" says " + bnName(G, "wall") + ". \"The road remembers.\"");
       await mech("You pay the blood-toll: " + n + " HP.", "hurt");
       return;
@@ -21595,7 +21796,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const last = DEMO_END || PARTS.length;
     for (let i = fromPart; i < last; i++) {
       S.part = i; digRefill(i);
-      if (i > fromPart) { await spoilsTurnIn(); await workbench(); }
+      if (i > fromPart) { await spoilsTurnIn(); await workbench(); const k = CHAPTERS.findIndex(c => c.from === i); if (k > 0) await calJourney(k); else calPass(1); }
       await coBefore(i);
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
