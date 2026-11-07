@@ -768,6 +768,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .recap-name small { font-weight: 400; color: var(--muted); letter-spacing: .06em; }
 .recap-ch ul { margin: 0; padding-left: 1.2em; display: grid; gap: 3px; font-size: .95rem; line-height: 1.45; }
 .recap-now { margin: 0; }
+.pr-hint { margin: 0; color: var(--gold); font-size: .85rem; }
 .name-form { display: grid; gap: 8px; margin: 0; }
 .name-form input { font: inherit; font-size: 1.1rem; padding: 10px 12px; border-radius: 4px; border: 1px solid #5c4d27; background: var(--bg); color: var(--ink); width: 100%; max-width: 360px; box-sizing: border-box; }
 .name-form input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
@@ -1315,6 +1316,31 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true, lv: 3, xp: 0
   });
   let S = fresh();
+
+  // ---------- how people speak of you ----------
+  // S.pr is "he", "she" or "they", chosen on the name card (an older save is asked on Continue;
+  // until then it reads as "they"). Story text carries tokens that el() resolves as each line is
+  // shown, so any say(), voice(), mech() or choice label can use them:
+  //   {he} {him} {his} {hers} {himself} {he's} {he'd} {he'll}, and capitalised {He} {His} ...
+  //   {g:man|woman|someone}  picks the he|she|they wording (for nouns, titles and verbs).
+  const PRONOUNS = {
+    he: { label: "He / him", he: "he", him: "him", his: "his", hers: "his", himself: "himself", "he's": "he's", "he'd": "he'd", "he'll": "he'll" },
+    she: { label: "She / her", he: "she", him: "her", his: "her", hers: "hers", himself: "herself", "he's": "she's", "he'd": "she'd", "he'll": "she'll" },
+    they: { label: "They / them", he: "they", him: "them", his: "their", hers: "theirs", himself: "themselves", "he's": "they're", "he'd": "they'd", "he'll": "they'll" }
+  };
+  const PR_IX = { he: 0, she: 1, they: 2 };
+  const prKey = () => PRONOUNS[S && S.pr] ? S.pr : "they";
+  const gx = (he, she, they) => [he, she, they][PR_IX[prKey()]];
+  const PR_RE = /\{(g:[^{}]*|[Hh](?:e|im|is|ers|imself|e's|e'd|e'll))\}/g;
+  function prn(html) {
+    if (typeof html !== "string" || html.indexOf("{") < 0) return html;
+    const P = PRONOUNS[prKey()];
+    return html.replace(PR_RE, (m, t) => {
+      if (t.startsWith("g:")) { const w = t.slice(2).split("|"); return w[PR_IX[prKey()]] ?? w[w.length - 1]; }
+      const v = P[t.toLowerCase()];
+      return t[0] === "H" ? v[0].toUpperCase() + v.slice(1) : v;
+    });
+  }
 
   // Tip jar: Adrian's Stripe Payment Link.
   const TIP_URL = "https://buy.stripe.com/00w7sL4wG4SSbtkePE2Nq00";
@@ -2566,7 +2592,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     }
     return node;
   }
-  function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+  function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = prn(html); return n; }
   async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); await wait(220); }
   const voice = (html) => say(html, "voice spirit");
   const mech = (html, kind) => say(html, "mech" + (kind ? " " + kind : ""));
@@ -4728,15 +4754,54 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const NAME_MAX = 20;
   const cleanName = (t) => String(t || "").replace(/[<>&"{}]/g, "").replace(/\s+/g, " ").trim().slice(0, NAME_MAX);
   const nm = (withName, without = "") => S.name ? withName.split("{N}").join(esc(S.name)) : without;
+
+  // ---------- how people speak of you: the cards (PRONOUNS and prn() are up by fresh()) ----------
+  const prRow = () => '<div class="bg-row pr-row"><span class="stat-label">How people speak of you</span><div class="bg-opts">' +
+    Object.entries(PRONOUNS).map(([k, v]) => '<button type="button" class="bg-opt" data-v="' + k + '" aria-pressed="false">' + v.label + "</button>").join("") + "</div></div>";
+  // Wires the pronoun buttons in a card. Returns a getter for the pick ("" until one is chosen).
+  function prWire(box, onPick) {
+    let pick = "";
+    box.querySelectorAll(".pr-row .bg-opt").forEach(b => b.onclick = () => {
+      pick = b.dataset.v;
+      box.querySelectorAll(".pr-row .bg-opt").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+      if (onPick) onPick(pick);
+    });
+    return () => pick;
+  }
+  // For a save that already has a name but was made before pronouns: one small card on Continue.
+  function askPronoun() {
+    return new Promise((done) => {
+      const box = el("section", "recap namecard",
+        '<div><span class="num">One thing first</span><h3>How do people speak of you?</h3></div>' +
+        "<p class='recap-now'>The people you meet talk about you when you're out of the room, and sometimes when you aren't. Pick the words they'll use from here on.</p>" +
+        prRow() + '<div class="actions"><button class="primary" type="button" disabled>Carry on</button></div>');
+      const goB = box.querySelector(".primary");
+      const got = prWire(box, () => { goB.disabled = false; });
+      goB.onclick = () => {
+        S.pr = got() || "they";
+        box.querySelectorAll("button").forEach(x => x.disabled = true);
+        box.remove();
+        save(); renderSheet();
+        done();
+      };
+      scrollNext = true;
+      add(box);
+    });
+  }
   function askName(isNew) {
     return new Promise((done) => {
       const box = el("section", "recap namecard",
         '<div><span class="num">' + (isNew ? "Before you go down" : "One thing first") + "</span><h3>What do they call you?</h3></div>" +
         "<p class='recap-now'>" + (isNew ? "Names get used down here. A thief will try yours on for size, a clerk will write it in a ledger, and one day a judge will read it off a warrant." : "You've come this far without a name. Give your adventurer one, and the people you meet from here on will use it.") + "</p>" +
         '<form class="name-form"><label class="stat-label" for="nameIn">Your adventurer\'s name</label><input id="nameIn" type="text" maxlength="' + NAME_MAX + '" autocomplete="off" spellcheck="false" placeholder="A name to carve on a stone">' +
+        (S.pr === undefined ? prRow() + '<p class="pr-hint" hidden>Pick how people speak of you first.</p>' : "") +
         '<div class="actions"><button class="primary" type="submit">' + (isNew ? "Go down" : "Carry on") + '</button><button class="ghost" type="button">Stay nameless</button></div></form>');
       const form = box.querySelector("form"), input = box.querySelector("input"), skip = box.querySelector(".ghost");
+      const asksPr = S.pr === undefined, hint = box.querySelector(".pr-hint");
+      const pr = asksPr ? prWire(box, () => { hint.hidden = true; }) : () => S.pr;
       const finish = (name) => {
+        if (asksPr && !pr()) { hint.hidden = false; return; }
+        if (asksPr) S.pr = pr();
         S.name = cleanName(name);
         box.querySelectorAll("button, input").forEach(x => x.disabled = true);
         box.remove();
@@ -4744,7 +4809,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (S.name) stat("named", "Named their adventurer");
         done();
       };
-      form.onsubmit = (e) => { e.preventDefault(); const v = cleanName(input.value); if (!v) { input.focus(); input.placeholder = "Type a name, or stay nameless"; return; } finish(v); };
+      form.onsubmit = (e) => { e.preventDefault(); if (asksPr && !pr()) { hint.hidden = false; return; } const v = cleanName(input.value); if (!v) { input.focus(); input.placeholder = "Type a name, or stay nameless"; return; } finish(v); };
       skip.onclick = () => finish("");
       scrollNext = true;
       add(box);
@@ -5048,7 +5113,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await say({
         odran: "In the morning Odran holds out the contract you signed, and tears it in half, slowly, because he's never torn anything quickly in his life. \"I stand in front,\" he says. \"Of you. No charge.\"",
         wenna: "In the morning Wenna screws your contract into a ball and shoots it off a fence post at sixty yards. \"I'm not getting paid any more,\" she says. \"Which is idiotic. Don't tell anyone.\"",
-        caddock: "In the morning Mother Caddock lights her pipe with your contract. \"I've buried a lot of people who hired me,\" she says. \"I'd rather not bury you. Come on.\""
+        caddock: "In the morning Mother Caddock lights her pipe with your contract. \"I've buried a lot of people who hired me,\" she says. \"I'd rather not bury you. Come on, {g:lad|lass|pet}.\""
       }[m], "voice");
       await mech(MERCS[m].name + " has sworn to you, and travels with you for free from now on. " + MERCS[m].perk, "loot");
       return;
@@ -5733,7 +5798,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     heading("I", "The Pathway");
     light("dusk");
     await say("For two days you have walked the ceremonial pathway, pausing only to eat a few bites from your pack. The labyrinth waits somewhere below. On the road, two hooded strangers step into your path.");
-    await say("\"Turn back,\" one says. \"Nothing that goes down there comes back up.\"", "voice");
+    await say("\"Turn back, {g:brother|sister|traveller},\" one says. \"Nothing that goes down there comes back up.\"", "voice");
     const c = await choose([
       { key: "coins", label: "Smile and press three coins into their palms" },
       { key: "past", label: "Brush past them in silence" }
@@ -6117,7 +6182,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     heading("VIII", "The Hollow Hands");
     light("torch");
     await say("Her name is Sable, and the four of them call themselves the Hollow Hands. They are thieves, and not apologetic about it.");
-    if (S.name) await say("\"And you?\" she says. You tell her. \"" + esc(S.name) + ",\" Sable repeats, trying it on like a borrowed coat. \"That'll do. It sounds like somebody who comes back up.\"", "voice");
+    if (S.name) await say("\"And you?\" she says. You tell her. \"" + esc(S.name) + ",\" Sable repeats, trying it on like a borrowed coat. \"That'll do. It sounds like {g:a man|a woman|somebody} who comes back up.\"", "voice");
     await say("<b>Sable</b> leads them: a talker and a planner who wears that coin like a trophy. <b>Grell</b>, the shorter stranger from the road, is broad and silent and picks his teeth with a lockpick. <b>Ysolde</b> is an alchemist with stained fingers and a bandolier of corked glass vials that clink when she moves. <b>Tobbin</b> is barely more than a boy. He never stops fidgeting with a deck of cards, and he watches your axe the whole time.");
     await say("As night falls and the cold comes in, Sable tells you why they stood on that road.");
     await say("\"Every few years someone goes into the labyrinth. Nobody comes out. We wait by the old well anyway, because the stories say that one day someone will, carrying the warden's axe.\" She nods at the gems. \"And there it is.\"", "voice");
@@ -6695,7 +6760,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("gems");
     await say("A figure steps out of the dark. He is tall, taller than you, and the shadows hang off him like a cloak until he steps into the lamplight. Then you see his clothes: violet velvet slashed with black silk, a high collar, rings on every finger. His face is lean and pale and amused. Grey runs through his black hair, and his eyes are the color of the water outside.");
     light("torch");
-    await say("\"Varro Duskwane,\" he says, with a little bow. \"The Violet Baron of the Hushfen, though there's nobody left to call me that but the frogs. My apologies for the welcome. The house defends itself. I've had a great deal of uninvited company lately. Now. Why are you in my home?\"", "voice");
+    await say("\"Varro Duskwane,\" he says, with a little bow. \"The Violet Baron of the Hushfen, though there's nobody left to call me that but the frogs. My apologies for the welcome, {g:sir|madam|my friend}. The house defends itself. I've had a great deal of uninvited company lately. Now. Why are you in my home?\"", "voice");
     if (stole && !clean) await say("He holds out his hand until you give it back.");
     S.varroCaught = stole && !clean;
     S.stoleClean = clean;
@@ -7137,7 +7202,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("torch");
     await say("The tower stair goes up and up, and the walls run with water. At the top is a round room with a single window, and in the window, the lantern. It's fixed to the face of a great round shield, and the shield is on the arm of a knight.");
     await say("Ser Oswin Harrowgate is green with lakeweed. Water runs out of the joints of his armor when he moves. Behind the visor there's nothing but dark and two small points of light. He doesn't draw his sword. He doesn't have to: he is standing in the only door down to the vault.");
-    await voice("\"Halt,\" he says. His voice is very tired, and very kind. \"None pass until the bounty on the Blackjackal is paid. I swore it to my king. I have kept that oath a hundred years.\"");
+    await voice("\"Halt, {g:ser|my lady|traveller},\" he says. His voice is very tired, and very kind. \"None pass until the bounty on the Blackjackal is paid. I swore it to my king. I have kept that oath a hundred years.\"");
     const adv = !!S.lantern;
     if (adv) {
       await say("Then he sees what you're carrying, and goes very still.");
@@ -7175,7 +7240,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       await mech("Ser Oswin has AC 15 and 27 HP. Each miss, his sword finds you: 1d8 damage.");
       await hitsFight({ need: 3, ac: 15, sides: 8, type: "slashing", missWhy: "His old sword finds the gap in your guard.", foe: "the knight", name: "Ser Oswin, the Lantern Knight",
         hitLines: ["The axe rings off his helm, and lake water sprays out of the visor.", "You catch him under the shield, and he staggers back a step.", "The third blow lands."] });
-      await voice("Oswin goes down on one knee. \"Well struck,\" he says. \"I am so tired.\"");
+      await voice("Oswin goes down on one knee. \"Well struck, {g:ser|my lady|friend},\" he says. \"I am so tired.\"");
     }
     await say("However it ends, Oswin unfastens the lantern from his shield and holds it out to you." + (S.lantern ? " You hold up his old lamp, and he lights it from this one, and the two flames burn as one." : ""));
     S.lantern = true; renderSheet();
@@ -8427,7 +8492,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const c = await choose(opts);
     if (c === "pay") {
       S.coins -= 10; renderSheet();
-      await say("The taller one weighs the purse and tilts his helm away from you. \"Sun's in my eyes,\" he says. \"Couldn't see a thing.\"", "voice");
+      await say("The taller one weighs the purse and tilts his helm away from you. \"Sun's in my eyes, {g:sir|miss|friend},\" he says. \"Couldn't see a thing.\"", "voice");
     } else {
       let fight = c === "fight";
       if (!fight) {
@@ -8748,7 +8813,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (me >= 2) {
       S.wonDrink = true; S.coins += 15; renderSheet();
       await mech("You win 15 gold.", "loot");
-      await say("When Brannoch can stand again, he hugs you with arms like warm iron. \"My niece Dilly sits on the Assize jury tomorrow,\" he says. \"Commons bench. I'll tell her you're a good one.\"", "voice");
+      await say("When Brannoch can stand again, he hugs you with arms like warm iron. \"My niece Dilly sits on the Assize jury tomorrow,\" he says. \"Commons bench. I'll tell her you're a good {g:man|woman|one}.\"", "voice");
       await juryShift("D", 1, "Brannoch will vouch for you.");
     } else await mech("Brannoch wins. You lose your stake, and the room spins until morning.", "hurt");
   }
@@ -9536,7 +9601,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   async function meetTyra() {
     await say("There's a woman with her boots up on the next table, peeling a pear with a knife much too long for peeling pears. Dark hair cut short with something sharp, a leather coat with more pockets than coat, and a way of sitting that says she could be across the room before you finished standing.");
-    await say("\"Tyra Quillon,\" she says, without getting up. \"Like the crossguard. My mother made swords.\" She eats a slice of pear off the knife. \"Marrit says you're " + nm("{N}, ", "") + "the one on the posters. The posters don't do you justice. The axe, though, they got right.\"", "voice");
+    await say("\"Tyra Quillon,\" she says, without getting up. \"Like the crossguard. My mother made swords.\" She eats a slice of pear off the knife. \"Marrit says you're " + nm("{N}, ", "") + "the one on the posters. The posters don't do you justice. {g:You're better-looking than the man they drew|You're prettier than the woman they drew|You're better-looking than whoever they drew}. The axe, though, they got right.\"", "voice");
     await say("\"I do odd jobs. Collecting, mostly: debts, keys, cats, things people left in places they shouldn't have. I'm cheap, I'm good, and I'm bored. Two days till they burn you? That's the most interesting thing that's happened in this city all year.\"", "voice");
     const c = await choose([
       { key: "deal", label: "\"Then you're hired.\"" },
@@ -10923,7 +10988,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("sun");
     await say("Ashgate is white. Salt dust lies on every roof and in every gutter, and the townsfolk have white eyebrows from it. Half the doors in the high street are chalked with a cross and a circle. The doors with the circle are nailed shut.");
     await say("In the square there is a board as tall as a man, roofed like a little house against the weather, nailed so thick with notices that the wood doesn't show. Painted across the top: <b>THE RECKONING BOARD. CONTRACTS PAID ON PROOF.</b> A woman sits under it on an upturned barrel with a patch over one eye and a pipe in her teeth.");
-    await say("\"Jessamy Rook,\" she says, before you ask. \"I keep the board. You've got the look of somebody who needs coin and doesn't mind how. Good. I've got more names than hunters.\"", "voice");
+    await say("\"Jessamy Rook,\" she says, before you ask. \"I keep the board. You've got the look of {g:a man|a woman|somebody} who needs coin and doesn't mind how. Good. I've got more names than hunters.\"", "voice");
     await say("You ask about the chalk on the doors.");
     await say("\"The Bloom.\" She taps her pipe out on the barrel. \"The <b>Hesk</b> carry it. You've not heard of the Hesk. No, you wouldn't. They live in the mountain. Tall as a door, made of shell, wings like dirty glass that are too small to fly with. They sleep seventeen years at a time in stone cradles, and wake for one summer, and sing, and trade, and go back down. Last time was thirteen years ago. They weren't due for four more.\"", "voice");
     await say("\"Something woke them early. Now they won't go back to sleep, and they're not trading. They come down at night and take people. And they don't forge their blades. They <i>sing</i> them. They hum into a fistful of white fungus, the Bloom, and the hum shapes it, and it hardens like bone. Get cut by one, and the cut goes pale round the edges, and then you go pale round the edges.\"", "voice");
@@ -11133,7 +11198,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const lines = [
       "Tyra comes back from somewhere with salt on her boots and a key you haven't seen before. \"Granary,\" she says. \"Don't ask me what was in the granary. Number forty-two.\"",
       "Tyra sits on the edge of the horse-trough in the square and watches the mountain. \"In Sulmara,\" she says, \"when something wants to kill you, at least it's got the manners to be a person.\"",
-      "Tyra hands you a hot pie wrapped in a cloth and doesn't say where it came from. \"You look like a man about to go into a mountain,\" she says. \"Eat something first.\""
+      "Tyra hands you a hot pie wrapped in a cloth and doesn't say where it came from. \"You look like {g:a man|a woman|somebody} about to go into a mountain,\" she says. \"Eat something first.\""
     ];
     await say(lines[day - 1]);
   }
@@ -12163,7 +12228,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("<b>The Blackjackal is wearing someone</b> in the city. Each clue you find clears one suspect. Find three, and you'll know who.");
     await say("\"Four people in Ammaret could hide him,\" Sabeth says. \"The four who handle shadows, or the light, every bell. Myself. Oriel Vane, who cuts shadows. Master Tollan of the Hour-House, who winds the lens. And Nim, the market's assayer, who weighs every shadow sold.\" She doesn't smile. \"You may suspect me. I would.\"", "voice");
     if (S.nk.hv.bowed) await say("\"Keep the mask,\" she adds. \"I don't trust my own hands with it, and neither should you.\"", "voice");
-    await say("Outside the temple, someone is waiting in the shade of the dome: four Lidless in grey hoods, holding long hooked shutter-poles. \"Give us the mask, stranger,\" the first says, gently. \"We only want to sleep.\"", "voice");
+    await say("Outside the temple, someone is waiting in the shade of the dome: four Lidless in grey hoods, holding long hooked shutter-poles. \"Give us the mask, {g:brother|sister|stranger},\" the first says, gently. \"We only want to sleep.\"", "voice");
     const c2 = await choose([
       { key: "fight", label: "\"No.\"" },
       { key: "talk", label: "\"Sleep isn't what he's offering you.\"", tag: "Persuasion DC 14", plain: true }
@@ -12312,7 +12377,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!N.hv.oriel) {
       N.hv.oriel = true;
       await say("Oriel Vane's cutting-room is down three steps under a bridge: the darkest room you've seen in Ammaret, hung with drying shadows like a tanner's shop. Oriel is long-boned and quick, with bone shears on a cord around her neck and a black needle stuck through her collar.");
-      await say("\"The axe-carrier,\" she says. \"Everyone in the city's talking about your shadow. It's a very good shadow. If you ever want to sell it, sell it to me, not those vultures in the arcade.\" She sniffs. \"I could do with a favour, though. There's a loose shade in the drainage under the Weavers' Square. Feral. It's been taking shadows off sleeping children. Bring it to me in this,\" a jar of black glass, \"and I'll make you a needle no shearer can get past.\"", "voice");
+      await say("\"The axe-carrier {himself},\" she says. \"Everyone in the city's talking about your shadow. It's a very good shadow. If you ever want to sell it, sell it to me, not those vultures in the arcade.\" She sniffs. \"I could do with a favour, though. There's a loose shade in the drainage under the Weavers' Square. Feral. It's been taking shadows off sleeping children. Bring it to me in this,\" a jar of black glass, \"and I'll make you a needle no shearer can get past.\"", "voice");
     } else await say("Oriel looks up from her stitching. \"Got my shade yet?\"");
     const c = await choose([{ key: "go", label: "Go down into the drains after the loose shade" }, { key: "no", label: "Not now", plain: true }]);
     if (c === "no") { N.hv.oriel = true; return; }
@@ -13125,7 +13190,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     await mech("<b>Your stones.</b> Watch your footing as the Lift rises. Kinstones can be bought and sold in the market, and some things you do down here will cost you stones or give you some.");
     await mech("<b>Time</b> runs in two tides of three turns: Slack Water, the Flood, and the Ebb, when the knot-houses open for sleep.");
     await say("Something drops past the edge of the square like a falling leaf, slowly, and stops in the air ten feet above Mother Kell's chair. A woman, lean and grey, with her hair cropped to the scalp and no stones on her at all. She has a long cord in one hand, and on the end of it, swinging, a knot of smooth dark stones. Somebody's stones. Her own dead.");
-    await say("\"Mother,\" she says, warmly. \"You've found a heavy.\" She turns in the air to look at you upside down. \"I'm Corwen. I read the tides. You've got something warm in your " + (S.ember ? "chest" : U.seed ? "arms" : "pack") + ", heavy. I can smell it from here. Don't put it back where it came from. Please. Our dead have waited a thousand years on that cold face, and the wardens nailed the lid down on them.\"", "voice");
+    await say("\"Mother,\" she says, warmly. \"You've found a heavy. Look at {him}.\" She turns in the air to look at you upside down. \"I'm Corwen. I read the tides. You've got something warm in your " + (S.ember ? "chest" : U.seed ? "arms" : "pack") + ", heavy. I can smell it from here. Don't put it back where it came from. Please. Our dead have waited a thousand years on that cold face, and the wardens nailed the lid down on them.\"", "voice");
     if (vaelricSpeaks()) await voice("\"She believes it,\" Vaelric says. \"That's the dangerous kind.\"");
     await say("\"I'm not asking you to help,\" Corwen says. \"Just don't stop us. At the end of the second tide, I'm going down to the Heartfall, and I'm pulling the last two pins, and we're all going home.\" She smiles at the Anchor-Mother. \"Even you, Mother. Even if we have to carry you.\"", "voice");
     await say("She rises away into the dark between the chains, and as she goes, three of her Unmoored drop out of the roof-roots onto the walkway behind you, swinging their cords.");
@@ -14272,7 +14337,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (vaelricSpeaks()) await voice("\"I've seen this before,\" Vaelric says quietly. \"Not here. Everywhere. It always looks the same.\"");
     await say("You're in the city for less than an hour before the garrison picks you up. Four soldiers in grey cloaks, thin as rakes, with their spears held as though they weigh too much. \"You came in from outside,\" says their sergeant, a lean grey-haired woman with a broken nose. \"Nobody comes in from outside. The Steward will want to see you.\"", "voice");
     await say("The <b>Steward's Hall</b> is on the sixth terrace, under a roof of glass gone green with age. In the middle of it, at a long table covered with ration lists, sits a tall woman in a gardener's apron, with dirt under her nails and a chain of office round her neck. She looks as if she hasn't slept in twelve days.");
-    await say("\"Nerys Aldane,\" she says. \"High Steward of Rahdaria, for what that's worth this week. Sit down. Sergeant Holt says you came in from outside. Through them.\" She looks at your axe. \"Nobody does that. So either you're one of them, or you're the most useful person I've met since they came.\"", "voice");
+    await say("\"Nerys Aldane,\" she says. \"High Steward of Rahdaria, for what that's worth this week. Sit down. Sergeant Holt says you came in from outside. Through them.\" She looks at your axe. \"Nobody does that. So either you're one of them, or you're the most useful {g:man|woman|person} I've met since they came.\"", "voice");
     await say("Around the table sit three more of the Council of Terraces. A broad scarred man in a soldier's coat: <b>Marshal Dace Kerrow</b>, who holds the walls. A sharp grey woman with wet sleeves: <b>Odile Moorcant</b>, Master of Waters, who keeps the screws turning. And a soft, well-fed man in a velvet coat, who's the only person you've seen in Rahdaria who isn't thin: <b>Aurel Vantry</b>, Master of Granaries. He smiles at you. Nobody else does.");
     await say("You tell them what you've seen: the camp, the fleet that rides too low, the people who don't fight in water. You tell them about Ilo Brack's cord, and the second pull in the west.");
     await say("Nerys Aldane listens to all of it. Then she says: \"Twelve days ago, they came up out of the sea. We don't know who they are. They don't speak to us. They have no flag. They dug in round the land side, and their ships closed the bay, and three days later the gardens started to die, terrace by terrace, from the top down. Rahdaria has eighty thousand people, and the gardens fed every one of them. There's flour in the city for nine days. There's been flour in the city for nine days for the last six days.\" She doesn't smile. \"Do you see?\"", "voice");
@@ -14782,7 +14847,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     light("sun");
     if (!R.hv.dawn4) { R.hv.dawn4 = true; await hunger(1, "The fifth dawn, and the flour is gone."); }
     await say("On the morning of the fifth day, Nerys Aldane calls the Council of Terraces to the Steward's Hall, and the people of Rahdaria come up the Stair behind them until the hall is full and the terrace outside it is full and there are people standing in the dead gardens to hear.");
-    await say(S.name ? "\"The Inquirer,\" says the High Steward, \"" + esc(S.name) + ", will tell us what they've found.\" There's a murmur at the name: it's been on every terrace for three days." : "\"The Inquirer,\" says the High Steward, \"will tell us what she's found. Or he. Or they.\" She looks at you. \"I never asked.\" There's a laugh from the back, the first laugh you've heard in Rahdaria.", "voice");
+    await say(S.name ? "\"The Inquirer,\" says the High Steward, \"" + esc(S.name) + ", will tell us what {he's} found.\" There's a murmur at the name: it's been on every terrace for three days." : "\"The Inquirer,\" says the High Steward, \"will tell us what {he's} found.\" She looks at you. \"I never did catch your name.\" There's a laugh from the back, the first laugh you've heard in Rahdaria.", "voice");
     const done = CASES.filter(C => solved(C.id) && C.id !== 6).map(C => C.name);
     await say(done.length ? "You go through it case by case: " + done.join(", ") + ". The hall is very quiet." : "You haven't much to tell them. The hall is very quiet.");
     const ready = CASES.filter(caseReady);
@@ -15816,7 +15881,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
   function bgItems(items) {
     if (!S.bg || !BGS[S.bg]) return;
-    items.push(["bg", "token", "Background: " + BGS[S.bg].name, BGS[S.bg].fx + (S.origin ? " From " + ORIGINS[S.origin] + "." : "") + (S.look ? " " + LOOKS[S.look][0].toUpperCase() + LOOKS[S.look].slice(1) + "." : "")]);
+    items.push(["bg", "token", "Background: " + BGS[S.bg].name, BGS[S.bg].fx + (PRONOUNS[S.pr] ? " People call you " + PRONOUNS[S.pr].label.toLowerCase().replace(" / ", "/") + "." : "") + (S.origin ? " From " + ORIGINS[S.origin] + "." : "") + (S.look ? " " + LOOKS[S.look][0].toUpperCase() + LOOKS[S.look].slice(1) + "." : "")]);
   }
 
   // ---------- Standing: tiers, gains and the discount cap ----------
@@ -17519,7 +17584,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const R = rh(), X = rx();
     if (!X || !X.path) return;
     if (X.path === "military") { grant("wallsheld"); await say("<b>The Walls Held.</b> They'll write it on the Lion Gate: that Rahdaria met the Bathyr in the field and threw them back into the sea. The garrison marches the length of the Stair, and the terraces throw the last of the dried petals from the festival stores at them, because there's nothing else to throw."); }
-    if (X.path === "sabotage") { grant("campapart"); await say("<b>The Camp Came Apart.</b> They'll tell it in the Low Lantern for a hundred years: how the Inquirer pulled the ground out from under an army, a tower and a bridge and a hillside at a time, until there was nothing left for them to stand on."); }
+    if (X.path === "sabotage") { grant("campapart"); await say("<b>The Camp Came Apart.</b> They'll tell it in the Low Lantern for a hundred years: how the Inquirer pulled the ground out from under an army, a tower and a bridge and a hillside at a time, until there was nothing left for them to stand on. In the songs, {he's} nine feet tall."); }
     if (X.path === "diplomacy") { grant("treaty"); await say("<b>The Treaty of the Salt Flats.</b> It's signed on a slab of slate in the land gate: Rahdarian ink, and Bathyr letters pressed in lead beside it. " + (X.turned.length ? X.turned.map(k => GENERALS[k].replace("General ", "")).join(" and ") + (X.turned.length > 1 ? " sign" : " signs") + " for the Bathyr." : "") + " Nobody quite won. Everyone lived."); }
     if (X.out[6] === "truth") await say("Corvus Aldane walks the terraces with his sister in the evenings. People stop and stare, and then, slowly, they stop stopping.");
     if (R.hunger <= 2 && R.blight) {
@@ -18690,6 +18755,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     const go2 = () => S.roam ? roamHub() : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
     const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go2) : go2();
     if (S.name === undefined) askName(!resumeState || S.part === 0).then(go3);
+    else if (S.pr === undefined) askPronoun().then(go3);
     else go3();
   }
   let resetArmed = false;
@@ -18742,7 +18808,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const v = saves[k], card = el("div", "slot" + (v ? "" : " empty") + (v && n === SLOT ? " current" : ""));
       const where = !v ? "Empty" : DEMO_END && v.part >= DEMO_END ? "The end of the demo" : "Part " + roman(v.part + 1) + " · " + NAMES[v.part];
       const info = !v ? "A fresh descent" : "Lv " + (v.lv || LV_MIN) + " · " + v.hp + "/" + v.maxHp + " HP · " + (v.coins || 0) + " gold" + (v.bank && v.bank.open ? " (+" + v.bank.bal + " banked)" : "") + (v.at ? " · " + slotDate(v.at) : "");
-      card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + (v && v.name ? " · " + esc(v.name) : "") + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
+      card.innerHTML = '<div class="slot-info"><span class="slot-num">Slot ' + n + (v && v.name ? " · " + esc(v.name) : "") + (v && PRONOUNS[v.pr] ? " (" + PRONOUNS[v.pr].label.toLowerCase().replace(" / ", "/") + ")" : "") + "</span><b>" + where + "</b><small>" + info + '</small></div><div class="slot-btns"></div>';
       const btns = card.querySelector(".slot-btns");
       const mk = (cls, label) => { const b = el("button", cls, label); b.type = "button"; btns.appendChild(b); return b; };
       if (v) {
