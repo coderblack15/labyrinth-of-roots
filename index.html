@@ -324,6 +324,9 @@ body.intro-open { overflow: hidden; }
 .story .mech.hurt::before { content: "✕"; color: var(--ember); }
 .story .mech.loot { color: var(--gold); }
 .story .mech.loot::before { content: "✦"; }
+.story .mech.echo { color: var(--ink); font-style: italic; }
+.story .mech.echo::before { content: "↺"; color: var(--gold); font-style: normal; }
+.story .mech .echo-k { font-style: normal; color: var(--gold); margin-right: 6px; }
 .story p.dry { font-style: italic; color: var(--muted); }
 .story .tipcard { margin: 0 0 1em; padding: 9px 12px; border: 1px dashed #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: rgba(207,168,80,.06); font-family: var(--label); font-size: .86rem; letter-spacing: .02em; line-height: 1.5; color: var(--ink); }
 .story .tipcard .tip-k { display: block; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: 2px; }
@@ -1931,6 +1934,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       h += "<section><h3>All journeys</h3>" + tiles([[all.length, "begun"], [all.filter(x => x.end === "finished").length, "finished"],
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
+    h += echoSection(rs);
     h += newsSection();
     h += calSection(rs);
     h += stoneSection();
@@ -1961,13 +1965,20 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
-    { ver: "60", name: "Locked In", date: "8 Nov 2026", items: [
+    { ver: "61", name: "Locked In", date: "8 Nov 2026", items: [
       "<b>Leveling, evened out.</b> A level comes about every two parts from the first chapter to the last, not one a part at the start and one every three at the end, and the story now ends right around level 40, where the Cascades wake. Saves keep their level.",
       "<b>Milestones</b> every fifth level: +3 more max HP, a full heal and a bandage. Your level card shows the next one coming.",
       "<b>You can outgrow places.</b> Story foes still rise to meet you, but an ordinary beast on the roads back belongs to its region: if you've outgrown it, it only closes half the gap, and it gives XP to match. Nightmares still meet you level for level.",
       "<b>Menace.</b> Every fight opens with you bearing down on the foe: −1 to its attacks for your first 2 turns, −2 if you've outgrown it by 5 levels, −3 by 10. A beast 10 levels under you can be stared down.",
       "<b>Locked into the fight.</b> The foe's name slams in, the screen closes in on a dark frame that beats with a war drum, reddens into a heartbeat when your HP runs low, and jolts with every blow you take.",
       "<b>Break away</b>: getting out of a road fight is an Agility check now. Fail and it swings at your back with advantage, and each try is harder. Bosses and story fights don't let you go at all.",
+    ] },
+    { ver: "60", name: "The World Remembers", date: "8 Nov 2026", items: [
+      "What you did comes back. Thirty echoes of choices from earlier chapters now turn up later in the journey, and a line marked <b>The world remembers</b> tells you which choice it was.",
+      "<b>People come back.</b> Varro Duskwane sends archers to the Rahdaria blockade if you held the tunnel with him. Sable runs a fence's stall in Raftmark, or Grell is waiting there with a hook for a hand. Hesper Coyle reads the siege for you from her cell, or speaks out of a mirror. The miners you dug out turn up in Kedge, a Hesk singer in Bathyrra, Corwen Lisk on the tally-stone, Aurel Vantry in the Salt King's counting-house, and the Gravepike in the falling Sea-Sky.",
+      "<b>Places stay how you left them.</b> The Hollow Hands' den is shut to anyone who sold them out. Sulmara charges the guilty half again and stands the acquitted a drink. Ashgate is rich and the mountain scarred if you blew the drum hall, and silent if you sang it to sleep. Ammaret, Rahdaria and Carrowmere landing all look the way your ending made them, and Raftmark's people sit in the ash.",
+      "<b>Debts get collected.</b> The Violet Baron's collectors, the juror you bribed, and the Reeve who gave you powder for a job you never did all come looking for you on the roads back. Pay, or fight.",
+      "A new journal page, <b>What the world remembers</b>, lists every echo you've met, and how many are still out there. Two new feats: Long Memory and Paid in Full."
     ] },
     { ver: "59", name: "The Open Reach", date: "8 Nov 2026", items: [
       "After the Black Tithe, a <b>ship of your own</b> on the roads back, and which one depends on how the chapter ended: captain of the Widow's Tally if you rose, master of the Saltwrit cutter Small Mercy with a letter of marque if you sold the Fleet, or the Second Knot, a fast Skerran sloop, if you gave the Fleet its dead back. Your sworn hands come aboard with their own knacks.",
@@ -2481,6 +2492,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     { id: "drycritic", name: "Everyone's a Critic", desc: "Get ten of Burr's opinions on one journey.", test: () => !!S.dry && S.dry.burr >= 10, prog: () => [Math.min(10, S.dry ? S.dry.burr : 0), 10] },
     { id: "bnweave", name: "The High Weave", desc: "Climb the Needle and break the High Weave, and take Threadfang.", test: () => false },
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
+    { id: "echoes", name: "Long Memory", desc: "Meet ten things you did, come back to you, on one journey.", test: () => !!S.echo && S.echo.seen.length >= 10, prog: () => [Math.min(10, S.echo ? S.echo.seen.length : 0), 10] },
+    { id: "paid", name: "Paid in Full", desc: "Settle every debt that comes to collect on one journey.", test: () => false },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
@@ -2866,6 +2879,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    echo: ["The world remembers", "What you did in earlier chapters comes back. People you spared or sold turn up later, towns stay how you left them, and debts get collected on the roads back. Each time, a line marked <b>The world remembers</b> says which choice it was. Your journal keeps a list."],
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
     bleed: ["Bleeding", "Cuts and stabs can open a wound that bleeds at the start of every round (it shows under your HP). A <b>bandage</b> stops it: free from the Bag with quick hands, or as your move. Still bleeding after the fight? Bandage it then, or tie it off and lose one more round. Spare cloth scraps get rolled into bandages between parts."],
     menu: ["Fight moves", "In a fight like this you pick a move each round. <b>Evade</b> gives up your swing for a chance to slip every attack that round, and <b>Catch your breath</b> heals once a fight. Anything marked \"no roll\" always lands."],
@@ -4648,22 +4662,23 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // can rest for nothing and be healed of what the road gave you.
   const TOWNS = {
     roots: [{ name: "The Library of Roots", kind: "sanctuary", has: ["sanctum", "library"], intro: "The Library of Roots is as you left it: shelves grown out of the living wood, and the smell of old paper and rain. Nobody else has been here. Nobody ever does come here." }],
-    desert: [{ name: "The Hollow Hands' den", kind: "town", has: ["inn", "market", "bar"], intro: "The Hollow Hands still keep their den under the dunes, and they still remember you. Somebody pours you a cup of something strong before you've sat down." }],
+    desert: [{ name: "The Hollow Hands' den", kind: "town", get has() { return S.side === "magistrate" ? [] : ["inn", "market", "bar"]; },
+      get intro() { return S.side === "magistrate" ? "The Hollow Hands still keep their den under the dunes, and they still remember you. Nobody pours you anything. The lamp at the top of the steps goes out as you come down them." : "The Hollow Hands still keep their den under the dunes, and they still remember you. Somebody pours you a cup of something strong before you've sat down."; } }],
     fen: [{ name: "The Glade", kind: "sanctuary", has: ["sanctum"], intro: "The Glade is still green in the middle of the mire, as if the Hushfen has agreed to leave this one place alone. The water here is clear enough to drink." }],
     mere: [{ name: "Carrowmere landing", kind: "town", has: ["inn", "market"], intro: "At the landing, people are building again with stone pulled out of the drowned town. There's an inn now, of a sort: a barge with a roof on it and a fire in a tin." }],
     lastwell: [{ name: "Lastwell", kind: "town", has: ["inn", "market", "smith"], intro: "Lastwell's doors are open in the daytime now. The bell in the Belfry rings the hours instead of warnings, and children chase each other round the well." }],
     glass: [{ name: "Sulmara", kind: "town", has: ["inn", "market", "smith", "library", "bar"], intro: "Sulmara under its glass sky: the Cracked Lantern, the Vitreous Library, the Slag & Siphon, and a hundred glaziers' shops. Nobody's looking for you any more. Mostly." }],
     corrach: [
-      { name: "Ashgate", kind: "town", has: ["inn", "market", "smith", "bank"], intro: "Ashgate's square is busy again, salt carts and copper carts, and the Coffer-House door stands open in the hill. Somebody has painted over the old bounties on the Reckoning Board." },
+      { name: "Ashgate", kind: "town", has: ["inn", "market", "smith", "bank"], get intro() { return S.ending2 === "blast" ? "Ashgate's square is loud with money: new copper roofs, new carts, miners in new coats buying rounds. Up the mountain, where Thrumhold was, there's a long grey scar, and nobody looks at it." : S.ending2 === "sleep" ? "Ashgate's square is busy again, salt carts and copper carts, and the Coffer-House door stands open in the hill. The mountain behind it is silent. Not quiet: silent, the way a held breath is." : "Ashgate's square is busy again, salt carts and copper carts, and the Coffer-House door stands open in the hill. Somebody has painted over the old bounties on the Reckoning Board."; } },
       { name: "Vellum Rest", kind: "sanctuary", has: ["sanctum", "healer"], intro: "Vellum Rest: white terraces, slow people, vinegar and smoke. Sister Wren looks up from her burners and nods as if you only left this morning." }
     ],
     noon: [
-      { name: "Ammaret", kind: "town", has: ["market", "bar"], intro: "Ammaret is still bright, but the light has a slant to it now, and the Lidless sell more shadows than they used to. Their market is louder than you remember." },
+      { name: "Ammaret", kind: "town", has: ["market", "bar"], get intro() { const e = S.nk && S.nk.ending; return e === "night" ? "Ammaret is dark when you come down the stair, really dark, and full of lamps. There's a night market now, and the Lidless walk round it slowly with their wet gold eyes wide, looking at the dark as if it were a painting." : e === "dusk" ? "Ammaret is gold and long-shadowed, the light low and sideways. Every evening at dusk the Lidless come out of their houses and stand in the street looking down at their own shadows, which have never been so long." : e === "keep" ? "Ammaret blazes. The Kept Noon is fiercer than ever, and the Lidless are prouder of it than ever, and a length of shadow costs twice what it did." : "Ammaret is still bright, but the light has a slant to it now, and the Lidless sell more shadows than they used to. Their market is louder than you remember."; } },
       { name: "The Temple of the Kept Noon", kind: "sanctuary", has: ["sanctum"], intro: "The Temple of the Kept Noon is quiet and full of warm light. The keepers leave you a mat and a bowl of water and don't ask what you've been doing." }
     ],
     undermoon: [{ name: "Kedge", kind: "town", has: ["inn", "market"], intro: "Kedge rides its moorings in the slow pull of the Undermoon. The Moored hand you a kinstone at the gate out of habit, so your feet stay down." }],
     rahdaria: [
-      { name: "Rahdaria", kind: "town", has: ["inn", "market", "smith", "bar", "bank"], intro: "Rahdaria's terraces are green again from the walls to the Lily. The Pressed Rose has a sign out, Mattie Gorse's hammer rings, and people know your face in the street." },
+      { name: "Rahdaria", kind: "town", has: ["inn", "market", "smith", "bar", "bank"], get intro() { const b = S.rh && S.rh.branch; return "Rahdaria's terraces are green again from the walls to the Lily. The Pressed Rose has a sign out, Mattie Gorse's hammer rings, and people know your face in the street. " + (b === "flood" ? "Out on the plain, the Bathyr trenches you flooded are rice fields now, in long bright strips of water." : b === "fire" ? "Down by the shore the salt kilns are black shells, and salt is dear in every shop." : b === "fall" ? "The Lion's Brow lies across the south road where you dropped it, and a new byway winds through its rubble." : ""); } },
       { name: "The hanging gardens", kind: "sanctuary", has: ["sanctum"], intro: "High on the terraces, the hanging gardens are clean again: figs, vines, water running down stone channels. Keeper Sabine Orr lets you sleep under the trees." }
     ],
     bathyrra: [
@@ -4679,6 +4694,294 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         get intro() { return S.pz && S.pz.ending === "rise" ? "Your ship. Hawl has your hammock slung, and Gannet has saved you a fish, and Ninian has the ledger out. Nobody takes a tithe aboard her any more." : "At the edge of the still water round Stillwater, nothing makes a sound, and nothing comes for you. You sleep in a boat on the glassy sea and wake up rested."; } }
     ]
   };
+  // ---------- the world remembers ----------
+  // Adrian's rule: no choice folds back into the same story. Every echo below is a choice from an
+  // earlier chapter coming back later, changed: people who return, places that stay how you left
+  // them, and debts that get collected. Each entry: the chapter the choice was made in, what you did
+  // (shown when it comes back), where it comes back, and on() reading the save. A debt can be settled.
+  // echoMark(id) marks one as met (S.echo.seen) and says so; the journal lists them.
+  // A new chapter reads at least two choices from earlier chapters, and adds an entry here for each
+  // choice of its own.
+  const ECHOES = {
+    // people who come back
+    varroAlly: { ch: "The Hushfen", why: "You warned Varro Duskwane of the Gnawkin and held the tunnel beside him.", where: "Rahdaria, at the blockade", on: () => !!S.varroAlly },
+    sable: { ch: "The Burning Sands", why: "You stood by Sable and the Hollow Hands in the vault.", where: "Raftmark", on: () => S.side === "crew" || (S.crew === "join" && S.side !== "magistrate") },
+    grell: { ch: "The Burning Sands", why: "You handed Sable and Grell to the Magistrate's guards.", where: "Raftmark", on: () => S.side === "magistrate" },
+    orrin: { ch: "The Glass Assize", why: "You walked old Brother Orrin to the Temple.", where: "Vellum Rest", on: () => !!S.ansel },
+    coyleSpare: { ch: "The Glass Assize", why: "You chained Hesper Coyle in the focus and let the court decide.", where: "Rahdaria", on: () => S.coyle === "spare" && !S.jackalTook },
+    coyleGlass: { ch: "The Glass Assize", why: "You let the mirror have Hesper Coyle.", where: "Rahdaria", on: () => S.coyle === "mirror" && !S.jackalTook },
+    coyleTaken: { ch: "The Glass Assize", why: "You let the Blackjackal take Hesper Coyle into the dark.", where: "Ammaret", on: () => !!S.jackalTook },
+    freed: { ch: "The Corrach Three", why: "You cut two villagers out of Wat Gorse's sheep-fold.", where: "Ashgate, on the roads back", on: () => !!S.freed },
+    miners: { ch: "The Corrach Three", why: "You dug three miners out of the fall.", where: "Kedge", on: () => !!S.breach },
+    heskTruce: { ch: "The Corrach Three", why: "You left the waking Hesk awake under Iyu, in an uneasy peace.", where: "Bathyrra", on: () => S.ending2 === "truce" },
+    corwen: { ch: "The Undermoon", why: "You let Corwen Lisk go up into the dark.", where: "Raftmark", on: () => !!(S.um && S.um.corwen === "up") },
+    vantry: { ch: "The Siege of Rahdaria", why: "You let Aurel Vantry get away over the wall.", where: "Raftmark", on: () => !!(S.rh && S.rh.vantry === "free") },
+    pike: { ch: "Carrowmere", why: "You fed the Gravepike, and it swam beside you to the drowned castle.", where: "Bathyrra, when the sky comes down", on: () => !!S.pike },
+    // places that stay changed
+    den: { ch: "The Burning Sands", why: "You handed Sable and Grell to the Magistrate's guards.", where: "The Hollow Hands' den, on the roads back", on: () => S.side === "magistrate" },
+    clerks: { ch: "Carrowmere", why: "You broke the chains on the drowned king's clerks.", where: "Carrowmere landing, on the roads back", on: () => !!S.kingFled },
+    tithe: { ch: "Carrowmere", why: "You left the drowned king's clerks at their desks.", where: "Carrowmere landing, on the roads back", on: () => !S.kingFled && (S.part || 0) > 21 },
+    guilty: { ch: "The Glass Assize", why: "The Glass Assize found you guilty.", where: "Sulmara, on the roads back", on: () => S.verdict === "guilty" },
+    acquitted: { ch: "The Glass Assize", why: "Twelve hands came down clear enough to set you free.", where: "Sulmara, on the roads back", on: () => S.verdict === "free" },
+    blast: { ch: "The Corrach Three", why: "You brought the drum hall down on the Hesk.", where: "Mount Corrach, on the roads back", on: () => S.ending2 === "blast" },
+    hush: { ch: "The Corrach Three", why: "You let Iyu sing the Hesk back to sleep.", where: "Ashgate, on the roads back", on: () => S.ending2 === "sleep" },
+    noonEnd: { ch: "The Kept Noon", get why() { return { keep: "You left the Kept Noon blazing.", dusk: "You gave Ammaret a dusk.", night: "You closed the lens, and gave Ammaret its first night." }[S.nk && S.nk.ending] || "You ended the Kept Noon."; }, where: "Ammaret, on the roads back", on: () => !!(S.nk && S.nk.ending) },
+    rahBranch: { ch: "The Siege of Rahdaria", get why() { return { flood: "You turned the river into the Bathyr trenches.", fire: "You burned the Bathyr crates in the salt kilns.", fall: "You brought the Lion's Brow down on the Bathyr engines." }[S.rh && S.rh.branch] || ""; }, where: "Rahdaria, on the roads back", on: () => !!(S.rh && S.rh.branch && S.rh.done) },
+    raftmark: { ch: "The Black Tithe", why: "You signalled the Saltwrit, and they burned Raftmark.", where: "The Stillwater Reach, on the roads back", on: () => !!(S.pz && S.pz.ending === "sell") },
+    ryytaa: { ch: "The Labyrinth of Roots", why: "You killed Ryytaa the Ender in her nest.", where: "The Library of Roots, on the roads back", on: () => !!S.slain },
+    brood: { ch: "The Labyrinth of Roots", why: "You left Ryytaa the Ender alive in her nest.", where: "The Labyrinth, on the roads back", on: () => !S.slain && (S.part || 0) > 4 },
+    // debts that get collected
+    collector: { ch: "The Hushfen", why: "Varro Duskwane caught you stealing from him.", where: "The roads of the Hushfen and Sulmara", on: () => !!S.varroCaught, debt: true },
+    juror: { ch: "The Glass Assize", why: "You bribed a juror.", where: "Ashgate, on the roads back", on: () => !!S.fixerBad, debt: true },
+    reeve: { ch: "The Corrach Three", why: "You took the Reeve's blasting charges and never brought the drum hall down.", where: "The roads of Mount Corrach", on: () => !!S.contract && !!S.ending2 && S.ending2 !== "blast", debt: true },
+    jackalDebt: { ch: "The Glass Assize", why: "You struck a deal with the Blackjackal: the truth, for her sun.", where: "Ammaret", on: () => !!S.jackalDeal },
+    shadow: { ch: "The Kept Noon", why: "You sold lengths of your shadow to the Lidless.", where: "Rahdaria", on: () => !!(S.nk && S.nk.sold) }
+  };
+  const wr = () => (S.echo = S.echo || { seen: [], paid: [] });
+  const echoSeen = (id) => !!(S.echo && S.echo.seen.includes(id));
+  const echoDue = (id) => ECHOES[id].on() && !echoSeen(id);
+  const debtOpen = (id) => ECHOES[id].on() && !(S.echo && S.echo.paid.includes(id));
+  // Mark an echo as met, and tell the player it happened because of them.
+  async function echoMark(id) {
+    if (echoSeen(id)) return;
+    wr().seen.push(id); tip("echo");
+    await mech('<span class="echo-k">The world remembers</span> ' + ECHOES[id].why, "echo");
+    if (S.echo.seen.length >= 10) grant("echoes");
+    save();
+  }
+  async function debtPaid(id, how) {
+    const E = wr();
+    if (E.paid.includes(id)) return;
+    E.paid.push(id);
+    await mech("Settled: " + how, "loot");
+    const owed = Object.keys(ECHOES).filter(k => ECHOES[k].debt && ECHOES[k].on());
+    if (owed.length && owed.every(k => E.paid.includes(k))) grant("paid");
+    save();
+  }
+  // What a town costs, by what you did there.
+  function townMul(T) {
+    if (T.reg === "glass" && S.verdict === "guilty") return 1.5;
+    if (T.reg === "rahdaria" && S.rh && S.rh.branch === "fire" && S.rh.done) return 1.25;
+    if (T.reg === "mere" && !S.kingFled) return 1.1;
+    return 1;
+  }
+  const echoInnFree = (T) => (T.reg === "corrach" && T.name === "Ashgate" && !!S.freed);
+  const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
+  // A town visit, after its intro.
+  async function echoTown(T) {
+    if (T.reg === "desert" && echoDue("den")) {
+      await echoMark("den");
+      await say("Halfway down the steps a knife comes out of the dark and sticks in the wall by your ear. It isn't a miss. It's a message. Then the rest of them come up out of the den.");
+      await hkFight({ name: "Hollow Hands knives", heads: 3, unit: "knife|knives", ac: 13, atk: 4, n: 1, s: 6, type: "piercing", bloom: 0, bleed: 25, who: "the Hollow Hands", whoShort: "knife",
+        hitWhy: "A knife finds the gap under your arm.", miss: "The knife whispers past and clatters down the steps.", hitLine: "One of them sits down hard on the steps." });
+      await say("When it's over, a voice comes up from somewhere below. \"That's for Sable,\" it says. \"Next time, don't come back.\" The door at the bottom of the steps shuts, and you hear the bar go across.");
+      await gold(1, 6 + 4, "One of them dropped a purse.");
+      return;
+    }
+    if (T.reg === "glass" && echoDue("guilty")) { await echoMark("guilty"); await mech("Sulmara remembers your face. Its inn, market, smith and library charge half as much again."); }
+    if (T.reg === "glass" && echoDue("acquitted")) { await echoMark("acquitted"); await mech("At the Cracked Lantern, your rounds are on the house."); }
+    if (T.reg === "mere" && echoDue("clerks")) await echoMark("clerks");
+    if (T.reg === "mere" && echoDue("tithe")) { await echoMark("tithe"); await mech("The drowned clerks take a tithe on every sale at the landing: prices here are a tenth higher."); }
+    if (T.reg === "corrach" && T.name === "Ashgate") {
+      if (echoDue("freed")) {
+        await echoMark("freed");
+        await say("The woman behind the bar at the inn is one of the two you cut out of Wat Gorse's fold. She knows you at once. She doesn't make a fuss. She just takes your pack off your shoulder and carries it upstairs.");
+        await say("\"Room's yours whenever you're through,\" she says. \"Don't argue. I counted sheep for that man for two years.\"", "voice");
+        await mech("The inn at Ashgate is free for you now.", "loot");
+      }
+      if (echoDue("hush")) { await echoMark("hush"); await say("The mountain is so quiet that the miners have taken to singing in the tunnels themselves, badly, so as to have something to listen to."); }
+      if (debtOpen("juror") && !echoSeen("juror")) {
+        await echoMark("juror");
+        await say("A thin man in a good coat sits down across from you, uninvited. You don't know him until he smiles: the juror from the Glass Assize, the one who took your gold. He's come a long way to smile at you.");
+        await say("\"Thirty gold,\" he says, \"and I never tell Sulmara who paid me. Or I tell the Reckoning Board, and you can meet whoever reads it.\"", "voice");
+        const c = await choose([{ key: "pay", label: "Pay him thirty gold", tag: S.coins >= 30 ? "" : "you don't have it", show: S.coins >= 30 }, { key: "no", label: "Tell him to do his worst", plain: true }]);
+        if (c === "pay") { S.coins -= 30; renderSheet(); await debtPaid("juror", "the juror takes his thirty gold and leaves Ashgate on the next salt cart."); }
+        else await say("He shrugs, and goes out. The next morning your face is chalked on the Reckoning Board, with a price under it. Somebody on the Corrach roads will want it.");
+      }
+    }
+    if (T.reg === "roots" && echoDue("ryytaa")) {
+      await echoMark("ryytaa");
+      await say("Something is hanging in the doorway of the Library that wasn't there before: Ryytaa the Ender's shed skin, whole, the size of a sail, grey and fine as paper. Her brood must have brought it here when they left. A gift, or a warning.");
+      await gold(2, 6 + 6, "You cut a few panels of it away. Tinkers will pay for spider-silk this fine.");
+    }
+    if (T.reg === "noon" && echoDue("noonEnd")) await echoMark("noonEnd");
+    if (T.reg === "rahdaria" && echoDue("rahBranch")) await echoMark("rahBranch");
+    if (T.reg === "reach" && echoDue("raftmark")) {
+      await echoMark("raftmark");
+      await say("Along the shingle where Raftmark's hulks used to ride, there's a line of ash at the tide mark, and the people who lived in them sit along it with their hands out. One of them is the Salt King's cook. He doesn't look at you.");
+      const c = await choose([{ key: "give", label: "Give them ten gold", tag: S.coins >= 10 ? "" : "you don't have it", show: S.coins >= 10 }, { key: "no", label: "Walk on", plain: true }]);
+      if (c === "give") { S.coins -= 10; renderSheet(); xpGain(15); await say("The cook takes it. He still doesn't look at you, but he says, \"There's a cave under the north point where the Saltwrit don't go,\" which is something."); }
+    }
+  }
+  // The roads back: a debt or a remembered thing can be waiting on the road. True if it took the walk.
+  async function echoRoad(r) {
+    const head = (t) => { const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[r] + "</span><h2>" + t + "</h2>"); scrollNext = true; add(h); };
+    if ((r === "fen" || r === "glass") && debtOpen("collector") && d(3) === 1) {
+      head("A man in violet gloves");
+      await echoMark("collector");
+      await say("He's standing in the middle of the road as if he's been there all week, and perhaps he has: a tall man in a violet coat, violet gloves, and a ledger under his arm. \"Varro Duskwane's compliments,\" he says. \"You took from the Baron's house. The Baron would like it back, with interest. Forty gold.\"", "voice");
+      const c = await choose([{ key: "pay", label: "Pay the Baron forty gold", tag: S.coins >= 40 ? "" : "you don't have it", show: S.coins >= 40 }, { key: "fight", label: "Refuse", tag: "he didn't come alone", plain: true }]);
+      if (c === "pay") { S.coins -= 40; renderSheet(); await debtPaid("collector", "the collector writes it in his ledger and bows. \"The Baron thanks you. He'll be sorry. He liked having a reason.\""); return true; }
+      await hkFight({ name: "The Violet Baron's collectors", heads: 3, unit: "collector|collectors", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", bloom: 0, who: "the collectors", whoShort: "collector",
+        hitWhy: "A violet-hilted blade opens your sleeve, and the arm under it.", miss: "The blade cuts the air where you were.", hitLine: "A collector drops his ledger." });
+      await say("A week later a letter finds you, sealed in violet wax. <i>Call it even,</i> it says. <i>I have never been robbed so rudely. I quite enjoyed it. V.D.</i>");
+      await debtPaid("collector", "Varro Duskwane calls it even.");
+      xpGain(40);
+      return true;
+    }
+    if (r === "corrach" && echoSeen("juror") && debtOpen("juror") && d(3) === 1) {
+      head("Your face on the Reckoning Board");
+      await say("A bounty hunter steps out from behind a salt cart with your face, chalked, folded in her hand. \"It's a good likeness,\" she says. \"Nothing personal.\"", "voice");
+      await hkFight({ name: "A Reckoning Board hunter", hp: 22, ac: 14, atk: 5, n: 1, s: 8, type: "piercing", bloom: 0, who: "the hunter", hitWhy: "Her short spear finds you.", miss: "The spear-point skips off your guard.", hitLine: "She staggers." });
+      await debtPaid("juror", "the hunter's chalked copy of your face goes in the fire, and Rook rubs the board clean.");
+      await gold(1, 6 + 6, "She was carrying the last three bounties she'd claimed.");
+      return true;
+    }
+    if (r === "corrach" && debtOpen("reeve") && d(3) === 1) {
+      head("The Reeve's men");
+      await echoMark("reeve");
+      await say("Two men in Ashgate copper livery stop you on the switchbacks. \"The Reeve gave you two blasting charges,\" the older one says, \"and the drum hall's still standing. He'd like twenty gold for the powder. Or he'd like us to take it out of you.\"", "voice");
+      const c = await choose([{ key: "pay", label: "Pay twenty gold for the powder", tag: S.coins >= 20 ? "" : "you don't have it", show: S.coins >= 20 }, { key: "fight", label: "Tell them the Reeve can come himself", plain: true }]);
+      if (c === "pay") { S.coins -= 20; renderSheet(); await debtPaid("reeve", "the Reeve has his twenty gold."); return true; }
+      await hkFight({ name: "The Reeve's men", heads: 2, unit: "man|men", ac: 12, atk: 4, n: 1, s: 6, type: "bludgeoning", bloom: 0, who: "the Reeve's men", whoShort: "man", hitWhy: "A pick-haft takes you in the ribs.", miss: "The pick-haft whistles past.", hitLine: "One of them sits down in the snow." });
+      await debtPaid("reeve", "the Reeve's men go back down the mountain, and don't come up it again.");
+      return true;
+    }
+    if (r === "corrach" && echoDue("blast")) {
+      head("Hesk in the rubble");
+      await echoMark("blast");
+      await say("Where the drum hall was, the mountainside has slumped into a long grey scar. Something is moving in it. Three Hesk, white with stone-dust, their wing-cases cracked, their song gone flat and wrong. They remember who set the charges.");
+      await hkFight({ name: "Hesk survivors", heads: 3, unit: "Hesk|Hesk", ac: 13, atk: 4, n: 1, s: 8, type: "piercing", bloom: 0, hesk: true, who: "the Hesk", whoShort: "Hesk", hitWhy: "A fungus-blade sings and bites.", miss: "The blade hums past you.", hitLine: "One of them stops singing." });
+      await gold(2, 6 + 6, "Ashgate's miners pay well for anything cleared out of the scar, and they're richer than they've ever been.");
+      xpGain(30);
+      return true;
+    }
+    if (r === "roots" && echoDue("brood")) {
+      head("Ryytaa's brood");
+      await echoMark("brood");
+      await say("The second passage is webbed solid, wall to wall, and the webs are fresh. Ryytaa the Ender never left her nest, and she has been busy. Her brood are bigger than you remember, and there are more of them.");
+      await hkFight({ name: "Ryytaa's brood", heads: 4, unit: "spider|spiders", ac: 13, atk: 4, n: 1, s: 6, type: "piercing", bloom: 0, bleed: 25, who: "the brood", whoShort: "spider", hitWhy: "Fangs find your calf.", miss: "Legs scrabble on the stone behind you.", hitLine: "A spider curls up on itself." });
+      await gold(2, 6 + 4, "There are old bones in the webs, and old purses on the bones.");
+      xpGain(30);
+      return true;
+    }
+    return false;
+  }
+  // Inside the chapters: the people who come back.
+  async function echoVellum() {
+    if (!echoDue("orrin")) return;
+    await echoMark("orrin");
+    await say("Sister Wren has a letter on her bench with a Temple seal. \"Brother Orrin,\" she says. \"He taught me to boil a needle, forty years ago. He writes that somebody walked him all the way to the Temple steps, and wouldn't take anything for it.\" She looks at you over the letter. \"Well. You can't pay me either, then.\"", "voice");
+    await mech("Sister Wren will teach you Field Mending for nothing.", "loot");
+  }
+  async function echoNoon() {
+    if (echoDue("coyleTaken")) {
+      await echoMark("coyleTaken");
+      await say("Sabeth Ure stops at a corner. \"There was a woman with him at first,\" she says. \"A judge, from the look of her. She walked like a judge. He wore her for a day and threw her away at the bottom of the stair. She's still there. She doesn't say anything.\"", "voice");
+      await clueFound("You know how Hesper Coyle carried herself. Somebody in Ammaret has been walking like that since he came, and then stopped.");
+    }
+    if (echoDue("jackalDebt")) {
+      await echoMark("jackalDebt");
+      await say("On the Temple steps somebody has drawn, in chalk, a jackal's head and a sun with a line through it. Under it: <i>Truth for sun. Paid.</i> Beside the drawing lies a length of shadow, rolled up and tied like a scroll.");
+      if (S.nk && S.nk.shade < 3) await shadeGain(1, "You shake it out, and it goes back to your heels as if it had never left.");
+      else await gold(1, 6 + 4, "You've shadow enough. Somebody at the market buys it from you.");
+    }
+  }
+  async function echoKedge() {
+    if (!echoDue("miners")) return;
+    await echoMark("miners");
+    await say("At the edge of the square, three men in Ashgate copper helmets are mending a chain. They're the miners you dug out of the fall on Mount Corrach. They followed the old seams down, they say, a long way down, and the Moored pay better than the Reeve.");
+    await stones(2, "They press two kinstones into your hands and won't take them back.");
+  }
+  async function echoRah() {
+    const R = rh();
+    if (echoDue("coyleSpare") || echoDue("coyleGlass")) {
+      const spare = echoDue("coyleSpare");
+      await echoMark(spare ? "coyleSpare" : "coyleGlass");
+      await say(spare ? "A courier from Sulmara finds you on the terraces with a sliver of glass wrapped in silk. Hesper Coyle, from her cell, has read the siege in it. The note says only: <i>I owe you a judgment. Here is a true one.</i>"
+        : "In the Steward's hall there's a tall mirror, and when you pass it, it speaks in Hesper Coyle's voice, cool and exact, as if she were reading from a ledger. Then the glass goes back to being glass. Nobody else heard.");
+      const open = CASES.filter(C => !solved(C.id)).flatMap(C => C.keys).filter(k => !hasClue(k));
+      if (open.length) await clue(open[d(open.length) - 1]);
+    }
+    if (echoDue("shadow")) {
+      await echoMark("shadow");
+      await say("In the market on the third terrace, you see your own shadow. It's walking down the street at the heels of a stranger, a Lidless trader in gold gauze, a long way from Ammaret. It's yours: you know the shape of it like your own hand.");
+      const c = await choose([{ key: "follow", label: "Follow it", tag: "see where it goes" }, { key: "buy", label: "Buy it back", tag: "12 gold", show: S.coins >= 12 && S.nk && S.nk.shade < 3, plain: true }, { key: "no", label: "Let it go", plain: true }]);
+      if (c === "buy") { S.coins -= 12; renderSheet(); await shadeGain(1, "The trader sells it back without haggling. He says it never fitted him."); }
+      else if (c === "follow") {
+        await say("Your shadow goes everywhere you'd never go: down the back stairs of the granaries, past the Council's side doors, along the cistern walks at the hour when nobody's on them. It knows the city's secrets better than you do.");
+        const open = CASES.filter(C => !solved(C.id)).flatMap(C => C.keys).filter(k => !hasClue(k));
+        if (open.length) await clue(open[d(open.length) - 1]);
+      }
+    }
+  }
+  async function echoBlockade() {
+    if (!echoDue("varroAlly")) return;
+    await echoMark("varroAlly");
+    await say("On the first morning of the blockade a barge comes down the river under a violet sail, low in the water, with twelve archers in violet sitting along the gunwales as calm as if they were going to church. Their captain climbs the river gate and gives the Steward a letter.");
+    await say("<i>For my friend from the tunnel,</i> it says. <i>Twelve of my best. Bring them back. V.D.</i>" + (S.ring ? " The archers look at the violet ring on your hand, and bow, and go up on the wall where you tell them." : ""));
+    await rxMom(S.ring ? -10 : -6, "Varro's archers hold the river wall.");
+  }
+  async function echoBathyrra() {
+    if (!echoDue("heskTruce")) return;
+    await echoMark("heskTruce");
+    await say("In the market, a sound you know: the high, buzzing drone of a Hesk song. There's a Hesk singer here, a long way from Corrach, sitting cross-legged on a lead slab and trading songs with the Bathyr for their taps. The truce held, she says, and the Hesk sent her to learn what other people sing.");
+    await sdLearn("friend", "She taps it for you, laughing at her own accent.");
+  }
+  async function echoSky() {
+    if (!echoDue("pike")) return;
+    await echoMark("pike");
+    await say("Something white is coming down through the Sea-Sky, very slowly, the way a leaf comes down through still water. It's the Gravepike. It's bigger than you remember. It turns once over the city, looks down at you with one pale eye, and goes ahead of you along the streets, showing you the quick ways.");
+    sd().sky += 2; renderSheet();
+    await mech("The Gravepike shows you the quick ways: Sea-Sky +2.", "loot");
+  }
+  async function echoRaftmark() {
+    const P = pz();
+    if (echoDue("sable")) {
+      await echoMark("sable");
+      await say("On a hulk at the edge of Raftmark there's a fence's stall under a red awning, and behind it, older and harder and very pleased to see you, is Sable. \"Look what the tithe dragged in,\" she says. \"I heard. I always hear.\"", "voice");
+      const n = salvWorth();
+      if (n > 0) { S.coins += n * 2; S.salv = { cloth: 0, metal: 0, spore: 0 }; renderSheet(); await mech("Sable buys your salvage at twice what anyone else would: gain " + (n * 2) + " gold.", "loot"); }
+      else await gold(2, 6 + 6, "\"For the shield,\" Sable says, and you know which shield she means.");
+    }
+    if (echoDue("grell")) {
+      await echoMark("grell");
+      await say("A Tithe hand with a burned face and a hook for a left hand stops in front of you on the walkway. It takes you a moment. Grell. The Magistrate's guards weren't kind to him. \"Tell them,\" he says loudly, to the crew behind you, \"what you did to your own crew in the desert.\"", "voice");
+      await pzName(-1, "Grell tells it, and the crew listen.");
+      await hkFight({ name: "Grell", hp: 24, ac: 13, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, who: "Grell", hitWhy: "The hook rakes across you.", miss: "The hook bites the rail.", hitLine: "Grell spits." });
+      await say("Nobody helps him up. Nobody helps you either.");
+    }
+    if (echoDue("corwen")) {
+      await echoMark("corwen");
+      await say("The Fleet's knot-witch sits on the tally-stone, tying cords. Her hair is cropped short now, with nothing braided into it. Corwen Lisk. \"You let me go up,\" she says. \"So I went up, and then I went to sea, where nothing pulls you anywhere.\" She ties off a knot and holds it out. \"Take it. It's a trick for getting out of things.\"", "voice");
+      const left = Object.keys(PZ_TRICKS).filter(k => !(S.tricks || []).includes(k));
+      if (left.length) await pzLearn(left[d(left.length) - 1], "She shows you how it's done.");
+      else await gold(2, 6 + 4, "You know every trick she does. She pays you for one of yours instead.");
+    }
+    if (echoDue("vantry")) {
+      await echoMark("vantry");
+      await say("In the Salt King's counting-house a soft-handed man is eating figs over a ledger. He looks up, and goes white. Aurel Vantry, who poured the brine into Rahdaria's cisterns, keeping the Saltwrit's books under another name.");
+      const opts = [{ key: "pell", label: "Tell Pell Ashby who he is", tag: "the Saltwrit's trust", show: P.pell === "ally" }, { key: "squeeze", label: "Make him pay to keep quiet", tag: "gold" }, { key: "no", label: "Leave him to his figs", plain: true }];
+      const c = await choose(opts);
+      if (c === "pell") await pzWrit(2, "Pell Ashby takes it to the Commodore, and the Commodore takes it very seriously.");
+      else if (c === "squeeze") { await gold(3, 6 + 4, "He pays in Saltwrit silver, with shaking hands."); }
+    }
+  }
+  // The journal page: what the world remembers, and what's still out there.
+  function echoSection(rs) {
+    if (!rs || !(rs.part > 0)) return "";
+    const keep = S;
+    S = rs;
+    try {
+      const ids = Object.keys(ECHOES), met = ids.filter(echoSeen), wait = ids.filter(k => !echoSeen(k) && ECHOES[k].on());
+      const owed = ids.filter(k => ECHOES[k].debt && echoSeen(k) && debtOpen(k));
+      return "<section><h3>What the world remembers · " + met.length + " met</h3>" +
+        '<p class="j-sub">What you did comes back. People return, places stay how you left them, and debts get collected.</p>' +
+        (met.length ? '<dl class="tips">' + met.map(k => "<dt>" + ECHOES[k].where + "</dt><dd>" + ECHOES[k].why + " <small>(" + ECHOES[k].ch + ")</small>" + (owed.includes(k) ? " <b>Still owed.</b>" : "") + "</dd>").join("") + "</dl>" : '<p class="j-empty">Nothing yet. Give it time.</p>') +
+        (wait.length ? '<p class="j-note">' + wait.length + " thing" + (wait.length > 1 ? "s" : "") + " you did " + (wait.length > 1 ? "are" : "is") + " still out there.</p>" : "") + "</section>";
+    } finally { S = keep; }
+  }
+
   // ---------- dry company: deadpan humour, in small doses ----------
   // Adrian's ask: dry lines from townsfolk, innkeepers, shopkeepers and gang members, Burr's opinions,
   // and the odd remark on the Blood-bought Roads. Kept out of the big story beats: wayside lines only
@@ -4931,16 +5234,17 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     light(T.kind === "sanctuary" ? "gems" : "dusk");
     await say(T.intro);
     if (T.reg === "reach" && T.kind === "town") await seaTownLine();
+    await echoTown(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
     await burrLine(30);
     const has = (k) => T.has.includes(k);
     let rested = false, drank = false, roofed = false;
-    const free = ctRank() >= 3, P = (n) => cp(n), cOff = ctOff() ? " (Contender)" : "";
+    const tm = townMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
     // The calendar: market day and the festivals change the stalls, the inn and the bar.
     const town = T.kind !== "sanctuary", fair = town ? calFair() : null;
-    const MP = (n) => mp(n), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
+    const MP = (n) => Math.max(1, Math.round(mp(n) * tm)), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
     const candle = fair && fair.id === "candle", lamps = fair && fair.id === "lamps";
-    const innFee = () => candle ? 0 : innCost();
+    const innFee = () => candle || echoInnFree(T) ? 0 : Math.round(innCost() * tm);
     if (town && fair) { await say(fair.intro); await dryLine("calFair", { key: fair.id, chance: 70 }); }
     else if (town) await dryLine("calSeason", { key: calSeason(), chance: 35 });
     else if (town && calMarket() && has("market")) await say("It's market day. The street is all stalls and shouting, and the prices are down, because everybody else's are.");
@@ -4953,7 +5257,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         ...CAL_ONCE.map(O => ({ key: "once:" + O.id, label: O.label, tag: O.tag, show: town && calOnceOn(O) && !calOnceDone(O) })),
         { key: "almanac", label: "Buy the Commoner's Almanac", tag: mp(3) + " gold · a proverb, a prediction, a joke and some gossip every month", show: has("market") && !cal().almanac && S.coins >= mp(3), plain: true },
         { key: "fair", label: fair ? fair.join : "", tag: fair ? fair.name.replace(/^the /, "") + " · " + fair.tag : "", show: !!fair && !(cal().fairs || {})[calYear() + ":" + fair.id] },
-        { key: "inn", label: "Take a room at the inn", tag: (candle ? "free for the Long Candle" : innCost() ? innCost() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innFee() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
+        { key: "inn", label: "Take a room at the inn", tag: (candle ? "free for the Long Candle" : echoInnFree(T) ? "free for you" : innFee() ? innFee() + " gold" + cOff : free ? "free for a Contender" : "free") + " · full HP and a foothold back", show: has("inn") && !rested && S.coins >= innFee() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
         { key: "potion", label: "Buy a Draught of Mending", tag: MP(8) + " gold" + mOff + " · " + (S.potions || 0) + " carried", show: has("market") && S.coins >= MP(8), plain: true },
         { key: "elixir", label: "Buy an Elixir of Health", tag: MP(20) + " gold" + mOff + " · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= MP(20), plain: true },
         { key: "band", label: "Buy two bandages", tag: MP(5) + " gold" + mOff + " · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= MP(5), plain: true },
@@ -4961,8 +5265,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         { key: "smith", label: "Visit the smith", tag: smithLeft.length ? "weapons and honing" : "honing", show: has("smith") && S.axe && (smithLeft.length > 0 || !S.whet), plain: true },
         { key: "bank", label: "The bank", tag: S.bank && S.bank.open ? (S.bank.bal || 0) + " gold on deposit" : "15 gold to open an account", show: has("bank"), plain: true },
         { key: "library", label: "Browse the library", tag: P(30) + " gold" + cOff + " · learn a skill", show: has("library") && skillsLeft.length > 0 && S.coins >= P(30), plain: true },
-        { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: P(10) + " gold" + cOff, show: has("healer") && !hasSkill("mend") && S.coins >= P(10), plain: true },
-        { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || lamps || S.coins >= P(2)), plain: true },
+        { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: S.ansel ? "free, for Brother Orrin" : P(10) + " gold" + cOff, show: has("healer") && !hasSkill("mend") && (S.ansel || S.coins >= P(10)), plain: true },
+        { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : echoBarFree(T) ? "on the house, since the Assize" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || echoBarFree(T) || lamps || S.coins >= P(2)), plain: true },
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: "Back to the road", plain: true }
@@ -5018,12 +5322,12 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         const k = await choose(skillsLeft.map((x, i) => ({ key: x, label: SKILLS[x].name, tag: SKILLS[x].desc, plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
         if (k !== "no") { const p = P(30); S.coins -= p; if (!S.skills) S.skills = []; await learnSkill(k, "You buy the book (" + p + " gold) and read it through twice in a corner of the reading room."); }
       } else if (c === "healer") {
-        const p = P(10); S.coins -= p; if (!S.skills) S.skills = [];
-        await learnSkill("mend", "Sister Wren shows you how: pressure first, then the knot. " + p + " gold.");
+        const p = S.ansel ? 0 : P(10); S.coins -= p; if (!S.skills) S.skills = [];
+        await learnSkill("mend", "Sister Wren shows you how: pressure first, then the knot. " + (p ? p + " gold." : "She won't take anything for it."));
       } else if (c === "bench") {
         await mineBench(T.reg, "Somebody in " + T.name + " keeps a bench for it: the local way of packing a mine, out of " + REGION_MINES[T.reg].fill + ", and a forge for caltrops.");
       } else if (c === "bar") {
-        drank = true; if (ctRank() < 2 && !lamps) S.coins -= P(2); renderSheet();
+        drank = true; if (ctRank() < 2 && !lamps && !echoBarFree(T)) S.coins -= P(2); renderSheet();
         if (await calRumour()) { save(); continue; }
         const left = relicsLeft(), unbroken = ROAD_GANGS.filter(G => roamRegions().includes(G.r) && !bn().beat[G.id]);
         if (unbroken.length && d(2) === 1) { const G = unbroken[d(unbroken.length) - 1]; await say("Somebody at the bar has a story about " + G.n + ", who work the roads round " + REGIONS[G.r] + ". " + G.how); }
@@ -5044,7 +5348,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     // now and then a whole Cascade-drowned company with its armoured captains.
     const roll = d(6);
     try {
-      if (cascadeOn() && roll === 6) await cascadeCompany(r);
+      if (await echoRoad(r)) {}
+      else if (cascadeOn() && roll === 6) await cascadeCompany(r);
       else if (roll === 1 && d(2) === 1 && ROAD_GANGS.some(G => G.r === r)) await bnMeet([r], { label: "The roads back · " + REGIONS[r] });
       else await meetBeast(r, { roam: true, pack: roll >= 4 });
     } finally { roamFight = false; }
@@ -12973,6 +13278,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       await say("The two you brought back from Gorse's fold are sitting in the sun on the meeting-house steps. Wren doesn't say thank you. She just puts two cups of saltroot tea in your hands and closes your fingers round them.");
       await mech("Gain 2 saltroot tea.", "loot");
     }
+    await echoVellum();
     if (S.wrenCold && !S.hv.cold) { S.hv.cold = true; await say("Wren looks at you once when you come in, and then doesn't look at you again. \"Thirty gold,\" she says to the wall. \"That's what they were worth to you.\" She'll still sell you tea. It costs double."); }
     let lesson = false;
     for (;;) {
@@ -12981,7 +13287,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         { key: "lesson", label: S.song >= 3 ? "Sit and sing with Ninefold" : "A song lesson with Ninefold", tag: S.song >= 3 ? "you're fluent" : "song " + S.song + " → " + (S.song + 1), show: !lesson && S.song < 3 },
         { key: "treat", label: "Let Wren burn the Bloom back", tag: "Bloom −1 · " + price + " gold", plain: true, show: S.bloom > 0 && S.coins >= price && !S.hv["treat" + S.hd] },
         { key: "tea", label: "Buy saltroot tea", tag: price + " gold a cup", plain: true, show: S.coins >= price },
-        { key: "mend", label: "Ask Wren to teach you field mending", tag: "first aid · " + (S.wrenCold ? 20 : 10) + " gold", plain: true, show: !hasSkill("mend") && S.coins >= (S.wrenCold ? 20 : 10) },
+        { key: "mend", label: "Ask Wren to teach you field mending", tag: "first aid · " + (S.ansel ? "free, for Brother Orrin" : (S.wrenCold ? 20 : 10) + " gold"), plain: true, show: !hasSkill("mend") && (S.ansel || S.coins >= (S.wrenCold ? 20 : 10)) },
         { key: "mask", label: "Give Wren saltroot for a mask", tag: S.saltroot + " of 3 saltroot", plain: true, show: !hasGear("mask") && S.hv.maskAsk && S.saltroot >= 3 },
         { key: "askmask", label: "Ask Wren how she keeps from catching it", plain: true, show: !S.hv.maskAsk },
         { key: "shell", label: "Give Ninefold back his sleep-shell", plain: true, show: S.shell && !hasGear("drum") },
@@ -12994,7 +13300,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       if (c === "treat") { S.coins -= price; S.hv["treat" + S.hd] = true; renderSheet(); await say("Wren lays a poultice of hot salt and vinegar on the white patches and holds it there while you swear."); await bloomDown(1, "The salt draws it out like a splinter."); }
       if (c === "tea") { S.coins -= price; S.tea++; renderSheet(); await mech("You buy a cup of saltroot tea, corked in a clay bottle.", "loot"); }
       if (c === "mend") {
-        S.coins -= S.wrenCold ? 20 : 10; if (!S.skills) S.skills = []; renderSheet();
+        S.coins -= S.ansel ? 0 : S.wrenCold ? 20 : 10; if (!S.skills) S.skills = []; renderSheet();
         await say("Wren spends an afternoon on you with a pile of rags and a bucket of vinegar. She makes you bind her arm, then your own leg, then her arm again, one-handed, until you can do it with your eyes shut. \"Pressure first,\" she says, every time. \"Then the knot. You'll be no use to me dead.\"", "voice");
         await learnSkill("mend", "Wren's lesson.");
       }
@@ -13817,6 +14123,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say("A woman in gold gauze is waiting for you at the end of the street, with the gate-warden panting behind her. She's very old and very straight, and the gauze is tied over her open eyes.");
     await say("\"I am <b>Sabeth Ure</b>, Noonkeeper of Ammaret,\" she says. \"You came down the deep stair. So did he. Six days ago. A shadow with a jackal's head, and a man from up there in a mask of gold.\" She turns her veiled face toward the mask on your belt. \"And now the mask comes down without him. Walk with me.\"", "voice");
     await say("She takes you up to the Temple of the Kept Noon, a white dome at the foot of the lighthouse tower, and tells you, walking.");
+    await echoNoon();
     await say("\"When the desert melted over us, the Noonkeepers caught the last noon in the great lens, so Ammaret would never be dark. The ones who kept the mask went up, and built a new city on our glass, and called themselves Magistrates. They forgot us. We didn't forget them. The mask opens the lens, and the mask can close it. Only a Magistrate's hand, in the mask, can do either.\"", "voice");
     await say("\"The Blackjackal wants the Noon put out. A shadow is a small thing in our light. In the dark, a shadow is everywhere, and can go anywhere, and put on anyone. He brought your Magistrate down to close the lens. The Magistrate wouldn't, and somewhere on the stair he dropped the mask, so he couldn't be made to. Now the Blackjackal hides in our city, in someone, and waits. For the mask.\" Her veil turns toward you. \"For you.\"", "voice");
     await say("\"And he isn't alone. There are Lidless who'd give him the dark gladly. We call them the <b>Dimmers</b>. Six hundred years without sleep is a long time. They climb the lens tower and close the shutters, one by one, and every bell the Noon grows dimmer.\"", "voice");
@@ -14794,6 +15101,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await hkFight(UNMOORED({ name: "Unmoored", heads: 3, unit: "Unmoored|Unmoored" }));
     await say("Afterwards, Mother Kell's chair creaks round to face you. \"Two tides,\" she says. \"The North Pin's in the Chainworks. The Weeping Pin is out past the Drift. The Grave Pin is in our ossuary, among the dead. Put them back, and you'll face her with the Lift low. Leave them, and you'll be fighting her in the sky.\"", "voice");
     await say("\"And I'll give you a hammock in the knot-house,\" she adds, \"for as long as Kedge has chains.\"", "voice");
+    await echoKedge();
     await go("Go out into Kedge");
   }
 
@@ -16425,6 +16733,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     const R = rh();
     R.phase = "inv";
     if (R.day > 2) return;
+    await echoRah();
     await rhWx("heat");
     await rhDays(2);
   }
@@ -16506,6 +16815,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     R.phase = "siege";
     await rhWx("wind");
     await rxBlockadeSetup();
+    await echoBlockade();
     while (R.day2 <= 3) {
       while (R.watch < 3) {
         const night = R.watch === 2;
@@ -19704,6 +20014,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say("He teaches you three words that afternoon, at the stone table, with his heavy hand over yours.");
     for (const w of ["light", "listen", "home"]) await sdLesson(w, "The Speaker", { tries: 3 });
     await say("\"The rest you'll learn the way we all do,\" he says. \"From people. Go out. Be useful. The city will teach you if it decides to.\" He looks up, at the lead ceiling, and through it, at the sky. \"Don't take too long.\"", "voice");
+    await echoBathyrra();
     await mech("<b>Errands.</b> Each one teaches you a word and can win the Bathyr's trust, and each one costs time: the Sea-Sky comes down 1. You can do as many as you dare, and stop whenever you like.");
     for (;;) {
       const left = Object.keys(SD_ERRANDS).filter(k => !D.errands.includes(k));
@@ -20000,6 +20311,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say("The Sea-Sky comes down over Bathyrra the way snow comes off a roof: first a little, sliding, and then all of it. Not yet. But you can see it starting. The green-black ceiling is lower over the middle of the city than it was at noon, low enough now that the tops of the tallest houses are wet, and the water is running down the streets in sheets.");
     await say("The stair is the only way out. There are eight thousand Bathyr in the city and most of them are already on it: a slow grey river of people going up the inside of the water-wall, carrying their children and their dead in lead boxes. But not everyone can get there by themselves.");
     await mech("<b>The evacuation.</b> Every group you bring to the stair costs Sea-Sky. Whatever's left when you go to the Light is all the time you'll have there: the more sky you save for the end, the more tries you get at the Sounding. Choose who to fetch, and in what order. You can't fetch everyone.");
+    await echoSky();
     let carry = 0, fought = false;
     for (;;) {
       const left = Object.keys(SD_GROUPS).filter(k => !D.saved.includes(k));
@@ -20811,6 +21123,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say("All round it, at anchor, the Tithe Fleet: forty black ships. In the middle of the ring, a stone. A single great slab of black rock, floating, which shouldn't be possible: the tally-stone, where the shares are paid and the tithe is counted.");
     await mech("Your share is paid on the tally-stone, in silver, by a Skerran who counts it twice: " + P.share + " gold.", "loot");
     S.coins += Math.max(0, P.share); P.share = 0; renderSheet();
+    await echoRaftmark();
     await say("The Salt King keeps his court on the biggest hulk of all, a warship so old her guns are green. Seld Varrick is a Skerran, enormous, laughing, generous, with a beard of salt crystals like a frozen waterfall. He pours wine for everyone. He hugs Orla. He hugs you, when he hears what you are. \"A landsman, pressed, and they haven't put you over yet!\" he roars. \"Good for you!\"");
     await say("He talks about the old days, when the Fleet was small and hungry. He doesn't remember any of the bad things. Not one. You ask him, carefully, about the tithe of crews, the drowned, the count-ropes, and he looks at you with honest, friendly puzzlement, the way Gannet looked at the hammock. \"The sea takes its share,\" he says. \"That's all. It's always been that way. Hasn't it?\"");
     await say("Behind his chair, in grey, stand the two Quiet Passengers from the <i>Widow's Tally</i>, and four more like them.");
