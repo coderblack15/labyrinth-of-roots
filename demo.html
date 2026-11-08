@@ -986,14 +986,17 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 /* Locked into the fight (2026-11-08): while a foe is on the meter the screen closes in, a dark frame
    that pulses with the war drum, reddens as your HP runs low, and jolts when a blow lands. A fight
    opens on the foe's name slamming in, with your Menace under it. None of it takes a click. */
-#bfx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .6s ease; box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); }
+/* 2026-11-08 (Adrian): an ordinary fight gets only a thin ember border that beats with the drum, so the
+   page stays easy to read. The screen goes dark only while you're Blinded (body.blinded), which is a real penalty. */
+#bfx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .6s ease, box-shadow .6s ease; box-shadow: inset 0 0 0 2px rgba(217, 80, 58, .45), inset 0 0 36px rgba(0, 0, 0, .35); }
 body.in-fight #bfx { opacity: 1; animation: bfxPulse 1.15s ease-in-out infinite; }
-body.in-fight.fight-low #bfx { box-shadow: inset 0 0 140px 50px rgba(90, 0, 0, .85); animation-duration: .8s; }
-body.in-fight .story > *:not(:nth-last-child(-n+6)) { opacity: .45; transition: opacity .6s; }
+body.in-fight.fight-low #bfx { box-shadow: inset 0 0 0 3px rgba(200, 30, 20, .75), inset 0 0 60px rgba(90, 0, 0, .45); animation-duration: .8s; }
+body.in-fight.blinded #bfx { box-shadow: inset 0 0 240px 140px rgba(0, 0, 0, .96); animation: none; }
+body.in-fight.blinded .story > *:not(:nth-last-child(-n+4)) { opacity: .25; filter: blur(1.2px); transition: opacity .4s, filter .4s; }
 body.fight-hit #bfx { animation: bfxHit .35s ease-out; }
 body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) both; }
-@keyframes bfxPulse { 0%, 100% { box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); } 12% { box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, .92); } }
-@keyframes bfxHit { 0% { box-shadow: inset 0 0 160px 80px rgba(150, 10, 10, .9); } 100% { box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); } }
+@keyframes bfxPulse { 0%, 100% { box-shadow: inset 0 0 0 2px rgba(217, 80, 58, .45), inset 0 0 36px rgba(0, 0, 0, .35); } 12% { box-shadow: inset 0 0 0 3px rgba(217, 80, 58, .7), inset 0 0 48px rgba(0, 0, 0, .45); } }
+@keyframes bfxHit { 0% { box-shadow: inset 0 0 0 4px rgba(200, 20, 10, .9), inset 0 0 90px rgba(150, 10, 10, .55); } 100% { box-shadow: inset 0 0 0 2px rgba(217, 80, 58, .45), inset 0 0 36px rgba(0, 0, 0, .35); } }
 .bfx-intro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; z-index: 61; background: radial-gradient(ellipse at center, rgba(0, 0, 0, .55), rgba(0, 0, 0, .9)); animation: bfxIn 1.9s ease forwards; padding: 0 16px; text-align: center; }
 .bfx-intro .nm { font-family: inherit; font-size: clamp(28px, 7vw, 56px); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #f2e2c4; text-shadow: 0 0 18px rgba(200, 40, 20, .8), 0 3px 0 #000; animation: bfxSlam .5s cubic-bezier(.2, 1.6, .4, 1) both; }
 .bfx-intro .mn { font-size: 15px; color: #e7b36a; letter-spacing: .12em; text-transform: uppercase; opacity: 0; animation: bfxFade .4s .45s ease forwards; }
@@ -1966,6 +1969,12 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "63", name: "Blinded", date: "8 Nov 2026", items: [
+      "Fights no longer darken the whole screen. An ordinary fight gets a thin ember border that beats with the war drum and reddens when your HP runs low, so the page stays easy to read.",
+      "The dark comes only when you're <b>Blinded</b>: a blow that lands has about a 1 in 10 chance (more from Nightmares) to blind you with grit, blood or a flash. Your next 2 swings have disadvantage, the foe's meter reads ???, and Evade is halved.",
+      "<b>Wipe your eyes</b> costs your turn and ends it.",
+      "The foe meter now shows the level the foe is actually fighting at.",
+    ] },
     { ver: "62", name: "The Ground Underfoot", date: "8 Nov 2026", items: [
       "<b>Terrain you can use</b>, in its home country: sinking sand in the Burning Sands, landslides on Mount Corrach, and earthquakes under the labyrinth. They're rare (about one road fight in eight there), never two fights running, and never in a boss fight.",
       "<b>Sinking sand:</b> lure a foe onto it and watch it sink, a little more every round, until the sand takes it (and everything it carried). Or blunder in yourself, and haul yourself out before it reaches your chest.",
@@ -2896,6 +2905,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   const TIPS = {
     echo: ["The world remembers", "What you did in earlier chapters comes back. People you spared or sold turn up later, towns stay how you left them, and debts get collected on the roads back. Each time, a line marked <b>The world remembers</b> says which choice it was. Your journal keeps a list."],
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
+    blind: ["Blinded", "A blow can blind you (grit, blood or a flash). While you're Blinded the screen goes dark, your next 2 swings have disadvantage, you can't read the foe's wounds, and Evade is halved. <b>Wipe your eyes</b> costs a turn and ends it."],
     bleed: ["Bleeding", "Cuts and stabs can open a wound that bleeds at the start of every round (it shows under your HP). A <b>bandage</b> stops it: free from the Bag with quick hands, or as your move. Still bleeding after the fight? Bandage it then, or tie it off and lose one more round. Spare cloth scraps get rolled into bandages between parts."],
     hazard: ["The ground underfoot", "Some country fights back: <b>sinking sand</b> in the Burning Sands, <b>landslides</b> on Mount Corrach, <b>earthquakes</b> under the labyrinth. Each one gives you new moves in the fight menu: lure a foe into the sand, bring the slope down on it, shove it into the crack. They can catch you too, and what they do to the land stays done."],
     menu: ["Fight moves", "In a fight like this you pick a move each round. <b>Evade</b> gives up your swing for a chance to slip every attack that round, and <b>Catch your breath</b> heals once a fight. Anything marked \"no roll\" always lands."],
@@ -3000,6 +3010,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   function check({ label, mod, dc, target = "DC", adv = false, dis = false, cta = "Roll d20" }) {
     if (S.lw && S.exh >= (target === "AC" ? 2 : 1)) dis = true;
     if (FOE.on && target === "AC" && FOE.digAdv) { FOE.digAdv = false; adv = true; }
+    if (FOE.on && target === "AC" && FOE.pblind > 0) { dis = true; label += " (blinded)"; blindSet(FOE.pblind - 1); }
     if (adv && dis) { adv = dis = false; }
     const atk = FOE.on && target === "AC";
     const cb = atk ? Math.min(FOE.dread >= DREAD_CAP ? 1 : 2, FOE.chain) : 0;
@@ -3213,6 +3224,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     }
     const crit = FOE.crit; FOE.crit = false;
     if (FOE.on && S.hp > 0 && total > 0 && !saved) await bleedMaybe(type, sides, crit);
+    if (FOE.on && S.hp > 0 && total > 0) await blindMaybe(type);
     if (FOE.on && !FOE.dug && S.hp > 0 && S.hp / S.maxHp <= DIG_AT) await digIn();
     return total;
   }
@@ -6027,6 +6039,20 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // things more than you: they only ever flinch 1. An outgrown road beast (10 levels under you) may
   // not want the fight at all: you can stare it down. While the fight lasts the screen locks in.
   const MENACE_TURNS = 2;
+  // Blinded (2026-11-08): a blow that lands has a 1 in 10 chance (3 in 20 from a Nightmare) to blind you with
+  // grit, blood or a flash. For your next 2 attacks you swing with disadvantage, the foe's meter reads ???,
+  // and Evade is halved. The screen goes dark while it lasts. Wiping your eyes costs a turn and ends it.
+  const BLIND_PCT = 10, BLIND_NM_PCT = 15, BLIND_TURNS = 2;
+  const blindNow = () => FOE.on && FOE.pblind > 0;
+  function blindSet(n) { FOE.pblind = n; document.body.classList.toggle("blinded", n > 0 && FOE.on); renderFoe(); }
+  async function blindMaybe(type) {
+    if (!FOE.on || FOE.pblind > 0 || S.hp <= 0) return;
+    if (d(100) > (FOE.lvd && cascadeOn() ? BLIND_NM_PCT : BLIND_PCT)) return;
+    const why = /fire|radiant|lightning/.test(type) ? "The flash of it burns white across your eyes" : /slash|pierc/.test(type) ? "Blood runs down into your eyes" : "Grit and dirt come up off the blow into your eyes";
+    blindSet(BLIND_TURNS);
+    tip("blind");
+    await mech("<b>Blinded.</b> " + why + ". Your next " + BLIND_TURNS + " swings have disadvantage, you can't read its wounds, and Evade is halved. Wiping your eyes costs a turn.", "hurt");
+  }
   // Breaking away from a road fight is an Agility check: DC 11, +1 per 6 of the foe's levels, +2 for a Nightmare, +1 for each failed try.
   const escapeDc = (F, st) => 11 + Math.floor(flk() / 6) + (cascadeOn() ? 2 : 0) + ((st && st.tries) || 0);
   const menaceFor = (fk) => { if (cascadeOn()) return 1; const gap = lvk() - fk; return 1 + (gap >= 5 ? 1 : 0) + (gap >= 10 ? 1 : 0); };
@@ -6052,7 +6078,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       if (low || bfxBeat % 2 === 0) { try { SND.drum(low); } catch (e) {} }
     }, 575);
   }
-  function bfxClose() { clearInterval(bfxTimer); bfxTimer = 0; document.body.classList.remove("in-fight", "fight-low", "fight-hit"); }
+  function bfxClose() { clearInterval(bfxTimer); bfxTimer = 0; FOE.pblind = 0; document.body.classList.remove("in-fight", "fight-low", "fight-hit", "blinded"); }
   function bfxHit() {
     if (!FOE.on) return;
     const b = document.body; b.classList.remove("fight-hit"); void b.offsetWidth; b.classList.add("fight-hit");
@@ -6068,7 +6094,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
-    FOE.menace = menaceFor(FOE.lk);
+    FOE.menace = menaceFor(FOE.lk); FOE.pblind = 0; document.body.classList.remove("blinded");
     bfxOpen(name, FOE.menace);
     jCount("fights");
     renderFoe(true);
@@ -6081,14 +6107,14 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     box.hidden = !FOE.on;
     sheetH();
     if (!FOE.on) return;
-    const pct = Math.max(0, FOE.hp / FOE.max * 100) + "%";
+    const pct = FOE.pblind > 0 ? "100%" : Math.max(0, FOE.hp / FOE.max * 100) + "%";
     $("foeName").textContent = FOE.name;
     const nm = FOE.lvd && cascadeOn();
     box.classList.toggle("nightmare", nm);
     $("foeLv").hidden = !FOE.lvd;
-    $("foeLv").textContent = (nm ? "Nightmare · " : "") + "Lv " + lv();
+    $("foeLv").textContent = (nm ? "Nightmare · " : "") + "Lv " + (flk() + LV_MIN);
     const u = FOE.unit.split("|"), unit = FOE.hp === 1 ? u[0] : u[u.length - 1];
-    $("foeVal").textContent = FOE.unit ? FOE.hp + " " + unit + " left" : FOE.hp + " / " + FOE.max + " HP";
+    $("foeVal").textContent = FOE.pblind > 0 ? "??? (blinded)" : FOE.unit ? FOE.hp + " " + unit + " left" : FOE.hp + " / " + FOE.max + " HP";
     const bar = $("foeBar"), lag = $("foeLag");
     if (instant) { bar.style.transition = lag.style.transition = "none"; void bar.offsetWidth; }
     bar.style.width = pct; lag.style.width = pct;
@@ -12280,6 +12306,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
+      if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
       if (F.escapable) opts.push({ key: "escape", label: "Break away", tag: "Agility check DC " + escapeDc(F, st) + " · fail and it swings at your back with advantage · no XP or spoils", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
       hzFightOpts(F, st).forEach(o => opts.push(o));
@@ -12364,6 +12391,9 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         const n = d(6) + Math.floor(lv() / 5), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
         await say("You give ground, get your back to something, and make yourself breathe: in, and out, and in.");
         await mech("Catch your breath: regain " + (S.hp - b) + " HP.", "loot");
+      } else if (c === "wipe") {
+        blindSet(0);
+        await say("You give ground and drag a sleeve across your eyes until the world comes back, swimming, then sharp.");
       } else if (c === "escape") {
         const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0), dc: escapeDc(F, st), cta: "Run" });
         if (r.ok) { st.fled = "you"; await say("You feint high, drop low, and you're past it and running. It doesn't follow far."); }
@@ -12407,7 +12437,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0);
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0);
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
