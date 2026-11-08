@@ -2951,12 +2951,15 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     if (bleedPending()) return bleedSettle().then(() => chooseRaw(opts));
     return chooseRaw(opts);
   }
+  // An option is hidden whenever it has a show and that show is falsy (false, but also undefined, 0 or ""):
+  // a guard like \`show: R.hv.x && S.coins >= 12\` comes out undefined, not false, when R.hv.x was never set.
+  const shown = o => !("show" in o) || !!o.show;
   function chooseRaw(opts) {
     const main = FOE.menu; FOE.menu = false;
     return new Promise(resolve => {
       const box = el("div", "choices");
       let detach = null;
-      opts.filter(o => o.show !== false).forEach((o, i) => {
+      opts.filter(shown).forEach((o, i) => {
         const b = el("button", i === 0 && !o.plain ? "primary" : "", wpnTxt(o.label) + (o.tag ? '<span class="tag">' + wpnTxt(o.tag) + "</span>" : ""));
         b.type = "button";
         b.onclick = () => {
@@ -11300,7 +11303,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     for (let leg = 0; leg < 3 && client.hp > 0; leg++) {
       const L = job.legs[leg];
       await say(L.text);
-      const c = await choose(L.opts.filter(o => o.show !== false));
+      const c = await choose(L.opts.filter(shown));
       await L.run(c, hurtClient);
     }
     if (client.hp <= 0) {
@@ -15987,7 +15990,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         }
         if (hasGear("maul") && !st.used.maul) o.push({ key: "maul", label: "Strike the root-floor with the Wardens' Maul", tag: "she falls · loses a turn", plain: true });
         if (U.cord && !st.used.cord && !st.cut) o.push({ key: "cord", label: "Cut her cord at the weak knot", tag: "Dexterity DC 15", plain: true });
-        return o.filter(x => x.show !== false);
+        return o.filter(shown);
       },
       before: async (st) => {
         st.high = st.round % 2 === 0 && !st.grounded;
@@ -22085,7 +22088,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       }
       X.voy++; X.seen[w] = (X.seen[w] || 0) + 1;
       if (X.ship.hull <= 0) {
-        const lost = Math.floor(X.gold / 2); S.coins -= lost; renderSheet();
+        const lost = Math.min(S.coins, Math.floor(X.gold / 2)); S.coins -= lost; renderSheet();
         await say("She's holed in three places and settling by the head, and you have to put back with the pumps going day and night, and the crew taking turns.");
         await mech("Voyage ended early. " + (lost ? "You lose half of what you took out there (" + lost + " gold) to the sea, to the pumps, and to the men who worked them." : "") + " She'll need the shipwright before she sails again.", "hurt");
         await seaTemper(-2);
