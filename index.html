@@ -980,7 +980,26 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 .drop-track.fell { animation: quake .5s both; }
 .drop-track.fell .drop-zone { background: rgba(120, 96, 64, .75); }
 @media (max-width: 860px) { .wx-line { display: none; } }
+/* Locked into the fight (2026-11-08): while a foe is on the meter the screen closes in, a dark frame
+   that pulses with the war drum, reddens as your HP runs low, and jolts when a blow lands. A fight
+   opens on the foe's name slamming in, with your Menace under it. None of it takes a click. */
+#bfx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .6s ease; box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); }
+body.in-fight #bfx { opacity: 1; animation: bfxPulse 1.15s ease-in-out infinite; }
+body.in-fight.fight-low #bfx { box-shadow: inset 0 0 140px 50px rgba(90, 0, 0, .85); animation-duration: .8s; }
+body.in-fight .story > *:not(:nth-last-child(-n+6)) { opacity: .45; transition: opacity .6s; }
+body.fight-hit #bfx { animation: bfxHit .35s ease-out; }
+body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes bfxPulse { 0%, 100% { box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); } 12% { box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, .92); } }
+@keyframes bfxHit { 0% { box-shadow: inset 0 0 160px 80px rgba(150, 10, 10, .9); } 100% { box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, .85); } }
+.bfx-intro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; pointer-events: none; z-index: 61; background: radial-gradient(ellipse at center, rgba(0, 0, 0, .55), rgba(0, 0, 0, .9)); animation: bfxIn 1.9s ease forwards; padding: 0 16px; text-align: center; }
+.bfx-intro .nm { font-family: inherit; font-size: clamp(28px, 7vw, 56px); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #f2e2c4; text-shadow: 0 0 18px rgba(200, 40, 20, .8), 0 3px 0 #000; animation: bfxSlam .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.bfx-intro .mn { font-size: 15px; color: #e7b36a; letter-spacing: .12em; text-transform: uppercase; opacity: 0; animation: bfxFade .4s .45s ease forwards; }
+@keyframes bfxIn { 0% { opacity: 0; } 10% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes bfxSlam { 0% { transform: scale(2.6); opacity: 0; } 60% { transform: scale(.94); opacity: 1; } 75% { transform: scale(1.03) translateX(-4px); } 90% { transform: translateX(3px); } 100% { transform: scale(1); } }
+@keyframes bfxFade { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
+  body.in-fight #bfx, body.fight-hit #bfx, body.fight-hit .story, .bfx-intro .nm { animation: none; }
+  .bfx-intro { animation: bfxIn 1.9s linear forwards; }
   .wx::before, .wx::after, body.quake .story, .drop-track.fell { animation: none; }
   .wx { transition: none; }
 }
@@ -1127,6 +1146,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
 
 <main class="wrap">
   <article class="story" id="story" aria-live="polite"></article>
+  <div id="bfx" aria-hidden="true"></div>
 
   <aside class="sheet" id="sheet" aria-label="Character sheet">
     <div>
@@ -1357,7 +1377,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     part: 0, hp: 24, maxHp: 24, coins: 12,
     blessing: false, torch: false, axe: false, shield: false,
     gemsSpent: false, slain: false, books: [], dis: false, adv: false,
-    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true, lv: 3, xp: 0
+    paid: false, saw: false, crew: "", side: "", token: false, smoke: false, ember: false, tobbin: false, ending: "", belfry: true, lv: 3, xp: 0, pace: 2
   });
   let S = fresh();
 
@@ -1692,6 +1712,20 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const g = gain(0.6, sfx), o = ctx.createOscillator(), t = ctx.currentTime + 0.3;
         o.type = "triangle"; o.frequency.setValueAtTime(277, t); o.connect(g); env(g, t, 0.1, 0.12, 1.3); o.start(t); o.stop(t + 1.5);
       },
+      // A fight opens: two heavy drum strokes and a low growl under them.
+      menace() {
+        if (!live()) return;
+        blip(sfx, 62, { type: "sine", a: 0.004, dec: 0.5, vol: 0.32, bend: 0.5 });
+        blip(sfx, 58, { type: "sine", a: 0.004, dec: 0.7, vol: 0.34, bend: 0.5, at: 0.32 });
+        hiss(sfx, { f: 160, q: 0.9, a: 0.08, dec: 0.6, vol: 0.08, at: 0.3 });
+        blip(sfx, 41, { type: "sawtooth", a: 0.2, dec: 1.4, vol: 0.06, bend: 0.85, at: 0.3 });
+      },
+      // Under a fight: a war drum on every beat, or a heartbeat (two soft thuds) when HP runs low.
+      drum(low) {
+        if (!live()) return;
+        if (low) { blip(sfx, 55, { type: "sine", a: 0.004, dec: 0.18, vol: 0.2, bend: 0.6 }); blip(sfx, 50, { type: "sine", a: 0.004, dec: 0.22, vol: 0.15, bend: 0.6, at: 0.2 }); }
+        else blip(sfx, 70, { type: "sine", a: 0.004, dec: 0.28, vol: 0.12, bend: 0.55 });
+      },
       // A tremor or a fall: a low rumble with grit in it.
       quake() {
         if (!live()) return;
@@ -1926,6 +1960,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "59", name: "Locked In", date: "8 Nov 2026", items: [
+      "<b>Leveling, evened out.</b> A level comes about every two parts from the first chapter to the last, not one a part at the start and one every three at the end, and the story now ends right around level 40, where the Cascades wake. Saves keep their level.",
+      "<b>Milestones</b> every fifth level: +3 more max HP, a full heal and a bandage. Your level card shows the next one coming.",
+      "<b>You can outgrow places.</b> Story foes still rise to meet you, but an ordinary beast on the roads back belongs to its region: if you've outgrown it, it only closes half the gap, and it gives XP to match. Nightmares still meet you level for level.",
+      "<b>Menace.</b> Every fight opens with you bearing down on the foe: −1 to its attacks for your first 2 turns, −2 if you've outgrown it by 5 levels, −3 by 10. A beast 10 levels under you can be stared down.",
+      "<b>Locked into the fight.</b> The foe's name slams in, the screen closes in on a dark frame that beats with a war drum, reddens into a heartbeat when your HP runs low, and jolts with every blow you take.",
+      "<b>Break away</b>: getting out of a road fight is an Agility check now. Fail and it swings at your back with advantage, and each try is harder. Bosses and story fights don't let you go at all.",
+    ] },
     { ver: "58", name: "The Commoner's Almanac", date: "7 Nov 2026", items: [
       "The world talks about the time of year now. Mud and full ditches in spring, tariff arguments and sleeping guards in summer, leaf-drifted shrines and orchard lights in autumn, frozen wells and lamp-oil stockpiles in winter, on the roads and in the towns.",
       "Festival oddities: contradictory elders and beribboned oxen at the Root-Waking, cursed turnips and dangerous vegetable judging at the Fair of Full Barns, strangers' stories and shy bandits on the Night of Lamps, and the fox who gets the soup at the Long Candle.",
@@ -3071,6 +3113,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   }
 
   async function hurt(count, sides, type, why) {
+    bfxHit();
     let total = 0; const rolls = [];
     for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
     const rolled = total;
@@ -3130,19 +3173,33 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // level (it was under a tenth after the Glade), and the last bosses take 7 to 9 rounds, not 10 to 12. Head-count mobs keep their numbers. Level 5 teaches Adaptive Reasoning,
   // level 8 teaches Mimic, and level 40 wakes the Cascades (see the roads back, further down).
   const LV_MIN = 3, LV_MAX = 50, LV_GATE = 40, WAX_MAX = 9, PART_XP = 40, CHAPTER_XP = 200;
-  const xpNeed = (L) => 60 + 10 * (L - LV_MIN);
+  const LV_MILE = 5, MILE_HP = 3;
+  // Leveling pace (2026-11-08): about 108 XP a part comes in at any point of the story, so a nearly
+  // flat need (200, +1 a level) gives a level every two parts from start to finish and lands the
+  // last part of the story on level 40, where the Cascades wake. (It was 60 + 10 a level: a level
+  // every part in the first chapters, one every two or three at the end, and the story stopped near 38.)
+  // Past 40 the rings come from the roads back, 340 rising by 40 a level, about two dozen road fights.
+  const xpNeed = (L) => L < LV_GATE ? 200 + (L - LV_MIN) : 300 + 40 * (L - LV_GATE + 1);
   const lv = () => Math.min(LV_MAX, Math.max(LV_MIN, S.lv || LV_MIN));
   const lvk = () => lv() - LV_MIN;
+  // The level a foe fights at. Story foes and the Cascades' Nightmares rise to meet you. An ordinary
+  // road beast belongs to its region: it fights at the level you'd usually have when you left that
+  // region, and if you've outgrown it, it closes only half the gap. So walking back into the
+  // Labyrinth at level 35 feels like it, and gives less XP for it. FOE.lk holds it during a fight.
+  let nextReg = null;
+  const regLvk = (reg) => { const c = CHAPTERS[TIER[reg]]; return c ? lvAtPart(c.to + 1) - LV_MIN : lvk(); };
+  const foeLvkFor = (reg) => { if (reg == null || cascadeOn() || !(reg in TIER)) return lvk(); const r = regLvk(reg), k = lvk(); return k <= r ? k : Math.round(r + (k - r) / 2); };
+  const flk = () => FOE.lk != null ? FOE.lk : lvk();
   const lvHit = () => Math.floor(lvk() / 9);
   const lvDmg = () => Math.floor(lvk() / 3);
   const lvAC = () => Math.floor(lvk() / 12);
   const cascadeOn = () => !!S.cascade;
   const NM_HP = 1.1;
-  const foeMult = () => (1 + 0.035 * lvk()) * (cascadeOn() ? NM_HP : 1);
+  const foeMult = () => (1 + 0.035 * flk()) * (cascadeOn() ? NM_HP : 1);
   // A road Nightmare's +2 to hit and +2 damage run down its Cascade threads: cut them and the bonus goes.
   const nmUp = () => FOE.on && FOE.threadsMax ? Math.round(2 * FOE.threads / FOE.threadsMax) : 2;
-  const foeAtkUp = () => Math.floor(lvk() / 6) + (cascadeOn() ? nmUp() : 0);
-  const foeDmgUp = () => Math.floor(lvk() / 4) + (cascadeOn() ? nmUp() : 0);
+  const foeAtkUp = () => Math.floor(flk() / 6) + (cascadeOn() ? nmUp() : 0) - menaceNow();
+  const foeDmgUp = () => Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0);
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -3561,10 +3618,22 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0) + (S.champ ? 1 : 0);
   const lvNewsQ = () => (S.lvNews = S.lvNews || []);
   // A save from before levels gets the XP a player would have earned on the way to its part.
+  // The level a player usually has on reaching a part (the playtest bot earns ~108 XP a part).
+  function lvAtPart(p) { let x = 108 * p, L = LV_MIN; while (L < LV_MAX && x >= xpNeed(L)) { x -= xpNeed(L); L++; } return L; }
+  // Saves from before the 2026-11-08 pace keep their level; the XP toward the next one keeps its share of the bar.
+  function lvRepace(v) {
+    if (!v || !v.lv || v.pace === 2) return v;
+    const L = Math.min(LV_MAX, Math.max(LV_MIN, v.lv)), old = 60 + 10 * (L - LV_MIN);
+    v.xp = L >= LV_MAX ? 0 : Math.min(xpNeed(L) - 1, Math.round((v.xp || 0) / old * xpNeed(L)));
+    v.pace = 2;
+    return v;
+  }
   function lvInit(v) {
-    if (!v || v.lv) return v;
+    if (v && v.lv) return lvRepace(v);
+    if (!v) return v;
+    v.pace = 2;
     v.lv = LV_MIN; v.xp = 0;
-    let pool = Math.round((v.part || 0) * 118);
+    let pool = Math.round((v.part || 0) * 108);
     while (v.lv < LV_MAX && pool >= xpNeed(v.lv)) { pool -= xpNeed(v.lv); v.lv++; v.maxHp += 2; v.hp += 2; }
     v.xp = pool;
     if (v.lv >= 5) v.adapt = true;
@@ -3586,9 +3655,11 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       const b = $("xpBox"); b.classList.remove("up"); void b.offsetWidth; b.classList.add("up");
     });
   }
+  // Every fifth level is a milestone: +3 more max HP, a full heal and a bandage.
   function lvUp(L) {
     S.maxHp += 2;
     S.hp = Math.min(S.maxHp, S.hp + 2 + Math.floor(S.maxHp / 10));
+    if (L % LV_MILE === 0) { S.maxHp += MILE_HP; S.hp = hpCap(); S.dress = (S.dress || 0) + 1; }
     if (L === 5) { S.adapt = true; lvNewsQ().push(["adapt", L]); }
     if (L === 8) { S.mimic = true; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); lvNewsQ().push(["mimic", L]); }
     else if (L > 8 && L % 4 === 0) S.wax = Math.min(WAX_MAX, (S.wax || 0) + 1);
@@ -3596,7 +3667,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     stat("level-" + L, "Reached level " + L);
   }
   function lvPerks(L) {
-    const k = L - LV_MIN, p = ["+2 max HP"];
+    const k = L - LV_MIN, mile = L % LV_MILE === 0, p = [mile ? "milestone: +" + (2 + MILE_HP) + " max HP, a full heal and a bandage" : "+2 max HP"];
     if (k % 9 === 0) p.push("+1 to hit");
     if (k % 3 === 0) p.push("+1 damage");
     if (k % 12 === 0) p.push("+1 AC");
@@ -3604,13 +3675,14 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (L === 8) p.push("learned Mimic, with 3 Mockwax");
     else if (L > 8 && L % 4 === 0) p.push("+1 Mockwax");
     if (L === LV_GATE) p.push("the Cascades wake");
-    return p.join(", ") + ". Foes rise to meet you.";
+    return p.join(", ") + ". Story foes rise to meet you; the roads back's old beasts only half do.";
   }
   const LV_ICON = '<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#22301f" stroke="#cfa850" stroke-width="1.5"/><circle cx="17" cy="17" r="10" fill="none" stroke="#9fbf7a" stroke-width="1"/><circle cx="17" cy="17" r="6" fill="none" stroke="#9fbf7a" stroke-width="1"/><path d="M17 26V12M12 16l5-5 5 5" fill="none" stroke="#ffd27a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function renderXp() {
     const L = lv(), cap = L >= LV_MAX, need = xpNeed(L), x = cap ? need : Math.min(need, S.xp || 0);
     $("lvVal").textContent = L;
-    $("lvSub").textContent = "Level " + L + " adventurer" + (cap ? " (the most there is)" : "");
+    const mile = Math.ceil((L + 1) / LV_MILE) * LV_MILE;
+    $("lvSub").textContent = "Level " + L + " adventurer" + (cap ? " (the most there is)" : " · next milestone at " + Math.min(LV_MAX, mile) + (L < LV_GATE && mile >= LV_GATE ? ", the Cascades" : ""));
     $("xpVal").textContent = cap ? "Level cap" : x + " / " + need + " XP";
     $("xpBar").style.width = (cap ? 100 : x / need * 100) + "%";
     $("xpBox").classList.toggle("cap", cap);
@@ -3632,7 +3704,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     if (!FOE.on || !started || FOE.hp >= FOE.max) return;
     if (FOE.hp <= 0) ctWin();
     const base = FOE.unit ? 12 * FOE.max : 15 + FOE.base;
-    xpGain((roamFight ? base * 2 + 4 * lv() : base) * (FOE.hp > 0 ? 0.5 : 1));
+    xpGain((roamFight ? base * 2 + 4 * (flk() + LV_MIN) : base) * (FOE.hp > 0 ? 0.5 : 1));
     if (S.adapt) { S.reads = S.reads || {}; const k = readKey(FOE.name); S.reads[k] = Math.min(5, (S.reads[k] || 0) + 1); }
   }
 
@@ -5584,8 +5656,46 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
   // land keep it going. Mob fights ("unit" foes) count heads instead of HP.
   // dig/dug/digAdv: the dig-in last stand; grained: the heartgrain has slowed a blow; burnt: a no-roll blast has landed.
   const FOE = { on: false, name: "", hp: 0, max: 0, base: 0, lvd: false, read: 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, unit: "", chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, crit: false, bleedPct: 0, bledAt: -1 };
+  // ---------- Menace, and fights you're locked into ----------
+  // Every fight opens with your Menace: you bear down on the foe and it flinches, -1 to its attacks
+  // for your first 2 turns, -2 if you've outgrown it by 5 levels, -3 by 10. Nightmares fear other
+  // things more than you: they only ever flinch 1. An outgrown road beast (10 levels under you) may
+  // not want the fight at all: you can stare it down. While the fight lasts the screen locks in.
+  const MENACE_TURNS = 2;
+  // Breaking away from a road fight is an Agility check: DC 11, +1 per 6 of the foe's levels, +2 for a Nightmare, +1 for each failed try.
+  const escapeDc = (F, st) => 11 + Math.floor(flk() / 6) + (cascadeOn() ? 2 : 0) + ((st && st.tries) || 0);
+  const menaceFor = (fk) => { if (cascadeOn()) return 1; const gap = lvk() - fk; return 1 + (gap >= 5 ? 1 : 0) + (gap >= 10 ? 1 : 0); };
+  const menaceNow = () => FOE.on && FOE.menace && FOE.turn <= MENACE_TURNS ? FOE.menace : 0;
+  let bfxTimer = 0, bfxBeat = 0;
+  function bfxOpen(name, menace) {
+    document.querySelectorAll(".bfx-intro").forEach(x => x.remove());
+    const nmTxt = String(name || "").replace(/<[^>]*>/g, "");
+    const box = el("div", "bfx-intro", "<div class='nm'></div><div class='mn'></div>");
+    box.setAttribute("aria-hidden", "true");
+    box.querySelector(".nm").textContent = nmTxt;
+    box.querySelector(".mn").textContent = "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns";
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 2000);
+    document.body.classList.add("in-fight");
+    try { SND.menace(); } catch (e) {}
+    clearInterval(bfxTimer); bfxBeat = 0;
+    bfxTimer = setInterval(() => {
+      if (!FOE.on) return bfxClose();
+      const low = S.hp <= Math.max(1, S.maxHp * 0.3);
+      document.body.classList.toggle("fight-low", low);
+      bfxBeat++;
+      if (low || bfxBeat % 2 === 0) { try { SND.drum(low); } catch (e) {} }
+    }, 575);
+  }
+  function bfxClose() { clearInterval(bfxTimer); bfxTimer = 0; document.body.classList.remove("in-fight", "fight-low", "fight-hit"); }
+  function bfxHit() {
+    if (!FOE.on) return;
+    const b = document.body; b.classList.remove("fight-hit"); void b.offsetWidth; b.classList.add("fight-hit");
+    setTimeout(() => b.classList.remove("fight-hit"), 380);
+  }
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
+    FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); nextReg = null;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
@@ -5593,11 +5703,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
+    FOE.menace = menaceFor(FOE.lk);
+    bfxOpen(name, FOE.menace);
     jCount("fights");
     renderFoe(true);
     if (!unit) tip("fight");
   }
-  function foeEnd(lost) { if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.lk = null; FOE.menace = 0; bfxClose(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -11320,6 +11432,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
+      if (F.escapable) opts.push({ key: "escape", label: "Break away", tag: "Agility check DC " + escapeDc(F, st) + " · fail and it swings at your back with advantage · no XP or spoils", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       sdFilter(opts, st);
@@ -11402,6 +11515,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         const n = d(6) + Math.floor(lv() / 5), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
         await say("You give ground, get your back to something, and make yourself breathe: in, and out, and in.");
         await mech("Catch your breath: regain " + (S.hp - b) + " HP.", "loot");
+      } else if (c === "escape") {
+        const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0), dc: escapeDc(F, st), cta: "Run" });
+        if (r.ok) { st.fled = "you"; await say("You feint high, drop low, and you're past it and running. It doesn't follow far."); }
+        else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
       } else if (c === "evade") {
         st.evade = true;
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
@@ -11427,7 +11544,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       st.evade = false;
     }
     F.overtaken = !!st.overtaken;
-    F.fled = !!st.fled;
+    F.fled = st.fled === "you" ? "you" : !!st.fled;
     foeEnd(!!st.fled);
     light(back);
     if (hasSkill("mend") && S.hp < S.maxHp) {
@@ -12008,7 +12125,13 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
     add(el("div", "", beastCard(B)));
     if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
     const sneak = 3 + (S.shadow ? 2 : 0) + (hasMark("roadwise") ? 2 : 0) + wxSneak();
-    const c = forced || haunt ? "fight" : await choose([{ key: "fight", label: "Fight", tag: "Lv " + lv() + (nm ? " Nightmare" : "") }, roam ? { key: "leave", label: "Let it go", plain: true } : { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }]);
+    const stareOk = !nm && !forced && !haunt && lvk() - foeLvkFor(reg) >= 10;
+    const c = forced || haunt ? "fight" : await choose([{ key: "fight", label: "Fight", tag: "Lv " + (foeLvkFor(reg) + LV_MIN) + (nm ? " Nightmare" : foeLvkFor(reg) < lvk() ? " · you've outgrown it" : "") }, roam ? { key: "leave", label: "Let it go", plain: true } : { key: "slip", label: "Try to slip past", tag: "Stealth DC " + B.notice, plain: true }].concat(stareOk ? [{ key: "stare", label: "Stare it down", tag: "Menace · Intimidation DC " + (B.notice - 2) + " · it runs, and you take a little XP", plain: true }] : []));
+    if (c === "stare") {
+      const r = await check({ label: "Intimidation check (your Menace)", mod: 2 + menaceFor(foeLvkFor(reg)) * 2, dc: B.notice - 2, cta: "Stare" });
+      if (r.ok) { await say("You don't reach for a weapon. You just look at it, the way you've looked at worse things than it, and let it see you remember them. It backs off a step, then another, and then it's gone."); xpGain(10); light(back); return; }
+      await say("It holds your eye a moment too long, and then it comes anyway.");
+    }
     if (c === "leave") { await say("You step off the road and let it pass."); light(back); return; }
     let spotted = false;
     if (c === "slip") {
@@ -12091,7 +12214,10 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
         if (ownTurn) return ownTurn(st);
       };
     }
+    F.escapable = true;
+    nextReg = reg;
     await hkFight(F);
+    nextReg = null;
     light(back);
     if (F.overtaken) {
       S.haunt = { reg, id: B.id, hp: Math.max(1, FOE.hp), threads: FOE.threads, max: FOE.threadsMax, pack: many };
@@ -12102,6 +12228,7 @@ body.quake .story { animation: quake .7s cubic-bezier(.36, .07, .19, .97) both; 
       renderSheet(); return;
     }
     const tier = TIER[reg];
+    if (F.fled === "you") { await mech("You broke away. No XP and no spoils, but you're out."); return; }
     if (F.fled === "thief") { await mech("The sandpicker got away with " + F.stolen + " gold.", "hurt"); return; }
     if (F.stolen) { S.coins += F.stolen; renderSheet(); await mech("You take back the " + F.stolen + " gold it lifted from you.", "loot"); }
     if (F.fled) { await gold(1, 4, "It got away, but it left something behind."); beastLog(B, true); return; }

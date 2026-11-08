@@ -22,15 +22,18 @@ const SCALE = {
   now: { mult: k => 1 + 0.035 * k, atk: k => Math.floor(k / 6), dmg: k => Math.floor(k / 4), heads: k => 0, pdmg: k => Math.floor(k / 3), bleed: 25, band: true },
   try: { mult: k => 1 + E("M", 0.035) * k, atk: k => Math.floor(k / E("A", 6)), dmg: k => Math.floor(k / E("D", 4)), heads: k => 0, pdmg: k => Math.floor(k / E("P", 3)), bleed: E("B", 25), band: true },
 }[V];
-// Level and max HP at a part (from playtest runs: lv ≈ 3 + 0.57*part; HP ≈ 24 + 2k, +56% at the Glade, + ~8 items).
-const lvAt = (p) => Math.min(40, Math.round(3 + 0.57 * p));
-const hpAt = (p, L) => { const k = L - 3; let h = 24 + 2 * k; if (p >= 15) h += Math.round(0.56 * (24 + 2 * Math.min(k, 10))); if (p >= 10) h += 6; if (p >= 30) h += 6; return h; };
+// Level and max HP at a part. The pace since 2026-11-08 (xpNeed 200 + 1 a level, the bot earns ~108 XP a
+// part) lands about a level every two parts and level 40 at the end of the story; "old" is the pace
+// before it (lv ≈ 3 + 0.57*part). HP ≈ 24 + 2k (+3 at each fifth-level milestone), +56% at the Glade, + ~8 items.
+const xpNeed = (L) => L < 40 ? 200 + (L - 3) : 300 + 40 * (L - 39);
+const lvAt = (p) => { if (V === "old") return Math.min(40, Math.round(3 + 0.57 * p)); let x = 108 * p, L = 3; while (L < 50 && x >= xpNeed(L)) { x -= xpNeed(L); L++; } return L; };
+const hpAt = (p, L) => { const k = L - 3; let h = 24 + 2 * k + (V === "old" ? 0 : 3 * Math.floor(L / 5)); if (p >= 15) h += Math.round(0.56 * (24 + 2 * Math.min(k, 10))); if (p >= 10) h += 6; if (p >= 30) h += 6; return h; };
 
 function fight(F, L, maxHp, opt = {}) {
-  const k = L - 3;
+  const k = L - 3, fk = opt.fk != null ? opt.fk : k; // fk: the foe's level (an outgrown road beast fights below yours)
   const heads = !!F.heads;
-  let fhp = heads ? F.heads + SCALE.heads(k) : Math.round(F.hp * SCALE.mult(k));
-  const fatk = F.atk + SCALE.atk(k), fdmg = SCALE.dmg(k);
+  let fhp = heads ? F.heads + SCALE.heads(fk) : Math.round(F.hp * SCALE.mult(fk));
+  const fatk = F.atk + SCALE.atk(fk), fdmg = SCALE.dmg(fk);
   let hp = maxHp, rounds = 0, chain = 0, adapt = 0, grained = false, gems = true, lowest = hp, saves = 0, bleed = [], bands = 2;
   const pHit = 5 + Math.floor(k / 9), pDmg = 3 + SCALE.pdmg(k);
   const acBase = 13 + Math.floor(k / 12) + (opt.gear || 0);
@@ -96,9 +99,16 @@ if (require.main === module) {
     ["Bathyr x3 (p57)", 57, { heads: 3, ac: 14, atk: 5, s: 8 }],
     ["Silent General (p60)", 60, { hp: 42, ac: 16, atk: 7, s: 10 }],
     ["Curator (p61)", 61, { hp: 52, ac: 15, atk: 7, s: 10 }],
-    ["Road beast L40", 70, { hp: 20, ac: 13, atk: 4, s: 8 }],
-    ["Road mob L40", 70, { heads: 3, ac: 12, atk: 4, s: 6 }],
+    ["Road beast L40", 76, { hp: 20, ac: 13, atk: 4, s: 8 }, 40],
+    ["Road mob L40", 76, { heads: 3, ac: 12, atk: 4, s: 6 }, 40],
+    // An outgrown road beast: back in the Labyrinth (left at part 6) at level 30 and 39, before the Cascades.
+    ["Knot-hound back home L30", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 30, "roots"],
+    ["Knot-hound back home L39", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 39, "roots"],
+    ["Brine-hound back L39", 76, { hp: 20, ac: 13, atk: 5, s: 6 }, 39, 62],
   ];
+  // The game's foeLvkFor: a road beast fights at the level you'd have on leaving its region, closing half the gap if you've outgrown it.
+  const regK = (left) => lvAt(left) - 3;
+  const fkFor = (k, left) => { if (V === "old" || left == null) return k; const r = regK(left === "roots" ? 6 : left); return k <= r ? k : Math.round(r + (k - r) / 2); };
   console.log("curve: " + V);
-  for (const [n, p, F] of FIGHTS) { const L = lvAt(p), H = hpAt(p, L); console.log(n.padEnd(26), "Lv" + L, "HP" + H, JSON.stringify(stats(F, L, H, { grain: p > 5, gear: p > 20 ? 1 : 0 }))); }
+  for (const [n, p, F, lvl, left] of FIGHTS) { const L = lvl || lvAt(p), H = hpAt(p, L), fk = fkFor(L - 3, left); console.log(n.padEnd(26), "Lv" + L + (fk !== L - 3 ? " (foe Lv" + (fk + 3) + ")" : ""), "HP" + H, JSON.stringify(stats(F, L, H, { grain: p > 5, gear: p > 20 ? 1 : 0, fk }))); }
 }
