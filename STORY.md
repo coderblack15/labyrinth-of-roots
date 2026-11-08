@@ -1191,6 +1191,18 @@ The four pieces of the chart (the *Constant Ann*'s bell, Old Lusk at the market,
 
 A **price on your head** (pirates) or a **pirates' grudge** (a Saltwrit man) brings thief-takers or a grudge-crew now and then. Pay them off, talk them down, name a captain who owes you, or fight (and more come). Raiders with a name can take a **Saltwrit salt-tax wagon** instead of a caravan. Raftmark's townsfolk talk about the hoard, the bell, the hanging-book, the lights, your prizes, your marooned captains and your mutiny.
 
+## Blade to Blade: duels on the stroke pad
+
+Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes, parries and attacks that overwhelm, "hundreds of attacks based on screen strokes". A prototype (the Salle Duel) came first, then the engine went into the game.
+
+- **The exchange.** Read: the foe's blade streaks across the pad (or, Blinded, you only hear it whistle from one side). Answer: draw the opposite stroke before the bar runs out. Exact and inside a second is a riposte (their guard drops to one edge, +2 Pressure). One direction off catches half. Press: up to three strokes, then their turn.
+- **Strokes.** Cut (a line, 8 directions), hook (a bowed line: a feint that pulls their guard to that side), thrust (a tap: small, always lands), bind (a loop: their guard is open for your next stroke). 18 strokes, 6,174 chains of up to three.
+- **Guard and Pressure.** They cover two of high, low, left and right (three for masters). A cut lands if any edge it drives toward is open. Every stroke adds a Pressure (6 breaks the guard: the next blow lands double). Repeat a stroke inside your last three and they guard it.
+- **Memory.** Each duelist remembers how you fight (S.duel.foes): meet them again and they guard your favourite stroke from the first press. A rival captain marooned or let go comes back knowing it; so does a gang's Knife on a grudge.
+- **Forms** (J.forms, across every journey): Widow's Cross, Root and Branch, Two Rivers, Foxstep, Rising Ember, Lantern Turn, Bell Stroke, Gate Knocker, Heron's Reach, Thornwheel, Kingfisher Dive, Mill-Wheel.
+- **Salles.** Every town on the roads back. Journeyman, provost and master, with blunted blades (your HP comes back). The master teaches a Form you haven't found. Each salle keeps one of three schools, and your first choice of school holds for the journey; other halls remark on it. The Lantern Hall (longer to answer, ripostes +3), the Thornwheel Yard (start at 2 Pressure, broken guards +4), the Foxstep Room (feints cut for 1d4 and add 2 Pressure).
+- **Where else.** Boarding on the Open Reach: call the captain out on the quarterdeck (win and the crew strike, lose and you're thrown back). Bandit gangs: challenge the Knife to single combat (win and the gang yields the cart and counts as broken; lose and all four set on you; you can break away).
+
 ## The Deafstones: lore tablets
 
 A fallen light wakes to loud voices, so the first wardens, the Whisperers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.

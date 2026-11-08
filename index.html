@@ -569,6 +569,39 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .pgrid.shell .tg { font-size: 1.8rem; line-height: 1; }
 .pgrid.shell small { font-family: var(--label); font-size: .7rem; color: var(--muted); }
 .pgrid.lock button { width: 56px; height: 56px; font-size: 1.5rem; }
+.duel { margin: 0 0 1em; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--label); max-width: 460px; }
+.duel .du-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.duel .du-ph { font-family: var(--display); font-size: 1.25rem; color: var(--ink); }
+.duel .du-tag { font-size: .8rem; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+.duel .du-pr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); margin: 6px 0; }
+.duel .du-pips { display: flex; gap: 4px; }
+.duel .du-pips i { width: 16px; height: 9px; border-radius: 2px; border: 1px solid var(--line); background: #0b0f0d; }
+.duel .du-pips i.on { background: var(--gold); border-color: var(--gold); }
+.duel .du-pips.full i { background: var(--ember); border-color: var(--ember); }
+.duel .du-timer { height: 4px; background: #0b0f0d; border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.duel .du-timer i { display: block; height: 100%; width: 0; background: var(--ember); }
+.duel .du-pad { position: relative; width: 100%; max-width: 440px; aspect-ratio: 1 / 1; touch-action: none; user-select: none; -webkit-user-select: none; }
+.duel canvas { width: 100%; height: 100%; display: block; border-radius: 6px; border: 1px solid var(--line); background: radial-gradient(circle at 50% 45%, #1d2620 0%, #0b0f0d 72%); touch-action: none; cursor: crosshair; }
+.duel .du-chain { display: flex; gap: 6px; flex-wrap: wrap; min-height: 28px; margin: 6px 0; }
+.duel .du-chain span { border: 1px solid var(--line); border-radius: 4px; padding: 1px 7px; font-size: .9rem; }
+.duel .du-chain .hit { border-color: var(--emerald); }
+.duel .du-chain .blk { color: var(--muted); }
+.duel .du-chain .form { border-color: var(--gold); color: var(--gold); }
+.duel .du-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.duel button { font: inherit; color: var(--ink); background: #1b231e; border: 1px solid var(--line); border-radius: 5px; padding: 7px 11px; cursor: pointer; }
+.duel button:hover:not(:disabled) { border-color: var(--gold); }
+.duel button:disabled { opacity: .4; cursor: default; }
+.duel .du-btns label { font-size: .85rem; color: var(--muted); display: flex; gap: 5px; align-items: center; cursor: pointer; }
+.duel details { margin-top: 6px; }
+.duel summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
+.duel .du-keys { display: inline-grid; grid-template-columns: repeat(3, 46px); gap: 5px; margin: 6px 12px 0 0; vertical-align: top; }
+.duel .du-keys button { padding: 8px 0; font-size: 1.1rem; }
+.duel .du-kx { display: inline-flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.duel .du-log { max-height: 150px; overflow-y: auto; font-family: var(--body); font-size: .9rem; line-height: 1.45; margin-top: 6px; }
+.duel .du-log p { margin: 0 0 3px; }
+.duel .du-log .y { color: var(--emerald); } .duel .du-log .f { color: #e89a8c; } .duel .du-log .g { color: var(--gold); } .duel .du-log .s { color: var(--muted); }
+.duel.spent .du-pad, .duel.spent .du-btns, .duel.spent details, .duel.spent .du-timer { display: none; }
+.duel.spent .du-log { max-height: 90px; }
 .lockhist { font-family: var(--label); letter-spacing: .1em; line-height: 1.7; font-size: .95rem; }
 .pgrid.maze { gap: 0; }
 .pgrid.maze button { width: 42px; height: 42px; border-radius: 0; border-color: var(--gold); font-size: 1rem; }
@@ -1694,6 +1727,9 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       paint,
       region(slug) { want = slug; if (live()) build(); },
       tone(i, dur = 0.42) { if (live()) heskTone(i, sfx, { dur }); },
+      // Duels: a blade you can't see whistles from where it comes (panned, pitched by height), and steel meets steel.
+      whistle(pan, f) { if (!live()) return; let dest = sfx; if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; p.connect(sfx); dest = p; } blip(dest, f, { type: "triangle", a: 0.01, dec: 0.45, vol: 0.14, bend: 0.85 }); },
+      clang(parry) { if (live()) bell(sfx, hz(parry ? 84 : 72), 0.05, 1.1); },
       // Plays a phrase of tones and says how long it lasts in ms (0 when sound is off).
       phrase(seq, o = {}) { return live() ? phraseInto(sfx, seq, o) * 1000 : 0; },
       // The Singing Door hums back its answer: a bright bell for each true note, a low one for each near note.
@@ -1946,6 +1982,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     h += linkSection();
     h += cwSection(rs);
     h += seaSection(rs);
+    h += duelSection(rs);
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
         J.past.slice(0, 8).map(x => "<tr><td>" + new Date(x.start).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + "</td><td>" +
@@ -1968,6 +2005,14 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "64", name: "Blade to Blade", date: "8 Nov 2026", items: [
+      "<b>Duels</b>, fought on a pad you draw on. Each exchange has three phases. <b>Read</b>: their blade streaks across the pad. <b>Answer</b>: draw the stroke that meets it, running the other way; quick and exact is a <b>riposte</b>, one direction off still catches half. <b>Press</b>: up to three strokes of your own.",
+      "Four shapes in eight directions: a line is a <b>cut</b>, a curve is a <b>feint</b> that pulls their guard, a tap is a <b>thrust</b> that always lands, and a loop <b>binds</b> their blade. That's 6,174 different chains of three. Cut toward the dark edges; the lit ones are their guard. Every stroke builds <b>Pressure</b>, and a full bar breaks the guard for a double blow.",
+      "Repeat yourself and they guard it. Meet the same duelist again and they remember your favourite stroke from the start.",
+      "<b>The Form Book</b>: twelve named chains (Widow's Cross, Mill-Wheel, Gate Knocker and more), found in duels or taught by masters, and kept across every journey in your journal.",
+      "<b>The salle</b> in every town on the roads back: spar the journeyman, the provost and the master with blunted blades. Masters teach a Form, and you can take up one of three schools for the journey: the Lantern Hall, the Thornwheel Yard or the Foxstep Room. Other halls can tell.",
+      "<b>Rival captains</b> on the Open Reach: when you board, call the captain out blade to blade. <b>Bandit gangs</b>: challenge their Knife to single combat, and win the cart without fighting all four.",
+      "Draw with a finger or a mouse, or use the keys (Q W E, A D, Z X C or the arrows, Shift to feint, S to thrust, R to bind, Enter to end your press), or the button pad. <b>Steady</b> takes the timer away. Locked in, Menace (more time to answer) and Blinded (parry by the whistle of the blade) all work in duels. Eight new pursuits in <b>Blade to Blade</b>."] },
     { ver: "63", name: "Blinded", date: "8 Nov 2026", items: [
       "Fights no longer darken the whole screen. An ordinary fight gets a thin ember border that beats with the war drum and reddens when your HP runs low, so the page stays easy to read.",
       "The dark comes only when you're <b>Blinded</b>: a blow that lands has about a 1 in 10 chance (more from Nightmares) to blind you with grit, blood or a flash. Your next 2 swings have disadvantage, the foe's meter reads ???, and Evade is halved.",
@@ -2515,6 +2560,14 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     { id: "hzcrack", name: "What the Ground Gives Back", desc: "Take a cache out of a crack an earthquake opened.", test: () => false },
     { id: "hzdig", name: "Navvy", desc: "Dig a landslide off the salt road to Ashgate yourself.", test: () => false },
     { id: "hzall", name: "Unsteady Ground", desc: "Face sinking sand, a landslide and an earthquake on one journey.", test: () => !!S.hz && (S.hz.met || []).length >= 3, prog: () => [Math.min(3, S.hz ? (S.hz.met || []).length : 0), 3] },
+    { id: "dufirst", name: "Steel on Steel", desc: "Win a duel with sharp blades.", test: () => false },
+    { id: "duriposte", name: "Answer and Return", desc: "Riposte three times in one duel.", test: () => false },
+    { id: "duschool", name: "A Hall of Your Own", desc: "Take up the way of a salle.", test: () => false },
+    { id: "duforms6", name: "Half a Book", desc: "Find six Forms, across every journey.", test: () => DUEL_FORMS.filter(f => (J.forms || {})[f.id]).length >= 6, prog: () => [Math.min(6, DUEL_FORMS.filter(f => (J.forms || {})[f.id]).length), 6] },
+    { id: "duforms", name: "The Whole Form Book", desc: "Find every Form, across every journey.", test: () => DUEL_FORMS.every(f => (J.forms || {})[f.id]), prog: () => [DUEL_FORMS.filter(f => (J.forms || {})[f.id]).length, DUEL_FORMS.length] },
+    { id: "dusalle", name: "Three Masters", desc: "Beat the masters of three salles on one journey.", test: () => false, prog: () => [Math.min(3, S.duel ? Object.values(S.duel.salle).filter(v => v >= 3).length : 0), 3] },
+    { id: "ducaptain", name: "On Her Own Quarterdeck", desc: "Beat a rival captain blade to blade.", test: () => false },
+    { id: "duknife", name: "Single Combat", desc: "Beat a gang's Knife in a duel on the road.", test: () => false },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
@@ -2556,7 +2609,9 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     { id: "opensea", name: "The Open Reach", ver: "16", desc: "A ship of your own after the Black Tithe: five waters, seven rival captains, broadside duels and the Salt King's hoard.",
       ids: ["seafirst", "seawaters", "seaduel", "searivals", "seafleet", "seafog", "sealog", "seastorm", "seabones", "seavote", "seafit", "seachart", "seaknot", "seahoard", "seapatience"] },
     { id: "ground", name: "The Ground Underfoot", ver: "17", desc: "Sinking sand, landslides and earthquakes in their home countries, and what they leave behind.",
-      ids: ["hzsink", "hzslide", "hzcrack", "hzdig", "hzall"] }
+      ids: ["hzsink", "hzslide", "hzcrack", "hzdig", "hzall"] },
+    { id: "duels", name: "Blade to Blade", ver: "18", desc: "Stroke duels on the pad: parries and ripostes, Pressure, twelve Forms, the salles, rival captains and the gangs' Knives.",
+      ids: ["dufirst", "duriposte", "duschool", "duforms6", "duforms", "dusalle", "ducaptain", "duknife"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2931,6 +2986,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     bloodroads: ["The Blood-bought Roads", "Each stretch between two kingdoms has its own name and nature: monster country (caravans with a body count), sellsword roads (escort contracts), conquered land (locals who want it back) and blood-tolls (pay in coin or blood, or take the bridge). Gang wars and chases turn up on any of them, and the Red-Coin Peddler, now and then."],
     contender: ["Contender", "Every fight you win counts towards the Contender. Each rank takes a twentieth off in towns on the roads back, and every town pays a purse for your stories once you've won another fight. Rank III: free rooms. Rank V: free honing. Rank VI: a gift from the healer."],
     calendar: ["The calendar", "Every part and every errand moves the clock on, the road between kingdoms takes days, and a rest runs on to morning. The date is under your purse. On the roads back, every sixth day is <b>market day</b> (town stalls a fifth cheaper), each season has a <b>festival</b> in the towns, <b>winter</b> tolls cost half as much again, and at <b>night</b> the gangs on the Blood-bought Roads lie in wait, with fatter purses. You can make camp and wait for dark, or for morning. Nothing ever runs out."],
+    duel: ["Duels", "A duel is fought on the pad. <b>Read</b>: watch where their blade comes from. <b>Answer</b>: draw the stroke that meets it, running the other way (they cut ↘, you draw ↖; meet a thrust with a small loop). Quick and exact is a <b>riposte</b>. <b>Press</b>: up to three strokes. A line is a cut, a curve is a feint that pulls their guard, a tap is a thrust that always lands, and a loop binds their blade. Strokes toward the dark edges land; the lit edges are their guard. Fill Pressure to break it. Named chains are <b>Forms</b>, kept in your journal. No drawing? Use the keys (Q W E, A D, Z X C, Shift to feint, S, R) or the button pad, and Steady takes the timer away."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -5306,11 +5362,13 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : echoBarFree(T) ? "on the house, since the Assize" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || echoBarFree(T) || lamps || S.coins >= P(2)), plain: true },
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
         ...hzTownOpts(T),
+        { key: "salle", label: "Climb the stairs to the salle", tag: (S.duel && S.duel.salle[T.reg + ":" + T.name] >= 3 ? "you've beaten the master here" : "duels with blunted blades · Forms and a school"), show: T.kind === "town", plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: "Back to the road", plain: true }
       ]);
       if (c === "leave") break;
       if (c === "fair") await calJoin(T, fair);
+      if (c === "salle") await salleVisit(T);
       if (c.startsWith("hz:")) await hzTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
       if (c === "almanac") {
@@ -22317,6 +22375,19 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say(theyBoard ? "They come over the rail with a roar." : "You lay her alongside, and the grapnels go across, and you go with them.");
     const caps = id === "quay" ? ["Ennis Quay", "Lorne Quay"] : [R.name.replace(/, called .*/, "")];
     const fac = R.skerra ? SKERRA : id === "patience" ? HUNTERS : PIRATES;
+    // Blade to blade: call the captain out on the quarterdeck. Win and the crew strike; lose and you're thrown back.
+    const dm = duel().foes["sea:" + id];
+    const how = await choose([
+      { key: "deck", label: "Fight across her deck", tag: "her whole crew, and " + (caps.length > 1 ? "both captains" : "the captain") },
+      { key: "duel", label: "Call " + caps[0] + " out, blade to blade", tag: "a duel on the quarterdeck · win and her crew strike · lose and you're thrown back" + (dm && dm.met ? " · they've fought you before" : ""), plain: true }
+    ]);
+    if (how === "duel") {
+      await say(dm && dm.met ? "\"You again,\" " + caps[0] + " says, and comes down the ladder to the waist with a cutlass in one hand. \"I've been thinking about the way you fight.\"" : "You shout for " + caps[0] + " across the deck, and the fighting stops around you, the way it does. " + caps[0] + " comes down from the quarterdeck with a cutlass and an ugly smile, and the two crews make a ring.");
+      const r = await duelFight({ id: "sea:" + id, name: caps[0], hp: 30 + Math.floor(E.max / 2), dmg: [2, 6, 1], win: 2100, chains: [0.6, 0.3] });
+      if (r.won) { duel().caps++; grant("ducaptain"); await say(caps[0] + " goes down on one knee on the planking with your " + wNoun(wpnKey()).replace("arrow", "knife") + " at their throat, and the crew look at each other, and the cutlasses start going down on the deck one at a time."); return "won"; }
+      await say("You go back over the rail with " + caps[0] + "'s cutlass at your back and the crews' jeering in your ears, and somebody cuts the grapnels.");
+      return "fled";
+    }
     const F = await companyFight({ soldiers: Math.max(2, E.crew - (seaHas("cagemen") ? 2 : 0) - (theyBoard ? 0 : 1)), captains: caps, capHp: 16 + Math.floor(E.max / 2), capThem: caps.length > 1 ? "them" : "them", cover: theyBoard ? "your own capstan" : "her capstan",
       capMiss: "Your blow rings off a captain's cutlass guard.", F: fac({ name: R.ship.replace(/^the /, "The ") + "'s crew", who: "the boarders", whoShort: "Boarders" }) });
     if (F.fled) { await say("You're thrown back to your own deck, and cut the grapnels, and she draws off."); return "fled"; }
@@ -23009,6 +23080,405 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       '<ul class="marks">' + R.map(id => { const M = X.rivals[id] || {}, V = seaRival(id); return '<li class="' + (M.fate && M.fate !== "fled" && M.fate !== "marooned" ? "won" : "") + '"><span class="mk"></span><span><b>' + V.name + "</b>, " + V.ship + " · " + (M.met ? FATE[M.fate || ""] : "Not met yet.") + "</span></li>"; }).join("") + "</ul></section>";
   }
 
+  // ---------- blade duels: the stroke pad (2026-11-08) ----------
+  // A duel is fought on a pad you draw on, in exchanges. Read: the foe's blade streaks across the pad
+  // (its tell). Answer: draw the stroke that meets it, running the other way (a quick exact parry is a
+  // riposte). Press: draw up to three strokes of your own against the foe's guard (the lit edges).
+  // Strokes are four shapes (cut, hook, thrust, bind) in eight directions, so 18 strokes and 6,174
+  // chains of up to three; DUEL_FORMS are the named chains, found once and kept across every journey
+  // (J.forms). Pressure fills on every stroke, and a full bar breaks the guard. Repeat yourself and the
+  // foe guards it; meet the same foe again and they remember your favourite stroke from the start.
+  // State: S.duel (school, record, salles, each foe's memory). Duels: the salle in every town (spars
+  // with blunted blades), a rival captain's quarterdeck on boarding, and a gang's Knife on the road.
+  // Mouse drags work like a finger; keys QWE/AD/ZXC or arrows (Shift = hook), S thrust, R bind,
+  // Enter ends the press; the button pad needs no drawing; Steady (per browser) takes the timer away.
+  const DU_ARW = ["→", "↗", "↑", "↖", "←", "↙", "↓", "↘"];
+  const DU_FROM = ["from your left, driving right", "rising from low on your left", "rising straight up", "rising from low on your right", "from your right, driving left", "falling from high on your right", "falling straight down", "falling from high on your left"];
+  const DU_LINES = [["right"], ["high", "right"], ["high"], ["high", "left"], ["left"], ["low", "left"], ["low"], ["low", "right"]];
+  const DU_ALL = ["high", "low", "left", "right"];
+  const DU_MAXP = 6, DU_STEADY = "labyrinth-of-roots-duel-steady";
+  const duKey = (t) => t.k === "cut" || t.k === "hook" ? t.k + t.d : t.k;
+  const duLab = (k) => k === "thrust" ? "•" : k === "bind" ? "◯" : (k.startsWith("hook") ? "⤳" : "") + DU_ARW[+k.slice(-1)];
+  const DUEL_FORMS = [
+    { id: "cross", name: "Widow's Cross", pat: ["cut7", "cut5"], hint: "Two falling cuts that cross", eff: "+4 damage", dmg: 4 },
+    { id: "root", name: "Root and Branch", pat: ["cut6", "cut2"], hint: "Down, then back up the same line", eff: "+2 Pressure", pr: 2 },
+    { id: "rivers", name: "Two Rivers", pat: ["cut0", "cut4"], hint: "Across, then back across", eff: "the second cut ignores the guard", pierce: true },
+    { id: "fox", name: "Foxstep", pat: ["hook4", "cut0"], hint: "Feint one way, cut the other", eff: "+3 damage", dmg: 3 },
+    { id: "ember", name: "Rising Ember", pat: ["thrust", "cut2"], hint: "A thrust, then a rising cut", eff: "opens a bleed for 3 exchanges", bleed: true },
+    { id: "lantern", name: "Lantern Turn", pat: ["bind", "cut0"], hint: "A loop, then a cut across", eff: "+3 damage, +1 Pressure", dmg: 3, pr: 1 },
+    { id: "bell", name: "Bell Stroke", pat: ["bind", "bind"], hint: "Two loops", eff: "+3 Pressure", pr: 3 },
+    { id: "gate", name: "Gate Knocker", pat: ["thrust", "thrust", "thrust"], hint: "Knock three times", eff: "the third thrust lands 3d4", gate: true },
+    { id: "heron", name: "Heron's Reach", pat: ["hook2", "thrust"], hint: "Feint high, then thrust", eff: "the thrust lands 1d10", heron: true },
+    { id: "thorn", name: "Thornwheel", pat: ["cut1", "cut7", "cut5"], hint: "Three cuts that turn a wheel", eff: "+6 damage, and the foe staggers", dmg: 6, stag: true },
+    { id: "king", name: "Kingfisher Dive", pat: ["cut5", "thrust"], hint: "Fall low, then thrust", eff: "you heal a little", heal: true },
+    { id: "mill", name: "Mill-Wheel", pat: ["cut2", "cut0", "cut6"], hint: "Up, across, down", eff: "breaks the guard outright", brk: true }
+  ];
+  const DUEL_SCHOOLS = {
+    lantern: { name: "the Lantern Hall", fx: "Half a second longer to answer every attack, and a riposte is worth 3 Pressure.", motto: "See it first." },
+    thorn: { name: "the Thornwheel Yard", fx: "Every duel starts at 2 Pressure, and a broken guard takes 4 more.", motto: "Never stop turning." },
+    fox: { name: "the Foxstep Room", fx: "Your feints cut too (1d4), and add 2 Pressure.", motto: "Be where you aren't." }
+  };
+  const duel = () => (S.duel = S.duel || { school: "", won: 0, lost: 0, rip: 0, salle: {}, foes: {}, knives: 0, caps: 0 });
+  const duForms = () => (J.forms = J.forms || {});
+  const duSteady = () => { try { return localStorage.getItem(DU_STEADY) === "1"; } catch (e) { return false; } };
+  const duTop = (mem) => { const h = mem && mem.habit ? Object.entries(mem.habit).sort((a, b) => b[1] - a[1])[0] : null; return h && h[1] >= 2 ? h[0] : null; };
+
+  // Read one drawn path as a stroke: a tap is a thrust, a loop is a bind, a bowed line is a hook.
+  function duRead(p, W) {
+    if (!p.length) return null;
+    let len = 0;
+    for (let i = 1; i < p.length; i++) len += Math.hypot(p[i].x - p[i - 1].x, p[i].y - p[i - 1].y);
+    const a = p[0], b = p[p.length - 1], ch = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len < W * 0.06) return { k: "thrust" };
+    if (ch < len * 0.35 && len > W * 0.25) return { k: "bind" };
+    const dir = ((Math.round(Math.atan2(-(b.y - a.y), b.x - a.x) / (Math.PI / 4)) % 8) + 8) % 8;
+    let dev = 0;
+    for (const q of p) dev = Math.max(dev, Math.abs((b.x - a.x) * (a.y - q.y) - (a.x - q.x) * (b.y - a.y)) / (ch || 1));
+    return { k: dev > ch * 0.28 ? "hook" : "cut", d: dir };
+  }
+
+  // o: { id (the foe's memory key), name, hp, dmg: [n, s], win (ms to answer), chains (HP fractions
+  //      where it starts chaining another attack), guard (lines it covers), spar, escapable, reg }
+  // Returns { won, fled, yielded }.
+  async function duelFight(o) {
+    const D = duel();
+    const r = await duelRun(o, D);
+    if (o.spar) await mech(r.won ? "You win the bout." : "You lose the bout. Blunted blades: your HP is as it was.", r.won ? "loot" : "");
+    else if (r.fled) await mech("You break away from the duel.", "hurt");
+    else await mech(r.won ? "You win the duel. Duels won: " + D.won + "." : "You lose the duel. The axe held you at " + S.hp + " HP.", r.won ? "loot" : "hurt");
+    if (r.found.length) await mech("New in your Form Book: " + r.found.join(", ") + ". Your journal keeps them.", "loot");
+    if (r.won && !o.spar) grant("dufirst");
+    if (r.rips >= 3) grant("duriposte");
+    achCheck();
+    return r;
+  }
+  function duelRun(o, D) {
+    const sch = D.school, forms = duForms();
+    const mem = o.id ? (D.foes[o.id] = D.foes[o.id] || { met: 0, won: 0, lost: 0, habit: {} }) : null;
+    const spar = !!o.spar, wk = wpnKey(), noun = wNoun(wk) === "arrow" ? "knife" : wNoun(wk);
+    const die = wNoun(wk) === "arrow" ? [1, 4, 2] : wDef(wk).die;
+    const hp0 = S.hp, top = mem && mem.met ? duTop(mem) : null;
+    if (o.reg) nextReg = o.reg;
+    foeStart(o.name, o.hp);
+    FOE.duel = true;
+    tip("duel");
+    let me = S.hp;
+    const st = { pr: sch === "thorn" ? 2 : 0, broken: false, guard: [], unguard: false, chain: [], recent: [], tells: [], ti: 0, tell: null, phase: "wait",
+      rip: false, rips: 0, stag: false, back: false, tries: 0, bleed: 0, first: true, hook: false, t0: 0, tellAt: 0, win: 0, found: [], over: false };
+    const box = add(el("div", "duel",
+      '<div class="du-top"><span class="du-ph">En garde</span><span class="du-tag"></span></div>' +
+      '<div class="du-pr"><span>Pressure</span><span class="du-pips"></span><span class="du-note"></span></div>' +
+      '<div class="du-timer"><i></i></div>' +
+      '<div class="du-pad"><canvas aria-label="Stroke pad: draw your strokes here, or use the keys or the button pad"></canvas></div>' +
+      '<div class="du-chain" aria-live="polite"></div>' +
+      '<div class="du-btns"><button type="button" class="du-end">End my press</button><button type="button" class="du-wipe" hidden>Wipe your eyes</button>' +
+      '<button type="button" class="du-out">' + (spar ? "Yield the bout" : o.escapable ? "Break away" : "Yield") + '</button>' +
+      '<label><input type="checkbox" class="du-steady"' + (duSteady() ? " checked" : "") + '> Steady (no timer)</label></div>' +
+      '<details class="du-kp"><summary>Button pad</summary><div class="du-keys">' +
+      [[3, "↖"], [2, "↑"], [1, "↗"], [4, "←"], ["t", "•"], [0, "→"], [5, "↙"], [6, "↓"], [7, "↘"]].map(([k, l]) => '<button type="button" data-d="' + k + '" aria-label="' + (k === "t" ? "Thrust" : "Stroke " + l) + '">' + l + "</button>").join("") +
+      '</div><div class="du-kx"><button type="button" class="du-hk" aria-pressed="false">Hook: off</button><button type="button" class="du-bd">Bind ◯</button></div></details>' +
+      '<div class="du-log" aria-live="polite"></div>'));
+    const q = (s) => box.querySelector(s);
+    const cv = q("canvas"), cx = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const C = { ink: css.getPropertyValue("--ink").trim() || "#e7dec9", gold: css.getPropertyValue("--gold").trim() || "#cfa850", ember: css.getPropertyValue("--ember").trim() || "#d9503a",
+      steel: "#9fb4c4", blood: css.getPropertyValue("--ruby").trim() || "#d9433b", ok: css.getPropertyValue("--emerald").trim() || "#47a771", muted: css.getPropertyValue("--muted").trim() || "#9b9a87" };
+    let W = 0, pts = [], drawing = false, fx = [], raf = 0, resolveRun;
+    const size = () => { const r = cv.getBoundingClientRect(), k = Math.min(window.devicePixelRatio || 1, 2); W = r.width || 300; cv.width = W * k; cv.height = W * k; cx.setTransform(k, 0, 0, k, 0, 0); };
+    const steady = () => q(".du-steady").checked;
+    const log = (t, c) => { const p = el("p", c || "", t); const L = q(".du-log"); L.prepend(p); while (L.children.length > 40) L.lastChild.remove(); };
+    const pop = (txt, col) => fx.push({ txt, col, t: performance.now() });
+    const phase = (n, tag) => { q(".du-ph").textContent = n; q(".du-tag").textContent = tag || ""; };
+    const roll = ([n, s, b]) => { let t = b || 0; for (let i = 0; i < n; i++) t += d(s); return t; };
+    const blind = () => blindNow();
+    function draw() {
+      q(".du-pips").innerHTML = Array.from({ length: DU_MAXP }, (_, i) => '<i class="' + (i < st.pr ? "on" : "") + '"></i>').join("");
+      q(".du-pips").classList.toggle("full", st.broken);
+      q(".du-note").textContent = st.broken ? "Guard broken: your next blow lands double" : st.bleed ? "Bleeding, " + st.bleed + " more" : "";
+      q(".du-chain").innerHTML = st.chain.map(c => '<span class="' + c.cls + '">' + c.lab + "</span>").join("");
+      q(".du-end").disabled = st.phase !== "press";
+      q(".du-out").disabled = st.phase !== "press";
+      q(".du-wipe").hidden = !(st.phase === "press" && blind());
+    }
+    function frame(now) {
+      if (st.over) return;
+      cx.clearRect(0, 0, W, W);
+      const e = W * 0.045, edge = { high: [0, 0, W, e], low: [0, W - e, W, e], left: [0, 0, e, W], right: [W - e, 0, e, W] };
+      if (st.phase === "press") {
+        const g = st.unguard || st.broken ? [] : st.guard;
+        for (const l of DU_ALL) {
+          if (blind()) { cx.fillStyle = "rgba(155,154,135,.12)"; cx.fillRect(...edge[l]); continue; }
+          cx.globalAlpha = g.includes(l) ? 0.8 : 1; cx.fillStyle = g.includes(l) ? C.steel : "rgba(217,80,58,.16)"; cx.fillRect(...edge[l]); cx.globalAlpha = 1;
+        }
+      }
+      cx.strokeStyle = "rgba(231,222,201,.09)"; cx.lineWidth = 1;
+      cx.beginPath(); cx.arc(W / 2, W / 2, W * 0.3, 0, 7); cx.stroke();
+      cx.beginPath(); cx.moveTo(W / 2, W * 0.42); cx.lineTo(W / 2, W * 0.58); cx.moveTo(W * 0.42, W / 2); cx.lineTo(W * 0.58, W / 2); cx.stroke();
+      const t = st.tell;
+      if (t && (st.phase === "read" || st.phase === "answer")) {
+        const age = (now - st.tellAt) / 1000;
+        if (st.blindTell) {
+          const side = t.k === "thrust" ? 0 : Math.cos(t.d * Math.PI / 4) > 0.3 ? -1 : Math.cos(t.d * Math.PI / 4) < -0.3 ? 1 : 0;
+          cx.fillStyle = "rgba(159,180,196," + Math.max(0, 0.32 - age * 0.22) + ")";
+          cx.fillRect(side < 0 ? 0 : side > 0 ? W * 0.7 : W * 0.35, 0, W * 0.3, W);
+          cx.fillStyle = C.muted; cx.font = "600 " + (W * 0.11) + "px " + (css.getPropertyValue("--label") || "sans-serif"); cx.textAlign = "center"; cx.fillText("? ? ?", W / 2, W * 0.55);
+        } else if (t.k === "thrust") {
+          cx.fillStyle = C.blood; cx.beginPath(); cx.arc(W / 2, W / 2, W * (0.04 + 0.05 * Math.abs(Math.sin(age * 4))), 0, 7); cx.fill();
+        } else {
+          const a = t.d * Math.PI / 4, dx = Math.cos(a), dy = -Math.sin(a), L = W * 0.36, sx = W / 2 - dx * L, sy = W / 2 - dy * L, ex = W / 2 + dx * L, ey = W / 2 + dy * L, p = Math.min(1, age / 0.45);
+          const gr = cx.createLinearGradient(sx, sy, ex, ey); gr.addColorStop(0, "rgba(217,67,59,0)"); gr.addColorStop(1, C.blood);
+          cx.strokeStyle = gr; cx.lineWidth = W * 0.03; cx.lineCap = "round";
+          cx.beginPath(); cx.moveTo(sx, sy); cx.lineTo(sx + (ex - sx) * p, sy + (ey - sy) * p); cx.stroke();
+          if (p >= 1) { const s = W * 0.05; cx.fillStyle = C.blood; cx.beginPath(); cx.moveTo(ex + dx * s, ey + dy * s); cx.lineTo(ex - dy * s * 0.7 - dx * s * 0.3, ey + dx * s * 0.7 - dy * s * 0.3); cx.lineTo(ex + dy * s * 0.7 - dx * s * 0.3, ey - dx * s * 0.7 - dy * s * 0.3); cx.fill(); }
+        }
+      }
+      const trail = (P, col) => { cx.strokeStyle = col; cx.lineWidth = W * 0.022; cx.lineCap = "round"; cx.lineJoin = "round"; cx.beginPath(); cx.moveTo(P[0].x, P[0].y); for (const v of P) cx.lineTo(v.x, v.y); cx.stroke(); };
+      if (pts.length > 1) trail(pts, C.ember);
+      fx = fx.filter(f => now - f.t < 750);
+      for (const f of fx) {
+        const k = 1 - (now - f.t) / 750; cx.globalAlpha = k;
+        if (f.pts && f.pts.length > 1) trail(f.pts, f.col);
+        if (f.txt) { cx.fillStyle = f.col; cx.font = (W * 0.08) + "px " + (css.getPropertyValue("--display") || "serif"); cx.textAlign = "center"; cx.fillText(f.txt, W / 2, W * 0.2 - (1 - k) * 18); }
+        cx.globalAlpha = 1;
+      }
+      const wipe = !(st.phase === "press" && blind()); if (q(".du-wipe").hidden !== wipe) q(".du-wipe").hidden = wipe;
+      const bar = q(".du-timer i");
+      if (st.phase === "answer" && !steady()) { const left = 1 - (now - st.t0) / st.win; bar.style.width = Math.max(0, left * 100) + "%"; if (left <= 0) answer(null); }
+      else bar.style.width = st.phase === "answer" ? "100%" : "0";
+      raf = requestAnimationFrame(frame);
+    }
+    const at = (ev) => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+    const live = () => st.phase === "answer" || st.phase === "press";
+    cv.addEventListener("pointerdown", (ev) => { if (!live()) return; drawing = true; pts = [at(ev)]; try { cv.setPointerCapture(ev.pointerId); } catch (e) {} ev.preventDefault(); });
+    cv.addEventListener("pointermove", (ev) => { if (drawing) pts.push(at(ev)); });
+    const lift = () => { if (!drawing) return; drawing = false; const t = duRead(pts, W); fx.push({ pts: pts.slice(), col: C.ember, t: performance.now() }); pts = []; if (t) input(t); };
+    cv.addEventListener("pointerup", lift); cv.addEventListener("pointercancel", lift);
+    const KMAP = { q: 3, w: 2, e: 1, a: 4, d: 0, z: 5, x: 6, c: 7, ArrowUp: 2, ArrowDown: 6, ArrowLeft: 4, ArrowRight: 0 };
+    const onKey = (ev) => {
+      if (st.over || ev.ctrlKey || ev.metaKey || ev.altKey || /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+      const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+      if (k === "Enter" && st.phase === "press") { ev.preventDefault(); endPress(); return; }
+      if (!live()) return;
+      if (k in KMAP) { ev.preventDefault(); input({ k: ev.shiftKey ? "hook" : "cut", d: KMAP[k] }); }
+      else if (k === "s") { ev.preventDefault(); input({ k: "thrust" }); }
+      else if (k === "r") { ev.preventDefault(); input({ k: "bind" }); }
+    };
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", size);
+    q(".du-keys").onclick = (ev) => { const b = ev.target.closest("button"); if (!b || !live()) return; const k = b.dataset.d; input(k === "t" ? { k: "thrust" } : { k: st.hook ? "hook" : "cut", d: +k }); };
+    q(".du-hk").onclick = () => { st.hook = !st.hook; q(".du-hk").textContent = "Hook: " + (st.hook ? "on" : "off"); q(".du-hk").setAttribute("aria-pressed", st.hook); };
+    q(".du-bd").onclick = () => { if (live()) input({ k: "bind" }); };
+    q(".du-steady").onchange = () => { try { localStorage.setItem(DU_STEADY, steady() ? "1" : "0"); } catch (e) {} };
+    q(".du-end").onclick = () => endPress();
+    q(".du-wipe").onclick = () => { if (st.phase !== "press") return; blindSet(0); log("You drag a sleeve across your eyes. You can see the guard again, and that's your press spent.", "s"); endPress(); };
+    q(".du-out").onclick = async () => {
+      if (st.phase !== "press") return;
+      if (!o.escapable) { log(spar ? "You lower your blade and step back. The bout is theirs." : "You throw down your blade.", "f"); return finish(false, { yielded: true }); }
+      st.phase = "wait"; draw();
+      const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0), dc: escapeDc(null, st), cta: "Run" });
+      if (r.ok) { log("You beat the blade aside and you're gone.", "s"); return finish(false, { fled: true }); }
+      st.tries++; st.back = true; log("They cut you off. Their next attack comes at your back, faster and harder.", "f");
+      foeTurn();
+    };
+    function hurtMe(n, why) {
+      bfxHit(); me -= n;
+      pop("−" + n, C.blood); log(why + " You take " + n + ".", "f");
+      if (!spar) { S.hp = Math.max(1, me); renderSheet(); }
+      if (me > 0 && !blind() && d(100) <= BLIND_PCT) { blindSet(BLIND_TURNS); log("Blood runs into your eyes. You're Blinded: you'll have to parry by the sound of the steel.", "f"); tip("blind"); }
+    }
+    function foeTurn() {
+      if (st.over) return;
+      if (FOE.hp <= 0) return finish(true);
+      fightTurn();
+      st.chain = []; st.unguard = false;
+      if (st.bleed) { const b = 2 + Math.floor(lvk() / 6); st.bleed--; foeHit(b); log("The wound bleeds. " + b + " more.", "y"); if (FOE.hp <= 0) return finish(true); }
+      const n = 1 + (o.chains || [0.5]).filter(f => FOE.hp / FOE.max <= f).length;
+      if (n > st.tells.length && st.tells.length) log(o.name + " is hurt, and angry. " + n + " attacks to an exchange now.", "f");
+      st.tells = Array.from({ length: n }, () => d(5) === 1 ? { k: "thrust" } : { k: "cut", d: d(8) - 1 });
+      st.ti = 0; nextTell();
+    }
+    function nextTell() {
+      st.tell = st.tells[st.ti]; st.blindTell = blind(); st.phase = "read"; st.tellAt = performance.now();
+      phase("Read", "attack " + (st.ti + 1) + " of " + st.tells.length); draw();
+      if (st.blindTell) { const t = st.tell; try { SND.whistle(t.k === "thrust" ? 0 : -Math.cos(t.d * Math.PI / 4) * 0.9, t.k === "thrust" ? 300 : 560 - Math.sin(t.d * Math.PI / 4) * 160); } catch (e) {} }
+      const readMs = st.stag ? 1300 : 850;
+      setTimeout(() => {
+        if (st.over) return;
+        st.phase = "answer"; st.t0 = performance.now();
+        st.win = (o.win || 2300) + (sch === "lantern" ? 500 : 0) + menaceNow() * 250 + (st.stag ? 900 : 0) - (st.back ? 600 : 0);
+        phase("Answer", steady() ? "draw the stroke that meets it" : "parry before the bar runs out"); draw();
+      }, readMs);
+    }
+    function answer(t) {
+      if (st.phase !== "answer") return;
+      st.phase = "wait";
+      const tell = st.tell, fast = performance.now() - st.t0 < 1000;
+      let res = "miss";
+      if (t) {
+        if (tell.k === "thrust") res = t.k === "bind" ? "full" : t.k === "thrust" ? "half" : "miss";
+        else if (t.k === "cut" || t.k === "hook") { const want = (tell.d + 4) % 8, df = Math.min((t.d - want + 8) % 8, (want - t.d + 8) % 8); res = df === 0 ? "full" : df === 1 ? "half" : "miss"; }
+      }
+      const what = tell.k === "thrust" ? "a straight thrust" : "a cut " + DU_FROM[tell.d];
+      const dmg = roll(o.dmg || [1, 8, 2]) + foeDmgUp() + (st.back ? 2 : 0);
+      st.back = false;
+      if (res === "full") {
+        try { SND.clang(true); } catch (e) {}
+        if (fast) { st.rip = true; st.rips++; D.rip++; pop("Riposte!", C.gold); log("You meet " + what + " clean and fast. Riposte!", "g"); }
+        else { pop("Parried", C.steel); log("You parry " + what + ".", "s"); }
+      } else if (res === "half") hurtMe(Math.ceil(dmg / 2), "You catch part of " + what + ".");
+      else hurtMe(dmg, (t ? "Wrong line. " : "Too slow. ") + what[0].toUpperCase() + what.slice(1) + " gets through.");
+      st.tell = null; draw();
+      if (me <= 0) return setTimeout(() => finish(false), 450);
+      st.ti++;
+      setTimeout(() => { if (st.over) return; if (st.ti < st.tells.length) nextTell(); else startPress(); }, 500);
+    }
+    function startPress() {
+      st.stag = false; st.phase = "press";
+      st.guard = DU_ALL.slice().sort(() => Math.random() - 0.5).slice(0, o.guard || 2);
+      if (st.first && top && top !== "thrust" && top !== "bind") {
+        st.guard = [...new Set(st.guard.concat(DU_LINES[+top.slice(-1)]))];
+        log(o.name + " has fought you before, and remembers your " + duLab(top) + ". They guard that line from the start.", "f");
+      }
+      st.first = false;
+      if (st.rip) { st.rip = false; st.guard = st.guard.slice(0, 1); st.pr = Math.min(DU_MAXP, st.pr + (sch === "lantern" ? 3 : 2)); log("Your riposte leaves them half open. Pressure +" + (sch === "lantern" ? 3 : 2) + ".", "g"); if (st.pr >= DU_MAXP) st.broken = true; }
+      phase("Press", "up to 3 strokes" + (blind() ? " · you can't see the guard" : "")); draw();
+    }
+    function strike(t) {
+      const k = duKey(t), ch = { lab: duLab(k), cls: "blk" };
+      let dmg = 0, pr = 1, note = "";
+      const repeated = st.recent.slice(-3).includes(k);
+      st.chain.push(ch); st.recent.push(k);
+      if (mem && (t.k === "cut" || t.k === "hook")) mem.habit[k] = (mem.habit[k] || 0) + 1;
+      const seq = st.recent.slice(-st.chain.length);
+      const F = DUEL_FORMS.find(f => f.pat.length <= seq.length && f.pat.every((p, i) => p === seq[seq.length - f.pat.length + i]));
+      const open = st.unguard || st.broken || (F && F.pierce);
+      if (repeated && !open && t.k === "cut") { st.guard = [...new Set(st.guard.concat(DU_LINES[t.d]))]; note = " They've seen that one, and they're ready for it."; }
+      const hits = (L) => L.some(x => !st.guard.includes(x));
+      const base = () => roll(die) + lvDmg();
+      if (t.k === "cut") { if (open || hits(DU_LINES[t.d])) { dmg = base(); ch.cls = "hit"; } }
+      else if (t.k === "thrust") { dmg = F && F.heron ? d(10) + lvDmg() : F && F.gate ? d(4) + d(4) + d(4) + lvDmg() : d(4) + Math.floor(lvDmg() / 2); ch.cls = "hit"; }
+      else if (t.k === "hook") {
+        if (repeated) note = " They don't bite this time.";
+        else { st.guard = DU_LINES[t.d].slice(); note = " They bite, and shift their guard " + DU_LINES[t.d].join(" and ") + "."; }
+        if (sch === "fox") { dmg = d(4); pr = 2; }
+        ch.cls = "hit";
+      } else if (t.k === "bind") { st.unguard = true; note = " You bind their blade: their guard is open for your next stroke."; ch.cls = "hit"; }
+      if (t.k !== "bind" && t.k !== "hook") st.unguard = false;
+      if (F && t.k === "cut" && !dmg) { log(F.name + ", but the last cut goes into their guard.", "s"); ch.cls = "blk"; ch.lab = F.name; }
+      else if (F) {
+        if (dmg) dmg += F.dmg || 0;
+        pr += F.pr || 0;
+        if (F.bleed) st.bleed = 3;
+        if (F.stag) st.stag = true;
+        if (F.heal) { const h = 3 + Math.floor(lv() / 5); me = Math.min(S.maxHp, me + h); if (!spar) { S.hp = me; renderSheet(); } note += " You heal " + h + ".";
+        }
+        if (F.brk) st.broken = true;
+        ch.cls = "form"; ch.lab = F.name;
+        if (!forms[F.id]) { forms[F.id] = Date.now(); st.found.push(F.name); jSave(); log("A new Form: " + F.name + "! " + F.eff[0].toUpperCase() + F.eff.slice(1) + ".", "g"); }
+        else log(F.name + "! " + F.eff[0].toUpperCase() + F.eff.slice(1) + ".", "g");
+      }
+      if (st.broken && dmg && !(F && F.brk)) { dmg = dmg * 2 + (sch === "thorn" ? 4 : 0); st.broken = false; st.pr = 0; pr = 0; pop("Overwhelmed!", C.ember); note += " Their guard is broken, and it lands double."; }
+      if (!dmg && t.k === "cut") note = " Into their guard." + note;
+      if (dmg) { foeHit(dmg); pop("−" + dmg, C.ok); try { SND.clang(false); } catch (e) {} }
+      st.pr = Math.min(DU_MAXP, st.pr + pr);
+      if (st.pr >= DU_MAXP && !st.broken) { st.broken = true; log("Pressure is full. Their guard breaks!", "g"); }
+      log("You " + { cut: "cut " + DU_ARW[t.d], hook: "feint " + DU_ARW[t.d], thrust: "thrust", bind: "bind" }[t.k] + (dmg ? " for " + dmg + "." : ".") + note, dmg ? "y" : "");
+      draw();
+      if (FOE.hp <= 0) return setTimeout(() => finish(true), 450);
+      if (st.chain.length >= 3) endPress();
+    }
+    function endPress() {
+      if (st.phase !== "press") return;
+      st.phase = "wait"; phase("Their turn", ""); draw();
+      if (blind()) blindSet(FOE.pblind - 1);
+      setTimeout(foeTurn, 650);
+    }
+    function input(t) { if (st.phase === "answer") answer(t); else if (st.phase === "press") strike(t); }
+    function finish(won, how = {}) {
+      if (st.over) return;
+      st.over = true; st.phase = "over"; cancelAnimationFrame(raf); FOE.duel = false;
+      document.removeEventListener("keydown", onKey); window.removeEventListener("resize", size);
+      phase(won ? "Won" : how.fled ? "Broken away" : "Lost", ""); draw();
+      box.classList.add("spent");
+      if (mem) { mem.met++; if (won) mem.won++; else if (!how.fled) mem.lost++; }
+      if (!spar && !how.fled) { if (won) D.won++; else D.lost++; }
+      if (spar) S.hp = hp0;
+      else if (me <= 0) { S.hp = 1; jCount("close"); }
+      foeEnd(spar || !won);
+      renderSheet();
+      resolveRun({ won, fled: !!how.fled, yielded: !!how.yielded, rips: st.rips, found: st.found });
+    }
+    return new Promise(res => {
+      resolveRun = res;
+      requestAnimationFrame(() => { size(); draw(); cv.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); log("Draw on the pad, use the keys, or open the button pad. Your " + noun + " is in your hand.", "s"); raf = requestAnimationFrame(frame); setTimeout(foeTurn, 900); });
+    });
+  }
+
+  // ---------- the salle: a fencing hall in every town on the roads back ----------
+  // Spars are with blunted blades (your HP comes back after). Each salle has three bouts: the
+  // journeyman, the provost and the master, and the master teaches a Form you haven't found.
+  // Your school is taken once a journey, at the first salle that teaches one, and every other
+  // salle and duelist reads it.
+  const SALLE_MASTERS = ["Ser Halloran Vesk", "Mistress Oriel Tamsett", "Old Gannet Rook", "Provost Ida Fennimore", "Ser Callum Ashby", "Mother Brisk Holloway", "Master Tobin Greer", "Dame Wenlock Marr", "Ser Ivo Lantry", "Hesper Kade, the left-handed", "Master Jory Quist", "Dame Averil Snow"];
+  const SALLE_RANKS = ["the journeyman", "the provost", "the master"];
+  function salleOf(T) {
+    const key = T.reg + ":" + T.name;
+    let h = 0; for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return { key, master: SALLE_MASTERS[h % SALLE_MASTERS.length], school: Object.keys(DUEL_SCHOOLS)[(h >> 3) % 3] };
+  }
+  const salleDone = () => Object.values(duel().salle).filter(v => v >= 3).length;
+  async function salleVisit(T) {
+    const D = duel(), A = salleOf(T), Sch = DUEL_SCHOOLS[A.school];
+    await say("The salle is a long room up a flight of stairs, with sawdust on the boards and a rack of blunted blades along one wall. " + A.master + " teaches here, in the manner of " + Sch.name + ". Painted over the door: <i>" + Sch.motto + "</i>");
+    if (D.school && D.school !== A.school) await say("\"" + DUEL_SCHOOLS[D.school].name.replace(/^the /, "The ") + ",\" " + A.master.replace(/,.*/, "") + " says, watching the way you stand. \"I can always tell. Let's see if they taught you anything we didn't.\"", "voice");
+    else if (D.school === A.school) await say("\"One of ours,\" " + A.master.replace(/,.*/, "") + " says, and nods to you like an old friend.", "voice");
+    for (;;) {
+      const r = D.salle[A.key] || 0;
+      const unk = DUEL_FORMS.filter(f => !duForms()[f.id]);
+      const c = await choose([
+        { key: "spar", label: "Spar with " + SALLE_RANKS[Math.min(2, r)], tag: "a duel with blunted blades · your HP comes back after" + (r === 2 ? " · the master teaches a Form" : ""), show: r < 3 },
+        { key: "again", label: "Cross blades with " + A.master.replace(/,.*/, "") + " again", tag: "for practice · blunted blades", show: r >= 3, plain: true },
+        { key: "school", label: "Take up the way of " + Sch.name, tag: Sch.fx + " · for the rest of this journey", show: !D.school, plain: true },
+        { key: "hint", label: "Ask about the Forms", tag: unk.length ? "a hint at one you haven't found" : "you've found them all", plain: true },
+        { key: "leave", label: "Back down the stairs", plain: true }
+      ]);
+      if (c === "leave") break;
+      if (c === "school") {
+        D.school = A.school; grant("duschool");
+        await say(A.master.replace(/,.*/, "") + " takes your wrist and turns it a little, and moves your back foot an inch, and steps back. \"There,\" " + "they say. \"Now you're one of ours. Other halls will see it on you.\"");
+        await mech("Your school: " + Sch.name + ". " + Sch.fx, "loot");
+        continue;
+      }
+      if (c === "hint") {
+        if (!unk.length) { await say("\"You know more Forms than I do,\" " + A.master.replace(/,.*/, "") + " says. \"Go away and invent one.\""); continue; }
+        const f = unk[d(unk.length) - 1];
+        await say("\"There's one they call " + f.name + ",\" " + A.master.replace(/,.*/, "") + " says, and draws it in the air without quite letting you see. \"" + f.hint + ". Find it yourself. You'll remember it better.\"", "voice");
+        continue;
+      }
+      const rank = c === "again" ? 2 : r;
+      const res = await duelFight({ id: "salle:" + A.key, name: (rank === 2 ? A.master : SALLE_RANKS[rank].replace(/^the /, "The ") + " of the salle"), hp: 26 + 10 * rank, dmg: [1, 6, 1 + rank], win: 2500 - 250 * rank, chains: rank === 2 ? [0.6, 0.3] : [0.5], guard: rank === 2 ? 3 : 2, spar: true });
+      if (!res.won) { await say(["\"Again tomorrow,\" they say, and tap you on the chest with the blunt point, where it would have gone in.", "You end up sitting in the sawdust. Somebody laughs, not unkindly."][d(2) - 1]); continue; }
+      xpGain(8 + lv());
+      if (c === "again") continue;
+      D.salle[A.key] = r + 1;
+      if (r + 1 < 3) { await say(SALLE_RANKS[r].replace(/^the /, "The ") + " salutes you with the blunted blade, and steps aside for " + SALLE_RANKS[r + 1] + "."); continue; }
+      await say(A.master.replace(/,.*/, "") + " lowers the blade and bows, properly, the way they bow to equals.");
+      const teach = DUEL_FORMS.find(f => !duForms()[f.id]);
+      if (teach) { duForms()[teach.id] = Date.now(); jSave(); await say("\"Here's one for you, then,\" they say, and this time they draw it slowly in the air, so you can follow."); await mech("The master teaches you <b>" + teach.name + "</b>: " + teach.pat.map(duLab).join(" ") + ", " + teach.eff + ". It's in your Form Book.", "loot"); }
+      else { S.coins += 25; renderSheet(); await mech("You've nothing left to learn here. They give you a salle-master's token instead: 25 gold.", "loot"); }
+      if (salleDone() >= 3) grant("dusalle");
+      achCheck();
+    }
+  }
+  function duelSection(rs) {
+    const X = rs && rs.duel, F = J.forms || {};
+    const n = DUEL_FORMS.filter(f => F[f.id]).length;
+    if (!X && !n) return "";
+    const rec = X ? "Duels won " + X.won + ", lost " + X.lost + " · ripostes " + X.rip + (X.school ? " · your school: " + DUEL_SCHOOLS[X.school].name : " · no school yet") + " · salles mastered " + Object.values(X.salle).filter(v => v >= 3).length + "." : "";
+    return "<section><h3>The Form Book · " + n + " of " + DUEL_FORMS.length + " found</h3>" +
+      '<p class="j-sub">Named chains of strokes, found in duels or taught by salle masters, across every journey. ' + rec + "</p>" +
+      '<ul class="marks">' + DUEL_FORMS.map(f => '<li class="' + (F[f.id] ? "won" : "") + '"><span class="mk"></span><span><b>' + (F[f.id] ? f.name : "Not found yet") + "</b> · " + (F[f.id] ? f.pat.map(duLab).join(" ") + ", " + f.eff : f.hint) + "</span></li>").join("") + "</ul></section>";
+  }
+
   // ---------- the roads back: a Saltwrit salt-tax wagon ----------
   async function roadTaxWagon(r) {
     await say("A salt-tax wagon comes along the " + REGIONS[r] + " road under a Saltwrit guard: the tax from every salt-pan between here and the sea, in a strongbox chained to the bed, and six hunters in grey walking beside it with their hands on their hangers.");
@@ -23477,6 +23947,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     const c = await choose([
       { key: "fight", label: "Fight them", tag: "four of them · Lv " + lv() + (grudge ? " · with a grudge" : "") },
       { key: "call", label: "Call them out by name", tag: "Intimidation DC " + callDc + " · " + bnTitle(), plain: true, show: tier >= 1 },
+      { key: "duel", label: "Challenge " + bnName(G, "knife") + " to single combat", tag: "a duel · win and they yield the cart · lose and the four of them set on you" + (duel().foes["gang:" + G.id] && duel().foes["gang:" + G.id].met ? " · " + bnName(G, "knife") + " has fought you before" : ""), plain: true },
       { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : ""), plain: true, show: S.coins >= toll },
       { key: "slip", label: "Slip off the road and round them", tag: "Stealth DC 14", plain: true, show: story },
       { key: "leave", label: "Turn back the way you came", plain: true, show: !story }
@@ -23484,6 +23955,17 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     if (c === "leave") { await say("You turn round and take the long way. They jeer you all the way out of sight."); light(back); return; }
     if (c === "toll") { S.coins -= toll; renderSheet(); await say(bnName(G, "wall") + " takes the coins, bites one, and waves you through."); await mech("You pay " + toll + " gold to pass.", "hurt"); light(back); return; }
     let spotted = false;
+    if (c === "duel") {
+      await say("You step out into the road and call for " + bnName(G, "knife") + ". The others laugh, but they draw back, and make a ring. The road has its own rules, and this is one of them.");
+      const r = await duelFight({ id: "gang:" + G.id, name: bnName(G, "knife"), hp: 30 + (grudge ? 6 : 0) + (G.tr === "legend" ? 10 : 0), dmg: [1, 8, 2], win: 2300, chains: [0.5], escapable: true });
+      if (r.fled) { light(back); await say("You get clear of them, somehow. They let you go, laughing, and keep the cart."); return; }
+      if (r.won) {
+        duel().knives++; grant("duknife");
+        await say(bnName(G, "knife") + " ends up on their back in the dust, and stays there. " + bnName(G, "hexer") + " spits, and steps back from the cart. A deal's a deal, even on the Blood-bought Roads.");
+        await bnWon(G, H, { grudge, night }); light(back); return;
+      }
+      await say(bnName(G, "knife") + " stands over you and laughs, and then the other three come on while you're still getting up.");
+    }
     if (c === "slip") {
       const r = await check({ label: "Stealth check (off the road)", mod: 3 + (S.shadow ? 2 : 0) + (hasMark("roadwise") ? 2 : 0) + wxSneak(), dc: 14, cta: "Sneak" });
       if (r.ok) { await say("You go up the bank and through the brush and come down onto the road again a mile on. Nobody follows."); light(back); return; }
