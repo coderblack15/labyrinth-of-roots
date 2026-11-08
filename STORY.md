@@ -1149,6 +1149,48 @@ End card Part LXXVII: Ilka Moth's grave, and the twenty-nine of the Hushed watch
 
 Level cap 50 (LV_MAX); everything that woke at 40 still wakes at 40 (LV_GATE: the Cascades, the chest, the hidden relics, the sixth harness place). Two new road creatures: the **Brackray** (jolt: every third round, 3d6 unless you get out of the way) and **Wreck-gulls** (mob: three strike while three are left, and they bleed you). Three Deafstones (The First Article, The Salt King's Debt, Ilka's Shepherd's Mark), a relic (The First Knot), Raftmark and a sanctuary on the roads back, the Smoke-pot mine, and the pursuit set "The Black Tithe" (ver 9).
 
+## The Open Reach: a ship of your own (the roads back, after the Black Tithe)
+
+Adrian asked for more pirate content on 2026-11-08. Once the Black Tithe is ended, the roads back offer **Go down to your ship**. Which ship depends on the ending:
+
+- **Rise**: the *Widow's Tally*, your own ship (hull 12, 6 guns). Your sworn hands come aboard, and Malloway too if you pressed him.
+- **Sell**: the *Small Mercy*, a Saltwrit cutter (hull 10, 6 guns), with a letter of marque for six names on Malloway's list. Pell Ashby comes aboard if you listened to him.
+- **Burn**: the *Second Knot*, a fast Skerran sloop (hull 10, 4 guns, nothing outruns her), left you by the homeward Fleet. You can take the tithe or hunt the ones who still do.
+
+*(State: S.sea. The ship has **hull**, **guns** and the crew's **temper** (0–10, Mutinous to Devoted). A grumbling crew (temper 2 or less) at the start of a voyage needs double shares, a vote under the Articles (Ninian helps; the lash makes later votes harder), or the lash. A lost vote is a mutiny fight. The shipwright (Ama Holt at Raftmark, Dobbin at the Saltwrit yard) mends her and sells copper sheathing, two more guns, a full shot-locker, a long glass and a count-bell for the bow. Hands aboard each have a knack: Hawl (storms), Gannet (+1 broadside), Dace (Bones), Jen (the deep), Ninian (votes), Pell and Malloway (they read the enemy), the cage-men (boarding), Wil (the lookout).)*
+
+### Voyages
+
+Three legs in one of five waters. Each leg is a sea event, a rival captain, or an echo of something you did before.
+
+- **The Stillwater Reach**: the **count-bell buoy** (ring it, tie your own knot on it, or cut it for bronze: cut it and the Skerra shun you, the fishers run, and the market's Skerran stalls overcharge); the **Skerran fishers** (rise: take the tithe or tell them nobody pays it now; sell: hand them in at two gold a head or let them run; burn: they welcome you home and warn you about Drear); the **Salt King's hulk** or Varrick himself, depending on how the chapter left him, who gives you the Salt King's knot-count.
+- **The Gibbet Skerries**: the **cages**, with three pressed men still alive (cut them out: they sign on, the cage-men, and the price on you rises, or for a Saltwrit man the pardon's fifth is gone); a **Saltwrit patrol** (answer the challenge with the signal-book pages from the chapter, run, or fight the *Diligence*); the **hanging-book** (read the names out at Raftmark, return it, or sink it).
+- **The Saltbones**: **fog** (a sounding puzzle: the chart's soundings are at high water and it's low water now, so the channel reads two fathoms less, and one cast in three is a trap); the derelict **Constant Ann** (put five loose log pages in order by the moon and the water casks, rain included, to find the first chart piece in the ship's bell; then bury her dead or strip her, and a stripped ship is bad luck in the next storm); **wreckers' lights** (three lights, one true: the hand-swung lantern is right for one turn of the light and then isn't).
+- **The Lantern Banks**: a fat **Sulmaran merchant** (take a tenth, and the next one pays the tenth without a shot; take it all, and the next one sails with a Saltwrit escort; for a Saltwrit man, rescue her from a lugger); the **floating market** (buy the chart-seller's piece, or win it off Old Lusk at Bones); **Bathyr fishermen** who tap (answer in the Sounding's words and they tell you where Annick Tarrow hides).
+- **The Grey Yonder** (after two voyages): a **storm** (the pin-rail, with two lines fouled; a Brineback you spared breaks the sea for you); the **Brineback** (harpoon it, lie still, or feed it the salt pork); a **castaway**: Pell Ashby, if you gave him to the Articles and the rope broke; Malloway in his jolly-boat, if you set him adrift; Wil, if you took his black bone.
+
+### The rival captains
+
+Each fights a broadside duel in her own way. Every round she shows a tell for what she means to do (broadside, rake, board, run or reload), and you answer with **round shot**, **chain** (stops a runner, and stops raking once her rigging's cut), **grape** (thins her crew, and breaks a boarding), **the helm** (slips a rake, halves a broadside), a **double-shotted hold**, **the glass** (shows what she really means) or a **boarding**. Prizes in company add to every broadside.
+
+- **Mother Hessaly Crane**, *the Lamb's Quarter* (the Saltbones): a wrecker. One tell in three is a lie.
+- **Bastian Sorrow, called Halfhang**, *the Second Rope* (the Gibbet Skerries): cut down alive off the gibbets. He boards. Carries a chart piece.
+- **Annick Tarrow**, *the Glass Eel* (the Lantern Banks): a smuggler who never stands and fights. She runs.
+- **Odo Ferrule**, *the Kindly Meant* (the Lantern Banks): a Saltwrit gunnery officer who turned. He rakes.
+- **The Brothers Quay**, *the Twinned Fortune* (the Stillwater Reach): two Skerran brothers who still take the tithe (how they got out depends on the ending). Broadside, then board, turn and turn about.
+- **Absalom Drear**, *the Long Lament* (the Grey Yonder): a slow ship of the line with twice your guns. Never runs. Carries a chart piece.
+- **Commodore Idris Malloway**, *the Patience*, only if you set him adrift and didn't pick him up: he came back for you.
+
+Fates, and what they bring later: **sink** her (her wreck lies on the Saltbones to dive on), take her as a **prize** (she sails with you, up to two), **hang** the captain (from then on nobody strikes to you just because they're short of hands), **maroon** them (they come back, stronger, flying a shirt for a flag), **hand them to the Saltwrit**, or **let them go** (they turn up in a later duel and put a broadside into your enemy, or call off thief-takers on the roads back).
+
+### The Salt King's hoard
+
+The four pieces of the chart (the *Constant Ann*'s bell, Old Lusk at the market, Halfhang's coat, Drear's cabin) open **Knucklebone Key** in the Grey Yonder. Lay the chart flat (four pieces, edges matched, open sea all round), fight the six old hoard-keepers in the cave, and open the **knot-lock**: three knotted ropes, overhand one, figure-eight five, double ten, and the dial wants the sea's tenth of the total. Without Varrick's knot-count you work the values out from two reckonings cut by the door. Then the choice, which Raftmark and the end card remember: give it back to the families, keep it (a fortune, and a bigger price on you), give it to the Saltwrit (your name off every list), or give it to the sea and keep only the Tithe-Cup (+4 max HP).
+
+### On the roads back
+
+A **price on your head** (pirates) or a **pirates' grudge** (a Saltwrit man) brings thief-takers or a grudge-crew now and then. Pay them off, talk them down, name a captain who owes you, or fight (and more come). Raiders with a name can take a **Saltwrit salt-tax wagon** instead of a caravan. Raftmark's townsfolk talk about the hoard, the bell, the hanging-book, the lights, your prizes, your marooned captains and your mutiny.
+
 ## The Deafstones: lore tablets
 
 A fallen light wakes to loud voices, so the first wardens, the Whisperers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
