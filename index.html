@@ -1965,6 +1965,13 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "62", name: "The Ground Underfoot", date: "8 Nov 2026", items: [
+      "<b>Terrain you can use</b>, in its home country: sinking sand in the Burning Sands, landslides on Mount Corrach, and earthquakes under the labyrinth. They're rare (about one road fight in eight there), never two fights running, and never in a boss fight.",
+      "<b>Sinking sand:</b> lure a foe onto it and watch it sink, a little more every round, until the sand takes it (and everything it carried). Or blunder in yourself, and haul yourself out before it reaches your chest.",
+      "<b>Landslides</b> give you a round's warning: run for the side, get down behind a pavise, or bring the slope down on them first. Stand still and it takes you both, and it buries the salt road to Ashgate until somebody digs it out: the town in three days, the navvies for 15 gold, or you, with a shovel.",
+      "<b>Earthquakes</b> knock everyone down, scatter packs, and split the ground. Shove a foe into the crack, or reach down for what the ground gave back. A crack stays open on the roads back, to climb down once.",
+      "<b>Three set scenes</b>, so everybody meets each one: Jessamy Tarn's sinking wagon on the way to the Hollow Hands, a salt train under the Hanging Scree below Ashgate, and the Rooks the sap-tappers when the floor gives on the road home. What you do is remembered in the den, in Ashgate and in the Library of Roots.",
+      "Once the Undermoon has risen, the quakes come more often (one road fight in five under the labyrinth), and harder. Five new pursuits in the set <b>The Ground Underfoot</b>."] },
     { ver: "61", name: "Locked In", date: "8 Nov 2026", items: [
       "<b>Leveling, evened out.</b> A level comes about every two parts from the first chapter to the last, not one a part at the start and one every three at the end, and the story now ends right around level 40, where the Cascades wake. Saves keep their level.",
       "<b>Milestones</b> every fifth level: +3 more max HP, a full heal and a bandage. Your level card shows the next one coming.",
@@ -2494,6 +2501,11 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     { id: "lv50", name: "Fifty Rings", desc: "Reach level 50, the most there is.", test: () => lv() >= LV_MAX, prog: () => [lv(), LV_MAX] },
     { id: "echoes", name: "Long Memory", desc: "Meet ten things you did, come back to you, on one journey.", test: () => !!S.echo && S.echo.seen.length >= 10, prog: () => [Math.min(10, S.echo ? S.echo.seen.length : 0), 10] },
     { id: "paid", name: "Paid in Full", desc: "Settle every debt that comes to collect on one journey.", test: () => false },
+    { id: "hzsink", name: "Swallowed Whole", desc: "Lure a foe onto sinking sand and let the sand have it.", test: () => false },
+    { id: "hzslide", name: "Bring the Mountain Down", desc: "Bring a landslide down on a foe and bury it.", test: () => false },
+    { id: "hzcrack", name: "What the Ground Gives Back", desc: "Take a cache out of a crack an earthquake opened.", test: () => false },
+    { id: "hzdig", name: "Navvy", desc: "Dig a landslide off the salt road to Ashgate yourself.", test: () => false },
+    { id: "hzall", name: "Unsteady Ground", desc: "Face sinking sand, a landslide and an earthquake on one journey.", test: () => !!S.hz && (S.hz.met || []).length >= 3, prog: () => [Math.min(3, S.hz ? (S.hz.met || []).length : 0), 3] },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
@@ -2533,7 +2545,9 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     { id: "almanac", name: "The Commoner's Almanac", ver: "15", desc: "Seasonal folklore: rumours by the month, byways with reputations, the Almanac and four things that happen once a year.",
       ids: ["calalmanac", "calonce", "calrumour", "calbyways"] },
     { id: "opensea", name: "The Open Reach", ver: "16", desc: "A ship of your own after the Black Tithe: five waters, seven rival captains, broadside duels and the Salt King's hoard.",
-      ids: ["seafirst", "seawaters", "seaduel", "searivals", "seafleet", "seafog", "sealog", "seastorm", "seabones", "seavote", "seafit", "seachart", "seaknot", "seahoard", "seapatience"] }
+      ids: ["seafirst", "seawaters", "seaduel", "searivals", "seafleet", "seafog", "sealog", "seastorm", "seabones", "seavote", "seafit", "seachart", "seaknot", "seahoard", "seapatience"] },
+    { id: "ground", name: "The Ground Underfoot", ver: "17", desc: "Sinking sand, landslides and earthquakes in their home countries, and what they leave behind.",
+      ids: ["hzsink", "hzslide", "hzcrack", "hzdig", "hzall"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2882,6 +2896,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     echo: ["The world remembers", "What you did in earlier chapters comes back. People you spared or sold turn up later, towns stay how you left them, and debts get collected on the roads back. Each time, a line marked <b>The world remembers</b> says which choice it was. Your journal keeps a list."],
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
     bleed: ["Bleeding", "Cuts and stabs can open a wound that bleeds at the start of every round (it shows under your HP). A <b>bandage</b> stops it: free from the Bag with quick hands, or as your move. Still bleeding after the fight? Bandage it then, or tie it off and lose one more round. Spare cloth scraps get rolled into bandages between parts."],
+    hazard: ["The ground underfoot", "Some country fights back: <b>sinking sand</b> in the Burning Sands, <b>landslides</b> on Mount Corrach, <b>earthquakes</b> under the labyrinth. Each one gives you new moves in the fight menu: lure a foe into the sand, bring the slope down on it, shove it into the crack. They can catch you too, and what they do to the land stays done."],
     menu: ["Fight moves", "In a fight like this you pick a move each round. <b>Evade</b> gives up your swing for a chance to slip every attack that round, and <b>Catch your breath</b> heals once a fight. Anything marked \"no roll\" always lands."],
     axe: ["The axe holds you", "At 0 HP Vaelric's axe holds you up at 1, and you lose nothing. Your journal counts these as close calls. The Pale Bloom, later, is the one thing it can't reach through."],
     belt: ["Quick hands", "<b>Use an item</b> is free, on top of your move, and comes back every second turn. Stop the marker in the gold to use it cleanly, or on the bright notch for half as much again. Waiting longer widens the notch."],
@@ -3113,6 +3128,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     }
     if (FOE.on && FOE.blind > 0 && !dis) { FOE.blind--; dis = true; label += " (half-blind)"; }
     if (FOE.on && FOE.prone) { FOE.prone = false; adv = true; label += " (you're down on one knee)"; }
+    if (FOE.on && FOE.hzYou) { adv = true; label += " (you're " + FOE.hzYou + ")"; }
+    if (FOE.on && FOE.hzFoe) { dis = true; label += " (" + FOE.hzFoe + ")"; }
     if (FOE.on && FOE.flub) { FOE.flub = false; adv = true; label += " (you're caught mid-swap)"; }
     if (FOE.on && FOE.pitted > 0) { FOE.pitted--; bonus -= 2; label += " (climbing out, −2)"; }
     if (FOE.on && wxFoe()) { bonus += wxFoe(); label += " (" + WX[S.wx.k].name.toLowerCase() + " " + fmt(wxFoe()) + ")"; }
@@ -4267,6 +4284,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       try {
         await lvNews();
         await calNews();
+        await hzNews();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
@@ -4277,6 +4295,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
+          { key: "crack", label: "Climb down a quake-crack", tag: hz().cracks.map(r => REGIONS[r]).join(", ") + " · it goes down further than your light", plain: true, show: hz().cracks.length > 0 },
           { key: "seek", label: "Search the old places for what was hidden", tag: left + " of " + roamRegions().filter(r => RELICS[r]).length + " still hidden", plain: true, show: cap && left > 0 },
           { key: "head", label: S.underdream ? "Go back to where the Cascades fall from" : "Follow the Cascades to where they fall from", tag: "the Underdream", plain: true, show: cap },
           { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
@@ -4285,7 +4304,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
           { key: "journal", label: "Open your journal", plain: true }
         ]);
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4 }[c] || 0;
+        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1 }[c] || 0;
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
@@ -4298,6 +4317,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         else if (c === "town") await townPick();
         else if (c === "cw") await cwHub();
         else if (c === "seek") await roamSeek();
+        else if (c === "crack") await hzCrack();
         else if (c === "stones") await stoneRoads();
         else if (c === "head") await roamUnderdream();
         else if (c === "toggle") {
@@ -5220,11 +5240,12 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     if (t) await say(t, "dry");
   }
 
-  const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t)));
+  const townsOpen = () => roamRegions().flatMap(r => (TOWNS[r] || []).map(t => Object.assign({ reg: r }, t))).filter(t => !(hzBlocked(t.reg) && t.name === hz().block.town));
   async function townPick() {
     const list = townsOpen();
-    const c = await choose(list.map((t, i) => ({ key: String(i), label: t.name, tag: REGIONS[t.reg] + " · " + (t.kind === "sanctuary" ? "sanctuary" : "town"), plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    const c = await choose(list.map((t, i) => ({ key: String(i), label: t.name, tag: REGIONS[t.reg] + " · " + (t.kind === "sanctuary" ? "sanctuary" : "town"), plain: i > 0 })).concat([{ key: "slide", label: "The salt road to " + (hz().block ? hz().block.town : "") + " is under a landslide", tag: "dig it out, pay the navvies, or wait", plain: true, show: hzBlocked("corrach") && roamRegions().includes("corrach") }, { key: "back", label: "Not now", plain: true }]));
     if (c === "back") return;
+    if (c === "slide") return hzSlideRoad();
     await townVisit(list[+c]);
   }
   async function townVisit(T) {
@@ -5235,9 +5256,10 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     await say(T.intro);
     if (T.reg === "reach" && T.kind === "town") await seaTownLine();
     await echoTown(T);
+    await hzTownIntro(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
     await burrLine(30);
-    const has = (k) => T.has.includes(k);
+    const has = (k) => T.has.includes(k) && !hzShut(T, k);
     let rested = false, drank = false, roofed = false;
     const tm = townMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
     // The calendar: market day and the festivals change the stalls, the inn and the bar.
@@ -5268,11 +5290,13 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
         { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: S.ansel ? "free, for Brother Orrin" : P(10) + " gold" + cOff, show: has("healer") && !hasSkill("mend") && (S.ansel || S.coins >= P(10)), plain: true },
         { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : echoBarFree(T) ? "on the house, since the Assize" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || echoBarFree(T) || lamps || S.coins >= P(2)), plain: true },
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
+        ...hzTownOpts(T),
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: "Back to the road", plain: true }
       ]);
       if (c === "leave") break;
       if (c === "fair") await calJoin(T, fair);
+      if (c.startsWith("hz:")) await hzTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
       if (c === "almanac") {
         const p = mp(3); S.coins -= p; cal().almanac = true; calBuy(); renderSheet(); grant("calalmanac");
@@ -6037,7 +6061,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
-    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false });
+    Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     FOE.menace = menaceFor(FOE.lk);
@@ -6541,7 +6565,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   const salvWorth = () => Object.keys(SALV).reduce((t, k) => t + salv()[k] * SALV[k][2], 0);
   const salvList = (o) => Object.keys(SALV).filter(k => o[k]).map(k => o[k] + " " + SALV[k][o[k] > 1 ? 1 : 0]).join(", ");
   function spoilsWon() {
-    if (!FOE.on || !started) return;
+    if (!FOE.on || !started || FOE.swallowed) return;
     const down = FOE.hp <= 0, hurtIt = FOE.hp < FOE.max;
     if (!down && !hurtIt) return;
     const got = { cloth: 0, metal: 0, spore: 0 };
@@ -7101,6 +7125,487 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     for (let i = 0; i < n; i++) { const r = d(s); rolls.push(r); t += r; }
     FOE.hp = Math.max(0, FOE.hp - t); renderFoe(); foePop("−" + t);
     await mech("Lightning: " + n + "d" + s + " → " + rolls.join(" + ") + " = " + t + ". " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+  }
+
+  // ---------- the ground underfoot: sinking sand, landslides and earthquakes ----------
+  // Adrian's ask: terrain the player interacts with. Each hazard has a home region (HZ_HOME): sinking
+  // sand in the Burning Sands, landslides on Mount Corrach, earthquakes under the labyrinth (the roots
+  // and the Undermoon). They're rare: 1 road fight in 8 in the home region (quakes 1 in 5 once the
+  // Undermoon has risen), never two fights running, and never in a boss fight, because only the
+  // creatures met through meetBeast roll them. Each home chapter has one set scene (HZ_SCENES, run
+  // from play()) so every player meets each hazard once.
+  // Hazards are choices. Lure a foe into the sand, or blunder in yourself. When a slope starts to go,
+  // run, get behind the pavise, or bring it down on them early. A quake knocks everyone down, scatters
+  // a pack, and splits the ground: shove a foe in, or reach down for what the ground gave back.
+  // They leave marks. A slide blocks the salt road to Ashgate until it's cleared (by the town in three
+  // days, by paying the navvies, or by digging it out yourself). A quake-crack stays open on the roads
+  // back, to climb down. Each set scene's choice is remembered in its region's town.
+  // State: S.hz = { last, met: [kinds], sunk, buried, caches, dug, cracks: [reg], cracked: [reg],
+  //   block: { reg, until, buried, who } | null, falls: [place names], scene: { sand, slide, quake }, seen: {} }.
+  const HZ = { sand: "Sinking sand", slide: "Landslide", quake: "Earthquake" };
+  const HZ_HOME = { desert: "sand", corrach: "slide", roots: "quake", undermoon: "quake" };
+  // Part index (as S.part counts) → the set scene that runs before it.
+  const HZ_SCENES = { 7: "sand", 34: "slide", 48: "quake" };
+  const SINK = ["knees", "waist", "chest"];
+  const hz = () => {
+    const H = S.hz = S.hz || {};
+    for (const [k, v] of [["last", false], ["met", []], ["sunk", 0], ["buried", 0], ["caches", 0], ["dug", 0], ["cracks", []], ["cracked", []], ["block", null], ["falls", []], ["scene", {}], ["seen", {}]]) if (H[k] === undefined) H[k] = v;
+    return H;
+  };
+  const umRose = () => !!(S.um && S.um.ending === "rise");
+  const hzOdds = (k) => k === "quake" && umRose() ? 5 : 8;
+  // Jessamy Tarn's red-rag poles: you never blunder into the sand in the Burning Sands again.
+  const hzPoles = () => ["driver", "paid"].includes(hz().scene.sand);
+  // Tamsin Rook's way of riding a quake: +5 to keep your feet.
+  const hzWraps = () => hz().scene.quake === "gave";
+  // Does this fight get a hazard? Forced by a set scene, or 1 in 8 in the home region.
+  function hzRoll(F) {
+    const H = hz();
+    if (F.hzForce) { H.last = true; return F.hzForce; }
+    const k = HZ_HOME[F.reg];
+    if (!k || F.company || F.noHz) { H.last = false; return null; }
+    if (H.last) { H.last = false; return null; }
+    if (d(hzOdds(k)) !== 1) return null;
+    H.last = true;
+    return k;
+  }
+  async function hzStart(F, st) {
+    FOE.hzYou = ""; FOE.hzFoe = "";
+    const k = hzRoll(F);
+    if (!k) return;
+    const H = hz(), them = F.heads ? "them" : "it";
+    const z = st.hz = { k, you: 0, foe: 0, falls: 0 };
+    if (!H.met.includes(k)) H.met.push(k);
+    tip("hazard");
+    if (k === "sand") {
+      await say("Between you and " + F.who + ", the sand has a sheen on it like the skin on milk, and it shivers when you put a foot near it. Sinking sand: a patch as wide as a threshing floor, and the wind has drifted dry sand over half of it.");
+      if (hzPoles()) await say("Somebody has staked it: red rags on poles at the edges, the way Jessamy Tarn marks them now. You know exactly where not to stand.");
+      await mech("<b>Sinking sand.</b> " + (hzPoles() ? "With the poles up you won't blunder in. " : "Now and then you might blunder in. ") + "Stuck, you fight at disadvantage, it has advantage, and you sink deeper each round. Or lure " + them + " in instead.", "hurt");
+      if (F.hzFoeStuck) {
+        z.foe = 1; FOE.hzFoe = "floundering in the sand";
+        await say((F.heads ? "They go" : "It goes") + " straight for the wagon, and the crust breaks under " + them + " like pie-crust.");
+        await mech((F.heads ? "One of them is" : "It's") + " in the sand already: your swing has advantage, and " + (F.heads ? "the pack's" : "its") + " attacks have disadvantage while it's stuck.", "loot");
+        if (F.heads) { foeHit(1); H.sunk++; grant("hzsink"); z.foe = 0; FOE.hzFoe = ""; await mech("It goes under with a sound like a boot pulled out of mud, and doesn't come up.", "loot"); }
+      }
+    } else if (k === "slide") {
+      z.warn = true;
+      await quake("Above you, the slope moves. A trickle of grit first, then stones the size of fists, bouncing, and under it all a long grinding sound like a millstone starting to turn.");
+      await mech("<b>Landslide.</b> It comes down at the start of next round. Run for the side, get behind a pavise, or bring it down early on " + them + ". Stand where you are and it takes you both.", "hurt");
+    } else {
+      await say("The ground is very still. Too still: the dust on the floor has stopped drifting, and somewhere far below there's a sound like a door the size of a hill swinging shut.");
+      await mech("<b>Earthquake.</b> It knocks everyone down" + (umRose() ? " (harder, now the Undermoon has risen)" : "") + ", scatters packs, and splits the ground open.", "hurt");
+    }
+    if (F.hzLate && FOE.hp > 0) {
+      await say((F.heads ? "They're" : "It's") + " on you while you're still waving the last carter clear.");
+      await foeSwing(F, st);
+    }
+  }
+  // At the top of every round of hkFight, after the weather.
+  async function hzRound(F, st) {
+    const z = st.hz;
+    if (!z || FOE.hp <= 0) return;
+    if (z.k === "sand") await hzSand(F, st, z);
+    else if (z.k === "slide") { if (z.warn && st.round >= 2) await hzFall(F, st, z, false); }
+    else await hzQuake(F, st, z);
+  }
+  async function hzSand(F, st, z) {
+    const H = hz();
+    if (z.foe > 0 && !F.heads) {
+      if (z.foe === 2 && d(5) === 1) {
+        z.foe = 0; FOE.hzFoe = "";
+        await say("It finds a root of firm ground under the sand and drags itself out, filthy and furious.");
+      } else {
+        z.foe++;
+        if (z.foe >= 4 || (z.foe >= 3 && FOE.hp <= FOE.max / 2)) {
+          F.swallowed = true; FOE.swallowed = true; H.sunk++; grant("hzsink");
+          await say("It's in to the chest, and then to the chin, and it stops fighting you and starts fighting the sand. The sand wins. It closes over " + F.who + " with a soft, satisfied sound, and the sheen comes back across the top as if nothing was ever there.");
+          foeSet(0);
+          await mech("Swallowed: it's gone, and everything it carried went with it. The fight is yours, but there are no spoils.", "loot");
+          return;
+        }
+        FOE.hzFoe = "mired to the " + SINK[Math.min(2, z.foe - 2)];
+        await mech("It's sunk to the " + SINK[Math.min(2, z.foe - 2)] + ". Your swing has advantage, its attacks disadvantage." + (z.foe === 3 ? " One more round, or once it's badly hurt, and the sand takes it." : ""), "loot");
+      }
+    }
+    if (z.foe > 0 && !F.heads) st.adv = true;
+    if (z.you > 0) {
+      if (z.held) z.held = false; else z.you = Math.min(3, z.you + 1);
+      FOE.hzYou = "sunk to the " + SINK[z.you - 1];
+      st.dis = true;
+      await mech("You're in to the " + SINK[z.you - 1] + ": you swing at disadvantage, it attacks with advantage, and Evade is no use.", "hurt");
+      if (z.you >= 3) await hurt(1, 6, "bludgeoning", "The sand closes round your chest and squeezes.");
+    } else if (!hzPoles() && st.round >= 2 && z.falls < 2 && d(4) === 1) {
+      const r = await check({ label: "Wisdom (Perception) check (where's the edge?)", mod: 2 + (S.bg === "hunter" ? 2 : 0), dc: 12, cta: "Look down" });
+      if (r.ok) await say("Your next step lands on the crust, and you feel it give, and you're back on firm sand before it does.");
+      else {
+        z.falls++; z.you = 1; FOE.hzYou = "sunk to the knees"; st.dis = true;
+        await say("Your next step goes through the crust as if it were paper, and the sand takes you to the knees, cold and heavy and pulling.");
+        await mech("Stuck: you swing at disadvantage and it attacks with advantage until you get out.", "hurt");
+      }
+    }
+  }
+  // The slope comes down: on its own (triggered = false), or because you brought it down.
+  async function hzFall(F, st, z, triggered) {
+    z.warn = false; z.fell = true; z.triggered = triggered;
+    const them = F.heads ? "them" : F.who;
+    await quake(triggered ? "You find the stone that's holding the rest, and you put your shoulder into it, and the whole slope lets go at once, onto " + them + "." : "The slope lets go. It comes down all at once, a grey roaring river of stone, and the road vanishes under it.");
+    if (triggered) await mech("You're clear: you were the one who knew where it was going.", "loot");
+    else if (z.safe === "pavise") await say("It breaks on the pavise like a wave on a prow. Stones hammer the board and go past on both sides, and none of them find you.");
+    else if (z.safe === "run") await say("You're off to the side, flat against a boulder, when it goes past. The noise is so big it stops being a noise.");
+    else {
+      const r = await check({ label: "Dexterity save (the slide)", mod: 2 + lvAC(), dc: 13, cta: "Jump" });
+      await hurt(r.ok ? 1 : 3, 6, "bludgeoning", r.ok ? "You throw yourself clear, nearly, and the edge of it catches your legs." : "It takes you off your feet and rolls you, and you lose count of the stones.");
+    }
+    const was = FOE.hp;
+    if (F.heads) {
+      const n = Math.min(FOE.hp, triggered ? 2 + d(2) : 1); foeHit(n);
+      await mech("The slide buries " + n + " of them" + (FOE.hp ? "." : ". None of them are left standing."), "loot");
+    } else {
+      const n = triggered ? Math.max(6, Math.round(FOE.max * 0.4)) + d(6) : Math.round(FOE.max * 0.2) + d(4);
+      FOE.hp = Math.max(0, FOE.hp - n); renderFoe(); foePop("−" + n, triggered); comboKeep();
+      await mech("The slide: " + n + " damage to " + FOE.name + (FOE.hp ? ", " + FOE.hp + " HP left." : ". It's under the stones."), "loot");
+    }
+    if (FOE.hp <= 0 && was > 0) { hz().buried++; F.buried = true; if (triggered) grant("hzslide"); }
+    if (F.reg === "corrach") {
+      const T = (TOWNS.corrach || [])[0];
+      hz().block = { reg: "corrach", until: calDay() + 3, buried: !!F.buried, who: F.name, town: T ? T.name : "Ashgate" };
+      await mech("The slide is across the salt road to " + hz().block.town + ". It'll be blocked on the roads back until somebody clears it.", "hurt");
+    }
+  }
+  async function hzQuake(F, st, z) {
+    const rose = umRose(), dc = rose ? 14 : 12, wraps = hzWraps() ? 5 : 0;
+    if (st.round === 1) {
+      await quake(rose ? "The quake comes up out of the deep like something rising for air, and the whole world rolls over once, the way the Undermoon rolled when it woke." : "The quake hits. The ground jumps sideways under you, then back, then heaves up in a long rolling shrug, and everything that isn't rooted falls over.");
+      const r = await check({ label: "Dexterity save (keep your feet)" + (wraps ? " (the Rooks' way of riding it)" : ""), mod: 2 + wraps, dc, cta: "Brace" });
+      if (!r.ok) { FOE.prone = true; await mech("You go down hard: its next attack has advantage.", "hurt"); }
+      else await mech("You ride it out on your feet.", "loot");
+      if (F.heads && FOE.hp >= 3) {
+        const n = Math.min(FOE.hp - 1, d(2)); foeHit(n);
+        await mech("The pack scatters: " + n + " of them bolt into the dark and don't come back.", "loot");
+      }
+      st.stilled = true;
+      await mech((F.heads ? "They're" : "It's") + " thrown down too, and lose" + (F.heads ? "" : "s") + " the next attack.", "loot");
+      z.crack = true; z.hasCache = !!F.hzScene || d(2) === 1;
+      await say("Where the floor heaved, it has split: a crack a stride wide runs between you, going down further than your light." + (z.hasCache ? " A hand's depth under the lip, something catches the light. Somebody hid something in the ground a long time ago, and the ground has just given it back." : ""));
+      return;
+    }
+    if (d(rose ? 3 : 4) === 1) {
+      await quake("An aftershock rolls through, short and sharp.");
+      const r = await check({ label: "Dexterity save (the aftershock)", mod: 2 + wraps, dc: dc - 2, cta: "Brace" });
+      if (!r.ok) { FOE.prone = true; await mech("It knocks you to one knee: its next attack has advantage.", "hurt"); }
+      else await say("You keep your feet.");
+    }
+  }
+  // Hazard moves hkFight offers.
+  function hzFightOpts(F, st) {
+    const z = st.hz;
+    if (!z || FOE.hp <= 0) return [];
+    const o = [];
+    if (z.k === "sand") {
+      if (z.you > 0) {
+        o.push({ key: "hz-out", label: "Haul yourself out of the sand", tag: "Strength (Athletics) DC " + (9 + 2 * z.you) + " · costs your turn", plain: true });
+        if (z.you > 1) o.push({ key: "hz-flat", label: "Lean back and spread your weight", tag: "no roll · come up a little, and don't sink next round · costs your turn", plain: true });
+      } else if (!(z.foe > 0)) o.push({ key: "hz-lure", label: F.heads ? "Draw one of them onto the sinking sand" : "Lure it onto the sinking sand", tag: "Dexterity (Deception) DC 13" + (hzPoles() ? " · +2, you know the poles" : "") + " · fail and you're in it yourself · costs your turn", plain: true });
+    } else if (z.k === "slide" && z.warn) {
+      if (!z.safe) {
+        o.push({ key: "hz-run", label: "Run for the side of the slope", tag: "Dexterity (Athletics) DC 11 · costs your turn", plain: true });
+        if (st.pavise > 0 || S.pavise > 0) o.push({ key: "hz-cover", label: st.pavise > 0 ? "Get down behind the planted pavise" : "Throw the pavise up against the slope", tag: "no roll · it takes the slide" + (st.pavise > 0 ? "" : " · " + S.pavise + " left") + " · costs your turn", plain: true });
+      }
+      o.push({ key: "hz-drop", label: "Bring the slope down on " + (F.heads ? "them" : "it"), tag: "Strength DC 13" + (hasSkill("sap") ? " · +3, Undermining" : "") + " · a heavy blow, and you're clear · fail and it takes you both · costs your turn", plain: true });
+    } else if (z.k === "quake" && z.crack) {
+      if (z.hasCache && !z.cache) o.push({ key: "hz-cache", label: "Reach down into the crack", tag: "grab what's down there · Dexterity save DC 12 or it pinches · costs your turn", plain: true });
+      if (!z.shoved) o.push({ key: "hz-shove", label: F.heads ? "Shove one of them into the crack" : "Shove it into the crack", tag: "Strength DC 14 · once a fight · costs your turn", plain: true });
+    }
+    return o;
+  }
+  async function hzFightDo(c, F, st) {
+    const z = st.hz, H = hz();
+    if (c === "hz-out") {
+      const r = await check({ label: "Strength (Athletics) check (out of the sand)", mod: 3, dc: 9 + 2 * z.you, cta: "Haul" });
+      if (r.ok) { z.you = 0; FOE.hzYou = ""; await say("You get an elbow onto firm ground, then the other, and drag yourself out, boots last, with a sound like a cork."); }
+      else await say("You heave, and the sand only takes a better grip.");
+    } else if (c === "hz-flat") {
+      z.you = Math.max(1, z.you - 1); z.held = true; FOE.hzYou = "sunk to the " + SINK[z.you - 1];
+      await say("You stop fighting it. You lean back, arms out, and let the sand hold you up the way water would, and you rise a little.");
+    } else if (c === "hz-lure") {
+      const r = await check({ label: "Dexterity (Deception) check (the lure)", mod: 3 + (hzPoles() ? 2 : 0), dc: 13, cta: "Feint" });
+      if (r.ok) {
+        await say("You back across the edge of the patch, where the crust holds you, and give " + (F.heads ? "the nearest of them" : F.who) + " a gap to come through. " + (F.heads ? "It takes it." : "It does."));
+        if (F.heads) { foeHit(1); H.sunk++; grant("hzsink"); await mech("One of them goes under with a sound like a boot pulled out of mud, and doesn't come up.", "loot"); }
+        else { z.foe = 1; FOE.hzFoe = "floundering in the sand"; await mech("It's in the sand: your swing has advantage, its attacks disadvantage, and it sinks deeper every round.", "loot"); }
+      } else {
+        z.you = 1; z.held = true; FOE.hzYou = "sunk to the knees";
+        await say("You get the edge wrong by a foot, and the sand takes you instead, to the knees.");
+        await mech("Stuck: you swing at disadvantage and it attacks with advantage until you get out.", "hurt");
+      }
+    } else if (c === "hz-run") {
+      const r = await check({ label: "Dexterity (Athletics) check (out from under it)", mod: 3, dc: 11, cta: "Run" });
+      if (r.ok) { z.safe = "run"; await say("You sprint across the face of the slope with stones already skipping past your heels, and get a boulder between you and the hill."); }
+      else await say("The scree goes out from under your boots, and you're on your hands and knees in the middle of it.");
+    } else if (c === "hz-cover") {
+      if (!(st.pavise > 0)) { S.pavise--; renderSheet(); }
+      z.safe = "pavise";
+      await say("You get the pavise up and its spike in, angled to the hill, and get yourself small behind it.");
+    } else if (c === "hz-drop") {
+      const r = await check({ label: "Strength check (bring the slope down)", mod: 3 + (hasSkill("sap") ? 3 : 0), dc: 13, cta: "Heave" });
+      if (r.ok) await hzFall(F, st, z, true);
+      else { await say("You heave on the wrong stone. The slope starts to go anyway, too soon, and too wide."); await hzFall(F, st, z, false); }
+    } else if (c === "hz-cache") {
+      z.cache = true;
+      const r = await check({ label: "Dexterity save (the crack shifts)", mod: 2, dc: 12, cta: "Grab" });
+      if (!r.ok) await hurt(1, 6, "bludgeoning", "The crack grinds a hand's width narrower while your arm is in it.");
+      await say("Your hand closes on it: something wrapped in waxed cloth, heavy for its size. You stuff it in your coat.");
+    } else if (c === "hz-shove") {
+      z.shoved = true;
+      const r = await check({ label: "Strength check (into the crack)", mod: 3, dc: 14, cta: "Shove" });
+      if (!r.ok) { await say((F.heads ? "It" : "It") + " catches the lip with everything it has and hauls itself back."); return; }
+      if (F.heads) { foeHit(1); await mech("One of them goes over the edge into the dark. You don't hear it land.", "loot"); }
+      else {
+        const n = Math.max(4, Math.round(FOE.max * 0.3)) + d(4);
+        FOE.hp = Math.max(0, FOE.hp - n); renderFoe(); foePop("−" + n); comboKeep(); st.stilled = true;
+        await mech("It goes in to the shoulders and wedges there: " + n + " damage, and it loses its next attack climbing out." + (FOE.hp ? "" : " It doesn't climb out."), "loot");
+      }
+    }
+  }
+  // After a creature fight in meetBeast: quake caches and cracks, and whether the sand kept the spoils.
+  // Returns true if the foe was swallowed (no spoils).
+  async function hzAfter(F, reg) {
+    const z = F.hzSt, H = hz();
+    FOE.hzYou = ""; FOE.hzFoe = "";
+    if (!z) return false;
+    if (z.k === "quake" && !F.fled && !F.hzScene) {
+      if (z.hasCache && !z.cache) {
+        const c = await choose([{ key: "get", label: "Climb down to what's in the crack", tag: "Dexterity save DC 12" }, { key: "no", label: "Leave it", plain: true }]);
+        if (c === "get") {
+          z.cache = true;
+          const r = await check({ label: "Dexterity save (climbing down)", mod: 2, dc: 12, cta: "Climb" });
+          if (!r.ok) await hurt(1, 6, "bludgeoning", "A stone lets go under your boot and you slide the last bit.");
+        }
+      }
+      if (z.cache) await hzCache(reg, "Wrapped in waxed cloth gone hard as horn: somebody's cache, put in the ground when the ground was quiet.");
+      if (!H.cracks.includes(reg) && !H.cracked.includes(reg)) { H.cracks.push(reg); await mech("The crack doesn't close. It'll still be there on the roads back, going down further than your light reaches.", "loot"); }
+    }
+    return !!F.swallowed;
+  }
+  async function hzCache(reg, why) {
+    const H = hz(); H.caches++; grant("hzcrack");
+    await gold(2, 6 + (TIER[reg] || 0), why);
+    const r = d(3);
+    if (r === 1) { S.potions = (S.potions || 0) + 1; await mech("And a Draught of Mending, its wax seal still good.", "loot"); }
+    else if (r === 2) { S.dress = (S.dress || 0) + 2; await mech("And two rolls of clean linen: two bandages.", "loot"); }
+    else { const k = ["jaw", "wire", "log", "pit"].find(x => !knowsSchem(x)); if (k) await findSchematic(k, "And a sheet of oiled vellum, folded small."); else { S.elixirs = (S.elixirs || 0) + 1; await mech("And an Elixir of Health.", "loot"); } }
+    renderSheet();
+  }
+  // ---------- set scenes, one per home chapter ----------
+  async function hzScene(i) {
+    const k = HZ_SCENES[i];
+    if (!k || hz().scene[k] || !S.axe || S.stripped) return;
+    const back = document.body.dataset.light;
+    if (k === "sand") await hzSceneSand();
+    else if (k === "slide") await hzSceneSlide();
+    else await hzSceneQuake();
+    light(back); save();
+  }
+  function hzHead(where, title) { const h = el("div", "part-head sub", '<span class="num">' + where + "</span><h2>" + title + "</h2>"); scrollNext = true; add(h); }
+  async function hzSceneSand() {
+    const H = hz();
+    hzHead("On the road · The Burning Sands", "The Sinking Wagon");
+    light("torch");
+    await say("Over the next dune there's a caravan, or what's left of one: five wagons gone on ahead into the heat-shimmer, and the sixth stopped dead in a hollow, sitting in the sand up to its axles and going down as you watch. The mules have kicked out of their traces and run.");
+    await say("On the box a woman in a blue headwrap is standing very still, the way you stand on thin ice. \"Don't come down,\" she shouts. \"It's sinking sand, the whole hollow. I'm Jessamy Tarn, that's my wagon, and that's my year in the back of it.\" The back of it is twelve water casks, the kind the caravans sell at the wells for a silver a cup.");
+    await say("Something else has seen her. A shape is coming over the far dune, low and quick, straight for the stranded wagon.");
+    await mech("You have time for one thing before it gets here.");
+    const c = await choose([
+      { key: "driver", label: "Throw Jessamy a line", tag: "get her out · the wagon goes under" },
+      { key: "casks", label: "Save the water casks", tag: "rope them off the back · she'll have to climb out by herself", plain: true },
+      { key: "bait", label: "Leave the wagon where it is, as bait", tag: "it goes for the wagon, into the sand · she loses everything", plain: true }
+    ]);
+    H.scene.sand = c;
+    if (c === "driver") {
+      const r = await check({ label: "Strength check (haul her in)", mod: 3, dc: 11, cta: "Haul" });
+      if (!r.ok) await hurt(1, 4, "slashing", "The rope burns through your palms, but you don't let go.");
+      await say("She comes off the box in one long jump on the end of your rope and lands face down on firm sand. Behind her the wagon tips, slowly, and the hollow takes it, casks and all, with a sound like a long drink.");
+      await say("Jessamy gets up and watches the place where it was. \"I'll stake every sink on this road,\" she says. \"Red rags on poles. If it's the last thing I do with my life, which it might be, now.\"");
+    } else if (c === "casks") {
+      await say("You get a rope round the tailboard and drag casks off the back as fast as they'll come. You get eight of the twelve onto firm sand before the tailboard goes under.");
+      await say("Jessamy climbs out over the front by herself, along the shafts, black to the waist with wet sand. She doesn't say thank you. She looks at the casks, and then at you, and then walks off after the caravan without a word.");
+      await gold(3, 6, "The caravan master, Odile Varga, rides back for the casks and pays you a finder's fee in good silver.");
+    } else {
+      await say("You stay up on the lip of the hollow and keep still. Jessamy sees what you're doing before the thing does. She screams something at you that the wind takes away.");
+    }
+    await meetBeast("desert", { forced: true, hz: "sand", hzFoe: c === "bait", scene: "sand" });
+    if (c === "bait") {
+      await say("When it's over, Jessamy climbs out the far side of the hollow with nothing. The wagon's gone, and the casks, and the mules are halfway to the Ember Root. She looks at you for a long time, and then she walks off after the caravan.");
+      await mech("She'll remember this.", "hurt");
+    }
+  }
+  async function hzSceneSlide() {
+    const H = hz();
+    hzHead("On the road · Mount Corrach", "The Hanging Scree");
+    light("dusk");
+    await say("The salt road up to Ashgate runs along the foot of a scree slope a quarter of a mile high: grey stones from the size of a fist to the size of a cottage, every one of them leaning on all the others.");
+    await say("Halfway along it, a salt train has stopped: four carts, eight oxen, a dozen carters standing in the road arguing about a wheel. Above them a stone shifts by itself, rolls a little way, and stops. Nobody looks up but you.");
+    await say("And down the road, coming for the oxen, there's something hungry.");
+    const c = await choose([
+      { key: "clear", label: "Get the carters out from under the slope first", tag: "it reaches you before you're ready" },
+      { key: "stand", label: "Meet it here in the road", tag: "the carters are still under the slope", plain: true }
+    ]);
+    if (c === "clear") await say("You shout, and point, and shove the nearest carter, and they look up at last. They go up the road at a run with the oxen bawling, and you turn round.");
+    hzLastF = null;
+    await meetBeast("corrach", { forced: true, hz: "slide", scene: "slide", late: c === "clear" });
+    const z = hzLastF && hzLastF.hzSt;
+    if (c === "clear") {
+      H.scene.slide = "clear";
+      await say("When the dust settles the carters come back down the road. Their foreman, a broad woman called Hadley Coke, looks at the place where her carts were standing a few minutes ago, and at you, and takes her hat off.");
+      if (S.name) { H.falls.push(S.name + "'s Bend"); await say("\"That's " + esc(S.name) + "'s Bend, then,\" she says. \"That's what it'll be called. I'll see to it.\""); }
+      else await say("\"Tell me your name some time,\" she says, \"and that bend's yours.\"");
+    } else if (z && z.fell) {
+      H.scene.slide = "buried";
+      await say("When the dust settles, two of the four carts are under the scree, and a carter called Abel Marsh is under it with them to the hips. They dig him out alive, swearing. The salt is gone.");
+      await say("Nobody says anything to you. One of them chalks a mark on a rock by the road, a tally of some kind, and they go on up to Ashgate with two carts.");
+      await mech("Ashgate's salt guild will remember those carts.", "hurt");
+    } else {
+      H.scene.slide = "stood";
+      await say("The slope holds, somehow. The carters go on up to Ashgate without ever knowing how close it was, and you don't tell them.");
+    }
+  }
+  async function hzSceneQuake() {
+    const H = hz();
+    hzHead("Under the labyrinth", "The Floor Gives");
+    light("torch");
+    await say("On the way back down into the labyrinth you meet the Rooks: Tamsin Rook and her two grown sons, sap-tappers, who have been bleeding the root walls into clay jars for twenty years and have never once been as deep as this. They're lost, they're out of water, and they're very glad to see a light.");
+    await say("You're showing them the way up when the ground stops being still. All their jars go at once, a whole season of sap, like a shelf of plates dropped down a stair.");
+    await meetBeast("roots", { forced: true, hz: "quake", scene: "quake" });
+    await say("Afterwards, the Rooks sit in the broken clay and the spilt sap, and Tamsin counts what's left on her fingers, and stops, because there's nothing to count. In the crack the quake opened there's a cache: wrapped in waxed cloth gone hard as horn, a purse of old coin and a stoppered flask.");
+    const c = await choose([
+      { key: "took", label: "Keep the cache", tag: "you found it, and you fought for it" },
+      { key: "gave", label: "Give it to the Rooks", tag: "they've lost their season", plain: true }
+    ]);
+    H.scene.quake = c;
+    if (c === "took") await hzCache("roots", "You tuck it into your pack. Tamsin watches you do it and says nothing at all.");
+    else {
+      await say("Tamsin turns the purse over in her hands. \"Twenty years,\" she says, \"and the ground never gave me so much as a button.\" Then she shows you the sap-tapper's trick for a quake: knees soft, weight back, and never, ever reach for the wall.");
+      await mech("The Rooks' way of riding a quake: +5 to keep your feet in every earthquake from now on.", "loot");
+    }
+    if (!H.cracks.includes("roots") && !H.cracked.includes("roots")) { H.cracks.push("roots"); await mech("The crack stays open. It'll still be there on the roads back.", "loot"); }
+  }
+  // ---------- what the ground leaves: towns and the roads back ----------
+  const hzBlocked = (reg) => { const b = hz().block; return !!b && b.reg === reg && calDay() < b.until; };
+  // A town's stall or bar shut to you, for what you did in a set scene.
+  function hzShut(T, what) {
+    const sc = hz().scene;
+    if (T.reg === "desert" && T.kind === "town" && what === "bar" && sc.sand === "bait") return true;
+    if (T.reg === "corrach" && T.name === "Ashgate" && what === "market" && sc.slide === "buried") return true;
+    return false;
+  }
+  // What a town remembers, said once when you walk in, and every time while it still holds a grudge.
+  async function hzTownIntro(T) {
+    const H = hz(), sc = H.scene, seen = H.seen;
+    if (T.reg === "desert" && T.kind === "town") {
+      if (sc.sand === "driver" && !seen.jess) {
+        seen.jess = true;
+        await say("Jessamy Tarn is at the bar in a new blue headwrap. She's staked the whole caravan road, she says, red rags on poles round every sink between here and the wells, and the Hollow Hands pay her for it. She won't let you buy your own drink, and she puts two rolls of linen in your hand when you go.");
+        S.dress = (S.dress || 0) + 2; renderSheet();
+        await mech("Gain two bandages.", "loot");
+      } else if (sc.sand === "casks" && !seen.jess) {
+        seen.jess = true;
+        await say("Jessamy Tarn is at the bar. She looks at you, and picks up her cup, and moves three seats down.");
+      } else if (sc.sand === "bait") await say("Jessamy Tarn keeps the den's door now, with a cudgel across her knees. She lets you in. She won't let you anywhere near the bar. \"A wagon,\" she says, \"costs twenty-five gold. I've been asking.\"");
+      else if (sc.sand === "paid" && !seen.paid) { seen.paid = true; await say("Jessamy has a new wagon, and red rags on poles round every sink on the caravan road. She nods to you at the door. That's all, but it's something."); }
+    }
+    if (T.reg === "corrach" && T.name === "Ashgate") {
+      if (sc.slide === "clear" && !seen.coke) {
+        seen.coke = true;
+        await say("Hadley Coke sees you across the square and shouts your name, or what she calls you, and half the carters in Ashgate turn round. They stand you a salt-cake and a cup of something that takes the skin off the inside of your mouth" + (H.falls.length ? ", and somebody has painted a sign at the bend on the salt road: " + esc(H.falls[0]) + "." : "."));
+        S.elixirs = (S.elixirs || 0) + 1; renderSheet();
+        await mech("Hadley presses an Elixir of Health on you: \"For the next hill.\"", "loot");
+      } else if (sc.slide === "buried") await say("On the Reckoning Board, in chalk, the salt guild has written: OWED, TWO CARTS OF SALT, BY THE ONE WITH THE AXE. The market stalls close their shutters when you walk past.");
+    }
+    if (T.reg === "roots" && !seen.rooks && sc.quake) {
+      seen.rooks = true;
+      if (sc.quake === "gave") {
+        await say("On the reading table, somebody has left a clay jar of root-sap with your name scratched on the lid, or a drawing of an axe, which is the same thing. The Rooks found their way up.");
+        const b = S.hp; S.hp = S.maxHp; S.potions = (S.potions || 0) + 1; renderSheet();
+        await mech("The sap heals you to full (+" + (S.hp - b) + " HP), and there's enough left for a Draught of Mending.", "loot");
+      } else await say("Somebody has scratched into the end of a shelf, low down, where you'd only see it sitting on the floor: THE ONE WITH THE AXE TOOK OUR WINTER.");
+    }
+  }
+  function hzTownOpts(T) {
+    const sc = hz().scene, o = [];
+    if (T.reg === "desert" && T.kind === "town" && sc.sand === "bait") o.push({ key: "hz:wagon", label: "Pay Jessamy Tarn for a new wagon", tag: "25 gold · she keeps you from the bar till you do", show: S.coins >= 25, plain: true });
+    if (T.reg === "corrach" && T.name === "Ashgate" && sc.slide === "buried") o.push({ key: "hz:salt", label: "Square the salt guild for the buried carts", tag: "30 gold · the market won't serve you till you do", show: S.coins >= 30, plain: true });
+    return o;
+  }
+  async function hzTownDo(c, T) {
+    const sc = hz().scene;
+    if (c === "hz:wagon") {
+      S.coins -= 25; sc.sand = "paid"; renderSheet();
+      await say("Jessamy counts it twice and puts it away. \"I'll mark the sinks,\" she says. \"Not for you. For whoever's next.\" She lets you past to the bar.");
+      await mech("Squared with Jessamy. She stakes the caravan road: you won't blunder into sinking sand in the Burning Sands again, and the lure is easier.", "loot");
+    } else if (c === "hz:salt") {
+      S.coins -= 30; sc.slide = "squared"; renderSheet();
+      await say("The guild's clerk rubs out the chalk on the Reckoning Board with his sleeve, slowly, so everybody sees him do it. The shutters come up.");
+      await mech("Squared with the salt guild. Ashgate's market is open to you again.", "loot");
+    }
+  }
+  // Said once, back on the roads, when a slide's been cleared by the town while you were away.
+  async function hzNews() {
+    const H = hz(), b = H.block;
+    if (!b || calDay() < b.until) return;
+    H.block = null;
+    await say("Word comes down from the mountain: the navvies of " + b.town + " have dug the salt road clear of the slide.");
+    if (b.buried) await gold(2, 6, "They found " + b.who + " under it, or what was left, and what it carried. Somebody sends your share down with a carter.");
+  }
+  async function hzSlideRoad() {
+    const H = hz(), b = H.block;
+    const back = document.body.dataset.light;
+    hzHead("The roads back · " + REGIONS[b.reg], "The slide on the salt road");
+    light("dusk");
+    await say("The salt road to " + b.town + " goes into a wall of grey scree and doesn't come out. On the far side you can hear shovels. A navvy sitting on a rock this side says they'll have it open by " + calDate(b.until) + ", give or take a cart.");
+    const c = await choose([
+      { key: "dig", label: "Pick up a shovel and dig", tag: "Strength (Athletics) DC 13 · takes a watch" },
+      { key: "pay", label: "Pay the navvies to work through the night", tag: "15 gold · open by morning", show: S.coins >= 15, plain: true },
+      { key: "wait", label: "Wait for them", tag: "till " + calDate(b.until), plain: true },
+      { key: "back", label: "Not now", plain: true }
+    ]);
+    if (c === "back") { light(back); return; }
+    if (c === "dig") {
+      calPass(1);
+      const r = await check({ label: "Strength (Athletics) check (shifting the scree)", mod: 3, dc: 13, cta: "Dig" });
+      if (!r.ok) { await hurt(1, 6, "bludgeoning", "A stone the size of a barrel rolls down off the pile onto your foot."); b.until = Math.max(calDay() + 1, b.until - 1); await say("You shift enough that the navvies say it'll be a day sooner, and they say it kindly."); light(back); return; }
+      H.dug++; grant("hzdig");
+      await say("You dig until you hit the navvies coming the other way, and they cheer you through the gap with their shovels in the air.");
+      if (S.name && !H.falls.includes(S.name + "'s Gap")) H.falls.push(S.name + "'s Gap");
+    } else if (c === "pay") {
+      S.coins -= 15; renderSheet(); calDawn();
+      await say("You pay them, and they work all night by lamplight, singing something rude, and by morning there's a cart-width through the scree.");
+    } else { calDawn(Math.max(1, b.until - calDay())); await say("You wait in Vellum Rest, and on the third morning a navvy comes down to say it's open."); }
+    H.block = null;
+    if (b.buried) await gold(2, 6, "Under the scree they found " + b.who + ", what was left of it, and what it carried. They give you your share.");
+    await mech("The salt road to " + b.town + " is open again.", "loot");
+    light(back);
+  }
+  // A quake-crack left open in a region: climb down it once, on the roads back.
+  async function hzCrack() {
+    const H = hz();
+    const r = await choose(H.cracks.map((x, i) => ({ key: x, label: "The crack in " + REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+    if (r === "back") return;
+    const back = document.body.dataset.light;
+    hzHead("The roads back · " + REGIONS[r], "Down the quake-crack");
+    light("dark");
+    await say("The crack the quake opened is still there, black and cold and breathing out air that smells of deep stone. You tie off a rope and go down it hand over hand, further than your light reaches.");
+    const k = await check({ label: "Strength (Athletics) check (the climb)", mod: 3, dc: 13, cta: "Climb" });
+    if (!k.ok) await hurt(2, 6, "bludgeoning", "The rope slides through your hands for the last twenty feet.");
+    H.cracks = H.cracks.filter(x => x !== r); H.cracked.push(r);
+    if (d(2) === 1) {
+      await say("You aren't the first thing down here. Something has been living in the dark at the bottom, and it doesn't like the light.");
+      roamFight = true;
+      try { await meetBeast(r, { forced: true }); } finally { roamFight = false; }
+    }
+    await hzCache(r, "At the bottom, where the crack meets an older one, there's a cave nobody has stood in since the ground was laid down, and in it, the leavings of whoever last came here the other way.");
+    if (d(3) === 1) await gold(2, 8, "Further in, there's a seam of something that glitters, and you knock off what you can carry.");
+    await say("You climb back up into the daylight with your arms shaking. The crack will still be there, but there's nothing left down it for you now.");
+    light(back);
   }
 
   // ---------- the trapwright: schematics, traps and innovation ----------
@@ -11749,10 +12254,12 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     if (!F.terrain && (S.arRank || 0) >= 3 && typeof sabotage === "function" && d(3) > 1) { F.terrain = OBS_TERRAIN[d(OBS_TERRAIN.length) - 1]; await mech("Adaptive Reasoning: you see it before the fight starts. " + F.terrain[0][0].toUpperCase() + F.terrain[0].slice(1) + " is loose. You could bring it down on " + (F.heads ? "them" : "it") + ".", "loot"); }
     if (F.setup) await F.setup(st);
+    if (F.reg) await hzStart(F, st);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       await bleedTick();
       await wxRound(F, st); if (FOE.hp <= 0) break;
+      await hzRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       await munRound(F, st); if (FOE.hp <= 0) break;
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
@@ -11771,6 +12278,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (F.escapable) opts.push({ key: "escape", label: "Break away", tag: "Agility check DC " + escapeDc(F, st) + " · fail and it swings at your back with advantage · no XP or spoils", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
+      hzFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       sdFilter(opts, st);
       pzFilter(opts, st);
@@ -11863,6 +12371,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       else if (String(c).startsWith("tc-") || String(c).startsWith("mun-")) await tcFightDo(c, F, st);
       else if (String(c).startsWith("sd-")) await sdFightDo(c, F, st);
       else if (String(c).startsWith("pz-")) await pzFightDo(c, F, st);
+      else if (String(c).startsWith("hz-")) await hzFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (FOE.hp <= 0 || st.fled) break;
       if (st.quick > 0) {
@@ -11882,6 +12391,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     }
     F.overtaken = !!st.overtaken;
     F.fled = st.fled === "you" ? "you" : !!st.fled;
+    F.hzSt = st.hz || null;
     foeEnd(!!st.fled);
     light(back);
     if (hasSkill("mend") && S.hp < S.maxHp) {
@@ -11893,7 +12403,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0);
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0);
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
@@ -12439,7 +12949,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   }
   // A creature of the region on the road. roam: walked into on the roads back (you can let it go);
   // forced: it won't let you slip past. Once the Cascades wake, every creature is a Nightmare.
-  async function meetBeast(reg, { roam = false, forced = false, pack = false } = {}) {
+  let hzLastF = null;
+  async function meetBeast(reg, { roam = false, forced = false, pack = false, hz: hzK = null, hzFoe = false, scene = "", late = false } = {}) {
     tip("beast");
     S.met = S.met || [];
     const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
@@ -12481,7 +12992,8 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
     }
     const q = nm && NM_NOFLEE.includes(B.quirk) ? {} : QUIRKS[B.quirk] || {};
     const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, bleed: B.bleed || 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
-      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade" };
+      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade", reg, hzForce: hzK, hzFoeStuck: hzFoe, hzScene: scene, hzLate: late };
+    hzLastF = F;
     if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
     if (haunt) F.hpLeft = haunt.hp;
     if (many && !haunt) await say("And it isn't alone. There are " + many + " of them, and they spread out to come at you from different sides.");
@@ -12564,6 +13076,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       await mech("<b>Overtaken.</b> You lose this fight and its spoils" + (lost ? ", and half the gold you were carrying (" + lost + ") is gone from your purse when you wake; banked gold is safe" : "") + ". It's waiting for you on the roads of " + REGIONS[reg] + " with " + S.haunt.hp + (F.heads ? " " + F.unit.split("|").slice(S.haunt.hp === 1 ? 0 : -1)[0] : " HP") + " left, and you'll meet it there next.", "hurt");
       renderSheet(); return;
     }
+    if (await hzAfter(F, reg)) { beastLog(B, true); return; }
     const tier = TIER[reg];
     if (F.fled === "you") { await mech("You broke away. No XP and no spoils, but you're out."); return; }
     if (F.fled === "thief") { await mech("The sandpicker got away with " + F.stolen + " gold.", "hurt"); return; }
@@ -23652,7 +24165,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug);
       for (;;) {
-        try { await lvNews(); await wayside(i); await bnStory(i); await wildEncounter(i); await wxSet(null); await PARTS[i](); await stoneAfter(i); break; }
+        try { await lvNews(); await wayside(i); await bnStory(i); await wildEncounter(i); await hzScene(i); await wxSet(null); await PARTS[i](); await stoneAfter(i); break; }
         catch (e) { if (e !== FALLEN) throw e; S = JSON.parse(CHECK); jRewind(); await fallen(); checkpoint(); }
       }
       xpGain(PART_XP + (CHAPTERS.some(c => c.to === i) ? CHAPTER_XP : 0));
