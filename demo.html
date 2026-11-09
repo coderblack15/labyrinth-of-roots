@@ -2121,6 +2121,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "67", name: "Reach on the Map", date: "9 Nov 2026", items: [
+      "On the battle maps, a blow needs you next to the foe. Press Strike from up to 2 steps away and you now see yourself close in before you swing; from further off it tells you it's out of reach.",
+      "Holding a bow, Strike shoots: up to 6 squares, if nothing blocks the line.",
+      "Magic (the axe's gems, a spellbook, the Sun-Shard) reaches anywhere on the map, but only if the foe is in sight. Thrown belt items reach 4 squares and need a clear line. A melee weapon's active closes in like a blow does.",
+    ] },
     { ver: "66", name: "The Proving Ground", date: "9 Nov 2026", items: [
       "<b>Hero against hero.</b> The Proving Ground opens from the start screen. Pick heroes from your save slots (or a stranger) and one of the twelve battle maps, and fight: 2 steps and one action a turn, with strikes, charges, slings, shoves and one set of hidden caltrops each.",
       "<b>Same screen</b>: two players pass one device. The map goes dark between turns, so hidden caltrops stay hidden.",
@@ -6680,6 +6685,8 @@ body.pv-open { overflow: hidden; }
   async function beltUse(key, main) {
     const it = beltItems().find(x => x.key === key);
     if (!it) return;
+    const far = await fdBeltReach(key);
+    if (far) { await mech(far, "hurt"); return; }
     const t = await beltGame(it.label);
     const mult = t === "perfect" ? 1.5 : t === "fumble" ? 0.5 : 1;
     FOE.beltAt = FOE.turn - (t === "perfect" ? 1 : 0);
@@ -13009,21 +13016,48 @@ body.pv-open { overflow: hidden; }
     if (W) o.push({ key: "fd-wd", label: "Strike the " + W.name, tag: "next to it · it hunts you after", plain: true });
     return o;
   }
+  // Walk up next to t if the steps left allow it, and let the player see the walk before the blow.
+  async function fdCloseIn(st, t) {
+    const fd = st.fd;
+    if (cheb(fd.you, t) === 1) return true;
+    const P = fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y], true);
+    let best = null;
+    for (const k in P.best) { const [x, y] = k.split(",").map(Number); if (cheb({ x, y }, t) === 1 && (!best || P.best[k] < best.c)) best = { x, y, c: P.best[k] }; }
+    if (!best) return false;
+    fdMove(st, fdPathTo(P, best.x, best.y));
+    if (fd.infoEl) fd.infoEl.innerHTML = "<b>You close in</b>, " + best.c + " step" + (best.c > 1 ? "s" : "") + ".";
+    await wait(450);
+    return true;
+  }
+  const FD_THROWN = ["flasks", "lens", "jar", "cullet", "cal"];
+  // Belt items on the map: thrown things reach 4 squares and need a clear line; a melee weapon's
+  // active needs you next to the foe (you close in if you can). Returns why not, or null.
+  async function fdBeltReach(key) {
+    const st = FOE.F && FOE.F.st, fd = st && st.fd;
+    if (!fd || !fd.foe || FOE.hp <= 0) return null;
+    const dist = cheb(fd.you, fd.foe), sight = fdLos(fd, fd.you, fd.foe);
+    if (FD_THROWN.includes(key) || key.startsWith("trap-")) {
+      if (dist > 4) return "It's too far to throw, " + dist + " squares off. Get within 4 on the map.";
+      if (!sight) return "There's rock in the way. Move to where you can see it.";
+    }
+    if (key.startsWith("wa-")) {
+      if (wNoun(wpnKey()) === "arrow") return sight ? null : "There's rock in the way. Move to where you can see it.";
+      if (!(await fdCloseIn(st, fd.foe))) return "That needs you close enough to land a blow, and it's " + dist + " squares off. Move closer on the map first.";
+    }
+    return null;
+  }
   // Out of reach? Close in if the steps allow, or say why not.
   async function fdGate(c, F, st) {
     const fd = st.fd;
-    const near = (t) => cheb(fd.you, t) === 1;
-    const closeIn = (t) => {
-      if (near(t)) return true;
-      const P = fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y], true);
-      let best = null;
-      for (const k in P.best) { const [x, y] = k.split(",").map(Number); if (cheb({ x, y }, t) === 1 && (!best || P.best[k] < best.c)) best = { x, y, c: P.best[k] }; }
-      if (!best) return false;
-      fdMove(st, fdPathTo(P, best.x, best.y));
-      return true;
-    };
-    if (c === "atk" || c === "fd-shove") return closeIn(fd.foe) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
-    if (c === "fd-wd") { const W = fdWd(fd); return W && closeIn(W) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
+    const closeIn = (t) => fdCloseIn(st, t);
+    if (c === "atk" && wNoun(wpnKey()) === "arrow") {
+      const dist = cheb(fd.you, fd.foe);
+      if (dist > 6) return "It's too far for the bow, " + dist + " squares off. Get within 6 on the map.";
+      return dist === 1 || fdLos(fd, fd.you, fd.foe) ? null : "There's rock in the way. Move to where you can see it.";
+    }
+    if (c === "atk" || c === "fd-shove") return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
+    if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
+    if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
     if (c === "fd-sling" || c === "fd-bow") {
       if (c === "fd-bow" && fd.bow > 0) return "The Long Reckoning isn't spanned yet.";
       const dist = cheb(fd.you, fd.foe), max = c === "fd-bow" ? 6 : 5;
