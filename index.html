@@ -1052,6 +1052,14 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fd-name { font-family: var(--display); color: var(--gold); font-size: 1.15em; }
 .fd-steps { font-family: var(--label); color: var(--verdigris); letter-spacing: .04em; font-size: .9em; }
 .fd-map { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.5); touch-action: manipulation; user-select: none; cursor: pointer; }
+.fd-zoom { position: relative; width: 100%; max-width: 560px; margin: 0 auto; }
+.fd-zoom .fd-map { max-width: none; touch-action: pan-y; }
+.fd-zoom.zoomed .fd-map { cursor: grab; }
+.fd-zoom.zoomed .fd-map:active { cursor: grabbing; }
+.fd-zbar { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 3px; opacity: .72; transition: opacity .15s; }
+.fd-zbar:hover, .fd-zbar:focus-within, .fd-zoom.zoomed .fd-zbar { opacity: 1; }
+.fd-zbar button { min-width: 30px; height: 30px; padding: 0 7px; font-size: .9em; line-height: 1; background: rgba(12, 15, 13, .78); border: 1px solid rgba(255, 255, 255, .14); color: var(--ink); border-radius: 7px; cursor: pointer; }
+.fd-zbar button:disabled { display: none; }
 .fd-info { margin: 0; font-size: .95em; color: var(--muted); min-height: 2.6em; }
 .fd-info b { color: var(--ink); }
 .fd-foot { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -2120,6 +2128,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "68", name: "A Closer Look", date: "9 Nov 2026", items: [
+      "<b>Zoom on the battle maps</b>, in road fights and the Proving Ground. Pinch, use the + and − buttons in the map's corner, or hold ctrl (cmd on a Mac) and scroll. It zooms toward where you are, up to three times.",
+      "Zoomed in, drag to look around; the map glides to a stop and never slides off. <b>Fit</b> shows the whole map again. A tap on a square is still a tap: the map only pans once you really drag.",
+    ] },
     { ver: "67", name: "Reach on the Map", date: "9 Nov 2026", items: [
       "On the battle maps, a blow needs you next to the foe. Press Strike from up to 2 steps away and you now see yourself close in before you swing; from further off it tells you it's out of reach.",
       "Holding a bow, Strike shoots: up to 6 squares, if nothing blocks the line.",
@@ -12966,6 +12978,7 @@ body.pv-open { overflow: hidden; }
     card.innerHTML = '<div class="fd-head"><span class="fd-name">' + f.name + '</span><span class="fd-steps"></span></div><svg class="fd-map" viewBox="0 0 ' + FW * FT + " " + FH * FT + '" role="img" aria-label="Battle map: ' + f.name + '"></svg><p class="fd-info"></p><div class="fd-foot"><button type="button" class="ghost map-link fd-mk">Marker: ' + markerName() + '</button><button type="button" class="ghost map-link fd-off">Fight without maps</button></div><div class="fd-pick" hidden></div>';
     fd.el = card; fd.svg = card.querySelector("svg"); fd.infoEl = card.querySelector(".fd-info"); fd.stepsEl = card.querySelector(".fd-steps");
     fd.svg.innerHTML = fdArt(fd);
+    fdZoom(fd.svg);
     fd.svg.addEventListener("click", (ev) => fdTap(st, ev));
     card.querySelector(".fd-mk").onclick = () => {
       const pk = card.querySelector(".fd-pick");
@@ -12980,6 +12993,94 @@ body.pv-open { overflow: hidden; }
     tip("field");
     if (!D.seen) { D.seen = true; await mech("<b>The battle map.</b> You get 2 steps a round on top of your move: tap a square, then tap it again. Strikes need you next to it. Tap any square to see what the ground does.", "loot"); }
     fdDraw(st);
+  }
+  // Zoom and pan for a battle map: pinch, ctrl/cmd + wheel (a trackpad pinch too) or the + / − buttons
+  // zoom toward the point you're on; a drag pans when zoomed in, and glides to a stop. The view is
+  // held inside the map, Fit snaps back, and a tap stays a tap (a drag only starts past 8 pixels, and
+  // the click after a drag is swallowed). Works by moving the SVG's viewBox, so taps still land on squares.
+  function fdZoom(svg) {
+    if (svg.__z) { svg.__z.fit(true); return svg.__z; }
+    const W = FW * FT, H = FH * FT, KMAX = 3, z = { k: 1, x: 0, y: 0 };
+    const wrap = el("div", "fd-zoom");
+    svg.parentNode.insertBefore(wrap, svg); wrap.appendChild(svg);
+    const bar = el("div", "fd-zbar", '<button type="button" class="map-link fd-zin" aria-label="Zoom in" title="Zoom in (or pinch, or ctrl + scroll)">+</button><button type="button" class="map-link fd-zout" aria-label="Zoom out" title="Zoom out">−</button><button type="button" class="map-link fd-zfit" aria-label="Show the whole map" title="Show the whole map">Fit</button>');
+    wrap.appendChild(bar);
+    const [bIn, bOut, bFit] = bar.querySelectorAll("button");
+    let anim = 0, glide = 0, vx = 0, vy = 0, lastT = 0, drag = null, pinch = null, moved = false;
+    const pts = new Map();
+    const stop = () => { cancelAnimationFrame(anim); cancelAnimationFrame(glide); anim = glide = 0; };
+    function apply() {
+      const w = W / z.k, h = H / z.k;
+      z.x = Math.min(Math.max(0, z.x), W - w); z.y = Math.min(Math.max(0, z.y), H - h);
+      svg.setAttribute("viewBox", z.x.toFixed(2) + " " + z.y.toFixed(2) + " " + w.toFixed(2) + " " + h.toFixed(2));
+      const on = z.k > 1.01;
+      svg.style.touchAction = on ? "none" : "pan-y";
+      wrap.classList.toggle("zoomed", on);
+      bOut.disabled = bFit.disabled = !on; bIn.disabled = z.k >= KMAX - .01;
+    }
+    const toMap = (cx, cy) => { const r = svg.getBoundingClientRect(); return [z.x + (cx - r.left) / r.width * W / z.k, z.y + (cy - r.top) / r.height * H / z.k]; };
+    // Zoom to k keeping the map point (mx, my) where it is on screen.
+    function zoomAt(k, mx, my) {
+      k = Math.min(KMAX, Math.max(1, k));
+      const fx = (mx - z.x) / (W / z.k), fy = (my - z.y) / (H / z.k);
+      z.k = k; z.x = mx - fx * W / k; z.y = my - fy * H / k; apply();
+    }
+    function animTo(k, mx, my) {
+      stop();
+      const k0 = z.k, t0 = performance.now(), D = reduced ? 0 : 220;
+      const step = (t) => { const p = D ? Math.min(1, (t - t0) / D) : 1, e = 1 - Math.pow(1 - p, 3); zoomAt(k0 + (k - k0) * e, mx, my); if (p < 1) anim = requestAnimationFrame(step); };
+      anim = requestAnimationFrame(step);
+    }
+    const mid = () => [z.x + W / z.k / 2, z.y + H / z.k / 2];
+    bIn.onclick = () => animTo(Math.min(KMAX, z.k * 1.6), ...mid());
+    bOut.onclick = () => animTo(Math.max(1, z.k / 1.6), ...mid());
+    bFit.onclick = () => animTo(1, ...mid());
+    svg.addEventListener("pointerdown", (e) => {
+      stop();
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 1) { drag = { x: e.clientX, y: e.clientY, ox: z.x, oy: z.y }; moved = false; vx = vy = 0; lastT = performance.now(); }
+      else if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: z.k }; moved = true; }
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch && pts.size >= 2) {
+        const [a, b] = [...pts.values()], m = toMap((a.x + b.x) / 2, (a.y + b.y) / 2);
+        zoomAt(pinch.k * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, m[0], m[1]);
+        e.preventDefault(); return;
+      }
+      if (!drag || z.k <= 1.01) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!moved) { if (Math.hypot(dx, dy) < 8) return; moved = true; if (e.pointerType !== "touch") try { svg.setPointerCapture(e.pointerId); } catch (er) {} }
+      const r = svg.getBoundingClientRect(), sc = W / z.k / r.width, nx = drag.ox - dx * sc, ny = drag.oy - dy * sc;
+      const now = performance.now(), dt = Math.max(1, now - lastT);
+      vx = .7 * (nx - z.x) / dt + .3 * vx; vy = .7 * (ny - z.y) / dt + .3 * vy; lastT = now;
+      z.x = nx; z.y = ny; apply(); e.preventDefault();
+    });
+    const up = (e) => {
+      if (!pts.delete(e.pointerId)) return;
+      if (pts.size < 2) pinch = null;
+      if (pts.size === 1) { const p = [...pts.values()][0]; drag = { x: p.x, y: p.y, ox: z.x, oy: z.y }; return; }
+      if (pts.size === 0) {
+        if (moved && drag && !reduced && performance.now() - lastT < 80 && Math.hypot(vx, vy) > .02) {
+          let t0 = performance.now();
+          const step = (t) => { const dt = t - t0; t0 = t; const f = Math.pow(.9, dt / 16); vx *= f; vy *= f; z.x += vx * dt; z.y += vy * dt; apply(); if (Math.hypot(vx, vy) > .01) glide = requestAnimationFrame(step); };
+          glide = requestAnimationFrame(step);
+        }
+        drag = null;
+      }
+    };
+    svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+    wrap.addEventListener("click", (e) => { if (moved && e.target !== bIn && e.target !== bOut && e.target !== bFit) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+    wrap.addEventListener("wheel", (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault(); stop();
+      const m = toMap(e.clientX, e.clientY);
+      zoomAt(z.k * Math.exp(-e.deltaY * (e.deltaMode ? .05 : .0025)), m[0], m[1]);
+    }, { passive: false });
+    svg.__z = { fit: (now) => { stop(); if (now) { z.k = 1; z.x = z.y = 0; apply(); } else animTo(1, ...mid()); }, get k() { return z.k; } };
+    apply();
+    return svg.__z;
   }
   // At the top of each round: fresh steps, the wanderer, and the map brought down to the menu.
   async function fdRound(F, st) {
@@ -25890,6 +25991,7 @@ body.pv-open { overflow: hidden; }
     const svg = pvEl("pvMap");
     svg.setAttribute("viewBox", "0 0 " + FW * FT + " " + FH * FT);
     svg.innerHTML = fdArt(pv.fd);
+    fdZoom(svg);
     pvSay("<b>" + esc(pv.P[0].n) + "</b> and <b>" + esc(pv.P[1].n) + "</b> face each other across " + f.name + ". " + esc(pv.P[pv.cur].n) + " goes first.");
     pvTurn();
     pvEl("pvDuel").scrollIntoView({ block: "start" });
