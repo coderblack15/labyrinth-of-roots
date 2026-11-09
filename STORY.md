@@ -1056,7 +1056,7 @@ A city of lead roofs and stone doors that ticks like a clock shop, and stops whe
 
 ### Part LXV: The Hall of Lead
 
-Lead doors: the outer door wants *friend* and *open*, weight 7. **Two Truths**: three pairs, each a Whisperers' gold tablet, a Bathyr lead one and a witness the Hall kept; two questions each, a wrong answer costs Sea-Sky.
+Lead doors: the outer door wants *friend* and *open*, weight 7. **Two Truths**: three pairs, each a Hushkeepers' gold tablet, a Bathyr lead one and a witness the Hall kept; two questions each, a wrong answer costs Sea-Sky.
 
 - *The Founding of Rahdaria*: a hundred hands, both peoples (the tally-cord); the gold tablet's seal wasn't cut until the ninth year.
 - *What Keeps the Light*: it slept when it was answered (the dawn-log); it's failing because the Sounders forgot.
@@ -1205,7 +1205,7 @@ Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes
 
 ## The Deafstones: lore tablets
 
-A fallen light wakes to loud voices, so the first wardens, the Whisperers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
+A fallen light wakes to loud voices, so the first wardens, the Hushkeepers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
 
 *(Three tablets per region: the Root, the Hush and the Wound. Two wait at the end of the part named; the third, and any missed, only on the roads back. Finding one is a check (the DC given), then a charcoal rubbing: rub every square and avoid the cracks. 0 smudges is a clean rubbing; 1–2 lose a few words; more lose many. Words in a script the player hasn't learned stay blank until they have. Afterwards the player leaves it standing (Hear) or pries it up for 1d6+4 gold, breaking it (Hush). All three of a region give +1 on non-attack checks there. All thirty open Ilka's Stone.)*
 
