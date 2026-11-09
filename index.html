@@ -600,6 +600,33 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .pgrid.shell .tg { font-size: 1.8rem; line-height: 1; }
 .pgrid.shell small { font-family: var(--label); font-size: .7rem; color: var(--muted); }
 .pgrid.lock button { width: 56px; height: 56px; font-size: 1.5rem; }
+.tac { margin: 0 0 1em; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--label); max-width: 560px; }
+.tac-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.tac-head b { color: var(--gold); letter-spacing: .04em; }
+.tac-head span { color: var(--muted); font-size: .85rem; }
+.tac-tl { display: flex; gap: 4px; align-items: center; margin: 0 0 6px; overflow: hidden; }
+.tac-tl small { color: var(--muted); font-size: .72rem; margin-right: 2px; }
+.tac-tl span { min-width: 28px; padding: 3px 4px; border-radius: 5px; text-align: center; font-size: .72rem; font-weight: 700; background: #1d3a33; color: #cfe9dd; opacity: .8; }
+.tac-tl span.foe { background: #4a1d17; color: #ffd6cc; }
+.tac-tl span.now { opacity: 1; outline: 2px solid var(--gold); }
+.tac-map { cursor: pointer; }
+.tac-pop { font: 700 17px var(--label, sans-serif); fill: #ffdf6b; stroke: #000; stroke-width: 3px; paint-order: stroke; }
+.tac-pop.heal { fill: #8ef0b5; } .tac-pop.law { fill: #f3d27a; font-size: 12px; }
+.tac-panel { margin-top: 8px; }
+.tac-who { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tac-who span { color: var(--muted); font-size: .85rem; }
+.tac-res { color: var(--gold); font-style: normal; letter-spacing: 1px; }
+.tac-st { margin: 4px 0 8px; font-size: .9rem; color: var(--ink); }
+.tac-hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+.tac-card { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+.tac-card b { color: var(--gold); font-size: .85rem; } .tac-card small { color: var(--muted); font-size: .72rem; line-height: 1.3; }
+.tac-card.on { outline: 2px solid var(--gold); } .tac-card:disabled { opacity: .4; }
+.tac-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tac-tiles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tac-tiles button { font-size: .72rem; padding: 3px 6px; }
+.tac-log p { margin: 2px 0; font-size: .82rem; color: var(--muted); } .tac-log p:first-child { color: var(--ink); }
+.tac-how { margin-top: 8px; font-size: .82rem; color: var(--muted); } .tac-how summary { cursor: pointer; color: var(--gold); }
+.tac-done .tac-map { pointer-events: none; opacity: .75; }
 .duel { margin: 0 0 1em; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--label); max-width: 460px; }
 .duel .du-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .duel .du-ph { font-family: var(--display); font-size: 1.25rem; color: var(--ink); }
@@ -2113,6 +2140,7 @@ body.pv-open { overflow: hidden; }
         '<p class="j-note">' + (recapOff() ? "This recap no longer shows when you continue a save. " : "This recap shows each time you continue a save. ") +
         '<button class="ghost" type="button" id="jRecapToggle">' + (recapOff() ? "Show it again" : "Stop showing it") + "</button></p></section>";
     }
+    if (started) h += '<section class="j-recap"><h3>Battle style · Slot ' + SLOT + '</h3><p class="j-note">Company battles, boardings and raids are fought <b>' + ({ classic: "the Classic way", tactics: "with Tactical Advantage, on the grid", ask: "whichever way you choose, each time" })[S.tac || "classic"] + '</b>. Missions won on the grid: ' + (J.tacWins || 0) + ' of 12 for Tactical Warrior.</p><p class="j-note">' + [["classic", "Classic"], ["tactics", "Tactical Advantage"], ["ask", "Ask each fight"]].map(([k, l]) => '<button class="ghost" type="button" data-tac="' + k + '"' + ((S.tac || "classic") === k ? ' aria-pressed="true" disabled' : "") + ">" + l + "</button>").join(" ") + "</p></section>";
     if (r) {
       const found = Object.values(r.items).map(x => x.name);
       h += "<section><h3>This journey · Slot " + SLOT + "</h3>" +
@@ -2161,12 +2189,19 @@ body.pv-open { overflow: hidden; }
     body.innerHTML = h;
     const rt = $("jRecapToggle");
     if (rt) rt.onclick = () => { setRecapOff(!recapOff()); jRender(); };
+    body.querySelectorAll("[data-tac]").forEach(b => b.onclick = () => { if (FOE.on) return; S.tac = b.dataset.tac; save(); jRender(); });
     const tt = $("jTipToggle");
     if (tt) tt.onclick = () => { tipState.off = !tipState.off; tipSave(); jRender(); };
   }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "71", name: "Tactical Advantage", date: "9 Nov 2026", items: [
+      "<b>A new battle style.</b> Boardings on the Open Reach and in the Black Tithe, caravan raids, the salt-tax wagon and the road-raiders can now be fought on the battle map with <b>your whole company as pieces</b>: you, Burr, Tyra, your sellswords, and on a deck, the crew sworn to you.",
+      "Each unit acts in turn, by speed (the bar shows who's next). Move, play one card, then choose which way to face: blows from the side are +2 to hit, from behind +4. The map's ground still counts: cover, high ground, rugged and sinking ground, charges and tall cover against shots. ◆ Resonance grows each turn and pays for the big cards. Your pirate tricks are cards, once a battle each.",
+      "Drop every captain and the rest strike. Only five of theirs fit on the field; the rest step up as others fall. On the road, a high Plunder makes guards throw down their arms when you close in. <b>Let them fight it out</b> plays it for you.",
+      "You choose your style once per slot (Classic, Tactical Advantage, or ask each fight), and can change it in the journal. Classic fights are exactly as they were.",
+      "<b>Tactical Warrior</b>: win 12 missions on the grid (counted across all slots) for the <b>Marshal's Compass</b>. On the grid you set your people before each fight and open with more ◆; in other fights your first swing has advantage. Four new feats in <b>Tactical Advantage</b>."] },
     { ver: "70", name: "The Siege Ground", date: "9 Nov 2026", items: [
       "<b>The Siege of Rahdaria is fought on battle maps now</b>, eight of them: the Land Gate, the Wall-Walk, the Tanners' Breach, the High Terraces, the Bathyr lines, the Riverbank Trench, the Engine Park and the Dead Orchards. Walls and gates block, towers are high ground, battlements and gabions are cover, the breach is rubble, and the ditches and the river hold whoever goes in.",
       "Both sides fly their colours: Rahdaria's <b>Seven-Terrace Tower</b> on garden green, and the Bathyr's <b>Struck Stone</b> on slate, hung from lead tabs. The Bathyr carry the Struck Stone on their medallion too.",
@@ -2776,6 +2811,10 @@ body.pv-open { overflow: hidden; }
     { id: "f50clean", name: "Light Feet", desc: "Find a Ring-Chart cache without springing a single pitfall on that field.", test: () => false },
     { id: "f50sure", name: "First Spade", desc: "Find a Ring-Chart cache with the first hole you dig on that field.", test: () => false },
     { id: "f50hoard", name: "Ringwarden", desc: "Finish the Ring-Chart and open the Fiftyfold Hoard.", test: () => false },
+    { id: "tacfirst", name: "First Mission", desc: "Win a battle with Tactical Advantage.", test: () => false },
+    { id: "tacdeck", name: "Over the Rail", desc: "Win a boarding on the grid.", test: () => false },
+    { id: "tacroad", name: "The Wagon Ring", desc: "Win a fight on the road on the grid.", test: () => false },
+    { id: "tactwar", name: "Tactical Warrior", desc: "Win 12 Tactical Advantage missions. The prize: the Marshal's Compass.", test: () => (J.tacWins || 0) >= 12, prog: () => [Math.min(12, J.tacWins || 0), 12] },
     { id: "dufirst", name: "Steel on Steel", desc: "Win a duel with sharp blades.", test: () => false },
     { id: "duriposte", name: "Answer and Return", desc: "Riposte three times in one duel.", test: () => false },
     { id: "duschool", name: "A Hall of Your Own", desc: "Take up the way of a salle.", test: () => false },
@@ -2835,7 +2874,9 @@ body.pv-open { overflow: hidden; }
     { id: "fifty", name: "The Fiftieth Ring", ver: "21", desc: "Level 50: the celebration, and the Ring-Chart, a treasure hunt across five battle maps.",
       ids: ["f50leg", "f50clean", "f50sure", "f50hoard"] },
     { id: "siege", name: "The Siege Ground", ver: "22", desc: "Battle maps for the Siege of Rahdaria: the gate, the wall-walk, the breach, the Bathyr lines, and the Porcelain Tower.",
-      ids: ["sgfirst", "sgdrown", "sgporc", "sgsix"] }
+      ids: ["sgfirst", "sgdrown", "sgporc", "sgsix"] },
+    { id: "tactics", name: "Tactical Advantage", ver: "23", desc: "Company battles on the grid: boardings, caravans and raiders, with your whole company on the map.",
+      ids: ["tacfirst", "tacdeck", "tacroad", "tactwar"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -12842,6 +12883,7 @@ body.pv-open { overflow: hidden; }
     lamp: { name: "The Daylamp", icon: "lantern", desc: "Old Tamsin's mine lamp, burning whale-white. Hesk fight at −2 in its light, and it shows spore pockets in the tunnels before you step in them." },
     bow: { name: "The Long Reckoning", icon: "bow", desc: "Jessamy Rook's own crossbow. Open every fight with a free shot: +5 to hit, 2d8 piercing." },
     ring: { name: "Seventeen-Year Ring", icon: "ring", desc: "A band of grey Hesk shell. Once, when the Bloom would let you die, you wake at 1 HP instead." },
+    compass: { name: "The Marshal's Compass", icon: "map", desc: "Given to a Tactical Warrior, for twelve battles won on the grid. On the battle map you set your people before the fight, and everyone opens with more ◆. In other fights, your first swing has advantage." },
     glaive: { name: "The Moltglaive", icon: "glaive", desc: "A Hesk war-glaive sung hard from moltwater salt, won in the Ring of Echoes. 1d10 + 3, and 1d6 more against the Hesk." }
   };
   const hasGear = (k) => (S.gear || []).includes(k);
@@ -13955,7 +13997,7 @@ body.pv-open { overflow: hidden; }
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
     S.gemsSpent = false; renderSheet();
-    const st = { round: 0, split: 0, stilled: false, used: {}, adv: false };
+    const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
@@ -23284,7 +23326,7 @@ body.pv-open { overflow: hidden; }
     else await say("You knock splinters off her stern, and she keeps running, but she's slower, and you're faster, and in an hour the grapnels are going over.");
     const n = Math.max(4, 10 - (g.direct ? 2 : g.near ? 1 : 0) - P.crew.length);
     if (P.crew.length) await say(P.crew.map(k => PZ_CREW[k].name).join(", ") + (P.crew.length > 1 ? " go" : " goes") + " across with you, and the <i>Good Intent</i>'s deck is a good deal emptier by the time you get your feet under you.");
-    const F = await companyFight({
+    const F = await companyOr("deck", {
       soldiers: n, captains: ["Master Absalom Tey", "Mate Wenlock Harr"], capHp: 20, capThem: "them", cover: "a lashed stack of wine-casks",
       capMiss: "Your blow slides off a merchant's breastplate, and the deckhands shove you back.",
       F: { name: "The Good Intent's crew", ac: 13, atk: 4, n: 1, s: 6, type: "slashing", who: "the merchant crew", whoShort: "Crew", hitWhy: "A cargo-hook rips across you.", miss: "The cudgel bangs off the rail.", hitLine: "A deckhand throws down his cudgel and sits on the hatch with his hands on his head." }
@@ -23450,7 +23492,7 @@ body.pv-open { overflow: hidden; }
       const g = await wallGun({ title: "The broadside", target: "the Patience", shots: 3 + Math.min(2, edge), dist: 200 + d(120) });
       const n = Math.max(4, 12 - P.crew.length - edge - (g.direct ? 3 : g.near ? 1 : 0));
       await say("You put her alongside the <i>Patience</i> in the smoke, and go across with the boarding-axes" + (crewTxt ? ", " + crewTxt + " at your back" : "") + ".");
-      const F = await companyFight({ soldiers: n, captains: ["Commodore Idris Malloway", "Lieutenant Sabeth Crane"], capHp: 28, capThem: "them", cover: "the Patience's capstan",
+      const F = await companyOr("deck", { soldiers: n, captains: ["Commodore Idris Malloway", "Lieutenant Sabeth Crane"], capHp: 28, capThem: "them", cover: "the Patience's capstan",
         capMiss: "Your blow rings off a Saltwrit officer's gorget, and the marines close up.", F: HUNTERS({ name: "The Saltwrit marines", hitWhy: "A Saltwrit boarding-pike takes you in the side." }) });
       if (F.fled) await say("You're driven back to your own deck, but the <i>Patience</i> is burning, and the Saltwrit line breaks round her, and Malloway strikes his flag before the fire reaches his magazine.");
       await say("Commodore Idris Malloway is brought to you on his knees on his own deck: a narrow grey man with a careful face, who has hanged four hundred people on the Gibbet Skerries, most of them pirates, and some of them not.");
@@ -23468,7 +23510,7 @@ body.pv-open { overflow: hidden; }
       await say("You're on the deck of the <i>Widow's Tally</i> when the cup comes round, and you draw a white bone, and then the Saltwrit come in out of the dark, nine ships, under a gallows-and-anchor flag, " + (P.sig ? "exactly where your signal told them" : "guessing") + ".");
       await say("Their guns open on the ring all at once, and the lashed ships can't move. It isn't a battle. It's a fire. You go across the plank bridges through the smoke toward the Salt King's hulk, because that's where the Commodore will want to be, and where the Quiet Passengers are, and because you want to be the one who's there.");
       const n = Math.max(4, 11 - edge - (P.sig ? 2 : 0) - (P.writ >= 6 ? 2 : 0));
-      const F = await companyFight({ soldiers: n, captains: ["Captain Mord Ivery of the Fleet", "Captain Sallow Breck of the Fleet"], capHp: 24, capThem: "them", cover: "a stack of tarred hawsers",
+      const F = await companyOr("deck", { soldiers: n, captains: ["Captain Mord Ivery of the Fleet", "Captain Sallow Breck of the Fleet"], capHp: 24, capThem: "them", cover: "a stack of tarred hawsers",
         capMiss: "Your blow slides off a Skerran captain's salt-crusted shoulder.", F: SKERRA({ name: "The Salt King's guard", who: "the Salt King's guard", whoShort: "Guard" }) });
       if (F.fled) await say("You're driven back, but the hulk is burning round them, and they don't follow.");
       await say("Seld Varrick, the Salt King, meets you on his own quarterdeck with a boarding-axe in each hand and fire behind him, and he's laughing, because he doesn't understand anything that's happening. He never has.");
@@ -23548,7 +23590,8 @@ body.pv-open { overflow: hidden; }
     try {
       if (hunt) {
         await say("The Saltwrit post a bounty on every road now. This one: a band of road-raiders working the " + REGIONS[r] + " road, who've taken three carts in a month and left nobody to say what they looked like. You find their fire.");
-        await hkFight({ name: "Road-raiders", heads: 3 + d(2), unit: "raider|raiders", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "the raiders", whoShort: "Raiders",
+        if (await tacWanted()) { const R = await tacCompany({ soldiers: 3 + d(2), captains: [], capHp: 0, F: { name: "Road-raiders", ac: 13, atk: 4, n: 1, s: 8, whoShort: "Raiders" } }, "road", r); if (R.fled) { light(back); return; } }
+        else await hkFight({ name: "Road-raiders", heads: 3 + d(2), unit: "raider|raiders", ac: 13, atk: 4, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "the raiders", whoShort: "Raiders",
           hitWhy: "A raider's hanger opens your arm.", miss: "The blow goes wide in the firelight.", hitLine: "A raider goes down across the fire, scattering sparks." });
         const n = Math.round((12 + lv()) * 1.2);
         S.coins += n; renderSheet(); xpGain(30 + lv());
@@ -23574,7 +23617,8 @@ body.pv-open { overflow: hidden; }
         else { force = true; await say("The caravan-master laughs at you, and the guards come on."); }
       }
       if (force) {
-        const F = await companyFight({ soldiers: 4 + 2 * tier, captains: ["The caravan-master"], capHp: 18, capThem: "him", cover: "an overturned wagon",
+        tacReg = r;
+        const F = await companyOr("road", { soldiers: 4 + 2 * tier, captains: ["The caravan-master"], capHp: 18, capThem: "him", cover: "an overturned wagon",
           capMiss: "Your blow slides off the caravan-master's mail.",
           F: { name: "The caravan guard", ac: 13, atk: 4, n: 1, s: 6, type: "slashing", road: true, who: "the guards", whoShort: "Guards", hitWhy: "A guard's spear finds you.", miss: "The spear goes past your ribs.", hitLine: "A guard throws down his spear and runs for the trees." } });
         if (F.fled) { light(back); return; }
@@ -23592,6 +23636,439 @@ body.pv-open { overflow: hidden; }
     light(back);
   }
 
+
+  // ---------- Tactical Advantage: company fights on the battle maps ----------
+  // Adrian's ask (8–9 Nov 2026): fights you can play like a tactics game, as an option across the
+  // whole game. Battle style lives per slot in S.tac: "classic" (as ever), "tactics" (company fights
+  // go to the grid) or "ask" (choose each time). The grid is the region's battle map (FIELDS, art
+  // by fdArt), with the same ground rules: low cover −1 to blows at you, rugged −1 from it, high
+  // ground +1 to hit and damage below, sinking ground holds (−3 out, +3 in), tall cover blocks
+  // shots, and a straight run of 2+ steps over open ground into a blow is a charge (+2). On top:
+  // your whole company fights as units, the turn order runs on speed, facing matters (+2 to hit
+  // from the side, +4 from behind), and each unit plays one card a turn. ◆ Resonance (+1 a turn,
+  // 3 at most) pays for the big cards; pirate tricks are cards, once a battle each. Drop every
+  // captain and the rest strike. The field holds 5 of theirs; the rest wait to step in. Your HP is
+  // your HP: Vaelric's axe holds you at 1, and the company drags you out (it counts as breaking
+  // away). Missions won are counted across all slots in J.tacWins; 12 earns Tactical Warrior, and
+  // with it the Marshal's Compass (see GEAR).
+  const tacStyle = () => S.tac || "classic";
+  let tacReg = null;
+  async function tacWanted() {
+    const s = tacStyle();
+    if (s === "tactics") return true;
+    if (s !== "ask") return false;
+    return (await choose([{ key: "tac", label: "Fight it on the grid", tag: "Tactical Advantage" }, { key: "cls", label: "Fight it the usual way", tag: "Classic", plain: true }])) === "tac";
+  }
+  async function companyOr(map, o) {
+    const reg = tacReg; tacReg = null;
+    if (await tacWanted()) return tacCompany(o, map, reg);
+    return companyFight(o);
+  }
+  const TA_ON = 5;
+  const TA_CARDS = {
+    strike: { name: "Strike", min: 1, max: 1, melee: true, text: "Your weapon. A straight run of 2+ steps into it is a charge, +2." },
+    heavy: { name: "Heavy Blow", cost: 2, min: 1, max: 1, melee: true, twice: true, text: "Roll the weapon's dice twice." },
+    shove: { name: "Shove", cost: 1, min: 1, max: 1, melee: true, shove: true, die: [1, 4, 0], text: "Push it a square: into sinking ground, off a ledge, into rock." },
+    sling: { name: "Sling", min: 2, max: 4, ranged: true, die: [1, 4, 1], text: "A stone from range. Tall cover blocks it." },
+    reckon: { name: "The Long Reckoning", min: 2, max: 5, ranged: true, hit: 5, die: [2, 8, 0], text: "Jessamy Rook's crossbow: +5 to hit, 2d8." },
+    mend: { name: "Field Mending", cost: 1, min: 0, max: 1, ally: true, heal: [1, 8, 2], uses: 2, text: "Bind you or a neighbour: 1d8 + 2. Twice a battle." },
+    bite: { name: "Bite", min: 1, max: 1, melee: true, text: "Teeth at the knee." },
+    drag: { name: "Drag Down", cost: 1, min: 1, max: 1, melee: true, stun: true, die: [1, 4, 0], text: "It goes down and loses its next turn." },
+    knife: { name: "Quiet Knife", cost: 1, min: 1, max: 1, melee: true, sneak: true, text: "From the side or behind: +1d6." },
+    bolt: { name: "Crossbow Bolt", min: 2, max: 4, ranged: true, text: "A bolt from range." },
+    guard: { name: "Hold the Line", cost: 1, min: 0, max: 1, ally: true, buff: "ac", text: "+2 AC to you or a neighbour until your next turn." },
+    patch: { name: "Patch Up", cost: 1, min: 0, max: 1, ally: true, heal: [1, 6, 2], text: "Stitch you or a neighbour: 1d6 + 2." },
+    count: { name: "Call the Count", cost: 1, min: 1, max: 3, ally: true, buff: "ct", text: "An ally acts sooner. Watch the turn bar." },
+    pzpin: { name: "Belaying Pin", min: 1, max: 1, melee: true, auto: [1, 6, 2], daze: true, once: true, trick: true, text: "1d6 + 2, no roll. Half the time it loses its turn." },
+    pzhook: { name: "Boarding Hook", min: 2, max: 3, pull: 2, once: true, trick: true, text: "Haul it two squares to you. Your next blow at it has advantage." },
+    pzpowder: { name: "Powder Flash", min: 1, max: 3, auto: [2, 6, 2], aoe: true, once: true, trick: true, text: "2d6 + 2 fire across a + of squares, no roll." },
+    pzsalt: { name: "Salt in the Eyes", min: 1, max: 1, salt: true, once: true, trick: true, text: "Its next two blows miss outright." },
+    pzblack: { name: "Run Up the Black", min: 0, max: 0, black: true, once: true, trick: true, text: "Every foe within 2 squares may throw down its arms." },
+    loose: { name: "Loose", min: 2, max: 4, ranged: true, text: "An arrow from range." }
+  };
+  // Your company on the grid. hp is a share of your max HP; hit and ac are offsets from yours.
+  const TA_CO = {
+    burr: { cls: "Dog", hp: .45, hit: 0, ac: -1, spd: 12, mv: 4, cards: ["bite", "drag"] },
+    tyra: { cls: "Knife", hp: .6, hit: 1, ac: 0, spd: 11, mv: 3, cards: ["strike", "knife"] },
+    wenna: { cls: "Crossbow", hp: .55, hit: 1, ac: -1, spd: 9, mv: 3, cards: ["bolt", "strike"] },
+    odran: { cls: "Shield", hp: .8, hit: -1, ac: 3, spd: 7, mv: 2, cards: ["strike", "shove", "guard"] },
+    caddock: { cls: "Surgeon", hp: .5, hit: -2, ac: -1, spd: 8, mv: 2, cards: ["strike", "patch"] }
+  };
+  const taCoDef = (id) => TA_CO[id] || { cls: "Blade", hp: .6, hit: 0, ac: 0, spd: 9, mv: 3, cards: ["strike", "guard"] };
+  const taRoll = ([n, s, b]) => { let t = b || 0; for (let i = 0; i < n; i++) t += d(s); return t; };
+  const taDist = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  const TA_DIR = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+  const taDirTo = (ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay; if (!dx && !dy) return null; return Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "E" : "W") : (dy > 0 ? "S" : "N"); };
+  function taSide(a, t) {
+    const v = TA_DIR[taDirTo(t.x, t.y, a.x, a.y) || t.face], f = TA_DIR[t.face];
+    if (v[0] === f[0] && v[1] === f[1]) return "front";
+    if (v[0] === -f[0] && v[1] === -f[1]) return "back";
+    return "side";
+  }
+
+  async function tacCompany(o, map, reg) {
+    const key = map === "deck" ? "reach" : (reg && FIELDS[reg] ? reg : "roots");
+    nextReg = map === "deck" ? "reach" : key;
+    const f = FIELDS[key], fd = { key, f, G: f.grid.map(r => r.split("")) };
+    const heads = o.soldiers + o.captains.length;
+    foeStart(o.F.name, heads, { unit: "standing" });
+    FOE.rounds = true; FOE.F = { hesk: false, st: { round: 0, used: {} } };
+    S.gemsSpent = false; renderSheet();
+    const mult = foeMult(), lvB = Math.floor(lv() / 6);
+    const myDie = wDef(wpnKey()).die, myHit = 4 + gearHit();
+    const U = [], tile = (x, y) => fdTile(fd, x, y);
+    const at = (x, y) => U.find(u => u.alive && u.x === x && u.y === y);
+    const mk = (u) => { const n = Object.assign({ alive: true, ct: d(30), res: hasGear("compass") ? 2 : 0, face: u.side === "you" ? "N" : "S", used: {}, stun: 0, salt: 0, guard: 0, adv: null, mv0: [] }, u); U.push(n); return n; };
+    // where everyone stands: the nearest free walkable squares to each side's mark
+    const spots = (ax, ay) => { const P = fdPaths(fd, ax, ay, 99, () => false); return Object.entries(P.best).sort((a, b) => a[1] - b[1]).map(([k]) => k.split(",").map(Number)).filter(([x, y]) => tile(x, y) !== "~"); };
+    const place = (u, list) => { const s = list.find(([x, y]) => !at(x, y)); if (s) { u.x = s[0]; u.y = s[1]; } return u; };
+    const youSp = spots(f.you[0], f.you[1]), foeSp = spots(f.foe[0], f.foe[1]);
+    const me = place(mk({ id: "you", side: "you", kind: "you", name: S.name || "Wayfarer", tag: (S.name || "You").slice(0, 2), hp: S.hp, max: S.maxHp, hit: myHit, ac: acNow(), die: [myDie[0], myDie[1], myDie[2] + lvDmg()], spd: 10, mv: fdSteps() + 1,
+      cards: ["strike", "heavy", "shove", hasGear("bow") ? "reckon" : "sling"].concat(hasSkill("mend") ? ["mend"] : [], (S.tricks || []).map(k => "pz" + k)) }), youSp);
+    company().forEach(id => {
+      const c = taCoDef(id), m = Math.max(8, Math.round(S.maxHp * c.hp));
+      place(mk({ id, side: "you", kind: "co", name: coName(id).split(" ")[0], tag: coName(id).slice(0, 2), hp: m, max: m, hit: myHit + c.hit, ac: acNow() + c.ac, die: [1, 6, 1 + Math.floor(lv() / 5) + bondOf(id)], spd: c.spd, mv: c.mv, cards: c.cards }), youSp);
+    });
+    if (map === "deck" && pzOn() && pz().crew) pz().crew.slice(0, 2).forEach(k => {
+      const m = Math.max(8, Math.round(S.maxHp * .5));
+      place(mk({ id: "crew-" + k, side: "you", kind: "co", name: PZ_CREW[k].name.split(" ")[0], tag: PZ_CREW[k].name.slice(0, 2), hp: m, max: m, hit: myHit - 1, ac: acNow() - 1, die: [1, 6, 1 + lvB], spd: 9, mv: 3, cards: ["strike", "shove"] }), youSp);
+    });
+    const F0 = o.F, sHp = Math.max(4, Math.round((4 + F0.n * F0.s / 2 + lv() * .3) * mult)), sDie = [F0.n, F0.s, (F0.b || 0) + lvB];
+    const capHp = Math.max(6, Math.round(o.capHp * (1 + (mult - 1) / 2) * 1.5));
+    o.captains.forEach(n => place(mk({ id: "cap-" + n, side: "foe", kind: "cap", name: n, tag: "Cp", hp: capHp, max: capHp, hit: F0.atk + 2 + lvB, ac: F0.ac + 1, die: [sDie[0], sDie[1], sDie[2] + 2], spd: 8, mv: 3, cards: ["strike"] }), foeSp));
+    let pool = o.soldiers, sn = 0;
+    const short = (F0.whoShort || "Foe").replace(/s$/, "");
+    const soldier = () => { sn++; pool--; return mk({ id: "sol-" + sn, side: "foe", kind: "sol", name: short + " " + sn, tag: short.slice(0, 1) + sn, hp: sHp, max: sHp, hit: F0.atk + lvB, ac: F0.ac, die: sDie, spd: 6 + d(4), mv: 3, cards: sn % 3 === 0 ? ["loose", "strike"] : ["strike"] }); };
+    while (pool > 0 && U.filter(u => u.side === "foe").length < TA_ON + o.captains.length) place(soldier(), foeSp);
+    const plT = map === "road" ? plTier() : 0;
+    const st = { won: false, fled: false, broken: 0, active: null, mode: null, sel: null, pend: null, auto: false, deploy: hasGear("compass"), pick: null, log: [], turns: 0, busy: false };
+    const foesLeft = () => U.filter(u => u.side === "foe" && u.alive).length + pool;
+    const syncFoe = () => { FOE.hp = Math.max(0, foesLeft()); renderFoe(); };
+
+    // ---- the board ----
+    const box = add(el("div", "tac",
+      '<div class="tac-head"><b>' + f.name + "</b><span>" + (o.captains.length ? "Drop " + (o.captains.length > 1 ? "both captains" : o.captains[0].replace(/^The /, "the ")) + " and the rest strike." : "Drive them off the field.") + "</span></div>" +
+      '<div class="tac-tl" aria-label="Turn order"></div><div class="tac-wrap"><svg class="fd-map tac-map" viewBox="0 0 ' + FW * FT + " " + FH * FT + '" role="img" aria-label="' + f.name + ', the battle map">' + fdArt(fd) + "</svg></div>" +
+      '<div class="tac-panel"></div><div class="tac-tiles" hidden></div><details class="tac-how"><summary>How Tactical Advantage works</summary><p>Each unit acts in the order on the bar: move (gold squares) and play one card, either order, then face a way. ' +
+      "From the side you're +2 to hit, from behind +4. The map's ground counts: cover, high ground, rugged and sinking ground, tall cover against shots, and charges across open ground. ◆ grows by 1 a turn, 3 at most. Tap a target once to see the odds, again to strike.</p></details>"));
+    const svg = box.querySelector("svg"), panel = box.querySelector(".tac-panel"), tl = box.querySelector(".tac-tl"), tilesEl = box.querySelector(".tac-tiles");
+    const log = (t) => { st.log.unshift(t); st.log = st.log.slice(0, 4); };
+    let pops = [];
+    const pop = (u, t, c) => pops.push({ x: u.x, y: u.y, t, c });
+    function reach(u) {
+      if (!u.alive || u.moved) return {};
+      const P = fdPaths(fd, u.x, u.y, u.mv, (x, y) => { const v = at(x, y); return !!v && v.side !== u.side; });
+      for (const k in P.best) { const [x, y] = k.split(",").map(Number); if (at(x, y)) delete P.best[k]; }
+      P.u = u; return P;
+    }
+    const inRange = (u, c, x, y, from) => { from = from || u; const dd = Math.abs(x - from.x) + Math.abs(y - from.y); return dd >= c.min && dd <= c.max && (!c.ranged || fdLos(fd, from, { x, y })); };
+    function targets(u, c, from) {
+      from = from || u; const out = [];
+      for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+        if (!inRange(u, c, x, y, from)) continue;
+        if (c.aoe) { out.push([x, y]); continue; }
+        let t = at(x, y); if (t === u && (from.x !== u.x || from.y !== u.y)) t = null; if (!t && x === from.x && y === from.y) t = u;
+        if (!t) continue;
+        if (c.black) { if (t === u) out.push([x, y]); continue; }
+        if (c.ally ? t.side === u.side : t.side !== u.side) out.push([x, y]);
+      }
+      return out;
+    }
+    const cardOk = (u, k) => { const c = TA_CARDS[k]; return !(c.cost > u.res) && !(c.once && u.used[k]) && !(c.uses && (u.used[k] || 0) >= c.uses); };
+    function mods(a, t, c, from) {
+      from = from || a; const m = []; const ta = tile(from.x, from.y), tt = tile(t.x, t.y);
+      if (c.auto || c.ally || c.black || c.salt) return m;
+      if (ta === "h" && tt !== "h") m.push(["from above", 1]);
+      if (ta === "r") m.push(["bad footing", -1]);
+      if (tt === "c") m.push(["in cover", -1]);
+      if (ta === "~") m.push(["stuck fast", -3]);
+      if (tt === "~") m.push(["it's stuck", 3]);
+      const sd = taSide(from, t); if (sd === "side") m.push(["from the side", 2]); if (sd === "back") m.push(["from behind", 4]);
+      if (t.guard) m.push(["held line", -2]);
+      return m;
+    }
+    const isCharge = (u, t, c) => c.melee && u.mv0.length >= 2 && u.mv0.every(s => s.d === u.mv0[0].d && s.t === ".") && tile(t.x, t.y) !== "r";
+    function odds(a, t, c, from) {
+      if (c.auto || c.salt || c.pull) return 1;
+      const need = t.ac - a.hit - (c.hit || 0) - mods(a, t, c, from).reduce((s, x) => s + x[1], 0);
+      let p = Math.max(.05, Math.min(.95, (21 - need) / 20));
+      if (a.adv === t.id) p = 1 - (1 - p) * (1 - p);
+      return p;
+    }
+    async function hit(a, t, c) {
+      if (c.salt) { t.salt = 2; pop(t, "SALT", "law"); log(a.name + " throws salt in " + t.name + "'s eyes."); return; }
+      if (c.pull) {
+        for (let i = 0; i < c.pull; i++) { const dd = taDirTo(t.x, t.y, a.x, a.y), [dx, dy] = TA_DIR[dd], nx = t.x + dx, ny = t.y + dy; if (tile(nx, ny) === null || tile(nx, ny) === "#" || at(nx, ny)) break; t.x = nx; t.y = ny; }
+        a.adv = t.id; log(a.name + " hooks " + t.name + " and hauls."); pop(t, "HOOKED", "law"); return;
+      }
+      let dmg = 0, crit = false;
+      if (c.auto) dmg = taRoll(c.auto);
+      else {
+        if (a.salt > 0) { a.salt--; log(a.name + " swings blind and misses."); pop(t, "miss", ""); return; }
+        let r = d(20); if (a.adv === t.id) { r = Math.max(r, d(20)); a.adv = null; }
+        const m = mods(a, t, c).reduce((s, x) => s + x[1], 0);
+        if (r === 1 || (r !== 20 && r + a.hit + (c.hit || 0) + m < t.ac)) { log(a.name + " misses " + t.name + "."); pop(t, "miss", ""); return; }
+        crit = r === 20;
+        const die = c.die || a.die, n = (crit ? 2 : 1) * (c.twice ? 2 : 1);
+        dmg = taRoll([die[0] * n, die[1], die[2]]);
+        if (tile(a.x, a.y) === "h" && tile(t.x, t.y) !== "h") dmg += 1;
+        if (isCharge(a, t, c)) { dmg += 2; log(a.name + " charges!"); }
+        if (c.sneak && taSide(a, t) !== "front") dmg += d(6);
+      }
+      t.hp -= dmg; pop(t, "−" + dmg + (crit ? "!" : ""), "dmg");
+      log(a.name + (crit ? " lands a crit on " : " hits ") + t.name + " for " + dmg + ".");
+      if (c.stun && t.hp > 0) t.stun = 1;
+      if (c.daze && t.hp > 0 && d(2) === 1) { t.stun = 1; log(t.name + " is dazed."); }
+      if (c.shove && t.hp > 0) shove(a, t);
+      if (t.hp <= 0) down(t);
+    }
+    function shove(a, t) {
+      const [dx, dy] = TA_DIR[taDirTo(a.x, a.y, t.x, t.y)], nx = t.x + dx, ny = t.y + dy, nt = tile(nx, ny), o2 = at(nx, ny);
+      if (nt === null || nt === "#") { const x = d(4); t.hp -= x; pop(t, "−" + x, "dmg"); log(t.name + " slams into " + (nt === null ? "the edge" : "rock") + "."); }
+      else if (o2) { const x = d(4); t.hp -= x; o2.hp -= x; log(t.name + " crashes into " + o2.name + "."); if (o2.hp <= 0) down(o2); }
+      else { const fall = tile(t.x, t.y) === "h" && nt !== "h"; t.x = nx; t.y = ny; if (fall) { const x = d(6); t.hp -= x; log(t.name + " goes off the ledge (" + x + ")."); } else if (nt === "~") log(t.name + " is shoved into the sinking ground."); else log(t.name + " is shoved back."); }
+      if (t.hp <= 0) down(t);
+    }
+    function down(t) {
+      if (!t.alive) return;
+      t.alive = false; t.hp = Math.max(0, t.hp);
+      if (t.side === "foe") { st.broken++; log(t.name + " is down."); syncFoe(); if (t.kind === "sol" && pool > 0) { const n = place(soldier(), foeSp); n.ct = 0; log("Another steps up: " + n.name + "."); } }
+      else log(t.name + (t === me ? " goes down." : " is out of the fight."));
+    }
+    function act(u, k, x, y) {
+      const c = TA_CARDS[k]; u.res -= c.cost || 0; u.acted = true;
+      if (c.once) u.used[k] = true; if (c.uses) u.used[k] = (u.used[k] || 0) + 1;
+      const fc = taDirTo(u.x, u.y, x, y); if (fc) u.face = fc;
+      if (c.black) {
+        log(u.name + " runs up the black.");
+        U.filter(t => t.alive && t.side !== u.side && t.kind === "sol" && taDist(u, t) <= 2).forEach(t => { if (Math.random() < .25 + .15 * plTier()) { t.alive = false; st.broken++; pop(t, "THROWS DOWN", "law"); log(t.name + " throws down his arms."); } });
+        syncFoe(); return Promise.resolve();
+      }
+      if (c.heal || c.buff) {
+        const t = at(x, y) || u;
+        if (c.heal) { const g = Math.min(taRoll(c.heal), t.max - t.hp); t.hp += g; pop(t, "+" + g, "heal"); log(u.name + " patches " + (t === u ? "themself" : t.name) + " (+" + g + ")."); }
+        if (c.buff === "ac") { t.guard = 1; pop(t, "+2 AC", "heal"); log(t.name + " holds the line."); }
+        if (c.buff === "ct") { t.ct += 50; pop(t, "SOONER", "heal"); log(u.name + " calls the count for " + t.name + "."); }
+        return Promise.resolve();
+      }
+      const hits = c.aoe ? [[x, y], [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]].map(([a2, b2]) => at(a2, b2)).filter(Boolean) : [at(x, y)].filter(Boolean);
+      if (c.aoe) log(u.name + " throws a powder flash.");
+      return hits.reduce((p, t) => p.then(() => hit(u, t, c)), Promise.resolve());
+    }
+    // ---- drawing ----
+    const tokSvg = (u) => {
+      const T = FT, cx = u.x * T + T / 2, cy = u.y * T + T / 2, fr = Math.max(0, u.hp / u.max);
+      const ring = u === st.active ? '<circle r="31" fill="none" stroke="#f3d27a" stroke-width="3"/>' : "";
+      const body = u === me ? '<circle r="27" fill="url(#fdAura)"/><image href="' + markerSrc() + '" x="-27" y="-27" width="54" height="54"/>'
+        : u.side === "foe" ? '<g transform="scale(' + (u.kind === "cap" ? .95 : .8) + ')">' + fdMedal("hood", cascadeOn() ? "nm" : "foe") + "</g>"
+        : '<circle r="21" fill="#1d3a33" stroke="#cfa850" stroke-width="2.5"/><text y="6" text-anchor="middle" font-size="17" font-weight="700" fill="#e7dec9">' + u.tag + "</text>";
+      const [fx, fy] = TA_DIR[u.face];
+      return '<g transform="translate(' + cx + " " + cy + ')"><ellipse cx="3" cy="9" rx="22" ry="9" fill="#000" opacity=".45"/>' + ring + body +
+        '<path d="M' + fx * 30 + " " + fy * 30 + " l" + (-fy * 6 - fx * 8) + " " + (fx * 6 - fy * 8) + " l" + (fy * 12) + " " + (-fx * 12) + 'Z" fill="' + (u.side === "foe" ? "#e0573f" : "#f3d27a") + '" stroke="#000" stroke-width="1"/>' +
+        '<rect x="-18" y="-38" width="36" height="5" rx="2" fill="#2a1210" stroke="#000" stroke-width=".8"/><rect x="-18" y="-38" width="' + 36 * fr + '" height="5" rx="2" fill="' + (u.side === "foe" ? "#e0573f" : "#6fd08c") + '"/>' +
+        (u.kind === "cap" ? '<text y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#f3d27a" stroke="#000" stroke-width="3" paint-order="stroke">CAPTAIN</text>' : "") +
+        (u.stun ? '<text y="-44" text-anchor="middle" font-size="12" fill="#f3d27a">✶</text>' : "") + (tile(u.x, u.y) === "~" ? '<path d="M-22 10 q11 8 22 0 t22 0" stroke="#e8d29a" stroke-width="2.4" fill="none"/>' : "") + "</g>";
+    };
+    function hl() {
+      const u = st.active, out = {};
+      if (st.deploy) { youSp.slice(0, 10).forEach(([x, y]) => out[x + "," + y] = "mv"); return out; }
+      if (!u || u.side !== "you" || st.auto || st.busy) return out;
+      if (st.mode === "move") for (const k in reach(u).best || {}) out[k] = "mv";
+      if (st.mode === "card") { const c = TA_CARDS[st.sel]; targets(u, c).forEach(([x, y]) => out[x + "," + y] = c.ally || c.black ? "ok" : "tg"); if (st.pend && c.aoe) [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([a2, b2]) => out[(st.pend[0] + a2) + "," + (st.pend[1] + b2)] = "aoe"); }
+      return out;
+    }
+    function predict(n) {
+      const sim = U.filter(u => u.alive).map(u => ({ u, ct: u.ct })), out = [];
+      if (st.active && st.active.alive) { out.push(st.active); sim.find(z => z.u === st.active).ct = 0; }
+      let g = 0; while (out.length < n && g++ < 3000) { const r = sim.filter(z => z.ct >= 100); if (r.length) { r.sort((a, b) => b.ct - a.ct); out.push(r[0].u); r[0].ct = 0; continue; } sim.forEach(z => z.ct += z.u.spd); }
+      return out;
+    }
+    function draw() {
+      const T = FT, H = hl(); let s = "";
+      const col = { mv: "#f3d27a", tg: "#e0573f", ok: "#6fd08c", aoe: "#ffb347" };
+      for (const k in H) { const [x, y] = k.split(",").map(Number); s += '<rect x="' + (x * T + 3) + '" y="' + (y * T + 3) + '" width="' + (T - 6) + '" height="' + (T - 6) + '" rx="6" fill="' + col[H[k]] + '" fill-opacity=".28" stroke="' + col[H[k]] + '" stroke-width="2"/>'; }
+      if (st.pend) s += '<rect x="' + (st.pend[0] * T + 1.5) + '" y="' + (st.pend[1] * T + 1.5) + '" width="' + (T - 3) + '" height="' + (T - 3) + '" rx="7" fill="none" stroke="#fff" stroke-width="2.5"/>';
+      svg.querySelector(".fd-over").innerHTML = s;
+      svg.querySelector(".fd-toks").innerHTML = U.filter(u => u.alive).map(tokSvg).join("") +
+        pops.map(p => '<text class="tac-pop ' + p.c + '" x="' + (p.x * T + T / 2) + '" y="' + (p.y * T + 8) + '" text-anchor="middle">' + p.t + "</text>").join("");
+      pops = [];
+      tl.innerHTML = "<small>Next</small>" + predict(9).map((u, i) => '<span class="' + (u.side === "foe" ? "foe" : "you") + (i === 0 && st.active ? " now" : "") + '">' + esc(u.tag) + "</span>").join("");
+      // squares as buttons, for keyboards and screen readers (and the playtest bot)
+      tilesEl.innerHTML = Object.keys(H).map(k => { const [x, y] = k.split(",").map(Number), t = at(x, y); return '<button type="button" data-x="' + x + '" data-y="' + y + '">' + (t ? esc(t.name) : "Square " + (x + 1) + "," + (y + 1)) + "</button>"; }).join("");
+      tilesEl.hidden = !tilesEl.innerHTML;
+      let p = "";
+      const u = st.active;
+      if (st.over) p = "";
+      else if (st.deploy) p = '<p class="tac-st">Marshal\'s Compass: set your people where you want them. Tap one of yours, then a gold square.</p><div class="tac-btns"><button type="button" class="primary" data-a="begin">Begin the battle</button></div>';
+      else if (u && u.side === "you" && !st.auto && !st.busy) {
+        const c = st.sel && TA_CARDS[st.sel], tg = st.pend && at(st.pend[0], st.pend[1]);
+        let line = st.mode === "face" ? "Choose which way " + esc(u.name) + " faces. Guard your back." :
+          st.pend ? (tg && !c.ally && !c.black && !c.aoe ? esc(tg.name) + ": " + Math.round(odds(u, tg, c) * 100) + "% to hit" + (mods(u, tg, c).length ? " (" + mods(u, tg, c).map(m => m[0] + " " + fmt(m[1])).join(", ") + ")" : "") + (isCharge(u, tg, c) ? ", charging +2" : "") + ". " : "") + "<i>Tap it again to play " + c.name + ".</i>" :
+          st.mode === "card" ? "Pick a target for " + c.name + "." : !u.moved && !u.acted ? "Move " + esc(u.name) + " (gold squares) or play a card." : !u.acted ? "Play a card, or end the turn." : "Move, or end the turn.";
+        p += '<div class="tac-who"><b>' + esc(u.name) + "</b><span>HP " + u.hp + "/" + u.max + " · AC " + u.ac + " · <i class=\"tac-res\">" + "◆".repeat(u.res) + "◇".repeat(3 - u.res) + "</i>" + (u.salt ? " · blinded by salt" : "") + "</span></div><p class=\"tac-st\">" + line + '</p><div class="tac-hand">';
+        u.cards.forEach(k => { const c2 = TA_CARDS[k], off = u.acted || !cardOk(u, k) || st.mode === "face"; p += '<button type="button" class="tac-card' + (st.sel === k ? " on" : "") + '" data-c="' + k + '"' + (off ? " disabled" : "") + "><b>" + c2.name + "</b><small>" + (c2.cost ? "◆".repeat(c2.cost) + " · " : "") + (c2.trick ? "once · " : "") + c2.text + "</small></button>"; });
+        p += '</div><div class="tac-btns">' + (st.mode === "face" ? ["W", "N", "S", "E"].map(dd => '<button type="button" data-f="' + dd + '">' + { N: "▲ North", E: "▶ East", S: "▼ South", W: "◀ West" }[dd] + "</button>").join("") :
+          '<button type="button" class="primary" data-a="end">' + (u.moved || u.acted ? "End turn" : "Wait") + "</button>") +
+          '<button type="button" class="ghost" data-a="auto">Let them fight it out</button><button type="button" class="ghost" data-a="out">Break away</button></div>';
+      } else p = '<p class="tac-st">' + (u ? esc(u.name) + "…" : "") + "</p>";
+      p += '<div class="tac-log">' + st.log.map(l => "<p>" + esc(l) + "</p>").join("") + "</div>";
+      panel.innerHTML = p;
+    }
+    // ---- turns ----
+    let resolveRun;
+    const done = new Promise(r => resolveRun = r);
+    const sleep = (ms) => wait(st.auto ? Math.min(ms, 220) : ms);
+    function over() {
+      if (st.over) return true;
+      if (!me.alive || me.hp <= 0) { st.over = true; st.fled = true; }
+      else if (!U.some(u => u.side === "foe" && u.alive) && pool <= 0) { st.over = true; st.won = true; }
+      else if (o.captains.length && !U.some(u => u.kind === "cap" && u.alive)) { const n = foesLeft(); st.broken += n; U.forEach(u => { if (u.side === "foe") u.alive = false; }); pool = 0; log("The captains are down. The rest strike."); st.over = true; st.won = true; }
+      if (st.over) { draw(); resolveRun(); }
+      return st.over;
+    }
+    async function next() {
+      if (over()) return;
+      let u, g = 0;
+      while (g++ < 5000) { const r = U.filter(x => x.alive && x.ct >= 100); if (r.length) { r.sort((a, b) => b.ct - a.ct); u = r[0]; break; } U.forEach(x => { if (x.alive) x.ct += x.spd; }); }
+      st.turns++; st.active = u; u.moved = false; u.acted = false; u.mv0 = []; u.guard = 0; u.res = Math.min(3, u.res + 1);
+      st.sel = null; st.pend = null;
+      if (u.stun) { u.stun = 0; log(u.name + " is still reeling and loses the turn."); draw(); await sleep(500); return end(u); }
+      if (plT && u.kind === "sol" && U.some(y => y.alive && y.side === "you" && taDist(u, y) === 1) && Math.random() < .12 * plT) {
+        u.alive = false; st.broken++; log(u.name + " knows your name, and throws down his arms."); syncFoe(); draw(); await sleep(500); return next();
+      }
+      if (u.side === "foe" || st.auto) { draw(); await sleep(420); await ai(u); return end(u); }
+      st.mode = "move"; draw();
+    }
+    function end(u) {
+      u.ct = u.moved && u.acted ? 0 : u.moved || u.acted ? 20 : 40;
+      st.active = null; st.mode = null;
+      if (over()) return;
+      return sleep(160).then(next);
+    }
+    function after(u) {
+      if (over()) return;
+      if (!u.alive) return end(u);
+      st.mode = u.moved && u.acted ? "face" : !u.moved ? "move" : null;
+      draw();
+    }
+    function moveTo(u, x, y, P) {
+      const path = fdPathTo(P, x, y); let px = u.x, py = u.y;
+      u.mv0 = path.map(([a2, b2]) => { const s = { d: taDirTo(px, py, a2, b2), t: tile(a2, b2) }; px = a2; py = b2; return s; });
+      u.face = taDirTo(u.x, u.y, x, y) || u.face; if (u.mv0.length) u.face = u.mv0[u.mv0.length - 1].d;
+      u.x = x; u.y = y; u.moved = true;
+    }
+    async function ai(u) {
+      const foes = U.filter(t => t.alive && t.side !== u.side), mates = U.filter(t => t.alive && t.side === u.side);
+      if (!foes.length) return;
+      const P = reach(u), spotsA = [[u.x, u.y]].concat(Object.keys(P.best || {}).map(k => k.split(",").map(Number)));
+      let best = null;
+      for (const k of u.cards) {
+        const c = TA_CARDS[k]; if (!cardOk(u, k) || c.trick || c.black) continue;
+        for (const [px, py] of spotsA) {
+          const from = { x: px, y: py }, sink = tile(px, py) === "~" ? 6 : 0;
+          for (const [tx, ty] of targets(u, c, from)) {
+            const t = at(tx, ty) || u; let sc;
+            if (c.heal) sc = t.hp < t.max * .5 ? 14 + (t === me ? 4 : 0) : -1;
+            else if (c.buff) sc = c.buff === "ac" && foes.some(f2 => taDist(f2, t) <= 2) ? 3 : -1;
+            else { const die = c.die || u.die, av = (die[0] * (c.twice ? 2 : 1)) * (die[1] + 1) / 2 + die[2]; sc = odds(u, t, c, from) * av + (av >= t.hp ? 8 : 0) + (t === me ? 2 : 0) + (t.kind === "cap" ? 3 : 0) - (c.cost || 0) * 1.5; }
+            sc -= sink + (px !== u.x || py !== u.y ? 0 : -.3);
+            if (sc > 0 && (!best || sc > best.sc)) best = { sc, k, px, py, tx, ty };
+          }
+        }
+      }
+      if (best) {
+        if (best.px !== u.x || best.py !== u.y) { moveTo(u, best.px, best.py, P); draw(); await sleep(380); }
+        await act(u, best.k, best.tx, best.ty); draw(); await sleep(420);
+        return;
+      }
+      let bs = null;
+      for (const [px, py] of spotsA) { const dd = Math.min(...foes.map(t => Math.abs(t.x - px) + Math.abs(t.y - py))) + (tile(px, py) === "~" ? 4 : 0); if (!bs || dd < bs.dd) bs = { dd, px, py }; }
+      if (bs && (bs.px !== u.x || bs.py !== u.y)) { moveTo(u, bs.px, bs.py, P); draw(); await sleep(380); }
+      const n = foes.sort((a, b) => taDist(u, a) - taDist(u, b))[0]; u.face = taDirTo(u.x, u.y, n.x, n.y) || u.face;
+    }
+    // ---- your taps ----
+    function onSquare(x, y) {
+      const u = st.active;
+      if (st.deploy) {
+        const t = at(x, y);
+        if (t && t.side === "you") { st.pick = t; log("Moving " + t.name + "."); }
+        else if (st.pick && youSp.slice(0, 10).some(([a2, b2]) => a2 === x && b2 === y)) { st.pick.x = x; st.pick.y = y; st.pick = null; }
+        return draw();
+      }
+      if (!u || u.side !== "you" || st.auto || st.busy) return;
+      if (st.mode === "card") {
+        const c = TA_CARDS[st.sel];
+        if (targets(u, c).some(([a2, b2]) => a2 === x && b2 === y)) {
+          if (st.pend && st.pend[0] === x && st.pend[1] === y) { st.busy = true; st.pend = null; const k = st.sel; st.sel = null; act(u, k, x, y).then(() => { st.busy = false; after(u); }); return; }
+          st.pend = [x, y]; return draw();
+        }
+        st.pend = null;
+      }
+      if (st.mode === "move" || (st.mode === "card" && !u.moved)) {
+        const P = reach(u);
+        if (P.best && P.best[x + "," + y] !== undefined && !(x === u.x && y === u.y)) { st.sel = null; moveTo(u, x, y, P); return after(u); }
+      }
+      draw();
+    }
+    svg.addEventListener("click", (ev) => {
+      const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      onSquare(Math.floor(q.x / FT), Math.floor(q.y / FT));
+    });
+    box.addEventListener("click", (ev) => {
+      const b = ev.target.closest("button"); if (!b || b.disabled || st.over) return;
+      const u = st.active;
+      if (b.dataset.x) return onSquare(+b.dataset.x, +b.dataset.y);
+      if (b.dataset.c && u) { if (st.sel === b.dataset.c) { st.sel = null; st.mode = u.moved ? null : "move"; } else { st.sel = b.dataset.c; st.mode = "card"; } st.pend = null; return draw(); }
+      if (b.dataset.f && u) { u.face = b.dataset.f; return end(u); }
+      const a2 = b.dataset.a;
+      if (a2 === "begin") { st.deploy = false; log("The battle is joined."); return next(); }
+      if (a2 === "end" && u) { st.mode = "face"; st.sel = null; st.pend = null; return draw(); }
+      if (a2 === "auto") { st.auto = true; log("You let them fight it out."); if (u && u.side === "you") { st.mode = null; draw(); ai(u).then(() => end(u)); } return; }
+      if (a2 === "out") { st.over = true; st.fled = true; log("You break away."); draw(); resolveRun(); }
+    });
+    log(o.captains.length ? o.captains.join(" and ") + (o.captains.length > 1 ? " call" : " calls") + " the line." : "They come on.");
+    if (st.deploy) draw(); else next();
+    await done;
+    box.querySelectorAll("button").forEach(b => b.disabled = true);
+    box.classList.add("tac-done");
+    // ---- after ----
+    S.hp = Math.max(me.alive ? 1 : 0, Math.min(S.maxHp, me.hp));
+    if (!me.alive || me.hp <= 0) {
+      if ((S.hk && S.bloom > 0 && !S.molt) || (S.nk && S.nk.on && S.nk.shade <= 0)) { S.hp = 0; foeEnd(true); throw FALLEN; }
+      S.hp = 1;
+      await mech("You go down on the deck of it, and Vaelric's axe holds you at 1 HP while your people drag you out.", "hurt");
+    }
+    renderSheet();
+    if (st.won) {
+      FOE.hp = 0; renderFoe(); foeEnd(false);
+      J.tacWins = (J.tacWins || 0) + 1; jSave();
+      await mech("Tactical Advantage: mission won in " + st.turns + " turns. Missions won: " + J.tacWins + ".", "loot");
+      grant("tacfirst"); if (map === "deck") grant("tacdeck"); if (map === "road") grant("tacroad");
+      if (J.tacWins >= 12 && !hasGear("compass")) {
+        S.gear = S.gear || []; S.gear.push("compass"); renderSheet();
+        await mech("<b>Tactical Warrior.</b> For twelve battles won on the grid, you're given the <b>Marshal's Compass</b>: on the grid you set your people before the fight and open with more ◆; in other fights, your first swing has advantage.", "loot");
+      }
+      achCheck();
+    } else foeEnd(true);
+    save();
+    return { fled: !st.won, broken: st.broken, tac: true };
+  }
+  function askStyle(isNew) {
+    return new Promise((done) => {
+      const box = el("section", "recap namecard",
+        '<div><span class="num">' + (isNew ? "Before you go down" : "Something new") + "</span><h3>How do you want to fight?</h3></div>" +
+        "<p class='recap-now'>" + (isNew ? "" : "There's a new way to fight the big battles. ") + "Company battles, boardings and raids can be fought the usual way, or on the battle map, with your whole company as pieces to move. You can change this in your journal any time you're not in a fight.</p>" +
+        '<div class="bg-opts"><button type="button" class="bg-opt" data-v="classic"><b>Classic</b><small>The fights as they have always been: rolls, orders and answers.</small></button>' +
+        '<button type="button" class="bg-opt" data-v="tactics"><b>Tactical Advantage</b><small>On the grid: move every unit, mind your facing and the ground, play cards.</small></button>' +
+        '<button type="button" class="bg-opt" data-v="ask"><b>Ask me each fight</b><small>Choose when the fight starts.</small></button></div>');
+      box.querySelectorAll(".bg-opt").forEach(b => b.onclick = () => {
+        S.tac = b.dataset.v; box.querySelectorAll("button").forEach(x => x.disabled = true); box.remove(); save(); done();
+      });
+      scrollNext = true;
+      add(box);
+    });
+  }
 
   // ---------- the Open Reach: a ship of your own, after the Black Tithe ----------
   // Adrian's ask (8 Nov 2026): more pirate content. Once the Black Tithe is ended you can put to sea
@@ -24034,7 +24511,7 @@ body.pv-open { overflow: hidden; }
       await say("You go back over the rail with " + caps[0] + "'s cutlass at your back and the crews' jeering in your ears, and somebody cuts the grapnels.");
       return "fled";
     }
-    const F = await companyFight({ soldiers: Math.max(2, E.crew - (seaHas("cagemen") ? 2 : 0) - (theyBoard ? 0 : 1)), captains: caps, capHp: 16 + Math.floor(E.max / 2), capThem: caps.length > 1 ? "them" : "them", cover: theyBoard ? "your own capstan" : "her capstan",
+    const F = await companyOr("deck", { soldiers: Math.max(2, E.crew - (seaHas("cagemen") ? 2 : 0) - (theyBoard ? 0 : 1)), captains: caps, capHp: 16 + Math.floor(E.max / 2), capThem: caps.length > 1 ? "them" : "them", cover: theyBoard ? "your own capstan" : "her capstan",
       capMiss: "Your blow rings off a captain's cutlass guard.", F: fac({ name: R.ship.replace(/^the /, "The ") + "'s crew", who: "the boarders", whoShort: "Boarders" }) });
     if (F.fled) { await say("You're thrown back to your own deck, and cut the grapnels, and she draws off."); return "fled"; }
     await say("Her people throw down their cutlasses on the deck, and her colours come down.");
@@ -25128,7 +25605,8 @@ body.pv-open { overflow: hidden; }
   // ---------- the roads back: a Saltwrit salt-tax wagon ----------
   async function roadTaxWagon(r) {
     await say("A salt-tax wagon comes along the " + REGIONS[r] + " road under a Saltwrit guard: the tax from every salt-pan between here and the sea, in a strongbox chained to the bed, and six hunters in grey walking beside it with their hands on their hangers.");
-    const F = await companyFight({ soldiers: 6, captains: ["The Saltwrit sergeant"], capHp: 20, capThem: "him", cover: "the tax wagon",
+    tacReg = r;
+    const F = await companyOr("road", { soldiers: 6, captains: ["The Saltwrit sergeant"], capHp: 20, capThem: "him", cover: "the tax wagon",
       capMiss: "Your blow rings off the sergeant's gorget.", F: HUNTERS({ name: "The Saltwrit guard", road: true, who: "the guard", whoShort: "Guard" }) });
     if (F.fled) return false;
     const n = 40 + 2 * lv();
@@ -26366,7 +26844,8 @@ body.pv-open { overflow: hidden; }
     // A run on the roads back carries on there, unless new chapters have been written since.
     if (S.roam && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
     const go2 = () => S.roam ? roamHub() : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
-    const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go2) : go2();
+    const go4 = () => S.tac === undefined ? askStyle(!resumeState || S.part === 0).then(go2) : go2();
+    const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go4) : go4();
     if (S.name === undefined) askName(!resumeState || S.part === 0).then(go3);
     else if (S.pr === undefined) askPronoun().then(go3);
     else go3();
