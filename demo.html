@@ -1101,7 +1101,11 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 @keyframes fdpulse { 50% { transform: scale(1.12); opacity: .6; } }
 @keyframes fdbreathe { 50% { transform: scale(1.08); opacity: .6; } }
 @keyframes fdshake { 20% { transform: translate(-5px, 2px); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
-@media (prefers-reduced-motion: reduce) { .fd-tok { transition: none; } .fd-calm, .fd-mad, .fd-aura, .field-card.fd-quake .fd-map { animation: none; } }
+.fd-flag { animation: fdflag 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 0; }
+.fd-glint { animation: fdglint 4.5s ease-in-out infinite; }
+@keyframes fdflag { 50% { transform: skewY(4deg) scaleX(.94); } }
+@keyframes fdglint { 0%, 70%, 100% { opacity: 0; } 80% { opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { .fd-tok { transition: none; } .fd-calm, .fd-mad, .fd-aura, .field-card.fd-quake .fd-map, .fd-flag, .fd-glint { animation: none; } }
 .mk-row { display: flex; flex-direction: column; gap: 6px; }
 .mk-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .mk-cols { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -2164,6 +2168,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "70", name: "The Siege Ground", date: "9 Nov 2026", items: [
+      "<b>The Siege of Rahdaria is fought on battle maps now</b>, eight of them: the Land Gate, the Wall-Walk, the Tanners' Breach, the High Terraces, the Bathyr lines, the Riverbank Trench, the Engine Park and the Dead Orchards. Walls and gates block, towers are high ground, battlements and gabions are cover, the breach is rubble, and the ditches and the river hold whoever goes in.",
+      "Both sides fly their colours: Rahdaria's <b>Seven-Terrace Tower</b> on garden green, and the Bathyr's <b>Struck Stone</b> on slate, hung from lead tabs. The Bathyr carry the Struck Stone on their medallion too.",
+      "Before a sortie, <b>the ground you choose is the map you fight on</b>. The Bathyr can't swim, so shove one into the water, and they get giddy up high: from a tower or a terrace they hit at −1 instead of +1.",
+      "Hold three of the siege maps on one journey and the terrace folk give you <b>the Porcelain Tower</b>, a glazed keepsake. It gives you a third step on the first round of every map fight, and a porcelain marker of your own.",
+    ] },
     { ver: "69", name: "The Fiftieth Ring", date: "9 Nov 2026", items: [
       "<b>Reaching level 50 is a party now.</b> The screen fills with rings and sparks, the number climbs to 50, the axe plays a fanfare and the road cheers. Then you choose how to mark it: a cup with the company, a ring carved in the axe-haft, or walking on quietly. Each one changes the gift.",
       "<b>The gift: the Ring-Chart.</b> A treasure hunt across five battle maps, from the roads back. On each field a cache is buried under one square, with pits, snares and a sleeping beast hidden in the ground. Where you stand, the axe tells you how far the cache is (◎) and how many pitfalls are round you (●). Probe with the haft, mark what you suspect, and dig. Lamp oil runs out, but what you learn stays.",
@@ -2758,6 +2768,10 @@ body.pv-open { overflow: hidden; }
     { id: "pvghost", name: "Ghostbreaker", desc: "Beat a friend's ghost, from a code they sent you.", test: () => false },
     { id: "pvledge", name: "Over You Go", desc: "Shove a hero off a ledge in the Proving Ground.", test: () => false },
     { id: "pvten", name: "Ten Ghosts Laid", desc: "Beat ten different friends' ghosts.", test: () => false },
+    { id: "sgfirst", name: "Hold the Line", desc: "Win a fight on one of the siege maps of Rahdaria.", test: () => false },
+    { id: "sgdrown", name: "Sinks Like Lead", desc: "Shove a Bathyr into the water on a battle map. They can't swim.", test: () => false },
+    { id: "sgporc", name: "The Porcelain Tower", desc: "Hold three different siege maps on one journey, and be given the Porcelain Tower.", test: () => hasGear("porctower"), prog: () => [Math.min(3, S.fd && S.fd.siege ? S.fd.siege.length : 0), 3] },
+    { id: "sgsix", name: "Every Wall and Ditch", desc: "Fight on six of the eight siege maps on one journey.", test: () => !!S.fd && (S.fd.sgseen || []).length >= 6, prog: () => [Math.min(6, S.fd ? (S.fd.sgseen || []).length : 0), 6] },
     { id: "pvreply", name: "Word Comes Back", desc: "Add a result to your ghost's record, sent back by someone who fought it.", test: () => false },
     { id: "f50leg", name: "A Warden's Cache", desc: "Dig up a cache on the Ring-Chart, the gift for fifty rings.", test: () => false },
     { id: "f50clean", name: "Light Feet", desc: "Find a Ring-Chart cache without springing a single pitfall on that field.", test: () => false },
@@ -2820,7 +2834,9 @@ body.pv-open { overflow: hidden; }
     { id: "proving", name: "The Proving Ground", ver: "20", desc: "Hero against hero on the battle maps: a shared screen, friends' ghosts by code, and a record that travels back.",
       ids: ["pvfirst", "pvhot", "pvghost", "pvledge", "pvten", "pvreply"] },
     { id: "fifty", name: "The Fiftieth Ring", ver: "21", desc: "Level 50: the celebration, and the Ring-Chart, a treasure hunt across five battle maps.",
-      ids: ["f50leg", "f50clean", "f50sure", "f50hoard"] }
+      ids: ["f50leg", "f50clean", "f50sure", "f50hoard"] },
+    { id: "siege", name: "The Siege Ground", ver: "22", desc: "Battle maps for the Siege of Rahdaria: the gate, the wall-walk, the breach, the Bathyr lines, and the Porcelain Tower.",
+      ids: ["sgfirst", "sgdrown", "sgporc", "sgsix"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -3197,6 +3213,7 @@ body.pv-open { overflow: hidden; }
     calendar: ["The calendar", "Every part and every errand moves the clock on, the road between kingdoms takes days, and a rest runs on to morning. The date is under your purse. On the roads back, every sixth day is <b>market day</b> (town stalls a fifth cheaper), each season has a <b>festival</b> in the towns, <b>winter</b> tolls cost half as much again, and at <b>night</b> the gangs on the Blood-bought Roads lie in wait, with fatter purses. You can make camp and wait for dark, or for morning. Nothing ever runs out."],
     duel: ["Duels", "A duel is fought on the pad. <b>Read</b>: watch where their blade comes from. <b>Answer</b>: draw the stroke that meets it, running the other way (they cut ↘, you draw ↖; meet a thrust with a small loop). Quick and exact is a <b>riposte</b>. <b>Press</b>: up to three strokes. A line is a cut, a curve is a feint that pulls their guard, a tap is a thrust that always lands, and a loop binds their blade. Strokes toward the dark edges land; the lit edges are their guard. Fill Pressure to break it. Named chains are <b>Forms</b>, kept in your journal. No drawing? Use the keys (Q W E, A D, Z X C, Shift to feint, S, R) or the button pad, and Steady takes the timer away."],
     field: ["The battle map", "Road fights are fought on a map of the ground. You get <b>2 steps</b> a round on top of your move: tap a square, then tap it again. <b>Low cover</b> takes 1 off blows at you, a straight run of 2 or more steps across <b>open ground</b> into a blow is a <b>charge</b> (+2 damage), <b>rugged ground</b> costs 2 steps and spoils charges, <b>high ground</b> gives +1 to hit and damage against anyone below, and <b>sinking ground</b> holds whoever is in it. Shove foes into things, and lay mines and caltrops in their path. Your marker is picked on the map, under it."],
+    siege: ["The siege maps", "The siege of Rahdaria is fought on maps of its walls and the Bathyr lines. <b>Walls</b> and engines block like rock, <b>towers</b> and terraces are high ground, <b>battlements</b> and gabions are low cover, the <b>breach</b> is rubble, and the ditches, pits and river hold whoever goes in. The Bathyr can't swim and get giddy up high. Before a sortie, the ground you pick is the map."],
     wanderer: ["Wanderers", "Sometimes a beast that belongs to nobody walks onto the field mid-fight. Anyone next to it when it moves may get hit. Strike it and it hunts you; shove your foe into it and it hunts your foe. It leaves when it's hurt badly enough, or bored."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
@@ -12973,7 +12990,11 @@ body.pv-open { overflow: hidden; }
     undermoon: { g: "#3e4350", gd: "#2a2e38", gl: "#5a6070", cov: "#4c5260", tall: "#262a33", tallL: "#6a7286", rug: "#363b47", hi: "#5e6578", cliff: "#1c1f27", sink: "#1c2a3a", sinkD: "#0a121c", acc: "#9fb4d8" },
     rahdaria:  { g: "#6c645a", gd: "#4e4840", gl: "#8a8276", cov: "#6a5238", tall: "#4a443c", tallL: "#8c8478", rug: "#5c544a", hi: "#948a7c", cliff: "#3a352e", sink: "#2e3a40", sinkD: "#131c20", acc: "#7a8a5a" },
     bathyrra:  { g: "#a89a7a", gd: "#857858", gl: "#c4b694", cov: "#6e7a5a", tall: "#5a5246", tallL: "#8a8070", rug: "#8a7e64", hi: "#c8bc9c", cliff: "#6a6048", sink: "#4a6a72", sinkD: "#22404a", acc: "#6a9a8a" },
-    reach:     { g: "#7a5a3a", gd: "#5a4028", gl: "#9a7650", cov: "#6a4a2a", tall: "#4a3420", tallL: "#8a6a48", rug: "#6a5038", hi: "#9a7a56", cliff: "#3a2818", sink: "#1e3a48", sinkD: "#0a1a24", acc: "#c9a85a" }
+    reach:     { g: "#7a5a3a", gd: "#5a4028", gl: "#9a7650", cov: "#6a4a2a", tall: "#4a3420", tallL: "#8a6a48", rug: "#6a5038", hi: "#9a7a56", cliff: "#3a2818", sink: "#1e3a48", sinkD: "#0a1a24", acc: "#c9a85a" },
+    // The siege of Rahdaria: the city's pale terrace stone, the Bathyr camp's trodden mud, the dead orchards.
+    siege:     { g: "#b3a283", gd: "#8c7c60", gl: "#cdbf9f", cov: "#a39274", tall: "#7a6d58", tallL: "#d6cab0", rug: "#9a8b6c", hi: "#d9cdb1", cliff: "#5e523f", sink: "#2f5560", sinkD: "#132a31", acc: "#6f9a5e" },
+    camp:      { g: "#7a6548", gd: "#5a4a34", gl: "#94805e", cov: "#8a7448", tall: "#4a4a4e", tallL: "#8a8f94", rug: "#6a5840", hi: "#8f7b5a", cliff: "#3a2f22", sink: "#33403f", sinkD: "#141c1c", acc: "#9ab0b8" },
+    orchard:   { g: "#9a8458", gd: "#76643f", gl: "#b39d6e", cov: "#8c7a5a", tall: "#4a3a28", tallL: "#7a6448", rug: "#7a6a48", hi: "#b8a678", cliff: "#5a4a30", sink: "#3d4a3a", sinkD: "#1c2418", acc: "#a39a5a" }
   };
   // One hand-built field per region. style picks the art: sand, fen, scree, stone or deck.
   const FIELDS = {
@@ -13053,8 +13074,39 @@ body.pv-open { overflow: hidden; }
     angler: '<path d="M-14 4 Q-8 -8 4 -6 Q12 -4 14 4 Q8 10 -4 8 L-14 12Z"/><path d="M2 -6 Q4 -16 12 -14" fill="none" stroke-width="1.6"/><circle cx="12" cy="-14" r="3" fill="#ffe9a8" stroke="none"/><path d="M6 4 l2 -2 l2 2 l2 -2" fill="none" stroke="#1a0f08" stroke-width="1.2"/>',
     rat: '<path d="M-12 8 Q-12 -4 -2 -6 L8 -8 L16 -2 L8 2 Q4 8 -4 9Z"/><circle cx="-2" cy="-8" r="4"/><circle cx="9" cy="-4" r="1.4" fill="#ff6b4a" stroke="none"/><path d="M-12 8 Q-16 12 -12 15 Q-6 16 -4 12" fill="none" stroke-width="2"/>',
     shell: '<path d="M0 0 m-2 0 a2 2 0 1 1 4 0 a5 5 0 1 1 -10 0 a9 9 0 1 1 18 0 a13 13 0 1 1 -26 0" fill="none" stroke-width="3"/>',
+    bathyr: '<ellipse cx="0" cy="5" rx="11" ry="8.5"/><path d="M-3 -17 L2 -18.5 L10 -5 L5.5 -3Z"/><path d="M-12 15 q12 6 24 0" fill="none" stroke-width="2.2" stroke-linecap="round"/><circle cx="9" cy="-9" r="1.4" stroke="none"/><circle cx="12.5" cy="-12" r="1.4" stroke="none"/>',
+    tower: '<path d="M-13 15 h26 v-3 h-3 v-3 h-3 v-3 h-14 v3 h-3 v3 h-3Z"/><path d="M-4.5 6 V-8 H4.5 V6Z"/><path d="M-6.5 -8 V-14 H-4 V-11.5 H-1.3 V-14 H1.3 V-11.5 H4 V-14 H6.5 V-8Z"/>',
     walrus: '<path d="M-13 4 Q-14 -10 0 -12 Q14 -10 13 4 Q8 10 0 10 Q-8 10 -13 4Z"/><path d="M-4 6 L-5 16 M4 6 L5 16" stroke="#efe6d0" stroke-width="2.6" stroke-linecap="round"/><circle cx="-5" cy="-4" r="1.6" fill="#1a0f08" stroke="none"/><circle cx="5" cy="-4" r="1.6" fill="#1a0f08" stroke="none"/>'
   };
+  // The siege maps of Rahdaria. Story fights in the siege pick one with F.field (and sorties with the
+  // ground you choose); siege: true counts them toward the Porcelain Tower. deco draws gates, ladders,
+  // engines, pavilions and banners: the Seven-Terrace Tower for the city, the Struck Stone for the Bathyr.
+  Object.assign(FIELDS, {
+    rhgate: { name: "The Land Gate", style: "siege", pal: "siege", siege: true, blurb: "The land gate of Rahdaria: a causeway over the flooded ditch, the gate between its two towers, and the wall running off either way.",
+      grid: ["r.c..cr", ".~~.~~.", "#hh.hh#", ".c...c.", "...c...", "c.....c"], you: [3, 5], foe: [3, 0],
+      deco: [[3, 2, "gate"], [0, 2, "bcity"], [6, 2, "bcity"], [0, 0, "bbathyr"]] },
+    rhwall: { name: "The Wall-Walk", style: "siege", pal: "siege", siege: true, blurb: "The top of the sea wall: the battlements on the outer edge with ladders coming up through the gaps, a tower at each end, and a spilled pitch-cauldron gone sticky on the stones.",
+      grid: ["c.c.c.c", ".......", "hh.#.hh", "hh...hh", ".~...r.", "c..c..c"], you: [3, 4], foe: [1, 0],
+      deco: [[1, 0, "ladder"], [3, 0, "ladder"], [5, 0, "ladder"], [3, 2, "crane"], [0, 2, "bcity"], [6, 3, "bcity"]] },
+    rhbreach: { name: "The Tanners' Breach", style: "siege", pal: "siege", siege: true, blurb: "Where the wall came down by the Tanners' Postern: a slope of broken stone in the gap, a tower stump either side, and the tannery pits behind, full and stinking.",
+      grid: [".c...c.", "..r.r..", "##rrr##", "h..c..h", ".~.~.~.", "c.....c"], you: [3, 5], foe: [3, 0],
+      deco: [[0, 2, "bcity"], [1, 0, "bbathyr"]] },
+    rhcamp: { name: "Between the Lines", style: "camp", pal: "camp", siege: true, blurb: "The Bathyr lines: a trench full of seep-water, wicker gabions, a spoil heap, and the long lead-grey pavilions beyond the stakes.",
+      grid: ["#.c..##", "..~~~..", ".c...c.", "r..h..r", "..~~.c.", "c.....#"], you: [1, 5], foe: [4, 0],
+      deco: [[0, 0, "pavilion"], [5, 0, "pavilion"], [6, 0, "bbathyr"], [6, 5, "engine"]] },
+    rhbank: { name: "The Riverbank Trench", style: "camp", pal: "camp", siege: true, blurb: "The riverbank below the walls, where their trench runs shallowest: reeds, a cut bank and the river itself. The Bathyr can't swim.",
+      grid: ["~~.c..r", "~..r.c.", "~~.....", "~.c.h..", "~~..~~.", "~.c...c"], you: [3, 5], foe: [4, 0],
+      deco: [[6, 0, "bbathyr"], [6, 4, "bcity"]] },
+    rhengine: { name: "The Engine Park", style: "camp", pal: "camp", siege: true, blurb: "Where the Bathyr keep their engines: the great throwers on their beds, stacked timber, a pit of hot tar, and a ramp of rammed earth.",
+      grid: [".#..c..", ".#.~...", "...~.##", "c.h....", "..h.r.c", "c....~."], you: [1, 5], foe: [5, 0],
+      deco: [[1, 0, "engine"], [5, 2, "engine"], [0, 0, "bbathyr"]] },
+    rhterrace: { name: "The High Terraces", style: "siege", pal: "siege", siege: true, terr: true, blurb: "The garden terraces high above the city: the stepped beds, the low terrace walls, a cistern, and the drop. The Bathyr don't like it up here.",
+      grid: ["hh.hhhh", "h.chc.h", "c..h..c", "..r.~..", ".c...c.", "...c..."], you: [3, 4], foe: [2, 0],
+      deco: [[0, 0, "bcity"], [6, 1, "bcity"]] },
+    rhorchard: { name: "The Dead Orchards", style: "orchard", pal: "orchard", siege: true, blurb: "The fig orchards outside the walls, dead since the Bathyr cut the water: grey trees in rows, dry-stone walls, and the old irrigation channel.",
+      grid: ["#.c.#..", "..~~~.#", "#.r...c", ".c..#..", "#..r..#", "..c...."], you: [1, 5], foe: [5, 0],
+      deco: [[6, 5, "bcity"]] }
+  });
   const BEAST_EMB = { ticks: "tick", hound: "canine", skimmer: "lizard", picker: "hood", hulk: "mound", wader: "wader", crab: "crab", lamprey: "eel", crows: "crow", reeve: "horn",
     cutter: "shards", mastiff: "flamehound", lurker: "rockeye", mites: "mites", shearer: "shears", cutshade: "shade", kiteeel: "kite", plumbmaw: "maw", brinehound: "canine",
     rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull" };
@@ -13081,9 +13133,25 @@ body.pv-open { overflow: hidden; }
     "wolf-midnight": "data:image/webp;base64,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",
     "wolf-verdigris": "data:image/webp;base64,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"
   };
+  // The Porcelain Tower: a glazed medallion of Rahdaria's emblem, for whoever holds the siege maps.
+  const PORC_MARK = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-64 -64 128 128" width="128" height="128"><defs>' +
+    '<linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dfa0"/><stop offset=".5" stop-color="#c89a42"/><stop offset="1" stop-color="#6e4b14"/></linearGradient>' +
+    '<radialGradient id="pw" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#ece8df"/><stop offset="1" stop-color="#b9b3a6"/></radialGradient>' +
+    '<radialGradient id="pe" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#4a8a5a"/><stop offset="1" stop-color="#173322"/></radialGradient>' +
+    '<linearGradient id="pt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#f0ece3"/><stop offset="1" stop-color="#c4beb1"/></linearGradient></defs>' +
+    '<circle r="58" fill="url(#pw)" stroke="#2a2418" stroke-width="2.5"/><circle r="52" fill="none" stroke="#3d6c8f" stroke-width="2.4"/>' +
+    [0, 45, 90, 135, 180, 225, 270, 315].map(a => '<circle transform="rotate(' + a + ') translate(0 -55)" r="2.6" fill="#3d6c8f"/>').join("") +
+    [0, 90, 180, 270].map(a => '<path transform="rotate(' + a + ')" d="M0 -63 L6 -55 L0 -48 L-6 -55Z" fill="url(#pg)" stroke="#2a2418" stroke-width="1"/>').join("") +
+    '<circle r="45" fill="url(#pe)" stroke="#2a2418" stroke-width="2"/><circle r="40" fill="none" stroke="#d9b45a" stroke-opacity=".5" stroke-width="1"/>' +
+    '<g fill="url(#pt)" stroke="#7d776b" stroke-width="1"><rect x="-30" y="22" width="60" height="7" rx="1"/><rect x="-25" y="15" width="50" height="7" rx="1"/><rect x="-20" y="8" width="40" height="7" rx="1"/><rect x="-15" y="1" width="30" height="7" rx="1"/>' +
+    '<path d="M-9 1 V-28 H9 V1Z"/><path d="M-12 -28 V-37 H-8 V-33 H-4 V-37 H0 V-33 H4 V-37 H8 V-33 H12 V-37 H12 V-28Z"/></g>' +
+    '<rect x="-3" y="-20" width="6" height="10" rx="3" fill="#173322"/><path d="M-6 -26 V-2" stroke="#fff" stroke-width="2" opacity=".85"/>' +
+    '<path d="M-24 29 C-22 14 -8 14 -11 4 C-14 -6 6 -10 4 -20 C2 -30 12 -34 16 -40" fill="none" stroke="url(#pg)" stroke-width="2.4" stroke-linecap="round"/>' +
+    '<circle cx="17" cy="-41" r="3" fill="url(#pg)"/><path d="M-40 -18 A44 44 0 0 1 -12 -42" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".55"/></svg>');
+  const porcOn = (m = S.marker) => !!(m && m.kind === "porcelain" && !m.img);
   const fdMark = () => (S.marker && MARKERS[S.marker.kind] && MARKER_COLS[S.marker.col]) ? S.marker : { kind: "wayfarer", col: "verdigris" };
-  const markerName = () => S.marker && S.marker.img ? "your own" : MARKER_COLS[fdMark().col] + " " + MARKERS[fdMark().kind];
-  const markerSrc = (m = S.marker) => m && m.img ? m.img : MARKER_IMG[(m && MARKERS[m.kind] ? m.kind : "wayfarer") + "-" + (m && MARKER_COLS[m.col] ? m.col : "verdigris")];
+  const markerName = () => S.marker && S.marker.img ? "your own" : porcOn() ? "the Porcelain Tower" : MARKER_COLS[fdMark().col] + " " + MARKERS[fdMark().kind];
+  const markerSrc = (m = S.marker) => m && m.img ? m.img : porcOn(m) ? PORC_MARK : MARKER_IMG[(m && MARKERS[m.kind] ? m.kind : "wayfarer") + "-" + (m && MARKER_COLS[m.col] ? m.col : "verdigris")];
   // A player's own image: load it, then cut it to a circle (zoomed as they like), give it a light
   // contrast lift and sharpen so it reads at token size, and set it in the same studded bronze rim as the medallions.
   function markerLoad(file) {
@@ -13136,14 +13204,17 @@ body.pv-open { overflow: hidden; }
     const row = el("div", "bg-row mk-row", '<span class="stat-label">Your marker on the battle maps</span>');
     const kinds = el("div", "mk-kinds"), cols = el("div", "mk-cols");
     let pick = { ...fdMark(), img: S.marker && S.marker.img || "" };
+    if (porcOn()) pick.kind = "porcelain";
     const own = el("div", "mk-own");
     const draw = () => {
-      kinds.innerHTML = Object.keys(MARKERS).map(k => '<button type="button" class="mk-k map-link" data-k="' + k + '" aria-pressed="' + (!pick.img && pick.kind === k) + '"><img alt="" src="' + MARKER_IMG[k + "-" + pick.col] + '"><span>' + MARKERS[k] + "</span></button>").join("");
-      cols.innerHTML = Object.keys(MARKER_COLS).map(c => '<button type="button" class="mk-c map-link" data-c="' + c + '" aria-pressed="' + (!pick.img && pick.col === c) + '"><img alt="" src="' + MARKER_IMG[pick.kind + "-" + c] + '"><span>' + MARKER_COLS[c] + "</span></button>").join("");
+      const pk = MARKERS[pick.kind] ? pick.kind : "wayfarer", porc = pick.kind === "porcelain" && !pick.img;
+      kinds.innerHTML = Object.keys(MARKERS).map(k => '<button type="button" class="mk-k map-link" data-k="' + k + '" aria-pressed="' + (!pick.img && pick.kind === k) + '"><img alt="" src="' + MARKER_IMG[k + "-" + pick.col] + '"><span>' + MARKERS[k] + "</span></button>").join("") +
+        (hasGear("porctower") ? '<button type="button" class="mk-k map-link" data-k="porcelain" aria-pressed="' + porc + '"><img alt="" src="' + PORC_MARK + '"><span>Porcelain Tower</span></button>' : "");
+      cols.innerHTML = porc ? "" : Object.keys(MARKER_COLS).map(c => '<button type="button" class="mk-c map-link" data-c="' + c + '" aria-pressed="' + (!pick.img && pick.col === c) + '"><img alt="" src="' + MARKER_IMG[pk + "-" + c] + '"><span>' + MARKER_COLS[c] + "</span></button>").join("");
       own.innerHTML = (pick.img ? '<button type="button" class="mk-c map-link" aria-pressed="true"><img alt="" src="' + pick.img + '"><span>Your own</span></button>' : "") +
         '<label class="ghost map-link mk-up">' + (pick.img ? "Use a different image" : "Use your own image") + '<input type="file" accept="image/*" hidden></label><span class="mk-note"></span>';
       kinds.querySelectorAll("button").forEach(b => b.onclick = () => { pick.kind = b.dataset.k; pick.img = ""; draw(); if (onPick) onPick(pick); });
-      cols.querySelectorAll("button").forEach(b => b.onclick = () => { pick.col = b.dataset.c; pick.img = ""; draw(); if (onPick) onPick(pick); });
+      cols.querySelectorAll("button").forEach(b => b.onclick = () => { pick.col = b.dataset.c; if (!MARKERS[pick.kind]) pick.kind = "wayfarer"; pick.img = ""; draw(); if (onPick) onPick(pick); });
       own.querySelector("input").onchange = async (e) => {
         const f = e.target.files && e.target.files[0];
         let im;
@@ -13163,9 +13234,9 @@ body.pv-open { overflow: hidden; }
     box.appendChild(row);
     return () => pick;
   }
-  const fdState = () => { const D = S.fd = S.fd || {}; for (const [k, v] of [["seen", false], ["won", 0], ["fields", []], ["w", false], ["charges", 0], ["shoves", 0], ["traps", 0], ["turned", 0]]) if (D[k] === undefined) D[k] = v; return D; };
-  const fdSteps = () => S.f50boots ? 3 : 2;
-  const fdOn = (F) => !!(F.road && F.reg && FIELDS[F.reg] && !F.company && !S.noField);
+  const fdState = () => { const D = S.fd = S.fd || {}; for (const [k, v] of [["seen", false], ["won", 0], ["fields", []], ["w", false], ["charges", 0], ["shoves", 0], ["traps", 0], ["turned", 0], ["siege", []], ["sgseen", []]]) if (D[k] === undefined) D[k] = v; return D; };
+  const fdSteps = (round) => (S.f50boots ? 3 : 2) + (round === 1 && hasGear("porctower") ? 1 : 0);
+  const fdOn = (F) => !!(!F.company && !S.noField && ((F.field && FIELDS[F.field]) || (F.road && F.reg && FIELDS[F.reg])));
   const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
   const fdTile = (fd, x, y) => x < 0 || y < 0 || x >= FW || y >= FH ? null : fd.G[y][x];
   function fdCost(fd, from, to, fly) {
@@ -13243,18 +13314,80 @@ body.pv-open { overflow: hidden; }
       '<g transform="scale(.82)" fill="' + T2.em + '" stroke="' + T2.em + '" stroke-linejoin="round" filter="url(#fdEmb)">' + (FD_EMB[emb] || FD_EMB.canine) + "</g>";
   }
   function fdArt(fd) {
-    let seed = fd.key.length * 977 + 13;
+    let seed = [...fd.key].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 2147483646 + 1;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     const rr = (a, b) => a + rnd() * (b - a);
-    const p = FD_PAL[fd.key], sty = fd.f.style, T = FT;
+    const p = FD_PAL[fd.f.pal || fd.key] || FD_PAL.rahdaria, sty = fd.f.style, T = FT;
     const blob = (cx, cy, r, fill, extra = "") => { let s = ""; for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, rad = r * rr(.72, 1.08); s += (i ? "L" : "M") + (cx + Math.cos(a) * rad).toFixed(1) + " " + (cy + Math.sin(a) * rad * .82).toFixed(1); } return '<path d="' + s + 'Z" fill="' + fill + '" ' + extra + "/>"; };
     const pebbles = (x0, y0, n, big = 1) => { let s = ""; for (let i = 0; i < n; i++) { const cx = x0 + rr(6, T - 6), cy = y0 + rr(6, T - 6), r = rr(1.5, 4.5) * big; s += '<ellipse cx="' + (cx + 1.5) + '" cy="' + (cy + 2) + '" rx="' + r + '" ry="' + r * .7 + '" fill="#000" opacity=".28"/><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + r + '" ry="' + r * .75 + '" fill="url(#fdStone)"/>'; } return s; };
     const tufts = (x0, y0, n, col) => { let s = ""; for (let i = 0; i < n; i++) { const cx = x0 + rr(8, T - 8), cy = y0 + rr(10, T - 6); for (let j = 0; j < 4; j++) { const a = rr(-.7, .7), h = rr(5, 10); s += '<path d="M' + cx + " " + cy + " q" + a * 3 + " " + (-h / 2) + " " + a * h + " " + (-h) + '" stroke="' + col + '" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>'; } } return s; };
     const flags = (x0, y0) => { let s = ""; for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const w = T / 2; s += '<rect x="' + (x0 + i * w + 2 + rr(-1, 1)) + '" y="' + (y0 + j * w + 2 + rr(-1, 1)) + '" width="' + (w - 4) + '" height="' + (w - 4) + '" rx="3" fill="' + (rnd() < .5 ? p.gl : p.g) + '" stroke="' + p.gd + '" stroke-width="1.5" opacity=".9"/>'; } return s; };
     const planks = (x0, y0) => { let s = ""; for (let j = 0; j < 4; j++) { const off = rr(-20, 20); s += '<rect x="' + x0 + '" y="' + (y0 + j * 16) + '" width="' + T + '" height="15" fill="' + (j % 2 ? p.g : p.gl) + '" opacity=".55"/><path d="M' + x0 + " " + (y0 + j * 16 + 15.5) + "h" + T + '" stroke="' + p.gd + '" stroke-width="1.2"/><path d="M' + (x0 + 32 + off) + " " + (y0 + j * 16) + "v15" + '" stroke="' + p.gd + '" stroke-width="1"/><circle cx="' + (x0 + 30 + off) + '" cy="' + (y0 + j * 16 + 7.5) + '" r="1" fill="' + p.gd + '"/>'; } return s; };
+    // Siege art: dressed wall blocks with merlons, tower platforms, parapets, rubble, porcelain tiles
+    // in the city's paving; gabions, stakes and lead-grey earthworks in the Bathyr camp; dead fig trees in the orchards.
+    const merlons = (x0, y0, w, n, h) => { let m = ""; const mw = w / (n * 2 - 1); for (let i = 0; i < n; i++) m += '<rect x="' + (x0 + i * mw * 2) + '" y="' + y0 + '" width="' + mw + '" height="' + h + '" fill="' + p.tallL + '" stroke="#2a251f" stroke-width="1"/>'; return m; };
+    const decoAt = (x0, y0) => (fd.f.deco || []).find(D => D[0] * T === x0 && D[1] * T === y0 && ["engine", "pavilion"].includes(D[2]));
+    function siegeTile(x0, y0, cx, cy, t) {
+      if (sty === "siege") {
+        if (t === ".") { let s = flags(x0, y0); if (rnd() < .22) { const px = x0 + rr(16, T - 16), py = y0 + rr(16, T - 16); s += '<g transform="translate(' + px.toFixed(1) + " " + py.toFixed(1) + ') rotate(45)"><rect x="-7" y="-7" width="14" height="14" fill="#eef1f2" stroke="#6f7f8a" stroke-width="1"/><circle r="3.2" fill="#3d6c8f"/><circle r="1.2" fill="#eef1f2"/><path d="M-5 -5 l3.5 3.5" stroke="#fff" stroke-width="1.4"/><rect x="-7" y="-7" width="14" height="14" fill="#fff" class="fd-glint" opacity="0"/></g>'; } return s; }
+        if (t === "#") { let s = '<rect x="' + (x0 + 6) + '" y="' + (y0 + 10) + '" width="' + T + '" height="' + (T - 6) + '" fill="#000" opacity=".35" filter="url(#fdSoft)"/><g filter="url(#fdShadow)"><rect x="' + (x0 + 1) + '" y="' + (y0 + 9) + '" width="' + (T - 2) + '" height="' + (T - 10) + '" fill="url(#sgWall)" stroke="#2a251f" stroke-width="1.4"/>';
+          for (let j = 0; j < 4; j++) { const yy = y0 + 9 + (j + 1) * (T - 10) / 5; s += '<path d="M' + (x0 + 1) + " " + yy.toFixed(1) + "h" + (T - 2) + '" stroke="#2a251f" stroke-opacity=".55" stroke-width="1"/>'; for (let i = 0; i < 3; i++) { const xx = x0 + 8 + i * 20 + (j % 2) * 10; s += '<path d="M' + xx + " " + (yy - (T - 10) / 5).toFixed(1) + "v" + ((T - 10) / 5).toFixed(1) + '" stroke="#2a251f" stroke-opacity=".45" stroke-width="1"/>'; } }
+          return s + merlons(x0 + 1, y0 + 1, T - 2, 4, 9) + '<path d="M' + (x0 + 2) + " " + (y0 + 10) + "h" + (T - 4) + '" stroke="#fff" stroke-opacity=".3" stroke-width="1.5"/></g>'; }
+        if (t === "h" && fd.f.terr) { let s = '<rect x="' + (x0 + 5) + '" y="' + (y0 + 5) + '" width="' + (T - 10) + '" height="' + (T - 10) + '" rx="4" fill="#5a4630" stroke="' + p.tallL + '" stroke-width="3"/>'; for (let j = 0; j < 3; j++) for (let i = 0; i < 4; i++) { const px = x0 + 14 + i * 12 + rr(-2, 2), py = y0 + 16 + j * 15; s += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + rr(3, 5).toFixed(1) + '" fill="' + (rnd() < .25 ? "#a8c46a" : "#5f8a48") + '"/>'; } return s; }
+        if (t === "h") { let s = '<circle cx="' + cx + '" cy="' + cy + '" r="25" fill="url(#fdStone)" stroke="#2a251f" stroke-width="1.4"/><circle cx="' + cx + '" cy="' + cy + '" r="18" fill="none" stroke="#2a251f" stroke-opacity=".35" stroke-width="1"/>';
+          for (let i = 0; i < 8; i++) s += '<rect transform="rotate(' + (i * 45 + 22.5) + " " + cx + " " + cy + ')" x="' + (cx - 4) + '" y="' + (cy - 29) + '" width="8" height="7" fill="' + p.tallL + '" stroke="#2a251f" stroke-width="1"/>';
+          return s + '<path d="M' + (cx - 14) + " " + (cy - 12) + ' q10 -8 22 -5" stroke="#fff" stroke-width="2" stroke-opacity=".3" fill="none" stroke-linecap="round"/>'; }
+        if (t === "c") return flags(x0, y0) + '<g filter="url(#fdShadow)">' + merlons(x0 + 6, cy - 6, T - 12, 3, 16) + '<rect x="' + (x0 + 6) + '" y="' + (cy + 8) + '" width="' + (T - 12) + '" height="6" fill="' + p.cov + '" stroke="#2a251f" stroke-width="1"/></g>';
+        if (t === "r") { let s = blob(cx, cy, 27, p.rug, 'filter="url(#fdEdge)" opacity=".7"'); for (let i = 0; i < 6; i++) { const bx = x0 + rr(12, T - 12), by = y0 + rr(12, T - 12), w = rr(9, 16); s += '<rect transform="rotate(' + rr(-40, 40).toFixed(0) + " " + bx.toFixed(1) + " " + by.toFixed(1) + ')" x="' + (bx - w / 2).toFixed(1) + '" y="' + (by - w / 3).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + (w / 1.6).toFixed(1) + '" fill="' + (rnd() < .5 ? p.tallL : p.gl) + '" stroke="#2a251f" stroke-width="1"/>'; } return s + pebbles(x0, y0, 6, .8); }
+      }
+      if (sty === "camp") {
+        if (t === "c") { let s = ""; for (const [dx, dy] of [[-12, 4], [12, 4], [0, -10]]) { const gx = cx + dx, gy = cy + dy; s += '<ellipse cx="' + (gx + 3) + '" cy="' + (gy + 4) + '" rx="11" ry="9" fill="#000" opacity=".35"/><circle cx="' + gx + '" cy="' + gy + '" r="10" fill="#8a6a3a" stroke="#3a2a14" stroke-width="1.2"/><circle cx="' + gx + '" cy="' + gy + '" r="7" fill="#5a4a32"/>'; for (let k = 0; k < 3; k++) s += '<circle cx="' + gx + '" cy="' + gy + '" r="' + (8.5 - k * 0.1) + '" fill="none" stroke="#c9a46a" stroke-width=".8" stroke-dasharray="2 2.5" transform="rotate(' + k * 40 + " " + gx + " " + gy + ')"/>'; } return s; }
+        if (t === "r") { let s = blob(cx, cy, 27, p.rug, 'filter="url(#fdEdge)" opacity=".8"'); for (let i = 0; i < 4; i++) { const sx = x0 + rr(10, T - 10), sy = y0 + rr(14, T - 8), a = rr(-30, 30); s += '<g transform="rotate(' + a.toFixed(0) + " " + sx.toFixed(1) + " " + sy.toFixed(1) + ')"><path d="M' + sx.toFixed(1) + " " + sy.toFixed(1) + "v-16 l-2.5 -5 l-2.5 5 v16Z" + '" fill="#8a6a42" stroke="#2c1e10" stroke-width="1" transform="translate(2.5 0)"/></g>'; } return s; }
+        if (t === "#" && decoAt(x0, y0)) return '<ellipse cx="' + (cx + 6) + '" cy="' + (cy + 10) + '" rx="28" ry="14" fill="#000" opacity=".4" filter="url(#fdSoft)"/>';
+        if (t === "#") { let s = '<ellipse cx="' + (cx + 6) + '" cy="' + (cy + 10) + '" rx="28" ry="14" fill="#000" opacity=".4" filter="url(#fdSoft)"/><g filter="url(#fdShadow)">'; for (let i = 0; i < 7; i++) { const sx = x0 + 5 + i * 9; s += '<path d="M' + sx + " " + (y0 + T - 6) + "v-" + (T - 18) + " l4 -7 l4 7 v" + (T - 18) + 'Z" fill="' + (i % 2 ? "#6e5a3a" : "#7d6742") + '" stroke="#2c1e10" stroke-width="1"/>'; } return s + '<path d="M' + (x0 + 3) + " " + (y0 + 24) + "h" + (T - 6) + " M" + (x0 + 3) + " " + (y0 + 44) + "h" + (T - 6) + '" stroke="#3a2a14" stroke-width="2.4"/></g>'; }
+      }
+      if (sty === "orchard") {
+        if (t === ".") { let s = ""; for (let i = 0; i < 5; i++) { const lx = x0 + rr(6, T - 6), ly = y0 + rr(6, T - 6); s += '<ellipse cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" rx="3.4" ry="1.8" transform="rotate(' + rr(0, 180).toFixed(0) + " " + lx.toFixed(1) + " " + ly.toFixed(1) + ')" fill="' + (rnd() < .5 ? "#a0844a" : "#6e5a34") + '"/>'; } return s + tufts(x0, y0, 2, p.acc); }
+        if (t === "#") { let s = '<ellipse cx="' + (cx + 8) + '" cy="' + (cy + 10) + '" rx="26" ry="13" fill="#000" opacity=".4" filter="url(#fdSoft)"/><g filter="url(#fdShadow)">';
+          for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2 + rr(-.2, .2), L = rr(18, 28), ex = cx + Math.cos(a) * L, ey = cy + Math.sin(a) * L * .9; s += '<path d="M' + cx + " " + cy + " L" + ex.toFixed(1) + " " + ey.toFixed(1) + " M" + (cx + Math.cos(a) * L * .6).toFixed(1) + " " + (cy + Math.sin(a) * L * .54).toFixed(1) + " l" + (Math.cos(a + .7) * 8).toFixed(1) + " " + (Math.sin(a + .7) * 8).toFixed(1) + '" stroke="#5a4630" stroke-width="' + rr(1.6, 3).toFixed(1) + '" stroke-linecap="round" fill="none"/>'; if (rnd() < .4) s += '<circle cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" r="2.4" fill="#4a2e3a"/>'; }
+          return s + '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="url(#fdRock)" stroke="#2a1a10" stroke-width="1.2"/></g>'; }
+        if (t === "c") { let s = '<g filter="url(#fdShadow)">'; for (let i = 0; i < 6; i++) s += '<ellipse cx="' + (x0 + 8 + i * 9.6) + '" cy="' + (cy + rr(-2, 2)) + '" rx="6" ry="5" fill="url(#fdStone)" stroke="' + p.gd + '" stroke-width=".8"/>'; for (let i = 0; i < 5; i++) s += '<ellipse cx="' + (x0 + 13 + i * 9.6) + '" cy="' + (cy - 7) + '" rx="5.5" ry="4.5" fill="url(#fdStone)" stroke="' + p.gd + '" stroke-width=".8"/>'; return s + "</g>"; }
+        if (t === "r") { let s = blob(cx, cy, 26, p.rug, 'filter="url(#fdEdge)" opacity=".7"'); for (let i = 0; i < 2; i++) { const sx = x0 + rr(16, T - 16), sy = y0 + rr(16, T - 16); s += '<circle cx="' + sx.toFixed(1) + '" cy="' + sy.toFixed(1) + '" r="8" fill="#7a6448" stroke="#3a2a18" stroke-width="1.2"/><circle cx="' + sx.toFixed(1) + '" cy="' + sy.toFixed(1) + '" r="4.5" fill="none" stroke="#3a2a18" stroke-width=".8"/>'; for (let k = 0; k < 4; k++) { const a = k * 1.6 + rr(0, 1); s += '<path d="M' + sx.toFixed(1) + " " + sy.toFixed(1) + " q" + (Math.cos(a) * 10).toFixed(1) + " " + (Math.sin(a) * 4).toFixed(1) + " " + (Math.cos(a) * 16).toFixed(1) + " " + (Math.sin(a) * 12).toFixed(1) + '" stroke="#5a4630" stroke-width="2" fill="none" stroke-linecap="round"/>'; } } return s; }
+      }
+      return null;
+    }
+    // The banners: Rahdaria's Seven-Terrace Tower on garden green, which sways in the wind, and the
+    // Bathyr's Struck Stone on slate, hung from lead tabs, which doesn't.
+    function fdBanner(kind, x, y) {
+      const bx = x * T + T / 2 - 12, by = y * T + 4;
+      const pole = '<ellipse cx="' + (bx + 2) + '" cy="' + (by + 52) + '" rx="7" ry="3" fill="#000" opacity=".45"/><rect x="' + (bx - 1.6) + '" y="' + by + '" width="3.2" height="52" rx="1.4" fill="#4a3a26" stroke="#1a120a" stroke-width=".8"/><circle cx="' + bx + '" cy="' + by + '" r="3" fill="url(#fdBronze)" stroke="#1a120a" stroke-width=".6"/>';
+      if (kind === "bcity") return pole + '<g transform="translate(' + (bx + 1.5) + " " + (by + 3) + ') scale(1.35)"><g class="fd-flag" filter="url(#fdEmb)"><path d="M0 0 H24 V30 L12 25 L0 30Z" fill="url(#sgGreen)" stroke="url(#fdBronze)" stroke-width="1.4"/>' +
+        '<g fill="#f2efe6" stroke="#8f887a" stroke-width=".4"><rect x="5" y="20" width="14" height="2.4"/><rect x="7" y="17.6" width="10" height="2.4"/><rect x="9" y="15.2" width="6" height="2.4"/><rect x="10" y="7" width="4" height="8.2"/><path d="M9.4 7 V4.6 H10.6 V5.6 H11.4 V4.6 H12.6 V5.6 H13.4 V4.6 H14.6 V7Z"/></g>' +
+        '<path d="M7 22 C8 17 11 16 10.4 13 C10 10 14 9 13.6 6 C13.4 4 14.6 3 15.6 2.4" fill="none" stroke="#e2bf6a" stroke-width=".9" stroke-linecap="round"/></g></g>';
+      return pole + '<g transform="translate(' + (bx + 1.5) + " " + (by + 3) + ') scale(1.35)" filter="url(#fdEmb)"><path d="M0 0 H24 V27 H0Z" fill="url(#sgSlate)" stroke="#6b737a" stroke-width="1.2"/>' +
+        '<g fill="url(#fdIron)" stroke="#202428" stroke-width=".5"><rect x="1" y="27" width="5" height="4" rx=".6"/><rect x="9.5" y="27" width="5" height="4" rx=".6"/><rect x="18" y="27" width="5" height="4" rx=".6"/>' +
+        '<ellipse cx="12" cy="13" rx="6" ry="5"/><path d="M8.4 3.2 L10.6 2.4 L15.4 9.2 L13.4 10.2Z"/></g><path d="M6 21 q6 3 12 0" stroke="#9fc0cf" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M4 24 q8 3.6 16 0" stroke="#9fc0cf" stroke-width=".8" fill="none" opacity=".55" stroke-linecap="round"/></g>';
+    }
+    function fdDeco(fd) {
+      let s = "";
+      for (const [x, y, k] of fd.f.deco || []) {
+        const x0 = x * T, y0 = y * T, cx = x0 + T / 2, cy = y0 + T / 2;
+        if (k === "bcity" || k === "bbathyr") s += fdBanner(k, x, y);
+        else if (k === "gate") s += '<g filter="url(#fdShadow)"><path d="M' + (x0 + 2) + " " + (y0 + 6) + " l20 -2 v40 l-20 6Z" + '" fill="#6a4a2a" stroke="#2a1a0c" stroke-width="1.2"/><path d="M' + (x0 + T - 2) + " " + (y0 + 6) + " l-20 -2 v40 l20 6Z" + '" fill="#6a4a2a" stroke="#2a1a0c" stroke-width="1.2"/>' +
+          '<path d="M' + (x0 + 6) + " " + (y0 + 18) + "l14 -1 M" + (x0 + 6) + " " + (y0 + 34) + "l14 -1 M" + (x0 + T - 6) + " " + (y0 + 18) + "l-14 -1 M" + (x0 + T - 6) + " " + (y0 + 34) + 'l-14 -1" stroke="#2a2420" stroke-width="2.4"/>' +
+          '<rect x="' + x0 + '" y="' + (y0 - 3) + '" width="' + T + '" height="6" fill="#3a3632" stroke="#151310" stroke-width="1"/>' + [...Array(7)].map((_, i) => '<path d="M' + (x0 + 5 + i * 9) + " " + (y0 + 3) + 'v5 l-1.6 3 l-1.6 -3" stroke="#3a3632" stroke-width="2" fill="none"/>').join("") + "</g>";
+        else if (k === "ladder") s += '<g filter="url(#fdShadow)" transform="rotate(' + rr(-8, 8).toFixed(0) + " " + cx + " " + y0 + ')"><path d="M' + (cx - 8) + " " + (y0 - 2) + "v" + (T * .62) + " M" + (cx + 8) + " " + (y0 - 2) + "v" + (T * .62) + '" stroke="#7a5a34" stroke-width="3.4" stroke-linecap="round"/>' + [...Array(4)].map((_, i) => '<path d="M' + (cx - 8) + " " + (y0 + 6 + i * 9) + 'h16" stroke="#9a7444" stroke-width="2.2"/>').join("") + '<path d="M' + (cx - 8) + " " + (y0 - 2) + " q-4 -6 1 -8 M" + (cx + 8) + " " + (y0 - 2) + ' q4 -6 -1 -8" stroke="#55585c" stroke-width="2" fill="none"/></g>';
+        else if (k === "crane") s += '<g filter="url(#fdShadow)"><path d="M' + (cx - 20) + " " + (cy + 14) + " L" + (cx + 22) + " " + (cy - 22) + '" stroke="#6a4a2a" stroke-width="5" stroke-linecap="round"/><path d="M' + (cx + 22) + " " + (cy - 22) + " v16" + '" stroke="#c9b48a" stroke-width="1.2"/><rect x="' + (cx + 17) + '" y="' + (cy - 7) + '" width="10" height="8" fill="#55514a" stroke="#1a1814" stroke-width="1"/><circle cx="' + (cx - 14) + '" cy="' + (cy + 9) + '" r="7" fill="none" stroke="#3a2a14" stroke-width="2.4"/></g>';
+        else if (k === "engine") s += '<g filter="url(#fdShadow)"><rect x="' + (x0 + 8) + '" y="' + (y0 + 12) + '" width="' + (T - 16) + '" height="' + (T - 22) + '" fill="none" stroke="#4a3420" stroke-width="5"/><path d="M' + (x0 + 8) + " " + (y0 + 12) + "L" + (x0 + T - 8) + " " + (y0 + T - 10) + '" stroke="#4a3420" stroke-width="3"/><path d="M' + cx + " " + (y0 + T - 8) + " L" + (cx + 6) + " " + (y0 + 2) + '" stroke="#7a5a34" stroke-width="4.5" stroke-linecap="round"/><rect x="' + (cx - 9) + '" y="' + (y0 + T - 18) + '" width="16" height="12" fill="url(#fdIron)" stroke="#1a1814" stroke-width="1"/><ellipse cx="' + (cx + 6) + '" cy="' + (y0 + 3) + '" rx="6" ry="4" fill="#3a3632" stroke="#151310" stroke-width="1"/>' +
+          [[x0 + 8, y0 + 12], [x0 + T - 8, y0 + 12], [x0 + 8, y0 + T - 10], [x0 + T - 8, y0 + T - 10]].map(([a, b]) => '<circle cx="' + a + '" cy="' + b + '" r="4.5" fill="#3a2a14" stroke="#120c06" stroke-width="1"/>').join("") + "</g>";
+        else if (k === "pavilion") s += '<g filter="url(#fdShadow)"><rect x="' + (x0 + 3) + '" y="' + (y0 + 5) + '" width="' + (T - 6) + '" height="' + (T - 10) + '" rx="3" fill="url(#sgLead)" stroke="#1f2326" stroke-width="1.4"/><path d="M' + (x0 + 3) + " " + (y0 + 5) + "L" + cx + " " + cy + "L" + (x0 + T - 3) + " " + (y0 + 5) + " M" + (x0 + 3) + " " + (y0 + T - 5) + "L" + cx + " " + cy + "L" + (x0 + T - 3) + " " + (y0 + T - 5) + '" stroke="#1f2326" stroke-opacity=".6" stroke-width="1.2" fill="none"/><circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#8d939a" stroke="#1f2326" stroke-width="1"/><rect x="' + (cx - 9) + '" y="' + (y0 + T - 13) + '" width="18" height="10" rx="1.5" fill="url(#fdIron)" stroke="#1f2326" stroke-width="1"/><path d="M' + (cx - 5) + " " + (y0 + T - 6) + ' q5 2 10 0" stroke="#9fc0cf" stroke-width="1" fill="none"/></g>';
+      }
+      return s;
+    }
     function tile(x, y, t) {
       const x0 = x * T, y0 = y * T, cx = x0 + T / 2, cy = y0 + T / 2;
       let s = "";
+      if (["siege", "camp", "orchard"].includes(sty)) { const v = siegeTile(x0, y0, cx, cy, t); if (v !== null) return v; }
       if (t === ".") {
         if (sty === "sand") { for (let i = 0; i < 3; i++) { const yy = y0 + rr(10, T - 10); s += '<path d="M' + (x0 + 6) + " " + yy + " q" + T / 4 + " -4 " + T / 2 + " 0 t" + (T / 2 - 12) + ' 0" stroke="' + p.gd + '" stroke-width="1.2" fill="none" opacity=".45"/>'; } s += pebbles(x0, y0, 2, .7); if (rnd() < .3) s += tufts(x0, y0, 1, p.acc); }
         else if (sty === "fen") { s += flags(x0, y0) + tufts(x0, y0, 2, p.acc); }
@@ -13287,7 +13420,7 @@ body.pv-open { overflow: hidden; }
       return s;
     }
     const W = FW * T, H = FH * T;
-    let s = fdDefs(p) + '<rect width="' + W + '" height="' + H + '" fill="' + p.g + '"/><rect width="' + W + '" height="' + H + '" fill="' + p.gd + '" filter="url(#fdMottle)" opacity=".75"/>';
+    let s = fdDefs(p) + (fd.f.siege ? '<defs><linearGradient id="sgWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p.tallL + '"/><stop offset="1" stop-color="' + p.tall + '"/></linearGradient><linearGradient id="sgGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3c7049"/><stop offset="1" stop-color="#1f3d27"/></linearGradient><linearGradient id="sgSlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a5d6c"/><stop offset="1" stop-color="#232e37"/></linearGradient><linearGradient id="sgLead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c838a"/><stop offset="1" stop-color="#3a3f44"/></linearGradient></defs>' : "") + '<rect width="' + W + '" height="' + H + '" fill="' + p.g + '"/><rect width="' + W + '" height="' + H + '" fill="' + p.gd + '" filter="url(#fdMottle)" opacity=".75"/>';
     const patch = (k, fill, op) => { let g = ""; for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) if (fd.G[y][x] === k) g += '<rect x="' + (x * T - 3) + '" y="' + (y * T - 3) + '" width="' + (T + 6) + '" height="' + (T + 6) + '" fill="' + fill + '"/>'; return g ? '<g filter="url(#fdRough)" opacity="' + op + '">' + g + "</g>" : ""; };
     s += patch("h", "url(#fdHi)", 1) + patch("r", p.rug, .55) + patch("~", p.sink, .7);
     for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
@@ -13297,6 +13430,7 @@ body.pv-open { overflow: hidden; }
       if (fdTile(fd, x + 1, y) !== null && fdTile(fd, x + 1, y) !== "h") s += '<path d="M' + (x0 + T) + " " + y0 + " v" + T + " l9 3 q3 -" + T / 2 + " 0 -" + T + 'Z" fill="' + p.cliff + '" opacity=".85" filter="url(#fdEdge)"/>';
     }
     for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) s += tile(x, y, fd.G[y][x]);
+    s += fdDeco(fd);
     s += '<rect width="' + W + '" height="' + H + '" fill="#fff" filter="url(#fdGrain)" opacity=".09" style="mix-blend-mode:overlay"/><rect width="' + W + '" height="' + H + '" fill="url(#fdSun)"/><rect width="' + W + '" height="' + H + '" fill="url(#fdVig)"/>';
     let gl = ""; for (let x = 1; x < FW; x++) gl += "M" + x * T + " 0V" + H; for (let y = 1; y < FH; y++) gl += "M0 " + y * T + "H" + W;
     return s + '<path d="' + gl + '" stroke="#000" stroke-opacity=".18" stroke-width="1" fill="none" stroke-dasharray="2 4"/><g class="fd-over"></g><g class="fd-toks"></g>';
@@ -13326,7 +13460,7 @@ body.pv-open { overflow: hidden; }
     if (W) k += at(W, '<ellipse cx="4" cy="10" rx="26" ry="11" fill="#000" opacity=".5"/><circle r="34" fill="none" stroke="' + (W.grudge ? "#ff5a3c" : "#e8c56a") + '" stroke-width="2" stroke-dasharray="' + (W.grudge ? "3 3" : "10 5") + '" class="' + (W.grudge ? "fd-mad" : "fd-calm") + '"/><g transform="scale(1.12)">' + fdMedal(W.emb, "wild") + "</g>" + bar(W.hp / W.max, -42, "#b07cd6"));
     k += at(fd.you, '<ellipse cx="3" cy="9" rx="25" ry="10" fill="#000" opacity=".5"/><circle r="27" fill="url(#fdAura)" class="fd-aura"/><image href="' + markerSrc() + '" x="-28" y="-28" width="56" height="56"/>' + (fd.you.stuck ? sunk : ""));
     fd.svg.querySelector(".fd-toks").innerHTML = k;
-    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of " + fdSteps() + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? " · charging" : "") : "";
+    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of " + (fd.smax || fdSteps()) + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? " · charging" : "") : "";
   }
   function fdInfo(fd, x, y) {
     const t = fdTile(fd, x, y), R = FD_RULES[t], who = fdAt(fd, x, y);
@@ -13419,13 +13553,14 @@ body.pv-open { overflow: hidden; }
   }
   // At the start of the fight: lay out the field.
   async function fdStart(F, st, B) {
-    const D = fdState(), f = FIELDS[F.reg];
-    const fd = st.fd = { key: F.reg, f, G: f.grid.map(r => r.split("")), you: { x: f.you[0], y: f.you[1] }, foe: { x: f.foe[0], y: f.foe[1] }, emb: BEAST_EMB[B && B.id] || "canine",
-      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(), mv: [], live: false, wd: null, bow: 0 };
-    if (!D.fields.includes(F.reg)) D.fields.push(F.reg);
+    const D = fdState(), key = F.field && FIELDS[F.field] ? F.field : F.reg, f = FIELDS[key], ys = F.fdYou || f.you;
+    const fd = st.fd = { key, f, G: f.grid.map(r => r.split("")), you: { x: ys[0], y: ys[1] }, foe: { x: f.foe[0], y: f.foe[1] }, emb: F.fdEmb || BEAST_EMB[B && B.id] || "canine",
+      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(1), mv: [], live: false, wd: null, bow: 0 };
+    if (!D.fields.includes(key)) D.fields.push(key);
     if (D.fields.length >= 6) grant("fdsix");
-    // A wanderer: 20% of road fights, 30% at night, never twice running.
-    if (!D.w && d(100) <= (calNight() ? 30 : 20)) { fd.wdAt = 1 + d(2); D.w = true; } else D.w = false;
+    if (f.siege && !D.sgseen.includes(key)) { D.sgseen.push(key); if (D.sgseen.length >= 6) grant("sgsix"); }
+    // A wanderer: 20% of road fights, 30% at night, never twice running. None on the siege fields.
+    if (!f.siege && F.road && WANDERERS[F.reg] && !D.w && d(100) <= (calNight() ? 30 : 20)) { fd.wdAt = 1 + d(2); D.w = true; } else if (!f.siege) D.w = false;
     const card = el("div", "field-card");
     card.innerHTML = '<div class="fd-head"><span class="fd-name">' + f.name + '</span><span class="fd-steps"></span></div><svg class="fd-map" viewBox="0 0 ' + FW * FT + " " + FH * FT + '" role="img" aria-label="Battle map: ' + f.name + '"></svg><p class="fd-info"></p><div class="fd-foot"><button type="button" class="ghost map-link fd-mk">Marker: ' + markerName() + '</button><button type="button" class="ghost map-link fd-off">Fight without maps</button></div><div class="fd-pick" hidden></div>';
     fd.el = card; fd.svg = card.querySelector("svg"); fd.infoEl = card.querySelector(".fd-info"); fd.stepsEl = card.querySelector(".fd-steps");
@@ -13443,6 +13578,7 @@ body.pv-open { overflow: hidden; }
     add(card);
     fd.infoEl.innerHTML = fdInfo(fd, fd.you.x, fd.you.y);
     tip("field");
+    if (f.siege) tip("siege");
     if (!D.seen) { D.seen = true; await mech("<b>The battle map.</b> You get 2 steps a round on top of your move: tap a square, then tap it again. Strikes need you next to it. Tap any square to see what the ground does.", "loot"); }
     fdDraw(st);
   }
@@ -13537,7 +13673,7 @@ body.pv-open { overflow: hidden; }
   // At the top of each round: fresh steps, the wanderer, and the map brought down to the menu.
   async function fdRound(F, st) {
     const fd = st.fd; if (!fd) return;
-    fd.steps = fdSteps(); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
+    fd.steps = fd.smax = fdSteps(st.round); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
     if (fd.wdAt && st.round === fd.wdAt && !fd.wd && FOE.hp > 0) await fdWdEnter(F, st);
     else if (fdWd(fd) && st.round > fd.wdAt) await fdWdTurn(F, st);
     if (st.fled) return;
@@ -13649,7 +13785,7 @@ body.pv-open { overflow: hidden; }
       } else {
         fd.foe.x = nx; fd.foe.y = ny; fdDraw(st);
         if (to === "~" && !fd.fly) {
-          fdState().sinks = (fdState().sinks || 0) + 1; grant("fdsink");
+          fdState().sinks = (fdState().sinks || 0) + 1; grant("fdsink"); if (F.bathyr) grant("sgdrown");
           if (F.heads) { foeHit(1); await say("One of them goes over backwards into the sinking ground and doesn't come up."); fd.foe.x -= dx; fd.foe.y -= dy; }
           else { fd.foe.stuck = true; await say("You shove it backwards into the sinking ground, and it goes in to the hips."); await mech("Stuck: +3 to your blows, −3 to its, until it hauls itself out.", "loot"); }
         } else if (from === "h" && to !== "h") {
@@ -13727,7 +13863,7 @@ body.pv-open { overflow: hidden; }
       }
     }
     const a = fdTile(fd, fd.foe.x, fd.foe.y), b = fdTile(fd, fd.you.x, fd.you.y);
-    if (a === "h" && b !== "h") { FOE.fdMod += 1; FOE.fdTxt += ", from above +1"; }
+    if (a === "h" && b !== "h") { if (F.bathyr) { FOE.fdMod -= 1; FOE.fdTxt += ", giddy up high −1"; } else { FOE.fdMod += 1; FOE.fdTxt += ", from above +1"; } }
     if (a === "r" && !fd.fly) { FOE.fdMod -= 1; FOE.fdTxt += ", bad footing −1"; }
     if (b === "c") { FOE.fdMod -= 1; FOE.fdTxt += ", you're in cover −1"; }
     if (b === "h" && a !== "h" && !fd.fly) { FOE.fdMod -= 1; FOE.fdTxt += ", you hold the high ground −1"; }
@@ -13802,11 +13938,19 @@ body.pv-open { overflow: hidden; }
     const fd = st.fd; if (!fd) return;
     fd.live = false;
     if (fd.el) fd.el.remove();
-    if (FOE.hp <= 0 && !st.fled) { const D = fdState(); D.won++; grant("fdfirst"); }
+    if (FOE.hp <= 0 && !st.fled) { const D = fdState(); D.won++; grant("fdfirst"); if (fd.f.siege) { grant("sgfirst"); if (!D.siege.includes(fd.key)) { D.siege.push(fd.key); F.sgWon = D.siege.length; } } }
     FOE.fdMod = 0; FOE.fdTxt = "";
     st.fd = null;
   }
 
+  // The Porcelain Tower: held three siege maps on one journey, and the terrace folk notice.
+  async function porcGive() {
+    S.gear = S.gear || []; S.gear.push("porctower"); renderSheet();
+    await say("On the way back up through the terraces, an old woman with clay to her elbows stops you and presses something into your hand: a little tower the length of your thumb, glazed white, on seven painted steps, with a gold vine climbing it. It's warm from her kiln.");
+    await say("\"We make them for the ones who hold the walls,\" she says. \"There aren't many of them left, so I've plenty.\"", "voice");
+    await mech("<b>The Porcelain Tower.</b> " + GEAR.porctower.desc, "loot");
+    grant("sgporc");
+  }
   async function hkFight(F) {
     const back = document.body.dataset.light;
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
@@ -13830,7 +13974,7 @@ body.pv-open { overflow: hidden; }
     if (!F.terrain && (S.arRank || 0) >= 3 && typeof sabotage === "function" && d(3) > 1) { F.terrain = OBS_TERRAIN[d(OBS_TERRAIN.length) - 1]; await mech("Adaptive Reasoning: you see it before the fight starts. " + F.terrain[0][0].toUpperCase() + F.terrain[0].slice(1) + " is loose. You could bring it down on " + (F.heads ? "them" : "it") + ".", "loot"); }
     if (F.setup) await F.setup(st);
     if (F.reg) await hzStart(F, st);
-    if (F.fdB && fdOn(F)) await fdStart(F, st, F.fdB);
+    if ((F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       await bleedTick();
@@ -13967,8 +14111,9 @@ body.pv-open { overflow: hidden; }
         continue;
       }
       if (st.stilled) { st.stilled = false; await say(F.hesk ? "They stand frozen for a breath, listening to something they last heard as children." : "It hesitates."); continue; }
-      if (F.turn && (await F.turn(st)) === "done") continue;
+      // On a map it has to get to you first, even when it has a trick of its own.
       if (st.fd && !(await fdFoeTurn(F, st))) { st.evade = false; continue; }
+      if (F.turn && (await F.turn(st)) === "done") continue;
       const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
       for (let i = 0; i < swings; i++) await foeSwing(F, st);
       st.evade = false;
@@ -13979,6 +14124,7 @@ body.pv-open { overflow: hidden; }
     fdEnd(F, st);
     foeEnd(!!st.fled);
     light(back);
+    if (F.sgWon === 3 && !hasGear("porctower")) await porcGive();
     if (hasSkill("mend") && S.hp < S.maxHp) {
       const n = d(6), before = S.hp;
       S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
@@ -15879,6 +16025,7 @@ body.pv-open { overflow: hidden; }
     shutter: { name: "Dimmer's Shutter-Cloak", icon: "cloak", desc: "Grey, hooded, smelling of lamp-smoke. The Dimmers take you for one of their own." }
   });
   Object.assign(ICONS, {
+    porctower: '<svg viewBox="0 0 26 26"><g fill="#f3f0e8" stroke="#8f887a" stroke-width=".6"><rect x="5" y="20" width="16" height="3"/><rect x="7" y="17" width="12" height="3"/><rect x="9" y="14" width="8" height="3"/><rect x="10.5" y="6" width="5" height="8"/><path d="M9.8 6V3.6h1.4v1h1.1v-1h1.4v1h1.1v-1h1.4V6z"/></g><path d="M7 21c1-4 4-4 3.6-7s3.4-3 3.2-6 1.6-3 2.6-3.6" fill="none" stroke="#d9b45a" stroke-width="1"/><path d="M11.4 7v6" stroke="#fff" stroke-width=".9"/></svg>',
     shard: '<svg viewBox="0 0 26 26"><path d="M13 2l4 9l-4 13l-4-13z" fill="#f0c86e"/><path d="M13 2l4 9l-4 3z" fill="#ffe7a8"/><path d="M4 8l3 2M22 8l-3 2M3 15h3M23 15h-3" stroke="#cfa850" stroke-width="1.2"/></svg>',
     key: '<svg viewBox="0 0 26 26"><circle cx="7" cy="13" r="4.5" fill="none" stroke="#cfa850" stroke-width="2"/><path d="M11.5 13H23M19 13v4M22 13v3" stroke="#cfa850" stroke-width="2"/></svg>',
     needle: '<svg viewBox="0 0 26 26"><path d="M5 21L20 5" stroke="#9ea6aa" stroke-width="1.8"/><ellipse cx="20" cy="5" rx="1.6" ry="2.4" transform="rotate(45 20 5)" fill="none" stroke="#9ea6aa" stroke-width="1"/><path d="M20 5c-4 6-8 3-13 12" stroke="#2a2433" stroke-width="1.6" fill="none"/></svg>',
@@ -18278,12 +18425,12 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const BATHYR = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Bathyr", whoShort: "Bathyr",
+  const BATHYR = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Bathyr", whoShort: "Bathyr", bathyr: true, fdEmb: "bathyr",
     hitWhy: "A Bathyr fist comes down on you like a dropped anvil.", miss: "The blow cracks the paving where you were standing.",
     hitLine: "A Bathyr goes over like a felled wall, and you feel it through your boots." }, o);
   // High on the terraces, the Bathyr get giddy: there's too little weight on them up here.
   const giddy = (F) => Object.assign(F, { before: async (st) => { if (st.round === 1) { st.adv = true; await mech("They're giddy up here, a long way from the sea floor, and slow to turn: advantage on your first swing.", "loot"); } } });
-  const GARRISON = (o) => Object.assign({ ac: 12, atk: 3, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the soldiers", whoShort: "Soldiers",
+  const GARRISON = (o) => Object.assign({ ac: 12, atk: 3, n: 1, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the soldiers", whoShort: "Soldiers", fdEmb: "tower",
     hitWhy: "A spear-butt catches you in the ribs.", miss: "He swings wide; he's too hungry to swing straight.", hitLine: "He sits down hard in the gutter and stays there." }, o);
   async function tyraSays(t) { if (rh().tyra) await say(t); }
 
@@ -18329,7 +18476,7 @@ body.pv-open { overflow: hidden; }
       await say("You go at their lines at dawn, along the riverbank, where the trench is shallowest. Two of them are on the bank, and they turn to look at you.");
       await say("They're short, no taller than your shoulder, and wider than any man you've ever seen: broad as doors, with arms like the trunks of young trees. Their skin is grey-blue and shines like wet slate, and their eyes are big and black, with a second clear lid that slides across when they blink. They don't wear armour. They don't need to. They don't carry swords either, only short hooked bars of dark metal.");
       await say("They don't shout. One of them taps his bar twice on a stone, and the other nods.");
-      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr" }));
+      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr", field: "rhbank" }));
       await say("You go into the river to get round the end of the trench, and it's only waist-deep, and they don't follow you. They stand on the bank and watch you go, with their black eyes, and one of them takes a step toward the water, and stops, as though the water were a wall.");
     }
     light("sun");
@@ -18617,7 +18764,7 @@ body.pv-open { overflow: hidden; }
       else { await say("\"Never heard of you,\" the big one says, and they take the cart."); }
     }
     if (c === "fight") {
-      await hkFight(GARRISON({ name: "Garrison soldiers", heads: 3, unit: "soldier|soldiers" }));
+      await hkFight(GARRISON({ name: "Garrison soldiers", heads: 3, unit: "soldier|soldiers", field: "rahdaria" }));
       await say("They go down easy. They hadn't eaten in days. You stand over them in the street and feel worse than you have about any fight in a long time.");
       await standing(2, "The bread line saw you take the cart back. Some of them saw you knock down three men too hungry to stand up straight.");
     }
@@ -18795,7 +18942,7 @@ body.pv-open { overflow: hidden; }
     const r = await check({ label: "Stealth check (into their camp)", mod: 3, dc: 14, adv: R.tyra, cta: "Creep" });
     if (!r.ok) {
       await say("A Bathyr picket taps twice on a stone right beside you, and a second answers from behind.");
-      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr" }));
+      await hkFight(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr", field: "rhcamp" }));
       await say("You've seen enough by the time you run for the wall. You get a good look at it while you run.");
     }
     await say("Their camp is quiet. They don't sing, or drink, or gamble. They sit in rows in the dark outside their long pavilions, very still, with their heads on one side, as if listening. Every so often one of them taps a stone, and others answer, all down the lines: they're talking.");
@@ -18815,7 +18962,7 @@ body.pv-open { overflow: hidden; }
       await say("You see them before they reach the chain: dark shapes on the harbour bottom, walking. Bathyr, in helmets like iron bells, walking along the sea floor toward the chain to cut it. You shout down, and the tower crew drop the great harbour stones on them, one, two, three, and the shapes stop walking.");
     } else {
       await say("You don't see them until they're climbing the chain itself: Bathyr, out of the water, in helmets like iron bells, streaming, hooked bars in their teeth.");
-      await hkFight(BATHYR({ name: "Bathyr bottom-walkers", heads: 2, unit: "bottom-walker|bottom-walkers", ac: 13 }));
+      await hkFight(BATHYR({ name: "Bathyr bottom-walkers", heads: 2, unit: "bottom-walker|bottom-walkers", ac: 13, field: "rhcamp" }));
     }
     await say("The boats come back at dawn, low in the water with fish. Herring, and mackerel, and big silver things nobody can name. They gut them on the harbour steps and there's a line to the harbour from the Fourth Stair before the first fire's lit.");
     await feed("fish", 2, "The fishing boats got out and back.");
@@ -19507,7 +19654,7 @@ body.pv-open { overflow: hidden; }
     const F = BATHYR({ name: "Bathyr wedge", heads: 3, unit: "Bathyr|Bathyr" });
     if (R.f.giddy) { giddy(F); await say("You lead them up the old ramp onto the Lion's Shoulder, the high ground by the gate, and they follow you up it, and up there, they sway."); }
     if (typeof sabotage === "function") F.terrain = ["the gatehouse crane", "large"];
-    retreatable(F); await rxGround(F);
+    F.field = "rhgate"; retreatable(F); await rxGround(F);
     await hkFight(F);
     if (await rxFled(F)) return;
     await rxMom(-4, "");
@@ -19524,7 +19671,7 @@ body.pv-open { overflow: hidden; }
     const r = await check({ label: "Stealth check (the wagon line)", mod: 3, dc: 13, adv: hasGear("vkey"), cta: "Go" });
     if (!r.ok) {
       await say("The wagon guards are awake.");
-      const F = retreatable(BATHYR({ name: "Wagon guards", heads: 2, unit: "Bathyr|Bathyr" }));
+      const F = retreatable(BATHYR({ name: "Wagon guards", heads: 2, unit: "Bathyr|Bathyr", field: "rhcamp" }));
       await hkFight(F);
       if (await rxFled(F, 8)) return;
     }
@@ -19653,7 +19800,7 @@ body.pv-open { overflow: hidden; }
         st.evade = false; return "done";
       };
       if (typeof sabotage === "function") F.terrain = ["the wall's old hoarding", "large"];
-      await hkFight(prep(F));
+      F.field = "rhwall"; await hkFight(prep(F));
       if (F.fled) return rxFled(F, 8);
       await say("Keel sits down. He does it slowly, on the stones, and puts the anchor across his knees, and taps it twice, and every Bathyr who can hear him stops fighting.");
       if (!last) { const n = Math.min(R.sol, 30); R.sol -= n; await mech("General Keel has yielded, and his soldiers lose their heart for it: " + n + " of them lay down their bars. Soldiers: " + R.sol + ".", "loot"); }
@@ -19677,7 +19824,7 @@ body.pv-open { overflow: hidden; }
         else await say("The bar bends. The Lung breathes in.");
       };
       if (typeof sabotage === "function") F.terrain = ["the Lung's own throwing-arm", "large"];
-      await hkFight(prep(F));
+      F.field = "rhengine"; await hkFight(prep(F));
       if (F.fled) return rxFled(F, 8);
       await say("Thole sits down on the ground with his back to his engine. \"Good,\" he says, to nobody. \"Good. I'm tired.\"");
       if (!last) { const n = Math.min(R.crates, 30); R.crates -= n; await mech("With Thole beaten, his engine-crews break up their own stores rather than haul them: " + n + " crates. Crates: " + R.crates + ".", "loot"); }
@@ -19692,7 +19839,7 @@ body.pv-open { overflow: hidden; }
         if (hit) { if (hasGear("sweet")) await mech("The brine runs off you like rain off oilcloth: Sabine's sweet water.", "loot"); else await hurt(1, 4, "acid", "The brine sits in the cut and burns."); }
         st.evade = false; return "done";
       };
-      await hkFight(prep(F));
+      F.field = "rhbank"; await hkFight(prep(F));
       if (F.fled) return rxFled(F, 8);
       await say("Sault goes down on her back in the road, and her own cask splits open beside her, and the brine runs out into the river and sinks, a long grey ribbon on the bottom, and is gone.");
       if (!last) { const a = Math.min(R.sol, 10), b = Math.min(R.crates, 10); R.sol -= a; R.crates -= b; await mech("Her brine wagons go into the river. Soldiers: " + R.sol + ". Crates: " + R.crates + ".", "loot"); await hunger(-1, "With the Brinewife gone, the gardeners stop being afraid of the water."); }
@@ -19724,7 +19871,7 @@ body.pv-open { overflow: hidden; }
       if (Xa && Xa.mom >= 60) {
         await say("They've had the better of the blockade, and it shows: the first wave reaches the wall-walk before the bells have stopped, and you meet it there.");
         await mech("Enemy control " + Xa.mom + "%: an extra wave before the Generals.");
-        await hkFight(BATHYR({ name: "The first wave", heads: 3, unit: "Bathyr|Bathyr" }));
+        await hkFight(BATHYR({ name: "The first wave", heads: 3, unit: "Bathyr|Bathyr", field: "rhwall" }));
       }
       const left = ["keel", "thole", "sault"].filter(k => !R.gens.includes(k));
       if (left.length) {
@@ -19732,7 +19879,7 @@ body.pv-open { overflow: hidden; }
         for (const k of left) await generalFight(k, true);
       } else {
         await say("They have no Generals left to lead them, and they come anyway. You meet the last of them at the top of the ladders on the Third Terrace, where they're giddy and slow.");
-        await hkFight(giddy(BATHYR({ name: "The last of the Bathyr", heads: 3, unit: "Bathyr|Bathyr" })));
+        await hkFight(giddy(BATHYR({ name: "The last of the Bathyr", heads: 3, unit: "Bathyr|Bathyr", field: "rhterrace" })));
       }
       await threeCheers("The last ladder falls. From one end of the walls to the other:");
       await say("By noon it's over. The Bathyr still on the walls sit down where they are, one after another, and tap their bars on the stones, and stop. The ones in the trenches walk down to the river and stand in it. The engines stand where they've stopped, smoking.");
@@ -20698,7 +20845,8 @@ body.pv-open { overflow: hidden; }
     mantle: { name: "The Detective's Mantle", icon: "clue", desc: "A long grey coat with deep pockets, the old Inquirer's, cut down for you. +1 to Investigation and Insight everywhere, one more look in Detective Vision, one more use of the Inquirer's Eye, and Standing comes 10% easier." },
     eyecoat: { name: "The Glass-Eye Coat", icon: "clue", desc: "Sea-green, with an open eye of green glass at the collar: only one is made in a generation. +1 AC, and the people of Rahdaria know it on sight." },
     crest: { name: "The Golden Crest Cloak", icon: "shield", desc: "A cloak of garden green, with Rahdaria's seven terraces worked on the back in gold thread. Standing comes 20% easier, and +1 AC." },
-    lens: { name: "The Old Inquirer's Lens", icon: "clue", desc: "A glass on a chain, ground for reading small hands. One more look in Detective Vision." }
+    lens: { name: "The Old Inquirer's Lens", icon: "clue", desc: "A glass on a chain, ground for reading small hands. One more look in Detective Vision." },
+    porctower: { name: "The Porcelain Tower", icon: "porctower", desc: "A thumb-high tower of white porcelain on seven painted terraces, with a gold vine: Rahdaria's emblem, from a terrace kiln. On every battle map you get a third step on the first round, and your marker can wear it (pick it under the map)." }
   });
 
   // ======================= the blockade, expanded =======================
@@ -20824,8 +20972,12 @@ body.pv-open { overflow: hidden; }
   };
   async function rxGround(F) {
     const X = rx();
-    const g = await choose(Object.entries(GROUND).map(([k, v], i) => ({ key: k, label: v[0], tag: v[1], plain: i > 0 })));
+    // The ground you pick is the map you fight on.
+    const SGM = { high: ["rhgate", [4, 2]], trench: ["rhcamp", null], wall: ["rhgate", [3, 1]], forest: ["rhorchard", null], river: ["rhbank", null] };
+    const g = await choose(Object.entries(GROUND).map(([k, v], i) => ({ key: k, label: v[0], tag: v[1] + (S.noField ? "" : " · the map: " + FIELDS[SGM[k][0]].name), plain: i > 0 })));
     X.hv.ground = g;
+    const SG = SGM[g];
+    if (SG) { F.field = SG[0]; F.fdYou = SG[1]; }
     if (g === "high") { F.atk -= 1; chainBefore(F, async (st) => { if (st.round === 1) { st.adv = true; await mech("High ground: advantage on your first swing.", "loot"); } }); }
     if (g === "trench") chainBefore(F, async (st) => { if (st.round === 1) { FOE.dig += 2; await mech("Down in their trench, they can only come at you one way: +2 AC.", "loot"); } if (st.round === 3) { FOE.dig = Math.max(0, FOE.dig - 2); await mech("They've found the other end of the trench: your +2 AC is gone."); } });
     if (g === "wall") F.noVolley = true;
@@ -21027,7 +21179,7 @@ body.pv-open { overflow: hidden; }
       const F = retreatable(BATHYR({ name: "Bathyr in the breach", heads: 3 + (day > 1 ? 1 : 0), unit: "Bathyr|Bathyr" }));
       F.extra = ((ex) => (st) => (st.used.reave ? [] : [{ key: "reave", label: "Reave", tag: "a sweeping blow · Strength DC 13 · two of them", plain: true }]).concat(ex(st)))(F.extra);
       F.onExtra = ((on) => async (c, st) => { if (c !== "reave") return on(c, st); st.used.reave = true; const r = await check({ label: "Strength check (the reave)", mod: 4, dc: 13, cta: "Sweep" }); if (r.ok) { foeHit(Math.min(2, FOE.hp)); await mech("The axe goes through the first and into the second.", "loot"); } else await say("They're too close together to swing at."); })(F.onExtra);
-      await hkFight(F);
+      F.field = "rhbreach"; await hkFight(F);
       if (await rxFled(F)) return;
       const n = Math.min(R.sol, 10 + d(6)); R.sol -= n; renderSheet();
       await mech("You held the breach: " + n + " Bathyr out of the fight. Soldiers: " + R.sol + ".", "loot");
@@ -21094,7 +21246,7 @@ body.pv-open { overflow: hidden; }
     X.hv["grand" + R.day2] = true;
     await say("Kerrow opens both leaves of the land gate for the first time since the siege began, and the whole garrison goes out behind you at a run, with the terrace militia behind them, at their shield-wall.");
     const F = retreatable(BATHYR({ name: "Bathyr shield-wall", heads: 4, unit: "Bathyr|Bathyr", ac: 15 }));
-    await rxGround(F);
+    F.field = "rhgate"; await rxGround(F);
     await hkFight(F);
     if (await rxFled(F, 15)) return;
     const a = Math.min(R.sol, 20 + R.militia), b = Math.min(R.crates, 5); R.sol -= a; R.crates -= b; renderSheet();
@@ -21106,7 +21258,7 @@ body.pv-open { overflow: hidden; }
     light("dark");
     await say("You go out in a Bathyr shroud of grey sailcloth, stooped low to look short and wide, with a lead tablet of " + (hasGear("knot") ? "Tamsk's" : "somebody's") + " round your neck.");
     const r = await check({ label: "Stealth check (among them)" + (wxSneak() ? " (fog)" : ""), mod: 3 + wxSneak(), dc: 14, adv: hasGear("knot") || R.tamsk === "kind" || company().includes("talia"), cta: "Walk" });
-    if (!r.ok) { await say("A picket taps a question on his bar. You don't know the answer."); const F = retreatable(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr" })); await hkFight(F); await rxFled(F, 6); await rxMom(4, "They know someone came among them."); return; }
+    if (!r.ok) { await say("A picket taps a question on his bar. You don't know the answer."); const F = retreatable(BATHYR({ name: "Bathyr pickets", heads: 2, unit: "Bathyr|Bathyr", field: "rhcamp" })); await hkFight(F); await rxFled(F, 6); await rxMom(4, "They know someone came among them."); return; }
     X.intel++;
     await say("You sit in their lines for an hour and listen. They talk by tapping, and you've learned enough of it now. Keel's people are tired. Thole's want to go home. And all of them, every one, are afraid of the Quiet One on the hill.");
     if (!rxHas("e6c")) await evid("e6c");
@@ -21205,7 +21357,7 @@ body.pv-open { overflow: hidden; }
     const R = rh();
     await say("Where the Cascade storm touches the ground beyond the trenches, the light folds, and something walks out of the fold: a Bathyr, but wrong, twice the size, its slate skin cracked with light, humming in five lines.");
     const F = retreatable(BATHYR({ name: "A Cascade-born Bathyr", hp: 40, ac: 15, atk: 7, s: 10, who: "the Cascade-born", whoShort: "Cascade-born", hitWhy: "Its fist comes down, and for a moment you're in two places.", hitLine: "Light leaks out of the crack you've made in it." }));
-    await hkFight(F);
+    F.field = "rhcamp"; await hkFight(F);
     if (await rxFled(F, 8)) return;
     await say("It comes apart into grey sand and a sliver of something like glass, which bends the light round it.");
     await loreFind("fragment");
@@ -21349,7 +21501,7 @@ body.pv-open { overflow: hidden; }
     light("dark");
     await say("You go up " + (X.hv.hill || "the hill") + " in the dark, on your belly for the last hundred yards.");
     const s = await check({ label: "Stealth check (the hilltop)", mod: 3 + wxSneak(), dc: 14, adv: company().includes("talia"), cta: "Creep" });
-    if (!s.ok) { await say("A mirror flashes on the hilltop, once, and every Bathyr picket on the slope turns toward you at the same moment."); const F = retreatable(BATHYR({ name: "The hill's guard", heads: 3, unit: "Bathyr|Bathyr" })); await hkFight(F); if (await rxFled(F, 6)) return; }
+    if (!s.ok) { await say("A mirror flashes on the hilltop, once, and every Bathyr picket on the slope turns toward you at the same moment."); const F = retreatable(BATHYR({ name: "The hill's guard", heads: 3, unit: "Bathyr|Bathyr", field: "rhcamp" })); await hkFight(F); if (await rxFled(F, 6)) return; }
     await say("On the hilltop there's a tent, and a mirror on a stand, and a lamp, and a man sitting by them in a mask of plain grey iron, quite still, watching the city. He isn't a Bathyr. He's tall, and old, and when he turns his head, you see he's been waiting for you.");
     await say("He doesn't speak. He reaches up and unbuckles the mask, and puts it on the ground, and you see the face under it: a long weathered face you've seen before, younger, in a painting in the Steward's Hall, over a plaque that says <i>Corvus Aldane, the Hero of the Harbour Chain, lost at sea</i>.");
     await say("\"Thirty-one years,\" says Corvus Aldane, Nerys Aldane's brother, in a voice gone rusty with not using it. \"My ship went down two miles out, where the sea's deeper than any line. I didn't drown. I fell. Into their country. They took me in. And I learned what Rahdaria did to them.\"", "voice");
