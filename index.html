@@ -398,6 +398,34 @@ body.intro-open { overflow: hidden; }
 .cheers-row li b { color: var(--gold); font-size: 1.05rem; }
 .cheers-row li.big b { font-size: 1.35rem; text-shadow: 0 0 14px rgba(207,168,80,.45); }
 @media (prefers-reduced-motion: reduce) { .cheers-row li { animation: none; } }
+/* The fiftieth ring: a celebration over the whole screen. */
+.f50-fx { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(6, 8, 7, .82); animation: f50in .35s ease both; overflow: hidden; }
+.f50-fx.out { opacity: 0; transition: opacity .35s; }
+.f50-glow { position: absolute; inset: -20%; background: radial-gradient(circle at 50% 45%, rgba(255, 210, 122, .32), rgba(207, 168, 80, .08) 35%, transparent 60%); animation: f50pulse 2.6s ease-in-out infinite; pointer-events: none; }
+.f50-sparks { position: absolute; left: 50%; top: 42%; width: 0; height: 0; pointer-events: none; }
+.f50-sparks i { position: absolute; width: 7px; height: 7px; border-radius: 2px; opacity: 0; animation: f50spark 1.6s cubic-bezier(.2, .7, .3, 1) both; }
+.f50-card { position: relative; width: min(420px, 100%); text-align: center; padding: 22px 20px 20px; border: 1px solid #6b5a2c; border-radius: 14px; background: linear-gradient(180deg, rgba(207, 168, 80, .14), rgba(207, 168, 80, 0) 55%), var(--panel); box-shadow: 0 20px 60px rgba(0, 0, 0, .6), 0 0 0 1px rgba(255, 210, 122, .08) inset; animation: f50pop .6s cubic-bezier(.2, 1.4, .4, 1) both .1s; }
+.f50-rings { display: block; width: 180px; height: 180px; margin: -6px auto -150px; }
+.f50-rings circle { fill: none; stroke: var(--gold); stroke-width: 1.4; opacity: .7; stroke-dasharray: 700; stroke-dashoffset: 700; animation: f50ring 1.2s ease-out forwards; }
+.f50-rings circle:nth-child(odd) { stroke: #9fbf7a; opacity: .5; }
+.f50-rings circle:last-child { stroke: #ffd27a; stroke-width: 2.4; opacity: 1; }
+.f50-rings g { transform-origin: 0 0; animation: f50turn 24s linear infinite; }
+.f50-num { position: relative; font-family: var(--display); font-size: 4.2rem; line-height: 1; color: #ffd27a; text-shadow: 0 0 24px rgba(255, 210, 122, .55); margin: 30px 0 36px; }
+.f50-num.hit { animation: f50bump .5s ease; }
+.f50-card small { display: block; font-family: var(--label); font-weight: 700; letter-spacing: .16em; font-size: .78rem; color: var(--gold); text-transform: uppercase; }
+.f50-card h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.9rem, 7vw, 2.5rem); margin: 4px 0 10px; color: var(--ink); }
+.f50-card p { margin: 0 0 10px; color: var(--muted); }
+.f50-card .f50-gift { color: var(--ink); font-style: italic; }
+.f50-card button { margin-top: 6px; min-width: 150px; }
+.f50-card-map.f50-off .fd-map { pointer-events: none; opacity: .72; filter: saturate(.7); }
+@keyframes f50in { from { opacity: 0; } }
+@keyframes f50pop { from { opacity: 0; transform: scale(.86) translateY(14px); } }
+@keyframes f50ring { to { stroke-dashoffset: 0; } }
+@keyframes f50turn { to { transform: rotate(360deg); } }
+@keyframes f50pulse { 50% { opacity: .65; transform: scale(1.04); } }
+@keyframes f50bump { 40% { transform: scale(1.22); } }
+@keyframes f50spark { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 60px)) rotate(540deg); } }
+@media (prefers-reduced-motion: reduce) { .f50-fx, .f50-card, .f50-num.hit, .f50-glow, .f50-rings g { animation: none; } .f50-rings circle { animation: none; stroke-dashoffset: 0; } }
 .bgcard .bg-row { display: grid; gap: 6px; margin: 8px 0; }
 .bg-opts { display: flex; flex-wrap: wrap; gap: 6px; }
 .bg-opt { display: grid; gap: 2px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: .9rem; max-width: 100%; }
@@ -1908,6 +1936,12 @@ body.pv-open { overflow: hidden; }
         let t = 0;
         for (const c of pat) { if (c === "|") { t += 0.3; continue; } blip(sfx, c === "-" ? 150 : 230, { type: "triangle", a: 0.002, dec: c === "-" ? 0.28 : 0.08, vol: 0.09, at: t }); t += c === "-" ? 0.34 : 0.17; }
       },
+      // Level 50: a rising fanfare of bells, then a held chord.
+      fanfare() {
+        if (!live()) return;
+        [60, 64, 67, 72, 76, 79].forEach((m, k) => bell(sfx, hz(m), 0.06, 1.6, 0.05 + k * 0.13));
+        [72, 76, 79, 84].forEach(m => blip(sfx, hz(m), { type: "triangle", a: 0.08, dec: 2.2, vol: 0.035, at: 0.95 }));
+      },
       // A cheer: a crowd's roar, rising, with a few bright notes on top.
       cheers(v = 1) {
         if (!live()) return;
@@ -2096,6 +2130,7 @@ body.pv-open { overflow: hidden; }
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
     h += echoSection(rs);
+    h += f50Section(rs);
     h += newsSection();
     h += calSection(rs);
     h += stoneSection();
@@ -2128,6 +2163,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "69", name: "The Fiftieth Ring", date: "9 Nov 2026", items: [
+      "<b>Reaching level 50 is a party now.</b> The screen fills with rings and sparks, the number climbs to 50, the axe plays a fanfare and the road cheers. Then you choose how to mark it: a cup with the company, a ring carved in the axe-haft, or walking on quietly. Each one changes the gift.",
+      "<b>The gift: the Ring-Chart.</b> A treasure hunt across five battle maps, from the roads back. On each field a cache is buried under one square, with pits, snares and a sleeping beast hidden in the ground. Where you stand, the axe tells you how far the cache is (◎) and how many pitfalls are round you (●). Probe with the haft, mark what you suspect, and dig. Lamp oil runs out, but what you learn stays.",
+      "Four earlier wardens each left a cache, with a letter and a gift. The fifth field holds the <b>Fiftyfold Hoard</b>: a mantle (+2 AC, +12 max HP), the <b>Wardstep Boots</b> (3 steps a round on every battle map), 1,500 gold, 6 vials and the name <b>Ringwarden</b>. Towns remember. Four new feats, and a journal page.",
+    ] },
     { ver: "68", name: "A Closer Look", date: "9 Nov 2026", items: [
       "<b>Zoom on the battle maps</b>, in road fights and the Proving Ground. Pinch, use the + and − buttons in the map's corner, or hold ctrl (cmd on a Mac) and scroll. It zooms toward where you are, up to three times.",
       "Zoomed in, drag to look around; the map glides to a stop and never slides off. <b>Fit</b> shows the whole map again. A tap on a square is still a tap: the map only pans once you really drag.",
@@ -2718,6 +2758,10 @@ body.pv-open { overflow: hidden; }
     { id: "pvledge", name: "Over You Go", desc: "Shove a hero off a ledge in the Proving Ground.", test: () => false },
     { id: "pvten", name: "Ten Ghosts Laid", desc: "Beat ten different friends' ghosts.", test: () => false },
     { id: "pvreply", name: "Word Comes Back", desc: "Add a result to your ghost's record, sent back by someone who fought it.", test: () => false },
+    { id: "f50leg", name: "A Warden's Cache", desc: "Dig up a cache on the Ring-Chart, the gift for fifty rings.", test: () => false },
+    { id: "f50clean", name: "Light Feet", desc: "Find a Ring-Chart cache without springing a single pitfall on that field.", test: () => false },
+    { id: "f50sure", name: "First Spade", desc: "Find a Ring-Chart cache with the first hole you dig on that field.", test: () => false },
+    { id: "f50hoard", name: "Ringwarden", desc: "Finish the Ring-Chart and open the Fiftyfold Hoard.", test: () => false },
     { id: "dufirst", name: "Steel on Steel", desc: "Win a duel with sharp blades.", test: () => false },
     { id: "duriposte", name: "Answer and Return", desc: "Riposte three times in one duel.", test: () => false },
     { id: "duschool", name: "A Hall of Your Own", desc: "Take up the way of a salle.", test: () => false },
@@ -2773,7 +2817,9 @@ body.pv-open { overflow: hidden; }
     { id: "fields", name: "The Ground You Choose", ver: "19", desc: "Battle maps for road fights: cover, open, rugged, high and sinking ground, laid traps, and the wanderers.",
       ids: ["fdfirst", "fdcharge", "fdsink", "fdtrap", "fdwild", "fdsix"] },
     { id: "proving", name: "The Proving Ground", ver: "20", desc: "Hero against hero on the battle maps: a shared screen, friends' ghosts by code, and a record that travels back.",
-      ids: ["pvfirst", "pvhot", "pvghost", "pvledge", "pvten", "pvreply"] }
+      ids: ["pvfirst", "pvhot", "pvghost", "pvledge", "pvten", "pvreply"] },
+    { id: "fifty", name: "The Fiftieth Ring", ver: "21", desc: "Level 50: the celebration, and the Ring-Chart, a treasure hunt across five battle maps.",
+      ids: ["f50leg", "f50clean", "f50sure", "f50hoard"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -2942,7 +2988,7 @@ body.pv-open { overflow: hidden; }
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0);
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0) + (S.f50mantle ? 2 : 0);
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
@@ -3945,6 +3991,7 @@ body.pv-open { overflow: hidden; }
     if (lv() >= LV_MAX) S.xp = 0;
     renderSheet();
     xpPop("+" + n + " XP");
+    if (ups.includes(LV_MAX)) { (S.f50 = S.f50 || {}).fx = true; setTimeout(f50Fx, reduced ? 0 : 700); }
     ups.forEach(L => {
       achToast({ name: "Level " + L, desc: lvPerks(L), kicker: "Level up", icon: LV_ICON, quiet: true });
       const b = $("xpBox"); b.classList.remove("up"); void b.offsetWidth; b.classList.add("up");
@@ -3959,6 +4006,7 @@ body.pv-open { overflow: hidden; }
     if (L === 8) { S.mimic = true; S.wax = Math.min(WAX_MAX, (S.wax || 0) + 3); lvNewsQ().push(["mimic", L]); }
     else if (L > 8 && L % 4 === 0) S.wax = Math.min(WAX_MAX, (S.wax || 0) + 1);
     if (L === LV_GATE) { S.cascade = true; lvNewsQ().push(["cascade", L]); }
+    if (L === LV_MAX && !(S.f50 && S.f50.how)) lvNewsQ().push(["fifty", L]);
     stat("level-" + L, "Reached level " + L);
   }
   function lvPerks(L) {
@@ -3970,6 +4018,7 @@ body.pv-open { overflow: hidden; }
     if (L === 8) p.push("learned Mimic, with 3 Mockwax");
     else if (L > 8 && L % 4 === 0) p.push("+1 Mockwax");
     if (L === LV_GATE) p.push("the Cascades wake");
+    if (L === LV_MAX) p.push("the axe has a gift for you");
     return p.join(", ") + ". Story foes rise to meet you; the roads back's old beasts only half do.";
   }
   const LV_ICON = '<svg viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15" fill="#22301f" stroke="#cfa850" stroke-width="1.5"/><circle cx="17" cy="17" r="10" fill="none" stroke="#9fbf7a" stroke-width="1"/><circle cx="17" cy="17" r="6" fill="none" stroke="#9fbf7a" stroke-width="1"/><path d="M17 26V12M12 16l5-5 5 5" fill="none" stroke="#ffd27a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -4052,9 +4101,11 @@ body.pv-open { overflow: hidden; }
   // ---------- level news: scenes for what a level teaches ----------
   async function lvNews() {
     if (lv() > LV_MIN) tip("level");
-    const q = S.lvNews || [];
+    const q = lvNewsQ();
+    if (lv() >= LV_MAX && !(S.f50 && S.f50.how) && !q.some(x => x[0] === "fifty")) q.push(["fifty", LV_MAX]);
     while (q.length) {
       const [what, L] = q.shift();
+      if (what === "fifty") { await f50Scene(); continue; }
       const h = el("div", "part-head sub", '<span class="num">Level ' + L + "</span><h2>" + (what === "adapt" ? "Adaptive Reasoning" : what === "mimic" ? "Mimic" : "The Cascades") + "</h2>");
       scrollNext = true; add(h);
       if (what === "adapt") {
@@ -4083,6 +4134,7 @@ body.pv-open { overflow: hidden; }
 
   // Sheet entries for levels, skills and what you've found.
   function lvItems(items) {
+    f50Items(items);
     const sn = S.stones ? stonesN() : 0;
     if (sn) items.push(["stones", "stone", "Deafstone rubbings ×" + sn, "Rubbings of the tablets the hush couldn't reach, " + sn + " of " + STONE_ALL.length + ". Read them in your journal." + (stoneBoon() ? " You hold all three of this land's stones: +1 on checks that aren't attacks here." : "")]);
     if (S.adapt) {
@@ -4537,10 +4589,11 @@ body.pv-open { overflow: hidden; }
           { key: "toggle", label: cascadeOn() ? "Still the Cascades" : "Open the Cascades again", tag: cascadeOn() ? "creatures go back to what they were" : "Nightmares again, and double gold", plain: true, show: !!S.underdream },
           { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · " + (innCost() ? innCost() + " gold" : ctRank() >= 3 ? "free for a Contender" : "free"), plain: true, show: S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
           { key: "wait", label: calNight() ? "Sleep rough till morning" : "Make camp and wait for dark", tag: calNight() ? "a cold camp by the road · a few HP" : "it's " + CAL_WATCH[calWatch()].toLowerCase() + " · gangs on the Blood-bought Roads lie in wait at night, with fatter purses", plain: true },
+          { key: "f50", label: "Follow the Ring-Chart", tag: "your gift for fifty rings · field " + ((S.f50 && S.f50.n || 0) + 1) + " of " + F50_LEGS + (S.f50 && S.f50.regs && S.f50.regs[S.f50.n] && FIELDS[S.f50.regs[S.f50.n]] ? " · " + FIELDS[S.f50.regs[S.f50.n]].name : ""), plain: true, show: f50Open() },
           { key: "journal", label: "Open your journal", plain: true }
         ]);
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1 }[c] || 0;
+        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
@@ -4552,6 +4605,7 @@ body.pv-open { overflow: hidden; }
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
         else if (c === "cw") await cwHub();
+        else if (c === "f50") await f50Hub();
         else if (c === "seek") await roamSeek();
         else if (c === "crack") await hzCrack();
         else if (c === "stones") await stoneRoads();
@@ -4572,6 +4626,401 @@ body.pv-open { overflow: hidden; }
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); calTo(0); }
     }
   }
+  // ---------- the fiftieth ring: a celebration, and a gift ----------
+  // Reaching level 50 (LV_MAX) fires a celebration over the whole screen (rings, sparks, a fanfare),
+  // then a scene at the next lvNews: you choose how to mark it (a cup with the company, a ring carved
+  // in the haft, or walking on quietly), and the axe's heartgrain splits to show a ring-chart. The
+  // chart is a treasure hunt across five of the battle maps (FIELDS). Each field hides a warden's cache
+  // under one square, and five pitfalls (pits, snares and a sleeper). Standing on a square, the axe
+  // tells you how far the cache is (warmth, steps as the crow walks: |dx| + |dy|) and how many pitfalls
+  // lie round you (hollow, the 8 squares about you). Lamp oil runs out; what you've learned stays.
+  // Four earlier wardens each left one cache; the fifth field holds the Fiftyfold Hoard.
+  // State: S.f50 = { at: day reached, how: feast|carve|quiet, legs: [leg], regs: [region], n: legs done,
+  //   haft, lamp, hoard, towns: [names greeted], falls, digs }. Leg = { cache, hz, seen, safe, marks, dug, done, falls, digs }.
+  // Old saves already at 50 get the scene on their next lvNews.
+  const F50_LEGS = 5, F50_OIL = 24;
+  // A mech line in one span, so its bold words stay inline.
+  const f50M = (h, k) => mech("<span>" + h + "</span>", k);
+  const F50_PREF = ["roots", "desert", "mere", "corrach", "reach"];
+  const f50 = () => S.f50 || null;
+  const f50Open = () => !!(S.roam && S.f50 && S.f50.how && !S.f50.hoard);
+  const F50_WARDENS = [
+    { who: "Sefa Lune", when: "four hundred years ago",
+      letter: "\"Whoever you are: well done. Fifty rings is a long road, and most of it is uphill. I left you what I could carry. Mind the ground on the next one; I didn't.\"",
+      gift: "a purse of old silver and three healing vials, still sealed with green wax" },
+    { who: "Brannoc Weir", when: "three hundred years ago",
+      letter: "\"I found Sefa's cache, so you must have too. I've added a brass cap for the haft. Knock with it and the ground answers more truly. Don't knock on anything that knocks back.\"",
+      gift: "a brass ferrule for the axe-haft, the Sounding Cap" },
+    { who: "Tor Elsing", when: "two hundred years ago",
+      letter: "\"Three of us now. I was always running out of light on these, so here's a lamp that doesn't. And money, because nobody ever complained about money.\"",
+      gift: "a squat horn lantern that burns twice as long, and a bag of coin" },
+    { who: "Maud Ashcombe", when: "ninety years ago",
+      letter: "\"Four. I was the last, I think, until you. The other three wrote that the fifth field has the rest of it. I never got there. My knees went. Get there for me, would you?\"",
+      gift: "a tin of Mockwax packed in moss, two clean bandages, and a heavy purse" }
+  ];
+  function f50Rng(seed) { let s = (seed >>> 0) % 2147483647 || 7; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  const f50Key = (x, y) => x + "," + y;
+  // Lay a field's cache and pitfalls, seeded, with a clear walk from the start to the cache.
+  function f50Lay(reg, seed) {
+    const f = FIELDS[reg], G = f.grid.map(r => r.split("")), sx = f.you[0], sy = f.you[1];
+    for (let t = 0; t < 60; t++) {
+      const rnd = f50Rng(seed + t * 7919), pick = (a) => a[Math.floor(rnd() * a.length)];
+      const cells = [];
+      for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) if (G[y][x] !== "#") cells.push([x, y]);
+      const spots = cells.filter(([x, y]) => G[y][x] !== "~" && Math.abs(x - sx) + Math.abs(y - sy) >= 4);
+      if (!spots.length) continue;
+      const cache = pick(spots), kinds = ["pit", "pit", "pit", "snare", "sleeper"], hz = [];
+      const free = cells.filter(([x, y]) => Math.max(Math.abs(x - sx), Math.abs(y - sy)) > 1 && !(x === cache[0] && y === cache[1]));
+      while (hz.length < kinds.length && free.length) { const i = Math.floor(rnd() * free.length), [x, y] = free.splice(i, 1)[0]; hz.push({ x, y, k: kinds[hz.length], found: false }); }
+      // A clear walk must exist.
+      const bad = new Set(hz.map(h => f50Key(h.x, h.y))), seen = new Set([f50Key(sx, sy)]), q = [[sx, sy]];
+      let ok = false;
+      while (q.length) {
+        const [x, y] = q.shift();
+        if (x === cache[0] && y === cache[1]) { ok = true; break; }
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx, ny = y + dy, k = f50Key(nx, ny);
+          if (nx < 0 || ny < 0 || nx >= FW || ny >= FH || G[ny][nx] === "#" || bad.has(k) || seen.has(k)) continue;
+          seen.add(k); q.push([nx, ny]);
+        }
+      }
+      if (ok) return { cache, hz, seen: { [f50Key(sx, sy)]: 1 }, safe: {}, marks: {}, dug: {}, done: false, falls: 0, digs: 0 };
+    }
+    return { cache: [sx, Math.max(0, sy - 4)], hz: [], seen: { [f50Key(sx, sy)]: 1 }, safe: {}, marks: {}, dug: {}, done: false, falls: 0, digs: 0 };
+  }
+  function f50Regs() {
+    const have = roamRegions().filter(r => FIELDS[r]);
+    const out = F50_PREF.filter(r => have.includes(r));
+    for (const r of have) if (out.length < F50_LEGS && !out.includes(r)) out.push(r);
+    for (const r of Object.keys(FIELDS)) if (out.length < F50_LEGS && !out.includes(r)) out.push(r);
+    return out.slice(0, F50_LEGS);
+  }
+  const f50Warm = (L, x, y) => Math.abs(x - L.cache[0]) + Math.abs(y - L.cache[1]);
+  const f50Hollow = (L, x, y) => L.hz.filter(h => !(h.x === x && h.y === y) && Math.max(Math.abs(h.x - x), Math.abs(h.y - y)) <= 1).length;
+  const f50HzAt = (L, x, y) => L.hz.find(h => h.x === x && h.y === y) || null;
+  const f50OilMax = () => F50_OIL + (S.f50.how === "quiet" ? 6 : 0) + (S.f50.lamp ? 8 : 0);
+  const f50ProbeMax = () => 3 + (S.f50.how === "carve" ? 1 : 0) + (S.f50.haft ? 2 : 0);
+  const F50_HOW = {
+    feast: "You raised a cup with the company. They walk the ring-chart with you, and the first time each field would have you, somebody pulls you back.",
+    carve: "You carved the fiftieth ring into the axe-haft yourself. The haft rings truer for it: one more probe on every field.",
+    quiet: "You told nobody and walked on before dawn. You set out early on every field: half as much lamp oil again."
+  };
+
+  // The moment itself: rings drawn outward, the number climbing to 50, sparks, and a fanfare.
+  function f50Fx() {
+    if (document.querySelector(".f50-fx")) return;
+    const name = esc(S.name || "The Wanderer");
+    const rings = Array.from({ length: 10 }, (_, i) => '<circle r="' + (14 + i * 9) + '" style="animation-delay:' + (0.08 * i).toFixed(2) + 's"/>').join("");
+    const box = el("div", "f50-fx");
+    box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Level 50 reached");
+    box.innerHTML = '<div class="f50-glow"></div><div class="f50-sparks" aria-hidden="true"></div>' +
+      '<div class="f50-card"><svg class="f50-rings" viewBox="-110 -110 220 220" aria-hidden="true"><g>' + rings + '</g></svg>' +
+      '<div class="f50-num" aria-hidden="true">40</div><small>Level 50 · the most there is</small><h2>Fifty Rings</h2>' +
+      "<p>" + name + ", fifty rings in the heartgrain. Every road, every fight, every bad night on cold ground: it all counted, and it's all in there now.</p>" +
+      '<p class="f50-gift">And the axe has something for you.</p>' +
+      '<button type="button" class="primary">Carry on</button></div>';
+    document.body.appendChild(box);
+    const sp = box.querySelector(".f50-sparks"), cols = ["#ffd27a", "#cfa850", "#9fbf7a", "#f7efd8", "#ff9f5a"];
+    if (!reduced) for (let i = 0; i < 46; i++) {
+      const s = document.createElement("i"), a = Math.random() * Math.PI * 2, r = 120 + Math.random() * 260;
+      s.style.setProperty("--dx", (Math.cos(a) * r).toFixed(0) + "px"); s.style.setProperty("--dy", (Math.sin(a) * r).toFixed(0) + "px");
+      s.style.background = cols[i % cols.length]; s.style.animationDelay = (0.5 + Math.random() * 0.9).toFixed(2) + "s";
+      sp.appendChild(s);
+    }
+    const num = box.querySelector(".f50-num");
+    let n = 40;
+    if (reduced) num.textContent = "50";
+    else { const tick = () => { n++; num.textContent = n; if (n < 50) setTimeout(tick, 70 + (n - 40) * 18); else num.classList.add("hit"); }; setTimeout(tick, 400); }
+    SND.fanfare && SND.fanfare();
+    setTimeout(() => SND.cheers && SND.cheers(1.4), 1500);
+    const btn = box.querySelector("button");
+    const close = () => { box.classList.add("out"); setTimeout(() => box.remove(), 350); };
+    btn.onclick = close;
+    box.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    setTimeout(() => btn.focus(), 60);
+    stat("level-50-moment", "Fifty Rings celebration");
+  }
+
+  // The scene: how you mark it, and the chart.
+  async function f50Scene() {
+    if (S.f50 && S.f50.how) return;
+    S.f50 = Object.assign({ at: calDay(), how: "", legs: [], regs: [], n: 0, haft: false, lamp: false, hoard: false, towns: [], falls: 0, digs: 0 }, S.f50 || {});
+    if (!document.querySelector(".f50-fx") && !S.f50.fx) f50Fx();
+    S.f50.fx = true;
+    const h = el("div", "part-head sub f50-head", '<span class="num">Level 50</span><h2>The Fiftieth Ring</h2>');
+    scrollNext = true; add(h);
+    light("gems");
+    await say("You feel it close the way you'd feel a door shut somewhere in a big house: not a sound, exactly, but a change in the air. The fiftieth ring of the heartgrain, all the way round.");
+    const here = company();
+    if (here.includes("burr")) await say("Burr knows before you do. He's on his feet with his tail going, barking at nothing, at everything, and then he puts both front paws on your chest and licks your chin like you've been gone a year.");
+    if (here.includes("tyra")) await say("Tyra looks at you sidelong. \"Something's happened,\" she says. \"You've got the face of somebody who's just been told they're taller than they thought.\" Then she grins. \"Fifty, is it? I'll buy the first round. Don't tell anyone I said that.\"");
+    if (vaelricSpeaks()) await voice("\"Fifty,\" Vaelric says, and for once there's no dryness in it at all. \"I have carried a great many wardens. Very few of them got this far. Fewer still got this far and stayed decent. Well done.\"");
+    await threeCheers("All along the road, from wherever you've been, it feels as though somebody's cheering. Probably they are.");
+    const c = await choose([
+      { key: "feast", label: "Raise a cup with the company", tag: "a long night · they'll watch your back on the chart" },
+      { key: "carve", label: "Carve the fiftieth ring into the axe-haft yourself", tag: "your own mark · the haft rings truer", plain: true },
+      { key: "quiet", label: "Tell nobody, and walk on before dawn", tag: "it's yours · more lamp oil on the chart", plain: true }
+    ]);
+    S.f50.how = c;
+    if (c === "feast") {
+      await say("You find the nearest inn with a fire and a fiddler, and you put more gold on the bar than is sensible, and the whole room drinks to a number most of them don't understand. Somebody sings. It isn't good. It doesn't matter.");
+      if (here.includes("burr") && co().burr) { co().burr.bond = Math.min(5, (co().burr.bond || 0) + 1); await f50M("Burr gets a whole sausage. Bond with Burr +1.", "loot"); }
+      here.filter(id => isMerc(id)).forEach(id => { co().loyal[id] = Math.min(5, (co().loyal[id] || 0) + 1); });
+      if (here.some(id => isMerc(id))) await f50M(here.filter(id => isMerc(id)).map(coName).join(" and ") + " drink to you. Loyalty +1.", "loot");
+    } else if (c === "carve") {
+      await say("You sit by the road with your knife and cut a thin ring all the way round the haft, just above your grip, where your hand will find it. It takes most of an hour. You don't hurry it.");
+      if (vaelricSpeaks()) await voice("\"Nobody has done that before,\" Vaelric says. \"I find I don't mind.\"");
+    } else {
+      await say("You don't tell anybody. You lie awake for a while with it, the way you'd keep a warm stone in your pocket, and then you get up in the dark and go on, and the road is very quiet and entirely yours.");
+    }
+    await say("Then the heartgrain does something it has never done. Along the haft, under your thumb, the wood splits: a hairline, dead straight, along the grain. Out of it slides a slip of pale wood no thicker than paper, rolled tight, warm as a hand.");
+    await say("Unrolled, it's a chart grown into the wood: five fields you've fought on, each drawn in the rings of the grain, and on each field one ring darker than the rest. Under it, in five different hands, five names. Four of them have been crossed out by their own writers. The fifth line is blank.");
+    if (vaelricSpeaks()) await voice("\"Every warden who ever carried me past fifty rings got that,\" Vaelric says. \"There have been four. Each left something for the next. None of them reached the end. I'm told the end is worth it.\"");
+    S.f50.regs = f50Regs();
+    S.f50.legs = S.f50.regs.map((r, i) => f50Lay(r, SLOT * 7777 + calDay() * 31 + i * 1013 + r.length * 97));
+    renderSheet(); save();
+    await f50M("<b>A gift for fifty rings: the Ring-Chart.</b> " + (S.roam ? "From the roads back," : "When the story so far is done, from the roads back,") + " follow it across five battle maps: " + S.f50.regs.map(r => FIELDS[r].name).join(", ") + ". On each, a cache is buried under one square, and pitfalls are hidden in the ground. The axe tells you how far the cache is from where you stand, and how many pitfalls are round you. " + F50_HOW[c], "loot");
+    light("dusk");
+  }
+
+  // The roads back: pick up the chart.
+  async function f50Hub() {
+    const X = S.f50, i = X.n, reg = X.regs[i], L = X.legs[i];
+    if (!reg || !L) { X.hoard = true; return; }
+    const h = el("div", "part-head sub", '<span class="num">The Ring-Chart · field ' + (i + 1) + " of " + F50_LEGS + " · " + REGIONS[reg] + "</span><h2>" + FIELDS[reg].name + "</h2>");
+    scrollNext = true; add(h);
+    const back = document.body.dataset.light;
+    light("dusk");
+    if (!L.tried) {
+      L.tried = true;
+      await say(i === F50_LEGS - 1 ? "The last field on the chart. The darker ring is darker here than on any of the others, nearly black, as if the grain had been pressed very hard in that one place." : "You find the place on the chart easily: the ground you fought on once, drawn in the rings of the wood. One ring in it is darker than the rest.");
+      if (!X.seenRules) { X.seenRules = true; await f50M("<b>How the chart works.</b> Tap a square next to you, then tap it again (or press Step) to walk there; rugged ground, climbing and wading out cost 2 oil. Where you stand, the axe gives two readings: <b>◎ warmth</b>, how many steps the cache is from you (across and up or down added together), and <b>● hollow</b>, how many pitfalls lie in the eight squares round you. <b>Probe</b> a square next to you with the haft to test it safely. <b>Mark</b> squares you think are hollow. <b>Dig</b> where you think the cache is (2 oil). What you learn stays on the chart if your lamp runs dry.", "loot"); }
+    } else await say("You're back on " + FIELDS[reg].name + ", with the chart open on your knee and what you learned last time pencilled on it.");
+    const R = { x: FIELDS[reg].you[0], y: FIELDS[reg].you[1], oil: f50OilMax(), probes: f50ProbeMax(), caught: false, sprung: 0 };
+    for (;;) {
+      const ev = await f50Board(reg, L, R);
+      if (ev.k === "leave") { await say("You fold the chart along its grain and walk off the field. It'll keep."); break; }
+      if (ev.k === "dry") { await say("Your lamp gutters, flares and goes out. You feel your way back the way you came, and the chart in your pocket keeps everything you found."); await f50M("Out of lamp oil. Come back to this field from the roads back; your readings and marks are kept.", "hurt"); break; }
+      if (ev.k === "hz") {
+        const H = ev.h; H.found = true; L.falls++; X.falls = (X.falls || 0) + 1; R.sprung++;
+        if (H.k === "pit") {
+          SND.quake && SND.quake();
+          await hurt(4, 8, "bludgeoning", "The turf was a lid. Under it there's nothing, and then a lot of hard ground all at once: a pit, lined with old stakes gone soft.");
+          R.oil -= 2; await f50M("Climbing out costs 2 oil.", "hurt");
+        } else if (H.k === "snare") {
+          await say("A noose of old rope snaps tight round your ankle and hauls you up into the air, upside down, with the chart flapping out of your coat. It takes you a long time to cut yourself down, swearing.");
+          R.oil -= 3; await f50M("The snare costs you 3 oil.", "hurt");
+        } else {
+          await say("The ground under your boot is warm, and it breathes out. Something has been asleep under the turf here since the last warden came by, and you've just stood on it.");
+          await meetBeast(reg, { roam: true, forced: true });
+        }
+        if (R.oil <= 0) { await f50M("And your lamp is out. The chart keeps what you found.", "hurt"); break; }
+        continue;
+      }
+      if (ev.k === "dig") {
+        L.digs++; X.digs = (X.digs || 0) + 1;
+        if (ev.hit) { await f50Cache(i, reg, L, R); break; }
+        await say(["Stones, roots and a long-dead beetle. Not here.", "A foot down, then two. Nothing but clay. Not here.", "You hit something hard, and your heart jumps, and it's a stone. Not here."][d(3) - 1]);
+        if (d(4) === 1) { await say("And something heard you digging."); await meetBeast(reg, { roam: true, forced: true }); }
+        if (R.oil <= 0) { await f50M("Your lamp is out. The chart keeps what you found.", "hurt"); break; }
+      }
+    }
+    light(back); renderSheet(); save();
+  }
+
+  // One look at the board: resolves with what happened next. The board is the field's own art.
+  function f50Board(reg, L, R) {
+    return new Promise(resolve => {
+      const f = FIELDS[reg], hv = { key: reg, f, G: f.grid.map(r => r.split("")) };
+      const card = el("div", "field-card f50-card-map");
+      card.innerHTML = '<div class="fd-head"><span class="fd-name">' + f.name + ' · the Ring-Chart</span><span class="fd-steps"></span></div><svg class="fd-map" viewBox="0 0 ' + FW * FT + " " + FH * FT + '" role="img" aria-label="Ring-Chart field: ' + f.name + '"></svg><p class="fd-info"></p><div class="fd-foot"><button type="button" class="ghost map-link f50-dig">Dig here · 2 oil</button><button type="button" class="ghost map-link f50-leave">Leave for now</button></div>';
+      const svg = card.querySelector("svg"), info = card.querySelector(".fd-info"), steps = card.querySelector(".fd-steps");
+      svg.innerHTML = fdArt(hv);
+      let sel = null, over = false;
+      const T = FT, adj4 = (x, y) => Math.abs(x - R.x) + Math.abs(y - R.y) === 1, adj8 = (x, y) => Math.max(Math.abs(x - R.x), Math.abs(y - R.y)) === 1;
+      const finish = (ev) => {
+        if (over) return; over = true;
+        card.classList.add("f50-off"); card.querySelectorAll("button").forEach(b => b.disabled = true);
+        resolve(ev);
+      };
+      const reading = (x, y) => "◎ " + f50Warm(L, x, y) + " · ● " + f50Hollow(L, x, y);
+      function draw() {
+        let s = "";
+        for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+          const k = f50Key(x, y), x0 = x * T, y0 = y * T, cx = x0 + T / 2, t = hv.G[y][x], H = f50HzAt(L, x, y);
+          if (t !== "#" && !L.seen[k]) s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + T + '" height="' + T + '" fill="#07090a" opacity="' + (L.safe[k] ? .28 : .5) + '"/>';
+          if (L.safe[k] && !L.seen[k]) s += '<path d="M' + (cx - 7) + " " + (y0 + T / 2) + " l5 5 l10 -11" + '" stroke="#9fbf7a" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>';
+          if (H && H.found) {
+            if (H.k === "pit") s += '<ellipse cx="' + cx + '" cy="' + (y0 + T / 2) + '" rx="20" ry="15" fill="#0a0705" stroke="#3a2a1c" stroke-width="3"/><path d="M' + (cx - 10) + " " + (y0 + 26) + " l3 -8 M" + cx + " " + (y0 + 24) + " l0 -9 M" + (cx + 10) + " " + (y0 + 26) + ' l-3 -8" stroke="#8a6a48" stroke-width="2"/>';
+            else if (H.k === "snare") s += '<circle cx="' + cx + '" cy="' + (y0 + T / 2) + '" r="13" fill="none" stroke="#c9a868" stroke-width="3" stroke-dasharray="5 3"/><path d="M' + (cx + 9) + " " + (y0 + T / 2 - 9) + ' l12 -14" stroke="#c9a868" stroke-width="3"/>';
+            else s += '<ellipse cx="' + cx + '" cy="' + (y0 + T / 2 + 4) + '" rx="22" ry="12" fill="#2a1f14" stroke="#120c07" stroke-width="2"/><text x="' + cx + '" y="' + (y0 + T / 2 + 2) + '" text-anchor="middle" font-size="15" font-family="Alegreya Sans SC, sans-serif" fill="#e8d29a">z z</text>';
+          }
+          if (L.dug[k]) s += '<path d="M' + (cx - 16) + " " + (y0 + T - 14) + " q16 -16 32 0z" + '" fill="#5a4630" stroke="#2a1f14" stroke-width="1.5"/>';
+          if (L.marks[k]) s += '<path d="M' + (x0 + T - 20) + " " + (y0 + 8) + " v20 M" + (x0 + T - 20) + " " + (y0 + 8) + " l12 5 l-12 5" + '" stroke="#e0573f" fill="#e0573f" stroke-width="2"/>';
+          if (L.seen[k]) {
+            const hw = f50Hollow(L, x, y), wm = f50Warm(L, x, y);
+            s += '<g font-family="Alegreya Sans SC, sans-serif" font-weight="700"><circle cx="' + (x0 + 13) + '" cy="' + (y0 + 13) + '" r="10" fill="' + (hw === 0 ? "#2f4a2a" : hw === 1 ? "#5a4a1c" : "#5a231a") + '" stroke="#000" stroke-opacity=".6"/><text x="' + (x0 + 13) + '" y="' + (y0 + 17.5) + '" text-anchor="middle" font-size="13" fill="#f7efd8">' + hw + "</text>" +
+              '<circle cx="' + (x0 + T - 13) + '" cy="' + (y0 + T - 13) + '" r="10" fill="#1c2a30" stroke="#cfa850" stroke-width="1.6"/><text x="' + (x0 + T - 13) + '" y="' + (y0 + T - 8.5) + '" text-anchor="middle" font-size="13" fill="#ffd27a">' + wm + "</text></g>";
+          }
+          if (!over && adj4(x, y) && t !== "#" && !(H && H.found)) s += '<rect x="' + (x0 + 3) + '" y="' + (y0 + 3) + '" width="' + (T - 6) + '" height="' + (T - 6) + '" rx="6" fill="#f3d27a" fill-opacity=".1" stroke="#f3d27a" stroke-opacity=".5" stroke-width="1.5"/>';
+        }
+        if (sel) s += '<rect x="' + (sel[0] * T + 1.5) + '" y="' + (sel[1] * T + 1.5) + '" width="' + (T - 3) + '" height="' + (T - 3) + '" rx="7" fill="none" stroke="#fff" stroke-width="2.5"/>';
+        svg.querySelector(".fd-over").innerHTML = s;
+        svg.querySelector(".fd-toks").innerHTML = '<g class="fd-tok" style="transform:translate(' + (R.x * T + T / 2) + "px," + (R.y * T + T / 2) + 'px)"><ellipse cx="3" cy="9" rx="25" ry="10" fill="#000" opacity=".5"/><circle r="27" fill="url(#fdAura)" class="fd-aura"/><image href="' + markerSrc() + '" x="-24" y="-24" width="48" height="48"/></g>';
+        steps.textContent = "Oil " + Math.max(0, R.oil) + " of " + f50OilMax() + " · Probes " + R.probes;
+        const dg = card.querySelector(".f50-dig");
+        dg.disabled = over || R.oil < 2 || !!L.dug[f50Key(R.x, R.y)];
+      }
+      function here() {
+        const k = f50Key(R.x, R.y);
+        return "<b>You</b>, on " + FD_RULES[hv.G[R.y][R.x]][0].toLowerCase() + ". The axe says <b>◎ " + f50Warm(L, R.x, R.y) + "</b> (the cache is that many steps away, across and up or down added together) and <b>● " + f50Hollow(L, R.x, R.y) + "</b> (pitfalls in the eight squares round you)." + (L.dug[k] ? " You've dug here already." : "");
+      }
+      function tell(x, y) {
+        const k = f50Key(x, y), t = hv.G[y][x], H = f50HzAt(L, x, y);
+        if (x === R.x && y === R.y) { info.innerHTML = here(); return; }
+        let s = "<b>" + FD_RULES[t][0] + "</b>.";
+        if (t === "#") s += " Nobody walks through that.";
+        else if (H && H.found) s += H.k === "pit" ? " An open pit. Not again." : H.k === "snare" ? " A sprung snare, the rope cut." : " The hollow where something slept.";
+        else if (L.seen[k]) s += " You've stood here: " + reading(x, y) + ".";
+        else if (L.safe[k]) s += " You sounded it with the haft: solid.";
+        else s += " Untested.";
+        const btns = [];
+        if (adj4(x, y) && t !== "#" && !(H && H.found)) { const c = fdCost(hv, [R.x, R.y], [x, y]); if (c <= R.oil) btns.push('<button type="button" class="ghost map-link f50-step">Step here · ' + c + " oil</button>"); }
+        if (adj8(x, y) && t !== "#" && !L.seen[k] && !L.safe[k] && !(H && H.found) && R.probes > 0) btns.push('<button type="button" class="ghost map-link f50-probe">Probe with the haft</button>');
+        if (t !== "#" && !L.seen[k] && !(H && H.found)) btns.push('<button type="button" class="ghost map-link f50-mark">' + (L.marks[k] ? "Unmark" : "Mark as hollow") + "</button>");
+        info.innerHTML = s + (btns.length ? " " + btns.join(" ") : "");
+        const b1 = info.querySelector(".f50-step"); if (b1) b1.onclick = () => step(x, y);
+        const b2 = info.querySelector(".f50-probe"); if (b2) b2.onclick = () => probe(x, y);
+        const b3 = info.querySelector(".f50-mark"); if (b3) b3.onclick = () => { if (L.marks[k]) delete L.marks[k]; else L.marks[k] = 1; save(); tell(x, y); draw(); };
+      }
+      function step(x, y) {
+        if (over) return;
+        const c = fdCost(hv, [R.x, R.y], [x, y]); if (c > R.oil) return;
+        const k = f50Key(x, y), H = f50HzAt(L, x, y);
+        R.oil -= c; sel = null;
+        if (H && !H.found) {
+          if (S.f50.how === "feast" && !R.caught) {
+            R.caught = true; H.found = true;
+            const who = company()[0];
+            info.innerHTML = "<b>" + (who ? coName(who) : "Somebody from the inn") + " pulls you back by the belt</b>, just as the ground gives: " + (H.k === "pit" ? "a pit opens where your foot was." : H.k === "snare" ? "a snare whips up through the empty air." : "something under the turf grunts, turns over and goes back to sleep. They'd let it lie.") + " That's the company's catch for this field.";
+            save(); draw(); return;
+          }
+          R.x = x; R.y = y; L.seen[k] = 1; delete L.marks[k]; save(); draw();
+          setTimeout(() => finish({ k: "hz", h: H }), reduced ? 0 : 260);
+          return;
+        }
+        R.x = x; R.y = y; L.seen[k] = 1; delete L.marks[k];
+        save(); info.innerHTML = here(); draw();
+        if (R.oil <= 0) setTimeout(() => finish({ k: "dry" }), reduced ? 0 : 260);
+      }
+      function probe(x, y) {
+        if (over || R.probes <= 0) return;
+        R.probes--;
+        const k = f50Key(x, y), H = f50HzAt(L, x, y);
+        if (H) { H.found = true; delete L.marks[k]; info.innerHTML = "<b>The haft goes straight through.</b> " + (H.k === "pit" ? "A pit, under a skin of turf. You prise the lid off and leave it open." : H.k === "snare" ? "A snare, set to whip. You cut the rope." : "Something under there stirs at the knock, and goes still. You'll walk round it.") + " (Probes left: " + R.probes + ")"; }
+        else { L.safe[k] = 1; delete L.marks[k]; info.innerHTML = "<b>Solid.</b> The haft knocks on good ground. (Probes left: " + R.probes + ")"; }
+        save(); draw();
+      }
+      svg.addEventListener("click", (ev) => {
+        if (over) return;
+        const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+        const m = svg.getScreenCTM(); if (!m) return;
+        const p = pt.matrixTransform(m.inverse()), x = Math.floor(p.x / T), y = Math.floor(p.y / T);
+        if (x < 0 || y < 0 || x >= FW || y >= FH) return;
+        if (sel && sel[0] === x && sel[1] === y && adj4(x, y)) { step(x, y); return; }
+        sel = [x, y]; tell(x, y); draw();
+      });
+      card.querySelector(".f50-dig").onclick = () => {
+        if (over || R.oil < 2) return;
+        const k = f50Key(R.x, R.y); if (L.dug[k]) return;
+        R.oil -= 2; L.dug[k] = 1; save();
+        finish({ k: "dig", hit: R.x === L.cache[0] && R.y === L.cache[1] });
+      };
+      card.querySelector(".f50-leave").onclick = () => finish({ k: "leave" });
+      scrollNext = true; add(card);
+      fdZoom(svg);
+      info.innerHTML = here();
+      draw();
+    });
+  }
+
+  // A cache comes up: a warden's letter and gift, or (on the fifth field) the hoard.
+  async function f50Cache(i, reg, L, R) {
+    const X = S.f50;
+    L.done = true;
+    if (L.digs === 1) grant("f50sure");
+    if (!R.sprung && !L.falls) grant("f50clean");
+    grant("f50leg");
+    SND.cheers && SND.cheers(0.8);
+    if (i < F50_LEGS - 1) {
+      const W = F50_WARDENS[i];
+      await say("The spade hits wood. A box, the size of a loaf, in a skin of old wax, with a name burned into the lid: <b>" + W.who + "</b>, " + W.when + ".");
+      await say("Inside, on top, a letter. " + W.letter, "voice");
+      await say("Under it: " + W.gift + ".");
+      if (i === 0) { S.coins += 300; S.potions = (S.potions || 0) + 3; await f50M("Gain <b>300 gold</b> and <b>3 healing vials</b>.", "loot"); }
+      if (i === 1) { X.haft = true; S.coins += 200; await f50M("Gain <b>the Sounding Cap</b>: 2 more probes on every field of the chart from now on. And 200 gold.", "loot"); }
+      if (i === 2) { X.lamp = true; S.coins += 400; await f50M("Gain <b>Tor Elsing's lantern</b>: 8 more lamp oil on every field from now on. And <b>400 gold</b>.", "loot"); }
+      if (i === 3) { S.wax = WAX_MAX; S.dress = (S.dress || 0) + 2; S.coins += 500; await f50M("Gain a full tin of <b>Mockwax</b> (" + WAX_MAX + "), <b>2 bandages</b> and <b>500 gold</b>.", "loot"); }
+      await say("Under the four names on the chart, " + W.who + "'s is crossed out, as it always was. But next to it now, very faint, in a hand you know is your own though you never wrote it, there's a tick.");
+      X.n = i + 1;
+      await f50M("The chart's next field: <b>" + FIELDS[X.regs[X.n]].name + "</b>, in " + REGIONS[X.regs[X.n]] + ".");
+      renderSheet(); save();
+      return;
+    }
+    // The fifth field: something guards it.
+    await say("The spade goes in, and the whole field shrugs. Round the square you're standing on, the turf cracks in a perfect ring, fifty paces across, and out of the ring climbs whatever the four wardens could never get past.");
+    await meetBeast(reg, { roam: true, forced: true, pack: true });
+    light("gems");
+    await say("When it's quiet, you dig the rest of the way down, and the spade goes through into air. Under the field there's a round room lined with wood, all one piece, grown not built, every wall striped with rings. In the middle stand four chests, one for each of them, and a fifth that's empty, with its lid open, waiting.");
+    await say("Sefa's has a mantle in it, grey-green and heavy, woven from something that was a root once. Brannoc's, a pair of boots with soles like bark. Tor's, gold, a great deal of it, loose. Maud's, a little bundle of vials, and a note: <i>\"I never got here. So I asked Tor's grandson to bring this down for me. It's for you.\"</i>");
+    await threeCheers("Four wardens, across four hundred years. If they could see you now, they'd be cheering loudest of anyone.");
+    S.f50mantle = true; S.maxHp += 12; S.hp = S.maxHp;
+    S.f50boots = true;
+    S.coins += 1500; S.potions = (S.potions || 0) + 6;
+    S.title = "Ringwarden";
+    X.hoard = true; X.n = F50_LEGS; X.hoardDay = calDay();
+    renderSheet();
+    await f50M("Gain <b>the Fiftyfold Mantle</b> (+2 AC, +12 max HP) and <b>the Wardstep Boots</b>: <b>3 steps</b> a round on every battle map, not 2.", "loot");
+    await f50M("Gain <b>1,500 gold</b> and <b>6 healing vials</b>. And the chart gives you a name, in your own hand on the fifth line: <b>Ringwarden</b>.", "loot");
+    if (X.how === "feast") await say("You put the empty fifth chest back on its own, with its lid open. Somebody will need it after you. On the way out you stop at the inn where you held the feast, and they've kept your cup on a nail behind the bar.");
+    else if (X.how === "carve") await say("Before you go, you take your knife and cut a thin ring inside the lid of the empty fifth chest, the same as the one on the haft. Then you leave it open, waiting, for whoever's next.");
+    else await say("You leave the fifth chest open and empty, for whoever comes next, and climb out into the morning without telling anybody, the way you came.");
+    if (vaelricSpeaks()) await voice("\"Five,\" Vaelric says. \"Finally. They'd be pleased with you. I am.\"");
+    grant("f50hoard");
+    stat("f50-hoard", "The Fiftyfold Hoard");
+    save();
+  }
+
+  // Towns on the roads back know, once.
+  async function f50Town(T) {
+    const X = S.f50;
+    if (!X || !X.hoard || T.kind !== "town") return;
+    X.towns = X.towns || [];
+    if (X.towns.includes(T.name)) return;
+    X.towns.push(T.name);
+    await say(X.how === "feast" ? "Somebody at the door of " + T.name + "'s inn recognises you from the night of the fifty rings and raises a cup at you down the length of the street. \"Ringwarden!\" Half the street raises theirs too, without knowing why."
+      : X.how === "carve" ? "A child in " + T.name + " points at the ring cut in your axe-haft and asks what it's for. You tell them. They go away and come back with a stick, and a ring cut round it, very badly, with a kitchen knife."
+      : "Nobody in " + T.name + " knows what the grey-green mantle means. But an old woman by the well looks at it a long time, and nods to you, very slowly, as if she does.");
+    save();
+  }
+
+  // The sheet and the journal.
+  function f50Items(items) {
+    if (S.f50mantle) items.push(["f50mantle", "cloak", "The Fiftyfold Mantle", "Grey-green, heavy, woven from something that was a root once. Left for the fifth warden by the four before. +2 AC, +12 max HP."]);
+    if (S.f50boots) items.push(["f50boots", "paw", "The Wardstep Boots", "Soles like bark, that know the ground before you do. 3 steps a round on every battle map, not 2."]);
+    const X = S.f50;
+    if (X && X.how && !X.hoard) items.push(["f50chart", "map", "The Ring-Chart", "Grown in the axe's heartgrain at fifty rings. Field " + (X.n + 1) + " of " + F50_LEGS + ": " + (FIELDS[X.regs[X.n]] ? FIELDS[X.regs[X.n]].name : "") + "." + (X.haft ? " Sounding Cap fitted." : "") + (X.lamp ? " Tor Elsing's lantern." : "")]);
+  }
+  function f50Section(rs) {
+    const X = rs && rs.f50;
+    if (!X || !X.how) return "";
+    const legs = (X.regs || []).map((r, i) => "<li>" + (FIELDS[r] ? FIELDS[r].name : r) + ": " + (i < X.n ? (i < F50_LEGS - 1 ? F50_WARDENS[i].who + "'s cache" : "the Fiftyfold Hoard") : i === X.n && !X.hoard ? "the next field" : "still ahead") + "</li>").join("");
+    return '<section class="j-f50"><h3>The Fiftieth Ring · Slot ' + SLOT + "</h3>" +
+      '<p class="j-sub">Reached on ' + calDate(X.at || 0) + ", year " + calYear(X.at || 0) + ". " + F50_HOW[X.how] + "</p>" +
+      '<ol style="margin:6px 0 0;padding-left:20px">' + legs + "</ol>" +
+      '<p class="j-note" style="margin-top:8px">' + (X.hoard ? "You finished the chart and wrote your name on its fifth line: Ringwarden." : (X.n || 0) + " of " + F50_LEGS + " caches dug up.") + " Pitfalls sprung: " + (X.falls || 0) + ". Holes dug: " + (X.digs || 0) + ".</p></section>";
+  }
+
   // ---------- the calendar: days, months and seasons ----------
   // Time is atmosphere, not a timer: nothing runs out and nothing is missed. Every part moves the clock
   // on a watch (dawn, day, dusk, night), the journey between chapters takes days, and a rest takes
@@ -5492,6 +5941,7 @@ body.pv-open { overflow: hidden; }
     await say(T.intro);
     if (T.reg === "reach" && T.kind === "town") await seaTownLine();
     await echoTown(T);
+    await f50Town(T);
     await hzTownIntro(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
     await burrLine(30);
@@ -12713,6 +13163,7 @@ body.pv-open { overflow: hidden; }
     return () => pick;
   }
   const fdState = () => { const D = S.fd = S.fd || {}; for (const [k, v] of [["seen", false], ["won", 0], ["fields", []], ["w", false], ["charges", 0], ["shoves", 0], ["traps", 0], ["turned", 0]]) if (D[k] === undefined) D[k] = v; return D; };
+  const fdSteps = () => S.f50boots ? 3 : 2;
   const fdOn = (F) => !!(F.road && F.reg && FIELDS[F.reg] && !F.company && !S.noField);
   const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
   const fdTile = (fd, x, y) => x < 0 || y < 0 || x >= FW || y >= FH ? null : fd.G[y][x];
@@ -12874,7 +13325,7 @@ body.pv-open { overflow: hidden; }
     if (W) k += at(W, '<ellipse cx="4" cy="10" rx="26" ry="11" fill="#000" opacity=".5"/><circle r="34" fill="none" stroke="' + (W.grudge ? "#ff5a3c" : "#e8c56a") + '" stroke-width="2" stroke-dasharray="' + (W.grudge ? "3 3" : "10 5") + '" class="' + (W.grudge ? "fd-mad" : "fd-calm") + '"/><g transform="scale(1.12)">' + fdMedal(W.emb, "wild") + "</g>" + bar(W.hp / W.max, -42, "#b07cd6"));
     k += at(fd.you, '<ellipse cx="3" cy="9" rx="25" ry="10" fill="#000" opacity=".5"/><circle r="27" fill="url(#fdAura)" class="fd-aura"/><image href="' + markerSrc() + '" x="-28" y="-28" width="56" height="56"/>' + (fd.you.stuck ? sunk : ""));
     fd.svg.querySelector(".fd-toks").innerHTML = k;
-    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of 2" + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? " · charging" : "") : "";
+    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of " + fdSteps() + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? " · charging" : "") : "";
   }
   function fdInfo(fd, x, y) {
     const t = fdTile(fd, x, y), R = FD_RULES[t], who = fdAt(fd, x, y);
@@ -12969,7 +13420,7 @@ body.pv-open { overflow: hidden; }
   async function fdStart(F, st, B) {
     const D = fdState(), f = FIELDS[F.reg];
     const fd = st.fd = { key: F.reg, f, G: f.grid.map(r => r.split("")), you: { x: f.you[0], y: f.you[1] }, foe: { x: f.foe[0], y: f.foe[1] }, emb: BEAST_EMB[B && B.id] || "canine",
-      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: 2, mv: [], live: false, wd: null, bow: 0 };
+      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(), mv: [], live: false, wd: null, bow: 0 };
     if (!D.fields.includes(F.reg)) D.fields.push(F.reg);
     if (D.fields.length >= 6) grant("fdsix");
     // A wanderer: 20% of road fights, 30% at night, never twice running.
@@ -13085,7 +13536,7 @@ body.pv-open { overflow: hidden; }
   // At the top of each round: fresh steps, the wanderer, and the map brought down to the menu.
   async function fdRound(F, st) {
     const fd = st.fd; if (!fd) return;
-    fd.steps = 2; fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
+    fd.steps = fdSteps(); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
     if (fd.wdAt && st.round === fd.wdAt && !fd.wd && FOE.hp > 0) await fdWdEnter(F, st);
     else if (fdWd(fd) && st.round > fd.wdAt) await fdWdTurn(F, st);
     if (st.fled) return;
