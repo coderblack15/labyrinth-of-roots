@@ -678,6 +678,28 @@ body.hn-dark .story > *:not(.hn-vision):not(:last-child) { opacity: .35; transit
 .hn-masks { display: grid; gap: 6px; }
 .hn-mrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .hn-mrow button { min-width: 110px; }
+/* The Unmapped: the redrawing grid, the wrong-country road, the Quire's legend */
+.un-grid { display: grid; gap: 3px; justify-content: center; align-items: end; margin: 6px auto; }
+.un-grid .un-c { font-family: var(--label); font-size: .78rem; color: var(--muted); text-align: center; line-height: 1.15; padding-bottom: 2px; }
+.un-grid .un-r { text-align: right; padding: 0 4px 0 0; align-self: center; white-space: nowrap; }
+.un-grid .un-c.ok { color: var(--gold); }
+.un-grid button { width: 36px; height: 36px; min-width: 0; min-height: 0; padding: 0; margin: 0; border-radius: 3px; background: #e9dcc0; border: 1px solid #b9a57e; color: #2a2014; font-size: 1rem; line-height: 1; }
+.un-grid button.ink { background: #1f1a14; border-color: #1f1a14; }
+.un-grid button.given { background: #4a3520; border-color: var(--gold); }
+.un-grid button.mark::after { content: "·"; color: #7a6a4a; font-size: 1.3rem; }
+.un-grid button.known { background: #d6c9ad; } .un-grid button.known::after { content: "×"; color: #9a8a6a; font-size: .85rem; }
+.un-grid button.blot { background-image: radial-gradient(circle at 42% 46%, rgba(60,40,25,.45) 0 28%, transparent 31%); }
+.un-ink { text-align: center; font-family: var(--label); letter-spacing: .05em; font-size: .9rem; }
+button.un-mode.on { border-color: var(--gold); color: var(--gold); }
+.un-order { display: grid; gap: 5px; max-width: 360px; }
+.un-order button { text-align: left; } .un-order button small { color: var(--muted); margin-right: 6px; }
+.un-order button.on { border-color: var(--gold); color: var(--gold); }
+.un-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; margin: 6px 0; }
+.un-word { display: flex; gap: 3px; }
+.un-glyph { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 28px; }
+.un-glyph .g { font-size: 1.3rem; color: var(--gold); line-height: 1.1; }
+.un-glyph .l { font-family: var(--label); font-size: .9rem; height: 30px; line-height: 30px; }
+.un-glyph button { width: 28px; height: 30px; min-width: 0; min-height: 0; padding: 0; font-family: var(--label); }
 .lockhist { font-family: var(--label); letter-spacing: .1em; line-height: 1.7; font-size: .95rem; }
 .pgrid.maze { gap: 0; }
 .pgrid.maze button { width: 42px; height: 42px; border-radius: 0; border-color: var(--gold); font-size: 1rem; }
@@ -1335,7 +1357,7 @@ body.pv-open { overflow: hidden; }
 
 <header class="hero" id="play">
   <div>
-    <p class="eyebrow">An adventure in seventy-six parts · d20</p>
+    <p class="eyebrow">An adventure in ninety parts · d20</p>
     <h2 class="title">Before You Go Down</h2>
     <p class="credit">Created by: Adrian Blackshire and Claude</p>
     <p class="lede">Far below an old ceremonial road lies a labyrinth grown from living roots, carved with druidic runes and guarded long ago by a warden named Vaelric. Travelers say nothing that goes down there comes back up. You are a lone adventurer with a pack, a belt knife and a flint, and you are going down anyway.</p>
@@ -1522,10 +1544,18 @@ body.pv-open { overflow: hidden; }
       <span class="stat-label hk-x">The masks</span>
       <span class="stat-val hk-x" id="hnMasks">unknown</span>
     </div>
+    <div class="lw" id="unBox" hidden>
+      <span class="stat-label">Millpond ink</span>
+      <span class="stat-val" id="unInk">26 drops</span>
+      <div class="huntbar"><span id="unInkBar" style="width:100%"></span></div>
+      <span class="note" id="unInkNote"></span>
+      <span class="stat-label hk-x">Drawn back</span>
+      <span class="stat-val hk-x" id="unBack">none yet</span>
+    </div>
     <div class="lw" id="unbalBox" hidden>
       <span class="stat-label">The world</span>
       <span class="stat-val">The Visceral Realm</span>
-      <span class="note">The Hinge is broken and so is the balance: foes have more HP and hit harder, Dread comes faster, and Hinge remnants hold the roads. The roads back pay a quarter more gold, and good weapons drop more often.</span>
+      <span class="note" id="unbalNote">The Hinge is broken and so is the balance: foes have more HP and hit harder, Dread comes faster, and Hinge remnants hold the roads. The roads back pay a quarter more gold, and good weapons drop more often.</span>
     </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
@@ -1676,7 +1706,7 @@ body.pv-open { overflow: hidden; }
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   let sdNoSave = false; // the Inside the Axe memory isn't saved
   function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (v.part === 75 && !v.roam && v.pz && v.pz.done) v.part = 76; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (v.part === 75 && !v.roam && v.pz && v.pz.done) v.part = 76; if (v.part === 82 && !v.roam && v.hn && v.hn.done) v.part = 83; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1888,6 +1918,12 @@ body.pv-open { overflow: hidden; }
         every(sc, 10, 22, () => { for (let i = 0; i < 6; i++) hiss(sc.out, { f: 2400, q: 3, a: 0.003, dec: 0.05, vol: 0.03, at: i * 0.09 }); });
         every(sc, 20, 40, () => bell(sc.out, hz(pick([58, 61])), 0.02, 5));
       },
+      unmapped(sc) {    // the Unmapped: almost nothing. Thin high air, a nib scratching somewhere, a far small bell
+        wind(sc, { type: "highpass", cut: 2600, q: 0.4, vol: 0.018, sweep: 400, rate: 0.02 });
+        drone(sc, [60, 67], { cut: 900, vol: 0.012, wob: 0.01 });
+        every(sc, 6, 14, () => { const n = 4 + Math.floor(Math.random() * 4); for (let i = 0; i < n; i++) hiss(sc.out, { f: 5200, q: 6, a: 0.002, dec: 0.03, vol: 0.02, at: i * 0.07 }); });
+        every(sc, 30, 60, () => bell(sc.out, hz(pick([79, 83])), 0.008, 6));
+      },
       tithe(sc) {       // the Reach: swell under the hull, wind in the rigging, timbers creaking, and the slow flat clank of a count-bell
         drone(sc, [41, 49], { cut: 300, vol: 0.035, wob: 0.03 });
         wind(sc, { type: "bandpass", cut: 700, q: 0.8, vol: 0.06, sweep: 400, rate: 0.05 });
@@ -2046,10 +2082,10 @@ body.pv-open { overflow: hidden; }
     ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
     ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75],
-    ["Half the East", "hinge", 76, 82]
+    ["Half the East", "hinge", 76, 82], ["The Unmapped", "unmapped", 83, 89]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "hnmap", "hnreaped", "contender", "roadname", "colours"]);
+  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "hnmap", "hnreaped", "unink", "unplaces", "contender", "roadname", "colours"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -2145,7 +2181,7 @@ body.pv-open { overflow: hidden; }
 
   function roman(n) {
     let out = "";
-    [[50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]].forEach(([v, r]) => { while (n >= v) { out += r; n -= v; } });
+    [[100, "C"], [90, "XC"], [50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]].forEach(([v, r]) => { while (n >= v) { out += r; n -= v; } });
     return out;
   }
   function dur(ms) {
@@ -2228,6 +2264,7 @@ body.pv-open { overflow: hidden; }
     h += seaSection(rs);
     h += duelSection(rs);
     h += hnSection(rs);
+    h += unSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -2252,6 +2289,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "73", name: "The Unmapped", date: "11 Nov 2026", items: [
+      "<b>A new chapter after Half the East, Parts LXXXIV–XC.</b> Where the Hinge rang the east blank, the land didn't die. It went <b>unmapped</b>: roads end mid-stride, the right hills turn up in the wrong order, and people are missing from memory as well as from the ground.",
+      "<b>Redrawing.</b> With a jar of millpond ink, draw the lost places back square by square, from the counts their rows and columns remember. Every square costs a drop, and there isn't enough for all of them. Scrape a square and the place comes back <i>wrong</i>. What you don't draw stays gone for good, and the world remembers every one.",
+      "It reads your Half the East save: how much of the east went, Ysolt woken (she draws with you, and it costs her) or dreaming (her map draws on its own, and one night it draws Corvane), the lantern (the Reaped ask you for things, or you meet them in the white, remembered wrong), and Vaelric (he roots a line for you, or remembers one from inside the lantern).",
+      "<b>The last fight depends on the bell.</b> Broken: the Unmapped stands up and tries to rub you out. Turned: Idony Rusk and the Hinge's last households wait in a leaning house. Kept: every faction wants the rope, and the Bell-Takers come for it. More puzzles: the wrong-country road and the Quire's legend.",
+      "<b>The Visceral Realm, explained</b>: the whole realm is leaning into the hole. And at the end, the paper house, the First Sheet, and the Quire, who drew the realm still. The last of them wanted it unbalanced, and he's drawing a new coast at the edge of the world. The story past level 40 starts there. Twelve new feats in <b>The Unmapped</b>."] },
     { ver: "72", name: "Half the East", date: "11 Nov 2026", items: [
       "<b>A new chapter after the Black Tithe, Parts LXXVII–LXXXIII.</b> At Stillwater a Cascade rises out of the still water, and when you cut it down, one silver thread ties itself into a message in your palm: a place east of Rahdaria, and a name. Ysolt, a mapmaker who has slept in a Cascade for eleven years, drawing what it shows her.",
       "Her newest map of the east is half blank, and the blank is a line: <b>the Hinge</b>, the houses the realm turns on, mean to lean every Cascade in the realm onto the lands between Rahdaria and Sulmara, and blame the Bathyr for it. The leagues still drawn on her map are your clock.",
@@ -2467,7 +2510,11 @@ body.pv-open { overflow: hidden; }
     hinge: { at: [150, 262], parts: { 76: [40, 196], 79: [176, 240], 81: [176, 240], 82: [150, 262] }, clear: [[150, 262, 40], [180, 238, 30]],
       road: [[96, 312], [124, 290], [150, 264], [178, 240]],
       art: [["hills", 160, 250, .7], ["village", 150, 266, .8]],
-      labels: [["Ostle Ford", 150, 290, 10, "s"], ["Gauntry", 186, 226, 10, "s"], ["the Ostle", 120, 252, 9, "s"]] }
+      labels: [["Ostle Ford", 150, 290, 10, "s"], ["Gauntry", 186, 226, 10, "s"], ["the Ostle", 120, 252, 9, "s"]] },
+    unmapped: { at: [282, 238], parts: { 83: [196, 236], 88: [290, 236], 89: [296, 234] }, clear: [[276, 238, 42]],
+      road: [[188, 228], [216, 234], [250, 238], [284, 236]],
+      art: [["blank", 276, 240, 1]],
+      labels: [["The Unmapped", 268, 216, 11, ""], ["the paper house", 300, 262, 9, "s"]] }
   };
   const MAP_SEEN = "lor-map-seen";
   const INK = "#3b2a18", INK2 = "#6b5434", PAPER = "#dcc8a0", WATER = "#5d7774", GLASS = "#5f9a84", AMBER = "#c58a2c";
@@ -2477,6 +2524,8 @@ body.pv-open { overflow: hidden; }
     return d;
   };
   const MAP_ART = {
+    blank: () => '<path d="M-34 -10q6-14 22-12t30 2q16 4 14 16t-10 18q-16 8-32 4t-26-10q-6-8 2-18z" fill="#f4ecd8" fill-opacity=".85" stroke="' + INK2 + '" stroke-width="1" stroke-dasharray="3 3"/>' +
+      '<path d="M22 6v-9l4-4 4 4v9z" fill="#fffaf0" stroke="' + INK + '" stroke-width=".9"/><path d="M-22 4h10M-6 -2h8" stroke="' + INK2 + '" stroke-width=".8" opacity=".6"/>',
     arch: () => '<path d="M-15 8V-6a15 15 0 0 1 30 0V8" fill="none" stroke="' + INK + '" stroke-width="2.4"/>' +
       '<path d="M-19 8h38M-15 -2h-4M15 -2h4" stroke="' + INK + '" stroke-width="1.6"/>' +
       '<path d="' + spiral(2.5, 9) + '" transform="translate(0 -3)" fill="none" stroke="' + INK + '" stroke-width="1.3"/>',
@@ -2822,6 +2871,18 @@ body.pv-open { overflow: hidden; }
     { id: "hnwrath", name: "The Wrathbrand", desc: "Earn Corvane's blade with a strong showing.", test: () => false },
     { id: "hnbest", name: "Nothing Left Undone", desc: "Finish Half the East with a near-perfect showing.", test: () => false },
     { id: "hnremnant", name: "Visceral", desc: "Break a barricade of Hinge remnants on the roads back.", test: () => false },
+    { id: "unfirst", name: "Half a Milestone", desc: "Draw the milestone at the edge of the white back true.", test: () => false },
+    { id: "unredraw", name: "What's Drawn Is So", desc: "Draw a lost place back true.", test: () => false },
+    { id: "unwrong", name: "Wrong Country", desc: "Draw a lost place back wrong.", test: () => false },
+    { id: "unthree", name: "Mapmender", desc: "Draw three lost places back in one journey.", test: () => false },
+    { id: "unorder", name: "The Road-Song", desc: "Walk the wrong country in the right order.", test: () => false },
+    { id: "unlegend", name: "The Quire's Hand", desc: "Read the Quire's legend off the survey stone.", test: () => false },
+    { id: "unstill", name: "Unwritten", desc: "Beat the Unwriting.", test: () => false },
+    { id: "unturn", name: "The Last Households", desc: "Bring Strand House down on the Hinge's heirs.", test: () => false },
+    { id: "unkeep", name: "Nobody Takes the Bell", desc: "Beat Bastia Grell and the Bell-Takers.", test: () => false },
+    { id: "undone", name: "The First Sheet", desc: "Finish The Unmapped.", test: () => false },
+    { id: "unnib", name: "The Quire's Nib", desc: "Earn the Quire's nib with a strong showing.", test: () => false },
+    { id: "unbest", name: "Nothing Left White", desc: "Finish The Unmapped with a near-perfect showing.", test: () => false },
     { id: "seafirst", name: "Blue Water", desc: "Make a voyage in a ship of your own.", test: () => false },
     { id: "seawaters", name: "Every Water", desc: "Sail all five waters of the Open Reach.", test: () => false, prog: () => [S.sea ? Object.keys(SEA_WATERS).filter(k => S.sea.seen[k]).length : 0, 5] },
     { id: "seaduel", name: "Strike Your Colours", desc: "Make a rival captain strike to you.", test: () => false },
@@ -2959,7 +3020,9 @@ body.pv-open { overflow: hidden; }
     { id: "tactics", name: "Tactical Advantage", ver: "23", desc: "Company battles on the grid: boardings, caravans and raiders, with your whole company on the map.",
       ids: ["tacfirst", "tacdeck", "tacroad", "tactwar"] },
     { id: "hinge", name: "Half the East", ver: "24", desc: "A message in a Cascade thread, the sleeping mapmaker, the Hinge, Fury bouts, the Reaping, and the Visceral Realm.",
-      ids: ["hnfury", "hnrelent", "hnrage", "hnmasks", "hntowers", "hnstarved", "hnfree", "hnstill", "hnturn", "hnkeep", "hndone", "hnwrath", "hnbest", "hnremnant"] }
+      ids: ["hnfury", "hnrelent", "hnrage", "hnmasks", "hntowers", "hnstarved", "hnfree", "hnstill", "hnturn", "hnkeep", "hndone", "hnwrath", "hnbest", "hnremnant"] },
+    { id: "unmapped", name: "The Unmapped", ver: "25", desc: "Redrawing the lost east with millpond ink, wrong country, the Quire's legend, and the First Sheet.",
+      ids: ["unfirst", "unredraw", "unwrong", "unthree", "unorder", "unlegend", "unstill", "unturn", "unkeep", "undone", "unnib", "unbest"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -3176,6 +3239,7 @@ body.pv-open { overflow: hidden; }
     sdItems(items);
     pzItems(items);
     hnItems(items);
+    unItems(items);
     seaItems(items);
     bnItems(items);
     lvItems(items);
@@ -3193,7 +3257,8 @@ body.pv-open { overflow: hidden; }
     renderSd();
     renderPz();
     renderHn();
-    { const u = $("unbalBox"); if (u) u.hidden = !unbal(); }
+    renderUn();
+    { const u = $("unbalBox"); if (u) u.hidden = !unbal(); const n = $("unbalNote"); if (n && S.unm && S.unm.done) n.textContent = "The Hinge is broken and so is the balance, and the whole realm leans into the Unmapped: foes have more HP and hit harder, Dread comes faster, and Hinge remnants hold the roads. The roads back pay a quarter more gold, and good weapons drop more often."; }
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -3345,6 +3410,10 @@ body.pv-open { overflow: hidden; }
     towers: ["The five towers", "Each tower takes you a day, and you have three (two, if Corvane still has the west half of the map). Each day one of the allies your earlier choices earned you (the Bathyr, your crew or the Saltwrit, the terrace folk, Varro's archers, a sellsword) can take another. Every tower left standing feeds the last fight, and the Leaning."],
     fury: ["Fury bouts", "No turns: attack without stopping. Every stroke that lands fills <b>Fury</b>, and a different stroke from your last two fills it faster. They strike back only when you hesitate (watch the bar). When they wind up (a red ring), draw a <b>loop</b> to catch it. At full Fury, <b>Unleash</b> (or Space): for a few seconds every swipe lands for your weapon's full dice. Then you're winded. A reader blocks the same stroke three times running."],
     reaping: ["The Reaping", "Corvane holds souls: the meter fills every round, and with his own men when they fall. At six he spends them all on the Reaping, and you see every one. Speak the names of the dead (−2), and anything you carry from earlier chapters for the dead may help. Brace when it's close: +5 on the save, and half. Every Reaping that lands costs the east a league."],
+    redraw: ["Redrawing", "The numbers by each row and column are its runs of ink, in order. Tap to ink a square (a drop each); tap an inked square to scrape it (the drop's gone, and a blot means the place comes back <b>wrong</b>). <b>Mark blank</b> is free. Some squares are given: by Ysolt, her map, and what the dead remember. Run dry with three quarters drawn and it comes back wrong; with less, it stays gone. Anything not drawn back by the margin stays gone for good."],
+    unwrite: ["The Unwriting", "Your outline is the meter: it fades every round, faster if more places stayed gone, and when it's gone it hurts. Redraw yourself (3 drops), name a place you drew back (each once: 2d8 and some outline back), or let Vaelric root you."],
+    lean: ["The leaning house", "Every other round the house leans and comes down: a Dexterity save or 3d8, and it takes one of them too. Brace in a doorway to stand the next one, or draw a door (2 drops) to send it onto them."],
+    rope: ["The rope", "They haul on the bell-rope every round (every other round if your allies hold it). Hold it with a Strength check and the next haul fails. Three slips and they ring the Gnomon at you. If you kept it, you can ring it yourself, once, and the lean doesn't care what it lands on."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -3434,6 +3503,8 @@ body.pv-open { overflow: hidden; }
     if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
     if (!atk && hasGear("ysoltmap") && /^(Survival|Perception)/.test(label)) { mod += 1; label += " (+1 Ysolt's map)"; }
+    if (!atk && hasGear("quirenib") && /^(Investigation|Survival|Perception)/.test(label)) { mod += 1; label += " (+1 the Quire's nib)"; }
+    if (!atk && hasGear("firstsheet") && /^(Investigation|Survival)/.test(label)) { mod += 1; label += " (+1 the First Sheet)"; }
     if (!atk) { const dx = (hasGear("mantle") && /Investigation|Insight/.test(label) ? 1 : 0) + (S.bg === "historian" && /Investigation/.test(label) ? 1 : 0); if (dx) { mod += dx; label += " (+" + dx + (hasGear("mantle") ? " Mantle" : " Historian") + ")"; } }
     if (!atk && S.grapple && /^(Athletics|Climbing|Acrobatics)/.test(label) && /climb|rope|ladder|chain|scaffold|Brow|arches|gaps|roof|wall|pitch|rail/i.test(label)) { adv = !dis; dis = false; mod += 2; label += " (+2 Threadfang's line)"; }
     const wm = atk ? wxYou() : 0;
@@ -5193,7 +5264,7 @@ body.pv-open { overflow: hidden; }
   const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
   const CAL_MD = 12, CAL_YEAR = 144;
   // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
-  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4];
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3];
   // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
   const CAL_FAIRS = [
     { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
@@ -5606,7 +5677,7 @@ body.pv-open { overflow: hidden; }
     hnEast: { ch: "Half the East", get why() { return { whole: "You kept the east whole.", scarred: "You stopped the Leaning, but not before it scarred the east.", half: "Half the east went into the dream on your watch." }[S.hn && S.hn.east] || "You fought the Hinge."; }, where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.done) },
     hnYsolt: { ch: "Half the East", why: "You woke Ysolt in the millpond at Ostle Ford.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.ysolt === "wake") },
     hnLantern: { ch: "Half the East", why: "You kept Corvane's lantern, and the dead in it.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.souls === "kept") },
-    hnBell: { ch: "Half the East", why: "You kept the Gnomon's great bell, and the realm knows it.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.ending === "keep") }
+    hnBell: { ch: "Half the East", why: "You kept the Gnomon's great bell, and the realm knows it.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.ending === "keep") && !(S.unm && S.unm.rope && S.unm.rope !== "kept") }
   };
   const wr = () => (S.echo = S.echo || { seen: [], paid: [] });
   const echoSeen = (id) => !!(S.echo && S.echo.seen.includes(id));
@@ -5640,6 +5711,7 @@ body.pv-open { overflow: hidden; }
   const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
   // A town visit, after its intro.
   async function echoTown(T) {
+    if (T.reg === "rahdaria") await unEchoTown(T);
     if (T.reg === "rahdaria" && S.hn && S.hn.done) {
       if (echoDue("hnEast")) { await echoMark("hnEast"); await say({ whole: "In the market they're selling Ostle bread again, and somebody's painted a tower falling over on the inn sign. Children play Hingebreaker in the street, and argue about who has to be Corvane.", scarred: "The bread's dearer since the east was scarred. A woman at a stall tells you her sister lived at Hobble Cross. She doesn't say anything else, and she gives you the loaf for nothing.", half: "There's a queue for bread that goes round two terraces. The Bathyr camp on the salt flats has soldiers round it now, and nobody will say whose." }[S.hn.east]); }
       if (echoDue("hnYsolt")) { await echoMark("hnYsolt"); await say("Ysolt has a little shop on the third terrace now, with maps in the window, and her eyes are grey and short-sighted behind thick spectacles. Everything she draws is exactly what's there. She gives you one for nothing."); S.coins += 10; renderSheet(); await mech("Ysolt's map of the roads round Rahdaria sells for 10 gold to a carter, the same afternoon.", "loot"); }
@@ -5942,6 +6014,12 @@ body.pv-open { overflow: hidden; }
         "A man selling eels from a barrow tells you they're fresh. One of them agrees, loudly, and gets out.",
         "The ferryman at Wend charges a penny to cross and two to come back. \"Nobody's ever argued,\" he says. \"They're on the wrong side by then.\""
       ],
+      unmapped: [
+        "A signpost at the edge of the white says NOWHERE 1. Somebody has crossed it out and written ANYWHERE, and somebody else has crossed that out and written PLEASE.",
+        "A cow is standing in the white with nothing to eat and nothing to stand on. It looks at you as if this is your fault, which it partly is.",
+        "A gate stands in the middle of the white with no fence on either side of it. You go through it anyway. It seems polite.",
+        "A Draft goes past carrying half a chair. It puts the chair down, sits on it, and falls over. Then it picks the chair up and goes on."
+      ],
       tithe: [
         "A deckhand tells you he's never been seasick in his life, and then excuses himself, briskly, over the rail.",
         "The cook hands you a bowl of something grey. You ask what it is. \"Thursday,\" he says.",
@@ -6241,6 +6319,7 @@ body.pv-open { overflow: hidden; }
       if (await echoRoad(r)) {}
       else if (cascadeOn() && roll === 6) await cascadeCompany(r);
       else if (S.unbal && roll === 2 && d(2) === 1) await hnRemnants(r);
+      else if (S.unm && S.unm.done && r === "rahdaria" && (roll === 3 || (lv() >= LV_GATE && !S.unm.quire)) && d(2) === 1 && await unWrongRoad(r)) {}
       else if (roll === 1 && d(2) === 1 && ROAD_GANGS.some(G => G.r === r)) await bnMeet([r], { label: "The roads back · " + REGIONS[r] });
       else await meetBeast(r, { roam: true, pack: roll >= 4 });
     } finally { roamFight = false; }
@@ -7608,12 +7687,14 @@ body.pv-open { overflow: hidden; }
     rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\"",
     sounding: "On the jetty where the Bathyr boats tie up, the same three sellswords are sitting on a crate of lamp oil. \"A city at the bottom of the sea,\" Wenna says. \"With no water in it. Somebody's going to fall off something.\"",
     hinge: "On the river road east of Rahdaria, the same three sellswords are sitting on a toll-gate, eating somebody's apples. \"A message from nobody, in a thread made of nothing, to go and see somebody who's asleep,\" Wenna says. \"Yes. We're coming.\"",
+    unmapped: "At the half milestone on the edge of the white, the same three sellswords are sitting in a row, looking at nothing. \"We were going to come in after you,\" Wenna says. \"Then Odran walked in and walked out again and couldn't remember his mother's name for an hour.\" \"Agnes,\" Odran says. \"It's Agnes.\" \"We're coming anyway,\" Caddock says.",
     tithe: "On the Rahdaria quay, the same three sellswords are sitting on a coil of rope beside a cog called the <i>Marigold</i>. \"Stillwater?\" Odran says. \"Across the Reach? Nobody crosses the Reach.\" \"We'll come anyway,\" Wenna says. \"Somebody'll need to say they told you so.\""
   };
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
     if (!S.tyra) return false;
+    if (S.unm && S.unm.on) return !!S.unm.tyra;
     if (S.hn && S.hn.on) return !!S.hn.tyra;
     if (S.pz && S.pz.on) return !!S.pz.tyra;
     if (S.sd && S.sd.on) return !!S.sd.tyra;
@@ -13001,6 +13082,8 @@ body.pv-open { overflow: hidden; }
     "Vaelric's roots can't reach you, healing is halved, and the rot costs 1d4 HP every morning and at the start of every part."
   ];
   const GEAR = {
+    quirenib: { name: "The Quire's nib", icon: "scroll", desc: "A steel nib on a bone handle, from the clean desk in the paper house. Your hand knows how to draw a straight line without a rule. +1 to Investigation, Survival and Perception checks, and +5 max HP." },
+    firstsheet: { name: "The First Sheet", icon: "map", desc: "The Quire's map of everything, rolled up, warm, and lighter than it should be. Somewhere inside the roll a nib is still drawing a coast at its edge. +1 to Survival and Investigation checks. Hollin Marrisk will want it back." },
     soullantern: { name: "Corvane's lantern", icon: "lantern", desc: "Black glass, cracked, warm in your hand, full of quiet light: the dead Mardek Corvane took, and you kept. +8 max HP, for good. Dogs won't come near you." },
     ysoltmap: { name: "Ysolt's waking map", icon: "map", desc: "The sheet she was drawing when you left her dreaming: the country a little way ahead of you, still changing. +1 to Survival and Perception checks." },
     cloak: { name: "The Weathercloak", icon: "cloak" },
@@ -14433,7 +14516,7 @@ body.pv-open { overflow: hidden; }
   const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach" };
   const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria", 84: "rahdaria", 85: "rahdaria", 87: "rahdaria" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -23827,13 +23910,14 @@ body.pv-open { overflow: hidden; }
   // a hit, land a hit or unleash. Some of it is read off your save.
   function hnTaunts(who) {
     const T = { idle: [], repeat: [], hurt: [], hit: [], rage: [] };
-    if (who === "rusk") {
+    if (who === "rusk" || who === "rusk2") {
       T.idle.push("Tired already?", "Is that a rest? Are we resting?", "I've had duels with furniture that moved more.", "Hit me. That's the whole game.");
       T.repeat.push("That one again? I'm getting bored of that one.", "You've got about three strokes, haven't you.");
       T.hurt.push("Ooh. Felt that, did you?", "Keep your guard up. Oh, you don't have one.");
       T.hit.push("Better.", "There you are.", "Again!");
       T.rage.push("Now we're talking!", "Oh, yes. Come on, then.");
       if (S.duel && S.duel.won >= 5) T.idle.push("They told me you'd won " + S.duel.won + " duels. Against who? Scarecrows?");
+      if (who === "rusk2") { T.idle.push("He's dead, you know. I'm all there is now. Hit me.", "Stopped? They're watching. Don't embarrass me."); T.hurt.push("That's for Gauntry.", "That's for my sister's house."); T.rage.push("Yes. Like that. Like a landslide."); }
     } else {
       T.idle.push("You hesitate. Everyone does, at the end.", "Take your time. I have all of theirs.", "Waiting for someone to save you?", "Your hands know you've lost. Listen to them.");
       T.repeat.push("Again? I've seen that one.", "You learned that from someone who died, I expect.", "Idony told me about that stroke.");
@@ -24596,7 +24680,7 @@ body.pv-open { overflow: hidden; }
     else if (H.taken === "tyra" && H.souls === "free") await say("A letter comes from Rahdaria, in Tyra's handwriting, which is terrible: <i>Awake. Starving. Who was he. Come and tell me. T.</i>");
     if (vaelricSpeaks() && H.vael !== "taken") await voice(H.vael === "held" ? "\"Stillwater,\" Vaelric says, after a long time. \"The grave on the headland. I'd like to go now. Before anything else happens.\"" : "\"Stillwater,\" Vaelric says. \"They're still waiting on the wall.\"");
     H.on = false; H.done = true; renderSheet();
-    await endCard();
+    await go("Sleep at the mill");
   }
   // The reward, by how hard you worked for it (Adrian: "a real reward for the user's effort").
   const HN_GOOD = 16, HN_BEST = 24;
@@ -24654,6 +24738,847 @@ body.pv-open { overflow: hidden; }
       capMiss: "Your blow rings off the remnant-captain's old Hinge breastplate.", F: HINGE({ name: "Hinge remnants" }) });
     if (!(F && F.fled)) { const n = Math.round((20 + lv()) * 1.25); S.coins += n; renderSheet(); xpGain(30 + lv()); await mech("The Hinge's last pay-chest, in a cart behind the barricade: " + n + " gold.", "loot"); grant("hnremnant"); }
     light(back);
+  }
+
+  // ======================= The Unmapped =======================
+  // Parts LXXXIV–XC (S.part 83–89), after Half the East. Pitched to Adrian on 11 Nov 2026 and built as
+  // pitched ("Yes", "Do what you think is right"): where the Hinge rang the east blank, the land didn't
+  // die, it went unmapped. Roads end mid-stride, and people are missing from memory as well as from the
+  // ground. What you draw back with Ysolt's millpond ink comes back; draw it badly and it comes back
+  // wrong; what you don't draw stays gone for good, and the world remembers each one (ECHOES un_*).
+  // It reads Half the East's save: how much of the east went (S.hn.east), Ysolt woken or dreaming, the
+  // bell (still / turn / keep: the boss), the lantern (kept: the Reaped speak and ask for things; freed:
+  // you meet some of them again, remembered wrong), and Vaelric (held: he roots a line of a redrawing;
+  // taken: he's in the lantern, and remembers a line at a cost). It gives the Visceral Realm its reason
+  // (the realm is leaning into the hole) and ends on the Quire, who drew the first map of the realm, and
+  // the last of them, who wanted it unbalanced: the door to the story past level 40.
+  // Region: still the lands east of Rahdaria, so the region key is "rahdaria" (CH_REG).
+  // State is S.unm (un()):
+  //   ink      drops of millpond ink left: the redrawing pool.  lost  the places the blank took (keys).
+  //   fate     { place: "true" | "wrong" | "gone" }.  mem  { place: n }: memories (free squares).
+  //   asks     places the Reaped asked for (lantern kept).  hob  "promise" | "refuse" | "" (Hob Veary).
+  //   met      the dead you met remembered wrong (lantern freed).  ysolt  "with" | "map".  spent  times
+  //            Ysolt drew for you.  order  the wrong country walked right.  legend  read the Quire's
+  //            legend.  practice  drew the milestone true.  rope  the kept bell's rope ("kept" |
+  //            "bathyr" | "steward" | "saltwrit"; "" if you didn't keep the bell).  boss  "won" | "lost".
+  //   sheet    "sign" | "take" | "seal" (the First Sheet).  effort  the reward score.
+  const un = () => S.unm;
+  const unOn = () => !!(S.unm && S.unm.on);
+  const UN_STONE = { name: "the milestone", pic: [".##.", "####", ".##.", ".##."] };
+  // Every picture has exactly one answer to its clues (checked with a solver, 11 Nov 2026).
+  const UN_PLACES = {
+    lantry: { name: "Lantry", what: "the chapel, and its cracked bronze bell", pic: ["..#..", ".###.", ".###.", "#####", "..#.."], dead: ["Brother Amis", "Mabyn Tresk"],
+      ask: "\"Ring it for me,\" Brother Amis says, out of the lantern. \"Draw the chapel back and ring the bell. Somebody has to ring it for the ones going past.\"",
+      wrongMet: "Brother Amis is sitting on the chapel steps in the white, pulling a bell-rope that goes up into nothing. There's no bell. He's ringing it anyway, and listening, and frowning, because he can't hear it.",
+      back: "Lantry comes back up out of the white like a stone coming up through a ploughed field: the chapel, the yard, the lychgate, the yew. The cracked bronze bell is in its tower. Nobody rings it, but it's there.",
+      wrong: "Lantry comes back, and the chapel is the right way round, and the yew, and the gate. But the bell rings the hours backwards: twelve at midnight, then eleven, then ten, down to one at noon. The new brother says you get used to it.",
+      gone: "Where Lantry was there's a white place on the hill, smooth as a plate, and travellers going past it lower their voices without knowing why." },
+    hobble: { name: "Hobble Cross", what: "the crossroads, the pump, and Abner Fitch's hives", pic: ["..#...", "..#.##", "######", "..#...", "#.#.#.", "..#..."], dead: ["Abner Fitch", "Hob Veary"],
+      ask: "\"The hives,\" Abner Fitch says, out of the lantern. \"Nobody will have told the bees. You have to tell bees when somebody dies, or they leave. Draw them back, and tell them.\"",
+      wrongMet: "Abner Fitch is standing at the crossroads in the white with his veil on, holding a smoker, smoking a hive that isn't there. He tells you the queen's name. It's his wife's, and he's said it wrong.",
+      back: "Hobble Cross comes back: four roads and a pump, the inn, the smithy, and up the lane the white hives, humming. Somebody's tied black ribbon round every hive. You don't know who.",
+      wrong: "Hobble Cross comes back with its four roads, but they don't go where they went: the Wend road comes out at Lantry, and the Lantry road at the pump again. The carters swear at it. The bees don't mind.",
+      gone: "There's a signpost on the river road that still says HOBBLE CROSS 2, and the road under it goes two miles into nothing." },
+    pellmarsh: { name: "Pellmarsh", what: "the barn school on its stilts above the marsh", pic: ["..##..", ".####.", "######", ".#..#.", ".#..#.", "##..##"], dead: ["Nell Ashby-Combe", "Father Ossian"],
+      ask: "\"It says TOMORROW: RIVERS,\" Nell Ashby-Combe says, out of the lantern, quite sharply. \"On the beam. Somebody has to teach them rivers. Draw the barn.\"",
+      wrongMet: "Nell Ashby-Combe is in the white with a stick of chalk, writing TOMORROW: RIVERS on the air, over and over. It doesn't stay. She tells you to sit down and stop fidgeting.",
+      back: "Pellmarsh comes back on its stilts above the marsh: the barn, the eel-traps, the plank walks. On the beam in the barn, in chalk, it says TOMORROW: RIVERS. Somebody has been teaching them rivers.",
+      wrong: "Pellmarsh comes back, but the marsh is on top and the village underneath: the barn hangs from its stilts over open water like a lantern from a hook. People manage. People always manage.",
+      gone: "The eel-men on the Ostle say the marsh at Pellmarsh has gone quiet. Not dry. Quiet. The water doesn't move, and nothing lives in it, and nobody fishes there." },
+    ninefields: { name: "Ninefields", what: "the hill farm, the fold and the flock", pic: ["#.....", "##..#.", "######", "#.##.#", "######", "..##.."], dead: ["Idwal", "Old Mother Brede"],
+      ask: "\"I counted them right,\" Idwal says, out of the lantern, very fast. \"I counted them right, and I never told anybody. Draw the fold, so the sheep are there, so I can.\"",
+      wrongMet: "Old Mother Brede is in the white with a cake on a plate, waiting at a door that isn't there for a man who isn't coming. She asks if you're him. You say no. She offers you the cake anyway.",
+      back: "Ninefields comes back on its hill: nine fields in a square, the fold, the farmhouse, and the flock spilling down the slope. A boy you don't know is counting them, and gets it right.",
+      wrong: "Ninefields comes back with ten fields. Everyone there will tell you there are nine, and they'll count them for you, and they'll get ten, and look at you as if it's your fault.",
+      gone: "On the hill where Ninefields was there's only white, and some nights the shepherds on the next hill hear a flock that isn't there, being counted, wrong." },
+    wend: { name: "Wend", what: "the ferry, the smithy and the eel-market", pic: ["......", "..#...", "..##..", "######", ".####.", "#.#.#."], dead: ["Tamsin Reed", "Lissa Quell"],
+      ask: "\"My boat,\" Tamsin Reed says, out of the lantern. \"Somebody's got to pole people over. Draw the ferry back. I'll tell you how she sits in the water.\"",
+      wrongMet: "Tamsin Reed is poling a ferry across the white with her eyes shut, the way she did for the bet. There's no river. She gets to the other side anyway, and turns round, and starts back.",
+      back: "Wend comes back to the river: the ferry and its rope, the smithy, the eel-market on the stones. The ferry's tied up, and there's a girl you don't know sitting in it, practising with her eyes shut.",
+      wrong: "Wend comes back on the wrong bank of the Ostle, facing the wrong way. The ferry crosses the river from Wend to Wend. It still charges a penny there and two back.",
+      gone: "The ferry rope at Wend still runs across the Ostle, and on the far bank it runs up into the white, and somebody's tied a lamp to it at the edge, every night, in case." },
+    gauntry: { name: "Gauntry House", what: "the house with a hundred windows: its servants, and its dogs", pic: ["..##..", ".####.", "######", "#.#.##", "######", "##..##"], dead: [],
+      wrongMet: "",
+      back: "Gauntry House comes back on its hill with a hundred windows, and in the kitchen there's a fire, and the scullery maids, and the footman you put in the coal-hole, and four dogs. None of the Hinge. You drew the house, not the dinner.",
+      wrong: "Gauntry House comes back with a hundred windows and no doors. The servants come and go through the windows, and the dogs through the scullery hatch. Nobody from the Hinge ever comes back to it. They couldn't get in.",
+      gone: "Gauntry hill is white and smooth from the river to the top, where the Gnomon stands in it like a finger. Nobody goes up there. The servants and the dogs went with the Hinge, on your bell." }
+  };
+  const unCells = (k) => (k === "stone" ? UN_STONE : UN_PLACES[k]).pic.join("").split("").filter(c => c === "#").length;
+  function unLostFor(H) {
+    const e = (H && H.east) || "scarred", L = ["lantry", "hobble", "pellmarsh"];
+    if (e !== "whole") L.push("ninefields");
+    if (e === "half") L.push("wend");
+    if (H && H.ending === "turn") L.push("gauntry");
+    return L;
+  }
+  function initUnm() {
+    const H = S.hn || {};
+    S.gear = S.gear || []; S.hh = S.hh || { hear: 0, hush: 0 };
+    const ys = H.ysolt === "wake" ? "with" : "map";
+    S.unm = { on: true, done: false, ink: 26 + (ys === "with" ? 6 : 0), inkMax: 0, lost: unLostFor(H), fate: {}, mem: {}, asks: [], hob: "", met: [], ysolt: ys, spent: 0,
+      order: false, legend: false, practice: false, rope: H.ending === "keep" ? "kept" : "", boss: "", sheet: "", effort: 0, shown: false,
+      tyra: !!(S.tyra && (H.tyra || (H.taken === "tyra" && H.souls === "free"))) };
+    S.unm.inkMax = S.unm.ink;
+    renderSheet();
+  }
+  const unBell = () => (S.hn && S.hn.ending) || "still";
+  const unKept = () => !!(S.hn && S.hn.souls === "kept");
+  // What Vaelric can do in unmapped country: hold a line of it down with his roots, or, from inside
+  // Corvane's lantern, remember a line of it, at a price.
+  const unVael = () => { if (!S.axe) return ""; if (S.hn && S.hn.vael === "taken") return unKept() ? "lantern" : ""; return vaelricSpeaks() ? "root" : ""; };
+  const unEffort = (n) => { if (S.unm) S.unm.effort += n; };
+  const unLeft = () => { const U = un(); return U ? U.lost.filter(k => !U.fate[k]) : []; };
+  async function unInk(n, why) {
+    const U = un(); if (!U || !n) return;
+    U.ink = Math.max(0, U.ink + n); U.inkMax = Math.max(U.inkMax, U.ink); renderSheet();
+    await mech((why ? why + " " : "") + (n > 0 ? "+" + n : "−" + -n) + " drops of ink: " + U.ink + " in the jar.", n > 0 ? "loot" : "hurt");
+  }
+  function renderUn() {
+    const box = $("unBox");
+    if (!box) return;
+    const U = S.unm;
+    box.hidden = !(U && U.on && U.shown);
+    if (box.hidden) return;
+    $("unInk").textContent = U.ink + (U.ink === 1 ? " drop" : " drops");
+    $("unInkBar").style.width = Math.min(100, U.ink / Math.max(1, U.inkMax) * 100) + "%";
+    const left = unLeft(), back = U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong");
+    $("unInkNote").textContent = left.length ? "Still unmapped: " + left.map(k => UN_PLACES[k].name).join(", ") + "." : "Nothing left to draw.";
+    $("unBack").textContent = back.length ? back.map(k => UN_PLACES[k].name + (U.fate[k] === "wrong" ? " (wrong)" : "")).join(", ") : "none yet";
+  }
+  function unItems(items) {
+    const U = S.unm;
+    if (!U) return;
+    if (U.on && U.shown) items.push(["unink", "map", "A jar of millpond ink", "Black water from the bottom of the millpond at Ostle Ford, where the Cascade stood. What you draw with it on the white, comes back. " + U.ink + " drops left."]);
+    if (U.done) items.push(["unplaces", "map", "The Unmapped: " + U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong").length + " of " + U.lost.length + " drawn back", U.lost.map(k => UN_PLACES[k].name + ": " + ({ true: "drawn back true", wrong: "drawn back wrong", gone: "gone" }[U.fate[k]] || "gone")).join(". ") + "."]);
+  }
+
+  // ---------- redrawing: the ink puzzle ----------
+  // A lost place is a sheet of squares with the counts of its inked runs along each row and column, the
+  // way a mapmaker's grid remembers it. Every square you ink costs a drop of the jar. Scraping a square
+  // off doesn't give the drop back, and leaves a blot: a place drawn with any blot comes back wrong.
+  // Marking a square blank costs nothing. Run dry with most of it drawn and it comes back wrong; with
+  // less, the ink's spent and the place stays gone. Help: memories and Ysolt give squares for nothing,
+  // Ysolt checks a row once, Vaelric roots a column once (or, from the lantern, remembers a row for 2 HP).
+  // o: { practice, ink (practice only), free }. Returns { q: "true" | "wrong" | "gone" | "skip", used, blots }.
+  function redrawPuzzle(k, o = {}) {
+    return new Promise(resolve => {
+      const U = un(), Pl = k === "stone" ? UN_STONE : UN_PLACES[k], pic = Pl.pic, N = pic.length, M = pic[0].length;
+      const sol = pic.map(r => [...r].map(c => c === "#"));
+      const runs = (a) => { const out = []; let c = 0; a.forEach(x => { if (x) c++; else if (c) { out.push(c); c = 0; } }); if (c) out.push(c); return out; };
+      const rowC = sol.map(runs), colC = [...Array(M)].map((_, j) => runs(sol.map(r => r[j])));
+      const total = sol.flat().filter(Boolean).length;
+      // 0 blank, 1 inked by you, 2 given (locked), 3 marked blank, 4 known blank (locked)
+      const st = sol.map(r => r.map(() => 0)), blot = sol.map(r => r.map(() => false));
+      const practice = !!o.practice;
+      let ink = practice ? o.ink : U.ink, used = 0, blots = 0, done = false, mode = "ink";
+      const filled = (v) => v === 1 || v === 2;
+      // free squares
+      const solCells = []; sol.forEach((r, i) => r.forEach((x, j) => { if (x) solCells.push([i, j]); }));
+      for (let n = Math.min(o.free || 0, total - 2); n > 0; n--) { const left = solCells.filter(([i, j]) => st[i][j] === 0); if (!left.length) break; const [i, j] = left[d(left.length) - 1]; st[i][j] = 2; }
+      const P = puzzleBox(practice ? "Redrawing: " + Pl.name : "Redrawing " + Pl.name,
+        "The numbers are the runs of ink along each row and down each column, in order: <b>3 1</b> means three inked squares together, a gap, then one. Tap a square to ink it (a drop each). Tap an inked square again to scrape it off: the drop's gone, and the blot means it comes back <i>wrong</i>. Switch to <b>Mark blank</b> to note the squares you know are empty, for nothing." + (practice ? " This is only a milestone, with a saucer of ink of its own." : ""));
+      const grid = el("div", "un-grid"); grid.style.gridTemplateColumns = "auto repeat(" + M + ", 36px)";
+      grid.appendChild(el("span", "un-c", ""));
+      const colEls = colC.map(c => { const s = el("span", "un-c", c.length ? c.join("<br>") : "0"); grid.appendChild(s); return s; });
+      const rowEls = [], bs = [];
+      for (let i = 0; i < N; i++) {
+        const rc = el("span", "un-c un-r", rowC[i].length ? rowC[i].join(" ") : "0"); grid.appendChild(rc); rowEls.push(rc);
+        bs.push([]);
+        for (let j = 0; j < M; j++) { const b = pbtn(""); b.setAttribute("aria-label", "row " + (i + 1) + ", column " + (j + 1)); b.onclick = () => tap(i, j); grid.appendChild(b); bs[i].push(b); }
+      }
+      const inkLine = el("div", "un-ink", "");
+      P.body.append(grid, inkLine);
+      const mInk = pbtn("Ink", "un-mode on"), mMark = pbtn("Mark blank", "un-mode");
+      mInk.onclick = () => { mode = "ink"; mInk.classList.add("on"); mMark.classList.remove("on"); };
+      mMark.onclick = () => { mode = "mark"; mMark.classList.add("on"); mInk.classList.remove("on"); };
+      P.ctrl.append(mInk, mMark);
+      const reveal = (cells) => cells.forEach(([i, j]) => { if (st[i][j] === 1 && !sol[i][j]) { blots++; blot[i][j] = true; } st[i][j] = sol[i][j] ? 2 : 4; });
+      if (!practice && U.ysolt === "with") {
+        const yb = pbtn("Ysolt checks a row"); P.ctrl.appendChild(yb);
+        yb.onclick = () => { if (done) return; const rows = [...Array(N).keys()].filter(i => st[i].some((v, j) => v !== 2 && v !== 4)); if (!rows.length) return; const i = rows[d(rows.length) - 1]; reveal([...Array(M).keys()].map(j => [i, j])); yb.disabled = true; P.status.textContent = "Ysolt runs her finger along row " + (i + 1) + ", with her eyes shut, and says where the ink goes."; draw(); test(); };
+      }
+      const V = practice ? "" : unVael();
+      if (V === "root") {
+        const vb = pbtn("Vaelric roots a column"); P.ctrl.appendChild(vb);
+        vb.onclick = () => { if (done) return; const cols = [...Array(M).keys()].filter(j => sol.some((r, i) => st[i][j] !== 2 && st[i][j] !== 4)); if (!cols.length) return; const j = cols[d(cols.length) - 1]; reveal([...Array(N).keys()].map(i => [i, j])); vb.disabled = true; P.status.textContent = "You set the axe-head down on the paper, and Vaelric's roots go down through it into whatever's under the white, and hold column " + (j + 1) + " still while you look."; draw(); test(); };
+      } else if (V === "lantern") {
+        const vb = pbtn("Ask Vaelric, in the lantern"); P.ctrl.appendChild(vb);
+        vb.onclick = () => { if (done) return; const rows = [...Array(N).keys()].filter(i => st[i].some(v => v !== 2 && v !== 4)); if (!rows.length) return; const i = rows[d(rows.length) - 1]; reveal([...Array(M).keys()].map(j => [i, j])); S.hp = Math.max(1, S.hp - 2); renderSheet(); vb.disabled = true; P.status.textContent = "The old knight remembers row " + (i + 1) + " for you from inside the lantern, and the glass goes cold against your hip. (−2 HP)"; draw(); test(); };
+      }
+      const give = pbtn("Stop drawing"); P.ctrl.appendChild(give);
+      give.onclick = () => { if (done) return; finish(used ? judge() : "skip"); };
+      function draw() {
+        for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) {
+          const b = bs[i][j], v = st[i][j];
+          b.className = v === 1 ? "ink" : v === 2 ? "given" : v === 3 ? "mark" : v === 4 ? "known" : "";
+          if (blot[i][j]) b.classList.add("blot");
+        }
+        rowEls.forEach((e, i) => e.classList.toggle("ok", runs(st[i].map(filled)).join() === rowC[i].join()));
+        colEls.forEach((e, j) => e.classList.toggle("ok", runs(st.map(r => filled(r[j]))).join() === colC[j].join()));
+        inkLine.innerHTML = "Ink: <b>" + ink + "</b> drop" + (ink === 1 ? "" : "s") + " · used " + used + (blots ? " · <span style='color:var(--ember)'>" + blots + " blot" + (blots > 1 ? "s" : "") + "</span>" : "");
+      }
+      const whole = () => st.every((r, i) => runs(r.map(filled)).join() === rowC[i].join()) && colC.every((c, j) => runs(st.map(r => filled(r[j]))).join() === c.join());
+      function judge() {
+        let right = 0, extra = 0;
+        st.forEach((r, i) => r.forEach((v, j) => { if (filled(v)) { if (sol[i][j]) right++; else extra++; } }));
+        return right / total >= 0.75 && extra <= 2 ? "wrong" : "gone";
+      }
+      function finish(q) {
+        done = true; P.end();
+        if (!practice) U.ink = ink;
+        renderSheet();
+        P.status.textContent = q === "true" ? "Every row and every column runs true. The ink sinks into the white like rain into dry ground." : q === "wrong" ? (whole() ? "It's whole, but you can see the blots in it. It'll come back, and it'll come back wrong." : "Out of ink, with most of it drawn. It'll come back, but not as it was.") : q === "skip" ? "You put the pen down before the first drop." : "The ink runs out with too little of it drawn, and what you've drawn soaks away into the white.";
+        setTimeout(() => resolve({ q, used, blots }), q === "skip" ? 300 : 1000);
+      }
+      function test() {
+        if (done) return;
+        if (whole()) { finish(blots ? "wrong" : "true"); return; }
+        if (ink <= 0 && st.some((r, i) => r.some((v, j) => sol[i][j] && !filled(v)))) finish(judge());
+      }
+      function tap(i, j) {
+        if (done) return;
+        const v = st[i][j];
+        if (v === 2 || v === 4) return;
+        if (v === 1) { st[i][j] = mode === "mark" ? 3 : 0; blots++; blot[i][j] = true; SND.tap && SND.tap("-"); draw(); test(); return; }
+        if (mode === "mark") { st[i][j] = v === 3 ? 0 : 3; draw(); return; }
+        if (ink <= 0) { P.status.textContent = "The jar's dry."; return; }
+        ink--; used++; st[i][j] = 1; SND.tap && SND.tap("."); draw(); test();
+      }
+      draw();
+    });
+  }
+  // A redrawing, with the choice of which place, and what comes of it.
+  async function unRedraw(when) {
+    const U = un();
+    const left = unLeft();
+    if (!left.length) return;
+    const free = (k) => (U.ysolt === "with" ? 3 : 2) + (U.mem[k] || 0);
+    await mech("<b>" + when + "</b> Ink in the jar: " + U.ink + " drops. Still unmapped: " + left.map(k => UN_PLACES[k].name).join(", ") + ".");
+    const c = await choose(left.map(k => ({ key: k, label: "Draw back " + UN_PLACES[k].name, tag: UN_PLACES[k].what + " · " + unCells(k) + " squares, " + free(k) + " given" + (U.asks.includes(k) ? " · " + UN_PLACES[k].dead[0] + " asked for this one" : "") + (k === "hobble" && U.hob === "promise" ? " · you promised Hob Veary" : "") }))
+      .concat([{ key: "save", label: "Keep the ink for later", tag: "every place you don't draw by the end stays gone", plain: true }]));
+    if (c === "save") { await say("You stopper the jar."); return; }
+    const Pl = UN_PLACES[c];
+    await say(U.ysolt === "with" ? "Ysolt kneels on the white with you, and wets the pen, and draws " + (free(c) > 3 ? "the squares she can see, and the ones the dead told you about," : "the squares she can see") + " with her eyes shut. Then she gives you the pen." : "You unfold Ysolt's sleeping map on the white. Overnight it has drawn a corner of " + Pl.name + " by itself: a few squares, in her shaking hand. The rest is yours.");
+    tip("redraw");
+    const r = await redrawPuzzle(c, { free: free(c) });
+    if (r.q === "skip") { await say("Not yet. You stopper the jar."); return; }
+    if (U.ysolt === "with") U.spent++;
+    U.fate[c] = r.q; renderSheet();
+    await say(Pl[r.q === "true" ? "back" : r.q]);
+    if (r.q === "true") { unEffort(3); grant("unredraw"); xpGain(25); }
+    else if (r.q === "wrong") { unEffort(1); grant("unwrong"); xpGain(15); }
+    else await mech(Pl.name + " stays gone.", "hurt");
+    if (U.asks.includes(c) && r.q !== "gone") await voice(Pl.dead[0] + " says, out of the lantern, very quietly, \"Thank you.\"");
+    if (c === "hobble" && U.hob === "promise" && r.q !== "gone") { U.hob = "broke"; await voice("In the lantern, one of the lights gutters, and goes small, and won't speak to you again. Hob Veary."); S.hh.hush++; }
+    if (U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong").length >= 3) grant("unthree");
+  }
+
+  // ---------- wrong country: the right landmarks in the wrong order ----------
+  // The road through a place that came back wrong: six landmarks, shuffled. Put them back in the
+  // order the road-song gives (west to east), by swapping two at a time, then walk it. Clues are drawn
+  // at random until only one order fits.
+  function orderPuzzle({ n = 6, tries = 3 } = {}) {
+    return new Promise(resolve => {
+      const ALL = ["the milestone", "the mill", "the chapel", "the ford", "the hanging oak", "the gibbet", "the tithe barn", "the well"];
+      const items = ALL.slice().sort(() => Math.random() - 0.5).slice(0, n);
+      const perms = []; (function p(a, rest) { if (!rest.length) { perms.push(a); return; } rest.forEach((x, i) => p(a.concat([x]), rest.slice(0, i).concat(rest.slice(i + 1)))); })([], [...Array(n).keys()]);
+      const pos = (pm) => { const o = []; pm.forEach((x, i) => o[x] = i); return o; };
+      const KINDS = [
+        () => { const a = d(n) - 1; let b; do { b = d(n) - 1; } while (b === a); return a < b ? { t: "<i>" + items[a] + "</i> comes somewhere before <i>" + items[b] + "</i>", f: (q) => q[a] < q[b] } : null; },
+        () => { const a = d(n - 1); return { t: "<i>" + items[a] + "</i> comes straight after <i>" + items[a - 1] + "</i>", f: (q) => q[a] === q[a - 1] + 1 }; },
+        () => { const a = [0, n - 1][d(2) - 1]; return { t: "<i>" + items[a] + "</i> is at one end of the road", f: (q) => q[a] === 0 || q[a] === n - 1 }; },
+        () => { const a = d(n) - 1; let b; do { b = d(n) - 1; } while (Math.abs(b - a) <= 1); return { t: "<i>" + items[a] + "</i> and <i>" + items[b] + "</i> aren't side by side", f: (q) => Math.abs(q[a] - q[b]) > 1 }; }
+      ];
+      const clues = [];
+      let fit = perms.map(pos);
+      for (let guard = 0; fit.length > 1 && guard < 400; guard++) {
+        const c = KINDS[d(KINDS.length) - 1](); if (!c || clues.some(x => x.t === c.t)) continue;
+        const next = fit.filter(c.f); if (next.length === fit.length || !next.length) continue;
+        clues.push(c); fit = next;
+        if (clues.length >= 7 && fit.length > 1) { const a = d(n) - 1; const nth = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"][a]; const c2 = { t: "<i>" + items[a] + "</i> is the " + nth + " thing on the road", f: (q) => q[a] === a }; clues.push(c2); fit = fit.filter(c2.f); }
+      }
+      let cur = items.map((_, i) => i).sort(() => Math.random() - 0.5);
+      if (cur.every((x, i) => x === i)) cur.reverse();
+      const P = puzzleBox("Wrong country", "Everything on this road is here, and nothing's where it was. Put it back in the order of the old road-song, west to east, top to bottom. Tap two to swap them, then walk it. " + tries + " walks before dark.<br>" + clues.map(c => "· " + c.t.replace(/^<i>(.)/, (m, ch) => "<i>" + ch.toUpperCase()) + ".").join("<br>"));
+      const list = el("div", "un-order");
+      let sel = -1, walks = 0, done = false;
+      const bs = cur.map((_, i) => { const b = pbtn(""); b.onclick = () => tap(i); list.appendChild(b); return b; });
+      P.body.appendChild(list);
+      const walk = pbtn("Walk it", "primary"), give = pbtn("Just walk east until it stops"); P.ctrl.append(walk, give);
+      function draw() { bs.forEach((b, i) => { b.innerHTML = "<small>" + (i + 1) + "</small> " + items[cur[i]]; b.classList.toggle("on", i === sel); }); P.status.textContent = walks + " of " + tries + " walks."; }
+      function tap(i) { if (done) return; if (sel < 0) { sel = i; draw(); return; } if (sel !== i) { const t = cur[sel]; cur[sel] = cur[i]; cur[i] = t; } sel = -1; draw(); }
+      walk.onclick = () => {
+        if (done) return;
+        walks++;
+        const right = cur.filter((x, i) => x === i).length;
+        if (right === n) { done = true; P.end(); P.status.textContent = "You walk it in the old order, and the road comes out of the white the way the song says, and the hills behind you settle like a dog turning round twice."; setTimeout(() => resolve({ ok: true, walks }), 900); return; }
+        if (walks >= tries) { done = true; P.end(); P.status.textContent = "It was: " + items.join(", ") + ". You get out in the end the long way, by luck, after dark."; setTimeout(() => resolve({ ok: false }), 1300); return; }
+        P.status.textContent = right + " of " + n + " in their places. You walk it and come back round to where you started. " + walks + " of " + tries + " walks.";
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+
+  // ---------- the Quire's legend ----------
+  // Under the white, the first map's legend is cut in survey stones: a line of the Quire's letters.
+  // Some letters you know off older maps. Give the rest a letter each (tap to turn through the letters
+  // that are left) until the line reads. Two readings.
+  function legendPuzzle({ tries = 2 } = {}) {
+    return new Promise(resolve => {
+      const LINES = ["WHAT IS DRAWN IS HELD", "WE DREW IT TO HOLD IT STILL", "THE MAP HOLDS THE LAND STILL"];
+      const line = LINES[d(LINES.length) - 1];
+      const letters = [...new Set(line.replace(/ /g, ""))];
+      const GL = ["◇", "△", "○", "□", "✕", "⌒", "≋", "⊥", "⊢", "✶", "⋈", "◐", "⊓", "∴"].sort(() => Math.random() - 0.5);
+      const gOf = {}; letters.forEach((L, i) => gOf[L] = GL[i]);
+      const hide = letters.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+      const pool = hide.slice().sort(() => Math.random() - 0.5);
+      const guess = {}; hide.forEach(L => guess[L] = "");
+      const P = puzzleBox("The Quire's legend", "The survey stone is cut with a line in the letters of the oldest maps. Some of them you know: the Hinge's surveyors used them, and so did every mapmaker since. Five you don't. The ones you don't know are among <b>" + pool.join(" ") + "</b>, one each. Tap a mark to try a letter for it (it changes every place that mark is cut), then read it. Two readings before the stone's too cold to touch.");
+      const row = el("div", "un-legend");
+      const btnOf = {};
+      line.split(" ").forEach(w => {
+        const word = el("span", "un-word");
+        [...w].forEach(L => {
+          const cell = el("span", "un-glyph", '<span class="g">' + gOf[L] + "</span>");
+          if (hide.includes(L)) { const b = pbtn("?"); b.onclick = () => cycle(L); cell.appendChild(b); (btnOf[L] = btnOf[L] || []).push(b); }
+          else cell.appendChild(el("span", "l", L));
+          word.appendChild(cell);
+        });
+        row.appendChild(word);
+      });
+      P.body.appendChild(row);
+      let reads = 0, done = false;
+      const go2 = pbtn("Read it", "primary"), give = pbtn("Copy it down and leave it"); P.ctrl.append(go2, give);
+      function cycle(L) { if (done) return; const opts = [""].concat(pool); guess[L] = opts[(opts.indexOf(guess[L]) + 1) % opts.length]; draw(); }
+      function draw() { hide.forEach(L => btnOf[L].forEach(b => b.textContent = guess[L] || "?")); P.status.textContent = reads + " of " + tries + " readings."; }
+      go2.onclick = () => {
+        if (done || hide.some(L => !guess[L])) { if (!done) P.status.textContent = "Give every mark a letter first."; return; }
+        reads++;
+        const right = hide.filter(L => guess[L] === L).length;
+        if (right === hide.length) { done = true; P.end(); P.status.textContent = "It reads: " + line + "."; setTimeout(() => resolve({ ok: true, line, reads }), 900); return; }
+        if (reads >= tries) { done = true; P.end(); P.status.textContent = "You copy it down as best you can. Later, by the fire, it comes to you: " + line + "."; setTimeout(() => resolve({ ok: false, line }), 1200); return; }
+        P.status.textContent = right + " of " + hide.length + " marks right. " + reads + " of " + tries + " readings.";
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true, line }); };
+      draw();
+    });
+  }
+
+  const DRAFTS = (o) => Object.assign({ name: "Pale Drafts", heads: 3, unit: "draft|drafts", ac: 14, atk: 6, n: 1, s: 8, type: "cold", bloom: 0, hesk: false, who: "the Pale Drafts", whoShort: "Draft", road: true,
+    hitWhy: "A half-drawn hand closes on your arm, and where it touches you the colour goes out of your skin for a moment.", miss: "It reaches for you with an arm that isn't finished, and misses.", hitLine: "It comes apart into loose lines, and the lines blow away across the white." }, o);
+
+  // ---------- Part LXXXIV: The Edge of the Paper ----------
+  async function partEdge() {
+    heading("LXXXIV", "The Edge of the Paper");
+    light("dusk");
+    if (!S.unm) initUnm();
+    const U = un(), H = S.hn || {}, e = H.east || "scarred";
+    await say("You sleep at the mill, on sacks, with the race running under the floor. In the morning there's frost on the water-meadows, and a carter in the yard asking for you by name.");
+    await say("He's come up from Wend in the night, with his hat in his hands. \"My sister,\" he says. \"I've come about my sister. I know I've got one. I can't think of her name, or her face, or where she lived. Only that she's gone, and there's a sort of hole, here.\" He puts his hand flat on his chest. \"They said at Wend you'd know what it was.\"");
+    await say({
+      whole: "You don't, yet. You walk east with him to see. The east is whole, the way you left it, green to the sky. But here and there along the Hinge's line, where the Cascades leaned before you stopped them, there are holes: the west end of a village, a lane, a churchyard, a field. Not grey, now. White. And the road you're walking on goes up to the edge of one of them and stops, mid-stride.",
+      scarred: "You don't, yet. You walk east with him to see. Along the Hinge's line the grey places you saw from the Gnomon aren't grey any more. They're white, the clean white of paper, a mile here and two miles there, and the road you're walking on goes up to the edge of one of them and stops, mid-stride, like a sentence somebody didn't finish.",
+      half: "You don't, yet. You walk east with him to see. Half the east is white: not grey any more, white, the clean white of new paper, from the line to the sky. The road you're walking on goes up to the edge of it and stops, mid-stride, like a sentence somebody didn't finish. There's no wind past the edge. There's no anything."
+    }[e]);
+    await say("It isn't dead. You can see that when you stand at the edge. Things move in the white, slowly, the way things move under ice: the shape of a hill, the line of a hedge, going past each other, out of order. The land's still there. It just isn't anywhere. Nothing's holding it where it was.");
+    if (U.ysolt === "with") {
+      await say("Ysolt comes up the river road on the Rahdaria carrier's cart before noon, in thick spectacles, with a satchel of pens. \"I thought I'd draw what's there,\" she says. \"Only what's there. And then I heard there was nothing there.\" She stands at the edge of the white and looks at it for a long time. \"My hands won't keep still,\" she says. \"They know what's in it. They want to draw it back.\"");
+      await say("She takes you back to the millpond. Where the Cascade stood in it, the silt at the bottom is black, and when she stirs clean water into a handful of it, it's ink. \"This is what I drew with, for eleven years,\" she says. \"Whatever I drew with it was so. I think whatever we draw with it on the white will be so too.\"", "voice");
+    } else {
+      await say("Ysolt is still asleep in the millpond, with the little Cascade standing up through her. The sheet you took from the mill floor has been drawing in your pack all night by itself, in her shaking hand: the edge of the white, and the road going into it, and on the road, very small, somebody walking. It's you. You're drawn a little way ahead of where you're standing.");
+      await say("Where the Cascade stands in the pond, the silt is black. You scoop a handful of it into a jar and stir pond water into it, and it's ink, the same brown-black as every line on her maps. When you lean over her and ask what it's for, her lips move. \"<i>What's drawn is so,</i>\" she says, in her sleep. \"<i>Draw it back.</i>\"");
+    }
+    await say((U.ysolt === "with" ? "\"It's hungry,\" Ysolt says." : "She talks on in her sleep, and you write it down.") + " \"It's a hole in the realm. Everything round it leans in, the way a floor leans round a sinkhole, and whatever's on the floor slides. The beasts on the roads feel it first. They're hungrier. The bandits are bolder. The dread comes quicker. That's what's wrong with the roads: the whole realm is off balance, and all of it leans east.\"", U.ysolt === "with" ? "voice" : "");
+    if (S.unbal) await mech("<b>The Visceral Realm</b>, now you know why: the Unmapped is pulling at the realm. Drawing places back won't fill the hole. It will decide what's left on its edge.");
+    U.shown = true; renderSheet();
+    await say("At the edge of the white there's half a milestone: the near half, cut clean, WEN on it, and nothing. You set the jar down beside it. Ysolt " + (U.ysolt === "with" ? "pours a saucer of ink for you to practise with." : "drew milestones all the time, in her sleep. You pour a saucer of ink to practise with."));
+    const r = await redrawPuzzle("stone", { practice: true, ink: 13 });
+    if (r.q === "true") { U.practice = true; unEffort(1); grant("unfirst"); await say("The other half of the milestone comes up out of the white like a tooth: D, and FORD 4. When you put your hand on it, it's cold and real and a little damp, the way stone is in the morning."); }
+    else if (r.q === "wrong") await say("The other half of the milestone comes up out of the white, but it says WEN FORD 4 backwards, mirror-way round, and it's warm, like something alive.");
+    else await say("The ink soaks away into the white. The milestone stays half a milestone.");
+    await mech("<b>Redrawing.</b> Unmapped: " + U.lost.map(k => UN_PLACES[k].name).join(", ") + ". You have " + U.ink + " drops of ink. A drop a square, and some squares you'll be given. There isn't enough for all of them, and what you don't draw back by the end stays gone for good. The jar is on your sheet.");
+    await say("Something comes out of the white to see what you've done.");
+    await say("They're shaped like people the way a child draws people: a line for a body, a ring for a head, arms that stop where the child got bored. They're white on white, and you only see them by their edges. They come in a line along the road, the way people walk to market, and when they see the milestone, they stop. Then they see you.");
+    if (vaelricSpeaks()) await voice("\"Drafts,\" Vaelric says. \"It's drawing people from memory, and it can't remember them properly. Don't let them touch you. It might start remembering you.\"");
+    await hkFight(DRAFTS({ heads: 3 }));
+    unEffort(1);
+    await say("When they've blown away, the carter from Wend is sitting on the milestone with his head in his hands. \"Bess,\" he says, suddenly, as if somebody had poked him. \"Her name was Bess.\" Then he can't remember why he said it.");
+    await go("Walk into the white");
+  }
+
+  // ---------- Part LXXXV: Wrong Country ----------
+  async function partWrong() {
+    heading("LXXXV", "Wrong Country");
+    light("lake");
+    const U = un(), H = S.hn || {};
+    await say("In the white there's no sound. Not quiet: none. Your boots don't make any on the road, and when you clap your hands nothing happens. After an hour you stop trying. After two you start to get used to it, which is worse.");
+    await say("And then the country comes back up round you, as if you'd walked into it: hedges, a lane, a hill with a wood on it, a stream. All of it's right. All of it's in the wrong order. The stream runs up the hill. The wood is on the wrong side of the lane, and then on the other wrong side. A field goes past you, slowly, like a barge.");
+    if (U.tyra && H.taken === "tyra") await say("Tyra catches you up at noon, out of breath, with two knives in her belt and a third in her boot. \"I got your note,\" she says. \"I didn't, actually. I just knew. I've got a bit of me that's been somewhere you can't get to, and it knows where things are.\" She looks at the field going past. \"That's not right, is it.\"");
+    else if (U.tyra) await say("Tyra walks with one hand on your sleeve, the way she did on the Reach. \"I don't like it,\" she says. \"It's like being in somebody else's dream. A boring person's.\"");
+    await say("There's a road-song the carters sing on the river road. Every village on the Ostle has a verse, and every verse is the road, west to east, in order: the milestone and the mill and the ford and the rest. " + (U.ysolt === "with" ? "Ysolt knows all of it, and sings it under her breath, badly." : "The carter from Wend taught you three verses before you left him at the milestone.") + " If you can put the road back in the order of the song, you can walk it out.");
+    const r = await orderPuzzle({ n: 6, tries: 3 });
+    U.order = r.ok;
+    if (r.ok) { unEffort(2); grant("unorder"); await say("At the end of the road, where it comes out of the white, there's a spring of black water: the same black as the millpond silt. Where the Cascades leaned, they've left a little of themselves behind."); await unInk(3, "You fill the jar from the spring."); }
+    else await hurt(1, 6, "cold", "You walk it wrong twice, and the white gets into your boots, and your feet go numb.");
+    const bell = unBell();
+    if (bell === "still") {
+      await say("You look up, for a moment, the way you've learned to on the roads, for the black rope of a Cascade going up into the sky. There isn't one. There isn't one anywhere. Since you broke the Gnomon's bell they've gone back to leaning toward the Underdream, quietly, a long way off, and the sky over the east is clean.");
+      await say(U.ysolt === "with" ? "\"Which means nothing can lean them back,\" Ysolt says. \"Not even to fill this. There's only the ink.\"" : "Ysolt's map, in your pack, has drawn a small broken bell in the margin, and beside it, in her shaking hand: <i>nobody leans them. not even back.</i>", U.ysolt === "with" ? "voice" : "");
+    } else if (bell === "turn") {
+      await say("At dusk, three riders come out of the white behind you, in black: mourning black, with a glass badge on every collar. Strand House. Calloway's canal-men. Farrant's household guard. The houses you leaned the Cascades onto had people in them who weren't at home that night.");
+      await say("\"Hingebreaker,\" the first of them says. \"My mother was at Gauntry. You rang a bell, and she went grey, and then she went white. I've been looking for you for a week.\"", "voice");
+      await hkFight({ name: "The Hinge's mourners", heads: 3, unit: "mourner|mourners", ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the mourners", whoShort: "mourner", road: true, bleed: 20,
+        hitWhy: "A mourning-sword opens your shoulder.", miss: "The black-gloved blade goes wide.", hitLine: "One of them goes down in the white, and the white closes over the black like milk." });
+      unEffort(1);
+      await say("The last of them, on her knees, says Idony Rusk is gathering the rest of them at Strand House, on the line. \"She says you'll come,\" she says. \"She says you always come.\"");
+    } else {
+      await say("You sleep at the edge of the white with the Gnomon's key on your belt and the rope's end tied round your waist. In the night somebody tries to cut it.");
+      const k = await check({ label: "Perception check (a hand at your belt)", mod: 3, dc: 15, cta: "Wake" });
+      if (k.ok) { unEffort(1); await say("You wake with your hand already on a wrist: a thin man in a grey coat, with a knife. He doesn't fight. He lets go of the knife and lies still, and when you turn out his pockets he's carrying thirty silver pieces of a kind you've never seen, stamped with a quill."); S.coins += 30; renderSheet(); await mech("Thirty silver pieces stamped with a quill: 30 gold, by weight.", "loot"); }
+      else await say("You wake with the rope cut half through and a thin man in a grey coat running into the white. He drops something as he goes: a silver piece of a kind you've never seen, stamped with a quill.");
+      await say("\"Everybody wants that bell,\" Ysolt says in the morning" + (U.ysolt === "with" ? "." : ", in her sleep.") + " \"That one was paid by somebody who doesn't use money.\"");
+    }
+    await unRedraw("The first redrawing.");
+    await go("Go on into the white");
+  }
+
+  // ---------- Part LXXXVI: What the Dead Remember ----------
+  async function partRemember() {
+    heading("LXXXVI", "What the Dead Remember");
+    light("dark");
+    const U = un(), H = S.hn || {};
+    const left = unLeft().filter(k => UN_PLACES[k].dead.length);
+    if (unKept()) {
+      await say("In the white, the lantern on your belt starts to talk.");
+      await say("Not loudly. It's like a room full of people in the next house, all at once, through a wall. Then it's fewer of them, and nearer, and then it's one or two at a time, very clear, the way people talk when they've waited a long while to be asked. They know where they are. They lived here.");
+      const k = await check({ label: "Wisdom saving throw (listen, and don't go in)", mod: 2 + (S.hh && S.hh.hear >= 3 ? 2 : 0), dc: 14, cta: "Listen" });
+      if (!k.ok) { await hurt(2, 6, "psychic", "For a while you're in there with them, in the warm, and it's very hard to come out."); S.hh.hush++; }
+      for (const pk of left.slice(0, 3)) {
+        const Pl = UN_PLACES[pk];
+        await voice(Pl.ask);
+        U.asks.push(pk); U.mem[pk] = (U.mem[pk] || 0) + 2;
+      }
+      if (U.asks.length) await mech("The Reaped ask for " + U.asks.map(k => UN_PLACES[k].name).join(", ") + ". Each of them tells you how it lay: 2 more squares given when you draw it.", "loot");
+      if (U.lost.includes("hobble") && !U.fate.hobble && H.reaped && H.reaped.includes("Hob Veary")) {
+        await say("And then one more of them, slurred, from right at the bottom of the lantern. \"Don't you draw that Cross back,\" Hob Veary says. \"Nobody there was ever kind to me but the dogs, and the dogs are in here with me. Let the white have it. Promise.\"", "voice spirit");
+        const c = await choose([{ key: "promise", label: "Promise him", tag: "you won't draw back Hobble Cross" }, { key: "refuse", label: "Don't promise", tag: "Abner Fitch's bees are there too", plain: true }]);
+        U.hob = c;
+        await say(c === "promise" ? "\"Good lad,\" he says, or something like it, and goes quiet, and then you can hear him, very faintly, whistling for a dog." : "He swears at you, at length, out of the lantern, and then goes quiet, and then you hear him crying, and then nothing.");
+      }
+      if (unVael() === "lantern") await voice("And among them, tired, an old man's voice you know. \"I'm in here too,\" Vaelric says. \"It's not so bad. It's warm. I can help you remember, a little, if you like. It costs you something. Everything in here does.\"");
+    } else {
+      await say("You meet the dead in the white.");
+      await say("You didn't expect to. You let them go, from the Gnomon, one by one, the way people leave a church; you saw them go. But the white is made of what the land remembers, and the land remembers them. It remembers them wrong.");
+      for (const pk of left.slice(0, 2)) {
+        const Pl = UN_PLACES[pk], who = Pl.dead[0];
+        if (!Pl.wrongMet) continue;
+        await say(Pl.wrongMet);
+        const c = await choose([{ key: "tell", label: "Tell " + who + " who they were", tag: "Insight DC 13" }, { key: "leave", label: "Leave them be", plain: true }]);
+        if (c === "tell") {
+          const k = await check({ label: "Insight check (" + who + ", remembered wrong)", mod: 3, dc: 13, cta: "Tell them" });
+          U.met.push(who);
+          if (k.ok) { U.mem[pk] = (U.mem[pk] || 0) + 1; unEffort(1); await say("They don't believe you. But they listen, and stop what they're doing, and tell you a thing about " + Pl.name + " that only somebody who lived there would know: where the lane bent, where the wall was low. Then they go back to it."); await mech("A memory of " + Pl.name + ": 1 more square given when you draw it.", "loot"); }
+          else await say("They look at you as if you're the one who's wrong, and turn back to it.");
+        }
+      }
+    }
+    if (U.ysolt === "with") {
+      await say("Ysolt sits down at noon on a stretch of road that isn't going anywhere, and takes off her spectacles, and rubs her eyes for a long time. \"I'm not used to them,\" she says. \"Eyes. I had eleven years off.\" When she looks up her eyes are grey, with a little silver at the very edge, like frost at the edge of a puddle. Every time she draws for you, there's a little more.");
+      if (U.spent) await mech("Every redrawing Ysolt draws for costs her. She's drawn " + U.spent + (U.spent > 1 ? " times." : " time."), "hurt");
+      await say("Then the Drafts come for her. A great many of them, out of the white on every side, walking the way people walk to a fair. They don't want you. They want the woman with the pen.");
+      await hkFight(DRAFTS({ heads: 4, hitLine: "It comes apart into loose lines before it can reach her." }));
+      unEffort(1);
+    } else {
+      await say("In the night, the map in your pack draws something.");
+      await say("You hear it: the scratch of a nib, very fast, from inside the oilcloth. When you unwrap the sheet the ink's still wet, and it's a drawing of a man, tall, not young, with a long clever face and his hair tied back. It's the last thing Ysolt's Cascade saw clearly, from the Gnomon. While you're looking at it, it stands up off the paper.");
+      await say("It's Mardek Corvane the way a quick sketch is a man: all the lines that matter, and nothing in between. The grey blade is three strokes of ink. It looks at you and it knows how you stand, because he did.");
+      await hkFight({ name: "A sketch of Mardek Corvane", hp: 44, ac: 15, atk: 7, n: 1, s: 10, type: "slashing", bloom: 0, hesk: false, who: "the sketch", whoShort: "Sketch", bleed: 15,
+        hitWhy: "Three strokes of ink go through your guard the way he did it at Ostle Ford.", miss: "The ink blade smears past you.", hitLine: "Your blow takes a line out of him, and the line doesn't come back." });
+      unEffort(1);
+      await say("When it's down it's only ink on the white, and the white drinks it. In the morning the sheet in your pack is blank where he was, and in the margin, in her shaking hand: <i>sorry.</i>");
+    }
+    await unRedraw("The second redrawing.");
+    await go("Go deeper");
+  }
+
+  // ---------- Part LXXXVII: The Legend ----------
+  async function partLegend() {
+    heading("LXXXVII", "The Legend");
+    light("lake");
+    const U = un();
+    await say("Deep in the white the wrong country stops coming up round you. There's nothing to put in order. There's the road, if you keep walking on it as if it's there, and white on every side, and in the white, standing up out of it every mile or so like teeth, stones.");
+    await say("Survey stones: old, older than the Gnomon, square-cut, with a cross on top where a surveyor's rod would sit. The Hinge's surveyors pegged their line from tower to tower. These were pegged first, by somebody else, a very long time ago. And they're the only things in the white that are exactly where they ought to be.");
+    if (U.ysolt === "with") await say("Ysolt puts her hand on one. \"I know this hand,\" she says, of the letters cut in it. \"The oldest map in the Sulmara archive is in this hand. Nobody's allowed to touch it. It isn't of anywhere. It's of everywhere.\"", "voice");
+    else await say("The map in your pack has drawn the stones too, and joined them with a fine straight line, and written beside the line in the margin, very small: <i>theirs. not his. older.</i>");
+    await say("The biggest of the stones has a line of letters round it, under the cross: the first map's legend, the words a mapmaker writes in the corner of a sheet to say what it's for.");
+    const r = await legendPuzzle({ tries: 2 });
+    U.legend = r.ok;
+    if (r.ok) { unEffort(2); grant("unlegend"); await say("<i>" + r.line + ".</i> When you say it out loud, the top of the stone slides back a finger's width, like a lid, and underneath it there's an ink-well, cut in the stone, full."); await unInk(3, "You fill the jar from the Quire's well."); }
+    else await say("<i>" + r.line + ".</i> You work it out by the fire, too late. The stone doesn't open for a reading in the dark.");
+    await say("Under the legend, smaller, there's a name for whoever cut it. Not a person's name: the name of a company of them, the way a guild signs its work. <b>The Quire.</b> Seven draughtsmen, it says, in the old letters. <i>Who drew the realm out of wrong country, and held it still.</i>");
+    if (vaelricSpeaks() || unVael() === "lantern") await voice("\"Wrong country,\" Vaelric says, slowly. \"The wardens had a story. That before anyone drew it, the whole realm was like this. Nothing stayed where it was put. They said somebody drew it still, and gave it a keel, so it wouldn't roll over. I always thought it was a story for children.\" A pause. \"The keel would be the Underdream. That's why they lean that way. All of them.\"");
+    const bell = unBell();
+    if (bell === "keep") {
+      await say("At the stone, there are people waiting for you. Three parties of them, camped a careful distance from each other, with their fires lit: a Bathyr lead-speaker with four of her people, grey and giddy in the open; a Rahdaria steward's man in a good coat, with a strongbox; and a Saltwrit captain with a warrant and twenty hunters.");
+      await say("They all want the same thing. The Gnomon's bell is still hanging on Gauntry hill, and the rope's end and the key are on your belt. Whoever has them can lean the Cascades, and with the realm off balance like this, a lean would go a very long way.");
+      const c = await choose([
+        { key: "kept", label: "Keep it", tag: "they'll all keep wanting it" },
+        { key: "bathyr", label: "Give it to the Bathyr", tag: "the bells were Bathyr lead; they'll sink it", plain: true },
+        { key: "steward", label: "Sell it to the Steward", tag: "200 gold, and Rahdaria holds the hinge", plain: true },
+        { key: "saltwrit", label: "Give it to the Saltwrit", tag: "the law holds it, for now", plain: true }
+      ]);
+      U.rope = c;
+      if (c === "kept") { S.hh.hush++; await say("You tell them no. All three of them. The steward's man smiles as if you've said something sensible, and packs up his strongbox. The Bathyr tap something to each other you don't know. The Saltwrit captain writes your name in her book."); }
+      else if (c === "bathyr") { S.hh.hear++; await say("You put the key in the lead-speaker's hand and the rope's end after it. She taps it, once, on your palm: a word you know. <i>Not.</i> Then: <i>never.</i> They'll take the bell down off the Gnomon and carry it to the sea, she says, and drop it where it's deepest."); }
+      else if (c === "steward") { S.coins += 200; renderSheet(); await say("The steward's man counts two hundred gold onto the stone, in Rahdaria crowns, and takes the key with a little bow. \"The Steward will keep it very safe,\" he says. \"Nobody need know.\" Everybody will know by Tuesday."); await mech("+200 gold.", "loot"); }
+      else { await say("The Saltwrit captain takes the key and writes you a receipt for it, which you didn't ask for. \"Evidence,\" she says. \"In the matter of the Hinge. It'll be very safe in the strong-room at the station.\" She means it, which is something."); }
+      await say("In the night, somebody watches the camp from the white. You see his coat once, grey, at the edge of the firelight, and the glint of something silver in his hand, stamped with a quill.");
+    } else if (bell === "turn") {
+      await say("At the stone, pinned to the turf with a sabre through it, there's a letter. You know the hand from the Hinge's dinner: Idony Rusk's, square and quick.");
+      await say("<i>Strand House, on the line. All the ones you left behind are here with me: the cousins, the sons, the ones who weren't at dinner. It's grey, and it's leaning, and it's coming down on all of us one of these nights. Come and finish it, or don't, and we'll come and find you. Bring your pen. I hear you've got a pen now. I.R.</i>");
+    } else {
+      await say("In the night, the white moves.");
+      await say("Not the slow wrong country going past. The white itself, all of it, toward you, the way a tide comes in over flat sand: an inch, and then another inch. Where it touches the road, the road isn't there any more. Where it touches the survey stones, it stops, and goes round them, and comes on.");
+      await say(U.ysolt === "with" ? "\"It's noticed us,\" Ysolt says. \"Every place we draw back is a place it hasn't got. With the bell broken, nothing can lean it back, so it's going to have to do it itself.\"" : "The map in your pack draws the white coming in, and in the middle of it, where you are, a small square of road with a figure on it. Then it starts to draw the white over the figure.", U.ysolt === "with" ? "voice" : "");
+    }
+    await go("Go on to the middle of it");
+  }
+
+  // ---------- Part LXXXVIII: The Margin ----------
+  async function partMargin() {
+    heading("LXXXVIII", "The Margin");
+    light("dark");
+    const U = un();
+    await say("In the middle of the Unmapped there's a place where even the white stops: a margin, like the margin of a page, where nothing was ever drawn because nothing was meant to be. It's a long flat edge, a mile across, as clean as a knife. Beyond it, there's nothing. Not white. Nothing.");
+    await say("On the near side of the margin there's a procession. Drafts, hundreds of them, walking along the edge in a long line the way people walk round a churchyard at a burying: every one of them a half-drawn person the land couldn't remember properly. They're going round and round. They've been going round since the bell.");
+    const k = await check({ label: "Stealth check (through the procession)", mod: 3 + (co().burr ? 0 : 1), dc: 15, cta: "Walk with them" });
+    if (k.ok) { unEffort(1); await say("You walk in among them, slowly, at their pace, with your head down, and they let you, because they can't remember whether you're one of them."); }
+    else { await say("A Draft turns its ring of a head toward you, and stops, and the ones behind it stop, and then all of them do."); await hkFight(DRAFTS({ heads: 5, name: "The procession" })); }
+    await say("At the very edge of the margin, the ink in your jar is cold enough to hurt your hand. Whatever you draw here, you draw for good. Whatever's still unmapped when you leave here stays unmapped.");
+    await unRedraw("The last redrawing.");
+    const gone = unLeft();
+    gone.forEach(k2 => U.fate[k2] = "gone");
+    renderSheet();
+    if (gone.length) await mech("Gone for good: " + gone.map(k2 => UN_PLACES[k2].name).join(", ") + ". The white closes over " + (gone.length > 1 ? "them" : "it") + ", and you can't remember, quite, what " + (gone.length > 1 ? "they" : "it") + " looked like.", "hurt");
+    else await mech("Everything the blank took, you've drawn back. The Unmapped is only the Unmapped now.", "loot");
+    if (gone.length) for (const k2 of gone) await say(UN_PLACES[k2].gone);
+    await say("And then you see it, out on the margin, right on the edge of the nothing: a house. Tall and narrow, with seven windows, and the whole of it made of paper, folded and pasted and stiff with old size, standing up on the white like a house of cards. There's a light in one window.");
+    const bell = unBell();
+    await say(bell === "still" ? "Between you and it, the white stands up." : bell === "turn" ? "Between you and it, on the line, there's a grey house leaning: Strand House, with a hundred lamps lit in it, and people on its steps." : "Between you and it, there are tents: a company of sellswords in grey coats, waiting, the way men wait who've been paid in advance.");
+    await go(bell === "still" ? "Stand your ground" : bell === "turn" ? "Go up the steps of Strand House" : "Walk into their camp");
+  }
+
+  // ---------- Part LXXXIX: The Last Line (the boss, by what you did with the bell) ----------
+  async function partLastLine() {
+    heading("LXXXIX", "The Last Line");
+    const U = un(), bell = unBell();
+    let won = false;
+    if (bell === "still") won = await unUnwriting();
+    else if (bell === "turn") won = await unLeaning();
+    else won = await unTakers();
+    U.boss = won ? "won" : "lost";
+    if (won) unEffort(3);
+    achCheck();
+    await go("Go to the paper house");
+  }
+  const unSaved = () => { const U = un(); return U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong"); };
+  // The bell broken: nothing can lean the Unmapped, so it stands up for itself, in the shape of everything
+  // you didn't draw back. It unwrites you: your outline fades a little every round.
+  async function unUnwriting() {
+    const U = un(), gone = U.lost.filter(k => U.fate[k] === "gone"), saved = unSaved();
+    light("dark");
+    await say("The white stands up off the ground in front of you like a sheet lifted off a bed, and keeps standing up, until it's taller than the Gnomon. It has a shape. It's the shape of everything that isn't there any more: " + (gone.length ? gone.map(k => UN_PLACES[k].name).join(" and ") + ", " : "") + "hedges, wells, a lychgate, a fold, folded together into something like a man, the way you'd fold a map.");
+    if (vaelricSpeaks()) await voice("\"It's going to rub you out,\" Vaelric says. \"Like a mistake. Hold on to your edges.\"");
+    const st0 = { out: 0, named: [], rooted: false };
+    const meter = () => "◼".repeat(5 - st0.out) + "◻".repeat(st0.out);
+    tip("unwrite");
+    await mech("<b>The Unwriting.</b> Your outline: " + meter() + ". It rubs a little of you out every round" + (gone.length >= 3 ? ", faster for all it's got" : "") + ". When your outline's gone, it rubs out a part of you that hurts. Redraw yourself with the ink (3 drops), or name the places you drew back: each one stands with you once.");
+    const F = {
+      name: "The Unwriting", hp: 54 + 8 * gone.length, ac: 15, atk: 7, n: 2, s: 6, type: "psychic", bloom: 0, hesk: false, who: "the Unwriting", whoShort: "Unwriting",
+      hitWhy: "It folds over you, and for a moment you can't remember your own name, and then you can, but it hurts.", miss: "It comes down on the road where you were, and the road goes.", hitLine: "Your blow tears it, and something it took shows through the tear for a moment: a hedge, a window.",
+      before: async (st) => {
+        if (st.round > 1) st0.out += gone.length >= 3 && st.round % 2 === 0 ? 2 : 1;
+        if (st0.out >= 5) {
+          st0.out = 1;
+          await hurt(3, 8, "psychic", "Your outline goes, all of it, and for a long breath you aren't anywhere.");
+          await mech("Rubbed out, and drawn back by the skin of your teeth. Outline: " + meter() + ".", "hurt");
+        } else if (st.round > 1) await mech("Your outline: " + meter() + (st0.out >= 3 ? " · it's nearly through you" : ""), st0.out >= 3 ? "hurt" : "");
+      },
+      extra: (st) => [
+        { key: "un-self", label: "Redraw yourself", tag: "3 drops of ink · outline back by 2 · " + U.ink + " left", plain: true, show: U.ink >= 3 && st0.out > 0 },
+        ...saved.filter(k => !st0.named.includes(k)).map(k => ({ key: "un-name-" + k, label: "Name " + UN_PLACES[k].name, tag: "it stands with you · 2d8, no roll · outline back by 1", plain: true })),
+        { key: "un-root", label: "Let Vaelric root you", tag: "once · outline whole again", plain: true, show: unVael() === "root" && !st0.rooted && st0.out > 0 }
+      ],
+      onExtra: async (c) => {
+        if (c === "un-self") { U.ink -= 3; st0.out = Math.max(0, st0.out - 2); renderSheet(); await say("You put the nib to the back of your own hand and draw the line of it, and up your arm, and round your shoulder, as fast as you can, and the ink takes."); await mech("Outline: " + meter() + ".", "loot"); }
+        else if (c === "un-root") { st0.rooted = true; st0.out = 0; await say("You set the axe-head down on the white and Vaelric's roots go down through it into whatever's under, and catch, and hold you where you are. \"There,\" he says. \"You're here. Stay here.\""); await mech("Outline: " + meter() + ".", "loot"); }
+        else if (c.startsWith("un-name-")) {
+          const k = c.slice(8); st0.named.push(k); st0.out = Math.max(0, st0.out - 1);
+          await say("You say it: " + UN_PLACES[k].name + ". " + (U.fate[k] === "wrong" ? "It comes, wrong as you drew it, but it comes, and stands at your back." : "It comes, as true as you drew it, and stands at your back.") + " The Unwriting can't fold what's drawn, and it tears itself on it.");
+          await foeBurst(2, 8, 0, UN_PLACES[k].name);
+        }
+      }
+    };
+    roamFight = false;
+    await hkFight(F);
+    grant("unstill");
+    await say("It comes down at last like a sheet coming down off a line, slowly, and lies on the road, and is only white. Under it, where it fell, you can see the road again, for a yard or two, and a daisy in the verge.");
+    return true;
+  }
+  // The bell turned: the Hinge's houses are grey and leaning, and the ones who weren't at dinner want you dead.
+  async function unLeaning() {
+    const U = un(), H = S.hn || {};
+    light("dusk");
+    await say("Strand House stands on the line, grey all through: grey brick, grey ivy, grey glass in a hundred windows, and every window lit. The whole house leans, a little, toward the white, like a man leaning into a wind. Every so often it creaks, and leans a little more.");
+    await say("Idony Rusk is waiting on the steps, with a sabre on each hip and a black band on her arm. Behind her, in the hall, there are forty people in mourning: cousins, sons, a grandmother in a chair. " + (H.rusk === "won" ? "\"I told him you hit like a landslide,\" she says. \"He wanted to see. Well. I'm what's left. Let's see again.\"" : "\"Last time I put you through a window,\" she says. \"This house has more windows.\""), "voice");
+    if (U.fate.gauntry === "true" || U.fate.gauntry === "wrong") await say("Behind you, up the hill, Gauntry House stands back in its place where you drew it, and in its kitchen doorway the footman you put in the coal-hole is standing with a poker, and four dogs. He doesn't come down. But he doesn't go in, either.");
+    const r = await furyFight({ taunt: "rusk2", id: "hinge:rusk", name: "Idony Rusk", hp: 46, dmg: [1, 8, 3], gap: 1150, windup: 6000, him: "she", reads: H.rusk === "won",
+      counter: "You stop for half a breath, and her sabre's in the gap.", heavy: "Both sabres come down at once, and you don't catch them." });
+    await say(r.won ? "Her sabres go out of her hands and skitter down the grey steps. She sits down on the top step, laughing, holding her side. \"Fine,\" she says. \"Fine. But you'll have to deal with them.\" She nods at the hall. \"I can't stop them now. Nobody can.\"" : "She puts you down on the steps, and stands over you, and doesn't finish it. \"No,\" she says. \"That's not what they want. They want you inside.\"");
+    await say("They come out of the hall all at once, the Hinge's leftovers, with whatever was on the walls: swords, pikes, a boar-spear, a fire-iron. And as they come, Strand House creaks, and leans.");
+    const st0 = { lean: 0, braced: false, doors: 0 };
+    const drawn = U.fate.gauntry === "true" || U.fate.gauntry === "wrong";
+    tip("lean");
+    await mech("<b>The leaning house.</b> Every other round Strand House leans further and comes down on whoever's under it: a Dexterity save (DC 15) or 3d8. Brace in a doorway (your turn) to stand it, or draw a door out of the grey (2 drops) to send it onto them." + (drawn ? " The house you drew back up the hill is watching: the lean does half." : ""));
+    const F = {
+      name: "The Hinge's last households", heads: 6, unit: "heir|heirs", ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's heirs", whoShort: "heir", bleed: 20,
+      hitWhy: "A Strand cousin's sword finds your ribs.", miss: "A pike goes past your ear and sticks in the grey panelling.", hitLine: "One of them goes down on the grey floor, and the house creaks over them.",
+      before: async (st) => {
+        if (st.round < 2 || st.round % 2) return;
+        st0.lean++;
+        await say("Strand House groans, and leans, and the ceiling comes down toward the floor like a lid closing.");
+        if (st0.braced) { st0.braced = false; await say("You stand in the doorway with your back to one post and your hands on the other, and the house comes down round you and doesn't touch you."); return; }
+        const k = await check({ label: "Dexterity saving throw (the house leans)", mod: 3, dc: 15, cta: "Dive" });
+        if (!k.ok) await hurt(drawn ? 2 : 3, 8, "bludgeoning", "A grey beam comes down across your back.");
+        else await say("You go under a table and the beam comes down on top of it.");
+        if (FOE.hp > 1) { foeHit(1); await say("It catches one of them, who didn't move."); }
+      },
+      extra: (st) => [
+        { key: "un-brace", label: "Brace in a doorway", tag: "costs your turn · the next lean misses you", plain: true, show: !st0.braced },
+        { key: "un-door", label: "Draw a door out of the grey", tag: "2 drops · the next lean comes down on them · " + U.ink + " left", plain: true, show: U.ink >= 2 }
+      ],
+      onExtra: async (c) => {
+        if (c === "un-brace") { st0.braced = true; await say("You get your back into a doorway, and wait for it."); }
+        else if (c === "un-door") { U.ink -= 2; st0.doors++; renderSheet(); await say("You draw a door on the grey wall beside you, fast, a rectangle and a knob, and it's a door, and you go through it, and the house comes down where you were, on them."); const n = Math.min(2, FOE.hp); foeHit(n); await mech("The lean takes " + n + " of them.", "loot"); }
+      }
+    };
+    roamFight = false;
+    await hkFight(F);
+    grant("unturn");
+    await say("When it's over, Strand House leans the last inch and lies down on the white like a tired horse, and is grey and silent, and the white takes it. Idony Rusk watches it go from the bottom of the steps. Then she picks up her sabres and walks off along the line without looking back. You think you'll see her again.");
+    return true;
+  }
+  // The bell kept: a company paid in Quire silver comes for the rope, or for whoever you gave it to.
+  async function unTakers() {
+    const U = un(), mine = U.rope === "kept";
+    light("dusk");
+    await say("Their captain comes out to meet you: a long thin woman in a grey coat, with a silver piece on a string round her neck, stamped with a quill. \"Bastia Grell,\" she says. \"The Bell-Takers. We've been paid for the Gnomon's bell, and the rope, and the key, and whoever's holding them.\"", "voice");
+    if (!mine) await say({ bathyr: "Behind you, the Bathyr lead-speaker and her four come up the road with the key, on their way to the sea. They planned to go round. There isn't a round.", steward: "Behind you, the steward's man comes up the road in a carriage with the key in his strongbox and six Rahdaria guards. He's very pale.", saltwrit: "Behind you, the Saltwrit captain comes up the road with the key in an evidence box and twenty hunters, and stops, and swears." }[U.rope] + " \"Whoever's holding them,\" Grell says again, pleasantly. \"And whoever's standing next to them.\"");
+    await say("\"Who paid you?\" you ask. She holds up the silver piece. \"Somebody who doesn't use money,\" she says. \"He uses this.\"", "voice");
+    const st0 = { slip: 0, rang: false };
+    tip("rope");
+    await mech("<b>The rope.</b> " + (mine ? "The rope's end is tied round your waist, and every round they get a hook on it and haul." : "Your allies have the rope, and every other round the Bell-Takers get a hook on it and haul.") + " Hold it (Strength DC 14, your turn) or it slips. At three slips they ring the Gnomon from here, at you: 4d10." + (mine ? " Or ring it yourself, once." : ""));
+    const F = {
+      name: "Bastia Grell and the Bell-Takers", hp: 70, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "the Bell-Takers", whoShort: "Bell-Takers", bleed: 20,
+      hitWhy: "A boat-hook on a pole comes in from the side and opens your arm.", miss: "The hook goes past and they haul on nothing.", hitLine: "One of the Bell-Takers goes down, and Grell steps over him without looking.",
+      before: async (st) => {
+        if (st.round < 2) return;
+        if (!mine && st.round % 2) return;
+        if (st0.held) { st0.held = false; return; }
+        st0.slip++;
+        await say(mine ? "A hook catches the rope at your waist and three of them haul, and you're dragged a yard across the road." : "A hook catches the rope in the lead-speaker's hands and they haul, and she's dragged a yard across the road.");
+        if (st0.slip >= 3) {
+          st0.slip = 0;
+          await say("Up on Gauntry hill, miles off, the Gnomon's great bell swings, once. You hear it in your teeth. The nearest Cascade in the realm, wherever it was, leans this way, and comes down on you like a wall of black water.");
+          await hurt(4, 10, "thunder", "It goes through you and out the other side and leaves you on your knees in the road.");
+        } else await mech("The rope slips: " + st0.slip + " of 3.", "hurt");
+      },
+      extra: (st) => [
+        { key: "un-hold", label: mine ? "Hold the rope" : "Help them hold the rope", tag: "Strength DC 14 · costs your turn · the next haul fails", plain: true },
+        { key: "un-ring", label: "Ring the bell yourself", tag: "once · 6d8 on them, no roll · the lean doesn't care what's under it", plain: true, show: mine && !st0.rang }
+      ],
+      onExtra: async (c) => {
+        if (c === "un-hold") {
+          const k = await check({ label: "Strength check (the rope)", mod: 3 + (S.tyra && tyraHere() ? 1 : 0), dc: 14, cta: "Haul" });
+          if (k.ok) { st0.held = true; st0.slip = Math.max(0, st0.slip - 1); await say("You get both hands on the rope and lean back, and haul, and three Bell-Takers come in across the road on the end of their own hook."); }
+          else await say("The rope burns through your hands.");
+        } else if (c === "un-ring") {
+          st0.rang = true; U.rang = true;
+          await say("You haul on the rope yourself, once, hard. Up on Gauntry hill the great bell swings, and somewhere in the realm a Cascade leans the way you tell it, and comes down across the Bell-Takers' camp like a wave across a beach.");
+          await foeBurst(6, 8, 0, "The lean");
+          const hit = unSaved().find(k => U.fate[k] === "true");
+          if (hit) { U.fate[hit] = "wrong"; renderSheet(); await mech("The lean doesn't care what's under it. It goes on past them, across the east, and " + UN_PLACES[hit].name + ", that you drew back true, shivers, and isn't quite right afterwards.", "hurt"); }
+          else await mech("The lean goes on past them, across the white, and you hear it go for a long time.", "hurt");
+          S.hh.hush++;
+        }
+      }
+    };
+    roamFight = false;
+    await hkFight(F);
+    grant("unkeep");
+    await say("When Grell goes down she's still smiling, a little. She takes the silver piece off her neck and holds it out to you. \"He'll want to meet you,\" she says. \"He's in the paper house. He's always in the paper house.\"");
+    return true;
+  }
+
+  // ---------- Part XC: The First Sheet ----------
+  async function partFirstSheet() {
+    heading("XC", "The First Sheet");
+    light("torch");
+    const U = un(), H = S.hn || {};
+    await say("The paper house is bigger inside, the way old houses are. Seven rooms, one above another, and a stair of folded card, and in every room a draughtsman's desk with a lamp and a stool and a rack of pens. Six of the desks are under dust as thick as felt. The seventh, at the top, is clean, and its lamp is lit, and the pen in its rack is wet.");
+    await say("There's nobody there.");
+    await say("On the big table in the top room, weighted at the corners with four survey stones, there's a map. It's very old, and very large, and it's of everything: the labyrinth, the sands, the fen, Carrowmere, Lastwell, Sulmara and its glass, Corrach, the western sea with Bathyrra in it like a pip, the Reach, the Ostle, Rahdaria on its terraces. Every road you've walked is on it. The ink's brown with age, and still, the way a pond is still. It's the First Sheet. Whatever's drawn on it is so.");
+    await say("Across the east, where the blank is, it's been scraped. Carefully, with a knife, the way you'd scrape a mistake off vellum. You can see the knife-marks. Somebody did that before the Hinge ever rang a bell. The Hinge only had to ring it.");
+    await say("There are letters pinned to the wall by the desk, in a row. The first is in a hand you know from his coat-pocket at Gauntry: Mardek Corvane's, years old.");
+    await say("<i>I had your thread. I have done as you asked. The towers will be hung by the summer's end and the east will go white at the full moon. You may have the paper. I will have the dead. I think we understand each other. M.C.</i>");
+    await say("Under it, in brown ink, in the hand that cut the survey stones, the answer.");
+    await say("<i>Thank you. A balanced map is a finished map, and a finished map can't be drawn on. Seven of us drew this realm still, out of wrong country, and gave it a keel so it wouldn't roll, and I have waited four hundred years alone at this desk for a clean sheet. When it's off balance enough it can be drawn again. Properly, this time. H. Marrisk, of the Quire.</i>");
+    if (U.ysolt === "with") await say("Ysolt reads it twice, and takes off her spectacles. \"He sent me the Cascade,\" she says. \"Eleven years ago. I walked into it because he wanted somebody to watch the east go. Somebody to draw it going.\" Her mouth goes thin. \"And I sent you a thread. He didn't think of that.\"", "voice");
+    else await say("The sheet in your pack is quite still. Then it writes, very small, in the margin: <i>he sent me the dream. i sent you the thread.</i>");
+    await say("And on the First Sheet, at the far edge, past Sulmara, past the sands, past where any map you've ever seen goes, there's a new line. Fresh ink, still wet. A coast that isn't there yet, being drawn in, a stroke at a time, from the edge toward the middle. While you watch, it gets a little longer.");
+    if (vaelricSpeaks() || unVael() === "lantern") await voice("\"He's not here,\" Vaelric says. \"He's out there. At the edge. Drawing.\" A long pause. \"When he's finished, we'll have to go and look.\"");
+    await mech("<b>The Quire's line.</b> Hollin Marrisk, the last of the Quire, is drawing new country at the edge of the realm, toward the middle. It isn't finished. The story past level " + LV_GATE + " starts on that coast.", "hurt");
+    const c = await choose([
+      { key: "sign", label: "Write your name on the First Sheet", tag: "whatever's drawn on it is so · you'd be on it, for good" },
+      { key: "take", label: "Roll it up and take it", tag: "he'll want it back", plain: true },
+      { key: "seal", label: "Leave it, and draw the door shut behind you", tag: "seal the paper house with ink" + (U.ink >= 2 ? " · 2 drops" : " · you're out of ink: it'll be a poor seal"), plain: true }
+    ]);
+    U.sheet = c;
+    if (c === "sign") {
+      S.hh.hush++; S.maxHp += 5; S.hp = Math.min(S.maxHp, S.hp + 5); renderSheet();
+      await say("You wet the pen on the clean desk and write your name on the First Sheet, small, at Ostle Ford, where you are. The ink goes brown as you watch, and still. You feel it: like a hand put flat on your back. You're on the map now. Wherever you go, you're drawn there.");
+      await mech("+5 max HP, for good. And whoever reads the First Sheet can find you.", "loot");
+    } else if (c === "take") {
+      S.gear = S.gear || []; if (!hasGear("firstsheet")) S.gear.push("firstsheet"); renderSheet();
+      await say("You lift the survey stones off the corners and roll the First Sheet up, carefully, and it's lighter than it should be, and warm. Out at its edge, rolled up inside, the new line goes on getting longer. You can hear the nib.");
+      await mech("The First Sheet is in your Bag. +1 to Survival and Investigation. He'll want it back.", "loot");
+    } else {
+      S.hh.hear++;
+      if (U.ink >= 2) { U.ink -= 2; renderSheet(); }
+      await say("You leave it on the table under its stones. Outside, on the white, you draw the paper house's door shut with the millpond ink, and draw a bar across it, and the bar's a bar, and the door's a wall." + (U.ink < 2 ? " It's a thin line, with the last of the jar. It'll hold for a while." : ""));
+      await mech("The paper house is sealed. Nobody draws on the First Sheet from in there again; he'll have to do it from the edge.", "loot");
+    }
+    if (U.ysolt === "with") {
+      if (U.spent >= 3) { await say("Ysolt walks back out of the white with her hand on your shoulder. She drew for you " + U.spent + " times, and her eyes are silver all through now, the way they were in the millpond. She can't see you. She can see the map of where you are, perfectly. \"It's not so bad,\" she says. \"I always liked it better.\""); U.ysoltBlind = true; }
+      else await say("Ysolt walks back out of the white beside you, squinting through her spectacles at ordinary things, a hedge, a gate, a cow, and naming them under her breath as if to make sure.");
+    } else await say("Back at Ostle Ford, Ysolt is still asleep in the millpond, drawing. Her hands are drawing a coast you've never seen.");
+    await unReward();
+    if (U.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits on the half milestone at the edge of the white, which is a whole milestone again, or isn't, and swings her heels. \"A man who draws the world,\" she says. \"Of course there is. Of course you'll go.\" She takes your hand. \"I'm coming. Somebody's got to make sure you come back drawn the right way round.\"" : "Tyra sits on the milestone and sharpens her knives, one after the other, and doesn't say anything, which is how you know she's coming.");
+    U.on = false; U.done = true; renderSheet();
+    await endCard();
+  }
+  const UN_GOOD = 14, UN_BEST = 21;
+  async function unReward() {
+    const U = un(), e = U.effort, saved = unSaved().length;
+    const gold = 220 + 12 * Math.max(0, e) + 5 * lv();
+    S.coins += gold; S.mapmender = true; renderSheet();
+    await mech("The east's villages, the ones you drew back and the ones on the edge of the ones you didn't, take up a collection. Gain " + gold + " gold, and a name they'll use for you on the river road: <b>Mapmender</b>.", "loot");
+    grant("undone");
+    if (e >= UN_GOOD) {
+      S.gear = S.gear || []; if (!hasGear("quirenib")) S.gear.push("quirenib"); renderSheet();
+      await say("On the clean desk in the paper house, before you left, there was a pen. You took it. It's a steel nib on a bone handle, and when you hold it, your hand knows how to draw a straight line without a rule.");
+      await mech("Gain <b>the Quire's nib</b>, for a strong showing (effort " + e + "): +1 to Investigation, Survival and Perception checks, and +5 max HP for as long as you carry it.", "loot");
+      S.maxHp += 5; S.hp = Math.min(S.maxHp, S.hp + 5); renderSheet();
+      grant("unnib");
+    } else await mech("Effort " + e + ". (A stronger showing would have earned the Quire's nib: " + UN_GOOD + " or more.)");
+    if (e >= UN_BEST) {
+      if (saved >= 3) { S.dress = (S.dress || 0) + 3; S.coins += 150; await mech("<b>The river road's thanks.</b> " + saved + " places drawn back, and everyone in them knows it: 150 gold more, and 3 bandages from the Lantry chapel.", "loot"); }
+      else { S.maxHp += 4; S.hp = Math.min(S.maxHp, S.hp + 4); await mech("<b>What the white couldn't take.</b> +4 max HP for good.", "loot"); }
+      renderSheet(); grant("unbest");
+    }
+  }
+  function unSection(rs) {
+    const U = rs && rs.unm;
+    if (!U || !U.lost || !Object.keys(U.fate || {}).length) return "";
+    const T = { true: "drawn back true", wrong: "drawn back wrong", gone: "gone for good" };
+    return "<section><h3>The Unmapped</h3>" +
+      '<p class="j-sub">What the blank took from the east, and what you drew back with the millpond ink.</p>' +
+      '<ul class="marks">' + U.lost.map(k => '<li><span class="mk' + (U.fate[k] === "true" ? " on" : "") + '"></span><span><b>' + UN_PLACES[k].name + "</b>, " + UN_PLACES[k].what + ": " + (T[U.fate[k]] || "still unmapped") + "</span></li>").join("") + "</ul></section>";
+  }
+  // ---------- the world remembers the Unmapped ----------
+  Object.assign(ECHOES, Object.fromEntries(Object.keys(UN_PLACES).map(k => ["un_" + k, {
+    ch: "The Unmapped",
+    get why() { const f = S.unm && S.unm.fate[k], n = UN_PLACES[k].name; return f === "true" ? "You drew " + n + " back true." : f === "wrong" ? "You drew " + n + " back, but wrong." : "You left " + n + " in the white."; },
+    where: "Rahdaria, and the east road", on: () => !!(S.unm && S.unm.done && S.unm.lost.includes(k))
+  }])), {
+    unRope: { ch: "The Unmapped", get why() { return { kept: "You kept the Gnomon's rope, and fought the Bell-Takers for it.", bathyr: "You gave the Gnomon's bell to the Bathyr.", steward: "You sold the Gnomon's bell to the Steward of Rahdaria.", saltwrit: "You gave the Gnomon's bell to the Saltwrit." }[S.unm && S.unm.rope] || ""; }, where: "Rahdaria", on: () => !!(S.unm && S.unm.done && S.unm.rope) },
+    unSheet: { ch: "The Unmapped", get why() { return { sign: "You wrote your name on the First Sheet.", take: "You took the First Sheet from the paper house.", seal: "You sealed the First Sheet in the paper house." }[S.unm && S.unm.sheet] || ""; }, where: "The roads back", on: () => !!(S.unm && S.unm.done && S.unm.sheet) },
+    unHob: { ch: "The Unmapped", get why() { return S.unm && S.unm.hob === "promise" ? "You kept your promise to Hob Veary." : "You promised Hob Veary, and drew Hobble Cross back anyway."; }, where: "Hobble Cross", on: () => !!(S.unm && S.unm.done && (S.unm.hob === "promise" || S.unm.hob === "broke")) },
+    unYsolt: { ch: "The Unmapped", why: "Ysolt drew for you until her eyes went silver.", where: "Rahdaria", on: () => !!(S.unm && S.unm.done && S.unm.ysoltBlind) }
+  });
+  const UN_TOWN = {
+    true: { lantry: "A carter in the market says he came the east road through Lantry this morning, and the chapel bell rang him past. \"Brother there rings it for everybody,\" he says. \"New brother. Didn't use to be one.\"",
+      hobble: "There's Hobble Cross honey on the stalls, in pots with a black ribbon round the neck. The woman selling it says the bees came back on their own, and you have to tell bees things.",
+      pellmarsh: "A girl from Pellmarsh is selling eels from a basket, and tells you, unasked, that the Ostle rises in the Sulmara hills and goes into the sea at Rahdaria and is forty leagues long. \"We did rivers,\" she says.",
+      ninefields: "There's a Ninefields fleece on the wool-stall, and the man selling it tells you the flock's the biggest it's been in his lifetime. \"Counted them myself,\" he says. \"Twice.\"",
+      wend: "The Wend ferry's running again: the carriers say so. A penny over and two back, and the girl who poles it does it with her eyes shut, for luck.",
+      gauntry: "Gauntry House's cook has come down to Rahdaria to buy flour, with two of the dogs. She tells everybody who'll listen that a stranger drew the house back with a pen. \"Not the family,\" she says. \"Just us. Best thing that ever happened to us.\"" },
+    wrong: { lantry: "The carters say you can tell the time by Lantry's bell going east, so long as you remember to count it backwards.",
+      hobble: "A carter in the market is complaining that he took the Wend road at Hobble Cross and came out at Lantry, twice. \"Somebody drew it wrong,\" he says. \"Somebody ought to draw it again.\" He doesn't know it was you.",
+      pellmarsh: "A man from Pellmarsh is buying rope, a great deal of rope. \"For the barn,\" he says. \"It hangs. You'd want rope too.\"",
+      ninefields: "A Ninefields shepherd at the inn tells you there are nine fields, and counts them on his fingers to prove it, and gets ten, and sits there looking at his hand.",
+      wend: "The ferry at Wend goes from Wend to Wend now. Nobody's sure what to do about the toll.",
+      gauntry: "Somebody at the inn says the servants at Gauntry go in and out by the windows now. \"Don't they mind?\" somebody else says. \"They say it keeps the family out.\"" },
+    gone: { lantry: "Nobody rings a bell for the travellers on the east road any more. A woman at a stall says she misses it, and can't think what she misses.",
+      hobble: "There's no Hobble Cross honey this year. There's a gap on the stall where it was, and the stallholder keeps putting things in it and taking them out again.",
+      pellmarsh: "On the wall of the inn somebody has chalked TOMORROW: RIVERS. Nobody knows who, or what it means. The landlord leaves it.",
+      ninefields: "There's no Ninefields wool on the wool-stall. The man there says the price has gone up, and can't tell you why, except that there used to be more sheep, somewhere.",
+      wend: "The carriers to the east go round by the long road now. There used to be a ferry, one of them says. \"Was there?\" says another. They argue about it for an hour.",
+      gauntry: "Nobody in Rahdaria talks about Gauntry House. When you say the name, people look at you as if you've said a word they don't know." }
+  };
+  async function unEchoTown(T) {
+    const U = S.unm;
+    if (!U || !U.done || T.reg !== "rahdaria") return;
+    let n = 0;
+    for (const k of U.lost) {
+      if (n >= 2) break;
+      if (!echoDue("un_" + k)) continue;
+      await echoMark("un_" + k); n++;
+      await say(UN_TOWN[U.fate[k] || "gone"][k]);
+    }
+    if (n < 2 && echoDue("unRope")) { await echoMark("unRope"); await say({ kept: "The Steward's people still won't look at you, and now neither will the Saltwrit. A Bathyr in the market taps at you as you pass: a word you know. <i>Not.</i>", bathyr: "A Bathyr in the market taps at you as you pass, slow and friendly: <i>deep</i>, and <i>good</i>. The bell is at the bottom of the western sea, she means. Where it's deepest.", steward: "The Steward's people are very polite to you. There's a new tower going up on the top terrace, and nobody will tell you what it's for, and everybody knows.", saltwrit: "There's a Saltwrit notice on the quay: EVIDENCE IN THE MATTER OF THE HINGE, NOT TO BE REMOVED. Somebody has written under it, in chalk: OR RUNG." }[U.rope]); n++; }
+    if (n < 2 && echoDue("unYsolt")) { await echoMark("unYsolt"); await say("Ysolt's shop on the third terrace has maps in the window, and all of them are perfect, and she can't see any of them. She knows you by your step. She gives you a map of where you're going next. It's right."); }
+  }
+  // The roads back: the east road runs past what you drew, and what you didn't. Past level 40, the
+  // Quire's coast is being drawn in from the edge, and now and then a sheet of it blows across the road.
+  async function unWrongRoad(reg) {
+    const U = S.unm, back = document.body.dataset.light;
+    const head = (t) => { const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>" + t + "</h2>"); scrollNext = true; add(h); };
+    if (lv() >= LV_GATE && !U.quire) {
+      U.quire = true;
+      head("A sheet on the wind");
+      await say("A sheet of paper comes along the road on the wind, end over end, and wraps itself round your boot. It's a map, in brown ink, in the hand that cut the survey stones: of this road, this bend, this milestone, drawn this morning. There's a figure on the road. It's you, drawn a little way ahead of where you're standing.");
+      await say("In the corner, very small: <i>Not finished. Come and see. H.M.</i>" + (U.sheet === "sign" ? " Your name's on it, in your own hand, the way you wrote it on the First Sheet." : U.sheet === "take" ? " The First Sheet in your Bag is warm against your back, and you can hear its nib." : ""));
+      xpGain(40); save(); return true;
+    }
+    const wrong = U.lost.filter(k => U.fate[k] === "wrong"), gone = U.lost.filter(k => U.fate[k] === "gone");
+    if (wrong.length && d(2) === 1) {
+      const k = wrong[d(wrong.length) - 1];
+      head(UN_PLACES[k].name + ", wrong");
+      await say(UN_PLACES[k].wrong);
+      await say("Somebody there knows your face, and doesn't know where from, and gives you supper anyway.");
+      await heal(1, 8, "Supper, wrong-way round."); xpGain(20); save(); return true;
+    }
+    if (gone.length) {
+      const k = gone[d(gone.length) - 1];
+      head("The edge of the white");
+      light("lake");
+      await say("The east road runs past the place where " + UN_PLACES[k].name + " was. The white is still there, smooth as a plate, and it's still hungry: something comes out of it as you go past, to see who you are.");
+      await hkFight(DRAFTS({ heads: 2 + d(2) }));
+      await gold(2, 10, "In the white where the Drafts fell, there are things the land couldn't remember to keep: a thimble, a spoon, a few coins.");
+      light(back); save(); return true;
+    }
+    return false;
+  }
+  // The end card's line for the Unmapped.
+  function unCoda() {
+    const U = S.unm, saved = U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong"), gone = U.lost.filter(k => U.fate[k] === "gone");
+    const list = (a) => a.length > 1 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a[0];
+    return " In the east you drew back " + (saved.length ? list(saved.map(k => UN_PLACES[k].name + (U.fate[k] === "wrong" ? " (wrong)" : ""))) : "nothing") + "." +
+      (gone.length ? " " + list(gone.map(k => UN_PLACES[k].name)) + (gone.length > 1 ? " are" : " is") + " gone for good, and the white is still there, still hungry, and the whole realm leans toward it." : " The white is still there, smaller, and the realm still leans toward it.") +
+      ({ sign: " Your name is on the First Sheet.", take: " The First Sheet is rolled up in your Bag, warm, and you can hear its nib.", seal: " The First Sheet is sealed in the paper house." }[U.sheet] || "") +
+      " Far past Sulmara, at the edge of the world, a coast is being drawn in a stroke at a time by the last of the Quire. On the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.";
   }
 
   // ---------- the roads back: caravans, and raiders ----------
@@ -26626,7 +27551,7 @@ body.pv-open { overflow: hidden; }
   function salleOf(T) {
     const key = T.reg + ":" + T.name;
     let h = 0; for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    return { key, master: SALLE_MASTERS[h % SALLE_MASTERS.length], school: Object.keys(DUEL_SCHOOLS)[(h >> 3) % 3] };
+    return { key, master: SALLE_MASTERS[h % SALLE_MASTERS.length], school: Object.keys(DUEL_SCHOOLS)[(h >>> 3) % 3] };
   }
   const salleDone = () => Object.values(duel().salle).filter(v => v >= 3).length;
   async function salleVisit(T) {
@@ -27098,7 +28023,7 @@ body.pv-open { overflow: hidden; }
     "At the crossroads there's a gibbet with nobody in it, and a sign nailed to it with their mark painted on. Under the sign, four of them are waiting, as if they knew you'd come this way."
   ];
   // Half the East is fought in the lands east of Rahdaria, so it borrows Rahdaria's region.
-  const CH_REG = { hinge: "rahdaria" };
+  const CH_REG = { hinge: "rahdaria", unmapped: "rahdaria" };
   const regAt = (k) => Object.keys(TIER).find(r => TIER[r] === k) || (CHAPTERS[k] && CH_REG[CHAPTERS[k].slug]);
   // Which gang: one from either end of the road, one you haven't broken if there is one, and a gang
   // you let go now and then comes back with a grudge.
@@ -27672,7 +28597,7 @@ body.pv-open { overflow: hidden; }
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done;
     const TITHE = {
       rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
       sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
@@ -27684,11 +28609,11 @@ body.pv-open { overflow: hidden; }
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned." : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
@@ -27824,6 +28749,19 @@ body.pv-open { overflow: hidden; }
         H.ysolt ? (H.ysolt === "wake" ? "You woke Ysolt." : "You let Ysolt dream on.") : ""
       ];
     },
+    unmapped: (s) => {
+      const U = s.unm;
+      if (!U) return [s.part > 82 && "Where the Hinge rang the east blank, the land went unmapped."];
+      const saved = U.lost.filter(k => U.fate[k] === "true" || U.fate[k] === "wrong"), gone = U.lost.filter(k => U.fate[k] === "gone");
+      return [
+        "Where the Hinge rang the east blank, the land went unmapped, and you went into the white with " + (U.ysolt === "with" ? "Ysolt and her pens" : "Ysolt's sleeping map") + " and a jar of millpond ink.",
+        saved.length ? "You drew back " + saved.map(k => UN_PLACES[k].name + (U.fate[k] === "wrong" ? " (wrong)" : "")).join(", ") + "." : "",
+        gone.length ? gone.map(k => UN_PLACES[k].name).join(", ") + (gone.length > 1 ? " stay" : " stays") + " gone." : "",
+        U.legend ? "You read the Quire's legend off a survey stone." : "",
+        U.boss ? ({ still: "At the margin you beat the Unwriting.", turn: "You brought Strand House down on the Hinge's last households.", keep: "You beat Bastia Grell and the Bell-Takers." }[(s.hn && s.hn.ending) || "still"]) : "",
+        U.sheet ? ({ sign: "In the paper house you wrote your name on the First Sheet.", take: "In the paper house you took the First Sheet.", seal: "You sealed the First Sheet in the paper house." }[U.sheet] + " Hollin Marrisk, the last of the Quire, is drawing new country at the edge of the realm.") : ""
+      ];
+    },
     sounding: (s) => {
       const D = s.sd;
       if (!D) return [s.part > 61 && "You went down the Sea-Stair with the Speaker for the Deep, to Bathyrra, the dry city under the western sea."];
@@ -27883,8 +28821,8 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.

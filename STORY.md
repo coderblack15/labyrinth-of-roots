@@ -1205,6 +1205,20 @@ Adrian's ask (11 November 2026): a vague message from somebody unknown, with a p
 
 Names: Ysolt; Mardek Corvane; the Hinge; Idony Rusk; the Gnomon; Gauntry House; the Ostle; Wynn Cotter the miller; Tamsin Reed; Brother Amis; the Reaped (HN_DEAD in `index.html`). State is `S.hn`; the world after is `S.unbal`.
 
+## The Unmapped (Parts LXXXIV–XC)
+
+Pitched to Adrian on 11 November 2026 as the chapter after Half the East and built as pitched ("Do what you think is right"). Where the Hinge rang the east blank, the land went unmapped. Redrawing is a limited-ink puzzle: bring back one lost place, and another stays gone. Every choice leaves a trace (ECHOES `un_*`, `unRope`, `unSheet`, `unHob`, `unYsolt`).
+
+- **LXXXIV The Edge of the Paper.** A carter from Wend who can't remember his sister. The grey places are white now, the white of paper, and the land is still in it, moving out of order. Ysolt (woken: she comes back with pens; dreaming: her sheet draws you a little way ahead) makes ink from the black silt where the millpond Cascade stood. Why the realm is visceral: it's leaning into the hole, like a floor round a sinkhole. Practice on half a milestone. The first Pale Drafts, people drawn from memory, badly.
+- **LXXXV Wrong Country.** No sound in the white. The road-song puzzle: put the landmarks back in order. The bell: broken, the sky is clean of Cascades and nothing can lean the white back; turned, the Hinge's mourners ambush you and Idony Rusk is gathering the rest at Strand House; kept, a thief paid in silver stamped with a quill tries for the rope. The first redrawing.
+- **LXXXVI What the Dead Remember.** Lantern kept: the Reaped ask for their places back (memories = free squares), and Hob Veary asks you to leave Hobble Cross gone. Lantern freed: you meet them in the white, remembered wrong. Ysolt woken: the Drafts come for the woman with the pen, and every redrawing silvers her eyes a little more. Dreaming: the map draws a sketch of Mardek Corvane, and it stands up. The second redrawing.
+- **LXXXVII The Legend.** Survey stones older than the Gnomon, and the first map's legend (a cipher): the Quire, seven draughtsmen who drew the realm still out of wrong country and gave it a keel, the Underdream. Bell kept: the Bathyr, the Steward and the Saltwrit all want the rope; keep it, give it, or sell it.
+- **LXXXVIII The Margin.** The procession of Drafts at the edge of the page; the last redrawing; whatever's left stays gone. The paper house.
+- **LXXXIX The Last Line.** Broken bell: the Unwriting, the shape of everything not drawn back, rubbing out your outline. Turned: Idony Rusk (a Fury bout) and the Hinge's last households in leaning Strand House. Kept: Bastia Grell and the Bell-Takers, paid in Quire silver, hauling on the rope.
+- **XC The First Sheet.** The Quire's house, six dusty desks and one wet pen; the First Sheet, scraped across the east with a knife; Corvane's letter and Hollin Marrisk's answer: a balanced map is a finished map, and he wanted clean paper. A new coast being drawn in at the edge of the world. Sign the sheet, take it, or seal it. The reward: gold, Mapmender, the Quire's nib.
+
+Names: the Unmapped; Pale Drafts; the Quire; Hollin Marrisk; the First Sheet; the paper house; Strand House; Bastia Grell; the Bell-Takers; the Unwriting. State is `S.unm`.
+
 ## Blade to Blade: duels on the stroke pad
 
 Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes, parries and attacks that overwhelm, "hundreds of attacks based on screen strokes". A prototype (the Salle Duel) came first, then the engine went into the game.
