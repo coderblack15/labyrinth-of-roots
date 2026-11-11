@@ -2293,7 +2293,7 @@ body.pv-open { overflow: hidden; }
     { ver: "74", name: "Sister Wren Comes East", date: "11 Nov 2026", items: [
       "<b>The east hits softer.</b> Mardek Corvane, Idony Rusk, the Fury bouts, the Reaping, the sketch of Corvane, the Drafts at the margin and the three bell bosses (the Unwriting, the leaning house, the Bell-Takers) all hit noticeably less hard. Their level bonus to damage is halved, their dice are smaller, and the big blows are lighter: the Reaping, the house's lean, the rubbing-out and the bell.",
       "Fury bouts give you more room: a little longer before the counter lands when you hesitate, longer between the big swings, and a moment more to catch them.",
-      "<b>Sister Wren comes east.</b> The healer from Vellum Rest turns up for the hard fights of Half the East and the Unmapped. Twice a fight she helps you with a protection save (+4, and if it still fails she takes the edge off it). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops. She has opinions about how you got that way."
+      "<b>Sister Wren comes east.</b> The healer from Vellum Rest turns up for the hard fights of Half the East and the Unmapped. Twice a fight she helps you with a protection save (+4, and if it still fails she takes the edge off it). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops. And she won't let you walk into one of those fights below half your HP. She has opinions about how you got that way."
     ] },
     { ver: "73", name: "The Unmapped", date: "11 Nov 2026", items: [
       "<b>A new chapter after Half the East, Parts LXXXIV–XC.</b> Where the Hinge rang the east blank, the land didn't die. It went <b>unmapped</b>: roads end mid-stride, the right hills turn up in the wrong order, and people are missing from memory as well as from the ground.",
@@ -23952,9 +23952,10 @@ body.pv-open { overflow: hidden; }
   // east when the Hinge starts killing, and stands at your back in the hard fights of Half the East and
   // the Unmapped. In each one: she helps you with up to WRN_WARDS protection saves (+WRN_BONUS on the
   // save, and if it still fails she takes the edge off it: half), and once, when you're close to death
-  // (a quarter of your HP or less), she gets to you: WRN_HEAL, and the bleeding stops.
+  // (a quarter of your HP or less), she gets to you: 3d8 + half your level, and the bleeding stops. And she
+  // won't let you start one of them below half your HP (WRN_PREP).
   // S.wren = { met } once she's come; FOE.ln = { wards, healed } for the fight in hand.
-  const WRN_WARDS = 2, WRN_BONUS = 4, WRN_LOW = 0.25;
+  const WRN_WARDS = 2, WRN_BONUS = 4, WRN_LOW = 0.25, WRN_PREP = 0.5;
   const wrnHealRoll = () => d(8) + d(8) + d(8) + Math.floor(lv() / 2);
   // Adrian: "She could come in with a sassy remark." One of these when she gets to you, none twice running.
   const WRN_SASS = [
@@ -23976,9 +23977,15 @@ body.pv-open { overflow: hidden; }
       S.wren = { met: true };
       await say("Somebody comes up behind you with a satchel that clinks: a small old woman in a vinegar-stained apron, out of breath, with her sleeves already rolled. It's <b>Sister Wren</b>, from Vellum Rest, a very long way from her burners.");
       await say("\"The roads east are full of the dead,\" she says, \"and somebody has to see to the ones who aren't, yet. Go on. I'll be behind you. I'm always behind somebody.\"", "voice");
-      await mech("<b>Sister Wren is with you</b> for the hard fights in the east. Twice a fight she helps with a protection save (+" + WRN_BONUS + ", and if it still fails she takes the edge off: half). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops.", "loot");
+      await mech("<b>Sister Wren is with you</b> for the hard fights in the east. Twice a fight she helps with a protection save (+" + WRN_BONUS + ", and if it still fails she takes the edge off: half). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops. And she won't let you start one below half your HP.", "loot");
     }
     FOE.ln = { wards: WRN_WARDS, healed: false };
+    // Room to recover: she won't let you walk into one of these at less than half your HP.
+    if (S.hp < Math.ceil(S.maxHp * WRN_PREP)) {
+      const to = Math.ceil(S.maxHp * WRN_PREP), h = to - S.hp; S.hp = to; renderSheet();
+      await say("Sister Wren takes one look at you and sits you down on the nearest flat thing. \u201c" + wrnSass() + "\u201d", "voice");
+      await mech("Sister Wren patches you up before it starts: +" + h + " HP (back to half).", "loot");
+    }
   }
   // A protection save with Wren at your shoulder. o is check()'s options. Returns { ok, warded }.
   async function wrnSave(o) {
@@ -24010,7 +24017,7 @@ body.pv-open { overflow: hidden; }
     const wk = wpnKey(), die = wNoun(wk) === "arrow" ? [1, 4, 2] : wDef(wk).die, noun = wNoun(wk) === "arrow" ? "knife" : wNoun(wk);
     foeStart(o.name, o.hp);
     FOE.soft = o.soft || 0;
-    if (o.wren && S.wren) FOE.ln = { wards: WRN_WARDS, healed: false };
+    if (o.wren) FOE.ln = { wards: WRN_WARDS, healed: false };
     tip("fury");
     const steady = () => q(".du-steady").checked;
     const st = { fury: 0, last: [], hits: 0, caught: 0, unleashed: 0, frenzy: 0, winded: 0, idle: performance.now(), wind: 0, windAt: performance.now() + (o.windup || 7000), over: false, counters: 0 };
@@ -24163,6 +24170,7 @@ body.pv-open { overflow: hidden; }
     });
   }
   async function furyFight(o) {
+    if (o.wren) await wrnJoin();
     const r = await furyBout(o);
     await mech(r.won ? "You win the bout: " + r.hits + " strokes landed" + (r.unleashed ? ", unleashed " + (r.unleashed > 1 ? r.unleashed + " times" : "once") : "") + (r.caught ? ", " + r.caught + " big swing" + (r.caught > 1 ? "s" : "") + " caught" : "") + "." : "You lose the bout. The axe held you at " + S.hp + " HP.", r.won ? "loot" : "hurt");
     if (r.won) grant("hnfury");
@@ -25420,7 +25428,7 @@ body.pv-open { overflow: hidden; }
     tip("lean");
     await mech("<b>The leaning house.</b> Every other round Strand House leans further and comes down on whoever's under it: a Dexterity save (DC 14) or 2d8. Brace in a doorway (your turn) to stand it, or draw a door out of the grey (2 drops) to send it onto them." + (drawn ? " The house you drew back up the hill is watching: the lean does half." : ""));
     const F = {
-      name: "The Hinge's last households", heads: 6, unit: "heir|heirs", ac: 15, atk: 6, n: 1, s: 6, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's heirs", whoShort: "heir", bleed: 20, soft: 0.5, wren: true,
+      name: "The Hinge's last households", heads: 6, unit: "heir|heirs", ac: 15, atk: 5, n: 1, s: 6, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's heirs", whoShort: "heir", bleed: 20, soft: 0.5, wren: true,
       hitWhy: "A Strand cousin's sword finds your ribs.", miss: "A pike goes past your ear and sticks in the grey panelling.", hitLine: "One of them goes down on the grey floor, and the house creaks over them.",
       before: async (st) => {
         if (st.round < 2 || st.round % 2) return;
