@@ -1170,6 +1170,31 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 @keyframes fdshake { 20% { transform: translate(-5px, 2px); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
 .fd-flag { animation: fdflag 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 0; }
 .fd-wheel { animation: fdwheel 14s linear infinite; }
+.wb-card { margin: 8px auto 4px; max-width: 460px; padding: 8px; background: #3a2d1d; border-radius: 6px; box-shadow: 0 14px 30px #0008, inset 0 0 0 2px #5b4528; }
+.wb-map { display: block; width: 100%; height: auto; border-radius: 3px; }
+.wb-node.can { cursor: pointer; }
+.wb-node.can .wb-ring { animation: wbpulse 1.6s ease-in-out infinite; }
+@keyframes wbpulse { 50% { stroke-opacity: .25; } }
+.wb-thread { animation: wbdrop 1.2s ease-out both; }
+@keyframes wbdrop { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+.wb-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 2px 0; font-size: .86rem; color: #d9c9a6; }
+.wb-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.wb-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.wb-hear { margin: 6px 2px 0; font-size: .9rem; color: #e8d8b2; font-style: italic; }
+.wb-wonder { max-width: 520px; margin: 10px auto; }
+.wb-scene { display: block; width: 100%; height: auto; border-radius: 4px; border: 2px solid #3a2916; box-shadow: 3px 4px 0 #0004; }
+.wb-scene .wb-wv { animation: wbshim 3s ease-in-out infinite; }
+.wb-scene .wb-bob { animation: wbbob 1.6s ease-in-out infinite; }
+.wb-scene .wb-rise { animation: wbrise 5s ease-in-out infinite; transform-box: fill-box; }
+.wb-scene .wb-ring2 { animation: wbshim 2.4s ease-in-out infinite; }
+@keyframes wbshim { 50% { opacity: .15; } }
+@keyframes wbbob { 50% { transform: translateY(-1.5px); } }
+@keyframes wbrise { 0% { opacity: .2; transform: translateY(6px); } 50% { opacity: 1; } 100% { opacity: .2; transform: translateY(-14px); } }
+.wb-book { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.wb-book figure { margin: 0; } .wb-book figcaption { font-size: .82rem; color: var(--muted); margin-top: 3px; }
+.wb-book .wb-scene.small { border-width: 1px; }
+.wb-unsk { aspect-ratio: 32 / 17; display: grid; place-items: center; border: 1px dashed var(--line); border-radius: 3px; color: var(--muted); font-size: 1.5rem; }
+@media (prefers-reduced-motion: reduce) { .wb-node.can .wb-ring, .wb-thread, .wb-scene * { animation: none !important; } }
 @keyframes fdwheel { to { transform: rotate(360deg); } }
 .fd-glint { animation: fdglint 4.5s ease-in-out infinite; }
 @keyframes fdflag { 50% { transform: skewY(4deg) scaleX(.94); } }
@@ -2257,6 +2282,7 @@ body.pv-open { overflow: hidden; }
     }
     h += echoSection(rs);
     h += f50Section(rs);
+    h += wbSection(rs);
     h += newsSection();
     h += calSection(rs);
     h += stoneSection();
@@ -2292,6 +2318,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "76", name: "The Wandering Board", date: "11 Nov 2026", items: [
+      "<b>The roads back are a board now, if you want them to be.</b> Pick <b>Walk the Wandering Board</b> and choose a region: a board of squares from a crossroads up to the top of the road, and your marker at the bottom. Move up one row at a time, or fold it away and come back.",
+      "<b>You don't know what's ahead.</b> The squares in front of you are only sounds (haggling, woodsmoke, something breathing in the rocks) until you stop and listen, which costs a watch.",
+      "<b>The world moves when you do.</b> Every step, the region's gang hunts the markets and you, a salt caravan heads for the nearest market, and every third step a Cascade thread falls on a square ahead and turns it Nightmare (worse, and worth double). Night makes the gang twice as fast.",
+      "<b>Roads you don't take don't wait.</b> Leave a fork behind and it plays out without you. You hear what happened at the next hearth.",
+      "<b>Wonders.</b> One square on every board is a wonder that no listening gives away: a frozen waterfall that sings, a herd of glowing stags, a root that climbs past the clouds and more. Sketch them into your journal. Three torn leaves of Ysolt's sketchbook open a hidden cache.",
+      "<b>The board remembers.</b> Rob the salt caravan and it never runs that road again. Break the gang and only stragglers are left. Help the Hesk singer and she sings for you at the top; rob her and her people are waiting next time. Four new feats in <b>The Wandering Board</b>."] },
     { ver: "75", name: "Ground in the East", date: "11 Nov 2026", items: [
       "<b>The east has its own battle maps.</b> Road fights in Half the East and the Unmapped used to happen on Barricade Street, back in the siege quarter of Rahdaria. Now they don't.",
       "<b>Ostle Ford</b>, for Half the East: the shallows below the mill, where the river is sinking ground on both sides of the old ford, the millrace runs deep, and the hedgebanks give cover. The millwheel turns while you fight. Its wanderer is the <b>Weir-otter</b>.",
@@ -2956,6 +2989,10 @@ body.pv-open { overflow: hidden; }
     { id: "fdblank", name: "Off the Edge of the Map", desc: "Win a fight on the Blank.", test: () => false },
     { id: "fdbump", name: "Nobody Drew That", desc: "Walk into a wall on the Blank before anyone had inked it in.", test: () => false },
     { id: "fdink", name: "Field Draughtsman", desc: "Ink in twelve squares of the Blank on one journey.", test: () => !!S.fd && (S.fd.inked || 0) >= 12, prog: () => [Math.min(12, S.fd ? S.fd.inked || 0 : 0), 12] },
+    { id: "wbfirst", name: "Over the Hill", desc: "Take the top of a Wandering Board.", test: () => false },
+    { id: "wbwonder", name: "Worth Stopping For", desc: "Find a wonder on the Wandering Board.", test: () => false },
+    { id: "wbsketch", name: "The Full Sketchbook", desc: "Sketch all six wonders of the Wandering Board.", test: () => !!S.wb && (S.wb.sk || []).length >= 6, prog: () => [Math.min(6, S.wb ? (S.wb.sk || []).length : 0), 6] },
+    { id: "wbcache", name: "X Marks It", desc: "Put three torn leaves together and find Ysolt's Cache.", test: () => false },
     { id: "pvfirst", name: "Proven", desc: "Win a duel in the Proving Ground.", test: () => false },
     { id: "pvhot", name: "Pass It Over", desc: "Settle a duel with a friend on one shared screen.", test: () => false },
     { id: "pvghost", name: "Ghostbreaker", desc: "Beat a friend's ghost, from a code they sent you.", test: () => false },
@@ -3041,7 +3078,9 @@ body.pv-open { overflow: hidden; }
     { id: "unmapped", name: "The Unmapped", ver: "25", desc: "Redrawing the lost east with millpond ink, wrong country, the Quire's legend, and the First Sheet.",
       ids: ["unfirst", "unredraw", "unwrong", "unthree", "unorder", "unlegend", "unstill", "unturn", "unkeep", "undone", "unnib", "unbest"] },
     { id: "eastground", name: "Ground in the East", ver: "26", desc: "Battle maps for the east: Ostle Ford below the mill, and the Blank, where most of the field isn't drawn yet.",
-      ids: ["fdford", "fdblank", "fdbump", "fdink"] }
+      ids: ["fdford", "fdblank", "fdbump", "fdink"] },
+    { id: "board", name: "The Wandering Board", ver: "27", desc: "A board for every region on the roads back: sounds in the fog, a world that moves when you do, roads you didn't take, and wonders to sketch.",
+      ids: ["wbfirst", "wbwonder", "wbsketch", "wbcache"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4829,6 +4868,7 @@ body.pv-open { overflow: hidden; }
           { key: "weave", label: bn().weave === 2 ? "Climb the Needle again" : "Climb to the High Weave", tag: bn().weave === 2 ? "the Weave is empty now · the view" : "the legendary gang · a hard fight", plain: true, show: bn().weave === 1 },
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "sea", label: S.sea ? "Put to sea in " + S.sea.ship.name : "Go down to your ship", tag: S.sea ? "voyages · rival captains · hull " + S.sea.ship.hull + " of " + S.sea.ship.max + (S.sea.chart.length && !S.sea.hoard ? " · chart " + S.sea.chart.length + " of 4" : "") : "the Open Reach · a ship of your own", plain: true, show: seaOpen() },
+          { key: "board", label: S.wb && S.wb.cur ? "Unfold the Wandering Board again" : "Walk the Wandering Board", tag: S.wb && S.wb.cur ? REGIONS[S.wb.cur.reg] + " · where you left it" : "a board for one region · sounds, wonders, a world that moves when you do", plain: true },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
@@ -4853,6 +4893,7 @@ body.pv-open { overflow: hidden; }
         else if (c === "roads") await bnRoads();
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
+        else if (c === "board") await wbHub();
         else if (c === "cw") await cwHub();
         else if (c === "f50") await f50Hub();
         else if (c === "seek") await roamSeek();
@@ -4875,6 +4916,443 @@ body.pv-open { overflow: hidden; }
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); calTo(0); }
     }
   }
+  // ---------- the Wandering Board ----------
+  // A board for one region on the roads back: squares in seven rows from a crossroads up to the region's
+  // top, joined by paths. You move a miniature one row at a time. Squares ahead are only sounds until you
+  // stop and listen (a watch passes). Every step you take, the world takes one too: a gang token hunts the
+  // markets (and you), a salt caravan heads for the nearest market, and every third step a Cascade thread
+  // falls on a square ahead and makes it a Nightmare (worse, and worth double). The forks you don't take
+  // play out without you (news at the next hearth). One square on every board is a wonder, which listening
+  // never gives away: a painted scene you can sketch into a sketchbook kept for the whole slot. Three torn
+  // leaves of Ysolt's sketchbook open a hidden cache. What you do is kept in S.wb.reg[reg] and read by the
+  // next board for that region (choices-must-matter): a robbed caravan never runs that road again, a broken
+  // gang leaves only stragglers, a helped Hesk singer comes to sing at the top, a robbed one sends an ambush.
+  // State: S.wb = { boards, sk: [wonder keys], led: [lines], reg: { [reg]: marks }, cur: board | null }.
+  // Board = { reg, N: [square], at, steps, gang: {at, alive, str, name}, car: {at, alive, state}, threads,
+  //   leaves, news: [{t, told}], heard, flags }. Square = { id, layer, x, y, k, name, links, seen, heard, vis, passed, nm, leaf, w }.
+  const WB_KIND = {
+    start: { label: "Start", col: "#6e5634" },
+    fight: { label: "Road fight", col: "#8a4a2a", sound: "Something heavy breathing, close to the path." },
+    market: { label: "Market", col: "#6c7b3a", sound: "Haggling. A mule complaining about it." },
+    hearth: { label: "Hearth", col: "#c4772c", sound: "Woodsmoke, and somebody singing badly." },
+    stone: { label: "Riddle stone", col: "#4e6a7a", sound: "A low hum, like a stone trying to remember a word." },
+    ruin: { label: "Investigation", col: "#5a4a6a", sound: "A door banging in the wind, over and over." },
+    meet: { label: "Traveller", col: "#7a6a3a", sound: "Someone calling for help. Or pretending to." },
+    elite: { label: "Elite fight", col: "#5a1f18", sound: "Silence. The birds have all left." },
+    wonder: { label: "Wonder", col: "#2f6a7a", sound: "A sound you can't place, like wind going through something very large." },
+    vault: { label: "Hidden cache", col: "#2f5a4a" },
+    boss: { label: "The top of the road", col: "#3a2030" },
+    burnt: { label: "Burnt", col: "#3a3a3a" },
+    wreck: { label: "Wreck", col: "#5a4a3a" }
+  };
+  const WB_NAMES = {
+    fight: ["The Narrows", "The Split Boulder", "Bone Gully", "The Rockfall", "The Thorn Bend", "The Low Ford", "Crow Hollow"],
+    market: ["The Salt Stalls", "Pedlar's Shelf", "The Mule Market"],
+    hearth: ["The Shepherd's Hearth", "Wind-Break Hearth", "The Drovers' Fire"],
+    stone: ["The Humming Stone", "Stone of Three Notes"],
+    ruin: ["The Toll-Keeper's House", "The Sealed Adit", "A Burned Shrine", "The Empty Mill"],
+    meet: ["The Switchback", "The Cairn Bend", "The Waymark"],
+    elite: ["The Grey Ledge", "The Notch", "The Old Kill"]
+  };
+  // The top of each region's board: who holds it.
+  const WB_TOP = { roots: "The Heartwood Gate", desert: "The Red Mesa", fen: "The Reed Throne", mere: "The Drowned Barbican", lastwell: "The Gallows Rise", glass: "The Cullet Heaps", corrach: "The Pale Cirque", noon: "The Gnomon Steps", undermoon: "The Last Mooring", rahdaria: "The Seventh Terrace", bathyrra: "The Sounding Rock", reach: "The Wreckers' Light", hinge: "Ostle Weir" };
+  const WB_WONDERS = [
+    { k: "choir", name: "The Glass Choir", text: "Round the bend the path stops at the foot of a frozen waterfall a hundred feet high. The wind comes down the gorge and through the ice, and the whole fall sings: long, low chords, changing as the light changes. Nobody has ever heard it sing the same thing twice." },
+    { k: "stags", name: "The Pale Crossing", text: "On the ridge above you, against the last of the sun, a herd of stags is crossing: pale as bone, dozens of them, and every antler is grown thick with the glowing fungus of the deep roots. They don't hurry and they don't look at you. It takes them the best part of an hour to go by." },
+    { k: "root", name: "The Sky-Root", text: "Out of the hillside, as thick as a tower, a single root of the labyrinth comes up out of the rock and keeps going: up through the cloud, and on past where you can see. Water runs down its bark in ribbons. Somewhere up there it's still growing. You can hear it creak." },
+    { k: "swarm", name: "The Lantern Rising", text: "The whole valley below you lights up at once. Thousands of Hesk are rising from the fungus groves on singing wings, each carrying a glow-cap like a lantern, all of them going up together in one long chord until the sky is full of slow green lights. It happens once a year. You happened to be here." },
+    { k: "bells", name: "The Drowned Bells", text: "A mere lies below the path, black and flat, and at the exact moment the sun clears the hills every bell of a town under the water starts to ring. You can see the ripples come up, ring by ring. Then the sun is up and it stops, as if somebody down there had remembered you were listening." },
+    { k: "mirage", name: "The Glass City", text: "Out on the flat, in the worst of the heat, a city stands where there was nothing a moment ago: towers of clear glass, banners, a gate with people going in and out of it. It's there for as long as you can hold your breath. The guides say it's real, and it's just somewhere else." }
+  ];
+  const wb = () => { const W = S.wb = S.wb || {}; for (const [k, v] of [["boards", 0], ["sk", []], ["led", []], ["reg", {}], ["cur", null]]) if (W[k] === undefined) W[k] = v; return W; };
+  const wbMarks = (reg) => (wb().reg[reg] = wb().reg[reg] || {});
+  const wbN = (B, id) => B.N[id];
+  const wbHere = (B) => B.N[B.at];
+  const wbAhead = (B) => wbHere(B).links.map(i => B.N[i]);
+  const wbGold = (m = 1) => Math.round((8 + lv() * 1.5) * m);
+  function wbInk(B, t) { const W = wb(); W.led.unshift(REGIONS[B.reg] + ": " + t); W.led = W.led.slice(0, 40); }
+
+  function wbNew(reg) {
+    const M = wbMarks(reg), widths = [1, 3, 3, 3, 3, 2, 1], L = widths.length, N = [], top = 54, bot = 612;
+    widths.forEach((w, li) => { for (let i = 0; i < w; i++) N.push({ id: N.length, layer: li, idx: i, x: w === 1 ? 180 : 52 + (256 * i) / (w - 1) + (Math.random() - .5) * 26, y: bot - (li * (bot - top)) / (L - 1) + (Math.random() - .5) * 18, k: "fight", name: "", links: [], seen: false, heard: false, vis: false, passed: null, nm: false, leaf: false }); });
+    const layer = (li) => N.filter(n => n.layer === li);
+    for (let li = 0; li < L - 1; li++) {
+      const a = layer(li), b = layer(li + 1), pos = (n, arr) => arr.length === 1 ? .5 : n.idx / (arr.length - 1);
+      const near = (n, from, to) => to.slice().sort((p, q) => Math.abs(pos(p, to) - pos(n, from)) - Math.abs(pos(q, to) - pos(n, from)))[0];
+      const link = (u, v) => { if (!u.links.includes(v.id)) u.links.push(v.id); };
+      a.forEach(n => link(n, near(n, a, b))); b.forEach(m => link(near(m, b, a), m));
+      a.forEach(n => b.forEach(m => { if (Math.abs(pos(n, a) - pos(m, b)) < .55 && Math.random() < .4) link(n, m); }));
+    }
+    N[0].k = "start"; N[0].name = "The Crossroads"; N[N.length - 1].k = "boss"; N[N.length - 1].name = WB_TOP[reg] || "The Top of the Road";
+    const pool = { 1: ["fight", "meet", "market"], 2: ["ruin", "fight", "stone"], 3: ["hearth", "market", "fight"], 4: ["elite", "ruin", "meet"], 5: ["fight", "stone"] };
+    for (let li = 1; li < L - 1; li++) { const ks = pool[li].slice().sort(() => Math.random() - .5); layer(li).forEach((n, i) => n.k = ks[i % ks.length]); }
+    // One wonder, preferring ones you haven't sketched yet.
+    const left = WB_WONDERS.filter(w => !wb().sk.includes(w.k)), W = (left.length ? left : WB_WONDERS)[d((left.length ? left : WB_WONDERS).length) - 1];
+    const wn = N.filter(n => n.layer >= 2 && n.layer <= 4 && !["market", "hearth"].includes(n.k)).sort(() => Math.random() - .5)[0];
+    wn.k = "wonder"; wn.w = W.k; wn.name = W.name;
+    const used = {};
+    N.forEach(n => { if (WB_NAMES[n.k]) { const o = WB_NAMES[n.k].filter(x => !used[x]); n.name = o.length ? o[d(o.length) - 1] : WB_NAMES[n.k][0]; used[n.name] = 1; } });
+    N.filter(n => n.layer >= 1 && n.layer <= 5 && !["market", "wonder", "boss"].includes(n.k)).sort(() => Math.random() - .5).slice(0, 4).forEach(n => n.leaf = true);
+    // Marks from earlier boards in this region.
+    const gang = ROAD_GANGS.filter(G => G.r === reg), gName = M.broke ? "stragglers of " + (M.gang || "the gang") : gang.length ? gang[d(gang.length) - 1].n.replace(/^The /, "the ") : "a hunting pack";
+    const car = layer(1).find(n => n.k !== "market") || layer(1)[0];
+    const B = { reg, N, at: 0, steps: 0, leaves: 0, news: [], threads: [], flags: {},
+      gang: { at: layer(5)[0].id, alive: true, str: M.broke ? -2 : 0, name: gName, real: !M.broke && gang.length > 0 },
+      car: { at: M.helped ? (layer(2).find(n => n.k !== "market") || car).id : car.id, alive: !M.robbed, state: "travelling" } };
+    if (M.singer === "robbed") { const s = layer(3).find(n => n.k === "fight"); if (s) { s.k = "elite"; s.name = "The Singers' Ambush"; s.hesk = true; } }
+    N[0].vis = N[0].seen = true;
+    wbHearAround(B);
+    wb().cur = B; wb().boards++;
+    return B;
+  }
+  function wbHearAround(B) { wbAhead(B).forEach(n => n.heard = true); }
+  function wbNbrs(B, id) { const out = B.N[id].links.slice(); B.N.forEach(m => { if (m.links.includes(id)) out.push(m.id); }); return out; }
+  function wbStep(B, from, goal) {
+    if (from === goal) return from;
+    const prev = { [from]: -1 }, q = [from];
+    while (q.length) { const c = q.shift(); if (c === goal) break; for (const v of wbNbrs(B, c)) if (prev[v] === undefined && B.N[v].k !== "boss") { prev[v] = c; q.push(v); } }
+    if (prev[goal] === undefined) return from;
+    let c = goal; while (prev[c] !== from) c = prev[c]; return c;
+  }
+  // The world's turn: one watch passes on the calendar too.
+  function wbWorld(B) {
+    B.steps++; calPass(1);
+    const out = [];
+    if (B.car.alive && B.car.state === "travelling") {
+      const mk = B.N.filter(n => n.k === "market");
+      if (mk.length) {
+        const goal = mk.sort((a, b) => Math.abs(a.layer - B.N[B.car.at].layer) - Math.abs(b.layer - B.N[B.car.at].layer))[0];
+        B.car.at = wbStep(B, B.car.at, goal.id);
+        if (B.car.at === goal.id) { B.car.state = "arrived"; goal.stock = true; out.push("The salt caravan reaches " + goal.name + ". The stalls fill up."); wbInk(B, "the salt caravan got through to " + goal.name + "."); }
+      } else B.car.alive = false;
+    }
+    if (B.gang.alive) {
+      const open = B.N.filter(n => n.k === "market" && !n.vis), dist = Math.abs(B.N[B.gang.at].layer - wbHere(B).layer);
+      const goal = dist <= 1 || !open.length ? B.at : open[0].id;
+      for (let i = 0; i < (calNight() ? 2 : 1); i++) {
+        B.gang.at = wbStep(B, B.gang.at, goal);
+        if (B.car.alive && B.car.state === "travelling" && B.gang.at === B.car.at) {
+          B.car.alive = false; B.gang.str += 2; const w = B.N[B.car.at];
+          if (w.k !== "start") { w.k = "wreck"; w.name = "The Wrecked Caravan"; }
+          out.push("Up the board, " + B.gang.name + " catch the salt caravan. They're better armed now."); wbInk(B, B.gang.name + " robbed the salt caravan.");
+        }
+        const m = B.N[B.gang.at];
+        if (m.k === "market" && !m.vis) { m.k = "burnt"; m.name = "Burnt " + m.name.replace(/^The /, ""); out.push("Smoke goes up over " + m.name.replace(/^Burnt /, "") + ". " + B.gang.name[0].toUpperCase() + B.gang.name.slice(1) + " got there first."); wbInk(B, m.name + ": burned before you got there."); }
+        if (B.gang.at === B.at) break;
+      }
+    }
+    if (B.steps % 3 === 0) {
+      const c = B.N.filter(n => !n.vis && !n.passed && n.layer > wbHere(B).layer && !["boss", "start", "burnt", "wreck", "vault", "wonder"].includes(n.k) && !n.nm);
+      if (c.length) { const t = c[d(c.length) - 1]; t.nm = true; B.threads.push(t.id); out.push("A Cascade thread comes down out of the sky onto " + (t.seen ? t.name : "a square in the fog") + ". Whatever is there is worse now, and worth double."); }
+    }
+    return out;
+  }
+  const WB_PASS = {
+    fight: (n) => "A shepherd went through " + n.name + " instead of you and lost two sheep to whatever lives there.",
+    market: (n) => "At " + n.name + " a pedlar waited for you till dusk, then sold the last flask to somebody else.",
+    hearth: (n) => "The fire at " + n.name + " burned down with nobody at it.",
+    stone: (n) => "Somebody chipped " + n.name + " for building stone. Whatever it remembered, it's forgotten now.",
+    ruin: (n) => "Grave-robbers got into " + n.name + " a day ahead of you and left the door open.",
+    meet: (n) => "The traveller at " + n.name + " waited, then went on alone. Nobody knows if they made it.",
+    elite: (n) => "Whatever held " + n.name + " went hunting further up, and it'll be waiting at the top.",
+    wonder: () => "Something happened on a square you passed that the shepherd won't talk about. He only says you should have been there.",
+    wreck: (n) => "Scavengers stripped " + n.name + " bare.",
+    burnt: (n) => n.name + " smoulders on without you."
+  };
+  function wbPassBy(B, n) {
+    if (n.k === "vault" || n.passed) return;
+    n.passed = (WB_PASS[n.k] || (() => n.name + " goes on without you."))(n);
+    if (n.k === "wonder") n.name = "Something you missed";
+    if (n.k === "elite") B.flags.loose = true;
+    if (n.leaf) { n.leaf = false; n.passed += " A torn page was blowing about there, and now it's gone."; }
+    B.news.unshift({ t: n.passed, told: false });
+  }
+
+  // ---------- drawing ----------
+  function wbGlyph(k, col) {
+    return ({
+      start: '<path d="M-7 6 L0 -8 L7 6Z" fill="none" stroke="' + col + '" stroke-width="2"/>',
+      fight: '<path d="M-7 7 L6 -6 M-7 -7 L6 6 M3 -7 L7 -7 L7 -3 M-3 -7 L-7 -7 L-7 -3" stroke="' + col + '" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+      elite: '<path d="M-8 4 L-6 -6 L-2 0 L0 -8 L2 0 L6 -6 L8 4Z" fill="' + col + '"/>',
+      market: '<path d="M-8 -2 H8 L6 -7 H-6Z M-6 -2 V7 H6 V-2" fill="none" stroke="' + col + '" stroke-width="2"/>',
+      hearth: '<path d="M0 -8 C5 -3 6 1 3 6 C2 2 0 2 0 -1 C-1 2 -3 3 -3 6 C-7 1 -4 -4 0 -8Z" fill="' + col + '"/><path d="M-7 8 H7" stroke="' + col + '" stroke-width="2"/>',
+      stone: '<rect x="-5" y="-8" width="10" height="16" rx="5" fill="none" stroke="' + col + '" stroke-width="2"/><path d="M-2 -2 H2 M-2 2 H2" stroke="' + col + '" stroke-width="1.6"/>',
+      ruin: '<circle cx="-2" cy="-2" r="5" fill="none" stroke="' + col + '" stroke-width="2"/><path d="M2 2 L7 7" stroke="' + col + '" stroke-width="2.4" stroke-linecap="round"/>',
+      meet: '<circle cy="-5" r="3" fill="' + col + '"/><path d="M-5 8 C-5 0 5 0 5 8" fill="' + col + '"/>',
+      wonder: '<path d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4Z" fill="' + col + '"/>',
+      vault: '<rect x="-7" y="-4" width="14" height="11" fill="none" stroke="' + col + '" stroke-width="2"/><path d="M-7 -4 L0 -9 L7 -4" fill="none" stroke="' + col + '" stroke-width="2"/>',
+      boss: '<path d="M0 -9 C4 -4 8 -4 8 1 C8 6 3 8 0 8 C-3 8 -8 6 -8 1 C-8 -4 -4 -4 0 -9Z" fill="' + col + '"/><circle cx="-3" cy="1" r="1.4" fill="#e8d8b2"/><circle cx="3" cy="1" r="1.4" fill="#e8d8b2"/>',
+      burnt: '<path d="M-6 6 L-4 -4 M0 6 L1 -6 M6 6 L4 -3" stroke="' + col + '" stroke-width="2.2" stroke-linecap="round"/>',
+      wreck: '<circle r="6" fill="none" stroke="' + col + '" stroke-width="2"/><path d="M-6 0 H6 M0 -6 V6" stroke="' + col + '" stroke-width="1.4"/>'
+    })[k] || "";
+  }
+  function wbSvg(B, can) {
+    const night = calNight();
+    let s = '<svg class="wb-map" viewBox="0 0 360 660" role="img" aria-label="The Wandering Board: ' + REGIONS[B.reg] + '"><defs><filter id="wbGrain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 .2  0 0 0 0 .14  0 0 0 0 .06  0 0 0 .5 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>' +
+      '<filter id="wbFog" x="-50%" y="-50%" width="200%" height="200%"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="3" seed="8"/><feDisplacementMap in="SourceGraphic" scale="22"/><feGaussianBlur stdDeviation="4"/></filter>' +
+      '<radialGradient id="wbVig" r="75%"><stop offset="70%" stop-color="#5a3e1a" stop-opacity="0"/><stop offset="100%" stop-color="#5a3e1a" stop-opacity=".45"/></radialGradient></defs>';
+    s += '<rect width="360" height="660" fill="#e8d8b2"/><rect width="360" height="660" fill="#fff" filter="url(#wbGrain)" opacity=".7"/>';
+    for (let i = 0; i < 7; i++) s += '<path d="M-10 ' + (640 - i * 34) + " Q 90 " + (600 - i * 70) + " 180 " + (590 - i * 82) + " T 370 " + (630 - i * 36) + '" fill="none" stroke="#6e5634" stroke-opacity=".13" stroke-width="1.2"/>';
+    s += '<text x="180" y="30" text-anchor="middle" font-family="Uncial Antiqua, Georgia, serif" font-size="16" fill="#3a2916">' + REGIONS[B.reg] + "</text>";
+    if (night) s += '<rect width="360" height="660" fill="#1d2440" opacity=".22"/>';
+    B.N.forEach(n => n.links.forEach(t => {
+      const m = B.N[t], walked = n.vis && m.vis, live = n.id === B.at && can.has(t), mx = (n.x + m.x) / 2 + (n.id % 2 ? 9 : -9), my = (n.y + m.y) / 2;
+      s += '<path d="M' + n.x.toFixed(1) + " " + n.y.toFixed(1) + " Q" + mx.toFixed(1) + " " + my.toFixed(1) + " " + m.x.toFixed(1) + " " + m.y.toFixed(1) + '" fill="none" stroke="' + (walked ? "#3a2916" : live ? "#9a3324" : "#6e5634") + '" stroke-width="' + (walked ? 3 : live ? 2.4 : 1.4) + '" stroke-opacity="' + (walked || live ? .9 : .4) + '"' + (walked ? "" : ' stroke-dasharray="4 5"') + ' stroke-linecap="round"/>';
+    }));
+    B.threads.forEach(id => { const n = B.N[id]; s += '<path class="wb-thread" d="M' + (n.x + 14) + " 0 C " + (n.x + 30) + " " + n.y / 3 + " " + (n.x - 10) + " " + n.y / 1.6 + " " + n.x + " " + (n.y - 14) + '" stroke="#c3cbe0" stroke-width="1.6" fill="none" stroke-dasharray="400"/>'; });
+    B.N.forEach(n => {
+      const K = WB_KIND[n.k], known = n.seen || n.vis || n.k === "boss" || n.k === "start", heard = n.heard && !known, live = can.has(n.id), passed = !!n.passed && !n.vis;
+      s += '<g class="wb-node' + (live ? " can" : "") + '" data-wb="' + n.id + '" transform="translate(' + n.x.toFixed(1) + " " + n.y.toFixed(1) + ')">';
+      if (!known && !heard) s += '<circle r="20" fill="#cbb98e" filter="url(#wbFog)" opacity=".95"/>';
+      else if (heard) s += '<circle r="20" fill="#d6c49a" filter="url(#wbFog)"/><circle class="wb-ring" r="17" fill="none" stroke="' + (live ? "#9a3324" : "#6e5634") + '" stroke-width="1.6" stroke-dasharray="3 3"/><text y="5" text-anchor="middle" font-family="Alegreya, Georgia, serif" font-size="15" fill="#3a2916">???</text>';
+      else {
+        const col = passed ? "#8a7a62" : K.col;
+        s += '<circle r="18" fill="#f3e6c4" stroke="' + col + '" stroke-width="' + (n.vis ? 3 : 2) + '"' + (passed ? ' stroke-dasharray="2 3"' : "") + "/>" + (live ? '<circle class="wb-ring" r="22" fill="none" stroke="#9a3324" stroke-width="2"/>' : "");
+        s += "<g" + (passed ? ' opacity=".45"' : "") + ">" + wbGlyph(n.k, col) + "</g>";
+        if (n.nm) s += '<circle r="22" fill="none" stroke="#c3cbe0" stroke-width="2" stroke-dasharray="1 3"/>';
+        if (n.leaf) s += '<path d="M12 -18 l8 3 l-3 8 l-8 -3Z" fill="#f8f0dc" stroke="#3a2916" stroke-width="1"/>';
+        if (passed) s += '<path d="M10 -16 l4 -8" stroke="#9a3324" stroke-width="2"/><circle cx="14" cy="-25" r="3" fill="#9a3324"/>';
+        s += '<text y="33" text-anchor="middle" font-family="Alegreya Sans SC, sans-serif" font-size="10.5" fill="#3a2916" opacity="' + (passed ? .5 : .85) + '">' + n.name + "</text>";
+      }
+      s += "</g>";
+    });
+    s += '<rect width="360" height="660" fill="url(#wbVig)" pointer-events="none"/>';
+    const tok = (n, inner, dx, dy) => '<g transform="translate(' + (n.x + dx).toFixed(1) + " " + (n.y + dy).toFixed(1) + ')">' + inner + "</g>";
+    if (B.car.alive && B.car.state === "travelling") s += tok(B.N[B.car.at], '<rect x="-9" y="-6" width="18" height="12" rx="2" fill="#cfa04c" stroke="#3a2916" stroke-width="1.4"/><circle cx="-5" cy="7" r="3" fill="#3a2916"/><circle cx="5" cy="7" r="3" fill="#3a2916"/>', -22, -14);
+    if (B.gang.alive) s += tok(B.N[B.gang.at], '<circle r="9" fill="#9a3324" stroke="#2a0e08" stroke-width="1.6"/><path d="M-4 4 L4 -4 M-4 -4 L4 4" stroke="#f3e6c4" stroke-width="2"/>', 20, -16);
+    s += tok(wbHere(B), '<ellipse cx="2" cy="10" rx="18" ry="6" fill="#000" opacity=".35"/><image href="' + markerSrc() + '" x="-17" y="-24" width="34" height="34"/>', 0, 0);
+    return s + "</svg>";
+  }
+  // The board as a card in the story; resolves with a square id, or one of the extra keys.
+  function wbPick(B, extra) {
+    const can = new Set(wbHere(B).links);
+    return new Promise(resolve => {
+      const card = el("div", "wb-card");
+      const hint = wbAhead(B).filter(n => n.heard && !n.seen && !n.vis);
+      card.innerHTML = wbSvg(B, can) + '<p class="wb-legend"><span><i style="background:#9a3324"></i>' + B.gang.name + "</span>" + (B.car.alive && B.car.state === "travelling" ? '<span><i style="background:#cfa04c"></i>the salt caravan</span>' : "") + '<span><i style="background:#c3cbe0"></i>a Cascade thread</span><span>Torn leaves <b>' + B.leaves + " / 3</b></span><span>" + (calNight() ? "Night" : "Day") + "</span></p>" +
+        (hint.length ? '<p class="wb-hear">From here you can hear: ' + hint.map(n => "“" + WB_KIND[n.k].sound + "”").join(" ") + "</p>" : "");
+      const done = (k) => { card.querySelectorAll(".wb-node.can").forEach(g => g.classList.remove("can")); box.querySelectorAll("button").forEach(x => x.disabled = true); scrollNext = true; resolve(k); };
+      card.querySelectorAll(".wb-node.can").forEach(g => g.addEventListener("click", () => done(+g.dataset.wb)));
+      const box = el("div", "choices");
+      wbAhead(B).forEach((n, i) => { const b = el("button", i === 0 ? "primary" : "", "Go to " + (n.seen || n.vis ? n.name : "the ??? " + (n.x < wbHere(B).x - 20 ? "on the left" : n.x > wbHere(B).x + 20 ? "on the right" : "ahead")) + '<span class="tag">' + (n.seen || n.vis ? WB_KIND[n.k].label + (n.nm ? " · Nightmare" : "") : "you don't know what's there") + "</span>"); b.type = "button"; b.onclick = () => done(n.id); box.appendChild(b); });
+      extra.filter(shown).forEach(o => { const b = el("button", "", o.label + (o.tag ? '<span class="tag">' + o.tag + "</span>" : "")); b.type = "button"; b.onclick = () => done(o.key); box.appendChild(b); });
+      add(card); add(box);
+    });
+  }
+
+  // ---------- playing a board ----------
+  async function wbHub() {
+    const W = wb();
+    let B = W.cur;
+    if (!B) {
+      const regs = roamRegions();
+      const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], tag: wbMarks(x).done ? "walked " + wbMarks(x).done + "×" : "", plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
+      if (r === "back") return;
+      B = wbNew(r);
+    }
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[B.reg] + "</span><h2>The Wandering Board</h2>");
+    scrollNext = true; add(h);
+    if (!W.seen) {
+      W.seen = true;
+      await say("Ysolt's map of the old roads isn't a map any more. It's a board, and it moves: the ink runs while you look at it, paths open and close, and a little brass figure that looks a lot like you stands at the bottom of it.");
+      await mech("<span><b>The Wandering Board.</b> Move up the board one row at a time. Squares ahead are only sounds until you <b>stop and listen</b> (a watch passes). Every step you take, the world takes one: the gang hunts, the salt caravan travels, and every third step a Cascade thread falls and makes a square a Nightmare. The forks you don't take play out without you. One square is a <b>wonder</b> that no amount of listening gives away. Three torn leaves open a hidden cache. What you do here, the next board for this region remembers.</span>", "loot");
+    } else if (B.steps === 0) await say("You unroll the board for " + REGIONS[B.reg] + ". The ink settles into a new mountain of roads." + (wbMarks(B.reg).robbed ? " The salt road isn't on it. The caravans don't come this way any more." : "") + (wbMarks(B.reg).broke ? " The gang token is smaller than it was. Only stragglers left." : ""));
+    for (;;) {
+      checkpoint();
+      if (wbHere(B).k === "boss" && wbHere(B).vis && B.flags.top) break;
+      // Back after a fall at the top: the top still has to be taken.
+      if (wbHere(B).k === "boss" && wbHere(B).vis) { await wbSquare(B, wbHere(B)); save(); continue; }
+      const listenOk = wbAhead(B).some(n => !n.seen && !n.vis);
+      const c = await wbPick(B, [
+        { key: "listen", label: "Stop and listen", tag: "a watch passes, and the world moves · find out what's ahead", show: listenOk },
+        { key: "fold", label: "Fold the board away for now", tag: "it keeps until you come back" }
+      ]);
+      if (c === "fold") { await say("You fold the board. The ink keeps moving under the fold; you can feel it."); light(back); save(); return; }
+      if (c === "listen") {
+        const m = wbWorld(B);
+        wbAhead(B).forEach(n => { if (n.k !== "wonder") n.seen = true; n.links.forEach(i => B.N[i].heard = true); });
+        await say("You stand still long enough for the country to stop noticing you. The sounds ahead sort themselves out into places." + (wbAhead(B).some(n => n.k === "wonder") ? " All but one. That one you can't make out at all." : ""));
+        for (const x of m) await mech(x, "hurt");
+        if (B.gang.alive && B.gang.at === B.at) await wbGang(B, wbHere(B));
+        save(); continue;
+      }
+      const to = B.N[c];
+      wbAhead(B).filter(n => n.id !== c).forEach(n => wbPassBy(B, n));
+      B.at = c; to.vis = to.seen = true;
+      const m = wbWorld(B); wbHearAround(B);
+      const hd = el("div", "part-head sub", '<span class="num">The Wandering Board · ' + REGIONS[B.reg] + "</span><h2>" + to.name + "</h2>");
+      scrollNext = true; add(hd);
+      for (const x of m) await mech(x, "hurt");
+      if (B.gang.alive && B.gang.at === B.at) await wbGang(B, to);
+      if (B.car.alive && B.car.state === "travelling" && B.car.at === B.at) await wbCaravan(B, to);
+      await wbSquare(B, to);
+      save();
+    }
+    // The top is taken: the board is done.
+    const M = wbMarks(B.reg); M.done = (M.done || 0) + 1;
+    W.cur = null; save();
+    grant("wbfirst"); achCheck();
+    light(back);
+  }
+  async function wbLeaf(B, n) {
+    if (!n.leaf) return; n.leaf = false; B.leaves++;
+    await mech("Caught on a thorn there: a torn page of Ysolt's sketchbook, in millpond ink. <b>Leaf " + B.leaves + " of 3.</b>", "loot");
+    if (B.leaves === 3) {
+      const L5 = B.N.filter(x => x.layer === 5), v = { id: B.N.length, layer: 5, idx: 9, x: Math.max(40, Math.min(320, L5[0].x < 180 ? 300 : 60)), y: L5[0].y + 8, k: "vault", name: "Ysolt's Cache", links: [B.N.length - 1], seen: true, heard: true, vis: false, passed: null, nm: false, leaf: false };
+      B.N.push(v); B.N.filter(x => x.layer === 4).forEach(x => x.links.push(v.id));
+      await say("Laid side by side, the three leaves make a little map, and on it there's an X on a ledge nobody showed you. The board draws it in while you watch.");
+      wbInk(B, "three torn leaves showed the way to Ysolt's Cache.");
+    }
+  }
+  async function wbFight(B, n, pack) {
+    roamFight = true;
+    try { await meetBeast(B.reg, { roam: true, forced: true, pack }); } finally { roamFight = false; }
+    if (n.nm) { const g = wbGold(1); S.coins += g; renderSheet(); await mech("It was a Nightmare square: " + g + " gold more.", "loot"); }
+  }
+  async function wbGang(B, n) {
+    await say(B.gang.name[0].toUpperCase() + B.gang.name.slice(1) + " were waiting for you at " + n.name + ". They've been following your fire for two days.");
+    if (B.gang.real) {
+      bnLast = null; roamFight = true;
+      try { await bnMeet([B.reg], { label: "The Wandering Board · " + REGIONS[B.reg] }); } finally { roamFight = false; }
+      if (bnLast === "won") { B.gang.alive = false; const M = wbMarks(B.reg); M.broke = true; M.gang = B.gang.name; wbInk(B, "you broke " + B.gang.name + " on the board. The next board here only has their stragglers."); }
+      else { B.gang.at = wbStep(B, B.gang.at, 0); }
+    } else {
+      await wbFight(B, n, true);
+      B.gang.alive = false; wbInk(B, "you saw off " + B.gang.name + " at " + n.name + ".");
+    }
+  }
+  async function wbCaravan(B, n) {
+    await say("The salt caravan has stopped at " + n.name + " with a split wheel: three mules, two drivers, and a strongbox under the salt that they think nobody knows about.");
+    const c = await choose([{ key: "help", label: "Help them mend the wheel", tag: "a watch passes · they'll remember you on this road" }, { key: "rob", label: "Rob them", tag: wbGold(3) + " gold · the caravan never comes this way again", plain: true }, { key: "go", label: "Leave them to it", plain: true }]);
+    const M = wbMarks(B.reg);
+    if (c === "help") { const m = wbWorld(B); for (const x of m) await mech(x, "hurt"); M.helped = true; xpGain(30); await say("It takes the best part of a watch. The older driver shakes your hand and says he'll start his next run further up the road, where it's safer, if you're about."); wbInk(B, "you mended the salt caravan's wheel. It starts higher up on the next board here."); }
+    if (c === "rob") { const g = wbGold(3); S.coins += g; renderSheet(); B.car.alive = false; M.robbed = true; n.k = "wreck"; n.name = "The Wrecked Caravan"; await say("The drivers don't fight. They just watch you do it."); await mech("+" + g + " gold.", "loot"); wbInk(B, "you robbed the salt caravan. It never runs this road again."); }
+    if (c === "go") await say("You go round them. Behind you, one of the drivers starts to swear at the wheel.");
+  }
+  async function wbSquare(B, n) {
+    const k = n.k;
+    if (k === "fight") { await say("Something comes down off the rocks at you." + (n.nm ? " A silver thread runs up from it into the sky, and its outline won't hold still." : "")); await wbFight(B, n, n.nm); await wbLeaf(B, n); return; }
+    if (k === "elite") {
+      await say(n.hesk ? "Hesk, a dozen of them, rise out of the scrub with their voice-drums humming: the singer's people. They haven't forgotten whose pocket her voice-box went into." : "Something old holds this ground, and it isn't alone." + (n.nm ? " A Cascade thread runs into its back." : ""));
+      await wbFight(B, n, true); if (n.hesk) { delete wbMarks(B.reg).singer; wbInk(B, "you fought off the Hesk the robbed singer sent. That's settled now."); }
+      n.leaf = true; await wbLeaf(B, n); return;
+    }
+    if (k === "market") {
+      const T = (TOWNS[B.reg] || [])[0];
+      if (n.stock) { S.potions = (S.potions || 0) + 1; renderSheet(); await say("The salt caravan is unloading at the far end, and the drivers press a healing vial on you for luck."); await mech("+1 healing vial.", "loot"); }
+      if (T && (await choose([{ key: "in", label: "Go into " + T.name, tag: "the town's inn, market and smiths" }, { key: "on", label: "Just pass through", plain: true }])) === "in") await townVisit(Object.assign({ reg: B.reg }, T));
+      else if (!T) { const p = Math.max(4, Math.round(cp(10))); if (S.coins >= p && (await choose([{ key: "buy", label: "Buy a healing vial", tag: p + " gold" }, { key: "on", label: "Move on", plain: true }])) === "buy") { S.coins -= p; S.potions = (S.potions || 0) + 1; renderSheet(); } }
+      return;
+    }
+    if (k === "burnt" || k === "wreck") { await say(k === "burnt" ? "Nothing's left of the market but the awning poles, and a dog that won't come near you." : "The caravan's wagons, on their sides. The salt is already melting into the mud."); return; }
+    if (k === "hearth") {
+      await say("A fire in a ring of stones, out of the wind." + (burrHere() ? " Burr turns round three times and lies down with his back to it." : ""));
+      const told = B.news.filter(x => !x.told); told.forEach(x => x.told = true);
+      if (told.length) { await say("The shepherd at the fire has news of the roads you didn't take."); for (const x of told) await say(x.t, "voice"); }
+      const c = await choose([{ key: "rest", label: "Rest till the next watch", tag: "full HP · the world takes two steps" }, { key: "burr", label: "Sit with Burr", tag: "bond with Burr", show: burrHere() }, { key: "on", label: "Leave the fire", plain: true }]);
+      if (c === "rest") { S.hp = S.maxHp; renderSheet(); const m = wbWorld(B).concat(wbWorld(B)); await say("You sleep with your boots on."); for (const x of m) await mech(x, "hurt"); }
+      if (c === "burr") await coBond("burr", 1, "You tell Burr about the day. He listens to all of it, which is more than most people do.");
+      return;
+    }
+    if (k === "stone") {
+      const Q = [["\"I am said once and never again by the same mouth. What am I?\"", ["A name", "An echo", "A last word"], 2],
+        ["\"The more of me there is, the less you see. I fill the Hushfen every morning.\"", ["Mist", "Water", "Night"], 0],
+        ["\"I have roads but no carts, rivers but no water, and mountains you can fold in half.\"", ["A dream", "A map", "A song"], 1],
+        ["\"I'm taken before you have me, and you keep me after you give me.\"", ["A word", "A promise", "A breath"], 1]][d(4) - 1];
+      await say("A standing stone hums three notes, low, lower, high, and under the hum somebody has carved: " + Q[0]);
+      const a = await choose(Q[1].map((x, i) => ({ key: String(i), label: x, plain: i > 0 })));
+      if (+a === Q[2]) { const g = wbGold(1.5); S.coins += g; renderSheet(); xpGain(25); await say("The stone goes warm under your hand. Something in the hum settles, and a loose stone at its foot has coins under it."); await mech("+" + g + " gold.", "loot"); }
+      else await say("The stone goes cold. Wrong answer.");
+      await wbLeaf(B, n); return;
+    }
+    if (k === "ruin") {
+      await say("Somebody left " + n.name + " in a hurry. There's a cold supper on the table and a strongroom door in the back that's still shut.");
+      const c = await choose([{ key: "Perception", label: "Look for what's wrong in the room", tag: "Perception · DC 13" }, { key: "Survival", label: "Read the tracks outside", tag: "Survival · DC 12", plain: true }, { key: "Investigation", label: "Work out the strongroom's lock", tag: "Investigation · DC 14", plain: true }]);
+      const dc = { Perception: 13, Survival: 12, Investigation: 14 }[c] + (n.nm ? 2 : 0);
+      const r = await check({ label: c + " check", mod: 2 + Math.floor(lv() / 8), dc });
+      if (r.ok) { const g = wbGold(n.nm ? 3 : 1.5); S.coins += g; renderSheet(); B.gang.str -= 2; await say("You work it out: whoever lived here paid " + B.gang.name + " to leave them be, then couldn't pay. The strongroom has what's left, and a note of where the gang sleeps."); await mech("+" + g + " gold. You know the gang's habits now.", "loot"); wbInk(B, "at " + n.name + " you found out where " + B.gang.name + " sleep."); }
+      else await hurt(1, 6, "piercing", "The floor by the strongroom was rigged.");
+      await wbLeaf(B, n); return;
+    }
+    if (k === "meet") {
+      const M = wbMarks(B.reg);
+      await say("A Hesk singer is sitting in the road with a cracked voice-box, the drum of skin under the throat that the Hesk sing fungus into weapons with. Without it she can't sing, and without singing she can't get home.");
+      const p = Math.max(5, Math.round(wbGold(.6)));
+      const c = await choose([{ key: "help", label: "Give her " + p + " gold for a mender", tag: "she'll remember", show: S.coins >= p }, { key: "rob", label: "Take the voice-box to sell", tag: wbGold(2) + " gold · her people will remember too", plain: true }, { key: "go", label: "Walk on", plain: true }]);
+      if (c === "help") { S.coins -= p; renderSheet(); M.singer = "helped"; await say("She doesn't thank you. She clicks twice, which is better."); wbInk(B, "you paid for the Hesk singer's voice-box. She'll sing for you at the top of this road, on this board and the next."); }
+      if (c === "rob") { const g = wbGold(2); S.coins += g; renderSheet(); M.singer = "robbed"; await say("She can't scream, either."); await mech("+" + g + " gold.", "loot"); wbInk(B, "you took the Hesk singer's voice-box. Her people will be waiting on the next board here."); }
+      if (c === "go") await say("You walk on. She doesn't call after you. She can't.");
+      return;
+    }
+    if (k === "wonder") return wbWonder(B, n);
+    if (k === "vault") {
+      const g = wbGold(6); S.coins += g; S.potions = (S.potions || 0) + 2; renderSheet(); grant("wbcache");
+      await say("Behind a slab exactly where Ysolt drew the X: a tin box, a purse, and two vials sealed with green wax.");
+      await mech("+" + g + " gold and 2 healing vials.", "loot"); wbInk(B, "you found Ysolt's Cache."); return;
+    }
+    if (k === "boss") {
+      const M = wbMarks(B.reg);
+      await say("At the top of the road, " + n.name + ", something has been waiting for you the whole way up." + (B.flags.loose ? " The thing you left loose further down got here first, and it's in a worse mood." : ""));
+      if (M.singer === "helped") await heal(2, 8, "Somewhere behind you, the Hesk singer you helped starts to sing, and the sound gets into your arms.");
+      await wbFight(B, n, true);
+      if (B.flags.loose) await wbFight(B, n, false);
+      const g = wbGold(5); S.coins += g; renderSheet(); xpGain(80);
+      await say("The top of the road is yours. From up here you can see the whole board laid out below you, every square you took and every one you didn't, inked in for good.");
+      await mech("+" + g + " gold for taking the top of the board.", "loot");
+      wbInk(B, "you took " + n.name + ".");
+      B.flags.top = true;
+    }
+  }
+  // Wonder scenes: layered hills, light and a few moving parts, drawn per wonder.
+  function wbScene(k, small) {
+    const W = 320, H = 170, id = k + (small ? "s" : "");
+    const sky = { choir: ["#9fb7c9", "#e8eef0"], stags: ["#3a2a4a", "#e88a4a"], root: ["#7f9aa8", "#d9e1dc"], swarm: ["#0f1a24", "#24384a"], bells: ["#e9b98a", "#f4dcc0"], mirage: ["#e6c27a", "#f7e8c0"] }[k];
+    let s = '<svg viewBox="0 0 ' + W + " " + H + '" class="wb-scene' + (small ? " small" : "") + '" role="img" aria-label="' + ((WB_WONDERS.find(w => w.k === k) || {}).name || "") + '"><defs><linearGradient id="wbSky' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient><radialGradient id="wbGlow' + id + '"><stop offset="0" stop-color="#d8ffb0"/><stop offset="1" stop-color="#7fd06a" stop-opacity="0"/></radialGradient></defs>';
+    s += '<rect width="' + W + '" height="' + H + '" fill="url(#wbSky' + id + ')"/>';
+    const ridge = (y, amp, col, sd) => { let p = "M0 " + H + " L0 " + y; for (let x = 0; x <= W; x += 20) p += " L" + x + " " + (y - Math.abs(Math.sin(x * .031 + sd) * amp) - Math.abs(Math.sin(x * .09 + sd * 2)) * amp * .35).toFixed(1); return '<path d="' + p + " L" + W + " " + H + 'Z" fill="' + col + '"/>'; };
+    if (k === "choir") {
+      s += ridge(70, 30, "#7d93a3", 1) + ridge(110, 26, "#556a78", 2) + '<path d="M130 20 L190 20 L196 170 L124 170Z" fill="#dcecf2" opacity=".95"/>';
+      for (let i = 0; i < 9; i++) s += '<path d="M' + (134 + i * 6.5) + " 22 L" + (131 + i * 7.5) + ' 170" stroke="#a9cbd8" stroke-width="1.4"/>';
+      for (let i = 0; i < 6; i++) s += '<path class="wb-wv" style="animation-delay:' + i * .5 + 's" d="M60 ' + (60 + i * 14) + ' q20 -10 40 0 t40 0" stroke="#fff" stroke-opacity=".5" fill="none" stroke-width="1.2"/>';
+      s += ridge(150, 12, "#2f3e48", 3);
+    } else if (k === "stags") {
+      s += '<circle cx="250" cy="120" r="26" fill="#ffd27a" opacity=".85"/>' + ridge(115, 14, "#5a3a4a", 1.4) + ridge(140, 20, "#2a1a2a", .4);
+      for (let i = 0; i < 9; i++) { const x = 20 + i * 34, y = 104 - Math.abs(Math.sin(x * .031 + 1.4)) * 14; s += '<g transform="translate(' + x + " " + (y - 4) + ')"><g class="wb-bob" style="animation-delay:' + i * .3 + 's"><path d="M-6 0 Q0 -5 6 0 L6 6 M-6 0 L-6 6 M-2 0 L-2 6 M3 0 L3 6" stroke="#f3eadc" stroke-width="1.6" fill="none"/><path d="M6 0 L9 -6 M9 -6 l-3 -4 M9 -6 l3 -4 M9 -6 l0 -5" stroke="#f3eadc" stroke-width="1" fill="none"/><circle cx="9" cy="-11" r="3" fill="url(#wbGlow' + id + ')"/></g></g>'; }
+    } else if (k === "root") {
+      s += ridge(90, 30, "#90a6ad", 2.2) + '<rect y="40" width="' + W + '" height="26" fill="#eef2ee" opacity=".55"/><path d="M150 170 C142 120 160 90 152 50 C148 30 156 10 158 0 L176 0 C174 14 168 34 172 52 C180 92 170 128 182 170Z" fill="#4a3826"/>';
+      for (let i = 0; i < 5; i++) s += '<path class="wb-wv" style="animation-delay:' + i * .4 + 's" d="M' + (158 + i * 4) + " 4 C" + (150 + i * 4) + " 60 " + (166 + i * 3) + " 110 " + (160 + i * 4) + ' 170" stroke="#9fc3d0" stroke-opacity=".6" stroke-width="1" fill="none"/>';
+      s += '<rect y="20" width="' + W + '" height="18" fill="#fff" opacity=".6"/>' + ridge(145, 16, "#3e4c4c", .9);
+    } else if (k === "swarm") {
+      s += ridge(120, 22, "#14222e", 2.6) + ridge(150, 14, "#0a1218", 1.1);
+      for (let i = 0; i < 70; i++) s += '<circle class="wb-rise" style="animation-delay:' + (i % 12) * .35 + 's" cx="' + (i * 97) % W + '" cy="' + (40 + (i * 53) % 110) + '" r="' + (3 + (i % 3) * 2) + '" fill="url(#wbGlow' + id + ')"/>';
+    } else if (k === "bells") {
+      s += '<circle cx="80" cy="96" r="22" fill="#fff1d6"/>' + ridge(90, 18, "#8a6a5a", 1.7) + '<rect y="100" width="' + W + '" height="70" fill="#1e2a2e"/>';
+      for (let i = 0; i < 5; i++) { const x = 50 + i * 55; for (let j = 0; j < 3; j++) s += '<ellipse class="wb-ring2" style="animation-delay:' + (i * .4 + j * .9) + 's" cx="' + x + '" cy="' + (128 + (i % 2) * 14) + '" rx="' + (10 + j * 12) + '" ry="' + (3 + j * 3) + '" fill="none" stroke="#e9c79a" stroke-opacity=".5"/>'; }
+    } else {
+      s += ridge(140, 6, "#c99a5a", .3) + '<g class="wb-wv">';
+      for (let i = 0; i < 9; i++) { const x = 70 + i * 22, h = 30 + ((i * 37) % 50); s += '<rect x="' + x + '" y="' + (128 - h) + '" width="14" height="' + h + '" fill="#eaf6f6" fill-opacity=".55" stroke="#ffffff" stroke-opacity=".7"/><path d="M' + (x + 7) + " " + (128 - h) + " l0 -10 l8 3 l-8 3" + '" stroke="#ffffff" stroke-opacity=".7" fill="#c9e6e6"/>'; }
+      s += "</g>" + ridge(160, 8, "#a87a44", 2);
+    }
+    return s + "</svg>";
+  }
+  async function wbWonder(B, n) {
+    const w = WB_WONDERS.find(x => x.k === n.w), W = wb(), had = W.sk.includes(w.k);
+    add(el("div", "wb-wonder", wbScene(w.k)));
+    await say(w.text);
+    grant("wbwonder");
+    const c = await choose([{ key: "sketch", label: "Sketch it into your journal", tag: "your sketchbook · " + (W.sk.length + 1) + " of " + WB_WONDERS.length, show: !had }, { key: "watch", label: "Sit and watch till it's over", tag: "full HP" + (burrHere() ? " · bond with Burr" : "") + " · a watch passes" }, { key: "on", label: "Go on", plain: true }]);
+    if (c === "sketch") { W.sk.push(w.k); wbInk(B, "you sketched " + w.name + "."); await mech("Sketched into your journal: <b>" + w.name + "</b>. " + W.sk.length + " of " + WB_WONDERS.length + " wonders.", "loot"); if (W.sk.length >= WB_WONDERS.length) grant("wbsketch"); }
+    if (c === "watch") { S.hp = S.maxHp; renderSheet(); const m = wbWorld(B); await say("When it's over you find you've been holding your breath."); if (burrHere()) await coBond("burr", 1, "Burr has been leaning on your leg the whole time."); for (const x of m) await mech(x, "hurt"); }
+  }
+  function wbSection(rs) {
+    const W = rs && rs.wb;
+    if (!W || !W.boards) return "";
+    return '<section class="j-wb"><h3>The Wandering Board · Slot ' + SLOT + '</h3><p class="j-note">Boards walked: ' + W.boards + ". Wonders sketched: " + (W.sk || []).length + " of " + WB_WONDERS.length + '.</p><div class="wb-book">' +
+      WB_WONDERS.map(w => (W.sk || []).includes(w.k) ? "<figure>" + wbScene(w.k, true) + "<figcaption>" + w.name + "</figcaption></figure>" : '<figure><div class="wb-unsk">?</div><figcaption>Not found yet</figcaption></figure>').join("") + "</div>" +
+      ((W.led || []).length ? "<h4>The board remembers</h4><ul>" + W.led.slice(0, 12).map(x => "<li>" + x + "</li>").join("") + "</ul>" : "") + "</section>";
+  }
+
   // ---------- the fiftieth ring: a celebration, and a gift ----------
   // Reaching level 50 (LV_MAX) fires a celebration over the whole screen (rings, sparks, a fanfare),
   // then a scene at the next lvNews: you choose how to mark it (a cup with the company, a ring carved
@@ -27933,6 +28411,7 @@ body.pv-open { overflow: hidden; }
     return { id, n, r, sh, dv, c1: TN[c1], c2: TN[c2], ch, cc: TN[cc], tr, w, motto, how, crew: { hexer, shot, wall, knife } };
   });
   const ROAD_GANGS = GANGS.filter(G => G.r !== "high");
+  let bnLast = null;  // "won" once a bnMeet ends in bnWon (the Wandering Board reads it)
   const WEAVE = GANGS.find(G => G.id === "highweave");
   const gangById = (id) => GANGS.find(G => G.id === id);
   function gangSvg(G, px = 44, dim = false) {
@@ -28287,6 +28766,7 @@ body.pv-open { overflow: hidden; }
     await bnWon(G, H, { grudge, night });
   }
   async function bnWon(G, H, { grudge = false, night = false } = {}) {
+    bnLast = "won";
     const B = bn(), first = !B.beat[G.id];
     B.beat[G.id] = (B.beat[G.id] || 0) + 1;
     if (grudge) B.beat[G.id + ":grudge"] = 1;
