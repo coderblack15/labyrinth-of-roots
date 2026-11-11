@@ -2289,6 +2289,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "74", name: "Sister Wren Comes East", date: "11 Nov 2026", items: [
+      "<b>The east hits softer.</b> Mardek Corvane, Idony Rusk, the Fury bouts, the Reaping, the sketch of Corvane, the Drafts at the margin and the three bell bosses (the Unwriting, the leaning house, the Bell-Takers) all hit noticeably less hard. Their level bonus to damage is halved, their dice are smaller, and the big blows are lighter: the Reaping, the house's lean, the rubbing-out and the bell.",
+      "Fury bouts give you more room: a little longer before the counter lands when you hesitate, longer between the big swings, and a moment more to catch them.",
+      "<b>Sister Wren comes east.</b> The healer from Vellum Rest turns up for the hard fights of Half the East and the Unmapped. Twice a fight she helps you with a protection save (+4, and if it still fails she takes the edge off it). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops. And she won't let you walk into one of those fights below half your HP. She has opinions about how you got that way."
+    ] },
     { ver: "73", name: "The Unmapped", date: "11 Nov 2026", items: [
       "<b>A new chapter after Half the East, Parts LXXXIV–XC.</b> Where the Hinge rang the east blank, the land didn't die. It went <b>unmapped</b>: roads end mid-stride, the right hills turn up in the wrong order, and people are missing from memory as well as from the ground.",
       "<b>Redrawing.</b> With a jar of millpond ink, draw the lost places back square by square, from the counts their rows and columns remember. Every square costs a drop, and there isn't enough for all of them. Scrape a square and the place comes back <i>wrong</i>. What you don't draw stays gone for good, and the world remembers every one.",
@@ -3760,7 +3765,9 @@ body.pv-open { overflow: hidden; }
   // A road Nightmare's +2 to hit and +2 damage run down its Cascade threads: cut them and the bonus goes.
   const nmUp = () => FOE.on && FOE.threadsMax ? Math.round(2 * FOE.threads / FOE.threadsMax) : 2;
   const foeAtkUp = () => Math.floor(flk() / 6) + (cascadeOn() ? nmUp() : 0) - menaceNow() + (S.unbal ? 1 : 0);
-  const foeDmgUp = () => Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0) + (S.unbal ? 1 : 0);
+  // FOE.soft (0-1) takes that share off the level bonus: the eastern chapters' bosses (2026-11-11, Adrian:
+  // "the enemies hit too hard") run at half, so their own dice and big blows carry the fight.
+  const foeDmgUp = () => { const v = Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0) + (S.unbal ? 1 : 0); return FOE.on && FOE.soft ? Math.round(v * (1 - FOE.soft)) : v; };
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -7020,7 +7027,7 @@ body.pv-open { overflow: hidden; }
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
-    Object.assign(FOE, { base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
+    Object.assign(FOE, { soft: 0, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
@@ -14206,6 +14213,8 @@ body.pv-open { overflow: hidden; }
     const back = document.body.dataset.light;
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
+    FOE.soft = F.soft || 0;
+    if (F.wren) await wrnJoin();
     S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
@@ -14235,6 +14244,7 @@ body.pv-open { overflow: hidden; }
       await rxRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       await munRound(F, st); if (FOE.hp <= 0) break;
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
+      if (FOE.ln) await wrnHeal();
       const opts = F.noAtk && F.noAtk(st) ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with the " + wDef(wpnKey()).name, tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
@@ -23935,9 +23945,78 @@ body.pv-open { overflow: hidden; }
     }
     return T;
   }
+  // ---------- Sister Wren comes east (2026-11-11) ----------
+  // Adrian: "some kind of healer come in to assist with a protection save" / "have one of our healers step
+  // in when the player is close to death". Sister Wren of Vellum Rest (who teaches Field Mending) comes
+  // east when the Hinge starts killing, and stands at your back in the hard fights of Half the East and
+  // the Unmapped. In each one: she helps you with up to WRN_WARDS protection saves (+WRN_BONUS on the
+  // save, and if it still fails she takes the edge off it: half), and once, when you're close to death
+  // (a quarter of your HP or less), she gets to you: 3d8 + half your level, and the bleeding stops. And she
+  // won't let you start one of them below half your HP (WRN_PREP).
+  // S.wren = { met } once she's come; FOE.ln = { wards, healed } for the fight in hand.
+  const WRN_WARDS = 2, WRN_BONUS = 4, WRN_LOW = 0.25, WRN_PREP = 0.5;
+  const wrnHealRoll = () => d(8) + d(8) + d(8) + Math.floor(lv() / 2);
+  // Adrian: "She could come in with a sassy remark." One of these when she gets to you, none twice running.
+  const WRN_SASS = [
+    "Forty years I've been stitching people, and you're the first one who's tried to do it to me on purpose.",
+    "Oh, lovely. You've got a hole in you the shape of somebody else's opinion. Hold still.",
+    "Lie down. No, that's dying. Lie down the other way.",
+    "I came all the way from Vellum Rest for this. The least you could do is bleed tidily.",
+    "Is this a fight or a fainting contest? Because you're winning one of them.",
+    "Do you know what I charge for this at home? Ten gold. You'll owe me a sheep.",
+    "If you die while I'm sewing, I'm keeping the needle.",
+    "Don't thank me. Duck. Then thank me.",
+    "There. Good as new. Well. Good as last Tuesday.",
+    "I told Brother Orrin I was retired. He laughed for a week."
+  ];
+  let wrnLast = -1;
+  const wrnSass = () => { let i; do { i = d(WRN_SASS.length) - 1; } while (i === wrnLast && WRN_SASS.length > 1); wrnLast = i; return WRN_SASS[i]; };
+  async function wrnJoin() {
+    if (!S.wren) {
+      S.wren = { met: true };
+      await say("Somebody comes up behind you with a satchel that clinks: a small old woman in a vinegar-stained apron, out of breath, with her sleeves already rolled. It's <b>Sister Wren</b>, from Vellum Rest, a very long way from her burners.");
+      await say("\"The roads east are full of the dead,\" she says, \"and somebody has to see to the ones who aren't, yet. Go on. I'll be behind you. I'm always behind somebody.\"", "voice");
+      await mech("<b>Sister Wren is with you</b> for the hard fights in the east. Twice a fight she helps with a protection save (+" + WRN_BONUS + ", and if it still fails she takes the edge off: half). Once a fight, when you're close to death, she gets to you: 3d8 + half your level, and the bleeding stops. And she won't let you start one below half your HP.", "loot");
+    }
+    FOE.ln = { wards: WRN_WARDS, healed: false };
+    // Room to recover: she won't let you walk into one of these at less than half your HP.
+    if (S.hp < Math.ceil(S.maxHp * WRN_PREP)) {
+      const to = Math.ceil(S.maxHp * WRN_PREP), h = to - S.hp; S.hp = to; renderSheet();
+      await say("Sister Wren takes one look at you and sits you down on the nearest flat thing. \u201c" + wrnSass() + "\u201d", "voice");
+      await mech("Sister Wren patches you up before it starts: +" + h + " HP (back to half).", "loot");
+    }
+  }
+  // A protection save with Wren at your shoulder. o is check()'s options. Returns { ok, warded }.
+  async function wrnSave(o) {
+    const L = FOE.on && FOE.ln, warded = !!(L && L.wards > 0);
+    if (warded) { L.wards--; await say(["Sister Wren's hand is flat on your back. \"Now,\" she says. \"Set your feet.\"", "\"Breathe out,\" Sister Wren says behind you, \"and let it go past.\"", "Sister Wren pulls you down by your belt, at exactly the right moment."][d(3) - 1], "voice"); }
+    const k = await check(Object.assign({}, o, { mod: (o.mod || 0) + (warded ? WRN_BONUS : 0), label: o.label + (warded ? ", with Sister Wren" : "") }));
+    return { ok: k.ok, warded };
+  }
+  // A big blow with no save of its own: with a ward left, Wren gives you one (Constitution DC 13) to halve it.
+  async function wrnBlow(count, sides, type, why) {
+    if (FOE.on && FOE.ln && FOE.ln.wards > 0) {
+      const r = await wrnSave({ label: "Constitution saving throw (protection)", mod: 2, dc: 13, cta: "Brace" });
+      if (r.ok) { await hurt(Math.max(1, Math.ceil(count / 3)), sides, type, why + " Sister Wren has you braced, and most of it goes past."); return; }
+      await hurt(Math.ceil(count / 2), sides, type, why + " Sister Wren takes the edge off it."); return;
+    }
+    await hurt(count, sides, type, why);
+  }
+  // Close to death: Wren gets to you, once a fight.
+  async function wrnHeal() {
+    const L = FOE.ln;
+    if (!L || L.healed || FOE.hp <= 0 || S.hp > S.maxHp * WRN_LOW) return;
+    L.healed = true;
+    const h = wrnHealRoll(); S.hp = Math.min(S.maxHp, S.hp + h); renderSheet();
+    await say("Sister Wren is suddenly there, on her knees beside you, with a needle in her teeth. \u201c" + wrnSass() + "\u201d", "voice");
+    await mech("Sister Wren patches you up: +" + h + " HP.", "loot");
+    await bleedStop("She ties it off.");
+  }
   function furyBout(o) {
     const wk = wpnKey(), die = wNoun(wk) === "arrow" ? [1, 4, 2] : wDef(wk).die, noun = wNoun(wk) === "arrow" ? "knife" : wNoun(wk);
     foeStart(o.name, o.hp);
+    FOE.soft = o.soft || 0;
+    if (o.wren) FOE.ln = { wards: WRN_WARDS, healed: false };
     tip("fury");
     const steady = () => q(".du-steady").checked;
     const st = { fury: 0, last: [], hits: 0, caught: 0, unleashed: 0, frenzy: 0, winded: 0, idle: performance.now(), wind: 0, windAt: performance.now() + (o.windup || 7000), over: false, counters: 0 };
@@ -23972,6 +24051,10 @@ body.pv-open { overflow: hidden; }
     }
     function hurtMe(n, why) {
       bfxHit(); SND.thud && SND.thud(6); me -= n; pop("−" + n, C.blood); log(why + " You take " + n + ".", "f"); taunt("hurt", 60);
+      if (me > 0 && FOE.ln && !FOE.ln.healed && me <= S.maxHp * WRN_LOW) {
+        FOE.ln.healed = true; const h = wrnHealRoll(); me = Math.min(S.maxHp, me + h); bleeds().length = 0; renderBleed();
+        pop("+" + h, C.ok); log("<b>Sister Wren</b> gets to you between strokes, with a needle in her teeth: \u201c" + wrnSass() + "\u201d +" + h + " HP, and the bleeding's tied off.", "g"); st.idle = performance.now();
+      }
       S.hp = Math.max(1, me); renderSheet();
       if (me <= 0) finish(false);
     }
@@ -24012,7 +24095,7 @@ body.pv-open { overflow: hidden; }
     }
     function counter(heavy) {
       st.counters++;
-      const n = roll(o.dmg || [1, 8, 2]) + (heavy ? roll([1, 8, 0]) : 0) + (FOE.lvd ? foeDmgUp() : 0);
+      const n = roll(o.dmg || [1, 8, 2]) + (heavy ? roll([1, 6, 0]) : 0) + (FOE.lvd ? foeDmgUp() : 0);
       if (!heavy) taunt("idle", 70);
       hurtMe(n, heavy ? (o.heavy || "The big swing comes down and you don't stop it.") : (o.counter || "You hesitate, and the counter is there in the gap."));
       st.fury = Math.max(0, st.fury - (heavy ? 3 : 2)); paint();
@@ -24086,6 +24169,7 @@ body.pv-open { overflow: hidden; }
     });
   }
   async function furyFight(o) {
+    if (o.wren) await wrnJoin();
     const r = await furyBout(o);
     await mech(r.won ? "You win the bout: " + r.hits + " strokes landed" + (r.unleashed ? ", unleashed " + (r.unleashed > 1 ? r.unleashed + " times" : "once") : "") + (r.caught ? ", " + r.caught + " big swing" + (r.caught > 1 ? "s" : "") + " caught" : "") + "." : "You lose the bout. The axe held you at " + S.hp + " HP.", r.won ? "loot" : "hurt");
     if (r.won) grant("hnfury");
@@ -24394,7 +24478,7 @@ body.pv-open { overflow: hidden; }
     }
     await say("Idony Rusk is the Hinge's Knife: a small square woman in a fencing jacket, with a sabre on each hip and a scar from her ear to the corner of her mouth that pulls it into a smile. She doesn't fence the way the salles teach. She doesn't wait for you. She comes at you all at once, and keeps coming.");
     await say("\"Don't stand there parrying,\" she says. \"We don't do that here. Hit me, if you can, and don't stop till one of us does.\"", "voice");
-    const r = await furyFight({ taunt: "rusk", id: "hinge:rusk", name: "Idony Rusk", hp: 38, dmg: [1, 8, 2], gap: 1300, windup: 6500, him: "she",
+    const r = await furyFight({ taunt: "rusk", id: "hinge:rusk", name: "Idony Rusk", hp: 38, dmg: [1, 6, 2], gap: 1450, windup: 7000, him: "she", soft: 0.5, wren: true,
       counter: "You stop for half a breath, and her sabre's in the gap.", heavy: "Both sabres come down at once, and you don't catch them." });
     H.rusk = r.won ? "won" : "lost";
     if (r.won) { hnEffort(2); await say("She goes down on one knee with both sabres gone out of her hands, laughing, with blood on her teeth. \"Oh, that's good,\" she says. \"He'll want to know about that. He'll want to know exactly how you did that.\" She's still laughing when you go out of the window."); }
@@ -24516,7 +24600,7 @@ body.pv-open { overflow: hidden; }
     await say("He stands up, and the long grey blade is in his hand, and he comes for you the Hinge's way: all at once, and without stopping.");
     const D = duel(), mem = D.foes["hinge:corvane"], top = mem ? duTop(mem) : null;
     if (top) await mech("He knows your habit (" + duLab(top) + "). Repeat yourself and he blocks it.", "hurt");
-    const r = await furyFight({ taunt: "corvane", id: "hinge:corvane", name: "Mardek Corvane", hp: 48, dmg: [2, 6, 3], gap: 1000, windup: 5500, windWin: 1000, reads: true,
+    const r = await furyFight({ taunt: "corvane", id: "hinge:corvane", name: "Mardek Corvane", hp: 48, dmg: [1, 8, 2], gap: 1250, windup: 6500, windWin: 1200, reads: true, soft: 0.5, wren: true,
       counter: "You stop for half a breath, and his grey blade is in the gap.", heavy: "He brings the long blade down with both hands and you don't catch it." });
     H.duel = r.won ? "won" : "lost";
     if (r.won) { hnEffort(3); await say("His blade goes out of his hand and over the parapet, and he goes back against the great bell, and it booms, once, low, under your feet. He's laughing, like Idony laughed. Then he isn't."); }
@@ -24539,7 +24623,7 @@ body.pv-open { overflow: hidden; }
     const say6 = async () => mech("Souls in him: " + pips() + (st0.souls >= st0.cap - 1 ? " · the Reaping is coming" : ""), st0.souls >= st0.cap - 1 ? "hurt" : "");
     await mech("<b>The Reaping.</b> The souls he holds are the meter: " + pips() + ". The dead drift in to him every round, his own men among them. At " + st0.cap + " he spends them all on one blow. Starve him: speak the names of the dead, retie them, ring them home. Brace when it's coming." + (stand ? " The " + stand + " tower" + (stand > 1 ? "s" : "") + " still standing feed him from the start." : ""));
     const F = {
-      name: "Mardek Corvane, full of the dead", hp: duelWon ? 64 : 76, ac: 16, atk: 7, n: 1, s: 12, type: "necrotic", bloom: 0, hesk: false, who: "Corvane", whoShort: "Corvane",
+      name: "Mardek Corvane, full of the dead", hp: duelWon ? 64 : 76, ac: 16, atk: 7, n: 1, s: 10, type: "necrotic", bloom: 0, hesk: false, who: "Corvane", whoShort: "Corvane", soft: 0.5, wren: true,
       hitWhy: "His blade goes through you cold, and for a moment you can hear the people inside him.", miss: "The grey blade goes past and rings on the bell.", hitLine: "The cut doesn't bleed. It lets out light, and the light goes back into him.",
       before: async (st) => {
         if (!F.half && FOE.hp > 0 && FOE.hp <= FOE.max / 2) {
@@ -24553,7 +24637,7 @@ body.pv-open { overflow: hidden; }
         }
         if (st.round > 1) { st0.souls += st0.lanternCut ? 0 : 1; if (st0.lanternCut && st.round % 2 === 0) st0.souls += 1; await say6(); }
         if (st0.hook > 0) {
-          const k = await check({ label: "Wisdom saving throw (hold on to Vaelric)", mod: 2 + (S.hh && S.hh.hear >= 3 ? 2 : 0), dc: 15, cta: "Hold on" });
+          const k = await wrnSave({ label: "Wisdom saving throw (hold on to Vaelric)", mod: 2 + (S.hh && S.hh.hear >= 3 ? 2 : 0), dc: 15, cta: "Hold on" });
           if (k.ok) { st0.hook = 0; H.vael = "held"; hnEffort(1); await say("You close both hands on the haft and hold on to him the way you'd hold someone on a cliff, and the hook of cold that's in him tears loose. \"Thank you,\" Vaelric says, faint as a draught."); }
           else if (--st0.hook <= 0) { H.vael = "taken"; S.gemsSpent = true; renderSheet(); await say("He's gone. You feel him go: the old knight in the axe, the one who's been at your back since the labyrinth, comes out of the haft like a long breath and goes across the room and into Mardek Corvane, and the gems in the haft go dark."); await mech("Vaelric is in Corvane now. The gems won't wake. The axe still holds you; that was never Vaelric, it was the axe.", "hurt"); }
           else await say("The cold hook in the axe pulls harder. You can feel Vaelric holding on to you from the other side.");
@@ -24567,10 +24651,11 @@ body.pv-open { overflow: hidden; }
         await say("He lifts the grey blade over his head with both hands, and all the light that's in him runs up it.");
         await hnVisions(dead, st0.reaps === 1 ? "The Reaping. You see them, every one he's spending." : "The Reaping, again. More of them.");
         SND.boom && SND.boom();
-        const k = await check({ label: "Wisdom saving throw (the Reaping)", mod: 2 + (st0.braced ? 5 : 0) + Math.floor(lvk() / 12), dc: 17, cta: st0.braced ? "Stand braced" : "Stand" });
-        const big = 4 + st0.reaps;
-        if (k.ok) await hurt(Math.ceil(big / 2), 10, "necrotic", "You take it on your guard, braced, with your feet set, and it still puts you on your knees.");
-        else await hurt(big, 10, "necrotic", "It comes down through you and through the floor and through the hill, and for a long moment you're every one of them.");
+        const k = await wrnSave({ label: "Wisdom saving throw (the Reaping)", mod: 2 + (st0.braced ? 5 : 0) + Math.floor(lvk() / 12), dc: 15, cta: st0.braced ? "Stand braced" : "Stand" });
+        const big = 3 + st0.reaps;
+        if (k.ok) await hurt(Math.ceil(big / 2), 8, "necrotic", "You take it on your guard, braced, with your feet set, and it still puts you on your knees.");
+        else if (k.warded) await hurt(Math.ceil(big / 2), 8, "necrotic", "It comes down through you, and Sister Wren's hands on your shoulders take the worst of it out of you, into the floor.");
+        else await hurt(big, 8, "necrotic", "It comes down through you and through the floor and through the hill, and for a long moment you're every one of them.");
         st0.souls = 0; st0.braced = false; H.reaps++;
         await say(d(2) === 1 ? "\u201c" + dead[0][0] + ",\u201d he says. \u201cYou couldn't save them. You couldn't save any of them.\u201d" : "\u201cThat was " + dead.length + " people,\u201d he says. \u201cAnd you just stood there.\u201d", "voice");
         await hnBlank(1, "Every one he spends goes out of the east. Somewhere on the Ostle, a village goes quiet.");
@@ -24583,7 +24668,7 @@ body.pv-open { overflow: hidden; }
       },
       extra: (st) => [
         { key: "hn-names", label: "Speak the names of the dead", tag: "Wisdom DC 14 · −2 souls · costs your turn" + (H.reaped.length ? " · you know " + H.reaped.length + " of them" : ""), plain: true },
-        { key: "hn-brace", label: "Brace for the Reaping", tag: "costs your turn · +5 on the save, and half", plain: true, show: st0.souls >= st0.cap - 2 && !st0.braced },
+        { key: "hn-brace", label: "Brace for the Reaping", tag: "costs your turn · +5 on the save", plain: true, show: st0.souls >= st0.cap - 2 && !st0.braced },
         { key: "hn-rope", label: "Retie the count-rope round the dead", tag: "−3 souls · once", plain: true, show: !st0.rope && (hasGear("countrope") || (S.pz && S.pz.ending === "rise")) },
         { key: "hn-note", label: "Sound the Bathyr's note", tag: "every soul in the room goes home · once", plain: true, show: !st0.note && S.sd && S.sd.ending === "sound" },
         { key: "hn-lantern", label: "Smash the black lantern at his belt", tag: "attack vs AC 18 · he holds 1 soul a round less", plain: true, show: H.lantern && !st0.lanternCut }
@@ -25187,13 +25272,13 @@ body.pv-open { overflow: hidden; }
       await say("Ysolt sits down at noon on a stretch of road that isn't going anywhere, and takes off her spectacles, and rubs her eyes for a long time. \"I'm not used to them,\" she says. \"Eyes. I had eleven years off.\" When she looks up her eyes are grey, with a little silver at the very edge, like frost at the edge of a puddle. Every time she draws for you, there's a little more.");
       if (U.spent) await mech("Every redrawing Ysolt draws for costs her. She's drawn " + U.spent + (U.spent > 1 ? " times." : " time."), "hurt");
       await say("Then the Drafts come for her. A great many of them, out of the white on every side, walking the way people walk to a fair. They don't want you. They want the woman with the pen.");
-      await hkFight(DRAFTS({ heads: 4, hitLine: "It comes apart into loose lines before it can reach her." }));
+      await hkFight(DRAFTS({ heads: 4, soft: 0.5, wren: true, hitLine: "It comes apart into loose lines before it can reach her." }));
       unEffort(1);
     } else {
       await say("In the night, the map in your pack draws something.");
       await say("You hear it: the scratch of a nib, very fast, from inside the oilcloth. When you unwrap the sheet the ink's still wet, and it's a drawing of a man, tall, not young, with a long clever face and his hair tied back. It's the last thing Ysolt's Cascade saw clearly, from the Gnomon. While you're looking at it, it stands up off the paper.");
       await say("It's Mardek Corvane the way a quick sketch is a man: all the lines that matter, and nothing in between. The grey blade is three strokes of ink. It looks at you and it knows how you stand, because he did.");
-      await hkFight({ name: "A sketch of Mardek Corvane", hp: 44, ac: 15, atk: 7, n: 1, s: 10, type: "slashing", bloom: 0, hesk: false, who: "the sketch", whoShort: "Sketch", bleed: 15,
+      await hkFight({ name: "A sketch of Mardek Corvane", hp: 44, ac: 15, atk: 7, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the sketch", whoShort: "Sketch", bleed: 15, soft: 0.5, wren: true,
         hitWhy: "Three strokes of ink go through your guard the way he did it at Ostle Ford.", miss: "The ink blade smears past you.", hitLine: "Your blow takes a line out of him, and the line doesn't come back." });
       unEffort(1);
       await say("When it's down it's only ink on the white, and the white drinks it. In the morning the sheet in your pack is blank where he was, and in the margin, in her shaking hand: <i>sorry.</i>");
@@ -25254,7 +25339,7 @@ body.pv-open { overflow: hidden; }
     await say("On the near side of the margin there's a procession. Drafts, hundreds of them, walking along the edge in a long line the way people walk round a churchyard at a burying: every one of them a half-drawn person the land couldn't remember properly. They're going round and round. They've been going round since the bell.");
     const k = await check({ label: "Stealth check (through the procession)", mod: 3 + (co().burr ? 0 : 1), dc: 15, cta: "Walk with them" });
     if (k.ok) { unEffort(1); await say("You walk in among them, slowly, at their pace, with your head down, and they let you, because they can't remember whether you're one of them."); }
-    else { await say("A Draft turns its ring of a head toward you, and stops, and the ones behind it stop, and then all of them do."); await hkFight(DRAFTS({ heads: 5, name: "The procession" })); }
+    else { await say("A Draft turns its ring of a head toward you, and stops, and the ones behind it stop, and then all of them do."); await hkFight(DRAFTS({ heads: 5, name: "The procession", soft: 0.5, wren: true })); }
     await say("At the very edge of the margin, the ink in your jar is cold enough to hurt your hand. Whatever you draw here, you draw for good. Whatever's still unmapped when you leave here stays unmapped.");
     await unRedraw("The last redrawing.");
     const gone = unLeft();
@@ -25295,13 +25380,13 @@ body.pv-open { overflow: hidden; }
     tip("unwrite");
     await mech("<b>The Unwriting.</b> Your outline: " + meter() + ". It rubs a little of you out every round" + (gone.length >= 3 ? ", faster for all it's got" : "") + ". When your outline's gone, it rubs out a part of you that hurts. Redraw yourself with the ink (3 drops), or name the places you drew back: each one stands with you once.");
     const F = {
-      name: "The Unwriting", hp: 54 + 8 * gone.length, ac: 15, atk: 7, n: 2, s: 6, type: "psychic", bloom: 0, hesk: false, who: "the Unwriting", whoShort: "Unwriting",
+      name: "The Unwriting", hp: 54 + 8 * gone.length, ac: 15, atk: 7, n: 1, s: 10, type: "psychic", bloom: 0, hesk: false, who: "the Unwriting", whoShort: "Unwriting", soft: 0.5, wren: true,
       hitWhy: "It folds over you, and for a moment you can't remember your own name, and then you can, but it hurts.", miss: "It comes down on the road where you were, and the road goes.", hitLine: "Your blow tears it, and something it took shows through the tear for a moment: a hedge, a window.",
       before: async (st) => {
         if (st.round > 1) st0.out += gone.length >= 3 && st.round % 2 === 0 ? 2 : 1;
         if (st0.out >= 5) {
           st0.out = 1;
-          await hurt(3, 8, "psychic", "Your outline goes, all of it, and for a long breath you aren't anywhere.");
+          await wrnBlow(2, 8, "psychic", "Your outline goes, all of it, and for a long breath you aren't anywhere.");
           await mech("Rubbed out, and drawn back by the skin of your teeth. Outline: " + meter() + ".", "hurt");
         } else if (st.round > 1) await mech("Your outline: " + meter() + (st0.out >= 3 ? " · it's nearly through you" : ""), st0.out >= 3 ? "hurt" : "");
       },
@@ -25333,24 +25418,24 @@ body.pv-open { overflow: hidden; }
     await say("Strand House stands on the line, grey all through: grey brick, grey ivy, grey glass in a hundred windows, and every window lit. The whole house leans, a little, toward the white, like a man leaning into a wind. Every so often it creaks, and leans a little more.");
     await say("Idony Rusk is waiting on the steps, with a sabre on each hip and a black band on her arm. Behind her, in the hall, there are forty people in mourning: cousins, sons, a grandmother in a chair. " + (H.rusk === "won" ? "\"I told him you hit like a landslide,\" she says. \"He wanted to see. Well. I'm what's left. Let's see again.\"" : "\"Last time I put you through a window,\" she says. \"This house has more windows.\""), "voice");
     if (U.fate.gauntry === "true" || U.fate.gauntry === "wrong") await say("Behind you, up the hill, Gauntry House stands back in its place where you drew it, and in its kitchen doorway the footman you put in the coal-hole is standing with a poker, and four dogs. He doesn't come down. But he doesn't go in, either.");
-    const r = await furyFight({ taunt: "rusk2", id: "hinge:rusk", name: "Idony Rusk", hp: 46, dmg: [1, 8, 3], gap: 1150, windup: 6000, him: "she", reads: H.rusk === "won",
+    const r = await furyFight({ taunt: "rusk2", id: "hinge:rusk", name: "Idony Rusk", hp: 46, dmg: [1, 6, 2], gap: 1350, windup: 7000, him: "she", reads: H.rusk === "won", soft: 0.5, wren: true,
       counter: "You stop for half a breath, and her sabre's in the gap.", heavy: "Both sabres come down at once, and you don't catch them." });
     await say(r.won ? "Her sabres go out of her hands and skitter down the grey steps. She sits down on the top step, laughing, holding her side. \"Fine,\" she says. \"Fine. But you'll have to deal with them.\" She nods at the hall. \"I can't stop them now. Nobody can.\"" : "She puts you down on the steps, and stands over you, and doesn't finish it. \"No,\" she says. \"That's not what they want. They want you inside.\"");
     await say("They come out of the hall all at once, the Hinge's leftovers, with whatever was on the walls: swords, pikes, a boar-spear, a fire-iron. And as they come, Strand House creaks, and leans.");
     const st0 = { lean: 0, braced: false, doors: 0 };
     const drawn = U.fate.gauntry === "true" || U.fate.gauntry === "wrong";
     tip("lean");
-    await mech("<b>The leaning house.</b> Every other round Strand House leans further and comes down on whoever's under it: a Dexterity save (DC 15) or 3d8. Brace in a doorway (your turn) to stand it, or draw a door out of the grey (2 drops) to send it onto them." + (drawn ? " The house you drew back up the hill is watching: the lean does half." : ""));
+    await mech("<b>The leaning house.</b> Every other round Strand House leans further and comes down on whoever's under it: a Dexterity save (DC 14) or 2d8. Brace in a doorway (your turn) to stand it, or draw a door out of the grey (2 drops) to send it onto them." + (drawn ? " The house you drew back up the hill is watching: the lean does half." : ""));
     const F = {
-      name: "The Hinge's last households", heads: 6, unit: "heir|heirs", ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's heirs", whoShort: "heir", bleed: 20,
+      name: "The Hinge's last households", heads: 6, unit: "heir|heirs", ac: 15, atk: 5, n: 1, s: 6, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's heirs", whoShort: "heir", bleed: 20, soft: 0.5, wren: true,
       hitWhy: "A Strand cousin's sword finds your ribs.", miss: "A pike goes past your ear and sticks in the grey panelling.", hitLine: "One of them goes down on the grey floor, and the house creaks over them.",
       before: async (st) => {
         if (st.round < 2 || st.round % 2) return;
         st0.lean++;
         await say("Strand House groans, and leans, and the ceiling comes down toward the floor like a lid closing.");
         if (st0.braced) { st0.braced = false; await say("You stand in the doorway with your back to one post and your hands on the other, and the house comes down round you and doesn't touch you."); return; }
-        const k = await check({ label: "Dexterity saving throw (the house leans)", mod: 3, dc: 15, cta: "Dive" });
-        if (!k.ok) await hurt(drawn ? 2 : 3, 8, "bludgeoning", "A grey beam comes down across your back.");
+        const k = await wrnSave({ label: "Dexterity saving throw (the house leans)", mod: 3, dc: 14, cta: "Dive" });
+        if (!k.ok) await hurt(k.warded ? 1 : drawn ? 1 : 2, 8, "bludgeoning", k.warded ? "A grey beam comes down across your back, and Sister Wren hauls you half out from under it." : "A grey beam comes down across your back.");
         else await say("You go under a table and the beam comes down on top of it.");
         if (FOE.hp > 1) { foeHit(1); await say("It catches one of them, who didn't move."); }
       },
@@ -25378,9 +25463,9 @@ body.pv-open { overflow: hidden; }
     await say("\"Who paid you?\" you ask. She holds up the silver piece. \"Somebody who doesn't use money,\" she says. \"He uses this.\"", "voice");
     const st0 = { slip: 0, rang: false };
     tip("rope");
-    await mech("<b>The rope.</b> " + (mine ? "The rope's end is tied round your waist, and every round they get a hook on it and haul." : "Your allies have the rope, and every other round the Bell-Takers get a hook on it and haul.") + " Hold it (Strength DC 14, your turn) or it slips. At three slips they ring the Gnomon from here, at you: 4d10." + (mine ? " Or ring it yourself, once." : ""));
+    await mech("<b>The rope.</b> " + (mine ? "The rope's end is tied round your waist, and every round they get a hook on it and haul." : "Your allies have the rope, and every other round the Bell-Takers get a hook on it and haul.") + " Hold it (Strength DC 14, your turn) or it slips. At three slips they ring the Gnomon from here, at you: 3d8." + (mine ? " Or ring it yourself, once." : ""));
     const F = {
-      name: "Bastia Grell and the Bell-Takers", hp: 70, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "the Bell-Takers", whoShort: "Bell-Takers", bleed: 20,
+      name: "Bastia Grell and the Bell-Takers", hp: 70, ac: 16, atk: 6, n: 1, s: 8, type: "piercing", bloom: 0, hesk: false, who: "the Bell-Takers", whoShort: "Bell-Takers", bleed: 20, soft: 0.5, wren: true,
       hitWhy: "A boat-hook on a pole comes in from the side and opens your arm.", miss: "The hook goes past and they haul on nothing.", hitLine: "One of the Bell-Takers goes down, and Grell steps over him without looking.",
       before: async (st) => {
         if (st.round < 2) return;
@@ -25391,7 +25476,7 @@ body.pv-open { overflow: hidden; }
         if (st0.slip >= 3) {
           st0.slip = 0;
           await say("Up on Gauntry hill, miles off, the Gnomon's great bell swings, once. You hear it in your teeth. The nearest Cascade in the realm, wherever it was, leans this way, and comes down on you like a wall of black water.");
-          await hurt(4, 10, "thunder", "It goes through you and out the other side and leaves you on your knees in the road.");
+          await wrnBlow(3, 8, "thunder", "It goes through you and out the other side and leaves you on your knees in the road.");
         } else await mech("The rope slips: " + st0.slip + " of 3.", "hurt");
       },
       extra: (st) => [
