@@ -660,6 +660,24 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .duel .du-log .y { color: var(--emerald); } .duel .du-log .f { color: #e89a8c; } .duel .du-log .g { color: var(--gold); } .duel .du-log .s { color: var(--muted); }
 .duel.spent .du-pad, .duel.spent .du-btns, .duel.spent details, .duel.spent .du-timer { display: none; }
 .duel.spent .du-log { max-height: 90px; }
+/* Half the East: Fury bouts, visions of the Reaped, Ysolt's sheets, the masked dinner */
+.duel.fury { user-select: none; -webkit-user-select: none; }
+.duel.fury .du-pips i { width: 12px; }
+.duel.fury.fu-rage canvas { border-color: var(--ember); box-shadow: 0 0 18px rgba(217,80,58,.45) inset; }
+body.fu-shake .duel.fury .du-pad { animation: quake .25s linear infinite; }
+@media (prefers-reduced-motion: reduce) { body.fu-shake .duel.fury .du-pad { animation: none; } }
+.hn-vision { margin: 0 0 1em; padding: 16px 14px; border-radius: 8px; background: #050706; border: 1px solid #2a2f2c; color: #d9d4c4; cursor: pointer; }
+.hn-vision .hn-vh { margin: 0 0 10px; font-family: var(--label); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hn-vision .hn-vone { margin: 0 0 8px; opacity: 0; transform: translateY(4px); transition: opacity 1.1s ease, transform 1.1s ease; font-style: italic; }
+.hn-vision .hn-vone.on { opacity: .92; transform: none; }
+.hn-vision .hn-vend { margin: 10px 0 0; color: var(--muted); font-size: .9rem; }
+body.hn-dark .story > *:not(.hn-vision):not(:last-child) { opacity: .35; transition: opacity .8s; }
+.hn-turns { display: block; letter-spacing: -2px; font-size: .7rem; color: var(--gold); overflow-wrap: anywhere; }
+.hn-sheets button { font-family: monospace; font-size: 2.2rem; line-height: 1; height: 64px; padding: 0; background: #2a2418; color: #d8c49a; }
+.hn-sheets.whole button { color: var(--gold); }
+.hn-masks { display: grid; gap: 6px; }
+.hn-mrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hn-mrow button { min-width: 110px; }
 .lockhist { font-family: var(--label); letter-spacing: .1em; line-height: 1.7; font-size: .95rem; }
 .pgrid.maze { gap: 0; }
 .pgrid.maze button { width: 42px; height: 42px; border-radius: 0; border-color: var(--gold); font-size: 1rem; }
@@ -1495,6 +1513,21 @@ body.pv-open { overflow: hidden; }
       <span class="stat-label hk-x">Your share</span>
       <span class="stat-val hk-x" id="pzShare">0 gold</span>
     </div>
+    <div class="lw" id="hnBox" hidden>
+      <span class="stat-label">The east on Ysolt's map</span>
+      <span class="stat-val" id="hnBlank">12 leagues</span>
+      <div class="huntbar"><span id="hnBlankBar" style="width:100%"></span></div>
+      <span class="note" id="hnBlankNote"></span>
+      <span class="stat-label">Towers down</span>
+      <span class="stat-val" id="hnTowers">0 of 5</span>
+      <span class="stat-label hk-x">The masks</span>
+      <span class="stat-val hk-x" id="hnMasks">unknown</span>
+    </div>
+    <div class="lw" id="unbalBox" hidden>
+      <span class="stat-label">The world</span>
+      <span class="stat-val">The Visceral Realm</span>
+      <span class="note">The Hinge is broken and so is the balance: foes have more HP and hit harder, Dread comes faster, and Hinge remnants hold the roads. The roads back pay a quarter more gold, and good weapons drop more often.</span>
+    </div>
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
@@ -1644,7 +1677,7 @@ body.pv-open { overflow: hidden; }
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   let sdNoSave = false; // the Inside the Axe memory isn't saved
   function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (v.part === 75 && !v.roam && v.pz && v.pz.done) v.part = 76; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -1849,6 +1882,13 @@ body.pv-open { overflow: hidden; }
         every(sc, 2.5, 6, () => { const n = 2 + Math.floor(Math.random() * 3), gap = Math.random() < 0.5 ? 0.18 : 0.4; for (let i = 0; i < n; i++) blip(sc.out, rnd(180, 260), { type: "triangle", a: 0.002, dec: 0.09, vol: 0.04, at: i * gap }); });
         every(sc, 14, 30, () => bell(sc.out, hz(pick([55, 58, 62])), 0.014, 7));
       },
+      hinge(sc) {       // the east: a slow river, a creaking millwheel, a chain dragging, a far chapel bell
+        wind(sc, { type: "lowpass", cut: 520, q: 0.6, vol: 0.06, sweep: 160, rate: 0.04 });
+        drone(sc, [36, 43, 48], { cut: 300, vol: 0.03, wob: 0.03 });
+        every(sc, 4, 9, () => { for (let i = 0; i < 3; i++) blip(sc.out, rnd(140, 180), { type: "sawtooth", a: 0.04, dec: 0.22, vol: 0.01, bend: 0.85, at: i * 0.5 }); });
+        every(sc, 10, 22, () => { for (let i = 0; i < 6; i++) hiss(sc.out, { f: 2400, q: 3, a: 0.003, dec: 0.05, vol: 0.03, at: i * 0.09 }); });
+        every(sc, 20, 40, () => bell(sc.out, hz(pick([58, 61])), 0.02, 5));
+      },
       tithe(sc) {       // the Reach: swell under the hull, wind in the rigging, timbers creaking, and the slow flat clank of a count-bell
         drone(sc, [41, 49], { cut: 300, vol: 0.035, wob: 0.03 });
         wind(sc, { type: "bandpass", cut: 700, q: 0.8, vol: 0.06, sweep: 400, rate: 0.05 });
@@ -1914,6 +1954,20 @@ body.pv-open { overflow: hidden; }
       clang(parry) { if (live()) bell(sfx, hz(parry ? 84 : 72), 0.05, 1.1); },
       // Plays a phrase of tones and says how long it lasts in ms (0 when sound is off).
       phrase(seq, o = {}) { return live() ? phraseInto(sfx, seq, o) * 1000 : 0; },
+      // Half the East (2026-11-11): Fury bout strokes and blows, the war-drum, the Reaping's choir and
+      // boom, the visions' breath, and the Gnomon's four bells.
+      whoosh() { if (live()) hiss(sfx, { f: 900 + Math.random() * 900, q: 1.2, a: 0.01, dec: 0.16, vol: 0.12, to: 300 }); },
+      thud(k = 0) { if (!live()) return; blip(sfx, 90 - k * 3, { type: "triangle", a: 0.003, dec: 0.18 + k * 0.02, vol: 0.12 + k * 0.015, bend: 0.5 }); hiss(sfx, { f: 400, q: 0.8, a: 0.002, dec: 0.08, vol: 0.06 + k * 0.01 }); },
+      drum(n = 8) { if (!live()) return; for (let i = 0; i < n; i++) { blip(sfx, 62, { type: "sine", a: 0.003, dec: 0.3, vol: 0.2, bend: 0.6, at: i * 0.38 }); if (i % 2) hiss(sfx, { f: 220, q: 1, a: 0.002, dec: 0.12, vol: 0.08, at: i * 0.38 + 0.19 }); } },
+      choir(secs = 5) {
+        if (!live()) return;
+        const g = gain(0, sfx), t = ctx.currentTime;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + secs * 0.85); g.gain.exponentialRampToValueAtTime(0.0001, t + secs + 0.6);
+        [57, 60, 64, 67, 69, 72].forEach((m, i) => { const f = filt("bandpass", hz(m) * 2.2, 3, g), o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(hz(m) * 0.98, t); o.frequency.linearRampToValueAtTime(hz(m + 2), t + secs); o.detune.value = (i - 3) * 7; o.connect(f); o.start(t + i * 0.25); o.stop(t + secs + 0.7); });
+      },
+      boom() { if (!live()) return; blip(sfx, 48, { type: "sine", a: 0.005, dec: 2.2, vol: 0.32, bend: 0.5 }); hiss(sfx, { f: 160, q: 0.6, a: 0.01, dec: 1.4, vol: 0.18, to: 60 }); bell(sfx, hz(36), 0.06, 5); },
+      breath() { if (live()) hiss(sfx, { f: 700, q: 0.7, a: 0.5, dec: 1.4, vol: 0.05, to: 380 }); },
+      gbell(i) { if (live()) bell(sfx, hz([67, 64, 60, 55][i] || 60), 0.08, 3.5); },
       // The Singing Door hums back its answer: a bright bell for each true note, a low one for each near note.
       door(hit, near) {
         if (!live()) return;
@@ -1992,10 +2046,11 @@ body.pv-open { overflow: hidden; }
     ["Carrowmere", "carrowmere", 17, 21], ["Lastwell", "lastwell", 22, 27], ["The Glass Assize", "assize", 28, 33],
     ["The Corrach Three", "corrach", 34, 40], ["The Kept Noon", "noon", 41, 47],
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
-    ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75]
+    ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75],
+    ["Half the East", "hinge", 76, 82]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
-  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "contender", "roadname", "colours"]);
+  const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "hnmap", "hnreaped", "contender", "roadname", "colours"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
   const newRun = (part, note) => ({ start: Date.now(), ms: 0, deaths: 0, close: 0, earned: 0, lost: 0, fights: 0,
     items: {}, bounties: [], maps: [], furthest: part || 0, chapters: [], mark: null, ck: null, note: note || "", end: "" });
@@ -2173,6 +2228,7 @@ body.pv-open { overflow: hidden; }
     h += cwSection(rs);
     h += seaSection(rs);
     h += duelSection(rs);
+    h += hnSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -2197,6 +2253,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "72", name: "Half the East", date: "11 Nov 2026", items: [
+      "<b>A new chapter after the Black Tithe, Parts LXXVII–LXXXIII.</b> At Stillwater a Cascade rises out of the still water, and when you cut it down, one silver thread ties itself into a message in your palm: a place east of Rahdaria, and a name. Ysolt, a mapmaker who has slept in a Cascade for eleven years, drawing what it shows her.",
+      "Her newest map of the east is half blank, and the blank is a line: <b>the Hinge</b>, the houses the realm turns on, mean to lean every Cascade in the realm onto the lands between Rahdaria and Sulmara, and blame the Bathyr for it. The leagues still drawn on her map are your clock.",
+      "<b>Mardek Corvane, the Surveyor</b>, hunts you through all of it. He drinks the souls of the dying, and in the last fight he spends them on <b>the Reaping</b>: you see every one of the dead before the blow lands, and every Reaping that gets through costs the east a league. Speak their names, retie them, ring them home, smash his lantern, or brace.",
+      "<b>Fury bouts</b>, a new and angrier kind of duel: attack without stopping, and they only strike back when you hesitate. Fill your Fury and Unleash it. Corvane and Idony Rusk will tell you what they think of you while you do.",
+      "Five puzzles (the thread's message, Ysolt's bearings, her sheets, the masked dinner, the counter-peal), five towers to bring down with whatever allies your earlier choices earned you, and three ways to end it. A real reward for the effort: gold and the name Hingebreaker for everyone, <b>the Wrathbrand</b> for a strong showing, and more for a near-perfect one.",
+      "<b>The Visceral Realm.</b> When it's over, the world is harder: foes have more HP and hit harder, Dread comes faster, and Hinge remnants hold the roads back. It pays a quarter more gold, and good weapons drop more often. Fourteen new feats in <b>Half the East</b>."] },
     { ver: "71", name: "Tactical Advantage", date: "9 Nov 2026", items: [
       "<b>A new battle style.</b> Boardings on the Open Reach and in the Black Tithe, caravan raids, the salt-tax wagon and the road-raiders can now be fought on the battle map with <b>your whole company as pieces</b>: you, Burr, Tyra, your sellswords, and on a deck, the crew sworn to you.",
       "Each unit acts in turn, by speed (the bar shows who's next). Move, play one card, then choose which way to face: blows from the side are +2 to hit, from behind +4. The map's ground still counts: cover, high ground, rugged and sinking ground, charges and tall cover against shots. ◆ Resonance grows each turn and pays for the big cards. Your pirate tricks are cards, once a battle each.",
@@ -2401,7 +2464,11 @@ body.pv-open { overflow: hidden; }
     tithe: { at: [40, 196], parts: { 73: [70, 206], 74: [70, 206] }, clear: [[42, 196, 34], [70, 210, 22], [66, 250, 18]],
       road: [[84, 300], [70, 262], [62, 228], [48, 204]],
       art: [["hulks", 70, 208, .8], ["isle", 34, 186, .9]],
-      labels: [["Stillwater", 34, 166, 11, ""], ["Raftmark", 82, 232, 9, "s"]] }
+      labels: [["Stillwater", 34, 166, 11, ""], ["Raftmark", 82, 232, 9, "s"]] },
+    hinge: { at: [150, 262], parts: { 76: [40, 196], 79: [176, 240], 81: [176, 240], 82: [150, 262] }, clear: [[150, 262, 40], [180, 238, 30]],
+      road: [[96, 312], [124, 290], [150, 264], [178, 240]],
+      art: [["hills", 160, 250, .7], ["village", 150, 266, .8]],
+      labels: [["Ostle Ford", 150, 290, 10, "s"], ["Gauntry", 186, 226, 10, "s"], ["the Ostle", 120, 252, 9, "s"]] }
   };
   const MAP_SEEN = "lor-map-seen";
   const INK = "#3b2a18", INK2 = "#6b5434", PAPER = "#dcc8a0", WATER = "#5d7774", GLASS = "#5f9a84", AMBER = "#c58a2c";
@@ -2742,6 +2809,20 @@ body.pv-open { overflow: hidden; }
     { id: "pzsell", name: "The Saltwrit's Pardon", desc: "Sell the Tithe Fleet to the gibbets.", test: () => false },
     { id: "pzburn", name: "Every Knot a Name", desc: "Give the Tithe Fleet its dead back.", test: () => false },
     { id: "pzblack", name: "A Black Name", desc: "Raise your Plunder to 8 on the roads back.", test: () => (S.plunder || 0) >= 8, prog: () => [Math.min(8, S.plunder || 0), 8] },
+    { id: "hnfury", name: "Fury", desc: "Win a Fury bout.", test: () => false },
+    { id: "hnrelent", name: "Relentless", desc: "Win a Fury bout without letting a single counter through.", test: () => false },
+    { id: "hnrage", name: "Wrath Unbound", desc: "Unleash three times in one Fury bout.", test: () => false },
+    { id: "hnmasks", name: "Unmasked", desc: "Name all five of the Hinge behind their masks.", test: () => false },
+    { id: "hntowers", name: "Five Towers Down", desc: "Bring down every one of the Hinge's towers before the full moon.", test: () => false },
+    { id: "hnstarved", name: "Starved", desc: "Beat Mardek Corvane without letting a single Reaping land.", test: () => false },
+    { id: "hnfree", name: "Let Them Go", desc: "Break the black lantern, and free the dead.", test: () => false },
+    { id: "hnstill", name: "Nobody Leans Them", desc: "Break the Gnomon's great bell.", test: () => false },
+    { id: "hnturn", name: "Turned on the Hinge", desc: "Lean the Cascades onto the Hinge's own houses.", test: () => false },
+    { id: "hnkeep", name: "The Hinge of the Realm", desc: "Keep the Gnomon's great bell for yourself.", test: () => false },
+    { id: "hndone", name: "Hingebreaker", desc: "Finish Half the East.", test: () => false },
+    { id: "hnwrath", name: "The Wrathbrand", desc: "Earn Corvane's blade with a strong showing.", test: () => false },
+    { id: "hnbest", name: "Nothing Left Undone", desc: "Finish Half the East with a near-perfect showing.", test: () => false },
+    { id: "hnremnant", name: "Visceral", desc: "Break a barricade of Hinge remnants on the roads back.", test: () => false },
     { id: "seafirst", name: "Blue Water", desc: "Make a voyage in a ship of your own.", test: () => false },
     { id: "seawaters", name: "Every Water", desc: "Sail all five waters of the Open Reach.", test: () => false, prog: () => [S.sea ? Object.keys(SEA_WATERS).filter(k => S.sea.seen[k]).length : 0, 5] },
     { id: "seaduel", name: "Strike Your Colours", desc: "Make a rival captain strike to you.", test: () => false },
@@ -2877,7 +2958,9 @@ body.pv-open { overflow: hidden; }
     { id: "siege", name: "The Siege Ground", ver: "22", desc: "Battle maps for the Siege of Rahdaria: the gate, the wall-walk, the breach, the Bathyr lines, and the Porcelain Tower.",
       ids: ["sgfirst", "sgdrown", "sgporc", "sgsix"] },
     { id: "tactics", name: "Tactical Advantage", ver: "23", desc: "Company battles on the grid: boardings, caravans and raiders, with your whole company on the map.",
-      ids: ["tacfirst", "tacdeck", "tacroad", "tactwar"] }
+      ids: ["tacfirst", "tacdeck", "tacroad", "tactwar"] },
+    { id: "hinge", name: "Half the East", ver: "24", desc: "A message in a Cascade thread, the sleeping mapmaker, the Hinge, Fury bouts, the Reaping, and the Visceral Realm.",
+      ids: ["hnfury", "hnrelent", "hnrage", "hnmasks", "hntowers", "hnstarved", "hnfree", "hnstill", "hnturn", "hnkeep", "hndone", "hnwrath", "hnbest", "hnremnant"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -3093,6 +3176,7 @@ body.pv-open { overflow: hidden; }
     rxItems(items);
     sdItems(items);
     pzItems(items);
+    hnItems(items);
     seaItems(items);
     bnItems(items);
     lvItems(items);
@@ -3109,6 +3193,8 @@ body.pv-open { overflow: hidden; }
     renderRah();
     renderSd();
     renderPz();
+    renderHn();
+    { const u = $("unbalBox"); if (u) u.hidden = !unbal(); }
     sheetH();
     const ul = $("inv");
     ul.innerHTML = "";
@@ -3256,6 +3342,10 @@ body.pv-open { overflow: hidden; }
     field: ["The battle map", "Road fights are fought on a map of the ground. You get <b>2 steps</b> a round on top of your move: tap a square, then tap it again. <b>Low cover</b> takes 1 off blows at you, a straight run of 2 or more steps across <b>open ground</b> into a blow is a <b>charge</b> (+2 damage), <b>rugged ground</b> costs 2 steps and spoils charges, <b>high ground</b> gives +1 to hit and damage against anyone below, and <b>sinking ground</b> holds whoever is in it. Shove foes into things, and lay mines and caltrops in their path. Your marker is picked on the map, under it."],
     siege: ["The siege maps", "The siege of Rahdaria is fought on maps of its walls and the Bathyr lines. <b>Walls</b> and engines block like rock, <b>towers</b> and terraces are high ground, <b>battlements</b> and gabions are low cover, the <b>breach</b> is rubble, and the ditches, pits and river hold whoever goes in. The Bathyr can't swim and get giddy up high. Before a sortie, the ground you pick is the map."],
     wanderer: ["Wanderers", "Sometimes a beast that belongs to nobody walks onto the field mid-fight. Anyone next to it when it moves may get hit. Strike it and it hunts you; shove your foe into it and it hunts your foe. It leaves when it's hurt badly enough, or bored."],
+    blank: ["The Blank", "Ysolt's map shows what the Cascade will take from the east. The leagues still drawn are on your sheet: slow work, failed puzzles and every Reaping that lands spend them. What's left at the end, and the towers still standing, decide how much of the east survives."],
+    towers: ["The five towers", "Each tower takes you a day, and you have three (two, if Corvane still has the west half of the map). Each day one of the allies your earlier choices earned you (the Bathyr, your crew or the Saltwrit, the terrace folk, Varro's archers, a sellsword) can take another. Every tower left standing feeds the last fight, and the Leaning."],
+    fury: ["Fury bouts", "No turns: attack without stopping. Every stroke that lands fills <b>Fury</b>, and a different stroke from your last two fills it faster. They strike back only when you hesitate (watch the bar). When they wind up (a red ring), draw a <b>loop</b> to catch it. At full Fury, <b>Unleash</b> (or Space): for a few seconds every swipe lands for your weapon's full dice. Then you're winded. A reader blocks the same stroke three times running."],
+    reaping: ["The Reaping", "Corvane holds souls: the meter fills every round, and with his own men when they fall. At six he spends them all on the Reaping, and you see every one. Speak the names of the dead (−2), and anything you carry from earlier chapters for the dead may help. Brace when it's close: +5 on the save, and half. Every Reaping that lands costs the east a league."],
     bench: ["Your trapper's kit", "Between parts you can build traps from schematics, using metal and cloth from your spoils. With Trapcraft you keep some salvage for parts instead of selling it all. Small traps are thrown through quick hands."]
   };
   const tipState = (() => { try { return Object.assign({ seen: {}, off: false }, JSON.parse(localStorage.getItem(TIP_KEY) || "{}")); } catch (e) { return { seen: {}, off: false }; } })();
@@ -3344,6 +3434,7 @@ body.pv-open { overflow: hidden; }
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
     if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
+    if (!atk && hasGear("ysoltmap") && /^(Survival|Perception)/.test(label)) { mod += 1; label += " (+1 Ysolt's map)"; }
     if (!atk) { const dx = (hasGear("mantle") && /Investigation|Insight/.test(label) ? 1 : 0) + (S.bg === "historian" && /Investigation/.test(label) ? 1 : 0); if (dx) { mod += dx; label += " (+" + dx + (hasGear("mantle") ? " Mantle" : " Historian") + ")"; } }
     if (!atk && S.grapple && /^(Athletics|Climbing|Acrobatics)/.test(label) && /climb|rope|ladder|chain|scaffold|Brow|arches|gaps|roof|wall|pitch|rail/i.test(label)) { adv = !dis; dis = false; mod += 2; label += " (+2 Threadfang's line)"; }
     const wm = atk ? wxYou() : 0;
@@ -3595,11 +3686,11 @@ body.pv-open { overflow: hidden; }
   const lvAC = () => Math.floor(lvk() / 12);
   const cascadeOn = () => !!S.cascade;
   const NM_HP = 1.1;
-  const foeMult = () => (1 + 0.035 * flk()) * (cascadeOn() ? NM_HP : 1);
+  const foeMult = () => (1 + 0.035 * flk()) * (cascadeOn() ? NM_HP : 1) * (S.unbal ? 1.15 : 1);
   // A road Nightmare's +2 to hit and +2 damage run down its Cascade threads: cut them and the bonus goes.
   const nmUp = () => FOE.on && FOE.threadsMax ? Math.round(2 * FOE.threads / FOE.threadsMax) : 2;
-  const foeAtkUp = () => Math.floor(flk() / 6) + (cascadeOn() ? nmUp() : 0) - menaceNow();
-  const foeDmgUp = () => Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0);
+  const foeAtkUp = () => Math.floor(flk() / 6) + (cascadeOn() ? nmUp() : 0) - menaceNow() + (S.unbal ? 1 : 0);
+  const foeDmgUp = () => Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0) + (S.unbal ? 1 : 0);
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -3661,6 +3752,7 @@ body.pv-open { overflow: hidden; }
     mend: { name: "Sap Mend", fx: "once a fight, the grip bleeds warm sap into your hand for 2d6 + 2 HP" },
     hush: { name: "Gloam Veil", fx: "once a fight, dusk pours off the blade: its next two attacks have disadvantage" },
     onslaught: { name: "Onslaught", fx: "once a fight, loose three arrows at once, each finding its own target" },
+    wrath: { name: "Unleash", fx: "once a fight, let the Wrathbrand have its way: 4d8, and 4d8 more if your last two blows landed" },
     grapple: { name: "Spider's Line", fx: "once a fight, fire the line high and haul yourself up out of reach: the next two blows can't reach you, and your next strike drops from above for +2d6" }
   };
   const ARM_NAMES = {
@@ -3819,12 +3911,13 @@ body.pv-open { overflow: hidden; }
   function lootDrop() {
     if (!S.axe) return "";
     S.pity = (S.pity || 0) + 1;
-    const hf = S.pity >= PITY_CAP ? 100 : ARM_TIERS.heartfire.odds + PITY_STEP * (S.pity - 1);
+    const ubm = S.unbal ? 1.25 : 1;
+    const hf = S.pity >= PITY_CAP ? 100 : (ARM_TIERS.heartfire.odds + PITY_STEP * (S.pity - 1)) * ubm;
     let r = Math.random() * 100, t = null;
     if (r < hf) t = "heartfire";
     else {
       r = Math.random() * 100;
-      for (const k of ["gloaming", "rootbound", "tempered", "ashen"]) { if (r < ARM_TIERS[k].odds) { t = k; break; } r -= ARM_TIERS[k].odds; }
+      for (const k of ["gloaming", "rootbound", "tempered", "ashen"]) { const od = ARM_TIERS[k].rank >= 2 ? ARM_TIERS[k].odds * ubm : ARM_TIERS[k].odds; if (r < od) { t = k; break; } r -= od; }
     }
     if (!t) return "";
     if (t === "heartfire") { S.pity = 0; grant("heartfind"); }
@@ -3851,7 +3944,7 @@ body.pv-open { overflow: hidden; }
   function wpnActives(o) {
     if (!S.axe || !FOE.on) return;
     const W = wDef(wpnKey());
-    (W.ac || []).forEach(a => { if (!(FOE.wUsed || []).includes(wpnKey() + ":" + a)) o.push({ key: "wa-" + a, label: ARM_AC[a].name + " (" + W.name + ")", tag: a === "phase" ? (FOE.unit ? "drops one" : "34 damage") + " · once a fight" : a === "onslaught" ? (FOE.unit ? "up to 3 targets" : "3 arrows, 3d6") + " · once a fight" : a === "ether" ? "next 2 blows pass through · once a fight" : a === "grapple" ? "out of reach for 2 blows, then +2d6 from above · once a fight" : "once a fight" }); });
+    (W.ac || []).forEach(a => { if (!(FOE.wUsed || []).includes(wpnKey() + ":" + a)) o.push({ key: "wa-" + a, label: ARM_AC[a].name + " (" + W.name + ")", tag: a === "phase" ? (FOE.unit ? "drops one" : "34 damage") + " · once a fight" : a === "onslaught" ? (FOE.unit ? "up to 3 targets" : "3 arrows, 3d6") + " · once a fight" : a === "ether" ? "next 2 blows pass through · once a fight" : a === "grapple" ? "out of reach for 2 blows, then +2d6 from above · once a fight" : a === "wrath" ? (FOE.chain >= 2 ? "8d8, the blade is hot" : "4d8 · 8d8 after two hits") + " · once a fight" : "once a fight" }); });
   }
   async function wpnActive(a, t, mult, main) {
     (FOE.wUsed = FOE.wUsed || []).push(wpnKey() + ":" + a);
@@ -3891,6 +3984,12 @@ body.pv-open { overflow: hidden; }
       FOE.hang = t === "perfect" ? 3 : t === "fumble" ? 1 : 2; FOE.drop = true; FOE.digAdv = true;
       await say("You thumb the catch on Threadfang's pommel and the line goes up like a thrown spear and catches on something high. The spool hauls you up after it, out of reach, and you hang there like a spider over " + (FOE.unit ? "them" : FOE.name) + ".");
       await mech("Spider's Line: the next " + (FOE.hang > 1 ? FOE.hang + " blows" : "blow") + " can't reach you, and your next strike drops from above with advantage and +2d6.", "loot");
+    } else if (a === "wrath") {
+      SND.drum && SND.drum(6);
+      const hot = FOE.chain >= 2;
+      await say(hot ? "The grey blade wakes in your hand on the back of your last two blows, and pulls, and you let it, and it doesn't stop." : "The grey blade pulls at your arm, and you let it go where it wants.");
+      await beltHurt(hot ? 8 : 4, 8, mult, "Unleash", main);
+      grant("hnrage");
     } else if (a === "hush") {
       FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : t === "perfect" ? 3 : 2);
       await mech("Gloam Veil: dusk pours off the blade. " + (FOE.blind > 1 ? "Its next " + FOE.blind + " attacks have" : "Its next attack has") + " disadvantage.", "loot");
@@ -5095,7 +5194,7 @@ body.pv-open { overflow: hidden; }
   const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
   const CAL_MD = 12, CAL_YEAR = 144;
   // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
-  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7];
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4];
   // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
   const CAL_FAIRS = [
     { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
@@ -5499,7 +5598,16 @@ body.pv-open { overflow: hidden; }
     juror: { ch: "The Glass Assize", why: "You bribed a juror.", where: "Ashgate, on the roads back", on: () => !!S.fixerBad, debt: true },
     reeve: { ch: "The Corrach Three", why: "You took the Reeve's blasting charges and never brought the drum hall down.", where: "The roads of Mount Corrach", on: () => !!S.contract && !!S.ending2 && S.ending2 !== "blast", debt: true },
     jackalDebt: { ch: "The Glass Assize", why: "You struck a deal with the Blackjackal: the truth, for her sun.", where: "Ammaret", on: () => !!S.jackalDeal },
-    shadow: { ch: "The Kept Noon", why: "You sold lengths of your shadow to the Lidless.", where: "Rahdaria", on: () => !!(S.nk && S.nk.sold) }
+    shadow: { ch: "The Kept Noon", why: "You sold lengths of your shadow to the Lidless.", where: "Rahdaria", on: () => !!(S.nk && S.nk.sold) },
+    // Half the East reads these, and leaves its own
+    vantryHinge: { ch: "The Siege of Rahdaria", why: "You let Aurel Vantry get away over the wall. He found new friends.", where: "Gauntry House, at the Hinge's table", on: () => !!(S.rh && S.rh.vantry === "free") },
+    varroTowers: { ch: "The Hushfen", why: "You held the tunnel beside Varro Duskwane. His archers came again.", where: "The Hinge's towers", on: () => !!S.varroAlly },
+    hnNote: { ch: "The Sounding", why: "You Sounded the Drowned Light. The Bathyr came up the towers for you.", where: "The Hinge's towers", on: () => !!(S.sd && S.sd.ending === "sound") },
+    hnSounding: { ch: "The Sounding", why: "You learned the Bathyr word for not. Their lead still hears it.", where: "The Lantry tower", on: () => sdKnows("not") },
+    hnEast: { ch: "Half the East", get why() { return { whole: "You kept the east whole.", scarred: "You stopped the Leaning, but not before it scarred the east.", half: "Half the east went into the dream on your watch." }[S.hn && S.hn.east] || "You fought the Hinge."; }, where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.done) },
+    hnYsolt: { ch: "Half the East", why: "You woke Ysolt in the millpond at Ostle Ford.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.ysolt === "wake") },
+    hnLantern: { ch: "Half the East", why: "You kept Corvane's lantern, and the dead in it.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.souls === "kept") },
+    hnBell: { ch: "Half the East", why: "You kept the Gnomon's great bell, and the realm knows it.", where: "Rahdaria, on the roads back", on: () => !!(S.hn && S.hn.ending === "keep") }
   };
   const wr = () => (S.echo = S.echo || { seen: [], paid: [] });
   const echoSeen = (id) => !!(S.echo && S.echo.seen.includes(id));
@@ -5533,6 +5641,12 @@ body.pv-open { overflow: hidden; }
   const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
   // A town visit, after its intro.
   async function echoTown(T) {
+    if (T.reg === "rahdaria" && S.hn && S.hn.done) {
+      if (echoDue("hnEast")) { await echoMark("hnEast"); await say({ whole: "In the market they're selling Ostle bread again, and somebody's painted a tower falling over on the inn sign. Children play Hingebreaker in the street, and argue about who has to be Corvane.", scarred: "The bread's dearer since the east was scarred. A woman at a stall tells you her sister lived at Hobble Cross. She doesn't say anything else, and she gives you the loaf for nothing.", half: "There's a queue for bread that goes round two terraces. The Bathyr camp on the salt flats has soldiers round it now, and nobody will say whose." }[S.hn.east]); }
+      if (echoDue("hnYsolt")) { await echoMark("hnYsolt"); await say("Ysolt has a little shop on the third terrace now, with maps in the window, and her eyes are grey and short-sighted behind thick spectacles. Everything she draws is exactly what's there. She gives you one for nothing."); S.coins += 10; renderSheet(); await mech("Ysolt's map of the roads round Rahdaria sells for 10 gold to a carter, the same afternoon.", "loot"); }
+      if (echoDue("hnLantern")) { await echoMark("hnLantern"); await say("A dog in the street sees the lantern on your belt and lies down flat and whines. People cross the road. A priest from the terrace temple follows you for a while, at a distance, praying under his breath."); }
+      if (echoDue("hnBell")) { await echoMark("hnBell"); await say("The Steward's people are very polite to you now, and very careful. Somebody has had a word with every innkeeper in the city: whatever you want, you're to have it, and you're not to be asked about the bell."); }
+    }
     if (T.reg === "desert" && echoDue("den")) {
       await echoMark("den");
       await say("Halfway down the steps a knife comes out of the dark and sticks in the wall by your ear. It isn't a miss. It's a message. Then the rest of them come up out of the den.");
@@ -5822,6 +5936,12 @@ body.pv-open { overflow: hidden; }
         "A shoal of fish passes overhead, slowly, every one of them looking down at you. You look up. They look away first.",
         "A Bathyr mason shows you a crack in the Sea-Sky and taps that it's fine. Then he taps the crack, as if to check.",
         "A child holds a bowl over her head in case of drips. Her mother tells her not to be silly. Her mother also has a bowl."
+      ],
+      hinge: [
+        "A cow on the river road watches you go past with the expression of somebody who's seen a lot of travellers and liked none of them.",
+        "A milestone says OSTLE FORD 4. A mile on, another says OSTLE FORD 5. Somebody in the east has a sense of humour, or a grudge.",
+        "A man selling eels from a barrow tells you they're fresh. One of them agrees, loudly, and gets out.",
+        "The ferryman at Wend charges a penny to cross and two to come back. \"Nobody's ever argued,\" he says. \"They're on the wrong side by then.\""
       ],
       tithe: [
         "A deckhand tells you he's never been seasick in his life, and then excuses himself, briskly, over the rail.",
@@ -6121,6 +6241,7 @@ body.pv-open { overflow: hidden; }
     try {
       if (await echoRoad(r)) {}
       else if (cascadeOn() && roll === 6) await cascadeCompany(r);
+      else if (S.unbal && roll === 2 && d(2) === 1) await hnRemnants(r);
       else if (roll === 1 && d(2) === 1 && ROAD_GANGS.some(G => G.r === r)) await bnMeet([r], { label: "The roads back · " + REGIONS[r] });
       else await meetBeast(r, { roam: true, pack: roll >= 4 });
     } finally { roamFight = false; }
@@ -6970,6 +7091,7 @@ body.pv-open { overflow: hidden; }
   }
   async function dreadAdd(n, why) {
     if (!FOE.on || !FOE.dreadOn || n <= 0 || !FOE.F) return;
+    if (S.unbal && d(4) === 1) n++;
     if (FOE.ward) { FOE.ward = false; n--; await mech("The heartgrain's rings slow the dread down: it takes 1 less.", "loot"); if (n <= 0) return; }
     const was = FOE.dread;
     if (was + n >= DREAD_MAX && !FOE.tyraSteady && company().includes("tyra") && bondOf("tyra") >= 2) {
@@ -7486,12 +7608,14 @@ body.pv-open { overflow: hidden; }
     undermoon: "At the caravanserai by Sulmara's west gate, the same three sellswords are sitting on the wall, swinging their heels. \"Home, is it?\" Wenna says. \"We like homes. They've usually got something wrong with them.\"",
     rahdaria: "On the last ridge above the sea, the same three sellswords are sitting on a milestone, looking down at the siege. \"A city full of hungry people and a camp full of things that came out of the sea,\" Wenna says. \"Somebody's going to need hiring.\"",
     sounding: "On the jetty where the Bathyr boats tie up, the same three sellswords are sitting on a crate of lamp oil. \"A city at the bottom of the sea,\" Wenna says. \"With no water in it. Somebody's going to fall off something.\"",
+    hinge: "On the river road east of Rahdaria, the same three sellswords are sitting on a toll-gate, eating somebody's apples. \"A message from nobody, in a thread made of nothing, to go and see somebody who's asleep,\" Wenna says. \"Yes. We're coming.\"",
     tithe: "On the Rahdaria quay, the same three sellswords are sitting on a coil of rope beside a cog called the <i>Marigold</i>. \"Stillwater?\" Odran says. \"Across the Reach? Nobody crosses the Reach.\" \"We'll come anyway,\" Wenna says. \"Somebody'll need to say they told you so.\""
   };
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
     if (!S.tyra) return false;
+    if (S.hn && S.hn.on) return !!S.hn.tyra;
     if (S.pz && S.pz.on) return !!S.pz.tyra;
     if (S.sd && S.sd.on) return !!S.sd.tyra;
     if (S.rh && S.rh.on) return !!S.rh.tyra;
@@ -9259,8 +9383,9 @@ body.pv-open { overflow: hidden; }
   async function gold(count, sides, why) {
     let total = 0;
     for (let i = 0; i < count; i++) total += d(sides);
-    S.coins += total; renderSheet();
-    await mech(why + " Gain " + count + "d" + sides + " gold: " + total + ".", "loot");
+    const ub = S.unbal && S.roam ? Math.ceil(total / 4) : 0;
+    S.coins += total + ub; renderSheet();
+    await mech(why + " Gain " + count + "d" + sides + " gold: " + total + (ub ? ", and " + ub + " more in the Visceral Realm" : "") + ".", "loot");
   }
 
   async function partSands() {
@@ -9725,7 +9850,7 @@ body.pv-open { overflow: hidden; }
   }
 
   // ---------- the hushfen ----------
-  const vaelricSpeaks = () => S.axe && S.ending !== "return" && !S.vRooted && !(S.sd && S.sd.ending === "vael");
+  const vaelricSpeaks = () => S.axe && S.ending !== "return" && !S.vRooted && !(S.sd && S.sd.ending === "vael") && !(S.hn && S.hn.vael === "taken");
   const fullHeal = async (why) => { S.hp = S.maxHp; renderSheet(); await mech(why + " You're back to full: " + S.hp + " HP.", "loot"); };
 
   async function partBounty() {
@@ -12877,6 +13002,8 @@ body.pv-open { overflow: hidden; }
     "Vaelric's roots can't reach you, healing is halved, and the rot costs 1d4 HP every morning and at the start of every part."
   ];
   const GEAR = {
+    soullantern: { name: "Corvane's lantern", icon: "lantern", desc: "Black glass, cracked, warm in your hand, full of quiet light: the dead Mardek Corvane took, and you kept. +8 max HP, for good. Dogs won't come near you." },
+    ysoltmap: { name: "Ysolt's waking map", icon: "map", desc: "The sheet she was drawing when you left her dreaming: the country a little way ahead of you, still changing. +1 to Survival and Perception checks." },
     cloak: { name: "The Weathercloak", icon: "cloak" },
     mirror: { name: "Mirrorwake", icon: "blade", desc: "Corvin Dray's thin blade. Once a fight, two copies of you step out of it: each of the next 3 attacks on you has a 2 in 3 chance to strike a copy instead." },
     drum: { name: "Drum of Stilling", icon: "drum", desc: "A tymbal drum cut from Ninefold's own sleep-shell. Once a fight, play the stilling beat: every Hesk in the fight loses its next turn, and the song holding their blades hard falters, so they hit for 2 less for the rest of the fight." },
@@ -13997,7 +14124,7 @@ body.pv-open { overflow: hidden; }
     const back = document.body.dataset.light;
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
-    S.gemsSpent = false; renderSheet();
+    S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
@@ -14307,7 +14434,7 @@ body.pv-open { overflow: hidden; }
   const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach" };
   const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -23574,7 +23701,960 @@ body.pv-open { overflow: hidden; }
     tip("plunder");
     if (P.tyra) await say(S.tyra && S.tyra.love ? "Tyra climbs out of the boat after you onto the shingle and stands there, swaying, and grabs your arm. \"It doesn't move,\" she says. \"I'd forgotten. Don't let me go back on a ship for a year.\"" : "Tyra jumps out onto the shingle and stamps on it, twice, hard. \"Land,\" she says. \"Good.\"");
     P.on = false; P.done = true; renderSheet();
+    await go("Step up onto the shingle");
+  }
+
+
+  // ======================= Half the East: the Hinge =======================
+  // Parts LXXVII–LXXXIII (S.part 76–82), after the Black Tithe. Adrian's ask (11 Nov 2026): a vague
+  // message from someone unknown, with a place and a person of interest; a meeting near Rahdaria in
+  // hope of learning about the Cascade; and a secret plot to destroy half the lands east of Rahdaria
+  // to wreck the balance of power. His calls: the messenger is something stranger than a person (the
+  // message writes itself in a Cascade thread, and the person is Ysolt, a mapmaker who has slept in a
+  // Cascade for eleven years and draws what it shows her); the villain is a real menace, built up to
+  // across the chapter (Mardek Corvane, the Surveyor, who leads the Hinge); he soaks up the souls of
+  // the dead for one great blow (the Reaping), and every Reaping shows you the people it spent; the
+  // duels here are a different, angrier kind (Fury bouts: attack without stopping, Unleash a frenzy);
+  // and a real reward for the effort (the Wrathbrand, by how well you did).
+  // Region: these are the lands east of Rahdaria, so the region key stays "rahdaria" (CH_REG).
+  // State is S.hn (hn()):
+  //   blank    leagues of the east still on Ysolt's map, HN_BLANK → 0. Slow work, failures and every
+  //            Reaping that lands spend it. What's left at the end, and the towers left standing,
+  //            decide how much of the east survives.
+  //   read     read the thread's message right.  taken  what Corvane took at Ostle Ford.
+  //   found    found Ysolt by her bearings.  sheets  joined her map.  masks  named the masks (0–5).
+  //   mapBack  stole the west half back.  rusk  "won" | "lost" | "" (the Hinge's Knife).
+  //   towers   towers brought down (keys of HN_TOWERS).  allies  allies spent on towers.
+  //   lantern  knows about the soul-lantern.  peal  rang the counter-peal right.
+  //   duel     "won" | "lost" (Corvane, stage one).  reaps  Reapings that landed.  reaped  the dead
+  //            you saw in the visions (names, kept for the journal).  vael  "" | "taken" | "held".
+  //   effort   the score the reward is paid out of.  east  "whole" | "scarred" | "half".
+  //   ending   "still" | "turn" | "keep" (the great bell).  souls  "free" | "kept".  ysolt  "wake" | "dream".
+  const HN_BLANK = 12;
+  const hn = () => S.hn;
+  const hnOn = () => !!(S.hn && S.hn.on);
+  function initHinge() {
+    S.gear = S.gear || []; S.hh = S.hh || { hear: 0, hush: 0 };
+    S.hn = { on: true, blank: HN_BLANK, shown: false, read: false, taken: "", found: false, sheets: false, masks: 0, mapBack: false, rusk: "", towers: [], allies: [], lantern: false, peal: false,
+      duel: "", reaps: 0, reaped: [], vael: "", effort: 0, east: "", ending: "", souls: "", ysolt: "", tyra: !!(S.tyra && ((S.pz && S.pz.tyra) || S.tyra.love)), done: false };
+    renderSheet();
+  }
+  function renderHn() {
+    const box = $("hnBox");
+    if (!box) return;
+    const H = S.hn;
+    box.hidden = !(H && H.on && H.shown);
+    if (box.hidden) return;
+    $("hnBlank").textContent = H.blank + (H.blank === 1 ? " league" : " leagues");
+    $("hnBlankBar").style.width = H.blank / HN_BLANK * 100 + "%";
+    $("hnBlankNote").textContent = H.blank <= 3 ? "Most of the east is white paper now." : H.blank <= 7 ? "The blank has crossed the Ostle." : "Leagues of the east still drawn on Ysolt's map.";
+    $("hnTowers").textContent = H.towers.length + " of " + Object.keys(HN_TOWERS).length;
+    $("hnMasks").textContent = H.masks >= 5 ? "all five named" : H.masks ? H.masks + " of 5" : "unknown";
+  }
+  function hnItems(items) {
+    const H = S.hn;
+    if (!H) return;
+    if (H.on && H.found) items.push(["hnmap", "map", "Ysolt's map of the east", "Her sheets, drawn in her sleep, of the country between Rahdaria and Sulmara. " + (H.mapBack ? "Both halves." : H.taken === "map" ? "Only the east half: Mardek Corvane has the west." : "") + " " + H.blank + " leagues of it are still drawn."]);
+    if (H.done && H.reaped.length) items.push(["hnreaped", "tally", "The Reaped: " + H.reaped.length, "The names of the dead you saw when Mardek Corvane spent them. Your journal keeps every one."]);
+  }
+  async function hnBlank(n, why) {
+    const H = hn(); if (!H || !n) return;
+    const was = H.blank; H.blank = Math.max(0, H.blank - n); renderSheet();
+    if (H.blank === was) return;
+    await mech((why ? why + " " : "") + "On Ysolt's map, the blank creeps west: " + H.blank + (H.blank === 1 ? " league" : " leagues") + " of the east still drawn." + (H.blank === 0 ? " There's nothing left of the east on the paper." : ""), "hurt");
+  }
+  const hnEffort = (n) => { if (S.hn) S.hn.effort += n; };
+
+  // The dead the Reaping spends: a name and a moment from each life. Adrian: let players feel the loss.
+  const HN_DEAD = [
+    ["Tamsin Reed", "the ferry-girl at Wend, who could pole across the Ostle with her eyes shut, and once did, for a bet, and won a goose"],
+    ["Abner Fitch", "who kept bees above Hobble Cross and named every queen after his wife, who died the year they married"],
+    ["Brother Amis", "of the wayside chapel at Lantry, who rang the bell for every traveller who passed, even at three in the morning, even in the rain"],
+    ["Jory Daunt", "a carter, who sang the same verse of the same song for forty years because nobody ever taught him the second"],
+    ["Mabyn Tresk", "the midwife at Lantry, who had brought half the village into the world and was sitting up, that night, waiting for one more"],
+    ["Idwal", "a shepherd boy at Ninefields, who had counted the flock that morning and got it right for the first time, and couldn't wait to tell"],
+    ["Wynn Cotter", "the miller at Ostle Ford, whose wheel hadn't stopped in thirty years until the night it did"],
+    ["Ebba Moyle", "a sergeant off the Rahdaria wall, on leave, walking home to her mother's with a basket of figs she'd paid too much for"],
+    ["Grall", "a Bathyr pedlar off the salt flats, who tapped the price of everything on your palm and always tapped it a little lower than he meant to"],
+    ["Nell Ashby-Combe", "who taught letters in a barn at Pellmarsh and had chalked TOMORROW: RIVERS on the beam for the morning"],
+    ["Hob Veary", "a drunk, who was kind to dogs and to nobody else; the dogs of Hobble Cross waited at his door for three days"],
+    ["Lissa Quell", "sixteen, promised that week to the smith's boy at Wend, who hadn't yet decided whether she minded"],
+    ["Father Ossian", "of Pellmarsh, ninety-one, who said he'd seen everything there was to see, and in the last moment looked surprised"],
+    ["Pip and Tansy Marrable", "twins, seven, who were sharing one bed because of the thunder, and holding hands, because of the thunder"],
+    ["Sefton Cray", "a tinker, who mended a pot for nothing at every village he came to, so that someone would remember him there"],
+    ["Old Mother Brede", "who'd buried four husbands at Ninefields and was courting a fifth, and had baked for him"]
+  ];
+  const HN_MEN = ["Kit Farrow", "Aldo Penn", "Rhoswen Tull", "Cass Merriday", "Dunstan Ekke", "Orla Brack", "Wat Silby", "Hennet Dare"];
+  // Visions of the dead: each fades in, holds, and goes, before the blow lands. A tap hurries them.
+  function hnVisions(list, head) {
+    return new Promise(resolve => {
+      const H = hn();
+      list.forEach(([n]) => { if (H && !H.reaped.includes(n)) H.reaped.push(n); });
+      const box = el("div", "hn-vision", '<p class="hn-vh">' + head + "</p>");
+      scrollNext = true; add(box);
+      document.body.classList.add("hn-dark");
+      let i = 0, t = 0, hurry = false;
+      box.addEventListener("click", () => { hurry = true; clearTimeout(t); step(); });
+      const hold = () => hurry || reduced ? 250 : 2300;
+      function step() {
+        if (i >= list.length) {
+          box.appendChild(el("p", "hn-vend", list.length > 1 ? "And then they're gone, all of them, into the blow." : "And then gone, into the blow."));
+          setTimeout(() => { document.body.classList.remove("hn-dark"); resolve(); }, hurry || reduced ? 200 : 1200);
+          return;
+        }
+        const [n, w] = list[i++];
+        const p = el("p", "hn-vone", "<b>" + n + "</b>, " + w + ".");
+        box.appendChild(p);
+        requestAnimationFrame(() => p.classList.add("on"));
+        SND.breath && SND.breath();
+        t = setTimeout(step, hold());
+      }
+      t = setTimeout(step, reduced ? 50 : 500);
+    });
+  }
+  const hnPickDead = (n) => { const H = hn(), left = HN_DEAD.filter(([x]) => !H.reaped.includes(x)), pool = left.length >= n ? left : HN_DEAD.slice(); const out = []; while (out.length < n && pool.length) out.push(pool.splice(d(pool.length) - 1, 1)[0]); return out; };
+
+  // ---------- Fury bouts: the Hinge's way of fighting (Adrian: "work out some aggression") ----------
+  // No turns. You attack without stopping on the pad, and every stroke that lands fills Fury. They
+  // only strike back when you hesitate: leave the pad still for too long (the bar under the pad) and
+  // their counter lands. Repeat the same stroke three times and a reader blocks it. Now and then they
+  // wind up (a red ring): draw a loop to catch it, or take it. At full Fury, Unleash: for a few
+  // seconds every swipe lands for your weapon's full dice, and then you're winded for a moment.
+  // Keys: QWE/AD/ZXC or arrows cut, S thrust, R loop, Space unleashes. Steady doubles every window.
+  // o: { id, name, hp, dmg: [n, s, b], gap (ms of patience), reads, windup (ms between wind-ups) }
+  // Returns { won, unleashed, hits, caught }.
+  const FURY_MAX = 10;
+  // Taunts (Adrian: "Can you taunt players?"): what they say when you hesitate, repeat yourself, take
+  // a hit, land a hit or unleash. Some of it is read off your save.
+  function hnTaunts(who) {
+    const T = { idle: [], repeat: [], hurt: [], hit: [], rage: [] };
+    if (who === "rusk") {
+      T.idle.push("Tired already?", "Is that a rest? Are we resting?", "I've had duels with furniture that moved more.", "Hit me. That's the whole game.");
+      T.repeat.push("That one again? I'm getting bored of that one.", "You've got about three strokes, haven't you.");
+      T.hurt.push("Ooh. Felt that, did you?", "Keep your guard up. Oh, you don't have one.");
+      T.hit.push("Better.", "There you are.", "Again!");
+      T.rage.push("Now we're talking!", "Oh, yes. Come on, then.");
+      if (S.duel && S.duel.won >= 5) T.idle.push("They told me you'd won " + S.duel.won + " duels. Against who? Scarecrows?");
+    } else {
+      T.idle.push("You hesitate. Everyone does, at the end.", "Take your time. I have all of theirs.", "Waiting for someone to save you?", "Your hands know you've lost. Listen to them.");
+      T.repeat.push("Again? I've seen that one.", "You learned that from someone who died, I expect.", "Idony told me about that stroke.");
+      T.hurt.push("There. That's how it feels to be measured.", "Every cut I give you, I keep.", "Bleed for me a little. It's only fair.");
+      T.hit.push("Is that anger? Good. Anger is so easy to read.", "You'll tire. They always tire.", "Closer. Not close enough.");
+      T.rage.push("There it is. All of you, at once. How generous.", "Spend it. Spend all of it.");
+      if (vaelricSpeaks()) T.idle.push("The old man in your axe is frightened. Can you feel it? I can.");
+      if (S.tyra && S.tyra.love) T.hurt.push("Does she know you'd die for her? She will.");
+      if (S.rh && S.rh.done) T.idle.push("The hero of the siege. Rahdaria will eat my bread like everyone else.");
+      if (S.pz && S.pz.ending === "rise") T.hit.push("A pirate's blow. I've bought better captains than you.");
+      if (S.pz && S.pz.ending === "sell") T.idle.push("The Saltwrit's pardon. I paid for that pardon, you know.");
+      if (S.sd && S.sd.ending === "hush") T.hurt.push("You let a whole city drown under the sea. And you judge me.");
+      if ((S.deaths || 0) >= 3) T.idle.push("You've died " + S.deaths + " times on the road. Shall we make it " + (S.deaths + 1) + "?");
+      if (S.hn && S.hn.reaped.length) T.hurt.push("I spent " + S.hn.reaped[d(S.hn.reaped.length) - 1] + " on you. Was it worth it?");
+    }
+    return T;
+  }
+  function furyBout(o) {
+    const wk = wpnKey(), die = wNoun(wk) === "arrow" ? [1, 4, 2] : wDef(wk).die, noun = wNoun(wk) === "arrow" ? "knife" : wNoun(wk);
+    foeStart(o.name, o.hp);
+    tip("fury");
+    const steady = () => q(".du-steady").checked;
+    const st = { fury: 0, last: [], hits: 0, caught: 0, unleashed: 0, frenzy: 0, winded: 0, idle: performance.now(), wind: 0, windAt: performance.now() + (o.windup || 7000), over: false, counters: 0 };
+    let me = S.hp, tauntAt = 0;
+    const TT = hnTaunts(o.taunt || "");
+    const taunt = (k, pct = 100) => { const L = TT[k] || [], now = performance.now(); if (!L.length || now - tauntAt < 2600 || d(100) > pct) return; tauntAt = now; log("<b>" + o.name + ":</b> \u201c" + L[d(L.length) - 1] + "\u201d", "g"); };
+    const box = add(el("div", "duel fury",
+      '<div class="du-top"><span class="du-ph">Fury</span><span class="du-tag">attack, and don\'t stop</span></div>' +
+      '<div class="du-pr"><span>Fury</span><span class="du-pips"></span><span class="du-note"></span></div>' +
+      '<div class="du-timer"><i></i></div>' +
+      '<div class="du-pad"><canvas aria-label="Fury pad: draw strokes here as fast as you can, or use the keys or the button pad"></canvas></div>' +
+      '<div class="du-btns"><button type="button" class="fu-go" disabled>Unleash</button>' +
+      '<label><input type="checkbox" class="du-steady"' + (duSteady() ? " checked" : "") + '> Steady (slower)</label></div>' +
+      '<details class="du-kp"><summary>Button pad</summary><div class="du-keys">' +
+      [[3, "↖"], [2, "↑"], [1, "↗"], [4, "←"], ["t", "•"], [0, "→"], [5, "↙"], [6, "↓"], [7, "↘"]].map(([k, l]) => '<button type="button" data-d="' + k + '" aria-label="' + (k === "t" ? "Thrust" : "Cut " + l) + '">' + l + "</button>").join("") +
+      '</div><div class="du-kx"><button type="button" class="du-bd">Loop ◯</button></div></details>' +
+      '<div class="du-log" aria-live="polite"></div>'));
+    const q = (s) => box.querySelector(s);
+    const cv = q("canvas"), cx = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const C = { gold: css.getPropertyValue("--gold").trim() || "#cfa850", ember: css.getPropertyValue("--ember").trim() || "#d9503a", blood: css.getPropertyValue("--ruby").trim() || "#d9433b", ok: css.getPropertyValue("--emerald").trim() || "#47a771" };
+    let W = 0, pts = [], drawing = false, fx = [], raf = 0, resolveRun;
+    const size = () => { const r = cv.getBoundingClientRect(), k = Math.min(window.devicePixelRatio || 1, 2); W = r.width || 300; cv.width = W * k; cv.height = W * k; cx.setTransform(k, 0, 0, k, 0, 0); };
+    const log = (t, c) => { const p = el("p", c || "", t); const L = q(".du-log"); L.prepend(p); while (L.children.length > 30) L.lastChild.remove(); };
+    const pop = (txt, col) => fx.push({ txt, col, t: performance.now(), x: W * (0.3 + Math.random() * 0.4) });
+    const roll = ([n, s, b]) => { let t = b || 0; for (let i = 0; i < n; i++) t += d(s); return t; };
+    const gap = () => (o.gap || 1200) * (steady() ? 2 : 1);
+    function paint() {
+      q(".du-pips").innerHTML = Array.from({ length: FURY_MAX }, (_, i) => '<i class="' + (i < st.fury ? "on" : "") + '"></i>').join("");
+      q(".du-pips").classList.toggle("full", st.fury >= FURY_MAX || st.frenzy > 0);
+      q(".du-note").textContent = st.frenzy ? "UNLEASHED: every swipe lands" : st.winded ? "Winded" : st.fury >= FURY_MAX ? "Full: unleash it" : "";
+      q(".fu-go").disabled = st.over || st.fury < FURY_MAX || st.frenzy > 0;
+    }
+    function hurtMe(n, why) {
+      bfxHit(); SND.thud && SND.thud(6); me -= n; pop("−" + n, C.blood); log(why + " You take " + n + ".", "f"); taunt("hurt", 60);
+      S.hp = Math.max(1, me); renderSheet();
+      if (me <= 0) finish(false);
+    }
+    function hitFoe(n, txt) {
+      FOE.hp = Math.max(0, FOE.hp - n); renderFoe(); foePop("−" + n, n >= 10); pop(String(n), C.gold); SND.thud && SND.thud(Math.min(8, st.fury));
+      if (txt) log(txt, "y");
+      if (FOE.hp <= 0) finish(true);
+    }
+    function input(t) {
+      if (st.over || st.winded) return;
+      const now = performance.now();
+      st.idle = now;
+      if (st.wind) {
+        if (t.k === "bind") { st.wind = 0; st.caught++; st.fury = Math.min(FURY_MAX, st.fury + 2); log("You catch the big swing in a loop of steel and throw it wide. +2 Fury.", "g"); SND.clang && SND.clang(true); paint(); st.windAt = now + (o.windup || 7000) * (0.7 + Math.random() * 0.6); return; }
+      }
+      const key = duKey(t);
+      SND.whoosh && SND.whoosh();
+      if (st.frenzy) { st.hits++; hitFoe(Math.max(2, roll(die) + Math.floor(lvk() / 6)), ""); return; }
+      if (o.reads && st.last.length >= 2 && st.last.slice(-2).every(k => k === key)) {
+        st.last.push(key); st.fury = Math.max(0, st.fury - 1);
+        log(o.name + " has your rhythm: the same stroke three times, and " + (o.him || "he") + "'s there before it. Blocked. −1 Fury.", "f"); SND.clang && SND.clang(false); taunt("repeat"); paint(); return;
+      }
+      const fresh = !st.last.slice(-2).includes(key);
+      st.last.push(key); if (st.last.length > 6) st.last.shift();
+      st.hits++;
+      const n = Math.max(1, Math.round(roll(die) * (t.k === "thrust" ? 0.4 : 0.5)) + (fresh ? 1 : 0));
+      st.fury = Math.min(FURY_MAX, st.fury + (fresh ? 2 : 1));
+      hitFoe(n, "");
+      if (st.hits % 7 === 0) taunt("hit", 50);
+      paint();
+    }
+    function unleash() {
+      if (st.over || st.fury < FURY_MAX || st.frenzy) return;
+      st.fury = 0; st.unleashed++; st.frenzy = performance.now() + (steady() ? 5000 : 3200);
+      box.classList.add("fu-rage"); document.body.classList.add("fu-shake"); SND.drum && SND.drum(steady() ? 13 : 8); taunt("rage");
+      log("You let it go. Everything you have, all at once, as fast as your arm will move.", "g");
+      paint();
+    }
+    function counter(heavy) {
+      st.counters++;
+      const n = roll(o.dmg || [1, 8, 2]) + (heavy ? roll([1, 8, 0]) : 0) + (FOE.lvd ? foeDmgUp() : 0);
+      if (!heavy) taunt("idle", 70);
+      hurtMe(n, heavy ? (o.heavy || "The big swing comes down and you don't stop it.") : (o.counter || "You hesitate, and the counter is there in the gap."));
+      st.fury = Math.max(0, st.fury - (heavy ? 3 : 2)); paint();
+    }
+    function frame(now) {
+      if (st.over) return;
+      cx.clearRect(0, 0, W, W);
+      if (st.frenzy && now > st.frenzy) {
+        st.frenzy = 0; st.winded = now + (steady() ? 1400 : 900);
+        box.classList.remove("fu-rage"); document.body.classList.remove("fu-shake");
+        log("It runs out of you all at once, and you're gasping.", "s"); paint();
+      }
+      if (st.winded && now > st.winded) { st.winded = 0; st.idle = now; paint(); if (!st.frenzy && FOE.hp > 0) counter(false); }
+      if (!st.frenzy && !st.winded && !st.wind && now > st.windAt) { st.wind = now; log(o.name + " draws back for a great swing. Loop to catch it!", "f"); }
+      if (st.wind && now - st.wind > (o.windWin || 1100) * (steady() ? 2 : 1)) { st.wind = 0; st.windAt = now + (o.windup || 7000) * (0.7 + Math.random() * 0.6); counter(true); if (st.over) return; }
+      if (!st.frenzy && !st.winded && !st.wind && now - st.idle > gap()) { st.idle = now; counter(false); if (st.over) return; }
+      // the pad
+      cx.fillStyle = st.frenzy ? "rgba(217,80,58,.14)" : "rgba(0,0,0,0)"; cx.fillRect(0, 0, W, W);
+      cx.strokeStyle = "rgba(231,222,201,.09)"; cx.lineWidth = 1; cx.beginPath(); cx.arc(W / 2, W / 2, W * 0.3, 0, 7); cx.stroke();
+      if (st.wind) { const k = Math.min(1, (now - st.wind) / ((o.windWin || 1100) * (steady() ? 2 : 1))); cx.strokeStyle = C.blood; cx.lineWidth = W * 0.03; cx.beginPath(); cx.arc(W / 2, W / 2, W * (0.42 - 0.3 * k), 0, 7); cx.stroke(); }
+      const trail = (P, col) => { cx.strokeStyle = col; cx.lineWidth = W * 0.022; cx.lineCap = "round"; cx.lineJoin = "round"; cx.beginPath(); cx.moveTo(P[0].x, P[0].y); for (const v of P) cx.lineTo(v.x, v.y); cx.stroke(); };
+      if (pts.length > 1) trail(pts, st.frenzy ? C.blood : C.ember);
+      fx = fx.filter(f => now - f.t < 700);
+      for (const f of fx) {
+        const k = 1 - (now - f.t) / 700; cx.globalAlpha = k;
+        if (f.pts && f.pts.length > 1) trail(f.pts, f.col);
+        if (f.txt) { cx.fillStyle = f.col; cx.font = (W * 0.08) + "px " + (css.getPropertyValue("--display") || "serif"); cx.textAlign = "center"; cx.fillText(f.txt, f.x || W / 2, W * 0.25 - (1 - k) * 22); }
+        cx.globalAlpha = 1;
+      }
+      const bar = q(".du-timer i");
+      bar.style.width = st.frenzy ? Math.max(0, (st.frenzy - now) / (steady() ? 5000 : 3200) * 100) + "%" : st.winded ? "0" : Math.max(0, 100 - (now - st.idle) / gap() * 100) + "%";
+      bar.style.background = st.frenzy ? C.blood : "";
+      raf = requestAnimationFrame(frame);
+    }
+    const at = (ev) => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+    cv.addEventListener("pointerdown", (ev) => { if (st.over) return; drawing = true; pts = [at(ev)]; try { cv.setPointerCapture(ev.pointerId); } catch (e) {} ev.preventDefault(); });
+    cv.addEventListener("pointermove", (ev) => { if (!drawing) return; pts.push(at(ev)); if (st.frenzy && pts.length > 6) { const P = pts; const t = duRead(P, W); if (t && t.k !== "thrust" && t.k !== "bind") { fx.push({ pts: P.slice(), col: C.blood, t: performance.now() }); pts = [P[P.length - 1]]; input(t); } } });
+    const lift = () => { if (!drawing) return; drawing = false; const t = duRead(pts, W); fx.push({ pts: pts.slice(), col: C.ember, t: performance.now() }); pts = []; if (t) input(t); };
+    cv.addEventListener("pointerup", lift); cv.addEventListener("pointercancel", lift);
+    const KMAP = { q: 3, w: 2, e: 1, a: 4, d: 0, z: 5, x: 6, c: 7, ArrowUp: 2, ArrowDown: 6, ArrowLeft: 4, ArrowRight: 0 };
+    const onKey = (ev) => {
+      if (st.over || ev.ctrlKey || ev.metaKey || ev.altKey || /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+      const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
+      if (k === " ") { ev.preventDefault(); unleash(); return; }
+      if (k in KMAP) { ev.preventDefault(); input({ k: "cut", d: KMAP[k] }); }
+      else if (k === "s") { ev.preventDefault(); input({ k: "thrust" }); }
+      else if (k === "r") { ev.preventDefault(); input({ k: "bind" }); }
+    };
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", size);
+    q(".du-keys").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; const k = b.dataset.d; input(k === "t" ? { k: "thrust" } : { k: "cut", d: +k }); };
+    q(".du-bd").onclick = () => input({ k: "bind" });
+    q(".fu-go").onclick = () => unleash();
+    q(".du-steady").onchange = () => { try { localStorage.setItem(DU_STEADY, steady() ? "1" : "0"); } catch (e) {} };
+    function finish(won) {
+      if (st.over) return;
+      st.over = true; cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", onKey); window.removeEventListener("resize", size);
+      box.classList.remove("fu-rage"); document.body.classList.remove("fu-shake");
+      q(".du-ph").textContent = won ? "Won" : "Beaten"; paint();
+      box.classList.add("spent");
+      if (o.id) { const D = duel(), m = D.foes[o.id] = D.foes[o.id] || { met: 0, won: 0, lost: 0, habit: {} }; m.met++; if (won) m.won++; else m.lost++; st.last.forEach(k => m.habit[k] = (m.habit[k] || 0) + 1); }
+      if (me <= 0) { S.hp = 1; jCount("close"); }
+      foeEnd(!won);
+      renderSheet();
+      resolveRun({ won, unleashed: st.unleashed, hits: st.hits, caught: st.caught, counters: st.counters });
+    }
+    return new Promise(res => {
+      resolveRun = res;
+      requestAnimationFrame(() => { size(); paint(); cv.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); st.idle = performance.now(); st.windAt = st.idle + (o.windup || 7000); log("Your " + noun + " is in your hand. Go.", "s"); raf = requestAnimationFrame(frame); });
+    });
+  }
+  async function furyFight(o) {
+    const r = await furyBout(o);
+    await mech(r.won ? "You win the bout: " + r.hits + " strokes landed" + (r.unleashed ? ", unleashed " + (r.unleashed > 1 ? r.unleashed + " times" : "once") : "") + (r.caught ? ", " + r.caught + " big swing" + (r.caught > 1 ? "s" : "") + " caught" : "") + "." : "You lose the bout. The axe held you at " + S.hp + " HP.", r.won ? "loot" : "hurt");
+    if (r.won) grant("hnfury");
+    if (r.won && r.counters === 0) grant("hnrelent");
+    if (r.unleashed >= 3) grant("hnrage");
+    achCheck();
+    return r;
+  }
+
+  // ---------- puzzles ----------
+  // The thread's message: knots in a silver thread, each with a word and a number of turns. The
+  // thread was wound from the least-turned knot to the most. Read them in that order.
+  function threadPuzzle() {
+    return new Promise(resolve => {
+      const WORDS = ["Ostle Ford", "the Tollmill", "a sleeper", "named Ysolt", "she has drawn", "what the Cascade", "will do", "to the east"];
+      const turns = []; while (turns.length < WORDS.length) { const n = 1 + d(12); if (!turns.includes(n)) turns.push(n); }
+      turns.sort((a, b) => a - b);
+      const order = WORDS.map((w, i) => i).sort(() => Math.random() - 0.5);
+      const P = puzzleBox("The thread's message", "The thread has tied itself into knots in your palm, and every knot is a word. A Cascade thread winds from its least-turned knot to its most, so count the turns (◯) and read the knots in that order. Two wrong knots and the silver fades before you've read it all.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(2, minmax(0, 1fr))";
+      const read = el("div", "sd-taps sd-mine", '<span class="sd-gone">the thread, unread</span>');
+      let at = 0, wrong = 0, done = false;
+      const bs = order.map(i => { const b = pbtn('<span class="hn-turns">' + "◯".repeat(turns[i]) + "</span><small>" + WORDS[i] + "</small>"); b.onclick = () => press(i, b); grid.appendChild(b); return b; });
+      P.body.append(grid, read);
+      const give = pbtn("Just read what you can"); P.ctrl.appendChild(give);
+      const got = [];
+      function press(i, b) {
+        if (done || b.disabled) return;
+        if (i === at) { b.disabled = true; b.classList.add("on"); got.push(WORDS[i]); at++; read.textContent = got.join(" · "); if (at >= WORDS.length) { done = true; P.end(); P.status.textContent = "The silver goes cold and dull, and lies in your hand like a dead hair. You read it all."; setTimeout(() => resolve({ ok: true, wrong }), 800); } else P.status.textContent = at + " of " + WORDS.length + " knots read."; return; }
+        wrong++; SND.tap && SND.tap("--");
+        if (wrong >= 2) { done = true; P.end(); P.status.textContent = "The silver fades with half of it unread: " + got.concat(["…"]).join(" · "); setTimeout(() => resolve({ ok: false, got: at }), 1100); return; }
+        P.status.textContent = "That knot has more turns than one you haven't read. It flickers. One more and it fades.";
+      }
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true, got: at }); };
+    });
+  }
+  // Ysolt's bearings: she speaks only in the language of maps. Find the square she means from two
+  // (or three) bearings off the landmarks on the millpond floor.
+  function bearingPuzzle({ marks = 2, tries = 3 } = {}) {
+    return new Promise(resolve => {
+      const N = 6, LM = [["M", "the millwheel"], ["C", "the chapel bell"], ["O", "the hanging oak"], ["S", "the sluice"]];
+      const cells = new Set(), pos = {};
+      LM.forEach(([g]) => { let x, y; do { x = d(N) - 1; y = d(N) - 1; } while (cells.has(x + "," + y)); cells.add(x + "," + y); pos[g] = [x, y]; });
+      let tx, ty; do { tx = d(N) - 1; ty = d(N) - 1; } while (cells.has(tx + "," + ty));
+      const num = ["", "one", "two", "three", "four", "five"];
+      const bearing = (g) => { const [x, y] = pos[g], dx = tx - x, dy = ty - y, a = []; if (dy) a.push(num[Math.abs(dy)] + (dy < 0 ? " north" : " south")); if (dx) a.push(num[Math.abs(dx)] + (dx < 0 ? " west" : " east")); return "from " + LM.find(l => l[0] === g)[1] + ", " + (a.join(" and ") || "right there"); };
+      const use = LM.map(l => l[0]).sort(() => Math.random() - 0.5).slice(0, marks);
+      const P = puzzleBox("Ysolt's bearings", "Ysolt talks in her sleep, but only in bearings, the way a map talks. North is up. She's telling you where she put the thing you need: <i>“" + use.map(bearing).join("; ") + ".”</i> Tap the square she means.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + N + ", 40px)";
+      let used = 0, done = false;
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const g = LM.find(l => pos[l[0]][0] === x && pos[l[0]][1] === y);
+        const b = pbtn(g ? g[0] : ""); b.setAttribute("aria-label", g ? g[1] : "square " + (x + 1) + ", " + (y + 1));
+        if (g) b.classList.add("pz-goal");
+        b.onclick = () => {
+          if (done || g) return;
+          used++;
+          if (x === tx && y === ty) { done = true; P.end(); b.classList.add("on"); P.status.textContent = "You dig with your hands in the millpond silt, there, and your fingers close on oilcloth."; setTimeout(() => resolve({ ok: true, used }), 800); return; }
+          b.textContent = "×";
+          if (used >= tries) { done = true; P.end(); P.status.textContent = "You dig until your hands are raw, and find it in the end by luck, in the wrong order, hours later."; setTimeout(() => resolve({ ok: false }), 1000); return; }
+          P.status.textContent = "Nothing but silt. " + used + " of " + tries + " tries.";
+        };
+        grid.appendChild(b);
+      }
+      P.body.append(grid, el("div", "hint", LM.map(l => "<b>" + l[0] + "</b> " + l[1]).join(" · ")));
+      const give = pbtn("Dig the whole pond"); P.ctrl.appendChild(give);
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+    });
+  }
+  // Ysolt's sheets: nine squares of map, shuffled and turned. Turn each one (tap) until every road and
+  // river runs on into the next sheet, and nothing runs off the edge.
+  function sheetsPuzzle({ turns = 30 } = {}) {
+    return new Promise(resolve => {
+      const N = 3, E = [1, 2, 4, 8]; // N E S W
+      const tiles = Array(N * N).fill(0);
+      // a random spanning tree, so every sheet joins the map
+      const seen = new Set([0]), edges = [];
+      while (seen.size < N * N) {
+        const a = [...seen][d(seen.size) - 1], x = a % N, y = Math.floor(a / N);
+        const opts = [[0, -1, 0, 2], [1, 0, 1, 3], [0, 1, 2, 0], [-1, 0, 3, 1]].filter(([dx, dy]) => x + dx >= 0 && x + dx < N && y + dy >= 0 && y + dy < N && !seen.has((y + dy) * N + x + dx));
+        if (!opts.length) continue;
+        const [dx, dy, s, t] = opts[d(opts.length) - 1], b = (y + dy) * N + x + dx;
+        tiles[a] |= E[s]; tiles[b] |= E[t]; seen.add(b); edges.push([a, b]);
+      }
+      const rot = (m) => ((m << 1) | (m >> 3)) & 15;
+      const cur = tiles.map(m => { let r = m; for (let k = d(4) - 1; k > 0; k--) r = rot(r); return r; });
+      if (cur.every((m, i) => m === tiles[i])) cur[4] = rot(cur[4]) === cur[4] ? cur[4] : rot(cur[4]);
+      const GL = { 0: " ", 1: "╵", 2: "╶", 4: "╷", 8: "╴", 5: "│", 10: "─", 3: "└", 6: "┌", 12: "┐", 9: "┘", 7: "├", 14: "┬", 13: "┤", 11: "┴", 15: "┼" };
+      const P = puzzleBox("Ysolt's sheets", "Nine sheets of her map, drawn in her sleep, shuffled and turned every which way. Tap a sheet to turn it a quarter. When every road and river runs on into the next sheet, and none runs off the edge of the map, it's whole. " + turns + " turns before the light goes.");
+      const grid = el("div", "pgrid hn-sheets"); grid.style.gridTemplateColumns = "repeat(" + N + ", 64px)";
+      let used = 0, done = false;
+      const ok = () => cur.every((m, i) => { const x = i % N, y = Math.floor(i / N);
+        const n = y > 0 ? !!(cur[i - N] & 4) : false, s = y < N - 1 ? !!(cur[i + N] & 1) : false, w = x > 0 ? !!(cur[i - 1] & 2) : false, e = x < N - 1 ? !!(cur[i + 1] & 8) : false;
+        return !!(m & 1) === n && !!(m & 4) === s && !!(m & 8) === w && !!(m & 2) === e; });
+      const bs = cur.map((m, i) => { const b = pbtn(""); b.onclick = () => { if (done) return; cur[i] = rot(cur[i]); used++; draw(); check2(); }; grid.appendChild(b); return b; });
+      P.body.appendChild(grid);
+      const give = pbtn("Leave it in pieces"); P.ctrl.appendChild(give);
+      function draw() { bs.forEach((b, i) => b.textContent = GL[cur[i]]); P.status.textContent = used + " of " + turns + " turns."; }
+      function check2() {
+        if (ok()) { done = true; P.end(); grid.classList.add("whole"); P.status.textContent = "It's whole. The roads run on, the rivers run on, and across all of it, dead straight, runs a line of white."; setTimeout(() => resolve({ ok: true, used }), 900); return; }
+        if (used >= turns) { done = true; P.end(); P.status.textContent = "The candle gutters. You'll have to make do with what you can see in pieces."; setTimeout(() => resolve({ ok: false }), 1000); }
+      }
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw();
+    });
+  }
+  // The masked dinner: five of the Hinge, five masks. Match them from what you overheard.
+  function masksPuzzle(fifth) {
+    return new Promise(resolve => {
+      const PEOPLE = [["farrant", "Dame Odile Farrant", "who holds the granaries of Rahdaria"], ["strand", "Lady Imelda Strand", "of the glass guild of Sulmara"], ["hale", "Paymaster Cyprian Hale", "who keeps the Saltwrit's purse"], ["calloway", "Master Joss Calloway", "who built the canals of the east"], ["fifth", fifth[0], fifth[1]]];
+      const MASKS = ["Hare", "Heron", "Wolf", "Moth", "Key"];
+      const ANS = { farrant: "Heron", fifth: "Wolf", hale: "Key", strand: "Hare", calloway: "Moth" };
+      const P = puzzleBox("The masked dinner", "Five of the Hinge at the long table at Gauntry, every face behind a mask. From the dumbwaiter shaft you heard:<br>· <i>“The Heron and the Wolf both came up from Rahdaria tonight.”</i><br>· <i>“Dame Farrant won't sit by anything with teeth.”</i><br>· <i>“The Key keeps a purse, and nobody else's.”</i><br>· <i>“Glass can't abide the Moth. It keeps flying into her.”</i><br>Tap a name to change the mask you think they're wearing. Two tries.");
+      const pick = {}; PEOPLE.forEach(([k]) => pick[k] = "");
+      const rows = el("div", "hn-masks");
+      const bs = PEOPLE.map(([k, n, w]) => { const b = pbtn(""); b.onclick = () => { if (done) return; const i = MASKS.indexOf(pick[k]); pick[k] = MASKS[(i + 1) % MASKS.length]; draw(); }; const r = el("div", "hn-mrow"); r.append(el("span", "", "<b>" + n + "</b>, " + w), b); rows.appendChild(r); return [k, b]; });
+      P.body.appendChild(rows);
+      let tries = 0, done = false;
+      const go = pbtn("That's who they are", "primary"), give = pbtn("Give up on the faces"); P.ctrl.append(go, give);
+      function draw() { bs.forEach(([k, b]) => b.textContent = pick[k] || "which mask?"); P.status.textContent = tries + " of 2 tries."; }
+      go.onclick = () => {
+        if (done || PEOPLE.some(([k]) => !pick[k])) return;
+        tries++;
+        const right = PEOPLE.filter(([k]) => pick[k] === ANS[k]).length;
+        if (right === 5) { done = true; P.end(); P.status.textContent = "Five faces, five masks. You know exactly who you're looking at."; setTimeout(() => resolve({ ok: true, right }), 800); return; }
+        if (tries >= 2) { done = true; P.end(); P.status.textContent = right + " of 5 right. You'll know some of them, at least."; setTimeout(() => resolve({ ok: false, right }), 1000); return; }
+        P.status.textContent = right + " of 5 right. Watch them a little longer. " + tries + " of 2 tries.";
+      };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true, right: 0 }); };
+      draw();
+    });
+  }
+  // The counter-peal: the great bell rings the Leaning's peal once. Ring it back, backwards.
+  function pealPuzzle({ len = 6, tries = 3 } = {}) {
+    return new Promise(resolve => {
+      const BELLS = ["Treble", "Second", "Third", "Tenor"], G = ["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ"];
+      const pat = [...Array(len)].map(() => d(4) - 1), goal = pat.slice().reverse();
+      const P = puzzleBox("The counter-peal", "The four bells of the Gnomon ring the Leaning's peal once through. A peal rung backwards undoes itself: ring it back to them, last bell first. The tower shakes with every wrong one.");
+      const view = el("div", "sd-taps"), mine = el("div", "sd-taps sd-mine"); P.body.append(view, mine);
+      let cur = [], used = 0, done = false, again = 1;
+      const bs = BELLS.map((n, i) => { const b = pbtn(G[i] + " <small>" + n + "</small>"); b.onclick = () => { if (done || cur.length >= len) return; cur.push(i); SND.gbell && SND.gbell(i); draw(); if (cur.length === len) test(); }; P.ctrl.appendChild(b); return b; });
+      const hear = pbtn("Listen to it again"), give = pbtn("Cut the bell-ropes instead"); P.ctrl.append(hear, give);
+      function play() {
+        hear.disabled = true; view.innerHTML = "";
+        pat.forEach((k, j) => setTimeout(() => { if (done) return; view.innerHTML = pat.slice(0, j + 1).map(x => "<b>" + G[x] + "</b>").join(" "); SND.gbell && SND.gbell(k); }, (reduced ? 300 : 650) * j));
+        setTimeout(() => { if (!done) { view.innerHTML = '<span class="sd-gone">the last note hums in the stone</span>'; hear.disabled = again <= 0; } }, (reduced ? 300 : 650) * len + (reduced ? 600 : 1400));
+      }
+      function draw() { mine.innerHTML = cur.length ? cur.map(k => G[k]).join(" ") : '<span class="sd-gone">your hands on the ropes</span>'; P.status.textContent = used + " of " + tries + " tries."; }
+      function test() {
+        used++;
+        if (cur.join() === goal.join()) { done = true; P.end(); P.status.textContent = "The last note goes out, backwards, and meets the first one coming, and they cancel, and the tower is quiet."; setTimeout(() => resolve({ ok: true, used }), 900); return; }
+        let k = 0; while (k < len && cur[k] === goal[k]) k++;
+        if (used >= tries) { done = true; P.end(); P.status.textContent = "It was " + goal.map(x => G[x]).join(" ") + ". You had " + k + " right before it went wrong."; setTimeout(() => resolve({ ok: false }), 1100); return; }
+        P.status.textContent = k + " right before it went wrong. The tower lurches. " + used + " of " + tries + " tries."; cur = []; setTimeout(draw, 500);
+      }
+      hear.onclick = () => { if (done || again <= 0) return; again--; play(); };
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, forced: true }); };
+      draw(); play();
+    });
+  }
+
+  const HINGE = (o) => Object.assign({ ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Hinge's men", whoShort: "Hinge men", road: true,
+    hitWhy: "A surveyor's chain-blade opens your arm.", miss: "The chain whips past your face.", hitLine: "A Hinge man goes down in the mud with his measuring-chain tangled round him." }, o);
+
+  // ---------- Part LXXVII: The Thread That Wrote ----------
+  async function partThread() {
+    heading("LXXVII", "The Thread That Wrote");
+    light("lake");
+    if (!S.hn) initHinge();
+    const H = hn();
+    await say("You're halfway up the shingle, and the twenty-nine on the wall are still watching you, when the still water behind you moves.");
+    await say("Not a wave. Nothing on the Reach makes waves. Something comes up out of the glassy sea a hundred yards out, the way smoke comes up off a candle: a black rope of water, as thick as a mast, rising straight into the white sky, with a fringe of silver light along its edges. A Cascade. Out here, where there's never been one.");
+    if (vaelricSpeaks()) await voice("\"That isn't right,\" Vaelric says. \"They lean toward the Underdream. All of them. That one's leaning east.\"");
+    await say("Something climbs down out of it onto the water and walks across the water toward you. It's made of the Cascade: wet black, the shape of a heron and a man at once, and where its face should be there's only the silver light, running.");
+    await hkFight({ name: "A Cascade-walker", hp: 34, ac: 15, atk: 6, n: 1, s: 10, type: "cold", bloom: 0, hesk: false, who: "the Cascade-walker", whoShort: "Walker",
+      hitWhy: "Its long black arm goes through you like cold water through a sieve.", miss: "It reaches for you and closes on air.", hitLine: "Black water spatters across the shingle.",
+      before: async (st) => { if (st.round === 2) await say("Silver threads run back from it into the Cascade behind, the way a puppet's strings run up. When your blade crosses them, they part with a sound like a harp-string cut."); } });
+    await say("It goes back to water at your feet. Out on the Reach, the Cascade bows, and thins, and falls back into the sea. Only one of the silver threads is left: it lies across the shingle to your boot, and up your boot, and into your palm, where it starts, very carefully, to tie itself in knots.");
+    const r = await threadPuzzle();
+    H.read = r.ok;
+    if (r.ok) { hnEffort(2); await say("<i>Ostle Ford. The Tollmill. A sleeper named Ysolt. She has drawn what the Cascade will do to the east.</i>"); }
+    else await say("You've got some of it: <i>Ostle Ford… the Tollmill…</i>, and a name, <i>Ysolt</i>, and the rest is a cold grey hair in your hand.");
+    await say("Ostle Ford is two days east of Rahdaria, on the river road. You know that much. Who sent it, you don't know. Nobody you've met can write in a Cascade.");
+    await say("You look up at the wall. The twenty-nine Hushed are still watching. One of them, a woman in grey with her hair cut short as a boy's, lifts her hand very slowly, palm out, the way you'd tell a horse to stand. Then she points east, and turns her back, and so do all the others, one by one, until the wall is a row of grey backs.");
+    await mech("The Hushed will keep. The grave on the headland, and whatever they want of you, will be waiting when you come back to Stillwater.");
+    if (H.tyra) await say(S.tyra && S.tyra.love ? "\"That's twice,\" Tyra says, \"that I've come all this way with you, and not got off the beach.\" She looks at the thread in your hand. \"East, then. At least it's dry.\"" : "Tyra looks at the thread in your hand, and at the wall of backs, and spits on the shingle. \"Well, I'm not staying here,\" she says.");
+    await say(S.pz && S.pz.ending === "rise" ? "The <i>Widow's Tally</i> takes you back across the Reach to Rahdaria in two days. Hawl doesn't ask where you're going. He gives you a belaying pin for luck." : S.pz && S.pz.ending === "sell" ? "The Saltwrit cutter takes you back to Rahdaria in two days, and her master charges you for it." : "Ninian rows you back out to a Skerran fishing boat, and the fishers take you to Rahdaria, and won't take payment.");
+    await go("Take the river road east");
+  }
+
+  // ---------- Part LXXVIII: Ostle Ford ----------
+  async function partOstle() {
+    heading("LXXVIII", "Ostle Ford");
+    light("dusk");
+    const H = hn();
+    await say("East of Rahdaria the terraces give out, and the land goes soft and green: water-meadows, willow, a slow brown river called the Ostle wandering through it with villages on its banks like beads on a string. Wend. Hobble Cross. Lantry, with its chapel bell. This is where Rahdaria's bread comes from, and Sulmara's too. Nobody writes songs about it. It's too busy.");
+    if (S.rh && S.rh.done) await say("At Wend the ferry-girl knows your face from the siege, and won't take your coin. \"You broke the blockade,\" she says. \"My brother was on the wall.\" Her name's Tamsin. She poles you across with her eyes shut, to show off.");
+    await say("Ostle Ford is a mill and a toll-house and a dozen cottages, where the river road crosses. You come over the rise at dusk on the second day, and the millwheel isn't turning. Somebody's tied it with a chain.");
+    await say("There are men in the mill-yard: a dozen, in long grey surveyors' coats, with measuring-chains coiled on their shoulders like whips, and brass rods, and lanterns. And in the middle of them, on one knee beside the miller, who's lying on his back in the mud, a man in black.");
+    light("dark");
+    await say("He's tall, and not young, with a long clever face and grey hair tied back with a black ribbon, and he's holding the miller's hand, gently, the way you'd hold a child's. The miller is dying. You can see that from the rise. And as he dies, something comes up out of his chest like breath on a cold morning, pale and shining, and the man in black breathes in, and it goes into him.");
+    await hnVisions([HN_DEAD[6]], "For a moment you aren't on the rise. You're him.");
+    H.reaped = H.reaped || [];
+    await say("The man in black gets up and wipes his hand on a handkerchief, and looks straight up the rise at you, as if he'd known you were there all along.");
+    await say("\"Mardek Corvane,\" he says, not loudly. His voice carries anyway. \"Surveyor. You'll have had a message. I had one too, once, a long time ago. I've been listening for whoever she'd send.\" He smiles. \"Do come down. I'm only leaving.\"", "voice");
+    if (vaelricSpeaks()) await voice("\"Don't,\" Vaelric says. \"That man smells of the inside of a grave. He's full. He's so full.\"");
+    const c = await choose([
+      { key: "down", label: "Go down to him", tag: "face him" },
+      { key: "charge", label: "Charge him", tag: "a blow before he's ready", plain: true },
+      { key: "wait", label: "Stay on the rise and watch", tag: "Perception DC 14", plain: true }
+    ]);
+    if (c === "wait") {
+      const k = await check({ label: "Perception check (the man in black)", mod: 3, dc: 14, cta: "Watch" });
+      if (k.ok) { H.lantern = true; hnEffort(1); await say("You watch him. There's a lantern hanging at his belt, small, of black glass, and when the miller's breath went into him, it brightened, just for a moment, from the inside. Whatever he takes, he keeps it there."); }
+      else await say("You watch, and learn nothing, except that he isn't in any hurry.");
+      await say("He sighs, and comes up the rise to you instead.");
+    }
+    await say(c === "charge" ? "You come down the rise at a run. He doesn't move until the last moment, and then he moves only a little, and your blow goes past him, and his comes back." : "He meets you at the foot of the rise, and looks you over, slowly, the way a surveyor looks over a field.");
+    await say("He hits you once. You don't see it. You'll think about it later, many times, and you still won't have seen it: one moment his hands are empty and the next there's a long grey blade in one of them, and it's been through your guard and out again.");
+    await hurt(3, 8, "slashing", "It's the cleanest cut you've ever taken.");
+    const D = duel(), m = D.foes["hinge:corvane"] = D.foes["hinge:corvane"] || { met: 0, won: 0, lost: 0, habit: {} };
+    const top = Object.values(D.foes).map(x => duTop(x)).find(Boolean);
+    if (top) m.habit[top] = (m.habit[top] || 0) + 2;
+    await say("\"There,\" he says. \"Now I know how you stand.\" He looks at your feet, and your shoulders, and nods. " + (top ? "\"You like to come in " + (top === "thrust" ? "straight, with the point" : top === "bind" ? "round, binding the blade" : "on the same line, again and again") + ". Somebody taught you that, and they were wrong.\"" : "\"You fight like somebody who's always won. That's a habit.\""), "voice");
+    const what = H.tyra ? "tyra" : "map";
+    H.taken = what;
+    if (what === "tyra") {
+      await say("Tyra comes at him from behind with both knives, which is the right thing to do and a thing that's always worked. He doesn't turn round. He reaches back with his free hand, almost kindly, and puts it flat on her chest, and she goes down in the mud like a cut puppet, breathing, but grey in the face, and cold.");
+      await say("\"A little of her,\" he says. \"Not all. She'll have it back, if you're lucky. I'll be wearing it till then.\" He holds up a folded sheaf of paper with the other hand. \"And this is mine, I think. The west half of the sleeper's map. You can keep the east. It won't be there long.\"", "voice");
+      H.tyra = false;
+      await mech("Tyra is hurt. The Wend ferry-girl takes her down the river to Rahdaria to be nursed. She won't be with you for the rest of this, and something of hers is in Corvane's lantern.", "hurt");
+    } else {
+      await say("He reaches past you into the mill, and comes out with a sheaf of paper, folded small: maps, drawn in a fine shaking hand. He tears the sheaf in half across the middle, carefully, along a fold, and keeps one half.");
+      await say("\"The west half of the sleeper's map,\" he says, \"is mine. You can have the east. It won't be there long.\"", "voice");
+    }
+    await say("He walks off down the river road without hurrying, and the black lantern at his belt swings as he goes. The surveyors in grey don't follow him. They stay, and unshoulder their chains.");
+    tacReg = "rahdaria";
+    const F = await companyOr("road", { soldiers: 6, captains: ["The chain-master"], capHp: 22, capThem: "him", cover: "the millrace wall",
+      capMiss: "Your blow rings off the chain-master's brass rod.",
+      F: HINGE({ name: "Hinge surveyors" }) });
+    if (F && F.fled) { await hnBlank(1, "You get away into the willows, and they take the mill apart looking for you."); }
+    else hnEffort(1);
+    await say("When it's quiet, you go into the mill. The race runs under the floor, and the chain on the wheel has made a dam of it, and in the pool behind the dam there's a Cascade: small, no thicker than your arm, coming up through the water and going up through a hole in the roof. And in the water, at the foot of it, floating on her back with her eyes shut and her hands moving, there's a woman.");
+    await go("Wade in");
+  }
+
+  // ---------- Part LXXIX: The Sleeper's Map ----------
+  async function partSleeper() {
+    heading("LXXIX", "The Sleeper's Map");
+    light("lake");
+    const H = hn();
+    await say("She's about forty, and very thin, and her hair has gone white all through and spreads out round her on the water. The Cascade comes up right through her: through her chest, and out of the top of her head, and up into the dark of the roof. She's asleep. Her hands are moving in the water the way a sleeper's hands move, and you see what they're doing. They're drawing.");
+    await say("There's a slate on a string round her neck, and somebody has scratched on it, a long time ago: <i>YSOLT. MAPMAKER OF SULMARA. DO NOT WAKE.</i>");
+    await say("The miller kept her. You find his notes, in a cupboard, in the careful hand of a man who doesn't write much. She walked into the Cascade that came up in his millpond eleven years ago, as if she knew it was there, and lay down in it, and never woke. Every day since, she's drawn. He gave her paper, and she drew on it with her finger dipped in the black water, and the water dried to ink: maps of the east, every road and hedge and well. And every month, the maps changed.");
+    await say("\"She draws what the Cascade sees,\" his last note says. \"I think it sees ahead. I think it shows her what's coming. A gentleman came in the spring, Mr Corvane, very civil, and paid me well for the old sheets, and for my silence. I have kept the newest sheets back. I don't like what's on them.\"");
+    await say("He's hidden them. Ysolt knows where. When you lean over the water and ask, her lips move.");
+    const b = await bearingPuzzle({ marks: H.read ? 2 : 3 });
+    H.found = true;
+    if (b.ok) hnEffort(2); else await hnBlank(1, "It takes you most of the night.");
+    await say("In the oilcloth: a sheaf of maps, drawn in black that's dried brown at the edges. " + (H.taken === "map" ? "The east half of the sheaf Corvane tore: nine sheets." : "Nine sheets of the east, the newest ones.") + " You spread them on the mill floor by the light of a candle, and they're out of order, and turned every which way.");
+    H.shown = true; renderSheet();
+    tip("blank");
+    const s = await sheetsPuzzle({ turns: 26 });
+    H.sheets = s.ok;
+    if (s.ok) hnEffort(2); else await hnBlank(1, "You work it out in the end from the river's bends, slowly.");
+    light("dark");
+    await say("It's the east: all of it, from the Rahdaria terraces to the glass domes of Sulmara, the Ostle and its villages, the edge of the sands, the low hills round the labyrinth where you began. Every hedge. Every well. And across the middle of it, from the Ostle to past Sulmara, there's nothing.");
+    await say("Not a burned place, not a flood. Paper. Clean, white, empty paper, as if nobody had ever drawn there, or as if there was nothing to draw. Wend is on the edge of it. Hobble Cross is gone. Lantry is half a chapel.");
+    await say("And the edge of the white isn't a ragged edge. It's a line. Dead straight, from one tower to the next, like a field a surveyor has pegged out with his chain. Five towers, marked in Ysolt's sleeping hand, along the line. And in the middle of the five, a sixth, drawn bigger: a tall tower with a bell in it, and a word written beside it, the only word on any of the sheets. <i>Gnomon.</i>");
+    await mech("<b>The Blank.</b> The white on Ysolt's map is what the Cascade will take from the east, if nobody stops it. It grows as time passes, and when things go wrong. The leagues still drawn are on your sheet. When it's over, what's left of the east is what's left on the map.");
+    await say("Ysolt's hands stop moving. Her eyes open. They're the silver of the edge of a Cascade, all through, no white, no colour. She looks at nothing, and talks to it.");
+    await say("\"He leans them,\" she says. Her voice is rusty, like a gate. \"All the Cascades lean toward the Underdream, the way grass leans in wind. He's found how to lean them the other way. Bells. Bathyr lead, struck in a peal. Hang them on the towers and ring the peal from the Gnomon, and every Cascade in the realm will lean east, and pour into the land between the towers, and the land will go into the dream, and the people will go into him.\"", "voice");
+    await say("\"Why,\" you ask her. Her face doesn't change.");
+    await say("\"The Hinge,\" she says. \"The houses the realm turns on. The granaries of Rahdaria. The glass of Sulmara. The Saltwrit's purse. Drown the land between them, and they're the only bread and the only roads left, and everyone must come to them on their knees. And the bells are Bathyr lead. When the east goes white, there'll be Bathyr lead on every tower. The Bathyr on the salt flats will be blamed. There'll be war. The Hinge has an army ready for it.\" A pause. \"He takes the dead. He's always taken the dead. He's going to have so many.\"", "voice");
+    await say("\"I sent the thread,\" she says. \"I've been sending threads for eleven years. Nobody came. You came.\" Her eyes close. \"Don't wake me. If I wake, the map stops, and you won't see him coming.\"", "voice");
+    if (H.lantern) await say("You ask her about the lantern. \"Black glass,\" she murmurs. \"He keeps them in it, till he spends them. Break it and they'll go. He knows that. He keeps it very close.\"");
+    else { await say("\"He carries a lantern,\" she says, very low. \"Black glass. That's where they go. Break it, and they're free.\""); H.lantern = true; }
+    await go("Go and find the Hinge");
+  }
+
+  // ---------- Part LXXX: The Hinge ----------
+  async function partGauntry() {
+    heading("LXXX", "The Hinge");
+    light("dusk");
+    const H = hn();
+    const fifth = S.rh && S.rh.vantry === "free" ? ["Aurel Vantry", "once Master of Granaries in Rahdaria, who got away over the wall"] : ["Provost Ancel Dray", "of the Rahdaria customs"];
+    await say("Gauntry House stands on a low hill above the Ostle, a day further east, right on the line: a long grey house with a hundred windows, and every window lit. It belongs to Master Joss Calloway, who dug the canals of the east and owns half of them. Tonight it's full of carriages.");
+    await say("You go in the way the servants do: over the kitchen-garden wall, through the scullery, up the back stairs. In the walls of a house like this there's always a dumbwaiter, a box on a rope that carries the dishes up, and a shaft it runs in, and a shaft carries voices.");
+    const k = await check({ label: "Stealth check (the back stairs)", mod: 3 + (co().burr ? 0 : 1), dc: 14, cta: "Creep" });
+    if (!k.ok) { await say("A footman comes round the corner of the back stairs with a tray, and you knock the tray up into his face and put him down in the coal-hole, but there's a lot of noise about it."); await hnBlank(1, "You lie up in the coal-hole for an hour until the house settles."); }
+    else hnEffort(1);
+    if (echoDue("vantryHinge")) await echoMark("vantryHinge");
+    await say("They're at dinner in the long room. You can hear every word up the dumbwaiter shaft, and through the crack of the shaft door you can see the table: five people in masks, the old kind, of painted leather. A hare, a heron, a wolf, a moth, and a mask that's nothing but a big iron key, with eyeholes. The sixth chair, at the head, is empty.");
+    const m = await masksPuzzle(fifth);
+    H.masks = m.right || 0;
+    if (m.ok) { hnEffort(2); grant("hnmasks"); }
+    await say("They talk about the east the way people talk about the weather. The price of bread after. Which of the canals will still run. Whether the Bathyr will fight, or have to be made to. Dame Farrant wants to know if her cousin in Lantry can be got out first. Paymaster Hale says no, it would be noticed.");
+    if (S.pz && S.pz.ending === "sell") await say("Hale mentions Commodore Malloway, and the pardon the Saltwrit gave somebody for the Tithe Fleet, and laughs. \"The Commodore thinks he's buying peace on the Reach,\" he says. \"He's buying it from us.\"");
+    await say("Then the doors at the end of the long room open, and Mardek Corvane comes in, and they all stand up.");
+    await say("\"The towers are hung,\" he says. \"The bells are on all five, and the Gnomon. We ring at the full moon, in three days. You'll want to be at Gauntry; it's on the line, but on the right side of it. I'd stay indoors.\" He sits. \"And there's someone in the walls.\"", "voice");
+    await say("He doesn't look up at the shaft. He doesn't need to. \"Idony,\" he says, as you'd call a dog, and somebody who's been standing in the shadow by the long room's door the whole time steps out of it.");
+    if (H.taken === "map") {
+      const r = await check({ label: "Sleight of Hand check (his coat, on the back of the chair)", mod: 3 + (hasSkill("lock") ? 2 : 0), dc: 15, cta: "Reach" });
+      if (r.ok) { H.mapBack = true; hnEffort(1); await say("While every eye in the room goes to the door, you drop down the shaft in the dumbwaiter, and the dumbwaiter's hatch opens behind the chair where Corvane has hung his coat, and the west half of Ysolt's map is in its pocket. Then it's in yours."); }
+      else await say("You reach for his coat through the dumbwaiter hatch, and a hand closes on your wrist: not his. Hers.");
+    }
+    await say("Idony Rusk is the Hinge's Knife: a small square woman in a fencing jacket, with a sabre on each hip and a scar from her ear to the corner of her mouth that pulls it into a smile. She doesn't fence the way the salles teach. She doesn't wait for you. She comes at you all at once, and keeps coming.");
+    await say("\"Don't stand there parrying,\" she says. \"We don't do that here. Hit me, if you can, and don't stop till one of us does.\"", "voice");
+    const r = await furyFight({ taunt: "rusk", id: "hinge:rusk", name: "Idony Rusk", hp: 38, dmg: [1, 8, 2], gap: 1300, windup: 6500, him: "she",
+      counter: "You stop for half a breath, and her sabre's in the gap.", heavy: "Both sabres come down at once, and you don't catch them." });
+    H.rusk = r.won ? "won" : "lost";
+    if (r.won) { hnEffort(2); await say("She goes down on one knee with both sabres gone out of her hands, laughing, with blood on her teeth. \"Oh, that's good,\" she says. \"He'll want to know about that. He'll want to know exactly how you did that.\" She's still laughing when you go out of the window."); }
+    else { await say("She puts you through the window. You land in a laurel bush two floors down, which is the only reason you're alive, and run for the river with the whole house roaring behind you."); await hnBlank(1, "They hunt you along the Ostle all night."); }
+    if (r.won) { const D = duel(), ru = D.foes["hinge:rusk"], co2 = D.foes["hinge:corvane"]; if (ru && co2) Object.keys(ru.habit).forEach(k2 => co2.habit[k2] = (co2.habit[k2] || 0) + ru.habit[k2]); }
+    await mech("Three days to the full moon. Five towers, and the Gnomon.");
+    await go("Go to the towers");
+  }
+
+  // ---------- Part LXXXI: The Five Towers ----------
+  const HN_TOWERS = {
+    wend: { name: "the Wend tower", tag: "on the water-meadows by the ferry", how: "athletics" },
+    hobble: { name: "the Hobble Cross tower", tag: "in the village square, guarded", how: "fight" },
+    lantry: { name: "the Lantry tower", tag: "the old chapel's bell-tower, rehung", how: "bell" },
+    pellmarsh: { name: "the Pellmarsh tower", tag: "out on the marsh, on stilts", how: "fire" },
+    ninefields: { name: "the Ninefields tower", tag: "on the hill, where it can be seen for miles", how: "fight" }
+  };
+  function hnAllies() {
+    const A = [];
+    if (S.sd && S.sd.ending === "sound") A.push(["bathyr", "The Bathyr", "they carry your note; they'll go up a tower for you, giddy or not"]);
+    else if (S.rh && S.rh.done && S.rh.rep >= 25) A.push(["bathyr", "The Bathyr off the salt flats", "the lead on the towers is theirs, and they want it back"]);
+    if (S.pz && S.pz.ending === "rise") A.push(["skerra", "Your Skerran crew", "Hawl Ostrey and twenty hands, up the river in boats"]);
+    else if (S.pz && S.pz.ending === "sell") A.push(["saltwrit", "A Saltwrit company", "Commodore Malloway owes you a pardon's worth"]);
+    else if (S.pz && S.pz.ending === "burn") A.push(["skerra", "Ninian and the knot-crews", "Skerra who remember their dead, and yours"]);
+    if (S.rh && S.rh.rep >= 50) A.push(["terraces", "The terrace folk of Rahdaria", "their bread comes from the Ostle"]);
+    if (S.varroAlly) A.push(["varro", "Varro Duskwane's archers", "twelve in violet, who came to the blockade once"]);
+    if (co().merc) A.push(["merc", MERCS[co().merc].name, "your sellsword"]);
+    return A;
+  }
+  async function partTowers() {
+    heading("LXXXI", "The Five Towers");
+    light("dusk");
+    const H = hn();
+    await say("You stand on the Ninefields hill at dawn with Ysolt's map in your hands" + (H.mapBack ? ", both halves of it" : "") + ", and you can see three of the towers from there: tall, thin, new-built in raw timber, every one with a cage at the top and a bell in the cage. The bells are grey. Bathyr lead.");
+    if (!H.mapBack && H.taken === "map") await say("Without the west half, you have to find two of the towers by walking. The country's full of the Hinge's men.");
+    const A = hnAllies();
+    if (A.length) await say("You don't go alone. Word goes out from Rahdaria, and it comes back with people: " + A.map(a => a[1]).join(", ") + ".");
+    if (A.some(a => a[0] === "varro") && echoDue("varroTowers")) await echoMark("varroTowers");
+    if (A.some(a => a[0] === "bathyr") && S.sd && S.sd.ending === "sound" && echoDue("hnNote")) await echoMark("hnNote");
+    let days = 3 - (!H.mapBack && H.taken === "map" ? 1 : 0);
+    await mech("Three days to the full moon" + (days < 3 ? ", and one of them gone finding the towers" : "") + ". Each tower takes you a day, and one ally a day can take another for you. Every tower left standing will ring.");
+    tip("towers");
+    const left = () => Object.keys(HN_TOWERS).filter(k => !H.towers.includes(k));
+    while (days > 0 && left().length) {
+      await say("Day " + (4 - days) + ". " + (days === 1 ? "The moon will be full tonight." : days + " days left."));
+      const c = await choose(left().map(k => ({ key: k, label: "Bring down " + HN_TOWERS[k].name, tag: HN_TOWERS[k].tag })));
+      await hnTower(c);
+      const spare = A.filter(a => !H.allies.includes(a[0]));
+      if (spare.length && left().length) {
+        const who = await choose(spare.map(a => ({ key: a[0], label: "Send " + a[1] + " to another tower", tag: a[2] })).concat([{ key: "none", label: "Keep them with you", plain: true }]));
+        if (who !== "none") {
+          const t = await choose(left().map(k => ({ key: k, label: HN_TOWERS[k].name, tag: HN_TOWERS[k].tag })));
+          const a = spare.find(x => x[0] === who);
+          H.allies.push(who); H.towers.push(t); hnEffort(1);
+          await say({ bathyr: "The Bathyr go up the timber like men climbing a cliff in a gale, grey in the face and clinging, and come down with the lead bell between four of them, and drop it in the river, and stand on the bank tapping at it, slowly, until it sinks.",
+            skerra: "The Skerra come up the Ostle in boats, by night, and saw through the tower's legs where they stand in the water, and it goes over into the river with a crash they hear in Wend.",
+            saltwrit: "The Saltwrit company marches up in good order with a warrant, and arrests the tower. You don't know how you arrest a tower. They manage it, and take the bell away in a cart.",
+            terraces: "The terrace folk come out from Rahdaria with ladders and pruning-hooks and a great deal of anger, and they take the tower apart, timber by timber, the way you'd prune a dead tree.",
+            varro: "Varro's archers ride up under a violet banner and shoot the bell's ropes through, one after another, from two hundred yards, and the bell drops through the tower like a stone through a wet sack.",
+            merc: a[1] + " goes with a mule-load of rope and an axe, and comes back two days later with the bell's clapper as a souvenir." }[who] + " " + HN_TOWERS[t].name[0].toUpperCase() + HN_TOWERS[t].name.slice(1) + " is down.");
+        }
+      }
+      days--;
+      if (days > 0 && left().length) await hnBlank(1, "Another day.");
+    }
+    const stand = left().length;
+    await mech(H.towers.length + " of " + Object.keys(HN_TOWERS).length + " towers down." + (stand ? " " + stand + " still standing, with " + (stand > 1 ? "their bells" : "its bell") + " hung." : " Every one of them."), stand ? "hurt" : "loot");
+    if (!stand) grant("hntowers");
+    await say("At dusk on the third day the moon comes up over Gauntry hill, very big and very orange, and on the top of the hill, behind the house with a hundred windows, the Gnomon stands up against it: a tower of black stone, older than anything round it, with a great grey bell in its top. Somebody's already up there. You can see his lantern.");
+    await go("Climb the Gnomon");
+  }
+  async function hnTower(k) {
+    const H = hn(), T = HN_TOWERS[k];
+    if (T.how === "athletics") {
+      await say("The Wend tower stands in the water-meadows with its feet in the flood. Nobody's guarding it: the Hinge trusts the water. You go up the timber in the wind, sixty feet, with the river under you.");
+      const r = await check({ label: "Athletics check (climbing the Wend tower)", mod: 3, dc: 15, cta: "Climb" });
+      if (r.ok) { hnEffort(1); await say("At the top you knock the pins out of the bell's yoke with the back of your axe, and it goes down through the tower and into the flood, and the water closes over it with hardly a sound."); }
+      else { await hurt(2, 6, "bludgeoning", "Halfway up a rung goes, and you go down twenty feet into the water-meadow before you catch yourself."); await say("You do it on the second try, slower, and the bell goes into the flood."); }
+      if (S.rh && S.rh.done) await say("Tamsin the ferry-girl has been watching from her boat. She claps.");
+    } else if (T.how === "fight") {
+      await say(k === "hobble" ? "The Hobble Cross tower stands in the village square, and the Hinge has put men round it, and the village is shut up behind its doors, watching through the shutters." : "The Ninefields tower is on the hill, and the Hinge has a camp at its foot: tents, fires, a dozen men and a dog.");
+      tacReg = "rahdaria";
+      const F = await companyOr("road", { soldiers: 5, captains: ["The tower-warden"], capHp: 20, capThem: "her", cover: k === "hobble" ? "the village pump" : "a timber stack",
+        capMiss: "Your blow skids off the tower-warden's breastplate.", F: HINGE({ name: "Tower guards" }) });
+      if (F && F.fled) { await say("You get out, and come back at night, and do it in the dark with a saw. It takes all night."); await hnBlank(1, ""); }
+      else { hnEffort(1); await say("When the guards are down you cut the bell's ropes and it falls."); }
+      if (k === "hobble") await say("The shutters open, one by one. An old man with a dog at his heels brings you a cup of beer and doesn't say anything. The dog sniffs your boots, and decides you'll do.");
+    } else if (T.how === "bell") {
+      await say("At Lantry they've hung the lead bell in the old chapel's tower, beside the chapel's own bell, which is bronze and cracked and older than the village. The chapel's brother, an old man called Amis, is sitting on the steps with his head in his hands. \"I can't get it down,\" he says. \"I've tried. They've pinned it with iron.\"");
+      if (sdKnows("not")) {
+        hnEffort(1);
+        await say("Bathyr lead hears a tap. You put your knuckles to the grey bell and tap the Sounding word for <i>not</i>, short and short, and the bell hears it, and remembers what it was made by, and cracks clean across, top to bottom, without a sound.");
+        await echoMarkSafe("hnSounding");
+      } else {
+        const r = await check({ label: "Strength check (the iron pins)", mod: 3, dc: 14, cta: "Heave" });
+        if (r.ok) { hnEffort(1); await say("You work the pins out with your bare hands and the back of your axe, and the lead bell drops through the tower and into the chapel yard and buries itself a foot deep."); }
+        else { await hurt(1, 6, "bludgeoning", "A pin comes free and the bell swings into you."); await say("You and Brother Amis get it down together in the end, with a rope and the chapel's ladder, and it takes the whole day and most of the night."); await hnBlank(1, ""); }
+      }
+      await say("Brother Amis rings his own bell for you when you go, the cracked bronze one. He rings it for everybody who passes.");
+    } else if (T.how === "fire") {
+      await say("The Pellmarsh tower stands on stilts out on the marsh, where nothing can get at it but a boat, and the Hinge has taken every boat. It's built of raw pine, still weeping resin.");
+      const r = await check({ label: "Survival check (finding a way across the marsh)", mod: 3 + (co().burr ? 1 : 0), dc: 14, cta: "Wade" });
+      if (r.ok) { hnEffort(1); await say("You find the old eel-path across the marsh, a hand's depth under the water, and at the tower's feet you light the resin. It burns like a torch the whole night, and the lead bell runs out of the cage in a bright grey rain and hisses in the marsh."); }
+      else { await hurt(1, 8, "cold", "You go in up to your neck twice, and the leeches find you."); await say("You get there in the end, and set it alight, and it burns."); await hnBlank(1, ""); }
+    }
+    H.towers.push(k); renderSheet();
+  }
+  async function echoMarkSafe(id) { if (ECHOES[id] && echoDue(id)) await echoMark(id); }
+
+  // ---------- Part LXXXII: The Hinge-Lord ----------
+  async function partHingeLord() {
+    heading("LXXXII", "The Hinge-Lord");
+    light("dark");
+    const H = hn();
+    await say("The stair inside the Gnomon is older than the Hinge, older than Rahdaria: worn hollow in the middle by a thousand years of feet. At the top there's a round room open to the sky on every side, and the great grey bell hanging in the middle of it, and the moon, and Mardek Corvane, sitting on the parapet with his long blade across his knees and the black lantern beside him, shining.");
+    await say("He doesn't get up. \"Idony tells me you hit like a landslide,\" he says. \"I thought I'd see for myself. There's time. The moon's not quite up.\"", "voice");
+    if (H.taken === "tyra") await say("The lantern beside him has something in it that moves. You know the way it moves. It's how Tyra moves when she's bored.");
+    if (vaelricSpeaks()) await voice("\"He's not a man any more,\" Vaelric says. \"He's a door that people go through. Don't let him open.\"");
+    await say("He stands up, and the long grey blade is in his hand, and he comes for you the Hinge's way: all at once, and without stopping.");
+    const D = duel(), mem = D.foes["hinge:corvane"], top = mem ? duTop(mem) : null;
+    if (top) await mech("He knows your habit (" + duLab(top) + "). Repeat yourself and he blocks it.", "hurt");
+    const r = await furyFight({ taunt: "corvane", id: "hinge:corvane", name: "Mardek Corvane", hp: 48, dmg: [2, 6, 3], gap: 1000, windup: 5500, windWin: 1000, reads: true,
+      counter: "You stop for half a breath, and his grey blade is in the gap.", heavy: "He brings the long blade down with both hands and you don't catch it." });
+    H.duel = r.won ? "won" : "lost";
+    if (r.won) { hnEffort(3); await say("His blade goes out of his hand and over the parapet, and he goes back against the great bell, and it booms, once, low, under your feet. He's laughing, like Idony laughed. Then he isn't."); }
+    else await say("You go down on the stone. He stands over you, and looks at you, and lets you get up. \"Not yet,\" he says. \"I want you to see this.\"");
+    await say("He picks up the black lantern, and opens it.");
+    await say("Light comes out of it, pale and shining, like breath on a cold morning: a great deal of it, more than the lantern could ever have held. It goes into him. He grows. Not taller: fuller. His eyes go silver at the edges, like a Cascade. All down the hill below, at Gauntry, where his men are standing in a ring round the tower's foot, men start to fall down.");
+    await say("\"I don't need the bells,\" he says, and his voice comes out of him in many voices at once. \"The bells were for them, for the Hinge, so they could feel they'd done it. I need the dead. And the more there are, the more I can do.\"", "voice");
+    tip("reaping");
+    await hnReaping(r.won);
+    await go("Look east");
+  }
+  // Corvane, full of the dead: a fight that runs on souls. Every round the dead drift in to him, his
+  // own men among them, and at six he spends them all on the Reaping. Each Reaping shows you who it
+  // was, and every one that lands costs the east a league.
+  async function hnReaping(duelWon) {
+    const H = hn();
+    const stand = Object.keys(HN_TOWERS).length - H.towers.length;
+    const st0 = { souls: 2 + stand, reaps: 0, braced: false, named: 0, rope: false, note: false, hook: 0, lanternCut: false, cap: 6, men: HN_MEN.slice() };
+    const pips = () => "●".repeat(Math.min(st0.cap, st0.souls)) + "○".repeat(Math.max(0, st0.cap - st0.souls));
+    const say6 = async () => mech("Souls in him: " + pips() + (st0.souls >= st0.cap - 1 ? " · the Reaping is coming" : ""), st0.souls >= st0.cap - 1 ? "hurt" : "");
+    await mech("<b>The Reaping.</b> The souls he holds are the meter: " + pips() + ". The dead drift in to him every round, his own men among them. At " + st0.cap + " he spends them all on one blow. Starve him: speak the names of the dead, retie them, ring them home. Brace when it's coming." + (stand ? " The " + stand + " tower" + (stand > 1 ? "s" : "") + " still standing feed him from the start." : ""));
+    const F = {
+      name: "Mardek Corvane, full of the dead", hp: duelWon ? 64 : 76, ac: 16, atk: 7, n: 1, s: 12, type: "necrotic", bloom: 0, hesk: false, who: "Corvane", whoShort: "Corvane",
+      hitWhy: "His blade goes through you cold, and for a moment you can hear the people inside him.", miss: "The grey blade goes past and rings on the bell.", hitLine: "The cut doesn't bleed. It lets out light, and the light goes back into him.",
+      before: async (st) => {
+        if (!F.half && FOE.hp > 0 && FOE.hp <= FOE.max / 2) {
+          F.half = true;
+          await say("He reaches down over the parapet with one hand, and all round the foot of the Gnomon his own people fall down at once, the last of the surveyors in grey, and their breath comes up the tower to him like smoke up a chimney.");
+          const n = Math.min(3, st0.men.length); const men = st0.men.splice(0, n).map(x => [x, "a Hinge chainman, who carried the chain for him and never once asked what it was for"]);
+          await hnVisions(men, "His own. He spends them like small change.");
+          st0.souls += 2; FOE.hp = Math.min(FOE.max, FOE.hp + 8); renderFoe();
+          await mech("He drinks his own men: +2 souls, and he heals 8.", "hurt");
+          await say6();
+        }
+        if (st.round > 1) { st0.souls += st0.lanternCut ? 0 : 1; if (st0.lanternCut && st.round % 2 === 0) st0.souls += 1; await say6(); }
+        if (st0.hook > 0) {
+          const k = await check({ label: "Wisdom saving throw (hold on to Vaelric)", mod: 2 + (S.hh && S.hh.hear >= 3 ? 2 : 0), dc: 15, cta: "Hold on" });
+          if (k.ok) { st0.hook = 0; H.vael = "held"; hnEffort(1); await say("You close both hands on the haft and hold on to him the way you'd hold someone on a cliff, and the hook of cold that's in him tears loose. \"Thank you,\" Vaelric says, faint as a draught."); }
+          else if (--st0.hook <= 0) { H.vael = "taken"; S.gemsSpent = true; renderSheet(); await say("He's gone. You feel him go: the old knight in the axe, the one who's been at your back since the labyrinth, comes out of the haft like a long breath and goes across the room and into Mardek Corvane, and the gems in the haft go dark."); await mech("Vaelric is in Corvane now. The gems won't wake. The axe still holds you; that was never Vaelric, it was the axe.", "hurt"); }
+          else await say("The cold hook in the axe pulls harder. You can feel Vaelric holding on to you from the other side.");
+        }
+      },
+      turn: async (st) => {
+        if (st0.souls < st0.cap) return;
+        st0.reaps++;
+        const dead = hnPickDead(Math.min(4, 2 + st0.reaps));
+        SND.choir && SND.choir(reduced ? 2 : 6);
+        await say("He lifts the grey blade over his head with both hands, and all the light that's in him runs up it.");
+        await hnVisions(dead, st0.reaps === 1 ? "The Reaping. You see them, every one he's spending." : "The Reaping, again. More of them.");
+        SND.boom && SND.boom();
+        const k = await check({ label: "Wisdom saving throw (the Reaping)", mod: 2 + (st0.braced ? 5 : 0) + Math.floor(lvk() / 12), dc: 17, cta: st0.braced ? "Stand braced" : "Stand" });
+        const big = 4 + st0.reaps;
+        if (k.ok) await hurt(Math.ceil(big / 2), 10, "necrotic", "You take it on your guard, braced, with your feet set, and it still puts you on your knees.");
+        else await hurt(big, 10, "necrotic", "It comes down through you and through the floor and through the hill, and for a long moment you're every one of them.");
+        st0.souls = 0; st0.braced = false; H.reaps++;
+        await say(d(2) === 1 ? "\u201c" + dead[0][0] + ",\u201d he says. \u201cYou couldn't save them. You couldn't save any of them.\u201d" : "\u201cThat was " + dead.length + " people,\u201d he says. \u201cAnd you just stood there.\u201d", "voice");
+        await hnBlank(1, "Every one he spends goes out of the east. Somewhere on the Ostle, a village goes quiet.");
+        if (st0.reaps === 1 && vaelricSpeaks() && !H.vael) {
+          st0.hook = 3;
+          await say("And then he reaches across the room, not for you. For the axe. Something like a fish-hook of cold goes into the haft, and catches, and pulls.");
+          await mech("He's after Vaelric. Hold on (Wisdom DC 15 each round) within 3 rounds, or Vaelric goes into him.", "hurt");
+        }
+        return "done";
+      },
+      extra: (st) => [
+        { key: "hn-names", label: "Speak the names of the dead", tag: "Wisdom DC 14 · −2 souls · costs your turn" + (H.reaped.length ? " · you know " + H.reaped.length + " of them" : ""), plain: true },
+        { key: "hn-brace", label: "Brace for the Reaping", tag: "costs your turn · +5 on the save, and half", plain: true, show: st0.souls >= st0.cap - 2 && !st0.braced },
+        { key: "hn-rope", label: "Retie the count-rope round the dead", tag: "−3 souls · once", plain: true, show: !st0.rope && (hasGear("countrope") || (S.pz && S.pz.ending === "rise")) },
+        { key: "hn-note", label: "Sound the Bathyr's note", tag: "every soul in the room goes home · once", plain: true, show: !st0.note && S.sd && S.sd.ending === "sound" },
+        { key: "hn-lantern", label: "Smash the black lantern at his belt", tag: "attack vs AC 18 · he holds 1 soul a round less", plain: true, show: H.lantern && !st0.lanternCut }
+      ],
+      onExtra: async (c, st) => {
+        if (c === "hn-names") {
+          const k = await check({ label: "Wisdom check (the names of the dead)", mod: 2 + Math.min(3, Math.floor(H.reaped.length / 3)), dc: 14, cta: "Speak" });
+          if (k.ok) { st0.souls = Math.max(0, st0.souls - 2); st0.named++; const n = H.reaped.length ? H.reaped[d(H.reaped.length) - 1] : "the miller"; await say("You say them out loud, the ones you know: " + n + ", and the rest. Some of the light in him hears its name, and stops, and won't go any further in."); await say6(); }
+          else await say("You say them, but your voice is shaking, and they don't hear you over him.");
+        } else if (c === "hn-brace") {
+          st0.braced = true; await say("You set your feet, and your guard, and wait for it.");
+        } else if (c === "hn-rope") {
+          st0.rope = true; st0.souls = Math.max(0, st0.souls - 3);
+          await say("You pull the Skerran count-rope out and throw a knot round the light that's going into him, the way Ninian showed you, a knot for a soul, and another, and another. Each one you tie, the dead in it remember who they were, and stop.");
+          await say6();
+        } else if (c === "hn-note") {
+          st0.note = true; st0.souls = 0;
+          await say("You tap the note the Bathyr gave you, the Drowned Light's own, on the stone of the Gnomon, and the stone carries it the way stone does, down and out through the hill. Every soul in the room hears it. It's the note that means <i>home</i>. They go.");
+          await say6();
+        } else if (c === "hn-lantern") {
+          const k = await check({ label: "Attack (the black lantern)", mod: 5 + rxHit(), dc: 18, target: "AC", cta: "Strike" });
+          if (k.ok) { st0.lanternCut = true; hnEffort(1); await say("Your blow catches the black lantern on its chain, and the glass stars, and light pours out of the crack, and he snatches at it, too late."); await mech("The lantern's cracked: he gathers souls only every other round now.", "loot"); }
+          else await say("He turns his hip and the lantern swings out of your reach.");
+        }
+      }
+    };
+    roamFight = false;
+    await hkFight(F);
+    if (H.reaps === 0) grant("hnstarved");
+    await say("He falls against the great bell, and it booms, and he goes down the side of it like water down a window, and lies on the stone, and all the light comes out of him at once: hundreds of them, pale and shining, standing up out of him and round him, filling the room, the way people stand up when a long sermon's over.");
+    await say("They stand there. They're waiting for something. The lantern lies on the stone by his hand, cracked, still open, and the light leans toward it the way grass leans in a wind.");
+    if (H.vael === "taken") await say("One of them is an old man in a warden's coat, with a kind, tired face. He looks at you, and at the axe.");
+    if (H.taken === "tyra") await say("One of them is small and quick and annoyed, and keeps trying to get to the stair.");
+    const c = await choose([
+      { key: "free", label: "Break the lantern, and let them go", tag: "the dead go where the dead go" + (H.vael === "taken" ? " · Vaelric comes home to the axe" : "") },
+      { key: "kept", label: "Close the lantern on them, and keep it", tag: "a lantern full of the dead · +8 max HP for good" + (H.vael === "taken" ? " · Vaelric stays in it" : ""), plain: true }
+    ]);
+    H.souls = c;
+    if (c === "free") {
+      S.hh.hear++;
+      await say("You bring your heel down on the lantern, and it breaks with a small sad sound like a cup, and they go. Not all at once. One by one, the way people leave a church: some of them look at you as they go past, and one or two of them touch your arm. Tamsin. Brother Amis. The miller. You know all their names.");
+      if (H.vael === "taken") { H.vael = "held"; S.gemsSpent = false; await say("The old warden doesn't go. He walks across the room to you, slowly, and puts his hand on the haft of the axe, and he's back in it, and the gems wake up, red, like a held breath let go. \"That was unpleasant,\" Vaelric says. \"Let's not.\""); }
+      if (H.taken === "tyra") await say("The quick one goes down the stair two at a time. In Rahdaria, two days later, Tyra will sit up in bed and ask for breakfast.");
+      grant("hnfree");
+    } else {
+      S.hh.hush += 2; S.maxHp += 8; S.hp = Math.min(S.maxHp, S.hp + 8);
+      S.gear = S.gear || []; if (!hasGear("soullantern")) S.gear.push("soullantern");
+      await say("You close the lantern. They go into it the way water goes down a drain, all of them, and the glass is warm in your hand and full of quiet light, and you feel stronger than you've felt in your life. You don't look at the light too closely.");
+      if (H.taken === "tyra") await say("The quick one goes in with the rest. In Rahdaria, Tyra will get better, slowly, and never quite be warm again.");
+      renderSheet();
+    }
+  }
+
+  // ---------- Part LXXXIII: Half the East ----------
+  async function partHalfEast() {
+    heading("LXXXIII", "Half the East");
+    light("dusk");
+    const H = hn();
+    const stand = Object.keys(HN_TOWERS).length - H.towers.length;
+    await say("The great grey bell hangs over you, still humming from his fall. Below it, through a hole in the floor, a rope goes down into the Gnomon, and on the stone round the hole, cut in letters older than any you can read, there's a ring of bell-marks: the Leaning's peal, the way it's rung.");
+    await say(stand ? "Out across the moonlit east, on the line, " + stand + " of the towers " + (stand > 1 ? "are" : "is") + " still standing with " + (stand > 1 ? "their bells" : "its bell") + " hung. They're humming in answer to the great bell. They're waiting for it." : "Out across the moonlit east, on the line, there's nothing standing: you can see the burned stump of the Pellmarsh tower glowing on the marsh.");
+    const p = await pealPuzzle({ len: 5 + Math.min(2, stand), tries: 3 });
+    H.peal = p.ok;
+    if (p.ok) { hnEffort(2); await say("The peal you ring goes out over the east backwards, and every tower that's still standing hears it, and the lead bells in them crack, one after another, like ice on a pond in spring."); }
+    else await say("You don't get the counter-peal. The towers still standing ring on, faintly, all night, and the Cascades lean east to them, and where they lean the land goes pale.");
+    const lost = HN_BLANK - H.blank + (p.ok ? 0 : stand * 2);
+    H.east = lost <= 3 ? "whole" : lost <= 7 ? "scarred" : "half";
+    await say({
+      whole: "In the morning you can see all the way to Sulmara, and it's all there: the Ostle, Wend, Hobble Cross with smoke going up from its chimneys, the chapel at Lantry. The east is whole. Nobody in it will ever know how close it came.",
+      scarred: "In the morning there's a white place on the east. It runs along the line where the Cascades leaned before you stopped them: a mile of it, here, two miles there, where the land just isn't any more. Not burned. Not drowned. Grey, and smooth, and quiet, and when you walk into it nothing makes a sound. Hobble Cross is on its edge. Half of Lantry is in it.",
+      half: "In the morning, half the east is gone. From the Gnomon you can see the line, dead straight, and on the near side of it the green country and on the far side nothing: a grey, smooth, silent plain going all the way to the sky, where Hobble Cross was, and Lantry, and Ninefields, and Pellmarsh, and all the people in them. Corvane got what he wanted, even dead. The Hinge will have its war."
+    }[H.east]);
+    if (H.east !== "whole") await mech("The east is " + (H.east === "half" ? "half gone" : "scarred") + ". It stays that way: the roads back will run past it, and the Hinge will try to make something of it.", "hurt");
+    await say("Then there's the bell. The Gnomon's great bell, still hanging. It's older than the Hinge. Whoever rings it can lean the Cascades. Whoever holds it, holds the hinge of the realm.");
+    const c = await choose([
+      { key: "still", label: "Cut it down, and break it", tag: "nobody leans them again" },
+      { key: "turn", label: "Ring it once more, the other way, on Gauntry", tag: "lean the Cascades on the Hinge's own houses", plain: true },
+      { key: "keep", label: "Leave it hanging, and keep the rope", tag: "the hinge of the realm is yours now", plain: true }
+    ]);
+    H.ending = c;
+    if (c === "still") { S.hh.hear++; await say("You cut the rope and the yoke, and the bell goes down the inside of the Gnomon, a thousand years of stair, and breaks at the bottom with a sound you'll hear in your sleep for a month. Nobody leans the Cascades again. They go back to leaning toward the Underdream, like grass in the wind."); grant("hnstill"); }
+    else if (c === "turn") { S.hh.hush++; await say("You ring it once, the way the marks say to, but turned: the Leaning's peal, aimed at Gauntry. The Cascades bow down onto the house with a hundred windows, and onto the Hinge's estates up and down the Ostle, and in the morning they're grey and smooth and silent, every one, and the Hinge with them, and their servants, and their dogs."); grant("hnturn"); }
+    else { S.hh.hush++; await say("You leave it hanging. You take the rope's end and tie it off, and put the key of the Gnomon's door on your belt beside the axe. The realm doesn't know it yet, but the hinge it turns on is you."); grant("hnkeep"); }
+    await say("Ysolt is still asleep in the millpond at Ostle Ford when you get back. Her hands are still. When you lean over her, they start to move again, slowly: drawing the east the way it is now.");
+    const y = await choose([
+      { key: "wake", label: "Wake her", tag: "the map stops; she lives her own life" },
+      { key: "dream", label: "Let her dream on", tag: "she keeps drawing what's coming · her map goes with you", plain: true }
+    ]);
+    H.ysolt = y;
+    if (y === "wake") { await say("You put your hand on her forehead and say her name. She opens her eyes, and they're grey, ordinary grey, a little short-sighted. The Cascade goes out of her like a candle. She sits up in the water and looks at her hands, which are an old woman's, and cries for a long time, and then asks what year it is."); await say("\"I'll go to Rahdaria,\" she says, later, wrapped in the miller's blanket. \"I'll draw maps of what's there. Only what's there.\"", "voice"); }
+    else { S.gear = S.gear || []; if (!hasGear("ysoltmap")) S.gear.push("ysoltmap"); await say("You let her sleep. You take the newest sheet off the mill floor while the ink's still wet. It's the country ahead of you, a little way ahead: a road, a hill, and a mark you don't understand yet."); }
+    await hnReward();
+    if (H.tyra) await say(S.tyra && S.tyra.love ? "Tyra sits on the mill step with you while the sun comes up. \"Every time,\" she says, \"I think you can't possibly find anything worse. And every time.\" She leans on you. \"Stillwater next. Then somewhere boring. Promise.\"" : "Tyra sits on the mill step and sharpens her knives, one after the other, the way she does when she doesn't want to talk.");
+    else if (H.taken === "tyra" && H.souls === "free") await say("A letter comes from Rahdaria, in Tyra's handwriting, which is terrible: <i>Awake. Starving. Who was he. Come and tell me. T.</i>");
+    if (vaelricSpeaks() && H.vael !== "taken") await voice(H.vael === "held" ? "\"Stillwater,\" Vaelric says, after a long time. \"The grave on the headland. I'd like to go now. Before anything else happens.\"" : "\"Stillwater,\" Vaelric says. \"They're still waiting on the wall.\"");
+    H.on = false; H.done = true; renderSheet();
     await endCard();
+  }
+  // The reward, by how hard you worked for it (Adrian: "a real reward for the user's effort").
+  const HN_GOOD = 16, HN_BEST = 24;
+  async function hnReward() {
+    const H = hn(), e = H.effort - 2 * H.reaps;
+    const gold = 250 + 10 * Math.max(0, e) + 5 * lv();
+    S.coins += gold; S.hinge = "breaker"; S.unbal = true; renderSheet();
+    await say("Corvane's strongroom at Gauntry is open when you go down the hill: the Hinge has run, all of it, in the night, and left everything. There's a great deal of everything.");
+    await mech("Gain " + gold + " gold from the Hinge's strongroom, and a name the towns will use: <b>Hingebreaker</b>.", "loot");
+    await mech("<b>The Visceral Realm.</b> With the Hinge broken, the balance of the realm goes with it, and the realm turns visceral. From now on, foes have more HP and hit harder, Dread comes on faster, and Hinge remnants hold the roads back. The roads back pay a quarter more gold, and good weapons drop more often. It's on your sheet.", "hurt");
+    grant("hndone");
+    if (e >= HN_GOOD) {
+      S.lootN = (S.lootN || 0) + 1;
+      const L = { id: S.lootN, uid: newUid(), b: "sword", t: "heartfire", n: "The Wrathbrand", icon: "rapier", die: [1, 10, 4], hit: 1, tr: ["keen"], ac: ["wrath"], keep: true,
+        lore: "Mardek Corvane's long grey blade. It was never his: it's older than the Hinge, and it likes to be used hard." };
+      const sold = gainLoot(L);
+      await say("On a rack in the strongroom, oiled and wrapped, is the long grey blade he cut you with at Ostle Ford. When you pick it up, it's warm, and heavy in a way that wants to be swung.");
+      await mech("<span>" + wTier("L" + L.id) + "Gain <b>" + armName("L" + L.id) + "</b>, for a strong showing (effort " + e + "). " + wDef("L" + L.id).fx + (sold.length ? " (You sell off " + sold.join(", ") + " to make room.)" : "") + "</span>", "loot find q-heartfire");
+      const w = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep what you're holding", plain: true }]);
+      if (w === "y") wield("L" + L.id);
+      grant("hnwrath");
+    } else await mech("Effort " + e + ". (A stronger showing would have earned the Wrathbrand: " + HN_GOOD + " or more.)");
+    if (e >= HN_BEST) {
+      if (H.souls === "free") { S.maxHp += 6; S.hp = Math.min(S.maxHp, S.hp + 6); S.dress = (S.dress || 0) + 3; await mech("<b>The blessing of the freed.</b> The ones you let go leave something behind with you: +6 max HP for good, and 3 bandages from the Lantry chapel.", "loot"); }
+      else { S.coins += 200; await mech("<b>The lantern's due.</b> The dead in the lantern know what you are, and so does everybody else: 200 gold more, paid by the Hinge's frightened creditors.", "loot"); }
+      renderSheet(); grant("hnbest");
+    }
+  }
+  function hnSection(rs) {
+    const H = rs && rs.hn;
+    if (!H || !H.reaped || !H.reaped.length) return "";
+    const known = Object.fromEntries(HN_DEAD.concat(HN_MEN.map(n => [n, "a Hinge chainman, who carried the chain and never asked what it was for"])));
+    return "<section><h3>The Reaped · " + H.reaped.length + "</h3>" +
+      '<p class="j-sub">The dead Mardek Corvane spent, as you saw them in the Reaping. ' + (H.souls === "free" ? "You let them go." : H.souls === "kept" ? "They're in the lantern on your belt." : "") + "</p>" +
+      '<ul class="marks">' + H.reaped.map(n => '<li><span class="mk"></span><span><b>' + n + "</b>, " + (known[n] || "") + "</span></li>").join("") + "</ul></section>";
+  }
+  // ---------- the Visceral Realm: the world after the Hinge ----------
+  // Adrian: "Increase the world difficulty after completing this." With Corvane dead and the Hinge
+  // scattered, the realm's balance is broken, and the roads feel it: foes have 15% more HP and +1 to
+  // hit and damage, Dread comes on faster, and Hinge remnants turn up on the roads back. It pays: a
+  // quarter more gold on the roads back, and a quarter better odds of a good weapon dropping.
+  // Named by Adrian's pick: the Visceral Realm. S.unbal is set when the chapter ends.
+  const unbal = () => !!S.unbal;
+  async function hnRemnants(reg) {
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>Hinge remnants</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    const who = ["the last of Dame Farrant's household guard, who were never paid off", "surveyors in grey, still carrying their chains, with nobody to measure for", "Paymaster Hale's bravos, selling what's left of his name", "men from the Hinge's war-camp, who were promised a war and didn't get one"][d(4) - 1];
+    await say("There's a barricade across the " + REGIONS[reg] + " road, and behind it, " + who + ". They know your face. \"Hingebreaker,\" one of them says, and spits.");
+    const c = await choose([{ key: "fight", label: "Break the barricade", tag: "a fight · the Visceral Realm pays" }, { key: "go", label: "Go round", plain: true }]);
+    if (c === "go") { await say("You go round through the fields. They throw stones after you, and a bottle."); light(back); return; }
+    tacReg = reg;
+    const F = await companyOr("road", { soldiers: 4 + d(3), captains: ["The remnant-captain"], capHp: 24, capThem: "him", cover: "the barricade",
+      capMiss: "Your blow rings off the remnant-captain's old Hinge breastplate.", F: HINGE({ name: "Hinge remnants" }) });
+    if (!(F && F.fled)) { const n = Math.round((20 + lv()) * 1.25); S.coins += n; renderSheet(); xpGain(30 + lv()); await mech("The Hinge's last pay-chest, in a cart behind the barricade: " + n + " gold.", "loot"); grant("hnremnant"); }
+    light(back);
   }
 
   // ---------- the roads back: caravans, and raiders ----------
@@ -26018,7 +27098,9 @@ body.pv-open { overflow: hidden; }
     "A stone the size of a fist lands in the road at your feet with a ribbon tied round it. On the ribbon there's a mark you don't know yet. When you look up, they're all round you.",
     "At the crossroads there's a gibbet with nobody in it, and a sign nailed to it with their mark painted on. Under the sign, four of them are waiting, as if they knew you'd come this way."
   ];
-  const regAt = (k) => Object.keys(TIER).find(r => TIER[r] === k);
+  // Half the East is fought in the lands east of Rahdaria, so it borrows Rahdaria's region.
+  const CH_REG = { hinge: "rahdaria" };
+  const regAt = (k) => Object.keys(TIER).find(r => TIER[r] === k) || (CHAPTERS[k] && CH_REG[CHAPTERS[k].slug]);
   // Which gang: one from either end of the road, one you haven't broken if there is one, and a gang
   // you let go now and then comes back with a grudge.
   function bnPick(regs) {
@@ -26591,7 +27673,7 @@ body.pv-open { overflow: hidden; }
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done;
     const TITHE = {
       rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
       sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
@@ -26603,11 +27685,11 @@ body.pv-open { overflow: hidden; }
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned." : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
@@ -26729,6 +27811,20 @@ body.pv-open { overflow: hidden; }
         P.ending ? { rise: "You became captain of the Widow's Tally, and beat the Saltwrit off Raftmark.", sell: "You signalled the Saltwrit, and they burned Raftmark, and hanged the Fleet on the Gibbet Skerries.", burn: "You gave the Fleet back its dead, knot by knot, and it broke up and went home." }[P.ending] : ""
       ];
     },
+    hinge: (s) => {
+      const H = s.hn;
+      if (!H) return [s.part > 75 && "At Stillwater a Cascade rose out of the still water, and a silver thread wrote you a message."];
+      return [
+        "At Stillwater a Cascade rose out of the still water, and when you cut it down a silver thread wrote you a message: Ostle Ford, and a sleeper named Ysolt.",
+        H.taken === "tyra" ? "At Ostle Ford, Mardek Corvane drank the miller's soul, cut you once, and took a little of Tyra." : H.taken ? "At Ostle Ford, Mardek Corvane drank the miller's soul, cut you once, and took half of Ysolt's map." : "",
+        H.sheets ? "You put Ysolt's map together, and saw the line the Hinge means to drown." : H.found ? "You found Ysolt's map, and the white line across the east." : "",
+        H.masks >= 5 ? "At Gauntry House you named all five of the Hinge behind their masks." : H.masks ? "At Gauntry House you named " + H.masks + " of the Hinge behind their masks." : "",
+        H.rusk === "won" ? "You beat Idony Rusk, the Hinge's Knife." : H.rusk === "lost" ? "Idony Rusk put you through a window." : "",
+        H.towers.length ? "You brought down " + H.towers.length + " of the five towers." : "",
+        H.ending ? ({ still: "You beat Mardek Corvane on the Gnomon and broke its bell.", turn: "You beat Mardek Corvane on the Gnomon and leaned the Cascades onto the Hinge.", keep: "You beat Mardek Corvane on the Gnomon and kept its bell." }[H.ending] + (H.souls === "free" ? " You let the dead go." : " You kept the dead in his lantern.")) : "",
+        H.ysolt ? (H.ysolt === "wake" ? "You woke Ysolt." : "You let Ysolt dream on.") : ""
+      ];
+    },
     sounding: (s) => {
       const D = s.sd;
       if (!D) return [s.part > 61 && "You went down the Sea-Stair with the Speaker for the Deep, to Bathyrra, the dry city under the western sea."];
@@ -26788,8 +27884,8 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.

@@ -37,6 +37,8 @@ fs.writeFileSync(gamePath, html);
 // The buttons the bot may press: those in the newest block of the story with anything to press.
 const POOL = `(() => {
   const story = document.getElementById("story");
+  // Duel and Fury pads: open the button pad, so the bot has strokes to press.
+  document.querySelectorAll(".duel:not(.spent) details").forEach(d => d.open = true);
   const ok = (b) => !b.disabled && b.offsetParent !== null && !b.closest("[hidden]") && !b.classList.contains("map-link") && !b.classList.contains("taken") && b.style.pointerEvents !== "none";
   const dlg = [...document.querySelectorAll("dialog[open]")];
   let pool = dlg.length ? [...dlg[dlg.length - 1].querySelectorAll("button, input[type=submit]")].filter(ok) : [];
