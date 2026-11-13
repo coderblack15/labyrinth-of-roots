@@ -2385,6 +2385,7 @@ body.pv-open { overflow: hidden; }
     h += stoneSection();
     h += achSection();
     h += rwSection();
+    h += creditsSection();
     h += tipSection();
     h += linkSection();
     h += cwSection(rs);
@@ -2424,12 +2425,15 @@ body.pv-open { overflow: hidden; }
   // place in this list and is written into the code, so never reorder or remove rows).
   const RW_KEY = "rimed-lantern/" + "the-axe-remembers/" + "LR1";
   // The Google Form players send codes through (code, a name for the credits, an email). Until it's set, claims point to the itch.io page.
+  // CLAIMS_OPEN: false hides the claim link and the named rewards. Players still earn and keep codes,
+  // told rewards are coming. Set it to true when the rewards are ready to send.
+  const CLAIMS_OPEN = false;
   const CLAIM_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScKRmtXk5TiPCCXAGPtkZmKzDHidkdhJd3B1S9_K4_pjKbFPA/viewform";
   const CLAIM_URL = CLAIM_FORM || FULL_URL;
   const REWARDS = [
     { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "A wallpaper of the world map.", test: (c) => rwCh(c, "labyrinth") },
     { id: "siege", name: "Rahdaria Stands", how: "Finish The Siege of Rahdaria.", gift: "Your name in the game's credits, in the list of Wayfarers.", test: (c) => rwCh(c, "rahdaria") },
-    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A download of the game's soundtrack or art pack.", test: (c) => rwCh(c, "unmapped") },
+    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A download of the game's art pack: emblems, medallions and maps.", test: (c) => rwCh(c, "unmapped") },
     { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "A printable Relicsong card made only for players who reach level 50.", test: () => lv() >= LV_MAX },
     // Twinbreaker comes with the Rimehold chapter: it switches on by itself once that feat exists.
     { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A half-price itch.io key for the full game, to give to a friend.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
@@ -2504,7 +2508,7 @@ body.pv-open { overflow: hidden; }
       J.rw[R.id] = { code: rwPack(i, rwWid(), Math.floor((Date.now() - RW_EPOCH) / 86400000), rwHours()), t: Date.now() };
       got.push(R);
       stat("reward-" + R.id, "Reward code: " + R.name);
-      achToast({ kicker: "Reward code", name: R.name, desc: "A code for a real reward. It's in your journal." });
+      achToast({ kicker: "Reward code", name: R.name, desc: CLAIMS_OPEN ? "A code for a real reward. It's in your journal." : "Keep it: rewards are coming. It's in your journal." });
     });
     if (got.length) jSave();
     return got;
@@ -2512,19 +2516,24 @@ body.pv-open { overflow: hidden; }
   const rwCodeHTML = (R) => '<span class="rw-code"><b class="rs-code">' + J.rw[R.id].code + '</b> <button class="ghost rw-copy" type="button" data-code="' + J.rw[R.id].code + '">Copy</button></span>';
   const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">' + (CLAIM_FORM ? "the claim form" : "the game\'s itch.io page") + "</a>";
   // A line for the chapter-complete card.
-  const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + R.gift + " To claim it, send the code to Adrian through " + rwClaim + ". It's in your journal too.</p>").join("");
+  const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + (CLAIMS_OPEN ? R.gift + " To claim it, send the code to Adrian through " + rwClaim + "." : "Keep this code: rewards are coming.") + " It's in your journal too.</p>").join("");
   function rwSection() {
     J.rw = J.rw || {};
     const item = (R) => {
       const g = J.rw[R.id];
       return '<li class="' + (g ? "won" : "") + '"><span class="mk"></span><span><b>' + R.name + "</b> · " + (R.soon && R.soon() ? "Coming with the Rimehold chapter. " : R.how + " ") +
-        "<i>" + R.gift + "</i>" + (g ? "<br>" + rwCodeHTML(R) : "") + "</span></li>";
+        (CLAIMS_OPEN ? "<i>" + R.gift + "</i>" : "") + (g ? "<br>" + rwCodeHTML(R) : "") + "</span></li>";
     };
     return '<section><h3>Reward codes · ' + REWARDS.filter(R => J.rw[R.id]).length + " of " + REWARDS.length + "</h3>" +
-      '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here. Send it to Adrian through ' + rwClaim +
-      " with the name you'd like in the credits and an email, and Adrian will send your reward. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" +
+      (CLAIMS_OPEN ? '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here. Send it to Adrian through ' + rwClaim +
+      " with the name you'd like in the credits and an email, and Adrian will send your reward. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" : '<p class="j-sub">A few milestones will be worth something outside the game. Reach one and you get a code here. Keep it: rewards are coming, and when they\'re ready you\'ll be able to claim them from this page. Each code can be claimed once, and rewards will always be free: you never pay to get one, and they never go by luck.</p>') +
       '<ul class="marks">' + REWARDS.map(item).join("") + "</ul>" +
-      (WAYFARERS.length ? '<h4 class="p-set">Wayfarers</h4><p class="j-sub">Players who carried a code out of the game.</p><p>' + WAYFARERS.map(([n, t]) => "<b>" + esc(n) + "</b>" + (t ? " <i>" + esc(t) + "</i>" : "")).join(" · ") + "</p>" : "") + "</section>";
+      "</section>";
+  }
+  function creditsSection() {
+    return '<section><h3>Credits</h3><p>Created by Adrian Blackshire and Claude.</p>' +
+      '<h4 class="p-set">Wayfarers</h4><p class="j-sub">Players who carried a reward code out of the game and asked to be named here.</p>' +
+      (WAYFARERS.length ? "<p>" + WAYFARERS.map(([n, t]) => "<b>" + esc(n) + "</b>" + (t ? " <i>" + esc(t) + "</i>" : "")).join(" · ") + "</p>" : '<p class="j-empty">No one yet.</p>') + "</section>";
   }
   document.addEventListener("click", rwCopy);
   function rwCopy(e) {
@@ -2543,9 +2552,9 @@ body.pv-open { overflow: hidden; }
       "<b>Save or backstab.</b> At five crossroads you can help a rival, sabotage them or race past, and they can do the same to you. Hunters can be lost for good. Whoever reaches the Seedheart changes the contract, and the teams you met turn up again on the roads back."
     ] },
     { ver: "78", name: "Reward Codes", date: "13 Nov 2026", items: [
-      "<b>Some milestones are worth something outside the game now.</b> Finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, or reach level 50, and you get a <b>reward code</b>. Send it to Adrian through the claim form (linked from your journal) to claim a real reward: a world-map wallpaper, your name in the credits, the soundtrack or art pack, or a printable Relicsong card made only for level 50.",
-      "Your codes are in the journal under <b>Reward codes</b>, with a Copy button. If you've already passed a milestone, the code turns up the next time you play. Each code can be claimed once, and rewards are always free: you never pay to get one, and they never go by luck.",
-      "Beat the Hollow Twin in Rimehold for a fifth code, <b>Twinbreaker</b>: a half-price key for a friend."] },
+      "<b>Some milestones are going to be worth something outside the game.</b> Finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, reach level 50, or beat the Hollow Twin in Rimehold, and you get a <b>reward code</b>. Keep it: the rewards are being made, and you'll be able to claim them from your journal when they're ready.",
+      "Your codes are in the journal under <b>Reward codes</b>, with a Copy button. If you've already passed a milestone, the code turns up the next time you play. Rewards will always be free: you never pay to get one, and they never go by luck.",
+      "The journal also has a <b>Credits</b> page now, with room for the Wayfarers: players named for carrying a code out of the game."] },
     { ver: "77", name: "Rimehold", date: "13 Nov 2026", items: [
       "<b>A new chapter after the Unmapped: Rimehold</b>, Parts XCI to XCIX, from Adrian's design. A Cascade thread writes NORTH in your palm in Rahdaria, and the road goes up past the top of every map, to a fortress in the ice built over a Labyrinth that is one vast tree turned inside out.",
       "<b>The road north.</b> A ledger puzzle, Hennet Brisk's salt caravan and its humming seed, and <b>Brannoc Vane</b> of the Rimehand, a cheerful gravedigger in a coat of fallen towns' flags who makes you an Offer every time you meet. The Long White in four legs, with warmth to spend and roads you don't take. Weatherend, Maelis, and the pass.",
