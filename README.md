@@ -111,7 +111,7 @@ Run a few seeds after any change, and after adding a chapter.
 
 ## Reward codes
 
-Five milestones (finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, reach level 50, and Twinbreaker once Rimehold is in) give the player a code such as `LR-8ENWV-VR104-Y2J5Y-RN33G`, once per browser. It holds the milestone, a random id for that browser, the day and the hours played, sealed with HMAC-SHA256. The rewards and claim link live in `REWARDS` and `CLAIM_URL` in `index.html`; add new milestones at the end of the list only. Names of players who claimed go in `WAYFARERS`.
+Five milestones (finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, reach level 50, and Twinbreaker once Rimehold is in) give the player a code such as `LR-8ENWV-VR104-Y2J5Y-RN33G`, once per browser. It holds the milestone, a random id for that browser, the day and the hours played, sealed with HMAC-SHA256. The rewards and claim link live in `REWARDS` and `CLAIM_FORM` (the Google Form link; empty falls back to the itch.io page) in `index.html`; add new milestones at the end of the list only. Names of players who claimed go in `WAYFARERS`.
 
 Check a code with `node tools/reward-codes.js <code>`. The seal catches typos and casual tampering, but the key ships in the game, so a determined player could forge one: keep rewards small and claims one per player per milestone.
 

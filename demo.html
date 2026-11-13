@@ -2329,14 +2329,16 @@ body.pv-open { overflow: hidden; }
   // To change a reward, edit `gift` below. To add a milestone, add a row at the END (the number is its
   // place in this list and is written into the code, so never reorder or remove rows).
   const RW_KEY = "rimed-lantern/" + "the-axe-remembers/" + "LR1";
-  const CLAIM_URL = FULL_URL;
+  // The Google Form players send codes through (code, a name for the credits, an email). Until it's set, claims point to the itch.io page.
+  const CLAIM_FORM = "";
+  const CLAIM_URL = CLAIM_FORM || FULL_URL;
   const REWARDS = [
-    { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "Your name in the game's list of Wayfarers.", test: (c) => rwCh(c, "labyrinth") },
-    { id: "siege", name: "Rahdaria Stands", how: "Finish The Siege of Rahdaria.", gift: "A printable Relicsong card, made for the players who held Rahdaria.", test: (c) => rwCh(c, "rahdaria") },
-    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A free download key for the full game on itch.io, to keep or give to a friend.", test: (c) => rwCh(c, "unmapped") },
-    { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "The title Ringwarden beside your name in the Wayfarers, and a printable Relicsong card.", test: () => lv() >= LV_MAX },
+    { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "A wallpaper of the world map.", test: (c) => rwCh(c, "labyrinth") },
+    { id: "siege", name: "Rahdaria Stands", how: "Finish The Siege of Rahdaria.", gift: "Your name in the game's credits, in the list of Wayfarers.", test: (c) => rwCh(c, "rahdaria") },
+    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A download of the game's soundtrack or art pack.", test: (c) => rwCh(c, "unmapped") },
+    { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "A printable Relicsong card made only for players who reach level 50.", test: () => lv() >= LV_MAX },
     // Twinbreaker comes with the Rimehold chapter: it switches on by itself once that feat exists.
-    { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A printable Relicsong card of the Hollow Twin.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
+    { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A half-price itch.io key for the full game, to give to a friend.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
   ];
   // Players who claimed a reward, as Adrian adds them: ["Name", "Ringwarden"] (the title is optional).
   const WAYFARERS = [];
@@ -2414,7 +2416,7 @@ body.pv-open { overflow: hidden; }
     return got;
   }
   const rwCodeHTML = (R) => '<span class="rw-code"><b class="rs-code">' + J.rw[R.id].code + '</b> <button class="ghost rw-copy" type="button" data-code="' + J.rw[R.id].code + '">Copy</button></span>';
-  const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">the game\'s itch.io page</a>';
+  const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">' + (CLAIM_FORM ? "the claim form" : "the game\'s itch.io page") + "</a>";
   // A line for the chapter-complete card.
   const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + R.gift + " To claim it, send the code to Adrian through " + rwClaim + ". It's in your journal too.</p>").join("");
   function rwSection() {
@@ -2426,7 +2428,7 @@ body.pv-open { overflow: hidden; }
     };
     return '<section><h3>Reward codes · ' + REWARDS.filter(R => J.rw[R.id]).length + " of " + REWARDS.length + "</h3>" +
       '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here. Send it to Adrian through ' + rwClaim +
-      " with the name you'd like to be known by, and Adrian will get your reward to you. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" +
+      " with the name you'd like in the credits and an email, and Adrian will send your reward. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" +
       '<ul class="marks">' + REWARDS.map(item).join("") + "</ul>" +
       (WAYFARERS.length ? '<h4 class="p-set">Wayfarers</h4><p class="j-sub">Players who carried a code out of the game.</p><p>' + WAYFARERS.map(([n, t]) => "<b>" + esc(n) + "</b>" + (t ? " <i>" + esc(t) + "</i>" : "")).join(" · ") + "</p>" : "") + "</section>";
   }
@@ -2442,9 +2444,9 @@ body.pv-open { overflow: hidden; }
   // Newest first. A release adds an entry at the top.
   const NEWS = [
     { ver: "78", name: "Reward Codes", date: "13 Nov 2026", items: [
-      "<b>Some milestones are worth something outside the game now.</b> Finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, or reach level 50, and you get a <b>reward code</b>. Send it to Adrian through the game's itch.io page to claim a real reward: your name in the list of Wayfarers, a printable Relicsong card, or a free download key for the full game.",
+      "<b>Some milestones are worth something outside the game now.</b> Finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, or reach level 50, and you get a <b>reward code</b>. Send it to Adrian to claim a real reward: a world-map wallpaper, your name in the credits, the soundtrack or art pack, or a printable Relicsong card made only for level 50.",
       "Your codes are in the journal under <b>Reward codes</b>, with a Copy button. If you've already passed a milestone, the code turns up the next time you play. Each code can be claimed once, and rewards are always free: you never pay to get one, and they never go by luck.",
-      "<b>Twinbreaker</b> gets a code of its own when the Rimehold chapter arrives."] },
+      "<b>Twinbreaker</b> gets a code of its own when the Rimehold chapter arrives: a half-price key for a friend."] },
     { ver: "76", name: "The Wandering Board", date: "11 Nov 2026", items: [
       "<b>The roads back are a board now, if you want them to be.</b> Pick <b>Walk the Wandering Board</b> and choose a region: a board of squares from a crossroads up to the top of the road, and your marker at the bottom. Move up one row at a time, or fold it away and come back.",
       "<b>You don't know what's ahead.</b> The squares in front of you are only sounds (haggling, woodsmoke, something breathing in the rocks) until you stop and listen, which costs a watch.",
