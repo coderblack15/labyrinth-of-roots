@@ -1296,6 +1296,10 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fd-mad { animation: fdpulse .9s ease-in-out infinite; transform-origin: 0 0; }
 .fd-aura { animation: fdbreathe 3.2s ease-in-out infinite; transform-origin: 0 0; }
 .field-card.fd-quake .fd-map { animation: fdshake .6s ease; }
+.fd-warn { animation: fdwarn 1.1s ease-in-out infinite; }
+@keyframes fdwarn { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.fd-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: fdflame .5s ease-in-out infinite alternate; }
+@keyframes fdflame { from { transform: scaleY(.9) skewX(-3deg); } to { transform: scaleY(1.08) skewX(3deg); } }
 @keyframes fdspin { to { transform: rotate(360deg); } }
 @keyframes fdpulse { 50% { transform: scale(1.12); opacity: .6; } }
 @keyframes fdbreathe { 50% { transform: scale(1.08); opacity: .6; } }
@@ -1331,7 +1335,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fd-glint { animation: fdglint 4.5s ease-in-out infinite; }
 @keyframes fdflag { 50% { transform: skewY(4deg) scaleX(.94); } }
 @keyframes fdglint { 0%, 70%, 100% { opacity: 0; } 80% { opacity: .9; } }
-@media (prefers-reduced-motion: reduce) { .fd-tok { transition: none; } .fd-calm, .fd-mad, .fd-aura, .field-card.fd-quake .fd-map, .fd-flag, .fd-glint, .fd-wheel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .fd-tok { transition: none; } .fd-calm, .fd-mad, .fd-aura, .field-card.fd-quake .fd-map, .fd-flag, .fd-glint, .fd-wheel, .fd-warn, .fd-flame { animation: none; } }
 .mk-row { display: flex; flex-direction: column; gap: 6px; }
 .mk-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .mk-cols { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -2622,11 +2626,18 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
-    { ver: "82", name: "The Root Summons and Dunvaar", date: "13 Nov 2026", items: [
+    { ver: "83", name: "The Root Summons and Dunvaar", date: "13 Nov 2026", items: [
       "<b>A new chapter after the Welling</b>, Parts CV to CXI, that plays two ways, from Adrian's design doc. Signed the contract? It's <b>the Root Summons</b>. Refused it, or ran out of time? It's <b>Dunvaar</b>.",
       "<b>The Root Summons.</b> Ammeroth calls, and you go down through the roots to the tears where the broken world leaks into the put-back one. A new puzzle: turn the things caught in a tear back the way they were, with Ringsight to look, a few times. Each tear holds something somebody loved: stitch it shut, or leave them a crack. Maelis, Hollow Holm and the Unborn, and Ammeroth's last call.",
       "<b>Dunvaar.</b> The drowned kingdom under the glacier: a court where one of three opened the Queen's stair, three knights of the thaw, Brannoc Vane's biggest Offer yet, Ithra Coldvein in two forms and a real-time flood, a seal of turning rings, and a second chance at the contract.",
       "<b>On the roads back:</b> small tears to mend after the summons, and after Dunvaar, a new region with its own Wandering Board, beasts, a town and a hidden thing. 16 new feats in an <b>After the Contract</b> pursuit."] },
+    { ver: "82", name: "Ground That Moves", date: "13 Nov 2026", items: [
+      "<b>Four big battle maps</b>, taller than the old ones and built in parts that tell you where you are, with the names painted on: a wall, then a breach, then a field. They fit a phone held upright, and zoom like the rest.",
+      "<b>The Calving Stair</b>, on the glacier below Rimehold: blocks of ice come down one marked column at a time, so get out of the line, or keep your foe in it. Light the old Rimehand brazier to turn the ice round it to warm stone.",
+      "<b>The Counting Vault</b>, in the Undervaults, where the race rivals fight you: the walls stand on gears and turn every third round. Pull a lever to turn them when it suits you, and catch a foe where a wall comes up. Two chests wait behind walls that only open on the half-turn.",
+      "<b>The Drowned Quay</b>, on Rahdaria's harbour in the Welling: the tide takes a row every second round, and there are people still on the quay. Get them up the sea stair before the water does. The quay remembers who you saved.",
+      "<b>The Twice-Fought Field</b>, under the old wall above the Ostle: a Cascade thread turns the field between the hour before a battle and the hour after it. The breach closes, the orchard stands up, and every route changes.",
+      "Whatever is about to change is marked on the map the round before, and five new feats." ] },
     { ver: "81", name: "The Welling", date: "13 Nov 2026", items: [
       "<b>A new chapter after Rimehold: The Welling</b>, Parts C to CIV. Whichever way the contract went, the spilled time ran downhill to the sea, and the sea drank it and woke up. It isn't a creature and it hasn't got a face. It's the water, and it wants everything that breathes to stop.",
       "<b>Fights against the water run in real time.</b> Short surges of ten to twenty seconds, with a breath between: tap the grey tongues before they reach the line. Big targets for phones, and a <b>Slow Tide</b> setting in your journal.",
@@ -3335,6 +3346,11 @@ body.pv-open { overflow: hidden; }
     { id: "fdsix", name: "Well-Travelled Ground", desc: "Fight on six different fields on one journey.", test: () => !!S.fd && S.fd.fields.length >= 6, prog: () => [Math.min(6, S.fd ? S.fd.fields.length : 0), 6] },
     { id: "fdford", name: "Wet to the Knee", desc: "Win a fight on Ostle Ford.", test: () => false },
     { id: "fdblank", name: "Off the Edge of the Map", desc: "Win a fight on the Blank.", test: () => false },
+    { id: "fdcalve", name: "The Glacier's Share", desc: "Let a falling block on the Calving Stair hit your foe.", test: () => false },
+    { id: "fdgear", name: "Keeper's Hand", desc: "Catch a foe where a gear wall comes up in the Counting Vault.", test: () => false },
+    { id: "fdquay", name: "Nobody Left on the Quay", desc: "Get all three groups up the sea stair in one fight on the Drowned Quay.", test: () => false },
+    { id: "fdtwice", name: "Before and After", desc: "Win on the Twice-Fought Field after the Cascade has turned it twice.", test: () => false },
+    { id: "fdbig", name: "Ground That Moves", desc: "Win a fight on all four of the big fields.", test: () => !!S.fd && (S.fd.big || []).length >= 4, prog: () => [Math.min(4, S.fd && S.fd.big ? S.fd.big.length : 0), 4] },
     { id: "fdbump", name: "Nobody Drew That", desc: "Walk into a wall on the Blank before anyone had inked it in.", test: () => false },
     { id: "fdink", name: "Field Draughtsman", desc: "Ink in twelve squares of the Blank on one journey.", test: () => !!S.fd && (S.fd.inked || 0) >= 12, prog: () => [Math.min(12, S.fd ? S.fd.inked || 0 : 0), 12] },
     { id: "wbfirst", name: "Over the Hill", desc: "Take the top of a Wandering Board.", test: () => false },
@@ -3487,9 +3503,11 @@ body.pv-open { overflow: hidden; }
       ids: ["wbfirst", "wbwonder", "wbsketch", "wbcache"] },
     { id: "rimehold", name: "Rimehold", ver: "28", desc: "The north, the Labyrinth inside out, the Hollow Twin and the contract.",
       ids: ["rmtrack", "rmkindle", "rmgate", "rmrings", "rmforks", "rmroots", "rmtalk", "rmmirrors", "rmwitness", "rmwardens", "rmmirror", "rmrewind", "rmweights", "rmbrannoc", "rmwhite", "rmtwin1", "rmtwin2", "rmtwin3", "rmtwin4", "rmblade", "rmfree", "rmgraft", "rmclause", "rmbind", "rmmelt", "rmover", "rmseed", "rmfair", "rmallhome", "rmknife"] },
+    { id: "bigfields", name: "Ground That Moves", ver: "30", desc: "Four big battle maps in zones, where the ground changes while you fight: the Calving Stair, the Counting Vault, the Drowned Quay and the Twice-Fought Field.",
+      ids: ["fdcalve", "fdgear", "fdquay", "fdtwice", "fdbig"] },
     { id: "welling", name: "The Welling", ver: "29", desc: "The sea that woke up hungry: surges, the Tide Map, three evacuations and the eye.",
       ids: ["wlcut", "wlharbour", "wlraft", "wlstair", "wlhold", "wlnone", "wleye", "wlcamp", "wlsaved", "wlscars"] },
-    { id: "after", name: "After the Contract", ver: "30", desc: "The Root Summons after the Binding, Dunvaar after the Deep Melt: you'll need both endings for all of it.",
+    { id: "after", name: "After the Contract", ver: "31", desc: "The Root Summons after the Binding, Dunvaar after the Deep Melt: you'll need both endings for all of it.",
       ids: ["rscall", "rsblind", "rsbell", "rsmaelis", "rsholm", "rsheir", "rsfree", "rsroad", "dvcourt", "dvbetray", "dvknights", "dvbrannoc", "dvithra", "dvseal", "dvsign", "dvrefuse"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
@@ -5863,7 +5881,7 @@ body.pv-open { overflow: hidden; }
     const have = roamRegions().filter(r => FIELDS[r]);
     const out = F50_PREF.filter(r => have.includes(r));
     for (const r of have) if (out.length < F50_LEGS && !out.includes(r)) out.push(r);
-    for (const r of Object.keys(FIELDS)) if (out.length < F50_LEGS && !out.includes(r)) out.push(r);
+    for (const r of Object.keys(FIELDS)) if (out.length < F50_LEGS && !out.includes(r) && !FIELDS[r].big) out.push(r);
     return out.slice(0, F50_LEGS);
   }
   const f50Warm = (L, x, y) => Math.abs(x - L.cache[0]) + Math.abs(y - L.cache[1]);
@@ -14216,7 +14234,8 @@ body.pv-open { overflow: hidden; }
     h: ["High ground", "Costs 2 steps to climb. +1 to hit and +1 damage against anyone below. A foe shoved off it falls."],
     "~": ["Sinking ground", "Whoever is in it is stuck: −3 to their blows and +3 to blows at them, and 2 steps to get out. Shove a foe in."],
     i: ["Black ice", "Step onto it and you slide the same way until something stops you: a wall, a block, a warm stone or another body. Foes slide too, and they don't plan for it."],
-    o: ["Warm stone", "A stone that holds a little heat. Anyone sliding stops on it."]
+    o: ["Warm stone", "A stone that holds a little heat. Anyone sliding stops on it."],
+    w: ["Deep water", "Nobody can stand in it. It doesn't block a shot. Shove a foe in and the water has it for a moment, and lets it go somewhere worse for wear."]
   };
   // Sliding ice (2026-11-13, Adrian's physics rules, the first one). Whoever steps onto black ice keeps going
   // the same way until the next square would stop them; a warm stone or any ground that isn't ice stops them on it.
@@ -14225,7 +14244,7 @@ body.pv-open { overflow: hidden; }
     let n = 0, by = null;
     while (fdTile(fd, x, y) === "i") {
       const nx = x + dx, ny = y + dy, t = fdTile(fd, nx, ny);
-      if (t === null || t === "#" || t === "c" || t === "h") { by = t === "c" ? "a block of ice" : t === "h" ? "the ledge" : "the wall"; break; }
+      if (t === null || t === "#" || t === "c" || t === "h" || t === "w") { by = t === "c" ? "a block of ice" : t === "h" ? "the ledge" : t === "w" ? "the water's edge" : "the wall"; break; }
       if (occ(nx, ny)) { by = "body"; break; }
       x = nx; y = ny; n++;
     }
@@ -14254,6 +14273,9 @@ body.pv-open { overflow: hidden; }
     // The east: Ostle Ford's water-meadow green, and the Blank's unfinished paper and millpond ink.
     hinge:     { g: "#66704a", gd: "#4a5434", gl: "#848e62", cov: "#4f6a2e", tall: "#4a3a28", tallL: "#7a6448", rug: "#5c6040", hi: "#8a9466", cliff: "#3e4630", sink: "#3a5a5c", sinkD: "#16282a", acc: "#b8c47a" },
     unmapped:  { g: "#dccba4", gd: "#c2b089", gl: "#efe3c4", cov: "#2f261c", tall: "#2a2018", tallL: "#5a4a38", rug: "#c9b68e", hi: "#e8dab6", cliff: "#8a7450", sink: "#26222c", sinkD: "#0a080e", acc: "#3b2a18" },
+    // The big fields (2026-11-13): the Counting Vault's slate and brass, the Drowned Quay's wet stone.
+    vault:     { g: "#5c5b60", gd: "#3e3e44", gl: "#7a7a82", cov: "#6e6656", tall: "#3a3a40", tallL: "#7e7e88", rug: "#4e4c4a", hi: "#88888f", cliff: "#2a2a2e", sink: "#2a3a44", sinkD: "#101820", acc: "#c9a24a" },
+    quay:      { g: "#6e7472", gd: "#4e5654", gl: "#8c9290", cov: "#6a5640", tall: "#4a4440", tallL: "#8a8078", rug: "#5e5a50", hi: "#9a9e98", cliff: "#3a3e3c", sink: "#3f5f68", sinkD: "#14303a", acc: "#8aa89a" },
     orchard:   { g: "#9a8458", gd: "#76643f", gl: "#b39d6e", cov: "#8c7a5a", tall: "#4a3a28", tallL: "#7a6448", rug: "#7a6a48", hi: "#b8a678", cliff: "#5a4a30", sink: "#3d4a3a", sinkD: "#1c2418", acc: "#a39a5a" }
   };
   // One hand-built field per region. style picks the art: sand, fen, scree, stone or deck.
@@ -14288,6 +14310,34 @@ body.pv-open { overflow: hidden; }
       grid: ["~~..c..", "~..r..h", "..#..hh", ".c..~..", "..rr~.c", "c......"], you: [2, 5], foe: [5, 0] },
     reach: { name: "The Waist", style: "deck", blurb: "The open deck amidships: crates lashed down, coils of line, the mainmast, an open hatch, and the quarterdeck behind.",
       grid: ["hhhhhhh", "..c.c..", ".r.#.~.", "..c....", ".r...rc", "c..c..."], you: [3, 5], foe: [3, 0] },
+    // The big fields (2026-11-13, "Can you do better?"): taller maps in zones that tell a story, with ground that moves
+    // while you fight (dyn), things on the field you can use (spots: [x, y, kind]) and zone names painted on the map.
+    // Picked by fdPick (rotation with the region's own field, never twice running) or set on a story fight.
+    calving: { name: "The Calving Stair", big: true, style: "scree", pal: "rime",
+      blurb: "Below Rimehold's gate the Rimehand cut a stair into the glacier to bring their sledges down, and then the glacier moved. Their wall still stands broken across the Notch at the top. The face below is black ice, with the warm stones they set to stop the sledges, and an old iron brazier halfway down. At the bottom the meltpool smokes in the cold. Every so often the ice above the Notch groans.",
+      how: "<b>The Calving Stair.</b> Every few rounds a block of the glacier lets go and comes down the face in one column, hitting everything in its line until a rock stops it. The column is marked the round before: get out of it, or keep your foe in it. Stand next to the Rimehand brazier and light it: the ice round it turns to warm stone, and the heat mends you and takes the edge off any Chill.",
+      grid: ["##hhhhh##", "#hh.c.hh#", "..c...c..", "iiio.oiii", "ii#iiii#i", "oiii#iiio", "i#iioii#i", "iiii.iiii", "..r.i.r..", ".~~...~c.", "c~ww~..r.", "..~w~...."],
+      you: [7, 11], foe: [4, 1], spots: [[4, 5, "brazier"]], dyn: { k: "calve", from: 3, every: 3, y0: 3, cols: [1, 2, 3, 5, 6, 7] },
+      zones: [[0, "The Notch"], [3, "The Glass Face"], [9, "The Meltpool"]] },
+    vault: { name: "The Counting Vault", big: true, style: "stone", pal: "vault",
+      blurb: "Under the outer ring the old keepers kept a count of everything the Labyrinth ever took, and the vault is still counting. Its walls stand on brass-banded gears the size of millwheels. Every so often they wind round, and the room is a different room. There are levers set in the floor, and in the two top corners, behind walls that only open on the half-turn, little iron chests that nobody has opened.",
+      how: "<b>The Counting Vault.</b> The brass-banded walls stand on gears. Every third round they wind round: the shut ones open and the open ones shut, and anyone standing where a wall comes down is thrown aside and bruised. The walls that will move are marked the round before. Stand next to a lever and pull it to turn them now (it starts the count again). Each corner chest only opens onto the room on one half of the turn.",
+      grid: ["$1#...#2$", "#.#.h.#.#", "..1...2..", "#.#c.c#.#", "..2.#.1..", "..1.#.2..", "#.#c.c#.#", "..2...1..", ".c#...#c.", "..#...#.."],
+      you: [4, 9], foe: [4, 0], spots: [[0, 0, "cache"], [8, 0, "cache"], [3, 9, "lever"], [5, 1, "lever"]], dyn: { k: "gears", from: 3, every: 3 },
+      zones: [[0, "The Gear Gallery"], [3, "The Counting Floor"], [7, "The Keepers' Stair"]] },
+    quay: { name: "The Drowned Quay", big: true, style: "stone", pal: "quay",
+      blurb: "Rahdaria's fish quay, or what the Welling has left of it. The sea stair climbs to the town at the back, the crane and the market stalls stand in the middle, and the slip at the front runs down into water that is moving the wrong way. There are still people on the quay, holding on to the stalls.",
+      how: "<b>The Drowned Quay.</b> The tide takes a row every second round: dry quay goes awash (sinking ground), and awash goes under (deep water: nobody can stand in it, and whoever's in it is thrown up the quay). The row it'll take next is marked. Stand next to anyone still on the quay and get them up the sea stair, as your action. Whoever the water reaches first is gone.",
+      grid: ["#..hhh..#", "#c.hhh.c#", "...c.c...", "r.......r", ".c..#..c.", "...r.r...", "c.......c", ".r.c.c.r.", ".........", "~~.~~~.~~", "www~.~www", "wwww.wwww"],
+      you: [4, 2], foe: [4, 8], spots: [[2, 8, "folk"], [7, 6, "folk"], [4, 5, "folk"]], deco: [[4, 4, "crane"]], dyn: { k: "tide", from: 2, every: 2, rows: [9, 8, 7, 6, 5] },
+      zones: [[0, "The Sea Stair"], [3, "The Fish Quay"], [9, "The Slip"]] },
+    twice: { name: "The Twice-Fought Field", big: true, style: "orchard", pal: "siege", sgArt: true, bands: [[0, 2, "siege"]],
+      blurb: "The field under the old wall above the Ostle, where two hosts met before the Cascade, and a Cascade thread is still caught on it. Most of the time it's what the battle left: the wall breached, the orchard burned to stumps, the ground cratered. But every so often the thread turns over, and it's the hour before the battle again, the wall whole and the orchard green, and everything on the field has to be somewhere when it turns.",
+      how: "<b>The Twice-Fought Field.</b> Every third round the Cascade turns the field over, between after the battle (a breach in the middle of the wall, stumps, craters of mud) and the hour before it (the wall whole with a gate at each end, the orchard standing in rows). The squares that will change are marked the round before, and anyone standing where a tree or a wall comes back is thrown aside and bruised. Routes, cover and lines of sight all turn with it.",
+      grid: ["h.hhhhh.h", "h.#...#.h", "###rrr###", "..c.r.c..", "...r.r...", ".~..c..~.", "c..~.~..c", ".r.....r.", "..~.c.~..", ".c.....c.", "..r.~.r..", "........."],
+      then: ["h.hhhhh.h", "h.#...#.h", "#.#####.#", ".........", ".#.#.#.#.", ".........", "c.#.#.#.c", ".........", ".#.#.#.#.", "cc.....cc", "..#.#.#..", "........."],
+      you: [4, 11], foe: [4, 0], dyn: { k: "flip", from: 3, every: 3 },
+      zones: [[0, "The Ostle Wall"], [3, "The Breach"], [5, "The Burnt Orchard"]], zonesThen: [[0, "The Ostle Wall"], [3, "The Gate Lane"], [5, "The Orchard"]] },
     // The east runs on the rahdaria region key, so these two are picked by part (fdEastKey), not by region.
     hinge: { name: "Ostle Ford", style: "fen", deco: [[4, 0, "wheel"]], blurb: "The ford below the mill where the Ostle runs wide and shallow. The millrace is deep, the hedgebanks are thick, and the only dry way across is the line of the old ford.",
       grid: ["cc.~#hh", "...~.hh", "r......", "c.~~.c.", "..~..r.", "c.~...c"], you: [1, 5], foe: [5, 2] },
@@ -14315,6 +14365,8 @@ body.pv-open { overflow: hidden; }
   };
   // Medallion emblems, drawn in a box about 36 across.
   const FD_EMB = {
+    lantern: '<path d="M-6 -14 h12 l2 4 h-16Z"/><path d="M-8 -10 h16 v16 q-8 6 -16 0Z"/><path d="M-4 -6 v10 M4 -6 v10" stroke="#ffcf6b" stroke-width="1.6" fill="none"/><circle cy="-1" r="3" fill="#ffcf6b" stroke="none"/><path d="M-3 -14 q3 -6 6 0" fill="none" stroke-width="1.8"/>',
+    pick: '<path d="M-15 -6 Q0 -16 15 -6 L13 -3 Q0 -11 -13 -3Z"/><path d="M-1 -10 L3 -10 L4 14 L-2 14Z"/><circle cx="1" cy="-9" r="1.6" fill="#ffcf6b" stroke="none"/>',
     otter: '<path d="M-15 6 Q-12 -2 -4 -2 Q2 -8 9 -8 Q15 -8 15 -3 Q15 1 10 2 Q6 8 -2 8 Q-8 10 -15 6Z"/><path d="M-15 6 Q-18 12 -11 13" fill="none" stroke-width="2.4" stroke-linecap="round"/><circle cx="10" cy="-5" r="1.3" fill="#ffcf6b" stroke="none"/><path d="M14 -2 l4 -1 M14 0 l4 1" fill="none" stroke-width=".8"/>',
     cat: '<path d="M-13 10 Q-14 -2 -6 -4 Q0 -5 4 -4 L5 -12 L9 -6 L12 -12 L13 -3 Q16 2 12 6 Q8 8 4 6 Q2 11 -4 11Z" stroke-dasharray="3 1.4"/><path d="M-13 8 Q-20 0 -15 -8" fill="none" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 2"/><circle cx="9" cy="-1" r="1.4" fill="#ffcf6b" stroke="none"/>',
     canine: '<path d="M-12 8 L-6 -2 L-9 -13 L-2 -7 L4 -8 L8 -14 L9 -4 L15 1 L14 5 L7 5 L2 11 L-4 10Z"/><circle cx="6" cy="-2" r="1.5" fill="#ffcf6b"/>',
@@ -14514,17 +14566,35 @@ body.pv-open { overflow: hidden; }
   const fdState = () => { const D = S.fd = S.fd || {}; for (const [k, v] of [["seen", false], ["won", 0], ["fields", []], ["w", false], ["charges", 0], ["shoves", 0], ["traps", 0], ["turned", 0], ["siege", []], ["sgseen", []]]) if (D[k] === undefined) D[k] = v; return D; };
   const fdSteps = (round) => (S.f50boots ? 3 : 2) + (round === 1 && hasGear("porctower") ? 1 : 0);
   // Half the East (parts 76–82) and the Unmapped (83–89) run on the rahdaria key; on the story road they get their own ground.
+  // Road fights sometimes go to one of the big fields: the Calving Stair in the north, the Twice-Fought Field below the
+  // Ostle wall, and the Drowned Quay on the Welling coasts. Never the same big field twice running.
+  function fdPick(reg, roam) {
+    const D = fdState(), east = !roam && fdEastKey(reg), last = D.lastBig || "";
+    const pick = (k, odds) => k !== last && d(100) <= odds ? (D.lastBig = k) : null;
+    let k = null;
+    if (east === "unmapped") return east;
+    if (east === "hinge") k = pick("twice", 50);
+    else if (reg === "rime") k = pick("calving", 50);
+    else if (!roam && S.part >= 99 && S.part <= 104 && (reg === "reach" || reg === "rahdaria")) k = pick("quay", 70);
+    else if (roam && reg === "rahdaria") k = pick("twice", 25);
+    else if (roam && (reg === "reach" || reg === "bathyrra") && S.wl && S.wl.on) k = pick("quay", 30);
+    if (!k && last && (east || ["rime", "rahdaria", "reach", "bathyrra"].includes(reg))) D.lastBig = "";
+    return k || east || null;
+  }
   const fdEastKey = (reg) => reg === "rahdaria" && !S.roam && S.part >= 76 && S.part <= 89 ? (S.part <= 82 ? "hinge" : "unmapped") : null;
   // The Blank: squares nobody has drawn yet. fdFog(fd, x, y) is true while one is still blank.
   const fdFog = (fd, x, y) => !!(fd.fog && fd.fog.has(x + "," + y));
   function fdInk(fd, x, y, r = 1) { if (!fd.fog) return 0; let n = 0; for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (fd.fog.delete((x + dx) + "," + (y + dy))) n++; return n; }
   const fdOn = (F) => !!(!F.company && !S.noField && ((F.field && FIELDS[F.field]) || (F.road && F.reg && FIELDS[F.reg])));
   const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-  const fdTile = (fd, x, y) => x < 0 || y < 0 || x >= FW || y >= FH ? null : fd.G[y][x];
+  // A field's size comes from its grid (the first fields are all 7 × 6; the big ones are taller). Gear walls ("1", "2")
+  // stand or lie down with the vault's half-turn (fd.ph).
+  const fdW = (fd) => fd.G[0].length, fdH = (fd) => fd.G.length;
+  const fdTile = (fd, x, y) => { if (x < 0 || y < 0 || y >= fd.G.length || x >= fd.G[0].length) return null; const t = fd.G[y][x]; return t === "1" ? (fd.ph ? "." : "#") : t === "2" ? (fd.ph ? "#" : ".") : t === "$" ? "." : t; };
   function fdCost(fd, from, to, fly) {
     const t = fdTile(fd, to[0], to[1]);
     if (t !== null && fd.guess && fdFog(fd, to[0], to[1])) return 1;  // planning a walk into the blank: it looks like open ground
-    if (t === null || t === "#") return Infinity;
+    if (t === null || t === "#" || t === "w") return Infinity;
     if (fly) return 1;
     if (fdTile(fd, from[0], from[1]) === "~") return 2;
     if (t === "r") return 2;
@@ -14602,7 +14672,8 @@ body.pv-open { overflow: hidden; }
     let seed = [...fd.key].reduce((a, ch) => a * 31 + ch.charCodeAt(0), 7) % 2147483646 + 1;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     const rr = (a, b) => a + rnd() * (b - a);
-    const p = FD_PAL[fd.f.pal || fd.key] || FD_PAL.rahdaria, sty = fd.f.style, T = FT;
+    const p = FD_PAL[fd.f.pal || fd.key] || FD_PAL.rahdaria, T = FT, FWd = fdW(fd), FHd = fdH(fd);
+    let sty = fd.f.style;
     const blob = (cx, cy, r, fill, extra = "") => { let s = ""; for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, rad = r * rr(.72, 1.08); s += (i ? "L" : "M") + (cx + Math.cos(a) * rad).toFixed(1) + " " + (cy + Math.sin(a) * rad * .82).toFixed(1); } return '<path d="' + s + 'Z" fill="' + fill + '" ' + extra + "/>"; };
     const pebbles = (x0, y0, n, big = 1) => { let s = ""; for (let i = 0; i < n; i++) { const cx = x0 + rr(6, T - 6), cy = y0 + rr(6, T - 6), r = rr(1.5, 4.5) * big; s += '<ellipse cx="' + (cx + 1.5) + '" cy="' + (cy + 2) + '" rx="' + r + '" ry="' + r * .7 + '" fill="#000" opacity=".28"/><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + r + '" ry="' + r * .75 + '" fill="url(#fdStone)"/>'; } return s; };
     const tufts = (x0, y0, n, col) => { let s = ""; for (let i = 0; i < n; i++) { const cx = x0 + rr(8, T - 8), cy = y0 + rr(10, T - 6); for (let j = 0; j < 4; j++) { const a = rr(-.7, .7), h = rr(5, 10); s += '<path d="M' + cx + " " + cy + " q" + a * 3 + " " + (-h / 2) + " " + a * h + " " + (-h) + '" stroke="' + col + '" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".85"/>'; } } return s; };
@@ -14693,7 +14764,18 @@ body.pv-open { overflow: hidden; }
     function tile(x, y, t) {
       const x0 = x * T, y0 = y * T, cx = x0 + T / 2, cy = y0 + T / 2;
       let s = "";
-      if (["siege", "camp", "orchard"].includes(sty)) { const v = siegeTile(x0, y0, cx, cy, t); if (v !== null) return v; }
+      sty = ((fd.f.bands || []).find(b => y >= b[0] && y <= b[1]) || [0, 0, fd.f.style])[2];
+      if (t === "1" || t === "2" || t === "$") t = ".";
+      if (t === "#" && (fd.f.spots || []).some(q => q[0] === x && q[1] === y)) return '<ellipse cx="' + (cx + 3) + '" cy="' + (cy + 22) + '" rx="20" ry="7" fill="#000" opacity=".35"/><rect x="' + (cx - 14) + '" y="' + (cy + 12) + '" width="28" height="12" rx="3" fill="url(#fdStone)" stroke="#1c140d" stroke-width="1.2"/>';
+      if (t === "w") { // deep water: dark, moving, with a lip of foam where it meets anything that isn't water
+        s += '<rect x="' + (x0 - .5) + '" y="' + (y0 - .5) + '" width="' + (T + 1) + '" height="' + (T + 1) + '" fill="' + p.sinkD + '"/>';
+        for (let i = 0; i < 3; i++) { const yy = y0 + 12 + i * 18 + rr(-3, 3); s += '<path class="fd-swell" d="M' + (x0 + rr(2, 10)) + " " + yy.toFixed(1) + " q8 -5 16 0 t16 0 t16 0" + '" stroke="' + p.sink + '" stroke-width="1.6" fill="none" opacity=".8"/>'; }
+        for (const [dx, dy] of [[0, -1], [1, 0], [-1, 0], [0, 1]]) { const n = fdTile(fd, x + dx, y + dy); if (n === null || n === "w") continue;
+          const ex = dx === 1 ? x0 + T : x0, ey = dy === 1 ? y0 + T : y0, hz = dy !== 0;
+          s += '<path d="M' + ex + " " + ey + (hz ? " h" + T : " v" + T) + '" stroke="#e8f2f0" stroke-width="3" stroke-opacity=".45" stroke-dasharray="4 3" filter="url(#fdEdge)"/>'; }
+        return s;
+      }
+      if (["siege", "camp", "orchard"].includes(sty)) { const v = siegeTile(x0, y0, cx, cy, t); if (v !== null) return v + (t === "#" && sty === "orchard" && fd.green ? fdCanopy(cx, cy) : ""); }
       if (sty === "paper") return paperTile(x0, y0, cx, cy, t);
       if (t === "i" || t === "o") {
         s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + T + '" height="' + T + '" fill="#3f6176"/><rect x="' + (x0 + 2) + '" y="' + (y0 + 2) + '" width="' + (T - 4) + '" height="' + (T - 4) + '" rx="3" fill="#56809a" opacity=".85"/>';
@@ -14733,21 +14815,33 @@ body.pv-open { overflow: hidden; }
       if (t === "." && rnd() < .12 && sty !== "deck" && sty !== "stone") { const px = x0 + rr(18, T - 18), py = y0 + rr(18, T - 18); s += sty === "sand" ? '<g transform="translate(' + px + " " + py + ") rotate(" + rr(-40, 40) + ')" opacity=".85"><path d="M-12 0h24" stroke="#efe3c6" stroke-width="2.4" stroke-linecap="round"/><circle cx="-12" cy="-2" r="2.4" fill="#efe3c6"/><circle cx="-12" cy="2" r="2.4" fill="#efe3c6"/><circle cx="12" cy="-2" r="2.4" fill="#efe3c6"/><circle cx="12" cy="2" r="2.4" fill="#efe3c6"/></g>' : '<circle cx="' + px + '" cy="' + py + '" r="' + rr(2, 4.5) + '" fill="' + p.acc + '" opacity=".5"/>'; }
       return s;
     }
-    const W = FW * T, H = FH * T;
-    let s = fdDefs(p) + (fd.f.siege ? '<defs><linearGradient id="sgWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p.tallL + '"/><stop offset="1" stop-color="' + p.tall + '"/></linearGradient><linearGradient id="sgGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3c7049"/><stop offset="1" stop-color="#1f3d27"/></linearGradient><linearGradient id="sgSlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a5d6c"/><stop offset="1" stop-color="#232e37"/></linearGradient><linearGradient id="sgLead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c838a"/><stop offset="1" stop-color="#3a3f44"/></linearGradient></defs>' : "") + '<rect width="' + W + '" height="' + H + '" fill="' + p.g + '"/><rect width="' + W + '" height="' + H + '" fill="' + p.gd + '" filter="url(#fdMottle)" opacity=".75"/>';
-    const patch = (k, fill, op) => { let g = ""; for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) if (fd.G[y][x] === k) g += '<rect x="' + (x * T - 3) + '" y="' + (y * T - 3) + '" width="' + (T + 6) + '" height="' + (T + 6) + '" fill="' + fill + '"/>'; return g ? '<g filter="url(#fdRough)" opacity="' + op + '">' + g + "</g>" : ""; };
-    s += patch("h", "url(#fdHi)", 1) + patch("r", p.rug, .55) + patch("~", p.sink, .7);
-    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) {
+    // In the hour before the battle the Twice-Fought Field's orchard is in leaf.
+    function fdCanopy(cx, cy) { let g = '<g filter="url(#fdShadow)">'; for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, r = rr(9, 14); g += '<circle cx="' + (cx + Math.cos(a) * 12).toFixed(1) + '" cy="' + (cy + Math.sin(a) * 10 - 4).toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + (i % 2 ? "#4f7a3a" : "#5f8c44") + '" stroke="#24381a" stroke-width=".8"/>'; } return g + '<circle cx="' + (cx - 5) + '" cy="' + (cy - 9) + '" r="6" fill="#86b060" opacity=".7"/><circle cx="' + (cx + 7) + '" cy="' + (cy + 2) + '" r="2.4" fill="#d8a23a"/><circle cx="' + (cx - 9) + '" cy="' + (cy + 4) + '" r="2.2" fill="#d8a23a"/></g>'; }
+    const W = FWd * T, H = FHd * T;
+    let s = fdDefs(p) + (fd.f.siege || fd.f.sgArt ? '<defs><linearGradient id="sgWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p.tallL + '"/><stop offset="1" stop-color="' + p.tall + '"/></linearGradient><linearGradient id="sgGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3c7049"/><stop offset="1" stop-color="#1f3d27"/></linearGradient><linearGradient id="sgSlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a5d6c"/><stop offset="1" stop-color="#232e37"/></linearGradient><linearGradient id="sgLead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c838a"/><stop offset="1" stop-color="#3a3f44"/></linearGradient></defs>' : "") + '<rect width="' + W + '" height="' + H + '" fill="' + p.g + '"/><rect width="' + W + '" height="' + H + '" fill="' + p.gd + '" filter="url(#fdMottle)" opacity=".75"/>';
+    const patch = (k, fill, op) => { let g = ""; for (let y = 0; y < FHd; y++) for (let x = 0; x < FWd; x++) if (fd.G[y][x] === k) g += '<rect x="' + (x * T - 3) + '" y="' + (y * T - 3) + '" width="' + (T + 6) + '" height="' + (T + 6) + '" fill="' + fill + '"/>'; return g ? '<g filter="url(#fdRough)" opacity="' + op + '">' + g + "</g>" : ""; };
+    s += patch("h", "url(#fdHi)", 1) + patch("r", p.rug, .55) + patch("~", p.sink, .7) + patch("w", p.sinkD, .9);
+    for (let y = 0; y < FHd; y++) for (let x = 0; x < FWd; x++) {
       if (fd.G[y][x] !== "h") continue;
       const x0 = x * T, y0 = y * T;
       if (fdTile(fd, x, y + 1) !== null && fdTile(fd, x, y + 1) !== "h") s += '<path d="M' + x0 + " " + (y0 + T) + " h" + T + " l-2 10 q-" + T / 2 + " 4 -" + (T - 4) + ' 0Z" fill="' + p.cliff + '" filter="url(#fdEdge)"/><path d="M' + x0 + " " + (y0 + T) + " h" + T + '" stroke="#fff" stroke-opacity=".25" stroke-width="1.5"/>';
       if (fdTile(fd, x + 1, y) !== null && fdTile(fd, x + 1, y) !== "h") s += '<path d="M' + (x0 + T) + " " + y0 + " v" + T + " l9 3 q3 -" + T / 2 + " 0 -" + T + 'Z" fill="' + p.cliff + '" opacity=".85" filter="url(#fdEdge)"/>';
     }
-    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) s += tile(x, y, fd.G[y][x]);
+    for (let y = 0; y < FHd; y++) for (let x = 0; x < FWd; x++) s += tile(x, y, fd.G[y][x]);
     s += fdDeco(fd);
+    // The gear walls' tracks in the floor (the walls themselves stand up or lie down on the overlay).
+    for (let y = 0; y < FHd; y++) for (let x = 0; x < FWd; x++) if (fd.G[y][x] === "1" || fd.G[y][x] === "2") {
+      const x0 = x * T, y0 = y * T; s += '<rect x="' + (x0 + 4) + '" y="' + (y0 + T / 2 - 5) + '" width="' + (T - 8) + '" height="10" rx="2" fill="#1a1a1e" opacity=".7"/>';
+      for (let i = 0; i < 6; i++) s += '<rect x="' + (x0 + 7 + i * 9) + '" y="' + (y0 + T / 2 - 3) + '" width="4" height="6" fill="' + p.acc + '" opacity=".55"/>'; }
     s += '<rect width="' + W + '" height="' + H + '" fill="#fff" filter="url(#fdGrain)" opacity=".09" style="mix-blend-mode:overlay"/><rect width="' + W + '" height="' + H + '" fill="url(#fdSun)"/><rect width="' + W + '" height="' + H + '" fill="url(#fdVig)"/>';
-    let gl = ""; for (let x = 1; x < FW; x++) gl += "M" + x * T + " 0V" + H; for (let y = 1; y < FH; y++) gl += "M0 " + y * T + "H" + W;
-    return s + '<path d="' + gl + '" stroke="#000" stroke-opacity=".18" stroke-width="1" fill="none" stroke-dasharray="2 4"/><g class="fd-over"></g><g class="fd-toks"></g>';
+    let gl = ""; for (let x = 1; x < FWd; x++) gl += "M" + x * T + " 0V" + H; for (let y = 1; y < FHd; y++) gl += "M0 " + y * T + "H" + W;
+    s += '<path d="' + gl + '" stroke="#000" stroke-opacity=".18" stroke-width="1" fill="none" stroke-dasharray="2 4"/>';
+    // Zone names, painted on like a campaign map, with a faint line where one part of the field gives onto the next.
+    for (const [zy, name] of (fd.green && fd.f.zonesThen) || fd.f.zones || []) {
+      if (zy) s += '<path d="M6 ' + zy * T + " H" + (W - 6) + '" stroke="#fff4d6" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="10 6"/>';
+      s += '<text x="' + (W - 8) + '" y="' + (zy * T + 15) + '" text-anchor="end" font-size="12.5" letter-spacing="1.5" font-family="Alegreya Sans SC, sans-serif" fill="#fff4d6" fill-opacity=".82" stroke="#120c06" stroke-width="3" stroke-opacity=".7" paint-order="stroke">' + name + "</text>";
+    }
+    return s + '<g class="fd-over"></g><g class="fd-toks"></g>';
   }
   function fdReach(fd) {
     if (!fd.live || fd.steps <= 0) return { best: {} };
@@ -14764,6 +14858,7 @@ body.pv-open { overflow: hidden; }
         s += '<rect x="' + (x0 - .5) + '" y="' + (y0 - .5) + '" width="' + (T + 1) + '" height="' + (T + 1) + '" fill="#ece0c2"/><rect x="' + (x0 - .5) + '" y="' + (y0 - .5) + '" width="' + (T + 1) + '" height="' + (T + 1) + '" fill="#000" opacity=".1" filter="url(#fdGrain)"/>' +
           '<path d="M' + (x0 + 10) + " " + (y0 + T - 12) + " l" + (T - 20) + " -" + (T - 24) + '" stroke="#8a7450" stroke-opacity=".28" stroke-width="1" stroke-dasharray="1 5" fill="none"/>'; }
     }
+    s += fdOverMarks(fd);
     const P = fdReach(fd);
     for (const k in P.best) { const [x, y] = k.split(",").map(Number); if (x === fd.you.x && y === fd.you.y) continue; s += '<rect x="' + (x * T + 3) + '" y="' + (y * T + 3) + '" width="' + (T - 6) + '" height="' + (T - 6) + '" rx="6" fill="#f3d27a" fill-opacity=".14" stroke="#f3d27a" stroke-opacity=".55" stroke-width="1.5"/><text x="' + (x * T + T - 9) + '" y="' + (y * T + 15) + '" font-size="11" fill="#fff4cc" text-anchor="end" font-family="Alegreya Sans SC, sans-serif">' + P.best[k] + "</text>"; }
     for (const k in fd.traps) {
@@ -14791,7 +14886,12 @@ body.pv-open { overflow: hidden; }
     if (who === "foe") return "<b>" + FOE.name + "</b>, on " + R[0].toLowerCase() + "." + (fd.foe.stuck ? " It's stuck fast." : "");
     if (who === "wd") return "<b>" + fd.wd.name + "</b>: " + (fd.wd.grudge ? "angry, and after " + (fd.wd.grudge === "you" ? "you" : "the foe") + "." : "roaming, on nobody's side.") + " Anyone next to it may get hit. Strike it and it hunts you; shove the foe into it and it hunts that.";
     if (fd.traps[x + "," + y]) return "<b>Your " + (fd.traps[x + "," + y].k === "cal" ? "caltrops" : fd.traps[x + "," + y].name) + "</b>, waiting. You won't step on your own.";
-    return "<b>" + R[0] + "</b>. " + R[1];
+    const warn = fd.warn && fd.warn.has(x + "," + y) ? " <b>Marked:</b> " + fd.warnTxt : "";
+    const sp = !who && (fd.spots || []).find(q => q.x === x && q.y === y && !q.done);
+    if (sp) return FD_SPOTS[sp.k].info(fd) + warn;
+    const raw = fd.G[y][x];
+    if (raw === "1" || raw === "2") return "<b>A gear wall</b>, " + (t === "#" ? "standing. Nobody gets through, and it blocks a shot." : "lying in its track. Open ground for now.") + " It turns with the vault." + warn;
+    return "<b>" + R[0] + "</b>. " + R[1] + warn;
   }
   function fdTap(st, ev) {
     const fd = st.fd; if (!fd) return;
@@ -14907,18 +15007,21 @@ body.pv-open { overflow: hidden; }
   async function fdStart(F, st, B) {
     const D = fdState(), key = F.field && FIELDS[F.field] ? F.field : F.reg, f = FIELDS[key], ys = F.fdYou || f.you;
     const fd = st.fd = { key, f, G: f.grid.map(r => r.split("")), you: { x: ys[0], y: ys[1] }, foe: { x: f.foe[0], y: f.foe[1] }, emb: F.fdEmb || BEAST_EMB[B && B.id] || "canine",
-      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(1), mv: [], live: false, wd: null, bow: 0 };
+      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(1), mv: [], live: false, wd: null, bow: 0,
+      ph: 0, spots: (f.spots || []).map(([x, y, k]) => ({ x, y, k, done: false })), next: f.dyn ? f.dyn.from : 0, warn: null, tideI: 0, flips: 0, saved: 0, green: false };
+    if (f.then) fd.Gs = [fd.G, f.then.map(r => r.split(""))];
     if (!D.fields.includes(key)) D.fields.push(key);
     if (D.fields.length >= 6) grant("fdsix");
     if (f.siege && !D.sgseen.includes(key)) { D.sgseen.push(key); if (D.sgseen.length >= 6) grant("sgsix"); }
     // A wanderer: 20% of road fights, 30% at night, never twice running. None on the siege fields.
-    if (f.blank) { fd.fog = new Set(); for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) fd.fog.add(x + "," + y); fdInk(fd, fd.you.x, fd.you.y); fdInk(fd, fd.foe.x, fd.foe.y, 0); }
+    if (f.blank) { fd.fog = new Set(); for (let y = 0; y < fdH(fd); y++) for (let x = 0; x < fdW(fd); x++) fd.fog.add(x + "," + y); fdInk(fd, fd.you.x, fd.you.y); fdInk(fd, fd.foe.x, fd.foe.y, 0); }
     if (!f.siege && F.road && WANDERERS[key] && !D.w && d(100) <= (calNight() ? 30 : 20)) { fd.wdAt = 1 + d(2); D.w = true; } else if (!f.siege) D.w = false;
     const card = el("div", "field-card");
-    card.innerHTML = '<div class="fd-head"><span class="fd-name">' + f.name + '</span><span class="fd-steps"></span></div><svg class="fd-map" viewBox="0 0 ' + FW * FT + " " + FH * FT + '" role="img" aria-label="Battle map: ' + f.name + '"></svg><p class="fd-info"></p><div class="fd-foot"><button type="button" class="ghost map-link fd-mk">Marker: ' + markerName() + '</button><button type="button" class="ghost map-link fd-off">Fight without maps</button></div><div class="fd-pick" hidden></div>';
+    card.innerHTML = '<div class="fd-head"><span class="fd-name">' + f.name + '</span><span class="fd-steps"></span></div><svg class="fd-map" viewBox="0 0 ' + fdW(fd) * FT + " " + fdH(fd) * FT + '" role="img" aria-label="Battle map: ' + f.name + '"></svg><p class="fd-info"></p><div class="fd-foot"><button type="button" class="ghost map-link fd-mk">Marker: ' + markerName() + '</button><button type="button" class="ghost map-link fd-off">Fight without maps</button></div><div class="fd-pick" hidden></div>';
     fd.el = card; fd.svg = card.querySelector("svg"); fd.infoEl = card.querySelector(".fd-info"); fd.stepsEl = card.querySelector(".fd-steps");
     fd.svg.innerHTML = fdArt(fd);
     fdZoom(fd.svg);
+    if (f.big) fd.svg.parentNode.style.maxWidth = "min(560px, " + (74 * fdW(fd) / fdH(fd)).toFixed(1) + "vh)";
     fd.svg.addEventListener("click", (ev) => fdTap(st, ev));
     card.querySelector(".fd-mk").onclick = () => {
       const pk = card.querySelector(".fd-pick");
@@ -14932,6 +15035,8 @@ body.pv-open { overflow: hidden; }
     fd.infoEl.innerHTML = fdInfo(fd, fd.you.x, fd.you.y);
     tip("field");
     if (f.siege) tip("siege");
+    if (f.how) { D.how = D.how || []; if (!D.how.includes(key)) { D.how.push(key); await mech(f.how, "loot"); } }
+    if (key === "quay") await fdQuayEcho(D);
     if (f.blank && !D.blankSeen) { D.blankSeen = true; await mech("<b>The Blank.</b> Most of this field isn't drawn yet. The ground next to you inks itself in as you go, and you can spend a step to ink in any square (and the ones round it) from where you stand. Walk into the blank and you take your chances: a wall stops you dead, and sinking ground holds on. Your foe was drawn here. It knows the ground.", "loot"); }
     if (!D.seen) { D.seen = true; await mech("<b>The battle map.</b> You get 2 steps a round on top of your move: tap a square, then tap it again. Strikes need you next to it. Tap any square to see what the ground does.", "loot"); }
     fdDraw(st);
@@ -14942,7 +15047,7 @@ body.pv-open { overflow: hidden; }
   // the click after a drag is swallowed). Works by moving the SVG's viewBox, so taps still land on squares.
   function fdZoom(svg) {
     if (svg.__z) { svg.__z.fit(true); return svg.__z; }
-    const W = FW * FT, H = FH * FT, KMAX = 3, z = { k: 1, x: 0, y: 0 };
+    const vb0 = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number), W = vb0[2] || FW * FT, H = vb0[3] || FH * FT, KMAX = 3, z = { k: 1, x: 0, y: 0 };
     const wrap = el("div", "fd-zoom");
     svg.parentNode.insertBefore(wrap, svg); wrap.appendChild(svg);
     const bar = el("div", "fd-zbar", '<button type="button" class="map-link fd-zin" aria-label="Zoom in" title="Zoom in (or pinch, or ctrl + scroll)">+</button><button type="button" class="map-link fd-zout" aria-label="Zoom out" title="Zoom out">−</button><button type="button" class="map-link fd-zfit" aria-label="Show the whole map" title="Show the whole map">Fit</button>');
@@ -15025,12 +15130,190 @@ body.pv-open { overflow: hidden; }
     return svg.__z;
   }
   // At the top of each round: fresh steps, the wanderer, and the map brought down to the menu.
+  // ---- moving ground (2026-11-13): the big fields change while you fight ----
+  // f.dyn.k: "calve" (a block comes down one marked column), "gears" (the vault's walls turn), "tide" (the sea takes a row),
+  // "flip" (the Cascade turns the field between before and after the battle). It happens on round from, then every
+  // `every` rounds (fd.next). The round before, the squares it'll touch are marked (fd.warn), so there's time to move,
+  // or to keep your foe where it is. Spots are things on the field you can use as your action from next to them.
+  const FD_SPOTS = {
+    brazier: { label: "Light the Rimehand brazier", tag: () => "next to it · warm stone round it, and the heat mends you",
+      info: () => "<b>The Rimehand brazier</b>: an iron basket on a post, still packed with pitch-pine. Stand next to it and light it: the ice round it turns to warm stone, and the heat mends you and eases any Chill." },
+    lever: { label: "Pull a gear lever", tag: (fd, st) => "next to it · the walls turn now" + (fd.next - st.round > 0 ? " (they'd turn on their own in " + (fd.next - st.round) + ")" : ""),
+      info: () => "<b>A gear lever</b>, brass, worn bright by hands. Pull it from next to it and the vault's walls turn now, and the count starts again." },
+    cache: { label: "Open a keeper's chest", tag: () => "next to it · whatever the keepers counted in", info: () => "<b>A keeper's chest</b>, iron, the lock rusted to nothing. Stand next to it to open it." },
+    folk: { label: "Get someone up the sea stair", tag: (fd) => "next to them · " + fd.spots.filter(q => q.k === "folk" && !q.done).length + " still on the quay",
+      info: () => "<b>Somebody still on the quay</b>, holding on to a stall with the water coming. Stand next to them and get them up the stair, as your action." }
+  };
+  // The nearest spot of a kind that's still there to use.
+  function fdSpot(fd, k) { let best = null; for (const q of fd.spots || []) if (q.k === k && !q.done && (!best || cheb(fd.you, q) < cheb(fd.you, best))) best = q; return best; }
+  function fdRedraw(fd) { fd.svg.innerHTML = fdArt(fd); }
+  // The squares the next turn of the ground will touch, with a line to say what's coming.
+  function fdWarnNext(F, st) {
+    const fd = st.fd, Y = fd.f.dyn, r = st.round; fd.warn = null; fd.warnTxt = "";
+    if (r + 1 !== fd.next) return "";
+    const w = new Set(), H = fdH(fd), Wd = fdW(fd);
+    if (Y.k === "calve") {
+      const pick = [fd.foe.x, fd.you.x].filter(x => Y.cols.includes(x)), col = pick.length && d(4) > 1 ? pick[d(pick.length) - 1] : Y.cols[d(Y.cols.length) - 1];
+      fd.col = col; for (let y = Y.y0; y < H; y++) { const t = fdTile(fd, col, y); if (t === "#" || t === "~" || t === "w") break; w.add(col + "," + y); }
+      fd.warnTxt = "the ice above this line is groaning. A block comes down it next round.";
+    } else if (Y.k === "gears") {
+      for (let y = 0; y < H; y++) for (let x = 0; x < Wd; x++) if ((fd.G[y][x] === "1" || fd.G[y][x] === "2") && fdTile(fd, x, y) !== "#") w.add(x + "," + y);
+      fd.warnTxt = "the gears are winding. This wall comes up next round.";
+    } else if (Y.k === "tide") {
+      if (fd.tideI >= Y.rows.length) return "";
+      for (let x = 0; x < Wd; x++) { const yy = Y.rows[fd.tideI], t = fdTile(fd, x, yy); if (t !== "#" && t !== "h" && t !== "w") w.add(x + "," + yy); if (fd.tideI) { const y2 = Y.rows[fd.tideI - 1]; if (fdTile(fd, x, y2) === "~") w.add(x + "," + y2); } }
+      fd.warnTxt = "the tide takes this row next round.";
+    } else if (Y.k === "flip") {
+      const o = fd.Gs[fd.green ? 0 : 1];
+      for (let y = 0; y < H; y++) for (let x = 0; x < Wd; x++) if (o[y][x] !== fd.G[y][x]) w.add(x + "," + y);
+      fd.warnTxt = "the Cascade thread is turning. This square changes next round.";
+    }
+    fd.warn = w;
+    return { calve: "High on the face the ice gives a long groan over one line of the stair. Something up there is coming loose. (Marked on the map: it comes down next round.)",
+      gears: "Somewhere under the floor a ratchet starts to click, faster and faster. The vault is about to turn. (The walls that'll come up are marked.)",
+      tide: "The water draws back off the slip, the way it does before it comes in. (The row it'll take next round is marked.)",
+      flip: "The air over the field goes thin and bright, like the hour before a storm, and for a breath you can see the other field through this one. (The squares that'll change are marked.)" }[Y.k];
+  }
+  // Move a body off a square it can't be on any more, to the nearest one it can.
+  function fdShunt(fd, u) {
+    let best = null;
+    for (let r = 1; r <= 4 && !best; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const x = u.x + dx, y = u.y + dy, t = fdTile(fd, x, y);
+      if (t === null || t === "#" || t === "w" || fdAt(fd, x, y)) continue;
+      const c = Math.abs(dx) + Math.abs(dy) + (t === "~" ? 3 : 0) + (t === "i" ? 1 : 0);
+      if (!best || c < best.c) best = { x, y, c };
+    }
+    if (best) { u.x = best.x; u.y = best.y; }
+  }
+  // After the ground changes: anyone on a square that can't be stood on is thrown aside and hurt; sinking ground holds.
+  async function fdSettle(F, st, why) {
+    const fd = st.fd; let foeHurt = false;
+    for (const k in fd.traps) { const [x, y] = k.split(",").map(Number), t = fdTile(fd, x, y); if (t === "#" || t === "w") delete fd.traps[k]; }
+    const W = fdWd(fd);
+    for (const u of [fd.you, fd.foe].concat(W ? [W] : [])) {
+      if (u === fd.foe && FOE.hp <= 0) continue;
+      const t = fdTile(fd, u.x, u.y);
+      if (t === "#" || t === "w") {
+        fdShunt(fd, u); fdDraw(st);
+        const wet = t === "w";
+        if (u === fd.you) { await say(wet ? "The water comes over you and throws you up the quay like a sack." : why); await hurt(1, wet ? 6 : 4, "bludgeoning", wet ? "The sea throws you onto the stones." : "You're thrown aside."); }
+        else if (u === fd.foe) { foeHurt = true; await say(wet ? (F.heads ? "The water takes one of them off its feet and spits it up the quay." : "The water comes over " + F.who + " and throws it up the quay.") : (F.heads ? "One of them is caught where the ground comes up, and thrown aside." : F.who.charAt(0).toUpperCase() + F.who.slice(1) + " is caught where the ground comes up, and thrown aside.")); if (F.heads) foeHit(1); else await foeBurst(1, wet ? 6 : 4, 0, wet ? "The water" : "Thrown aside"); }
+        else { u.hp -= d(4); if (u.hp <= u.max / 2) await fdWdLeave(st); }
+      }
+      if (u !== W) { const t2 = fdTile(fd, u.x, u.y); if (t2 === "~" && !(u === fd.foe && fd.fly)) u.stuck = true; else if (t2 !== "~") u.stuck = false; }
+    }
+    fdDraw(st);
+    return foeHurt;
+  }
+  async function fdTick(F, st) {
+    const fd = st.fd, Y = fd.f.dyn, D = fdState(), H = fdH(fd);
+    if (st.round === fd.next) {
+      fd.next += Y.every; const warned = fd.warn; fd.warn = null;
+      if (Y.k === "calve" && fd.col !== undefined) {
+        const col = fd.col; fd.col = undefined;
+        fd.el.classList.remove("fd-quake"); void fd.el.offsetWidth; fd.el.classList.add("fd-quake");
+        await say("With a crack like a door slamming in the sky, a block of the glacier lets go above the Notch and comes down the face, end over end, straight down the marked line.");
+        let hit = false;
+        for (let y = Y.y0; y < H; y++) {
+          const t = fdTile(fd, col, y); if (t === "#" || t === "~" || t === "w") { await say(t === "#" ? "It bursts on the rock, and the rock takes it." : "It goes into the meltpool with a sound like a slammed door, and the pool smokes."); break; }
+          if (fd.you.x === col && fd.you.y === y) { hit = true; await hurt(2, 6, "bludgeoning", "The block takes you on the way past."); }
+          if (FOE.hp > 0 && fd.foe.x === col && fd.foe.y === y) { hit = true; D.calved = (D.calved || 0) + 1; grant("fdcalve"); if (F.heads) { foeHit(2); await mech("It goes through them like a sledge through a fence. Two of them go down.", "loot"); } else await foeBurst(2, 8, 0, "The falling ice"); }
+          const W = fdWd(fd); if (W && W.x === col && W.y === y) { W.hp -= d(8) + d(8); await say("It catches the " + W.name + " too."); if (W.hp <= W.max / 2) await fdWdLeave(st); }
+        }
+        if (!hit) await say("It misses everyone, and the stair shakes.");
+      } else if (Y.k === "gears") {
+        fd.ph ^= 1;
+        fd.el.classList.remove("fd-quake"); void fd.el.offsetWidth; fd.el.classList.add("fd-quake");
+        await say("The ratchet stops. With a long iron groan the vault turns: walls that were lying in their tracks come up out of the floor, and the ones that stood go down.");
+        if (await fdSettle(F, st, "A wall comes up under you and throws you aside.")) { D.crushed = (D.crushed || 0) + 1; grant("fdgear"); }
+      } else if (Y.k === "tide" && fd.tideI < Y.rows.length) {
+        for (let i = 0; i < fd.tideI; i++) for (let x = 0; x < fdW(fd); x++) if (fd.G[Y.rows[i]][x] === "~") fd.G[Y.rows[i]][x] = "w";
+        const row = Y.rows[fd.tideI++];
+        for (let x = 0; x < fdW(fd); x++) if (!["#", "h", "w"].includes(fd.G[row][x])) fd.G[row][x] = "~";
+        fdRedraw(fd);
+        await say(fd.tideI === 1 ? "The sea comes up the slip in one long grey push, and doesn't go back." : "The tide comes in another row. What was awash is under now.");
+        for (const q of fd.spots) if (q.k === "folk" && !q.done && fdTile(fd, q.x, q.y) === "w") { q.done = q.lost = true; D.folkLost = (D.folkLost || 0) + 1; await say("The water reaches the people at the stall before you do. One moment they're holding on, and the next the stall is floating and they aren't there."); }
+        await fdSettle(F, st, "");
+      } else if (Y.k === "flip") {
+        fd.green = !fd.green; fd.G = fd.Gs[fd.green ? 1 : 0]; fd.flips++;
+        fdRedraw(fd);
+        fd.el.classList.remove("fd-quake"); void fd.el.offsetWidth; fd.el.classList.add("fd-quake");
+        await say(fd.green ? "The thread turns over. It's the hour before the battle: the wall stands whole, the orchard is in leaf, and somewhere behind the wall a drum is beating for men who've been dead for years." : "The thread turns back. The wall is broken, the orchard is stumps, and the craters are full of brown water again.");
+        await fdSettle(F, st, "A tree that hasn't burned yet stands up where you were standing, and throws you aside.");
+      }
+      void warned;
+    }
+    if (FOE.hp <= 0) return;
+    const line = fdWarnNext(F, st);
+    if (line) await mech(line, "hurt");
+    fdDraw(st);
+  }
+  async function fdAct(F, st, k) {
+    const fd = st.fd, q = fdSpot(fd, k), D = fdState(); if (!q) return;
+    if (k === "brazier") {
+      q.done = true; D.braz = (D.braz || 0) + 1;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const x = q.x + dx, y = q.y + dy; if (fdTile(fd, x, y) === "i") fd.G[y][x] = "o"; }
+      fdRedraw(fd);
+      await say("You get a flame into the old Rimehand pitch-pine, and the brazier goes up with a roar. The black ice round it sweats and goes dull and grey: warm stone, for a few squares, that will hold your feet.");
+      if (S.rm && S.rm.chill) { S.rm.chill = Math.max(0, S.rm.chill - 1); renderSheet(); await mech("The heat takes a step of Chill off you.", "loot"); }
+      await heal(2, 4, "The heat gets into your hands and your face.");
+    } else if (k === "lever") {
+      fd.ph ^= 1; fd.next = st.round + fd.f.dyn.every; fd.warn = null; D.levers = (D.levers || 0) + 1;
+      fd.el.classList.remove("fd-quake"); void fd.el.offsetWidth; fd.el.classList.add("fd-quake");
+      await say("You haul the lever over. Under the floor something enormous engages, and the vault turns on your word instead of its own: walls up, walls down.");
+      if (await fdSettle(F, st, "A wall comes up under you and throws you aside. You pulled the lever, so that's on you.")) { D.crushed = (D.crushed || 0) + 1; grant("fdgear"); }
+    } else if (k === "cache") {
+      q.done = true; const g = 20 + 2 * (TIER.rime || 0); S.coins += g; D.vcache = (D.vcache || 0) + 1; renderSheet();
+      await say("The lid comes up on a shriek of iron. Inside, in neat rows, the keepers' count: old coins from every road the Labyrinth ever swallowed, each one with a little tag of bark tied on.");
+      await mech("+" + g + " gold.", "loot");
+    } else if (k === "folk") {
+      q.done = q.saved = true; fd.saved++; D.folk = (D.folk || 0) + 1; D.folkOwed = (D.folkOwed || 0) + 1;
+      if (S.wl) S.wl.saved = (S.wl.saved || 0) + 4;
+      await say(["You get an arm round the old net-mender and the girl with her and half carry them to the foot of the stair, and they go up it on their hands and knees, and they don't look back.", "You prise a fishwife's fingers off the stall one at a time, talking the whole while, and point her at the stair, and shove. She goes. Her two boys go after her like ducks.", "The man at the crane won't leave his boat. You tell him the boat's already gone, which is true, and he looks, and then he goes."][Math.min(2, fd.saved - 1)]);
+      if (fd.saved >= 3) grant("fdquay");
+    }
+    fdDraw(st);
+  }
+  // What the quay remembers: the people you sent up the stair, and the ones the water had.
+  async function fdQuayEcho(D) {
+    if (D.folk) await say("Chalked on the bottom step of the sea stair, where you'll see it, there's a row of little marks: " + D.folk + ", one for everyone somebody got up these steps last time." + (D.folkLost ? " Further along there are " + D.folkLost + " more, crossed through." : ""));
+    else if (D.folkLost) await say("There's a hat still going round and round in the slip. Nobody has fished it out.");
+    if (D.folkOwed && D.folk) { D.folkOwed = 0; S.potions = (S.potions || 0) + 1; renderSheet(); await mech("On the bollard by the chalk marks somebody has left a stoppered horn of healing draught, with a bit of net tied round it. +1 healing potion.", "loot"); }
+  }
+  // Things on the field and what's about to change: drawn on the overlay, under the tokens.
+  function fdOverMarks(fd) {
+    const T = FT; let s = "";
+    for (let y = 0; y < fdH(fd); y++) for (let x = 0; x < fdW(fd); x++) {
+      const raw = fd.G[y][x]; if (raw !== "1" && raw !== "2") continue;
+      if (fdTile(fd, x, y) !== "#") continue;
+      const x0 = x * T, y0 = y * T, cx = x0 + T / 2, cy = y0 + T / 2;
+      let teeth = ""; for (let i = 0; i < 8; i++) teeth += '<rect transform="rotate(' + i * 45 + " " + cx + " " + cy + ')" x="' + (cx - 3) + '" y="' + (cy - 14) + '" width="6" height="5" fill="#c9a24a"/>';
+      s += '<g filter="url(#fdShadow)"><rect x="' + (x0 + 3) + '" y="' + (y0 + 3) + '" width="' + (T - 6) + '" height="' + (T - 6) + '" rx="4" fill="#4a4a52" stroke="#16161a" stroke-width="2"/><rect x="' + (x0 + 3) + '" y="' + (y0 + 3) + '" width="' + (T - 6) + '" height="' + (T - 6) + '" rx="4" fill="#000" opacity=".25" filter="url(#fdGrain)"/>' +
+        '<path d="M' + (x0 + 3) + " " + (y0 + 12) + "h" + (T - 6) + "M" + (x0 + 3) + " " + (y0 + T - 12) + "h" + (T - 6) + '" stroke="#c9a24a" stroke-width="3"/>' + teeth + '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#8a6a2a" stroke="#2a1a08" stroke-width="1.5"/><circle cx="' + cx + '" cy="' + cy + '" r="3" fill="#2a1a08"/></g>';
+    }
+    for (const q of fd.spots || []) {
+      if (q.done && q.k !== "brazier") continue;
+      const cx = q.x * T + T / 2, cy = q.y * T + T / 2;
+      if (q.k === "brazier") s += '<g filter="url(#fdShadow)"><path d="M' + (cx - 4) + " " + (cy + 24) + " L" + (cx - 2) + " " + (cy + 4) + " L" + (cx + 2) + " " + (cy + 4) + " L" + (cx + 4) + " " + (cy + 24) + 'Z" fill="#2a2420"/><path d="M' + (cx - 16) + " " + (cy - 6) + " L" + (cx + 16) + " " + (cy - 6) + " L" + (cx + 9) + " " + (cy + 6) + " L" + (cx - 9) + " " + (cy + 6) + 'Z" fill="#3a3632" stroke="#151310" stroke-width="1.5"/>' +
+        (q.done ? '<circle cx="' + cx + '" cy="' + (cy - 6) + '" r="30" fill="url(#fdAura)" class="fd-aura"/><path class="fd-flame" d="M' + (cx - 11) + " " + (cy - 6) + " Q" + (cx - 12) + " " + (cy - 20) + " " + (cx - 4) + " " + (cy - 28) + " Q" + (cx - 2) + " " + (cy - 18) + " " + (cx + 2) + " " + (cy - 22) + " Q" + (cx + 4) + " " + (cy - 32) + " " + (cx + 10) + " " + (cy - 20) + " Q" + (cx + 13) + " " + (cy - 12) + " " + (cx + 11) + " " + (cy - 6) + 'Z" fill="#ff9a3c" stroke="#ffd27a" stroke-width="1.2"/>'
+          : '<path d="M' + (cx - 10) + " " + (cy - 7) + " q10 -6 20 0" + '" stroke="#6a625a" stroke-width="3" fill="none"/><text x="' + cx + '" y="' + (cy + 36) + '" text-anchor="middle" font-size="10" font-family="Alegreya Sans SC, sans-serif" fill="#fff4d6" stroke="#120c06" stroke-width="2.5" paint-order="stroke">unlit</text>') + "</g>";
+      else if (q.k === "lever") { const a = fd.ph ? 30 : -30; s += '<g filter="url(#fdShadow)"><rect x="' + (cx - 12) + '" y="' + (cy + 6) + '" width="24" height="9" rx="2" fill="#3a3a40" stroke="#121214" stroke-width="1.4"/><g transform="rotate(' + a + " " + cx + " " + (cy + 8) + ')"><rect x="' + (cx - 2.5) + '" y="' + (cy - 20) + '" width="5" height="28" fill="#c9a24a" stroke="#4a3410" stroke-width="1"/><circle cx="' + cx + '" cy="' + (cy - 21) + '" r="5" fill="#8a2a1a" stroke="#2a0a04" stroke-width="1.2"/></g></g>'; }
+      else if (q.k === "cache") s += '<g filter="url(#fdShadow)"><rect x="' + (cx - 15) + '" y="' + (cy - 6) + '" width="30" height="18" rx="2" fill="#4a3a26" stroke="#1a120a" stroke-width="1.5"/><path d="M' + (cx - 15) + " " + (cy - 6) + " q15 -12 30 0" + '" fill="#5a4a32" stroke="#1a120a" stroke-width="1.5"/><path d="M' + (cx - 15) + " " + (cy + 1) + "h30" + '" stroke="#c9a24a" stroke-width="2.4"/><rect x="' + (cx - 3) + '" y="' + (cy - 2) + '" width="6" height="7" fill="#c9a24a" stroke="#4a3410" stroke-width=".8"/></g>';
+      else if (q.k === "folk") { const p3 = [[-11, 2, "#7a5a4a"], [0, -3, "#4a5a7a"], [11, 3, "#6a4a5a"]]; s += '<g filter="url(#fdShadow)">' + p3.map(([dx, dy, c]) => '<path d="M' + (cx + dx - 6) + " " + (cy + dy + 16) + " q6 -18 12 0Z" + '" fill="' + c + '" stroke="#1a120a" stroke-width="1"/><circle cx="' + (cx + dx) + '" cy="' + (cy + dy - 5) + '" r="5" fill="#e0c2a0" stroke="#1a120a" stroke-width="1"/>').join("") + '<path class="fd-flag" d="M' + (cx + 4) + " " + (cy - 12) + " l3 -14 l10 3 l-4 6 l-7 -1" + '" fill="#f2efe6" stroke="#1a120a" stroke-width=".8"/></g>'; }
+    }
+    if (fd.warn) for (const k of fd.warn) { const [x, y] = k.split(",").map(Number); s += '<rect class="fd-warn" x="' + (x * T + 2.5) + '" y="' + (y * T + 2.5) + '" width="' + (T - 5) + '" height="' + (T - 5) + '" rx="5" fill="#ff5a3c" fill-opacity=".16" stroke="#ff7a4c" stroke-width="2.2" stroke-dasharray="6 4"/>'; }
+    if (fd.f.dyn && fd.f.dyn.k === "calve" && fd.col !== undefined) { const cx = fd.col * T + T / 2, y0 = fd.f.dyn.y0 * T; s += '<path class="fd-warn" d="M' + (cx - 10) + " " + (y0 - 22) + " h20 l-10 16Z" + '" fill="#ff7a4c" stroke="#3a0a04" stroke-width="1.4"/>'; }
+    return s;
+  }
   async function fdRound(F, st) {
     const fd = st.fd; if (!fd) return;
     fd.steps = fd.smax = fdSteps(st.round); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
     if (fd.wdAt && st.round === fd.wdAt && !fd.wd && FOE.hp > 0) await fdWdEnter(F, st);
     else if (fdWd(fd) && st.round > fd.wdAt) await fdWdTurn(F, st);
     if (st.fled) return;
+    if (fd.f.dyn && FOE.hp > 0) await fdTick(F, st);
+    if (st.fled || FOE.hp <= 0) return;
     fd.el.remove(); add(fd.el);
     if (!fd.you.stuck || fdTile(fd, fd.you.x, fd.you.y) !== "~") fd.infoEl.innerHTML = fdInfo(fd, fd.you.x, fd.you.y);
     fdDraw(st);
@@ -15056,6 +15339,7 @@ body.pv-open { overflow: hidden; }
     if (hasGear("bow")) o.push({ key: "fd-bow", label: "Loose the Long Reckoning", tag: fd.bow > 0 ? "still spanning it · ready next round" : "at 2 to 6 squares, if you can see it · 2d8 · then a round to span it", plain: true });
     o.push({ key: "fd-shove", label: F.heads ? "Shove one of them back" : "Shove it back", tag: "next to it · Strength DC " + (12 + (F.heads ? 0 : 1)) + " · into sinking ground, off a ledge, into rock" + (W ? " or into the " + W.name : ""), plain: true });
     if (W) o.push({ key: "fd-wd", label: "Strike the " + W.name, tag: "next to it · it hunts you after", plain: true });
+    for (const k of Object.keys(FD_SPOTS)) { const q = fdSpot(fd, k); if (q) o.push({ key: "fd-act-" + k, label: FD_SPOTS[k].label, tag: FD_SPOTS[k].tag(fd, st), plain: true }); }
     return o;
   }
   // Walk up next to t if the steps left allow it, and let the player see the walk before the blow.
@@ -15099,6 +15383,7 @@ body.pv-open { overflow: hidden; }
     }
     if (c === "atk" || c === "fd-shove") return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
     if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
+    if (String(c).startsWith("fd-act-")) { const q = fdSpot(fd, c.slice(7)); if (!q) return "There's nothing left there to do."; return cheb(fd.you, q) <= 1 || (await closeIn(q)) ? null : "It's too far off, " + cheb(fd.you, q) + " squares. Move next to it on the map first."; }
     if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
     if (c === "fd-sling" || c === "fd-bow") {
       if (c === "fd-bow" && fd.bow > 0) return "The Long Reckoning isn't spanned yet.";
@@ -15111,6 +15396,7 @@ body.pv-open { overflow: hidden; }
   }
   async function fdDo(c, F, st) {
     const fd = st.fd;
+    if (String(c).startsWith("fd-act-")) { await fdAct(F, st, c.slice(7)); return; }
     if (c === "fd-sling" || c === "fd-bow") {
       const bow = c === "fd-bow", mods = fdYouMods(st, fd.foe).filter(m => m[0] !== "bad footing");
       if (fdTile(fd, fd.foe.x, fd.foe.y) === "c") { mods.splice(mods.findIndex(m => m[0] === "it's in cover"), 1, ["it's in cover", -3]); }
@@ -15132,6 +15418,10 @@ body.pv-open { overflow: hidden; }
         W.grudge = "foe"; W.cool = 3; st.stilled = true; fdState().turned++; grant("fdwild");
         await say("You drive " + (F.heads ? "one of them" : "it") + " backwards, straight into the " + W.name + ". The " + W.name + " turns on it.");
         await mech("It's dazed and loses its next attack, and the " + W.name + " is after it now.", "loot");
+      } else if (to === "w" && !fd.fly) {
+        st.stilled = true; fdState().drown = (fdState().drown || 0) + 1; grant("fdsink");
+        await say("You drive " + (F.heads ? "one of them" : "it") + " backwards off the edge and into the deep water. It goes under, and the water takes its time giving it back.");
+        if (F.heads) { foeHit(1); await mech("That one doesn't come up.", "loot"); } else { await foeBurst(2, 6, 0, "The water"); await mech("It claws back out where it went in, and it's lost its next attack.", "loot"); }
       } else if (to === null || to === "#" || to === undefined) {
         st.stilled = true;
         await say("You slam " + (F.heads ? "one of them" : "it") + " back into " + (to === null ? "the edge of the field" : "the rock") + ".");
@@ -15168,7 +15458,7 @@ body.pv-open { overflow: hidden; }
     let spot = null;
     for (const [x, y] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]].map(([dx, dy]) => [fd.you.x + dx, fd.you.y + dy])) {
       const t = fdTile(fd, x, y);
-      if (t === null || t === "#" || t === "~" || fdAt(fd, x, y) || fd.traps[x + "," + y] || P.best[x + "," + y] === undefined) continue;
+      if (t === null || t === "#" || t === "~" || t === "w" || fdAt(fd, x, y) || fd.traps[x + "," + y] || P.best[x + "," + y] === undefined) continue;
       if (!spot || P.best[x + "," + y] < spot.c) spot = { x, y, c: P.best[x + "," + y] };
     }
     if (!spot) return false;
@@ -15229,7 +15519,7 @@ body.pv-open { overflow: hidden; }
   // ---- the wanderer ----
   async function fdWdEnter(F, st) {
     const fd = st.fd, w = WANDERERS[fd.key] || WANDERERS[F.reg], t = TIER[F.reg] || 0, edge = [];
-    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) if ((x === 0 || y === 0 || x === FW - 1 || y === FH - 1) && !["#", "~"].includes(fdTile(fd, x, y)) && !fdAt(fd, x, y) && cheb({ x, y }, fd.you) >= 2 && cheb({ x, y }, fd.foe) >= 2) edge.push([x, y]);
+    for (let y = 0; y < fdH(fd); y++) for (let x = 0; x < fdW(fd); x++) if ((x === 0 || y === 0 || x === fdW(fd) - 1 || y === fdH(fd) - 1) && !["#", "~", "w"].includes(fdTile(fd, x, y)) && !fdAt(fd, x, y) && cheb({ x, y }, fd.you) >= 2 && cheb({ x, y }, fd.foe) >= 2) edge.push([x, y]);
     if (!edge.length) return;
     const [x, y] = edge[d(edge.length) - 1];
     fd.wd = { ...w, x, y, hp: 18 + 3 * t, max: 18 + 3 * t, ac: 12 + Math.floor(t / 3), atk: 4 + Math.floor(t / 2), n: 1 + Math.floor(t / 4), s: 8, on: true, grudge: null, cool: 0, rounds: 0 };
@@ -15292,7 +15582,7 @@ body.pv-open { overflow: hidden; }
     const fd = st.fd; if (!fd) return;
     fd.live = false;
     if (fd.el) fd.el.remove();
-    if (FOE.hp <= 0 && !st.fled) { const D = fdState(); D.won++; grant("fdfirst"); if (fd.key === "hinge") grant("fdford"); if (fd.key === "unmapped") grant("fdblank"); if (fd.f.siege) { grant("sgfirst"); if (!D.siege.includes(fd.key)) { D.siege.push(fd.key); F.sgWon = D.siege.length; } } }
+    if (FOE.hp <= 0 && !st.fled) { const D = fdState(); D.won++; grant("fdfirst"); if (fd.key === "hinge") grant("fdford"); if (fd.key === "unmapped") grant("fdblank"); if (fd.key === "twice" && fd.flips >= 2) grant("fdtwice"); if (fd.f.big) { D.big = D.big || []; if (!D.big.includes(fd.key)) D.big.push(fd.key); if (D.big.length >= 4) grant("fdbig"); } if (fd.f.siege) { grant("sgfirst"); if (!D.siege.includes(fd.key)) { D.siege.push(fd.key); F.sgWon = D.siege.length; } } }
     FOE.fdMod = 0; FOE.fdTxt = "";
     st.fd = null;
   }
@@ -16113,7 +16403,7 @@ body.pv-open { overflow: hidden; }
     }
     const q = nm && NM_NOFLEE.includes(B.quirk) ? {} : QUIRKS[B.quirk] || {};
     const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, bleed: B.bleed || 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
-      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade", reg, field: roam ? undefined : fdEastKey(reg) || undefined, hzForce: hzK, hzFoeStuck: hzFoe, hzScene: scene, hzLate: late };
+      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade", reg, field: fdPick(reg, roam) || undefined, hzForce: hzK, hzFoeStuck: hzFoe, hzScene: scene, hzLate: late };
     hzLastF = F;
     if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
     if (haunt) F.hpLeft = haunt.hp;
@@ -32109,7 +32399,7 @@ body.pv-open { overflow: hidden; }
         let ok = false;
         if (c === "talk") { const r = await check({ label: "Persuasion check (Quenby)", mod: Math.floor((S.lv || 40) / 8), dc: 17, cta: "Speak" }); ok = r.ok; if (ok) await say("You tell him it was the race, and the cold, and that you'll carry it. He doesn't forgive you. But he lowers the pick."); }
         if (!ok) {
-          await hkFight({ name: "The Thinwick Few", heads: 5, unit: "miner|miners", who: "the miners", whoShort: "the miners", hp: 14, ac: 12, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, hesk: false,
+          await hkFight({ name: "The Thinwick Few", field: "vault", fdEmb: "pick", heads: 5, unit: "miner|miners", who: "the miners", whoShort: "the miners", hp: 14, ac: 12, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, hesk: false,
             hitWhy: "A pick comes round out of the dark.", miss: "A pick sparks off the ice.", hitLine: "A miner goes down on the ice, and doesn't get up, and you're sorry." });
           R.thinBeaten = true; R.pos.thin -= 3;
           await say("They go down, or run. Quenby sits on the stair with his face in his hands. You step round him.");
@@ -32141,7 +32431,7 @@ body.pv-open { overflow: hidden; }
         await say("The Gilt Lanterns get there first. Lady Lettice lifts the Seedheart out of its cup of roots with two fingers, like something she's buying.");
         const c = await choose([{ key: "fight", label: "Take it from them", tag: "a fight; they'll never forget it" }, { key: "let", label: "Let her have it", plain: true }]);
         if (c === "fight") {
-          await hkFight({ name: "The Gilt Lanterns", heads: 4, unit: "sword|swords", who: "the Lanterns", whoShort: "the Lanterns", hp: 18, ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false,
+          await hkFight({ name: "The Gilt Lanterns", field: "vault", fdEmb: "lantern", heads: 4, unit: "sword|swords", who: "the Lanterns", whoShort: "the Lanterns", hp: 18, ac: 15, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false,
             hitWhy: "A good sword, well kept, finds you.", miss: "The blade sings past, very expensively.", hitLine: "A Lantern man sits down hard on the ice, holding his arm, out of it." });
           R.seed = "you"; R.rel.gilt -= 5; R.giltRobbed = true;
           await say("Lady Lettice hands it over, in the end, with her men on the ice round her. She doesn't smile. “You'll hear from the House,” she says.");
@@ -33884,7 +34174,7 @@ body.pv-open { overflow: hidden; }
       '<button type="button" class="map-link" data-pvmode="hot" aria-pressed="' + (pv.mode === "hot") + '">Same screen <small>two players, one device</small></button>' +
       '<button type="button" class="map-link" data-pvmode="ghost" aria-pressed="' + (pv.mode === "ghost") + '">Ghost duel <small>a friend\'s hero, by code</small></button></div>';
     h += '<div class="pv-sides">' + pvSide(0, heroes) + pvSide(1, heroes) + "</div>";
-    h += '<p class="pv-eye">The field</p><div class="pv-chips">' + Object.keys(FIELDS).map(k => '<button type="button" class="map-link" data-pvfield="' + k + '" aria-pressed="' + (pv.field === k) + '">' + FIELDS[k].name + "</button>").join("") + "</div>";
+    h += '<p class="pv-eye">The field</p><div class="pv-chips">' + Object.keys(FIELDS).filter(k => !FIELDS[k].big).map(k => '<button type="button" class="map-link" data-pvfield="' + k + '" aria-pressed="' + (pv.field === k) + '">' + FIELDS[k].name + "</button>").join("") + "</div>";
     h += '<p class="pv-even"><button type="button" class="map-link" id="pvEven" aria-pressed="' + pv.even + '">Even Ground: ' + (pv.even ? "on" : "off") + "</button> " + (pv.even ? "Both heroes fight at level " + PV_EVEN + ". Weapons, markers and fighting style stay their own." : "Each hero fights at their own level. A big gap makes for a short duel.") + "</p>";
     h += '<button type="button" class="primary map-link" id="pvGo"' + (pv.mode === "ghost" && !pv.ghost ? " disabled" : "") + ">" + (pv.mode === "ghost" ? (pv.ghost ? "Face " + esc(pv.ghost.n) + "'s ghost" : "Choose a ghost first") : "Begin the duel") + "</button>";
     if (pv.mode === "ghost") {
