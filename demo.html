@@ -566,6 +566,8 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .rs-form input { flex: 1 1 140px; min-width: 0; padding: 7px 10px; background: transparent; color: inherit; border: 1px solid var(--muted); border-radius: 6px; font: inherit; text-transform: uppercase; }
 .rs-msg { flex-basis: 100%; color: var(--muted); font-size: .86rem; }
 .rs-code { color: var(--gold); letter-spacing: .08em; }
+.rw-code { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; font-family: var(--label); }
+.rw-code .rw-copy { padding: 2px 10px; font-size: .78rem; }
 .j-sub a { color: var(--gold); }
 .ach-toasts { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
 .ach-toast { pointer-events: auto; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; width: 100%;
@@ -2236,6 +2238,7 @@ body.pv-open { overflow: hidden; }
     r.chapters = r.chapters.filter(c => c.name !== C.name).concat([sum]);
     if (ch === CHAPTERS.length - 1) { r.end = "finished"; stat("journey-finished", "Finished the journey"); }
     jSave();
+    const rwNew = rwCheck({ ch: C.slug });
     achCheck({ ch: C.slug, sum, last: ch === CHAPTERS.length - 1 });
     stat("chapter-done-" + C.slug, "Finished " + C.name);
     const box = el("section", "chap-sum",
@@ -2243,6 +2246,7 @@ body.pv-open { overflow: hidden; }
       tiles([[dur(sum.ms), "time"], [sum.deaths, sum.deaths === 1 ? "death" : "deaths"], [sum.close, "close calls"], [sum.fights, sum.fights === 1 ? "fight" : "fights"],
         [sum.earned, "gold found"], [sum.lost, "gold spent or lost"], [sum.items.length, sum.items.length === 1 ? "item found" : "items found"]]) +
       listLine("Found", sum.items) + listLine("Bounties claimed", sum.bounties) + listLine("Treasure dug up", sum.maps) +
+      rwCard(rwNew) +
       '<p class="j-list"><button class="ghost map-link" type="button">Open your map</button> ' + (ch < CHAPTERS.length - 1 ? "The fog over the next road lifts as you go." : "") + "</p>");
     box.querySelector(".map-link").onclick = () => mapOpen();
     scrollNext = true;
@@ -2287,6 +2291,7 @@ body.pv-open { overflow: hidden; }
     h += calSection(rs);
     h += stoneSection();
     h += achSection();
+    h += rwSection();
     h += tipSection();
     h += linkSection();
     h += cwSection(rs);
@@ -2315,9 +2320,131 @@ body.pv-open { overflow: hidden; }
     const tt = $("jTipToggle");
     if (tt) tt.onclick = () => { tipState.off = !tipState.off; tipSave(); jRender(); };
   }
+  // ---------- reward codes: real-world rewards for big milestones ----------
+  // Reaching a milestone gives a code, once per browser. The player sends it to Adrian, who checks it
+  // with the private verifier page and gives the reward. A code holds: the milestone, a random id for
+  // this browser (J.wid), the day it was earned and the hours played, sealed with HMAC-SHA256.
+  // The seal stops typos and casual tampering, but the key ships in this file, so someone who reads
+  // the code could make their own. Keep the rewards small, and check claims by hand.
+  // To change a reward, edit `gift` below. To add a milestone, add a row at the END (the number is its
+  // place in this list and is written into the code, so never reorder or remove rows).
+  const RW_KEY = "rimed-lantern/" + "the-axe-remembers/" + "LR1";
+  const CLAIM_URL = FULL_URL;
+  const REWARDS = [
+    { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "Your name in the game's list of Wayfarers.", test: (c) => rwCh(c, "labyrinth") },
+    { id: "siege", name: "Rahdaria Stands", how: "Finish The Siege of Rahdaria.", gift: "A printable Relicsong card, made for the players who held Rahdaria.", test: (c) => rwCh(c, "rahdaria") },
+    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A free download key for the full game on itch.io, to keep or give to a friend.", test: (c) => rwCh(c, "unmapped") },
+    { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "The title Ringwarden beside your name in the Wayfarers, and a printable Relicsong card.", test: () => lv() >= LV_MAX },
+    // Twinbreaker comes with the Rimehold chapter: it switches on by itself once that feat exists.
+    { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A printable Relicsong card of the Hollow Twin.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
+  ];
+  // Players who claimed a reward, as Adrian adds them: ["Name", "Ringwarden"] (the title is optional).
+  const WAYFARERS = [];
+  const rwCh = (c, slug) => (c && c.ch === slug) || slotRuns().some(r => r.chapters.some(x => x.name === (CHAPTERS.find(C => C.slug === slug) || {}).name));
+  // SHA-256 and HMAC, small and synchronous (crypto.subtle isn't there on every file:// page).
+  function sha256(bytes) {
+    const K = [], H = [], isP = (n) => { for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; }, fr = (x) => (x - Math.floor(x)) * 4294967296 | 0;
+    for (let n = 2, i = 0; i < 64; n++) if (isP(n)) { if (i < 8) H[i] = fr(Math.pow(n, 1 / 2)); K[i++] = fr(Math.pow(n, 1 / 3)); }
+    const len = bytes.length, m = new Uint8Array(((len + 9 + 63) >> 6) << 6);
+    m.set(bytes); m[len] = 0x80;
+    const dv = new DataView(m.buffer); dv.setUint32(m.length - 4, len * 8); dv.setUint32(m.length - 8, Math.floor(len / 536870912));
+    const w = new Array(64), r = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let o = 0; o < m.length; o += 64) {
+      for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+      for (let i = 16; i < 64; i++) {
+        const a = w[i - 15], b = w[i - 2];
+        w[i] = (w[i - 16] + (r(a, 7) ^ r(a, 18) ^ (a >>> 3)) + w[i - 7] + (r(b, 17) ^ r(b, 19) ^ (b >>> 10))) | 0;
+      }
+      let [a, b, c, d, e, f, g, h] = H;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+        const t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      [a, b, c, d, e, f, g, h].forEach((v, i) => H[i] = (H[i] + v) | 0);
+    }
+    const out = new Uint8Array(32), ov = new DataView(out.buffer);
+    H.forEach((v, i) => ov.setUint32(i * 4, v));
+    return out;
+  }
+  function hmac(keyStr, msg) {
+    let k = new TextEncoder().encode(keyStr);
+    if (k.length > 64) k = sha256(k);
+    const ip = new Uint8Array(64 + msg.length), op = new Uint8Array(96);
+    for (let i = 0; i < 64; i++) { ip[i] = (k[i] || 0) ^ 0x36; op[i] = (k[i] || 0) ^ 0x5c; }
+    ip.set(msg, 64); op.set(sha256(ip), 64);
+    return sha256(op);
+  }
+  // 8 bytes of facts + 4 bytes of seal = 12 bytes, written as 20 letters in Crockford base32.
+  const B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", RW_EPOCH = Date.UTC(2026, 0, 1);
+  function rwPack(idx, wid, day, hours) {
+    const b = new Uint8Array(12), v = new DataView(b.buffer);
+    v.setUint8(0, (1 << 6) | (idx & 63));
+    v.setUint32(1, wid >>> 0);
+    v.setUint16(5, Math.min(16383, Math.max(0, day)));
+    v.setUint8(7, Math.min(255, Math.max(0, hours)));
+    b.set(hmac(RW_KEY, b.subarray(0, 8)).subarray(0, 4), 8);
+    let bits = "", s = "";
+    b.forEach(x => bits += x.toString(2).padStart(8, "0"));
+    for (let i = 0; i < 96; i += 5) s += B32[parseInt(bits.slice(i, i + 5).padEnd(5, "0"), 2)];
+    return "LR-" + s.slice(0, 5) + "-" + s.slice(5, 10) + "-" + s.slice(10, 15) + "-" + s.slice(15, 20);
+  }
+  function rwWid() {
+    if (!J.wid) { const a = new Uint32Array(1); try { crypto.getRandomValues(a); } catch (e) { a[0] = Math.random() * 4294967296; } J.wid = a[0] || 1; }
+    return J.wid;
+  }
+  const rwHours = () => Math.floor((J.past.reduce((a, x) => a + (x.ms || 0), 0) + slotRuns().reduce((a, x) => a + (x.ms || 0), 0)) / 3600000);
+  // Called from achCheck (every sheet render, part start and chapter end) and at each chapter's end.
+  // Returns the rewards earned just now.
+  function rwCheck(c) {
+    if (!started || !jLive) return [];
+    J.rw = J.rw || {};
+    const got = [];
+    REWARDS.forEach((R, i) => {
+      if (J.rw[R.id] || (R.soon && R.soon())) return;
+      let ok = false;
+      try { ok = !!R.test(c); } catch (e) {}
+      if (!ok) return;
+      J.rw[R.id] = { code: rwPack(i, rwWid(), Math.floor((Date.now() - RW_EPOCH) / 86400000), rwHours()), t: Date.now() };
+      got.push(R);
+      stat("reward-" + R.id, "Reward code: " + R.name);
+      achToast({ kicker: "Reward code", name: R.name, desc: "A code for a real reward. It's in your journal." });
+    });
+    if (got.length) jSave();
+    return got;
+  }
+  const rwCodeHTML = (R) => '<span class="rw-code"><b class="rs-code">' + J.rw[R.id].code + '</b> <button class="ghost rw-copy" type="button" data-code="' + J.rw[R.id].code + '">Copy</button></span>';
+  const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">the game\'s itch.io page</a>';
+  // A line for the chapter-complete card.
+  const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + R.gift + " To claim it, send the code to Adrian through " + rwClaim + ". It's in your journal too.</p>").join("");
+  function rwSection() {
+    J.rw = J.rw || {};
+    const item = (R) => {
+      const g = J.rw[R.id];
+      return '<li class="' + (g ? "won" : "") + '"><span class="mk"></span><span><b>' + R.name + "</b> · " + (R.soon && R.soon() ? "Coming with the Rimehold chapter. " : R.how + " ") +
+        "<i>" + R.gift + "</i>" + (g ? "<br>" + rwCodeHTML(R) : "") + "</span></li>";
+    };
+    return '<section><h3>Reward codes · ' + REWARDS.filter(R => J.rw[R.id]).length + " of " + REWARDS.length + "</h3>" +
+      '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here. Send it to Adrian through ' + rwClaim +
+      " with the name you'd like to be known by, and Adrian will get your reward to you. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" +
+      '<ul class="marks">' + REWARDS.map(item).join("") + "</ul>" +
+      (WAYFARERS.length ? '<h4 class="p-set">Wayfarers</h4><p class="j-sub">Players who carried a code out of the game.</p><p>' + WAYFARERS.map(([n, t]) => "<b>" + esc(n) + "</b>" + (t ? " <i>" + esc(t) + "</i>" : "")).join(" · ") + "</p>" : "") + "</section>";
+  }
+  document.addEventListener("click", rwCopy);
+  function rwCopy(e) {
+    const b = e.target.closest && e.target.closest(".rw-copy");
+    if (!b) return;
+    const done = () => { b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy"; }, 1600); };
+    try { navigator.clipboard.writeText(b.dataset.code).then(done, () => {}); } catch (err) {}
+  }
+
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "78", name: "Reward Codes", date: "13 Nov 2026", items: [
+      "<b>Some milestones are worth something outside the game now.</b> Finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, or reach level 50, and you get a <b>reward code</b>. Send it to Adrian through the game's itch.io page to claim a real reward: your name in the list of Wayfarers, a printable Relicsong card, or a free download key for the full game.",
+      "Your codes are in the journal under <b>Reward codes</b>, with a Copy button. If you've already passed a milestone, the code turns up the next time you play. Each code can be claimed once, and rewards are always free: you never pay to get one, and they never go by luck.",
+      "<b>Twinbreaker</b> gets a code of its own when the Rimehold chapter arrives."] },
     { ver: "76", name: "The Wandering Board", date: "11 Nov 2026", items: [
       "<b>The roads back are a board now, if you want them to be.</b> Pick <b>Walk the Wandering Board</b> and choose a region: a board of squares from a crossroads up to the top of the road, and your marker at the bottom. Move up one row at a time, or fold it away and come back.",
       "<b>You don't know what's ahead.</b> The squares in front of you are only sounds (haggling, woodsmoke, something breathing in the rocks) until you stop and listen, which costs a watch.",
@@ -3157,6 +3284,7 @@ body.pv-open { overflow: hidden; }
     if (!started || !jLive) return;
     if (!pursuitsTold) { pursuitsTold = true; pursuitsNews(); }
     rsSync();
+    rwCheck(c);
     c = c || {};
     if (c.ch && c.sum.deaths === 0) { J.achCh = J.achCh || {}; J.achCh[c.ch] = true; }
     achEarn(ACH.filter(a => {
