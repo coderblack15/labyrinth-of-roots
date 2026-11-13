@@ -1241,6 +1241,20 @@ body.in-fight.in-lab.blinded .story > *:not(:nth-last-child(-n+4)) { opacity: 1;
 .wl-clock { border: 1px solid #3a3020; border-radius: 10px; padding: 8px 10px; margin: 10px 0; background: #17140e; }
 .wl-bells { font-size: 1.25em; letter-spacing: 3px; color: #cfa850; }
 .wl-bells span:not(.on) { opacity: .25; filter: grayscale(1); }
+/* 2026-11-13 (Adrian's design doc): the Root Summons tears and the ring-locks. */
+.rs-row { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; margin: 4px 0 8px; }
+.rs-cell { display: grid; justify-items: center; gap: 3px; padding: 4px 2px; border-radius: 8px; transition: background .2s; }
+.rs-cell.peek { background: rgba(127, 208, 232, .08); }
+.rs-cell.right .rs-was { color: #9ad6a0; }
+.rs-was { min-height: 1.3em; font-size: 1.1em; color: #7fd0e8; }
+.rs-thing { width: 100%; min-width: 44px; min-height: 52px; font-size: 1.5em; padding: 0; display: grid; place-items: center; line-height: 1; text-align: center; }
+.rs-name { font-size: .72em; color: var(--muted); text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+.rs-rings { display: grid; gap: 6px; justify-content: center; margin: 4px 0 8px; }
+.rs-ring { display: grid; grid-template-columns: 44px auto 44px; gap: 6px; align-items: center; }
+.rs-ring button { min-height: 44px; padding: 0; }
+.rs-strip { display: flex; gap: 2px; font-family: inherit; letter-spacing: 1px; }
+.rs-strip span { display: inline-grid; place-items: center; line-height: 1; padding: 0; width: 30px; height: 40px; border-radius: 4px; background: #1b221d; color: var(--muted); font-size: 1.05em; }
+.rs-strip span.slot { background: #3a3020; color: var(--gold); box-shadow: inset 0 0 0 2px var(--gold); font-weight: 700; }
 /* 2026-11-08 (Adrian): an ordinary fight gets only a thin ember border that beats with the drum, so the
    page stays easy to read. The screen goes dark only while you're Blinded (body.blinded), which is a real penalty. */
 #bfx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .6s ease, box-shadow .6s ease; box-shadow: inset 0 0 0 2px rgba(217, 80, 58, .45), inset 0 0 36px rgba(0, 0, 0, .35); }
@@ -1876,7 +1890,7 @@ body.pv-open { overflow: hidden; }
   function useSlot(n) { SLOT = n; try { localStorage.setItem(SLOT_KEY, String(n)); } catch (e) {} }
   let sdNoSave = false; // the Inside the Axe memory isn't saved
   function save() { if (sdNoSave) return; S.at = Date.now(); try { localStorage.setItem(slotKey(SLOT), JSON.stringify(S)); } catch (e) {} }
-  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (v.part === 75 && !v.roam && v.pz && v.pz.done) v.part = 76; if (v.part === 82 && !v.roam && v.hn && v.hn.done) v.part = 83; if (v.part === 89 && !v.roam && v.unm && v.unm.done) v.part = 90; if (v.part === 98 && !v.roam && v.rm && v.rm.done) v.part = 99; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
+  function load(n) { try { const v = JSON.parse(localStorage.getItem(slotKey(n || SLOT)) || "null"); if (!v || typeof v.part !== "number") return null; if (!v.belfry && v.part >= 25) v.part++; v.belfry = true; if (v.part === 27 && v.lw === false) v.part = 28; if (v.part === 33 && v.gl === false) v.part = 34; if (v.part === 40 && v.hk === false && v.ending2) v.part = 41; if (v.part === 47 && v.nk && v.nk.on === false && v.nk.ending) v.part = 48; if (v.part === 54 && !v.roam && v.um && v.um.on === false && v.um.ending) v.part = 55; if (v.part === 61 && !v.roam && v.rh && v.rh.done) v.part = 62; if (v.part === 68 && !v.roam && v.sd && v.sd.done) v.part = 69; if (v.part === 75 && !v.roam && v.pz && v.pz.done) v.part = 76; if (v.part === 82 && !v.roam && v.hn && v.hn.done) v.part = 83; if (v.part === 89 && !v.roam && v.unm && v.unm.done) v.part = 90; if (v.part === 98 && !v.roam && v.rm && v.rm.done) v.part = 99; if (v.part === 103 && !v.roam && v.wl && v.wl.done) v.part = 104; if (Array.isArray(v.books)) v.books = v.books.map(b => b === "Scroll of Misty Step" ? "Scroll of Silver Mist" : b); return calInit(lvInit(v)); } catch (e) { return null; } }
   function clearSave(n) { try { localStorage.removeItem(slotKey(n || SLOT)); } catch (e) {} }
 
   // ---------- anonymous stats (public site only) ----------
@@ -2095,6 +2109,11 @@ body.pv-open { overflow: hidden; }
         every(sc, 9, 20, () => { for (let i = 0; i < 4; i++) hiss(sc.out, { f: 3200, q: 4, a: 0.002, dec: 0.04, vol: 0.025, at: i * 0.07 }); });
         every(sc, 22, 44, () => bell(sc.out, hz(pick([64, 67])), 0.014, 6));
       },
+      summons(sc) {     // after the contract: a slow drip under ice, a held low note, a root creaking
+        drone(sc, [36, 43, 48], { cut: 360, vol: 0.022, wob: 0.012 });
+        every(sc, 4, 9, () => blip(sc.out, rnd(700, 1000), { type: "sine", a: 0.002, dec: 0.5, vol: 0.011, bend: 0.75 }));
+        every(sc, 18, 36, () => bell(sc.out, hz(pick([60, 63, 67])), 0.012, 7));
+      },
       unmapped(sc) {    // the Unmapped: almost nothing. Thin high air, a nib scratching somewhere, a far small bell
         wind(sc, { type: "highpass", cut: 2600, q: 0.4, vol: 0.018, sweep: 400, rate: 0.02 });
         drone(sc, [60, 67], { cut: 900, vol: 0.012, wob: 0.01 });
@@ -2260,8 +2279,10 @@ body.pv-open { overflow: hidden; }
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
     ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75],
     ["Half the East", "hinge", 76, 82], ["The Unmapped", "unmapped", 83, 89],
-    ["Rimehold", "rime", 90, 98], ["The Welling", "welling", 99, 103]
+    ["Rimehold", "rime", 90, 98], ["The Welling", "welling", 99, 103], ["The Root Summons", "summons", 104, 110]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
+  // After the Deep Melt the same seven parts are Dunvaar.
+  Object.defineProperty(CHAPTERS[CHAPTERS.length - 1], "name", { get: () => (typeof S !== "undefined" && S && S.rm && S.rm.ending === "melt" ? "Dunvaar" : "The Root Summons") });
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
   const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "hnmap", "hnreaped", "unink", "unplaces", "contender", "roadname", "colours", "rmread", "rmsight", "rmspirit"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
@@ -2450,6 +2471,7 @@ body.pv-open { overflow: hidden; }
     h += unSection(rs);
     h += rmSection(rs);
     h += wlSection(rs);
+    h += rsSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -2616,10 +2638,15 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
-    { ver: "83", name: "A Gentler Start", date: "13 Nov 2026", items: [
+    { ver: "84", name: "A Gentler Start", date: "13 Nov 2026", items: [
       "<b>A shorter start screen.</b> Three lines to get going; everything else is folded under <b>How it all works</b>.",
       "<b>Guide me, or I know the way.</b> The first time you begin, the game asks. Guided players get a short note on rolls, the sheet and Bag, the journal and map, and saves in the first parts, on top of the usual first-time notes, and meet the battle-style question at their first company battle instead of before Part I.",
       "Switch the notes on or off any time from the Field guide in your journal." ] },
+    { ver: "83", name: "The Root Summons and Dunvaar", date: "13 Nov 2026", items: [
+      "<b>A new chapter after the Welling</b>, Parts CV to CXI, that plays two ways, from Adrian's design doc. Signed the contract? It's <b>the Root Summons</b>. Refused it, or ran out of time? It's <b>Dunvaar</b>.",
+      "<b>The Root Summons.</b> Ammeroth calls, and you go down through the roots to the tears where the broken world leaks into the put-back one. A new puzzle: turn the things caught in a tear back the way they were, with Ringsight to look, a few times. Each tear holds something somebody loved: stitch it shut, or leave them a crack. Maelis, Hollow Holm and the Unborn, and Ammeroth's last call.",
+      "<b>Dunvaar.</b> The drowned kingdom under the glacier: a court where one of three opened the Queen's stair, three knights of the thaw, Brannoc Vane's biggest Offer yet, Ithra Coldvein in two forms and a real-time flood, a seal of turning rings, and a second chance at the contract.",
+      "<b>On the roads back:</b> small tears to mend after the summons, and after Dunvaar, a new region with its own Wandering Board, beasts, a town and a hidden thing. 16 new feats in an <b>After the Contract</b> pursuit."] },
     { ver: "82", name: "Ground That Moves", date: "13 Nov 2026", items: [
       "<b>Four big battle maps</b>, taller than the old ones and built in parts that tell you where you are, with the names painted on: a wall, then a breach, then a field. They fit a phone held upright, and zoom like the rest.",
       "<b>The Calving Stair</b>, on the glacier below Rimehold: blocks of ice come down one marked column at a time, so get out of the line, or keep your foe in it. Light the old Rimehand brazier to turn the ice round it to warm stone.",
@@ -2842,6 +2869,9 @@ body.pv-open { overflow: hidden; }
   //   art:    [glyph, x, y, scale] from MAP_ART
   //   labels: [text, x, y, size, style] style: "" region, "s" small town, "u" under the ground
   const MAP = {
+    summons: { get at() { return S.rm && S.rm.ending === "melt" ? [196, 44] : [200, 292]; }, clear: [[196, 50, 40]],
+      art: [["gate", 196, 44, .7]],
+      get labels() { return S.rm && S.rm.ending === "melt" ? [["Dunvaar, under the ice", 196, 22, 10, ""]] : [["Hollow Holm", 150, 270, 9, "s"]]; } },
     welling: { at: [72, 290], parts: { 99: [92, 316], 100: [92, 316], 101: [70, 262], 102: [28, 282], 103: [92, 316] }, clear: [[70, 282, 52], [28, 282, 24]],
       road: [[92, 316], [70, 262], [82, 232]],
       art: [["isle", 26, 284, .6]],
@@ -3369,6 +3399,22 @@ body.pv-open { overflow: hidden; }
     { id: "rmfair", name: "A Fair Race", desc: "Win the Seedheart without sabotaging anyone.", test: () => false },
     { id: "rmallhome", name: "Everyone Home", desc: "Finish the Seedheart race without losing a single hunter.", test: () => false },
     { id: "rmknife", name: "Knife in the Dark", desc: "Sabotage rivals three times in the Undervaults.", test: () => false },
+    { id: "rscall", name: "When I Call", desc: "Answer Ammeroth's first summons.", test: () => false },
+    { id: "rsblind", name: "Without Looking", desc: "Mend a tear without looking through the rings once.", test: () => false },
+    { id: "rsbell", name: "One Bell", desc: "Mend the tear under the Belfry at Lastwell.", test: () => false },
+    { id: "rsmaelis", name: "The Empty Chair", desc: "Find Maelis in the tear at Weatherend.", test: () => false },
+    { id: "rsholm", name: "Hollow Holm", desc: "Bring the Unborn of Hollow Holm into the put-back world.", test: () => false },
+    { id: "rsheir", name: "Root-Heir", desc: "Promise Ammeroth you'll keep the roots one day.", test: () => false },
+    { id: "rsfree", name: "Unbound", desc: "Finish the summons and walk away free.", test: () => false },
+    { id: "rsroad", name: "Mender", desc: "Mend five small tears on the roads back.", test: () => false },
+    { id: "dvcourt", name: "One of Them Opened the Stair", desc: "Catch the traitor in the drowned court.", test: () => false },
+    { id: "dvbetray", name: "She Promised Them the Sky", desc: "Stand with the traitor of Dunvaar.", test: () => false },
+    { id: "dvknights", name: "Three Gates", desc: "Beat all three knights of the thaw yourself.", test: () => false },
+    { id: "dvbrannoc", name: "Changing Sides", desc: "Turn Brannoc Vane against the Meltwater Queen.", test: () => false },
+    { id: "dvithra", name: "The Meltwater Queen", desc: "Break Ithra Coldvein.", test: () => false },
+    { id: "dvseal", name: "The Seal of Dunvaar", desc: "Set the seal of Dunvaar.", test: () => false },
+    { id: "dvsign", name: "The Second Contract", desc: "Sign Ammeroth's contract the second time round.", test: () => false },
+    { id: "dvrefuse", name: "Thawbreaker", desc: "Say no to the contract twice.", test: () => false },
     { id: "wlcut", name: "Breakwater", desc: "Cut back 150 tongues of the Welling.", test: () => false },
     { id: "wlharbour", name: "Six Bells", desc: "Get everyone out of Rahdaria's Lower Harbour.", test: () => false },
     { id: "wlraft", name: "All Hands off the Rafts", desc: "Get everyone off Raftmark.", test: () => false },
@@ -3476,7 +3522,9 @@ body.pv-open { overflow: hidden; }
     { id: "bigfields", name: "Ground That Moves", ver: "30", desc: "Four big battle maps in zones, where the ground changes while you fight: the Calving Stair, the Counting Vault, the Drowned Quay and the Twice-Fought Field.",
       ids: ["fdcalve", "fdgear", "fdquay", "fdtwice", "fdbig"] },
     { id: "welling", name: "The Welling", ver: "29", desc: "The sea that woke up hungry: surges, the Tide Map, three evacuations and the eye.",
-      ids: ["wlcut", "wlharbour", "wlraft", "wlstair", "wlhold", "wlnone", "wleye", "wlcamp", "wlsaved", "wlscars"] }
+      ids: ["wlcut", "wlharbour", "wlraft", "wlstair", "wlhold", "wlnone", "wleye", "wlcamp", "wlsaved", "wlscars"] },
+    { id: "after", name: "After the Contract", ver: "31", desc: "The Root Summons after the Binding, Dunvaar after the Deep Melt: you'll need both endings for all of it.",
+      ids: ["rscall", "rsblind", "rsbell", "rsmaelis", "rsholm", "rsheir", "rsfree", "rsroad", "dvcourt", "dvbetray", "dvknights", "dvbrannoc", "dvithra", "dvseal", "dvsign", "dvrefuse"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -3834,6 +3882,9 @@ body.pv-open { overflow: hidden; }
     sheet: ["Your sheet and Bag", "Your <b>HP</b>, armour, gold and level are on the sheet. Everything you carry is in your <b>Bag</b> (on a phone, the <b>Items</b> button in the corner): tap a thing to read it or use it. Healing between fights comes from there."],
     jmap: ["Journal and map", "Your <b>journal</b> keeps this journey: what you've found, who you've met, and every tip you've seen (the Field guide). The <b>Map</b> beside it shows the realm, and the fog lifts as you go. Both are in your Bag."],
     saves: ["Saves", "The game saves itself as you go, in this browser. You can keep three runs at once: <b>Saves</b> in your Bag switches between them. If you fall, you pick up again from your last checkpoint."],
+    tear: ["Tears", "Touch a thing and it turns (◇ ◈ ◆), and so do the things either side of it. Set each back the way it was. You can only see the way it was by <b>looking</b>, a few times, for a breath each; the count always says how many are right. A rough mend costs you."],
+    court: ["The drowned court", "One of the three opened the Queen's stair. You have time to search three places. An alibi clears someone; a thing left on the stair points at someone. Then you stand with one of them, and it matters who."],
+    dunvaar: ["Dunvaar", "Dunvaar is a new region. When the chapter's done, its <b>Wandering Board</b>, its beasts, a town and a hidden thing are on the roads back."],
     surge: ["The surge", "The living water fights in <b>real time</b>. Grey tongues of it reach up the channels toward the line: <b>tap one to cut it</b> (the heavy ones take two taps). Whatever gets to the line reaches you. Each surge lasts ten to twenty seconds, with a breath between. If it's too fast, choose <b>Slow Tide</b>, here or in your journal."],
     tidemap: ["The Tide Map", "Each day you do one thing; each night <b>the Welling takes its own turn</b>, reaching from every wet place to the next. At 3 a place goes under, with whoever's still in it. <b>Read the tide</b> to see where it'll reach tonight. A levee turns it back once."],
     evac: ["Evacuations", "The <b>bells</b> are your clock. Every group you move costs bells, and so does a safe route. Who goes first matters, and so does who you leave. You can stay and <b>hold the water</b> once, to buy bells. When the bells run out, whoever's left takes their chances."],
@@ -4667,7 +4718,7 @@ body.pv-open { overflow: hidden; }
     const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep the axe in hand", plain: true }]);
     if (c === "y") { wield(k); await mech("Main hand: <b>" + WEAPONS[k].name + "</b>. The axe goes on your back, where it can still keep you alive."); }
   }
-  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0) + wpnHit() + (S.champ ? 1 : 0);
+  const gearHit = () => lvHit() + (relic("lens") ? 1 : 0) + (relic("weircrown") ? 1 : 0) + wpnHit() + (S.champ ? 1 : 0);
   const dmgUp = () => lvDmg() + (relic("fang") ? 1 : 0) + (S.champ ? 1 : 0);
   const lvNewsQ = () => (S.lvNews = S.lvNews || []);
   // A save from before levels gets the XP a player would have earned on the way to its part.
@@ -5252,9 +5303,13 @@ body.pv-open { overflow: hidden; }
     rime: { key: "thousandth", icon: "grain", name: "The Thousandth Ring", fx: "A slice of the oldest wood in Rimehold, with a thousand rings in it: +6 max HP, and 3 bundles of Kindling.", hint: "the frozen pond at Tallowby",
       where: "At Tallowby, where the Long White begins, a Cascade pours up out of the frozen pond, and the ice round it melts in a perfect circle, and something comes up to the surface and turns over, slowly.",
       find: "It's a disc of black wood the size of a plate, polished by water, with rings in it so fine you need to hold it to the light: a thousand of them, exactly. The outermost ring is torn, and the tear has healed. It's warm.",
-      on: () => { S.maxHp += 6; S.hp += 6; const M = rm(); M.kin = (M.kin || 0) + 3; } }
+      on: () => { S.maxHp += 6; S.hp += 6; const M = rm(); M.kin = (M.kin || 0) + 3; } },
+    dunvaar: { key: "weircrown", icon: "ring", name: "The Weir-Crown", fx: "The drowned kings' circlet of green ice that won't melt: +6 max HP, and +1 to hit.", hint: "the throne room of Dunvaar",
+      where: "In the throne room of Dunvaar, a Cascade pours up out of the empty throne, and the ice of the seat goes soft round something that has been frozen into it for a thousand years.",
+      find: "It's a circlet of green ice, thin as a wedding ring for a giant, that doesn't melt in your hand. The last king of Dunvaar wore it when the water came. He didn't take it off.",
+      on: () => { S.maxHp += 6; S.hp += 6; } }
   };
-  const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part));
+  const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part) && (r !== "dunvaar" || !!(S.dv && S.dv.done)));
   const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
   async function roamFall() {
     foeEnd(true);
@@ -5297,6 +5352,7 @@ body.pv-open { overflow: hidden; }
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "sea", label: S.sea ? "Put to sea in " + S.sea.ship.name : "Go down to your ship", tag: S.sea ? "voyages · rival captains · hull " + S.sea.ship.hull + " of " + S.sea.ship.max + (S.sea.chart.length && !S.sea.hoard ? " · chart " + S.sea.chart.length + " of 4" : "") : "the Open Reach · a ship of your own", plain: true, show: seaOpen() },
           { key: "board", label: S.wb && S.wb.cur ? "Unfold the Wandering Board again" : "Walk the Wandering Board", tag: S.wb && S.wb.cur ? REGIONS[S.wb.cur.reg] + " · where you left it" : "a board for one region · sounds, wonders, a world that moves when you do", plain: true },
+          { key: "summons", label: "Answer the summons", tag: "a small tear somewhere on the roads · Ringsight" + (S.rs && S.rs.road ? " · " + S.rs.road + " mended" : ""), plain: true, show: !!(S.rs && S.rs.done) },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
@@ -5318,6 +5374,7 @@ body.pv-open { overflow: hidden; }
         if (c === "walk") await roamWalk();
         else if (c === "raid") await roadRaid();
         else if (c === "sea") await seaHub();
+        else if (c === "summons") await rsRoad();
         else if (c === "roads") await bnRoads();
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
@@ -5383,7 +5440,7 @@ body.pv-open { overflow: hidden; }
     elite: ["The Grey Ledge", "The Notch", "The Old Kill"]
   };
   // The top of each region's board: who holds it.
-  const WB_TOP = { roots: "The Heartwood Gate", desert: "The Red Mesa", fen: "The Reed Throne", mere: "The Drowned Barbican", lastwell: "The Gallows Rise", glass: "The Cullet Heaps", corrach: "The Pale Cirque", noon: "The Gnomon Steps", undermoon: "The Last Mooring", rahdaria: "The Seventh Terrace", bathyrra: "The Sounding Rock", reach: "The Wreckers' Light", hinge: "Ostle Weir", rime: "The Last Cairn" };
+  const WB_TOP = { roots: "The Heartwood Gate", desert: "The Red Mesa", fen: "The Reed Throne", mere: "The Drowned Barbican", lastwell: "The Gallows Rise", glass: "The Cullet Heaps", corrach: "The Pale Cirque", noon: "The Gnomon Steps", undermoon: "The Last Mooring", rahdaria: "The Seventh Terrace", bathyrra: "The Sounding Rock", reach: "The Wreckers' Light", hinge: "Ostle Weir", rime: "The Last Cairn", dunvaar: "The Green Throne" };
   const WB_WONDERS = [
     { k: "choir", name: "The Glass Choir", text: "Round the bend the path stops at the foot of a frozen waterfall a hundred feet high. The wind comes down the gorge and through the ice, and the whole fall sings: long, low chords, changing as the light changes. Nobody has ever heard it sing the same thing twice." },
     { k: "stags", name: "The Pale Crossing", text: "On the ridge above you, against the last of the sun, a herd of stags is crossing: pale as bone, dozens of them, and every antler is grown thick with the glowing fungus of the deep roots. They don't hurry and they don't look at you. It takes them the best part of an hour to go by." },
@@ -6192,7 +6249,7 @@ body.pv-open { overflow: hidden; }
   const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
   const CAL_MD = 12, CAL_YEAR = 144;
   // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
-  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9];
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9, 6];
   // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
   const CAL_FAIRS = [
     { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
@@ -6522,6 +6579,12 @@ body.pv-open { overflow: hidden; }
   // any of them: an inn, a market, a smith, a bank, a library, a bar, and the sanctuaries, where you
   // can rest for nothing and be healed of what the road gave you.
   const TOWNS = {
+    dunvaar: [
+      { name: "The Weir-House", kind: "town", get has() { return S.dv && S.dv.seal === "risen" ? ["inn", "market"] : ["inn"]; },
+        get intro() { return S.dv && S.dv.seal === "risen" ? "The Weir-House is an inn now, the Steward's idea: a drowned lord's hall with a fire in it, and a market in the courtyard where the newly-woken sell things a thousand years out of fashion to the Rimehand, who love them." : "The Weir-House stands empty in the ice, with frost on the tables. Somebody keeps a fire laid in the hearth, all the same, for whoever comes down." ; } },
+      { name: "The Sleepers' Chapel", kind: "sanctuary", has: ["sanctum"],
+        intro: "In the drowned chapel the court's sleepers lie in rows under the ice, smiling. It's the quietest place you've ever slept." }
+    ],
     rime: [
       { name: "Weatherend", kind: "town", has: ["inn", "market"],
         get intro() { return S.rm && S.rm.ending === "melt" ? "Weatherend's stockade is mended with green ice that won't melt, and the hall's fire is roaring, and every night somebody stands the watch in the tower, looking north at the light in the crack." : "Weatherend has a stockade again, of new black timber, and the long hall's fire burns blue and gold on Kindling, and the reeve's lips are pink. When you come through the gate the whole outpost stops and looks at you, and somebody puts a cup of something hot in your hands without asking."; } },
@@ -6648,6 +6711,7 @@ body.pv-open { overflow: hidden; }
     if (T.reg === "rahdaria") await unEchoTown(T);
     if (T.reg === "rahdaria") await rmEchoTown(T);
     await wlTown(T);
+    await rsTown(T);
     if (T.reg === "rahdaria" && S.hn && S.hn.done) {
       if (echoDue("hnEast")) { await echoMark("hnEast"); await say({ whole: "In the market they're selling Ostle bread again, and somebody's painted a tower falling over on the inn sign. Children play Hingebreaker in the street, and argue about who has to be Corvane.", scarred: "The bread's dearer since the east was scarred. A woman at a stall tells you her sister lived at Hobble Cross. She doesn't say anything else, and she gives you the loaf for nothing.", half: "There's a queue for bread that goes round two terraces. The Bathyr camp on the salt flats has soldiers round it now, and nobody will say whose." }[S.hn.east]); }
       if (echoDue("hnYsolt")) { await echoMark("hnYsolt"); await say("Ysolt has a little shop on the third terrace now, with maps in the window, and her eyes are grey and short-sighted behind thick spectacles. Everything she draws is exactly what's there. She gives you one for nothing."); S.coins += 10; renderSheet(); await mech("Ysolt's map of the roads round Rahdaria sells for 10 gold to a carter, the same afternoon.", "loot"); }
@@ -6876,6 +6940,15 @@ body.pv-open { overflow: hidden; }
   const DRY = {
     calSeason: CAL_SEASON_LINES, calFair: CAL_FAIR_LINES, calName: CAL_NAME_WHY,
     wayside: {
+      get summons() { return S.rm && S.rm.ending === "melt" ? [
+        "A drowned courtier in the street bows to you, and asks the year. You tell him. He thanks you, and goes and lies down again.",
+        "There's a fishmonger's stall in Dunvaar with a thousand-year-old fish on it, frozen, priced. Nobody has bought it. Nobody has marked it down.",
+        "The thawlings follow you for a mile, at a distance, the way ducklings do, until you turn round, and then they all look at the ceiling."
+      ] : [
+        "A root comes up through the road in front of you, taps twice, and goes back down. It's Ammeroth's way of saying not yet.",
+        "In one inn, the soup is the soup from the broken world for a moment, and then it isn't. The cook swears. Nobody else notices.",
+        "Your palm itches at dinner. You put your fork down. It stops. You pick your fork up. It starts. Ammeroth has a sense of humour after all."
+      ]; },
       rime: [
         "A cairn on the Long White has a black stone on top and a note under the stone: THIS IS THE RIGHT WAY. Under that, in another hand: WHICH WAY? Under that, nothing.",
         "A salt-man coming south tells you it's cold up there. You thank him. He says no, really, and goes on.",
@@ -6973,6 +7046,8 @@ body.pv-open { overflow: hidden; }
     },
     // Townsfolk on the roads back, by region. A function can return "" when the town isn't there any more.
     town: {
+      dunvaar: ["The Steward has introduced market days. Nobody in Dunvaar has bought anything for a thousand years, and they've all forgotten how to haggle, and the Rimehand are making a killing.",
+        "A drowned lady at the Weir-House asks you whether the war is over. You ask which war. She thinks for a long time, and says she doesn't remember, and orders another drink."],
       rime: ["The reeve of Weatherend says they had a summer once. It was on a Thursday. They all went out and stood in it.",
         "A child at Weatherend asks you if it's true that in the south the snow is warm. You say there isn't any snow. The child looks at you with deep suspicion and goes to tell its mother."],
       roots: ["On the reading desk somebody has left a note: BACK SOON. The ink is about four hundred years old.",
@@ -8950,6 +9025,7 @@ body.pv-open { overflow: hidden; }
   };
   // Which weather each region's roads can roll. Underground roads get none, but they can shake.
   const REGION_WX = {
+    dunvaar: { k: ["fog", "snow", "fog", "wind"], quake: 8 },
     rime: { k: ["snow", "wind", "snow", "fog"], quake: 10 },
     roots: { k: [], quake: 20 }, desert: { k: ["heat", "heat", "wind"], quake: 0 }, fen: { k: ["fog", "rain", "fog"], quake: 0 },
     mere: { k: ["rain", "fog", "storm"], quake: 0 }, lastwell: { k: ["fog", "rain", "wind"], quake: 0 }, glass: { k: ["heat", "storm", "wind"], quake: 0 },
@@ -9892,6 +9968,7 @@ body.pv-open { overflow: hidden; }
   const OBS_TERRAIN = [["a cracked pillar", "large"], ["an overhang of loose stone", "large"], ["a leaning stack of timber", "small"], ["a rotten beam overhead", "small"]];
   // Things on the road worth bringing down, by region: [what, size].
   const ROAD_TERRAIN = {
+    dunvaar: [["a frozen tower leaning over the street", "large"], ["a sheet of black ice over deep water", "small"]],
     rime: [["a cornice of wind-packed snow overhanging the track", "large"], ["a cairn with a black stone on top", "small"]],
     roots: [["a cracked root-pillar", "small"], ["a hanging slab of old ceiling", "large"]],
     desert: [["a wind-cut sandstone arch", "large"], ["a dune lip heavy with loose sand", "small"]],
@@ -9932,6 +10009,7 @@ body.pv-open { overflow: hidden; }
   // fx: still = loses its next turn · blind = −2 to hit for the fight · soft = −1 AC for the fight ·
   // bleed = 1d4 a round for 3 rounds · shade = double against shades.
   const REGION_MINES = {
+    dunvaar: { name: "Thaw-jar", fill: "a drowned court's wine jar full of meltwater that freezes as it breaks", cost: 14, dice: [3, 6], type: "cold", fx: "still", fxTxt: "it freezes to the spot: it loses its next turn" },
     rime: { name: "Frost-pot", fill: "a Rimehand clay pot of something that freezes as it spills", cost: 14, dice: [3, 6], type: "cold", fx: "still", fxTxt: "it freezes to the spot: it loses its next turn" },
     roots: { name: "Rootsnare", fill: "a fist of living labyrinth root", cost: 8, dice: [2, 6], type: "piercing", fx: "still", fxTxt: "roots hold it: it loses its next turn" },
     desert: { name: "Glasswind", fill: "furnace sand that fuses into splinters", cost: 10, dice: [3, 6], type: "slashing", fx: "blind", fxTxt: "glass in its eyes: −2 to hit for the fight" },
@@ -14199,6 +14277,7 @@ body.pv-open { overflow: hidden; }
   }
   // Palettes: g ground, gd dark, gl light, cov cover, tall, tallL, rug, hi, cliff, sink, sinkD, acc (plants and lichen).
   const FD_PAL = {
+    dunvaar:   { g: "#5a7a74", gd: "#46625c", gl: "#7a9a92", cov: "#3a524c", tall: "#22342f", tallL: "#6a8a82", rug: "#4e6a64", hi: "#a8d0c4", cliff: "#1a2a26", sink: "#1d3a44", sinkD: "#0e2028", acc: "#7fe0c0" },
     rime:      { g: "#c9d6dc", gd: "#a3b4bc", gl: "#e6eef2", cov: "#8a9aa2", tall: "#5a6a72", tallL: "#b4c4cc", rug: "#a8b8c0", hi: "#f2f6f8", cliff: "#4a5a62", sink: "#5a8aa0", sinkD: "#2a4a5a", acc: "#7fc0e0" },
     roots:     { g: "#4a3d2c", gd: "#33281b", gl: "#6a5843", cov: "#5f4a30", tall: "#3a2c1c", tallL: "#6e5638", rug: "#3f3222", hi: "#6d5a40", cliff: "#2a2016", sink: "#2c2a1a", sinkD: "#141208", acc: "#9fbf6a" },
     desert:    { g: "#c79f63", gd: "#a9824a", gl: "#dcbb83", cov: "#9b7440", tall: "#6e4f33", tallL: "#a37a52", rug: "#8f7552", hi: "#e0c08a", cliff: "#8a5f37", sink: "#d6bd86", sinkD: "#b79a5e", acc: "#7b8a4a" },
@@ -14225,6 +14304,8 @@ body.pv-open { overflow: hidden; }
   };
   // One hand-built field per region. style picks the art: sand, fen, scree, stone or deck.
   const FIELDS = {
+    dunvaar: { name: "The Drowned Street", style: "scree", pal: "dunvaar", blurb: "A street of Dunvaar under its sky of ice: black water standing still between the houses, slicks of black ice, fallen statues for cover, and the frozen dead lying where they fell.",
+      grid: ["c#.i.#c", "..iii..", "c.i~i.c", "..ii.r.", ".r..i..", "c..o..c"], you: [3, 5], foe: [3, 0] },
     rime: { name: "The Frozen Pass", style: "scree", pal: "rime", blurb: "The narrows of the pass under the blue ice cliffs: fallen blocks of the Rimehand's wall for cover, drifts as deep as your waist, and black ice where the wind has scoured the snow away.",
       grid: ["hh.#.hh", "h..c..h", ".r.~.c.", "c.~~~..", "..r..r.", "c..c..c"], you: [3, 5], foe: [3, 0] },
     rimehall: { name: "The Glass Hall", style: "scree", pal: "rime", blurb: "A hall of the outer ring where the floor is black ice, polished by nothing, with warm stones set into it here and there like stepping stones and blocks of old ice fallen from the roof.",
@@ -14289,6 +14370,7 @@ body.pv-open { overflow: hidden; }
   };
   // Wanderers: one per region, on nobody's side.
   const WANDERERS = {
+    dunvaar: { name: "A drowned courtier", emb: "shade", home: "c", enter: "A drowned courtier in a ruff a thousand years out of fashion comes stiffly out of a doorway onto the field, looking for the ball. There isn't one. It decides you're the reason.", lash: "The drowned courtier lunges with a little silver knife", why: "The silver knife is very cold, and very sharp." },
     rime: { name: "Hoarback calf", emb: "ox", home: "h", enter: "A Hoarback calf comes blundering down off the drifts onto the field, as big as a pony already and frosted like a cake, looking for its mother. It doesn't find her. It finds both of you, and it's frightened, and it's very large.", lash: "The Hoarback calf panics and charges", why: "It shoves you off your feet with its frosted head." },
     roots: { name: "Lanternstag", emb: "stag", home: "c", enter: "Through the root-curtains steps a stag made of the labyrinth: bark for a hide, and antlers grown thick with pale fungus that glows like a row of lanterns. It looks at the two of you as if you were in its hall.", lash: "The Lanternstag lowers its glowing antlers and drives in", why: "Antler-tines of hard root open you up." },
     desert: { name: "Glassback", emb: "glassback", home: "~", enter: "Out of the heat-shimmer comes a Glassback: a lizard the size of an ox, its back a ridge of fused sand plates that chime as it walks. It isn't here for you, or for it. This is its wash.", lash: "The Glassback whips its tail round like a door slamming", why: "The tail takes you across the legs." },
@@ -14380,7 +14462,7 @@ body.pv-open { overflow: hidden; }
   });
   const BEAST_EMB = { ticks: "tick", hound: "canine", skimmer: "lizard", picker: "hood", hulk: "mound", wader: "wader", crab: "crab", lamprey: "eel", crows: "crow", reeve: "horn",
     cutter: "shards", mastiff: "flamehound", lurker: "rockeye", mites: "mites", shearer: "shears", cutshade: "shade", kiteeel: "kite", plumbmaw: "maw", brinehound: "canine",
-    rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull", hoarback: "ox", rimeshrikes: "hawk" };
+    rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull", hoarback: "ox", rimeshrikes: "hawk", thawlings: "mites", icepike: "gar" };
   // Beasts that fly or swim over the ground: every square costs them 1, and sinking ground doesn't hold them.
   const FD_FLY = ["crows", "wreckgulls", "kiteeel", "brackray"];
   // Your marker: a medallion, picked on the name card or from the map, kept per save slot.
@@ -15859,10 +15941,10 @@ body.pv-open { overflow: hidden; }
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach", rime: "The Rimewaste" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11, rime: 14 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach", rime: "The Rimewaste", dunvaar: "Dunvaar" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11, rime: 14, dunvaar: 16 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria", 84: "rahdaria", 85: "rahdaria", 87: "rahdaria", 91: "rime", 93: "rime", 101: "reach", 103: "rahdaria" };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria", 84: "rahdaria", 85: "rahdaria", 87: "rahdaria", 91: "rime", 93: "rime", 101: "reach", 103: "rahdaria", get 105() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "glass"; }, get 107() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "rime"; } };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -16020,7 +16102,19 @@ body.pv-open { overflow: hidden; }
       tactic: "Thin them fast: anything that drops more than one at a time. Below three, they lose their nerve.",
       lore: "Little grey-and-white birds of the far north with hooked beaks, that hang what they kill on thorns and icicles to freeze for later. A flock of them will take on a wolf. They've never seen a reason not to take on you.",
       intro: "There's a thorn bush by the track with frozen mice hung all over it like decorations. Then the bush explodes into wings.",
-      who: "the rime-shrikes", hitWhy: "A hooked beak takes a strip out of your ear.", miss: "Wings whirr round your head, and miss.", hitLine: "A shrike drops into the snow in a puff of grey." }
+      who: "the rime-shrikes", hitWhy: "A hooked beak takes a strip out of your ear.", miss: "Wings whirr round your head, and miss.", hitLine: "A shrike drops into the snow in a puff of grey." },
+    { id: "thawlings", name: "Thawlings", region: "dunvaar", quirk: "mob", heads: 5, unit: "thawling|thawlings", ac: 13, atk: 6, n: 1, s: 6, type: "cold", notice: 13, bleed: 15,
+      ability: ["Mob", "While three or more are left, three of them strike each round instead of two, with cold little hands that leave the skin white."],
+      tactic: "Thin them fast. Below three, they remember they're small, and go back into the ice.",
+      lore: "Little drowned things of Dunvaar, knee-high, that were a city's children's dolls and pets and carvings when the kingdom sank, and got up when it thawed. They want to be held. They hold on.",
+      intro: "Something tugs at your coat. Then something else does. They're all round your knees, small and pale and dripping, with their arms up, and their hands are so cold they burn.",
+      who: "the thawlings", hitWhy: "A little cold hand closes on your wrist and won't let go.", miss: "Small hands grab at the air where you were.", hitLine: "A thawling goes to slush and runs away into the ice." },
+    { id: "icepike", name: "Glacier pike", region: "dunvaar", quirk: "lunge", hp: 34, ac: 14, atk: 7, n: 1, s: 10, type: "piercing", notice: 14,
+      ability: ["Lunge", "It comes out of the black water all at once, from far off, faster than you can turn."],
+      tactic: "Keep your back to the ice, not the water. When it misses, it's stranded for a breath: hit it then.",
+      lore: "A fish the length of a boat that lived in the black lake under the glacier for a thousand years in the dark, getting bigger. It has no eyes. It doesn't need them.",
+      intro: "The black water by the path goes flat, which is wrong. Then it comes up all at once, and the thing in it is mostly mouth.",
+      who: "the glacier pike", hitWhy: "Its jaws close on you like a door slamming.", miss: "It hits the ice where you were, and the ice cracks.", hitLine: "Black blood runs out onto the ice and freezes." }
   ];
 
   function beastCard(B, met = true, tally) {
@@ -16218,7 +16312,7 @@ body.pv-open { overflow: hidden; }
   // they're more afraid of what they're turning into than of you.
   const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
     cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
-    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls" };
+    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
   const beastById = (id) => BEASTS.find(b => b.id === id);
 
@@ -32959,7 +33053,7 @@ body.pv-open { overflow: hidden; }
     if (W.saved >= 4000) grant("wlsaved");
     await say("Before you go, Reeve Pollard paints a line on the harbour wall of the Terraces, at the height the water reached. Under it she writes the date. Under that, after a while, people start writing names.");
     W.done = true; save();
-    await endCard();
+    await go(wlBind() ? "Wait for the call" : "Look north");
   }
   // ---------- traces ----------
   const WL_SCARS = {
@@ -33010,6 +33104,596 @@ body.pv-open { overflow: hidden; }
       "</ul><p class='j-note'>Saved: <b>" + wlNum(W.saved) + "</b>. Lost: <b>" + wlNum(W.lost) + "</b>.</p></section>";
   }
 
+  // ================= After the contract (Adrian's design doc, 2026-11-13) =================
+  // One chapter slot, Parts CV to CXI, that plays two ways. After the Binding it's the Root Summons:
+  // Ammeroth calls, and you mend tears where the broken world leaks into the put-back one, each tear
+  // holding something somebody loved. After the Deep Melt it's Dunvaar: the drowned kingdom under the
+  // ice, its court, the knights of the thaw, Ithra Coldvein, the seal, and a second chance at the contract.
+  const rsMelt = () => !!(S.rm && S.rm.ending === "melt");
+  const rs = () => (S.rs = S.rs || { on: false, calls: 0, kept: [], stitched: [], trust: 0, rough: 0, looks: 0, done: false });
+  const dv = () => (S.dv = S.dv || { on: false, ally: null, traitor: null, clues: [], knights: [], bv: null, ithra: null, seal: null, contract: null, done: false });
+  const rsLooks = () => 2 + (S.rs && S.rs.kept.includes("maelis") ? 1 : 0) + (S.rm && S.rm.spirit ? 1 : 0);
+
+  // ---------- the tear: a row of things caught between two worlds ----------
+  // Each thing is in one of three states. Touch one and it turns, and so do the things either side
+  // (they're stitched together). Set every one back the way it was. You can't see the way it was
+  // except by looking through the rings, a few times, for a breath each; and you can always see how
+  // many are right.
+  function rsTear(o) {
+    return new Promise(resolve => {
+      const n = o.things.length, G = o.glyphs || ["◇", "◈", "◆"], looks0 = o.looks ?? rsLooks();
+      const P = puzzleBox(o.title, o.hint);
+      const T = o.things.map(() => d(3) - 1), cur = T.slice();
+      const press = (arr, i, k) => { for (const j of [i - 1, i, i + 1]) if (j >= 0 && j < n) arr[j] = (arr[j] + k) % 3; };
+      const sol = new Set(); while (sol.size < (o.depth || 3)) sol.add(d(n) - 1);
+      sol.forEach(i => press(cur, i, 2));
+      if (cur.every((v, i) => v === T[i])) press(cur, sol.values().next().value, 2);
+      const cap = (o.depth || 3) * 3 + 6;
+      let moves = 0, looks = looks0, done = false, peek = false;
+      const row = el("div", "rs-row"); row.style.setProperty("--n", n);
+      const cells = o.things.map((name, i) => {
+        const c = el("div", "rs-cell", '<span class="rs-was" aria-hidden="true"></span>');
+        const b = pbtn(""); b.className = "rs-thing"; b.onclick = () => { if (done) return; press(cur, i, 1); moves++; draw(); };
+        c.append(b, el("span", "rs-name", name)); row.appendChild(c); return { c, b, was: c.querySelector(".rs-was") };
+      });
+      P.body.appendChild(row);
+      const look = pbtn(o.lookLabel || "Look through the rings"), force = pbtn(o.forceLabel || "Tear it shut by force");
+      P.ctrl.append(look, force);
+      look.onclick = () => {
+        if (done || looks <= 0 || peek) return;
+        looks--; peek = true; S.rs && S.rs.looks++; draw();
+        setTimeout(() => { peek = false; draw(); }, wlSlow() ? 3600 : 2400);
+      };
+      force.onclick = () => { if (done) return; done = true; P.end(); P.status.textContent = "You force it shut. It closes, roughly, and takes something with it."; setTimeout(() => resolve({ ok: false, moves, looks: looks0 - looks }), 450); };
+      function draw() {
+        const right = cur.filter((v, i) => v === T[i]).length;
+        cells.forEach((x, i) => {
+          x.b.textContent = G[cur[i]]; x.b.setAttribute("aria-label", o.things[i] + ": " + (o.names || ["as it is", "between", "as it was"])[cur[i]] + ". Turn it.");
+          x.was.textContent = peek ? G[T[i]] : ""; x.c.classList.toggle("peek", peek); x.c.classList.toggle("right", peek && cur[i] === T[i]);
+        });
+        look.textContent = (o.lookLabel || "Look through the rings") + " (" + looks + " left)"; look.disabled = done || looks <= 0 || peek;
+        P.status.textContent = right + " of " + n + " are as they were · " + moves + " of " + cap + " touches";
+        if (right === n) { done = true; P.end(); P.status.textContent = "Every one of them is as it was. The tear closes like a held breath let go. (" + moves + " touches)"; setTimeout(() => resolve({ ok: true, moves, looks: looks0 - looks }), 500); }
+        else if (moves >= cap) { done = true; P.end(); P.status.textContent = "Your hands are shaking too much to go on. The tear closes on its own, roughly."; setTimeout(() => resolve({ ok: false, moves, looks: looks0 - looks }), 500); }
+      }
+      draw();
+    });
+  }
+  // A tear, with the price of mending it badly. Returns true if it went cleanly.
+  async function rsMend(o) {
+    tip("tear");
+    const r = await rsTear(o);
+    if (r.ok) { if (r.looks === 0) grant("rsblind"); return true; }
+    if (S.rs) S.rs.rough++;
+    await hurt(2, 8, "psychic", "A rough mend pulls at you: some of the tear closes on you instead.");
+    return false;
+  }
+
+  // ---------- the ring-lock: words on turning rings ----------
+  // Rings of letters turn past a slot. Turning one ring drags the ring below it the other way.
+  // Set the slot to read the word.
+  function rsRings(o) {
+    return new Promise(resolve => {
+      const W = o.word.toUpperCase(), R = W.length, L = 8, ABC = "ABCDEFGHIKLMNOPRSTUVWY";
+      const rings = [], off = [];
+      for (let k = 0; k < R; k++) {
+        const s = []; while (s.length < L) { const ch = ABC[d(ABC.length) - 1]; if (ch !== W[k] && !s.includes(ch)) s.push(ch); }
+        s[d(L) - 1] = W[k]; rings.push(s); off.push(0);
+      }
+      const turn = (k, dir) => { off[k] = (off[k] + dir + L) % L; if (k + 1 < R) off[k + 1] = (off[k + 1] - dir + L) % L; };
+      for (let i = 0; i < 6; i++) turn(d(R) - 1, d(2) === 1 ? 1 : -1);
+      const P = puzzleBox(o.title, o.hint);
+      const box = el("div", "rs-rings");
+      const rows = rings.map((s, k) => {
+        const r = el("div", "rs-ring"), lb = pbtn("◀"), rb = pbtn("▶"), strip = el("div", "rs-strip");
+        lb.setAttribute("aria-label", "Turn ring " + (k + 1) + " left"); rb.setAttribute("aria-label", "Turn ring " + (k + 1) + " right");
+        lb.onclick = () => { turn(k, 1); moves++; draw(); }; rb.onclick = () => { turn(k, -1); moves++; draw(); };
+        r.append(lb, strip, rb); box.appendChild(r); return strip;
+      });
+      P.body.appendChild(box);
+      const give = pbtn(o.giveLabel || "Give up and guess"); P.ctrl.appendChild(give);
+      let moves = 0, done = false;
+      give.onclick = () => { if (done) return; done = true; P.end(); resolve({ ok: false, moves }); };
+      function draw() {
+        const read = rings.map((s, k) => s[off[k]]).join("");
+        rows.forEach((strip, k) => { strip.innerHTML = [-2, -1, 0, 1, 2].map(j => '<span class="' + (j === 0 ? "slot" : "") + '">' + rings[k][(off[k] + j + L) % L] + "</span>").join(""); });
+        P.status.textContent = "The slot reads " + read.split("").join(" ") + " · " + moves + " turns";
+        if (read === W && !done) { done = true; P.end(); P.status.textContent = "The slot reads " + W + ". Something under the rings goes click. (" + moves + " turns)"; setTimeout(() => resolve({ ok: true, moves }), 500); }
+        else if (moves >= 80 && !done) { done = true; P.end(); P.status.textContent = "The rings have gone stiff with frost. They won't turn any more."; setTimeout(() => resolve({ ok: false, moves }), 500); }
+      }
+      draw();
+    });
+  }
+  // ---------- the Root Summons (after the Binding) ----------
+  // A tear is where the glue of the put-back world lets go, and the broken world leaks through. Each one
+  // holds something somebody loved. Stitch it shut (Ammeroth's way, and the world stays clean), or leave
+  // a hairline crack (somebody keeps what only the broken world gave them). Both are remembered.
+  async function rsChoose(key, o) {
+    const R = rs();
+    const c = await choose([
+      { key: "stitch", label: o.stitch, tag: o.stitchTag || "Ammeroth's way · the world stays clean" },
+      { key: "keep", label: o.keep, tag: o.keepTag || "a hairline crack · somebody keeps what the broken world gave them", plain: true }
+    ]);
+    if (c === "stitch") { R.stitched.push(key); R.trust++; await say(o.stitched); }
+    else { R.kept.push(key); R.trust--; await say(o.kept); }
+    save();
+    return c;
+  }
+  // Part CV
+  async function rsFirstCall() {
+    const R = rs(), M = S.rm; R.on = true;
+    light("dusk");
+    await say("It comes on a wet night at an inn on the roads back, three weeks after the eye closed. You're asleep. Then you aren't: there's a root round your ankle, come up between the floorboards, and it's pulling. Not hard. The way you'd pull a sleeve to get somebody's attention.");
+    await say("You go down through the floor the way a seed goes down, and the dark is warm, and it smells of soil and old paper, and when it lets you go you're standing in the Library of Roots, where all of this began.");
+    await voice("“Little root,” says Ammeroth, from the shelves and the floor and the air. “I said I would call.”");
+    await voice("“When the world was put back, it was put back like a torn page glued down: flat, mostly. Where the glue lets go, the broken world leaks through. I call those tears. I can feel them. I can't reach them. You can.”");
+    await say("The library is wrong. The reading lamp is lit and not lit. A chair is pushed in and pulled out. And at the long table an old woman in a librarian's grey is reading the same page, over and over, turning it and turning it back. Her lips move. It's the same line every time.");
+    await voice("“Archivist Wenda Fallowes,” Ammeroth says. “In the put-back world she has worked here forty years. In the broken one, she had a brother, Aldous, who was born in the year of the first Cascade and died in the second. He only ever existed there. Every night she reads the letter he never wrote her. Look.”");
+    await mech("<b>Ringsight</b> is more than a flinch now. In a tear you can <b>look through the rings</b> and see, for a breath, how each thing was before it tore. You only get a few looks.", "loot");
+    const ok = await rsMend({ title: "The reading room", hint: "Five things in the room are caught between two worlds. Touch one and it turns (◇ ◈ ◆), and so do the things either side of it. Set each back as it was. Look through the rings to see how that was; the count shows how many are right.", things: ["the lamp", "the chair", "the page", "the inkwell", "the window"], depth: 2 });
+    await say(ok ? "The last thing settles, and the room goes still and single. The lamp is only lit. The chair is only pulled out. And Archivist Fallowes stops turning the page, and looks at it, and frowns, as if she's lost her place." : "The tear closes, but rough, like a sleeve sewn in the dark. The room is single again, mostly. The window still shows rain that isn't falling.");
+    await say("She looks up at you. “Have we met?” she says. “I keep thinking I owe somebody a letter.” In her hand, for one more moment, there's a sheet in a boy's handwriting. It's going transparent.");
+    await rsChoose("fallowes", {
+      stitch: "Stitch it shut", keep: "Leave her the letter",
+      stitched: "You close the last of it with your thumb, the way you'd close an eye. The letter goes. Archivist Fallowes blinks, and finds her place, and goes back to her catalogue, and hums. She'll never know what she lost. Ammeroth says nothing, which is how you know it's pleased.",
+      kept: "You let the last thread be. The letter stays, a little faded, a little warm. She folds it, without knowing why, and puts it in the drawer where she keeps the things she can't throw away. Ammeroth is quiet for a long moment. “Small cracks let in small drafts,” it says. “Mind they don't grow.”"
+    });
+    R.calls = 1; grant("rscall");
+    xpGain(80); save();
+    await go("Wake up");
+  }
+  // Part CVI
+  async function rsGlassTwice() {
+    const R = rs();
+    light("sun");
+    await say("The second call comes at noon, in a market, in front of a hundred people. The roots take you through a puddle. You come up through a crack in a glass floor, in Sulmara, in the great court of the Assize, and the court is sitting twice.");
+    await say("In one, it's the put-back Sulmara: a dull day, a dispute about a fence. In the other, it's the broken one, and there's a man in the dock with chains on, a glass-cutter called Benedek Strand, and the court is sentencing him to hang. The two courts sit in the same seats, through each other, and neither can see the other. Benedek can see both.");
+    await say("Something is coming through the tear behind him: a thing like a dog, and like two dogs, one in each world, that don't quite line up. Tearlings, Ammeroth calls them: what the broken world sends to keep its doors open.");
+    await hkFight({ name: "A Tearling", hp: 36, ac: 14, atk: 6, n: 2, s: 6, type: "psychic", bloom: 0, hesk: false, who: "the tearling", whoShort: "Tearling",
+      hitWhy: "Both of its jaws close on you, in two worlds, a breath apart.", miss: "It snaps where you were, and where you were a breath ago.", hitLine: "One of its two bodies flinches, and the other one doesn't.",
+      extra: (st) => (st.used.look || 0) < 2 ? [{ key: "look", label: "Look through the rings", tag: "see which body is real · 2d8, no roll · twice a fight", plain: true }] : [],
+      onExtra: async (c, st) => { st.used.look = (st.used.look || 0) + 1; await say("You look through the rings, and for a breath you see it as it was: one dog, ordinary, scared. You hit that one."); await foeBurst(2, 8, 0, "Ringsight"); } });
+    await say("With the tearling down, the tear is quieter. You can work. Benedek watches you, both of his courts going on round him.");
+    const ok = await rsMend({ title: "The two courts", hint: "Six things in the court are caught between the two sittings. Touch one and it and its neighbours turn. Set each back as it was.", things: ["the gavel", "the chains", "the ledger", "the jury bench", "the noose-rope", "the glass door"], depth: 3 });
+    await say(ok ? "The broken court thins, and goes, like breath off a window. The fence dispute goes on. Benedek Strand is standing in an empty dock with no chains on, looking at his wrists." : "The broken court goes, but not cleanly: for a second the hanging is in the put-back room, and a clerk screams and doesn't know why.");
+    await say("“I did it,” Benedek says to you, low. “In that world. I cut the glass of the granary and fed my street through a winter that never happened here. They hanged me for it. Here nobody's hungry and I never did anything.” He looks at his hands. “I'd like to remember the faces. If it's all the same to you.”");
+    await rsChoose("strand", {
+      stitch: "Stitch it shut", keep: "Let him keep the faces",
+      stitched: "You stitch it shut. He goes quiet, and then he laughs, embarrassed, and asks you what he was saying. In the put-back world nobody was hungry. He goes home to a street of people who never needed him.",
+      kept: "You leave him the faces. He'll have a nightmare twice a month for the rest of his life, about a rope. He'll also stop, sometimes, in his street, and look at the children, and know exactly what he'd do. Ammeroth makes a sound like a branch creaking under snow."
+    });
+    R.calls = 2; xpGain(90); save();
+    await go("Go back up through the floor");
+  }
+  // Part CVII
+  async function rsBell() {
+    const R = rs();
+    light("dusk");
+    await say("The third call is a bell. You hear it in your sleep and wake standing up, already walking, and the roots meet you halfway. They put you down at Lastwell, at the foot of the Belfry, at the hour the Wringer used to come.");
+    await say("In the put-back world there was never a Wringer. The village has a bell-ringers' guild and a fair. But the tear here is the worst yet: the broken world is pouring through it like water through a crack in a dam, grey hands of it, reaching for the village, and wherever they touch a door that door remembers being locked against something.");
+    await voice("“This one is wide,” Ammeroth says. “Hold it narrow while you mend it. Cut what reaches through.”");
+    const r = await wlSurge({ title: "The tear reaches through", line: "Lastwell", secs: 14, rise: 2600, every: 720, heavy: 0.2, lanes: 3 });
+    R.bell = r.reached <= Math.ceil(r.total * 0.3) ? "held" : "rough";
+    if (R.bell === "rough") await hurt(Math.min(r.reached, 8), 6, "psychic", "What reaches through goes through you on the way: a night of the old Lastwell, the bolts, the waiting.");
+    const ok = await rsMend({ title: "The Belfry", hint: "Six things in the Belfry are caught between a fair and a siege. Touch one and it and its neighbours turn. Set each back as it was.", things: ["the bell", "the rope", "the bolt", "the lantern", "the shutter", "the trapdoor"], depth: 3 });
+    await say(ok ? "The tear closes from the bottom up, like ice forming. The bell stops ringing in two worlds and rings in one: the fair bell, for the fair." : "It closes, but the bell cracks as it does, in this world too. The guild will argue for a year about who did it.");
+    if (!ok) R.bellCrack = true;
+    await say("Afterwards, an old woman of the guild comes out with two cups of something hot. She has never seen you before. She says that sometimes, at this hour, everybody in Lastwell bolts their doors at once, without a word, and then laughs about it. “Habit,” she says. “From what, nobody knows.”");
+    R.calls = 3; grant("rsbell"); xpGain(90); save();
+    await go("Let the roots take you");
+  }
+  // Part CVIII
+  async function rsMaelis() {
+    const R = rs(), M = S.rm, mercy = rmTerm("mercy");
+    light("lake");
+    await say("The fourth call takes you north. The roots put you down in Weatherend, in the hall, by the fire, where you met a scholar with ink on their fingers who only existed because the world broke.");
+    if (mercy) {
+      await say("And they're here. Maelis, born anyway, because you wrote it into the last ring: a little older than you remember, with the same ink on the same fingers, reading by the fire. They look up. They don't know you. But the tear is in the chair next to them, and in it, sitting with its knees up, is the other Maelis: the one from the broken world, the one who walked the Long White with you, fading.");
+      await say("The two of them look at each other. The living one goes white. The fading one smiles, a little crooked. “Hello,” it says. “You're the one who gets to stay.”");
+    } else {
+      await say("The tear is in the chair by the fire. In it, sitting with its knees up, is Maelis: the one who walked the Long White with you, who " + ({ talked: "you talked down in the rings", fled: "ran from you into the heart", beaten: "you beat twice", won: "beat you in the rings" }[M.ma && M.ma.fate] || "you met at this fire") + ". It's all that's left of them, anywhere: an echo, caught in a fold of the glue. Nobody else in the hall can see it.");
+      await say("“Oh,” it says, when it sees you. “It's you. I wondered who they'd send.”");
+    }
+    const r = await check({ label: "Insight check (what Maelis wants)", mod: 2 + Math.floor(lv() / 8), dc: 14, cta: "Listen" });
+    await say(r.ok ? "You listen, properly, and you hear it under what they're saying: they're not frightened of being stitched shut. They're frightened of being stitched shut without anyone having said goodbye." : "You can't tell what they want. They talk about the weather in the Long White, and the price of ink, and you wait.");
+    const ok = await rsMend({ title: "The fire at Weatherend", hint: "Six things by the fire are caught between the hall as it is and the hall as it was. Touch one and it and its neighbours turn. Set each back as it was.", things: ["the kettle", "the map", "the quill", "the stool", "the shutters", "the empty chair"], depth: 3, looks: rsLooks() + (r.ok ? 1 : 0) });
+    if (!ok) await say("The mend goes rough, and the echo flinches as it closes round them.");
+    if (mercy) {
+      await rsChoose("maelis", {
+        stitch: "Stitch the echo shut", keep: "Let the living Maelis take the echo in",
+        stitchTag: "the living Maelis stays whole, and never knows", keepTag: "they'll remember the Long White, and you",
+        stitched: "The echo looks at the living one for a long moment, and nods, and lets you close it. The living Maelis rubs their eyes and goes back to their book. Later, you see them look up at you across the hall, puzzled, the way you'd look at someone whose name is on the tip of your tongue.",
+        kept: "The echo stands up out of the tear and sits down in the living Maelis, the way you'd sit down in a chair you know. The living one gasps. Then they look at you, and they know you, all of it, the white and the rings and the contract. “You wrote me in,” they say. “You absolute fool.” They're crying. They're laughing."
+      });
+      if (R.kept.includes("maelis")) await mech("<b>Maelis</b> remembers. They'll come with you on the summons from now on: one more look through the rings in every tear.", "loot");
+    } else {
+      await rsChoose("maelis", {
+        stitch: "Say goodbye, and stitch it shut", keep: "Keep the echo in your rings",
+        stitchTag: "Maelis goes, for good, but not unsaid", keepTag: "a voice in your Ringsight · one more look in every tear",
+        stitched: "You say it. They say it back. They close their own eyes before you close the tear, which is a kindness to you, and very like them. When it's done, the chair by the fire is just a chair.",
+        kept: "You hold out your hand, palm up, the way you hold it out for Ringsight, and the echo looks at it, and laughs, and steps into it. It's warm. From now on, when you look through the rings, somebody looks with you, and makes remarks."
+      });
+      if (R.kept.includes("maelis")) await mech("<b>Maelis</b> rides in your Ringsight now: one more look through the rings in every tear.", "loot");
+    }
+    R.calls = 4; grant("rsmaelis"); xpGain(100); save();
+    await go("Go down into the roots");
+  }
+  // Part CIX
+  async function rsLedger() {
+    const R = rs(), M = S.rm;
+    light("gems");
+    await say("The fifth call doesn't put you anywhere broken. It takes you all the way down, through the roots, to the heart of Rimehold, and puts you on your feet in front of the knot, where you signed.");
+    await say("It's quiet. The melt is gone; the rings are dry and still. Ammeroth is sitting on a root with its long hands between its knees, and it looks older than it did. It looks like a tree in a drought.");
+    await voice("“Five tears in a season,” it says. “There were three last year. They're coming faster, little root. There's a big one coming. I can feel it the way you feel a storm in a knee. But I can't read where.” It nods at the knot. “The rings can. I'm too tired to turn them.”");
+    if (M.spirit) await say("At your shoulder the freed Refuser stirs, the way it does when it means to help. It puts a hand on the knot beside yours.");
+    const r = await rsRings({ title: "The rings of the knot", hint: "Four rings of the knot turn past a slot. Turn a ring, and the ring below it turns the other way. The rings name the place of the next great tear: a place where a lot of people were born in the broken world, and nowhere else. Ammeroth says it's a word for a dip in the land with a pond in it.", word: "HOLM" });
+    R.read = r.ok;
+    await say(r.ok ? "The slot reads HOLM, and Ammeroth lets out a long breath. “Hollow Holm,” it says. “On the Kingsroad, past the ford. In the broken world, two hundred souls lived there who were born of the Cascade, and nowhere else. The Unborn, like your Maelis. In this world it's a pond and some reeds.”" : "The rings stiffen before you've read them. Ammeroth reads the half you managed and guesses the rest. “Hollow Holm,” it says, slowly. “I think. On the Kingsroad, past the ford. If I'm wrong, we'll be late.”");
+    if (M.bv && M.bv.fate !== "dead") await say("On the way out, at the crossroads by the churchyard, the cheerful gravedigger in the plain black coat is sitting on his spade, eating an apple. He nods to you. “Busy?” he says. “Me too. Funny thing. I keep digging graves out here for people nobody's heard of. I put names on them anyway. Feels right.” He offers you the apple. It has a coin in it.");
+    R.calls = 5; xpGain(100); save();
+    await go("Go to Hollow Holm");
+  }
+  // Part CX
+  async function rsTornYear() {
+    const R = rs(), late = !R.read;
+    light("dusk");
+    await say("Hollow Holm in the put-back world is a pond, some reeds, a ruined sheepfold and a heron. Today, it's a village and a pond at the same time, and the village is going under: two hundred people, the Unborn of the broken world, in their doorways and their gardens and their one street, looking up at a sky that's coming apart like wet paper.");
+    if (late) await say("You're late. Some of the far end of the street has already gone: you see a doorway with no house behind it, and a child's shoe in the reeds.");
+    await say("A woman runs up to you with flour on her arms. “Are you the one?” she says. “The old tree said there'd be someone. Are we going to stop?”");
+    const r = await wlSurge({ title: "The tear pulls at Hollow Holm", line: "the street", secs: 16, rise: 2400, every: 640, heavy: 0.3, lanes: 4 });
+    const lost = Math.max(0, Math.round(200 * (r.reached / Math.max(1, r.total))) + (late ? 30 : 0));
+    R.holmLost = Math.min(200, lost);
+    await say(R.holmLost ? "When it drops back, " + R.holmLost + " of them are gone. Not dead. Never were. Their neighbours look at the empty places and can't remember who stood there." : "When it drops back, all two hundred of them are still standing in their street, holding on to each other.");
+    const ok = await rsMend({ title: "Hollow Holm", hint: "Seven things in the village are caught between a village and a pond. Touch one and it and its neighbours turn. Set each back as it was. This is the big one: take your time.", things: ["the well", "the bridge", "the bread oven", "the heron", "the sheepfold", "the reeds", "the sky"], depth: 4 });
+    if (!ok) await say("The mend goes rough, and the sky over the village tears a little further before it holds.");
+    await voice("Ammeroth comes up through the pond, slow, enormous, tired. “Now,” it says. “Stitch it, little root. They were never meant to be. When it's closed they won't suffer. They won't have been.”");
+    await say("The woman with the flour on her arms is looking at you.");
+    const owe = !!(S.rm && S.rm.clause) || R.kept.length >= 2;
+    const c = await choose([
+      { key: "stitch", label: "Stitch Hollow Holm shut", tag: "the Unborn go, as if they never were · Ammeroth's way" },
+      { key: "carry", label: "Carry them through into this world", tag: "they'll live, here · Ammeroth will want something for it", plain: true },
+      { key: "clause", label: "Write them into the last ring", tag: "the Refuser's Clause still has room · costs you, not them", plain: true, show: owe }
+    ]);
+    R.holm = c;
+    if (c === "stitch") {
+      R.trust += 2;
+      await say("You close it. It's the hardest thing you've done since you signed. The village goes the way the broken courts went: thin, then gone, like breath off glass. The last thing to go is the woman with flour on her arms. She doesn't look angry. She looks like somebody who always knew.");
+      await say("The pond is a pond. The heron is standing in it, on one leg, as if nothing has happened. Nothing has.");
+    } else if (c === "carry") {
+      R.owed = true; R.trust--;
+      await voice("Ammeroth looks at you for a long time. “It can be done,” it says. “A tear can be pulled closed from this side, with them on it. But the glue has to come from somewhere, and you're the only one I can take it from.” A pause. “When I call you for the last time, you'll come, and you won't be able to say no. That's the price.”");
+      await say("You say yes. The roots go into the ground under the village, all of them, the whole field white with them, and they pull, and the sky closes over Hollow Holm with the village under it, and the village stays. Two hundred people who were never born in this world are standing in it, in a field by a pond, alive, and they have no birth records, no rents, no names in any church book anywhere. They have each other, and a heron.");
+    } else {
+      R.owed = true; S.maxHp = Math.max(1, S.maxHp - 8); S.hp = Math.min(S.hp, S.maxHp); renderSheet();
+      await say("You go down into the pond to the knot that's under every pond, and you find the last ring of the contract, the one in the very middle, and there's room in it still, the way there's always room in a family Bible for one more name. You write them in. Hollow Holm. Two hundred souls. It takes something out of you to write it, and doesn't give it back.");
+      await mech("−8 max HP, for good. Hollow Holm is written into the contract: they're born in this world after all.", "hurt");
+    }
+    if (c !== "stitch") { grant("rsholm"); await say("Before you go, the woman with the flour on her arms gives you a loaf. It's warm. It's the first thing anyone has ever baked in Hollow Holm in this world."); S.potions = (S.potions || 0) + 2; renderSheet(); await mech("The loaf is as good as two healing draughts, and you treat it like them.", "loot"); }
+    R.calls = 6; xpGain(140); save();
+    await go("Wait for the last call");
+  }
+  // Part CXI
+  async function rsLastCall() {
+    const R = rs(), M = S.rm, free = rmTerm("free");
+    light("gems");
+    await say("The last call comes on the first warm day of spring. It doesn't pull. It asks. You feel it in your palm, a soft knock, the way a friend knocks who knows you might be busy. You go.");
+    await say("Ammeroth is in the heart of Rimehold, sitting with its back to the knot, and it's thinner than you've ever seen it: you can see the knot through it in places. It smiles when it sees you, the real smile.");
+    await voice("“I'm wearing out,” it says. “That's all. Root-Keepers do. I was a soul like you once, standing where you stood with a pen. I signed. I've kept the roots for a very long time.” It looks at you. “Somebody has to keep them after me. Not yet. Not for years. But somebody.”");
+    await voice("“You've mended " + R.calls + " tears with me. You stitched " + R.stitched.length + (R.kept.length ? ", and left " + R.kept.length + " open a crack, for people you didn't want to lose" : "") + ". " + (R.trust >= 3 ? "You do it the way I would." : R.trust <= -1 ? "You do it the way I wish I had." : "You do it your own way. Good.") + "”");
+    let c;
+    if (R.owed) {
+      await voice("“And you owe me one call you can't refuse. For Hollow Holm.” It doesn't smile, quite. “This is it. I won't make you keep them now. But you'll promise. That's the call.”");
+      c = "promise";
+      await say("You promise. You'd have promised anyway, you think. You're not sure.");
+    } else if (free) {
+      await voice("“And you wrote yourself a term, at the end of the last ring. <i>When the summons are done, the bound one goes free.</i>” It laughs, softly. “They're done. You're free, little root. You don't owe me a thing. I'm only asking.”");
+      c = await choose([
+        { key: "promise", label: "Promise you'll come back for it", tag: "one day, the roots will be yours to keep" },
+        { key: "walk", label: "Walk away free", tag: "the Binding ends · you're nobody's but your own", plain: true }
+      ]);
+    } else {
+      c = await choose([
+        { key: "promise", label: "Promise you'll take its place one day", tag: "the roots will be yours to keep" },
+        { key: "refuse", label: "Say no", tag: "it'll keep calling, as long as it lasts", plain: true }
+      ]);
+    }
+    R.end = c;
+    if (c === "promise") {
+      await say("You put your hand on the knot, next to its hand. The roots under Rimehold shift, all the way down, and settle round your name, the way a tree settles round a nail.");
+      await voice("“Not yet,” Ammeroth says. “Go and live first. A keeper who hasn't lived is no good to the roots.” It gives you a little push, the way you'd push a boat off.");
+      S.title = "Root-Heir"; grant("rsheir");
+    } else if (c === "walk") {
+      R.free = true; S.title = "Unbound"; grant("rsfree");
+      await say("You take your hand off the knot. Something goes out of your palm that's been there since you signed: a weight you'd stopped noticing. Ringsight stays. Nothing else does.");
+      await voice("“Good,” Ammeroth says, and means it. “Go on. Someone else will come. Someone always does.”");
+    } else {
+      await say("You say no. It doesn't argue. It nods, as if it expected that, and as if it doesn't mind, much.");
+      await voice("“Then I'll keep calling,” it says. “As long as I last. You'll come. You always do.”");
+    }
+    R.done = true; renderSheet(); xpGain(200); save();
+    await mech("<b>The Root Summons</b> go on, on the roads back: smaller tears, wherever the glue lets go." + (R.free ? " You're free; you can answer them anyway, if you like." : ""), "loot");
+    await endCard();
+  }
+
+  // ---------- on the roads back: a small tear ----------
+  const RS_ROAD = [
+    { reg: "desert", where: "a well in the Burning Sands", who: "a water-seller who keeps setting out cups for a caravan that only came in the broken world", things: ["the cups", "the rope", "the bucket", "the awning", "the camel"] },
+    { reg: "fen", where: "a jetty in the Hushfen", who: "a ferryman who keeps rowing out to fetch a passenger who was never born", things: ["the oar", "the lamp", "the mooring", "the reeds", "the bell"] },
+    { reg: "glass", where: "a glassblower's in Sulmara", who: "an apprentice blowing the same vase for a customer who doesn't exist here", things: ["the pipe", "the furnace", "the vase", "the shears", "the shutter"] },
+    { reg: "corrach", where: "a groove in Thrumhold", who: "a Hesk singer singing the second half of a duet whose first singer was never born", things: ["the drum", "the cap", "the stone", "the lamp", "the echo"] },
+    { reg: "rahdaria", where: "a terrace garden in Rahdaria", who: "a gardener watering a row of graves from a siege that never happened", things: ["the can", "the stones", "the fig", "the gate", "the bench"] },
+    { reg: "reach", where: "a raft at Raftmark", who: "a net-mender mending a net for a boat that sank in the other world", things: ["the net", "the needle", "the float", "the lantern", "the plank"] }
+  ];
+  async function rsRoad() {
+    const R = rs(), T = RS_ROAD.filter(t => roamRegions().includes(t.reg)), X = T.length ? T[d(T.length) - 1] : RS_ROAD[0];
+    const h = el("div", "part-head sub", '<span class="num">The roads back · the Root Summons</span><h2>A small tear</h2>');
+    scrollNext = true; add(h);
+    await say("The roots take you to " + X.where + ", where " + X.who + ".");
+    if (d(2) === 1) await hkFight({ name: "A Tearling", hp: 24 + lv(), ac: 13 + Math.floor(lv() / 12), atk: 5 + Math.floor(lv() / 10), n: 1, s: 8, type: "psychic", bloom: 0, hesk: false, road: true, who: "the tearling", whoShort: "Tearling",
+      hitWhy: "Both of its jaws close on you, a breath apart.", miss: "It snaps where you were a breath ago.", hitLine: "One of its two bodies flinches.",
+      extra: (st) => st.used.look ? [] : [{ key: "look", label: "Look through the rings", tag: "2d8, no roll · once", plain: true }],
+      onExtra: async (c, st) => { st.used.look = true; await foeBurst(2, 8, 0, "Ringsight"); } });
+    const ok = await rsMend({ title: "A small tear", hint: "Touch a thing and it and its neighbours turn. Set each back as it was.", things: X.things, depth: 2 + d(2) });
+    await rsChoose("road", { stitch: "Stitch it shut", keep: "Leave them what they had", stitched: "The tear closes. They blink, and go on with their day.", kept: "You leave a hairline crack. They'll keep doing it, now and then, and won't know why, and won't mind." });
+    R.road = (R.road || 0) + 1;
+    const g = wbGold(ok ? 3 : 2); S.coins += g; renderSheet();
+    await mech("Ammeroth leaves " + g + " gold in your boot, as it always does, as if it thinks you won't notice." + (R.road >= 5 ? "" : ""), "loot");
+    if (R.road >= 5) grant("rsroad");
+    xpGain(40); save();
+  }
+  // ---------- Dunvaar (after the Deep Melt) ----------
+  const DV_COURT = {
+    isaut: { name: "Lady Isaut of the Weirs", short: "Lady Isaut", party: "the Sleepers", want: "wants Dunvaar to sink back under the ice and sleep, for good",
+      alibi: "Lady Isaut was at the Weir-Gate all night: the gate-wardens saw her lantern there till the thaw-bell. She can't have let the knights through the Larder stair.",
+      tell: "a strip of the weir-wardens' blue silk, caught on the Queen's stair, torn as if somebody went up it fast" },
+    hobb: { name: "Steward Hobb Marrable", short: "the Steward", party: "the Wakers", want: "wants Dunvaar to live, risen, but free of the queen",
+      alibi: "The Steward's larder book has his hand on every line of last night's count, and the count took till dawn. He was nowhere near the Queen's stair.",
+      tell: "a larder tally-stick on the Queen's stair, notched with a count of knights instead of barrels" },
+    agathe: { name: "Mother Clemence Fenning, the Tide-Clerk", short: "Mother Clemence", party: "the Ledger", want: "keeps the court's records and wants to write the end of the story herself",
+      alibi: "Mother Clemence's ledger was being read aloud in the drowned chapel all night, and she was correcting the reader every other line. Half the court heard her.",
+      tell: "a drop of green tide-ink on the Queen's stair, still wet, the ink only the Tide-Clerk uses" }
+  };
+  const DV_PLACES = [["gate", "The Weir-Gate"], ["larder", "The Steward's Larder"], ["ledger", "The Clerk's Ledger-Room"], ["chapel", "The Drowned Chapel"]];
+  // Part CV
+  async function dvUnder() {
+    const D = dv(), M = S.rm; D.on = true;
+    light("lake");
+    await say("The word comes down from the north a month after the eye closed: a rider from Weatherend, half-dead, with frost in his beard. Things are coming up out of the crack in Rimehold at night. Tall things, in armour of black water. They take people. They take them down.");
+    await say("You go north again. The Long White is a long grey slush now, and every river runs the wrong colour. Weatherend has a wall of green ice round it that won't melt, and a watch in the tower every night, looking north at the light in the crack.");
+    await say("The great door of Rimehold is open, and the rings behind it are flooded, and the flood is going down. Not draining. Going down, like a staircase. Like something's drinking it from below.");
+    await voice("Ammeroth's voice, very faint, from the roots in the walls. It sounds like someone talking through a wall of ice. “She's using the water as a stair. Follow it down, little root. Dunvaar is open. Somebody has to go in.”");
+    await say("The last stair goes down past the heart, past the knot, through the floor of the glacier, and out into air: cold, green, enormous. Under the ice there's a sky of ice, and under that sky, a city.");
+    await say("<b>Dunvaar.</b> Towers of green ice, streets of black water standing still, houses with their shutters open and frost in the windows. And in the streets, people, just thawing: drowned folk in court clothes a thousand years out of fashion, blinking, stiff, with weed in their hair, getting up off the ground where they fell when the kingdom sank.");
+    await say("Between you and the city the sluice that holds the meltwater back is jammed half-open. If it gives, the stair goes, and you with it.");
+    const ok = await rsMend({ title: "The jammed sluice", hint: "Five sluice-gates are jammed, each in ice, slush or water. Turn one, and the gates either side turn with it. Set each as the carving above them shows. The carving is under frost: wipe it to see, a few times.", things: ["the first gate", "the second", "the third", "the fourth", "the fifth"], depth: 3, looks: 3, lookLabel: "Wipe the frost off the carving", forceLabel: "Hack the sluice open", names: ["ice", "slush", "water"] });
+    D.sluice = ok;
+    await say(ok ? "The gates turn into line one after another, and the sluice sighs, and the meltwater goes where it's told. The stair holds." : "You hack the sluice open. The water goes out with a roar that the whole city hears. The stair holds. So much for coming in quietly.");
+    if (BEASTS.some(b => b.region === "dunvaar")) await meetBeast("dunvaar", { forced: true });
+    tip("dunvaar");
+    xpGain(80); save();
+    await go("Go into the city");
+  }
+  // Part CVI
+  async function dvCourt() {
+    const D = dv();
+    light("lake");
+    await say("The drowned court of Dunvaar meets in a hall with a roof of ice so clear you can see the glacier moving above it. There's no queen on the throne. Ithra Coldvein is in the deep, below the city, waking slowly, the way a glacier does everything. Her knights are her hands until she's up.");
+    await say("Three of the court come to meet you, dripping, stiff, very courteous, a thousand years out of practice at visitors.");
+    for (const k of ["isaut", "hobb", "agathe"]) await say("<b>" + DV_COURT[k].name + "</b>, of " + DV_COURT[k].party + ", " + DV_COURT[k].want + ".");
+    const keys = ["isaut", "hobb", "agathe"]; D.traitor = keys[d(3) - 1];
+    const inn = keys.filter(k => k !== D.traitor);
+    await say("Last night somebody let two of the knights of the thaw up the Queen's stair to the court, and they took a dozen of the newly-woken down with them, into the deep. One of these three opened the stair. The other two don't know which.");
+    tip("court");
+    const pool = [{ t: "clear", k: inn[0] }, { t: "clear", k: inn[1] }, { t: "clear", k: inn[d(2) - 1] }, { t: "tell", k: D.traitor }].sort(() => Math.random() - .5);
+    const places = DV_PLACES.map(([key, name], i) => ({ key, name, clue: pool[i] }));
+    for (let n = 0; n < 3; n++) {
+      const c = await choose(places.filter(p => !D.clues.includes(p.key)).map(p => ({ key: p.key, label: "Search " + p.name, tag: (3 - n) + " of 3 before the thaw-bell", plain: true })));
+      D.clues.push(c);
+      const P = places.find(p => p.key === c);
+      await say("You go through " + P.name + " while the court pretends not to watch.");
+      await mech(P.clue.t === "clear" ? DV_COURT[P.clue.k].alibi : "On the Queen's stair you find " + DV_COURT[P.clue.k].tell + ".", "loot");
+    }
+    await say("The thaw-bell rings. The three of them are waiting for you in the hall. You can stand with one of them. The other two will do what they're told.");
+    const c = await choose(keys.map(k => ({ key: k, label: "Stand with " + DV_COURT[k].short, tag: DV_COURT[k].party + " · " + DV_COURT[k].want })));
+    D.ally = c;
+    if (c === D.traitor) await say(DV_COURT[c].short + " bows, very low, and very long, so that you can't see their face.");
+    else { await say(DV_COURT[c].short + " takes your hand in a cold wet hand and doesn't let go for a long moment. Then they turn to the hall and point at " + DV_COURT[D.traitor].short + ", who has gone white under the frost."); grant("dvcourt"); D.caught = true;
+      await say(DV_COURT[D.traitor].short + " doesn't run. There's nowhere to run under a glacier. “She promised us the sky,” they say. “A thousand years under the ice, and she promised us the sky.” The court takes them away to the cold cells, where a thousand years is nothing."); }
+    xpGain(100); save();
+    await go("Go down toward the deep");
+  }
+  // Part CVII
+  async function dvKnights() {
+    const D = dv(), hobb = D.ally === "hobb" && D.caught;
+    light("lake");
+    await say("Between the city and the deep there are three gates, and the knights of the thaw hold them: tall shapes in armour made of black water that holds its shape, with weed in their helms, and nothing at all inside.");
+    if (hobb) await say("The Steward's Wakers come down behind you: forty newly-woken drowned folk with boat-hooks and kitchen knives and a thousand years of being angry. They take the middle gate off your hands. “Go on,” the Steward says. “We'll keep this one busy. We've been waiting to.”");
+    await hkFight({ name: "Sir Ewart of the Sluice", hp: 44, ac: 15, atk: 7, n: 2, s: 6, type: "cold", bloom: 0, hesk: false, icicle: true, who: "Sir Ewart", whoShort: "Ewart",
+      hitWhy: "His sword is a blade of flowing water, and it cuts like ice.", miss: "His blade splashes against the gate-post.", hitLine: "Black water spills out of the gap in his armour and runs back up into it.",
+      turn: async (st) => { if (st.round % 3 === 0) { await say("He opens his visor and the sluice behind his face opens with it."); await hurt(2, 6, "cold", "A sheet of freezing water knocks you flat."); return "done"; } } });
+    D.knights.push("ewart");
+    if (!hobb) {
+      await hkFight({ name: "The Weed-Helm", hp: 46, ac: 14, atk: 7, n: 1, s: 10, type: "bludgeoning", bloom: 0, hesk: false, who: "the Weed-Helm", whoShort: "Weed-Helm",
+        hitWhy: "Long ropes of weed come out of its helm and wrap you, and pull.", miss: "The weed lashes the ice where you were.", hitLine: "A rope of weed parts with a wet snap.",
+        extra: (st) => st.used.cut ? [] : [{ key: "cut", label: "Cut the weed at the helm", tag: "Athletics DC 14 · it can't drag you", plain: true }],
+        onExtra: async (c, st) => { st.used.cut = true; const r = await check({ label: "Athletics check", mod: 3 + Math.floor(lv() / 10), dc: 14, cta: "Cut" }); if (r.ok) { await say("You get a hand in the weed and saw through it at the helm. The helm is empty inside. It's a dreadful thing to see."); await foeBurst(2, 8, 0, "Weed cut"); } else await say("The weed's too thick. It drags you a yard before you get free."); } });
+      D.knights.push("weed");
+    }
+    await say("The last gate opens onto a hall where the floor is black ice, polished by nothing, the same as the Glass Hall in Rimehold's outer ring. Dame Morwen Blackwater is waiting in the middle of it, very still. She lets you come onto the ice.");
+    await hkFight({ name: "Dame Morwen Blackwater", field: "rimehall", fdEmb: "shade", hp: 52, ac: 16, atk: 8, n: 2, s: 6, type: "cold", bloom: 0, hesk: false, icicle: true, who: "Dame Morwen", whoShort: "Morwen",
+      hitWhy: "She slides in on the ice without moving her feet, and her blade's already in you.", miss: "She slides past, turning, her blade a hand from your face.", hitLine: "Her armour cracks like a pond in spring." });
+    D.knights.push("morwen");
+    if (D.knights.length >= 3) grant("dvknights");
+    xpGain(120); save();
+    await go("Go down into the deep");
+  }
+  // Part CVIII
+  async function dvBrannoc() {
+    const D = dv(), M = S.rm, alive = M.bv && M.bv.fate !== "dead";
+    light("dusk");
+    if (alive) {
+      await say("The deep stair goes down past a camp: tents of flags, and a cookfire burning on the ice with a green flame, and fifty Rimehand sitting round it with their knees up. Brannoc Vane is cooking. Of course he is.");
+      await voice("“There you are!” he says, delighted, and gets up, and wipes his hands on a flag. “I said you'd come. Didn't I say? I said.” He looks down at the deep, where something enormous is turning over in its sleep. “She's nearly up. And I'm on the winning side, which is a habit of mine, as you'll remember.”");
+      await voice("“So. An Offer. You knew there'd be an Offer. Three thousand gold, and you go home, and when she's up she leaves Weatherend alone, my word on it. I've never broken my word. Ask anybody I've buried.”");
+      const spared = M.bv.fate === "spared";
+      const c = await choose([
+        { key: "turn", label: "Turn him", tag: "Persuasion · DC " + (spared ? 13 : 16) + (spared ? " · you left him by his fire once" : "") },
+        { key: "take", label: "Take the three thousand", tag: "the Rimehand stand aside, and everyone will know you took it", plain: true },
+        { key: "fight", label: "Fight him", tag: "his camp, his fire, his ice", plain: true }
+      ]);
+      if (c === "turn") {
+        const r = await check({ label: "Persuasion check (Brannoc Vane)", mod: 2 + Math.floor(lv() / 8), dc: spared ? 13 : 16, cta: "Make the case" });
+        if (r.ok) { D.bv = "turned"; grant("dvbrannoc"); await say("You tell him what she'll do with Weatherend, and with the salt roads, and with every grave he ever dug. You tell him she doesn't need gravediggers: she doesn't bury things. She keeps them."); await voice("He listens. He stops smiling, which you've never seen. Then he starts again, slowly, a different smile. “Well,” he says. “Nobody likes a queen who doesn't let you finish things.” He kicks the fire out. “Rimehand! We're changing sides. Bring the pots.”"); }
+        else { D.bv = "fought"; await say("He listens, politely, and shakes his head, and picks up his spade."); }
+      } else if (c === "take") {
+        D.bv = "paid"; S.coins += 3000; renderSheet();
+        await mech("+3,000 gold. The Rimehand stand aside.", "loot");
+        await say("He counts it out into your hands in gold coins from a dozen countries, and pats your cheek. “Good choice. Sensible. I'd have taken it.” The Rimehand stand aside to let you pass, and every one of them watches you go down.");
+      } else D.bv = "fought";
+      if (D.bv === "fought") await hkFight({ name: "Brannoc Vane", hp: 56, ac: 15, atk: 7, n: 2, s: 6, type: "slashing", bloom: 0, hesk: false, icicle: true, who: "Brannoc Vane", whoShort: "Brannoc",
+        hitWhy: "The spade again, swung flat. He hasn't lost the knack.", miss: "The spade rings off the ice. He tuts.", hitLine: "He laughs, and bleeds, and keeps coming.",
+        turn: async (st) => { if (st.round % 4 === 0) { await say("He lobs a frost-pot underhand at your feet."); await hurt(2, 6, "cold", "The pot bursts in a bloom of frost."); return "done"; } } });
+      if (D.bv === "fought") await say("He goes down by his own green fire, laughing. “Fair,” he says. “That's fair.” The Rimehand pick him up and carry him off up the stair, still laughing.");
+    } else {
+      await say("The deep stair goes down past a camp: tents of flags and a cold fire. The Rimehand are here without Brannoc Vane. They have a new leader, a hard old woman called Ma Tull, who was his cook, and who hasn't forgiven you.");
+      await hkFight({ name: "The Rimehand", heads: 5, unit: "raider|raiders", ac: 14, atk: 6, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Rimehand", whoShort: "Rimehand",
+        hitWhy: "A hooked blade comes out of the press of them.", miss: "A blade skids off the ice by your boot.", hitLine: "One of them goes down on the ice and slides away." });
+      D.bv = "dead";
+      await say("Ma Tull lowers her cleaver when the last of them is down. “He'd have liked you,” she says. “That's the worst of it.” She takes the Rimehand back up the stair.");
+    }
+    xpGain(100); save();
+    await go("Go down to the Queen");
+  }
+  // Part CIX
+  async function dvIthra() {
+    const D = dv(), betrayed = D.ally === D.traitor, named = !betrayed && (D.ally === "agathe" || D.ally === "isaut");
+    light("lake");
+    await say("At the bottom of everything, under Dunvaar, under the glacier, there's a lake as black and flat as a table, and Ithra Coldvein is getting up out of it.");
+    await say("She's tall, and then taller, a woman made of meltwater that keeps the shape of a woman because it chooses to. Her crown is a ring of icicles. Her face is in every wall of the cavern, the way it was in Rimehold, and all of them are smiling.");
+    await voice("“Little one,” she says. “You came back down. I did hope you would. It's so tedious, being thanked by strangers.”");
+    if (betrayed) {
+      await say(DV_COURT[D.ally].short + ", beside you, steps away from you onto the water, and the water holds them up. They don't look at you. “I'm sorry,” they say. “A thousand years. She promised us the sky.”");
+      await hurt(3, 8, "cold", "The knights you didn't see come up out of the lake behind you.");
+      grant("dvbetray");
+    }
+    if (D.bv === "turned") await say("Behind you, on the shore, the Rimehand come down the stair with Brannoc at their head, and start throwing frost-pots at a queen. “It's not personal, ma'am!” Brannoc calls. “Only it is a bit!”");
+    await hkFight({ name: "Ithra Coldvein", hp: 70 + (betrayed ? 10 : 0), ac: 16, atk: 8, n: 2, s: 8, type: "cold", bloom: 0, hesk: false, icicle: true, who: "the Meltwater Queen", whoShort: "Ithra",
+      hitWhy: "She doesn't strike. She rises over you, and falls, and you're under a ton of black water.", miss: "She breaks over the rock where you were.", hitLine: "Part of her runs off into the lake and doesn't come back when she calls it.",
+      extra: (st) => { const o = []; if (D.bv === "turned" && !st.used.pots) o.push({ key: "pots", label: "Shout for the frost-pots", tag: "the Rimehand throw · 3d6, no roll", plain: true }); if (named && !st.used.name) o.push({ key: "name", label: "Say her true name", tag: DV_COURT[D.ally].short + " told you · 4d6, no roll", plain: true }); return o; },
+      onExtra: async (c, st) => {
+        st.used[c] = true;
+        if (c === "pots") { await say("A dozen frost-pots arc over your head and burst against her, and where they burst she freezes, and cracks."); await foeBurst(3, 6, 0, "Frost-pots"); }
+        else { await say("You say the name " + DV_COURT[D.ally].short + " gave you: her name from before, when she was only a woman who drowned with her city. She stops. All her faces stop smiling."); await foeBurst(4, 6, 0, "Her name"); }
+      } });
+    await say("She comes apart, and the lake comes up with her: all the meltwater under the glacier rising at once, out of every crack, reaching for you and the shore and the stair.");
+    const r = await wlFight({ name: "The Meltwater Queen", line: "the shore", sides: 8, surges: [{ secs: 13, rise: 2500, every: 680, heavy: 0.25, lanes: 3, say: "The first of it comes up the shore." }, { secs: 16, rise: 2200, every: 600, heavy: 0.35, lanes: 4, say: "She comes again, all of her." }], calm: ["The water draws back down into the lake and gathers itself into a shape."] });
+    D.surge = r.ok;
+    await say("When the water falls back the second time it doesn't get up again. It lies in the lake, flat, and shivering, and there's a face in it, very small now, looking up at you.");
+    const c = await choose([
+      { key: "freeze", label: "Freeze her back into the glacier", tag: "Vaelric's axe takes the cold back · she sleeps, and may wake" },
+      { key: "name", label: "Bind her by her name to the court", tag: DV_COURT[D.ally] ? DV_COURT[D.ally].short + " knows how · she'll sleep under the city, kept" : "", show: named, plain: true },
+      { key: "sea", label: "Let her run to the sea", tag: "out of the glacier for good · the sea will have her", plain: true }
+    ]);
+    D.ithra = c;
+    if (c === "freeze") await say("You lay the axe's edge on the water, and the heartgrain in it goes blue, and the lake freezes from the edge in, with her in it, a face in the ice like a fly in amber. She's still smiling. She'll still be smiling when she wakes.");
+    else if (c === "name") await say(DV_COURT[D.ally].short + " kneels by the lake and speaks to her, a long time, in a language nobody has spoken for a thousand years: the names of her people, one after another. The face in the water listens, and gets smaller, and goes down, like a child being put to bed. The court will keep her, under the city, and say the names every year.");
+    else await say("You step back from the shore. The water lies still a moment, as if it can't believe it. Then it goes, all at once, down every crack in the floor, south, toward the sea, and you hear it for a long time, running. Somewhere on the coast, the Welling is going to get a little bigger.");
+    grant("dvithra"); xpGain(200); save();
+    await go("Go up to the seal");
+  }
+  // Part CX
+  async function dvSeal() {
+    const D = dv(), ally = D.caught ? D.ally : null;
+    light("gems");
+    await say("The seal of Dunvaar is a ring of standing stones in the middle of the city, round a well that goes down to the black lake. When the kingdom sank, the seal shut over it. When the glacier opened, the seal broke. Somebody has to set it again.");
+    const word = ally === "isaut" ? "SINK" : ally === "hobb" ? "HOLD" : "SEAL";
+    await say(ally === "isaut" ? "Lady Isaut wants it set to sink: the city goes back under the ice, asleep, all of them, for good. She says it kindly. She has been asleep a thousand years and thinks it was the best of it." : ally === "hobb" ? "The Steward wants it set to hold: the deep shut, and the city above it left risen, under its sky of ice, alive. “Let us have a go at it,” he says. “We never got the chance.”" : "With nobody of the court to say what it should do, the stones only know one word: the old one.");
+    const r = await rsRings({ title: "The seal of Dunvaar", hint: "Four rings of the seal turn past a slot. Turn a ring, and the ring below it turns the other way. Set the slot to read " + word + ".", word });
+    D.seal = !r.ok ? "cracked" : word === "SINK" ? "sunk" : word === "HOLD" ? "risen" : "sealed";
+    if (D.seal === "cracked") await say("The rings freeze before the word's set. The seal shuts, but not all the way: there's a crack through the middle stone you could put your hand in. Things will come up through it, now and then. Dunvaar's beasts will be on the roads.");
+    else if (D.seal === "sunk") await say("The slot reads SINK, and the stones go down into the ice, slowly, and the city goes with them. The drowned court stand in the streets and wave, and some of them are crying, and some of them are already asleep on their feet. The ice closes over the last tower like water over a stone.");
+    else if (D.seal === "risen") await say("The slot reads HOLD, and the well under the stones closes with a sound like a door shut in a big house. The city stays: risen, under its sky of ice, with its people coming out into the streets to look at each other. The Steward is already organising a market.");
+    else await say("The slot reads SEAL, and the well shuts, and the stones settle. The city is quiet. Nobody's sure yet what it will do with itself.");
+    grant("dvseal"); xpGain(120); save();
+    await go("Find Ammeroth");
+  }
+  // Part CXI
+  async function dvSecond() {
+    const D = dv(), M = S.rm;
+    light("gems");
+    await say("You find Ammeroth on your way up, in the heart of Rimehold, sitting with its back against the knot that was torn. It's thin, and grey, and the frost is in its bark. It smiles when it sees you.");
+    await voice("“You did it the hard way,” it says. “I said there'd be another chance. There always is, for someone who comes back.” It holds out its long hand. In it is the contract: the sheet of wood with a thousand rings in it. It's cracked. “It isn't too late. It's later than it was. The Cascade has run a long way, and I can't take it all back now. But sign, and the roots will hold Dunvaar shut for good, and the Cascades will start to slow. Not stop. Slow.”");
+    await voice("“And you'll be mine. You know the terms.”");
+    if (M.ma && M.ma.met) await say("Somewhere in the rings you can hear Maelis, who lived because you said no the first time, saying nothing at all.");
+    const c = await choose([
+      { key: "sign", label: "Sign it now", tag: "Rootbound · Ringsight · Dunvaar shut for good · the Cascades slow" },
+      { key: "refuse", label: "Say no again", tag: "you're your own · Dunvaar stays as you left it · Thawbreaker", plain: true }
+    ]);
+    D.contract = c;
+    if (c === "sign") {
+      M.ringsight = true; S.title = "Rootbound"; M.late = true;
+      await say("You sign. The pen is cold, and then it's warm. The crack in the contract fills with green, like sap.");
+      await say("Nothing rolls back. The world stays broken; it was always going to. But under your feet, all the way down, roots close round the deep of Dunvaar like fingers round a stone, and somewhere very far away a Cascade that was pouring up into the sky falters, and thins, for the first time in years.");
+      await mech("<b>The second contract.</b> The title <b>Rootbound</b>, and <b>Ringsight</b>: the first blow of every fight comes at a disadvantage. Ammeroth will call.", "loot");
+      grant("dvsign");
+    } else {
+      S.title = "Thawbreaker";
+      await say("You say no. Ammeroth nods, slowly, and puts the contract away into the bark of the knot, the way you'd put away a letter you'll read again.");
+      await voice("“Then go and live in the world you chose,” it says. “It's a broken one. You're good at those.”");
+      grant("dvrefuse");
+    }
+    D.done = true; renderSheet(); xpGain(200); save();
+    await mech("<b>Dunvaar</b> is on the roads back now" + (D.seal === "sunk" ? ", sunk under the ice: its board is a cold one" : D.seal === "risen" ? ", risen, with a town in it" : "") + ". Walk its Wandering Board.", "loot");
+    await endCard();
+  }
+  // ---------- the chapter's seven parts, either way ----------
+  async function partAfter1() { heading("CV", rsMelt() ? "Under the Ice" : "The First Call"); return rsMelt() ? dvUnder() : rsFirstCall(); }
+  async function partAfter2() { heading("CVI", rsMelt() ? "The Drowned Court" : "The Glass Twice"); return rsMelt() ? dvCourt() : rsGlassTwice(); }
+  async function partAfter3() { heading("CVII", rsMelt() ? "Knights of the Thaw" : "The Bell"); return rsMelt() ? dvKnights() : rsBell(); }
+  async function partAfter4() { heading("CVIII", rsMelt() ? "The Gravedigger's Fire" : "The Empty Chair"); return rsMelt() ? dvBrannoc() : rsMaelis(); }
+  async function partAfter5() { heading("CIX", rsMelt() ? "The Meltwater Queen" : "The Rings of the Knot"); return rsMelt() ? dvIthra() : rsLedger(); }
+  async function partAfter6() { heading("CX", rsMelt() ? "The Seal" : "Hollow Holm"); return rsMelt() ? dvSeal() : rsTornYear(); }
+  async function partAfter7() { heading("CXI", rsMelt() ? "The Second Contract" : "The Last Call"); return rsMelt() ? dvSecond() : rsLastCall(); }
+
+  // ---------- traces ----------
+  async function rsTown(T) {
+    const R = S.rs, D = S.dv;
+    if (R && R.done && T.kind === "town") {
+      if (T.reg === "roots" && !R.seenF) { R.seenF = true; await say(R.kept.includes("fallowes") ? "In the Library of Roots, Archivist Fallowes keeps a drawer nobody else may open. Once, when she thinks nobody's looking, she takes a letter out of it and reads it, and smiles." : "In the Library of Roots, Archivist Fallowes is cataloguing, humming. She has no brother. She never had."); }
+      if (T.reg === "glass" && !R.seenL) { R.seenL = true; await say(R.kept.includes("strand") ? "In Sulmara, a glass-cutter called Benedek Strand gives bread away at his door every morning to anybody who asks, and won't say why." : "In Sulmara, a glass-cutter called Benedek Strand nods to you in the street, politely, the way you'd nod to a stranger."); }
+      if (T.reg === "lastwell" && R.bellCrack && !R.seenB) { R.seenB = true; await say("In Lastwell the guild is still arguing about who cracked the fair bell."); }
+      if (T.reg === "rahdaria" && R.holm && R.holm !== "stitch" && !R.seenH) { R.seenH = true; await say("Past the ford, Hollow Holm is a village again: two hundred people with no birth records, a bread oven and a heron. They've put up a sign on the road with your name on it, spelled wrong."); }
+    }
+    if (D && D.done && T.reg === "rime" && T.kind === "town" && !D.seenW) {
+      D.seenW = true;
+      await say("At Weatherend " + (D.bv === "turned" ? "the Rimehand are drinking in the hall, by invitation, and Brannoc Vane is telling the story of how he changed sides, better every time." : D.bv === "paid" ? "everybody knows you took Brannoc's three thousand. Nobody says it. The reeve charges you double for the bed." : "the watch in the tower has been stood down.") + (D.ithra === "sea" ? " Fishermen down from the coast say the sea's been higher since spring." : ""));
+    }
+  }
+  function rsCoda() {
+    const R = S.rs, D = S.dv;
+    if (R && R.done) return " Ammeroth called " + R.calls + " times, and you came. You stitched " + R.stitched.filter(k => k !== "road").length + " tears shut and left " + R.kept.filter(k => k !== "road").length + " open a crack." + (R.holm && R.holm !== "stitch" ? " Hollow Holm is alive." : " Hollow Holm is a pond.") + ({ promise: " One day the roots will be yours to keep.", walk: " You're free.", refuse: " You said no, and it keeps calling." }[R.end] || "");
+    if (D && D.done) return " Under the glacier, Dunvaar is " + ({ sunk: "asleep again under the ice", risen: "risen and alive, under its sky of ice", sealed: "sealed", cracked: "sealed, badly" }[D.seal] || "quiet") + ", and Ithra Coldvein " + ({ freeze: "is frozen in the lake, smiling", name: "sleeps under the court, kept", sea: "ran to the sea" }[D.ithra] || "is gone") + "." + (D.contract === "sign" ? " You signed, the second time." : " You said no twice.");
+    return "";
+  }
+  function rsSection(rs0) {
+    const R = rs0 && rs0.rs, D = rs0 && rs0.dv;
+    const li = (on, t) => "<li" + (on ? ' class="won"' : "") + '><span class="mk"></span><span>' + t + "</span></li>";
+    if (R && R.on) return "<section><h3>The Root Summons</h3><p class=\"j-sub\">Ammeroth calls, and you mend where the broken world leaks through.</p><ul class=\"marks\">" +
+      li(R.calls >= 1, "Tears answered: " + R.calls + (R.road ? ", and " + R.road + " small ones on the roads" : "")) +
+      li(true, "Stitched shut: " + R.stitched.filter(k => k !== "road").length + ". Left open a crack: " + R.kept.filter(k => k !== "road").length + (R.rough ? ". Mended rough: " + R.rough : "")) +
+      li(R.kept.includes("maelis"), "Maelis: " + (R.kept.includes("maelis") ? (rmTerm("mercy") ? "remembers you" : "rides in your Ringsight") : R.stitched.includes("maelis") ? "said goodbye" : "not yet")) +
+      li(R.holm && R.holm !== "stitch", "Hollow Holm: " + ({ stitch: "stitched shut; a pond", carry: "carried through, for a price", clause: "written into the last ring" }[R.holm] || "not yet")) +
+      li(R.done, "The last call: " + ({ promise: "you promised to keep the roots one day", walk: "you walked away free", refuse: "you said no" }[R.end] || "not yet")) + "</ul></section>";
+    if (D && D.on) return "<section><h3>Dunvaar</h3><p class=\"j-sub\">The kingdom under the ice, and the queen who waited for someone to fail.</p><ul class=\"marks\">" +
+      li(D.caught, "The court: " + (D.ally ? "you stood with " + DV_COURT[D.ally].short + (D.ally === D.traitor ? ", who opened the Queen's stair" : ", and caught " + DV_COURT[D.traitor].short) : "not yet")) +
+      li(D.knights.length >= 3, "Knights of the thaw beaten: " + D.knights.length) +
+      li(D.bv === "turned", "The Rimehand: " + ({ turned: "turned, and fought for you", paid: "paid you three thousand to go by", fought: "fought you", dead: "led by Ma Tull" }[D.bv] || "not yet")) +
+      li(!!D.ithra, "Ithra Coldvein: " + ({ freeze: "frozen in the lake", name: "bound by her name to the court", sea: "ran to the sea" }[D.ithra] || "not yet")) +
+      li(D.seal && D.seal !== "cracked", "The seal: " + ({ sunk: "set to sink", risen: "set to hold, with the city risen", sealed: "set", cracked: "cracked" }[D.seal] || "not yet")) +
+      li(D.contract === "sign", "The second contract: " + ({ sign: "signed", refuse: "refused again" }[D.contract] || "not yet")) + "</ul></section>";
+    return "";
+  }
+
   async function endCard() {
     await wait(300);
     const carried = carriedList();
@@ -33031,7 +33715,7 @@ body.pv-open { overflow: hidden; }
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done;
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done, RSD = (S.rs && S.rs.done) || (S.dv && S.dv.done);
     const TITHE = {
       rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
       sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
@@ -33043,11 +33727,11 @@ body.pv-open { overflow: hidden; }
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (RSD ? "CXII" : WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (RSD ? (S.dv && S.dv.done ? "You stand at the top of the deep stair under Rimehold, with the glacier quiet over your head, with " : "You stand in the heart of Rimehold, by the knot, with ") : WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() + rsCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
@@ -33211,6 +33895,28 @@ body.pv-open { overflow: hidden; }
         M.ending === "bind" ? "In the heart, you signed Ammeroth's contract. The Cascade never happened, and you're the only one who remembers." : M.ending === "melt" ? "In the heart, the ice gave way. Dunvaar rose under the glacier, and Ithra Coldvein woke." : ""
       ];
     },
+    summons: (s) => {
+      const R = s.rs, D = s.dv;
+      if (D && D.on) return [
+        "Things came up out of the crack in Rimehold at night, and you went down after them, into Dunvaar, the drowned kingdom under the ice.",
+        D.ally ? "In the drowned court you stood with " + DV_COURT[D.ally].short + (D.ally === D.traitor ? ", who had opened the Queen's stair, and betrayed you at the lake." : ", and caught " + DV_COURT[D.traitor].short + ", who had opened the Queen's stair.") : "",
+        D.knights.length ? "You beat " + D.knights.length + " of the knights of the thaw." : "",
+        D.bv ? { turned: "You turned Brannoc Vane, and the Rimehand fought on your side.", paid: "You took Brannoc Vane's three thousand gold to go by.", fought: "You fought Brannoc Vane by his green fire.", dead: "The Rimehand, led by Ma Tull, fought you without him." }[D.bv] : "",
+        D.ithra ? "You broke Ithra Coldvein, the Meltwater Queen, and " + { freeze: "froze her back into the lake.", name: "bound her by her name to the court.", sea: "let her run to the sea." }[D.ithra] : "",
+        D.seal ? "You set the seal of Dunvaar: " + { sunk: "the city sank back to sleep.", risen: "the city stays risen, alive.", sealed: "it holds.", cracked: "it cracked." }[D.seal] : "",
+        D.contract ? (D.contract === "sign" ? "Ammeroth offered the contract again, and you signed." : "Ammeroth offered the contract again, and you said no.") : ""
+      ];
+      if (!R || !R.on) return [s.part > 103 && "Ammeroth said it would call."];
+      return [
+        "Ammeroth called, and you went: down through the roots to the tears where the broken world leaks into the put-back one.",
+        R.calls >= 1 ? "In the Library of Roots, " + (R.kept.includes("fallowes") ? "you let Archivist Fallowes keep a letter from a brother who never lived." : "you stitched shut a brother who never lived.") : "",
+        R.calls >= 2 ? "In Sulmara, Benedek Strand " + (R.kept.includes("strand") ? "kept the faces of the street he fed." : "forgot the street he fed.") : "",
+        R.calls >= 3 ? "You mended the tear under the Belfry at Lastwell." : "",
+        R.calls >= 4 ? (R.kept.includes("maelis") ? "You kept Maelis." : "You said goodbye to Maelis.") : "",
+        R.holm ? { stitch: "You stitched Hollow Holm shut, and two hundred of the Unborn went as if they never were.", carry: "You carried Hollow Holm through into this world, and owe Ammeroth for it.", clause: "You wrote Hollow Holm into the last ring of the contract." }[R.holm] : "",
+        R.end ? { promise: "You promised Ammeroth you'd keep the roots one day.", walk: "Your summons were done, and you walked away free.", refuse: "Ammeroth asked you to take its place, and you said no." }[R.end] : ""
+      ];
+    },
     welling: (s) => {
       const W = s.wl;
       if (!W || !W.on) return [s.part > 98 && "Coming down out of the north, you found the sea above Rahdaria too high, and moving the wrong way."];
@@ -33284,8 +33990,8 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround, partAfter1, partAfter2, partAfter3, partAfter4, partAfter5, partAfter6, partAfter7];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call"];
 
   let started = false;
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
