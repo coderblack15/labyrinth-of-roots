@@ -35,7 +35,7 @@ def main():
     s = re.sub(r"<title>([^<]*)</title>", r"<title>\1 (Free Demo)</title>", s, count=1)
     s = swap(s, '<p class="eyebrow">A Dark Fantasy Horror Adventure</p>',
              f'<p class="demo-badge">FREE DEMO · {label.upper()}</p>\n      <p class="eyebrow">A Dark Fantasy Horror Adventure</p>')
-    s = re.sub(r'<p class="eyebrow">An adventure in [a-z-]+ parts · d20</p>',
+    s = re.sub(r'<p class="eyebrow">An adventure in [a-z -]+ parts · d20</p>',
                f'<p class="eyebrow">Free demo · {label} · d20</p>', s, count=1)
     (root / a.out).write_text(s, encoding="utf-8")
     print(f"Wrote {a.out}: demo ends after part {a.parts}")
