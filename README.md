@@ -109,6 +109,12 @@ Run a few seeds after any change, and after adding a chapter.
 - **The story so far.** Continuing a save opens with a short recap of that run: the choices you made in each chapter, who is with you, where you stopped and what you carry. Skip it, turn it off, or read it again any time at the top of the journal. Each chapter's lines come from the `RECAP` table in `index.html`, keyed by the chapter's slug in `CHAPTERS`; a new chapter should add an entry there.
 - **A map that grows.** The *Map* button (next to *Journal*) opens a hand-inked map of the realm. Each chapter you reach lifts the fog off its region, with a mark for where you are now; the western sea stays uncharted. Each save slot keeps its own map. Regions come from the `MAP` table in `index.html`, keyed by the chapter's slug in `CHAPTERS`, so a new chapter adds its region with one entry (its place, glyphs from `MAP_ART`, labels, road and the fog it clears) and no redraw.
 
+## Reward codes
+
+Five milestones (finish the Labyrinth of Roots, the Siege of Rahdaria or the Unmapped, reach level 50, and Twinbreaker once Rimehold is in) give the player a code such as `LR-8ENWV-VR104-Y2J5Y-RN33G`, once per browser. It holds the milestone, a random id for that browser, the day and the hours played, sealed with HMAC-SHA256. The rewards and claim link live in `REWARDS` and `CLAIM_FORM` (the Google Form link; empty falls back to the itch.io page) in `index.html`; add new milestones at the end of the list only. Names of players who claimed go in `WAYFARERS`.
+
+Check a code with `node tools/reward-codes.js <code>`. The seal catches typos and casual tampering, but the key ships in the game, so a determined player could forge one: keep rewards small and claims one per player per milestone.
+
 ## Visitor stats (public site only)
 
 The GitHub Pages version can count anonymous visits with [GoatCounter](https://www.goatcounter.com/), which uses no cookies and collects nothing personal. It's off until a site code is filled in: set `GOATCOUNTER_CODE` near the top of the game script in `index.html` to your GoatCounter code. It only ever runs on `coderblack15.github.io`, never in the private Claude link or a copy opened from disk.
