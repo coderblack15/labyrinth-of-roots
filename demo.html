@@ -2419,8 +2419,9 @@ body.pv-open { overflow: hidden; }
       "<b>Chill and Kindling.</b> Cold stacks on you: Numb, Stiff, Frozen solid. You invent Kindling out of salt and ash, and the Hearthsalt Tonic, and the Ember Wrap.",
       "<b>The Labyrinth plays by harsher rules.</b> The axe's hold is off. Fall, and you wake at the start of the ring, the melt rises and the rooms move. Braziers are the only rest. Nothing living goes in with you.",
       "<b>Twelve kinds of puzzle</b>: Before and After rooms, the Rising Melt, Forks That Come Back (doors that ask about the Wandering Board squares you passed by), root routing, ring dials, your own echo, frost mirrors, slide-and-stop ice, the Unborn Door, frozen witnesses, rewinding roots and melting weights. And traps between them.",
+      "<b>Sliding ice.</b> The first of the Labyrinth's physics: in the Glass Hall of the outer ring the floor is black ice. Step on it and you slide until something stops you: a wall, a block, a warm stone or another body. The map shows where you'll stop. Foes slide too, and they don't plan for it, so you can make them overshoot you.",
       "<b>The Hollow Twin</b>, you from the world where you stayed home. It learns how you fight and counters it, and from the middle rings it fights you in two timelines at once. Four meetings, big rewards, and a choice at the end that changes the ending.",
-      "<b>Two endings, both real.</b> Sign Ammeroth's contract and the world goes back, at a price. Refuse, or run out of time, and the ice gives way. 25 new feats in a <b>Rimehold</b> pursuit."] },
+      "<b>Two endings, both real.</b> Sign Ammeroth's contract and the world goes back, at a price. Refuse, or run out of time, and the ice gives way. 26 new feats in a <b>Rimehold</b> pursuit."] },
     { ver: "76", name: "The Wandering Board", date: "11 Nov 2026", items: [
       "<b>The roads back are a board now, if you want them to be.</b> Pick <b>Walk the Wandering Board</b> and choose a region: a board of squares from a crossroads up to the top of the road, and your marker at the bottom. Move up one row at a time, or fold it away and come back.",
       "<b>You don't know what's ahead.</b> The squares in front of you are only sounds (haggling, woodsmoke, something breathing in the rocks) until you stop and listen, which costs a watch.",
@@ -3121,6 +3122,7 @@ body.pv-open { overflow: hidden; }
     { id: "rmtwin4", name: "Twinbreaker", desc: "Beat the Hollow Twin in the heart of Rimehold.", test: () => false },
     { id: "rmblade", name: "The Refuser's Blade", desc: "Shatter the Hollow Twin and take its weapon.", test: () => false },
     { id: "rmfree", name: "Somebody Said No", desc: "Set the Hollow Twin free.", test: () => false },
+    { id: "rmover", name: "Let It Come", desc: "Make foes slide past you on the black ice three times.", test: () => !!S.fd && (S.fd.over || 0) >= 3 },
     { id: "rmgraft", name: "Grafted", desc: "Graft the torn roots before the water reaches them.", test: () => false },
     { id: "rmclause", name: "The Refuser's Clause", desc: "Write a term of your own into the last ring of the contract.", test: () => false },
     { id: "rmbind", name: "Rootbound", desc: "Sign Ammeroth's contract, and put the world back.", test: () => false },
@@ -3573,6 +3575,7 @@ body.pv-open { overflow: hidden; }
     rmroom: ["The rooms of the rings", "Move with the arrows (or your keyboard). <b>Pull the lever</b> to flip between before and after the Cascade: walls in one can be doorways in the other. Fail a room and it costs cold and Chill and you try again; <b>Force your way through</b> skips it, for more, and the melt rises."],
     rmmelt: ["The rising melt", "In water rooms the water rises a row every few moves, and ice bridges melt when it touches them. Plan the whole route before you move. Outside the rooms, the melt rises by a step every time you fall or force your way: at 12, it reaches the roots."],
     twin: ["The Hollow Twin", "It has two health bars, <b>before</b> and <b>after</b>. Your blows land on the one for the time you're in: pull the lever to flip. Empty both within 3 rounds of each other or the full one refills the empty one. It counters your top habit, so change how you fight. Use the traps in its room against it."],
+    ice: ["Black ice", "Some of this floor is <b>black ice</b>. Step onto it and you slide the same way until something stops you: a wall, a block, a <b>warm stone</b> or another body. The squares you can reach already show where you'll stop, so plan by where you'll end up. Foes slide too, and they don't plan for it: stand off their straight line and they go sailing past, and lose their swing."],
     graft: ["The graft", "Two warm roots, two sides of the tear: turn the tiles so each reaches its own side without crossing. The fewer times you fell and forced your way, the more turns you have."],
     echo: ["The world remembers", "What you did in earlier chapters comes back. People you spared or sold turn up later, towns stay how you left them, and debts get collected on the roads back. Each time, a line marked <b>The world remembers</b> says which choice it was. Your journal keeps a list."],
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
@@ -13901,8 +13904,24 @@ body.pv-open { overflow: hidden; }
     "#": ["Tall cover", "Can't be crossed. It blocks a sling or bow shot."],
     r: ["Rugged ground", "Costs 2 steps. Whoever swings from it is at −1, and nobody can charge someone standing in it."],
     h: ["High ground", "Costs 2 steps to climb. +1 to hit and +1 damage against anyone below. A foe shoved off it falls."],
-    "~": ["Sinking ground", "Whoever is in it is stuck: −3 to their blows and +3 to blows at them, and 2 steps to get out. Shove a foe in."]
+    "~": ["Sinking ground", "Whoever is in it is stuck: −3 to their blows and +3 to blows at them, and 2 steps to get out. Shove a foe in."],
+    i: ["Black ice", "Step onto it and you slide the same way until something stops you: a wall, a block, a warm stone or another body. Foes slide too, and they don't plan for it."],
+    o: ["Warm stone", "A stone that holds a little heat. Anyone sliding stops on it."]
   };
+  // Sliding ice (2026-11-13, Adrian's physics rules, the first one). Whoever steps onto black ice keeps going
+  // the same way until the next square would stop them; a warm stone or any ground that isn't ice stops them on it.
+  // occ(x, y) says a square has a body (or anything else) in it.
+  function fdSlideEnd(fd, x, y, dx, dy, occ) {
+    let n = 0, by = null;
+    while (fdTile(fd, x, y) === "i") {
+      const nx = x + dx, ny = y + dy, t = fdTile(fd, nx, ny);
+      if (t === null || t === "#" || t === "c" || t === "h") { by = t === "c" ? "a block of ice" : t === "h" ? "the ledge" : "the wall"; break; }
+      if (occ(nx, ny)) { by = "body"; break; }
+      x = nx; y = ny; n++;
+    }
+    if (!by && n) by = fdTile(fd, x, y) === "o" ? "a warm stone" : "ground";
+    return { x, y, n, by };
+  }
   // Palettes: g ground, gd dark, gl light, cov cover, tall, tallL, rug, hi, cliff, sink, sinkD, acc (plants and lichen).
   const FD_PAL = {
     rime:      { g: "#c9d6dc", gd: "#a3b4bc", gl: "#e6eef2", cov: "#8a9aa2", tall: "#5a6a72", tallL: "#b4c4cc", rug: "#a8b8c0", hi: "#f2f6f8", cliff: "#4a5a62", sink: "#5a8aa0", sinkD: "#2a4a5a", acc: "#7fc0e0" },
@@ -13930,6 +13949,8 @@ body.pv-open { overflow: hidden; }
   const FIELDS = {
     rime: { name: "The Frozen Pass", style: "scree", pal: "rime", blurb: "The narrows of the pass under the blue ice cliffs: fallen blocks of the Rimehand's wall for cover, drifts as deep as your waist, and black ice where the wind has scoured the snow away.",
       grid: ["hh.#.hh", "h..c..h", ".r.~.c.", "c.~~~..", "..r..r.", "c..c..c"], you: [3, 5], foe: [3, 0] },
+    rimehall: { name: "The Glass Hall", style: "scree", pal: "rime", blurb: "A hall of the outer ring where the floor is black ice, polished by nothing, with warm stones set into it here and there like stepping stones and blocks of old ice fallen from the roof.",
+      grid: ["h.iii.h", ".iiiiio", "cii.oii", ".iiiic.", "oii.ii.", "..i.i.."], you: [3, 5], foe: [3, 0] },
     roots: { name: "The Root Gallery", style: "fen", blurb: "A long hall of the labyrinth where the roots have come down from the ceiling like curtains, and a sap-pool shines in the middle of the floor.",
       grid: ["c#..rc.", "...~..h", ".r.~.hh", "c....#.", "..rr...", ".c....c"], you: [3, 5], foe: [3, 0] },
     desert: { name: "The Dry Wash", style: "sand", blurb: "A dry riverbed under a red cliff. The sand in the middle has a sheen on it like the skin on milk.",
@@ -14197,7 +14218,7 @@ body.pv-open { overflow: hidden; }
     return 1;
   }
   // Cheapest 4-way paths from (sx, sy) within budget. block(x, y) shuts a square; sinkAvoid prices sinking ground out.
-  function fdPaths(fd, sx, sy, budget, block, sinkAvoid, fly) {
+  function fdPaths(fd, sx, sy, budget, block, sinkAvoid, fly, slide) {
     const best = { [sx + "," + sy]: 0 }, prev = {}, q = [[0, sx, sy]];
     while (q.length) {
       q.sort((a, b) => a[0] - b[0]);
@@ -14210,7 +14231,9 @@ body.pv-open { overflow: hidden; }
         if (sinkAvoid && !fly && fdTile(fd, nx, ny) === "~") sc += 50;
         const nc = c + sc;
         if (nc > budget) continue;
-        if (best[k] === undefined || nc < best[k]) { best[k] = nc; prev[k] = x + "," + y; q.push([nc, nx, ny]); }
+        let ex = nx, ey = ny, ek = k;
+        if (slide && !fly && fdTile(fd, nx, ny) === "i") { const E = fdSlideEnd(fd, nx, ny, dx, dy, block); ex = E.x; ey = E.y; ek = ex + "," + ey; if (ex === sx && ey === sy) continue; }
+        if (best[ek] === undefined || nc < best[ek]) { best[ek] = nc; prev[ek] = x + "," + y; q.push([nc, ex, ey]); }
       }
     }
     return { best, prev };
@@ -14358,6 +14381,13 @@ body.pv-open { overflow: hidden; }
       let s = "";
       if (["siege", "camp", "orchard"].includes(sty)) { const v = siegeTile(x0, y0, cx, cy, t); if (v !== null) return v; }
       if (sty === "paper") return paperTile(x0, y0, cx, cy, t);
+      if (t === "i" || t === "o") {
+        s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + T + '" height="' + T + '" fill="#3f6176"/><rect x="' + (x0 + 2) + '" y="' + (y0 + 2) + '" width="' + (T - 4) + '" height="' + (T - 4) + '" rx="3" fill="#56809a" opacity=".85"/>';
+        for (let i = 0; i < 2; i++) { const yy = y0 + rr(12, T - 12); s += '<path d="M' + (x0 + rr(6, 18)) + " " + (yy + 8) + " L" + (x0 + rr(T - 22, T - 8)) + " " + (yy - 8) + '" stroke="#e8f4fa" stroke-opacity=".55" stroke-width="' + rr(1.2, 2.6).toFixed(1) + '" stroke-linecap="round"/>'; }
+        if (rnd() < .5) s += '<path d="M' + (x0 + rr(10, T - 10)) + " " + (y0 + rr(10, T - 10)) + " l" + rr(-9, 9).toFixed(1) + " " + rr(4, 10).toFixed(1) + " l" + rr(-6, 6).toFixed(1) + " " + rr(3, 8).toFixed(1) + '" stroke="#1d3442" stroke-opacity=".5" stroke-width="1" fill="none"/>';
+        if (t === "o") s += '<ellipse cx="' + (cx + 3) + '" cy="' + (cy + 5) + '" rx="19" ry="12" fill="#000" opacity=".35"/><circle cx="' + cx + '" cy="' + cy + '" r="22" fill="#f0a050" opacity=".22"/><ellipse cx="' + cx + '" cy="' + cy + '" rx="17" ry="13" fill="#6a5a50" stroke="#2a201a" stroke-width="1.4"/><ellipse cx="' + (cx - 2) + '" cy="' + (cy - 2) + '" rx="10" ry="7" fill="#d9783a" opacity=".55"/><path d="M' + (cx - 9) + " " + (cy - 6) + ' q6 -5 13 -3" stroke="#ffd9a8" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+        return s;
+      }
       if (t === ".") {
         if (sty === "sand") { for (let i = 0; i < 3; i++) { const yy = y0 + rr(10, T - 10); s += '<path d="M' + (x0 + 6) + " " + yy + " q" + T / 4 + " -4 " + T / 2 + " 0 t" + (T / 2 - 12) + ' 0" stroke="' + p.gd + '" stroke-width="1.2" fill="none" opacity=".45"/>'; } s += pebbles(x0, y0, 2, .7); if (rnd() < .3) s += tufts(x0, y0, 1, p.acc); }
         else if (sty === "fen") { s += flags(x0, y0) + tufts(x0, y0, 2, p.acc); }
@@ -14408,7 +14438,7 @@ body.pv-open { overflow: hidden; }
   function fdReach(fd) {
     if (!fd.live || fd.steps <= 0) return { best: {} };
     fd.guess = true;
-    try { return fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y]); } finally { fd.guess = false; }
+    try { return fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y], false, false, true); } finally { fd.guess = false; }
   }
   function fdDraw(st) {
     const fd = st.fd; if (!fd || !fd.svg) return;
@@ -14469,13 +14499,20 @@ body.pv-open { overflow: hidden; }
   }
   function fdMove(st, path) {
     const fd = st.fd; let bump = "";
-    for (const [nx, ny] of path) {
+    for (const [tx, ty] of path) {
+      const dx = Math.sign(tx - fd.you.x), dy = Math.sign(ty - fd.you.y), nx = fd.you.x + dx, ny = fd.you.y + dy;
       const blind = fdFog(fd, nx, ny), c = fdCost(fd, [fd.you.x, fd.you.y], [nx, ny]);
       if (blind) fdInk(fd, nx, ny, 0);
       if (c === Infinity) { bump = "<b>You walk into a wall nobody had drawn.</b> The line goes down in front of your face as you hit it. That's the rest of your steps gone."; fd.steps = 0; grant("fdbump"); break; }
       if (c > fd.steps) { if (blind) { bump = "<b>The ground comes up rougher than the blank looked.</b> You haven't the steps left to get onto it."; fd.steps = 0; } break; }
-      fd.steps -= c; fd.mv.push({ dir: [nx - fd.you.x, ny - fd.you.y], t: fdTile(fd, nx, ny) });
+      fd.steps -= c; fd.mv.push({ dir: [dx, dy], t: fdTile(fd, nx, ny) });
       fd.you.x = nx; fd.you.y = ny;
+      if (fdTile(fd, nx, ny) === "i") {
+        const E = fdSlideEnd(fd, nx, ny, dx, dy, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y]);
+        fd.you.x = E.x; fd.you.y = E.y;
+        if (E.n) { fdState().slid = (fdState().slid || 0) + E.n; bump = "<b>Your feet go on the black ice.</b> You slide " + E.n + " square" + (E.n > 1 ? "s" : "") + (E.by === "body" ? ", into " + (fdAt(fd, E.x + dx, E.y + dy) === "foe" ? FOE.name : "something") + "." : E.by === "ground" ? ", and off the end of the ice." : ", until " + E.by + " stops you."); }
+        if (E.x !== tx || E.y !== ty) break;
+      }
     }
     const t = fdTile(fd, fd.you.x, fd.you.y);
     if (t === "~" && !fd.you.stuck) { fd.you.stuck = true; fd.infoEl.innerHTML = "<b>The ground takes you to the knees.</b> You're stuck: −3 to your swings and +3 to its blows until you wade out (2 steps)."; }
@@ -14514,10 +14551,24 @@ body.pv-open { overflow: hidden; }
     for (const [nx, ny] of path) {
       const c = fdCost(fd, [u.x, u.y], [nx, ny], fly);
       if (spent + c > budget) break;
-      spent += c; if (mv) mv.push({ dir: [nx - u.x, ny - u.y], t: fdTile(fd, nx, ny) });
+      const dx = nx - u.x, dy = ny - u.y;
+      spent += c; if (mv) mv.push({ dir: [dx, dy], t: fdTile(fd, nx, ny) });
       u.x = nx; u.y = ny;
       fdDraw(st); await wait(140);
       if (fd.traps[nx + "," + ny]) { await fdTrip(F, st, u); if (mv) mv.length = 0; break; }
+      if (!fly && fdTile(fd, nx, ny) === "i") {
+        let n = 0, by = "";
+        for (;;) {
+          const E = fdSlideEnd(fd, u.x, u.y, dx, dy, (x, y) => !!fdAt(fd, x, y));
+          if (!E.n) { by = E.by; break; }
+          u.x += dx; u.y += dy; n++; fdDraw(st); await wait(90);
+          if (fd.traps[u.x + "," + u.y]) { await fdTrip(F, st, u); by = "trap"; break; }
+        }
+        if (mv) mv.length = 0;
+        const nm = u === fd.wd ? "The " + fd.wd.name : FOE.name;
+        if (n && by !== "trap") { if (by === "body" && fd.you.x === u.x + dx && fd.you.y === u.y + dy) await mech(nm + " hits the black ice and comes sliding " + n + " square" + (n > 1 ? "s" : "") + ", right up against you."); else { await mech(nm + " hits the black ice and goes sliding " + n + " square" + (n > 1 ? "s" : "") + ", past where it meant to stop."); if (u === fd.foe) { fdState().over = (fdState().over || 0) + 1; if (fdState().over >= 3) grant("rmover"); } } }
+        break;
+      }
     }
   }
   async function fdTrip(F, st, u) {
@@ -14697,7 +14748,7 @@ body.pv-open { overflow: hidden; }
   async function fdCloseIn(st, t) {
     const fd = st.fd;
     if (cheb(fd.you, t) === 1) return true;
-    const P = fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y], true);
+    const P = fdPaths(fd, fd.you.x, fd.you.y, fd.steps, (x, y) => !!fdAt(fd, x, y) || !!fd.traps[x + "," + y], true, false, true);
     let best = null;
     for (const k in P.best) { const [x, y] = k.split(",").map(Number); if (cheb({ x, y }, t) === 1 && (!best || P.best[k] < best.c)) best = { x, y, c: P.best[k] }; }
     if (!best) return false;
@@ -30320,7 +30371,7 @@ body.pv-open { overflow: hidden; }
     if (meet === 2 || (meet >= 3 && top.k === "w")) W.vsW = top.weapon;
     const counter = meet === 1 ? "mv" : meet === 2 ? "w" : top.k;
     const F = {
-      name: "The Hollow Twin", hp, ac: 15 + (meet >= 3 ? 1 : 0), atk: 6 + Math.floor(meet / 2), n: 1, s: meet >= 3 ? 10 : 8, type: "cold", bloom: 0, hesk: false, soft: 0.45,
+      name: "The Hollow Twin", field: meet === 1 ? "rimehall" : undefined, fdEmb: "shade", hp, ac: 15 + (meet >= 3 ? 1 : 0), atk: 6 + Math.floor(meet / 2), n: 1, s: meet >= 3 ? 10 : 8, type: "cold", bloom: 0, hesk: false, soft: 0.45,
       who: "the Hollow Twin", whoShort: "Twin", bleed: 10, rmTwin: true, icicle: !!o.icicle,
       hitWhy: "Your own swing, from the outside: it knows exactly where you leave a gap.", miss: "It steps into the gap you always leave, and finds you've moved for once.",
       hitLine: "Ice cracks off it where you hit, and underneath the ice is root, and under the root is a face that's very nearly yours.",
@@ -31156,6 +31207,15 @@ body.pv-open { overflow: hidden; }
         await say("A round door made of rings of wood, one inside the other, each turning on its own. Carved round the edge, in an old hand: <i>Open for the day the roots tore.</i>");
         const r = await ringCountPuzzle({ drag: false, tries: 3 });
         if (r.ok) { rmEffort(2); grant("rmrings"); } else { await hurt(2, 6, "cold", "The frost locks the dials, and you have to break the door's edge with your boot and squeeze past."); await rmChill(1, "The frost off the dials"); }
+      },
+      async () => {
+        await say("The next hall has no snow on its floor at all. It's black ice, polished by nothing, so clear you can see roots down in it, curled like sleeping animals. There are stones set into it here and there that steam a little, and blocks of old ice fallen from the roof.");
+        await say("Something gets up off the far side of it: a hound, more or less, grown out of ice and root the way the Labyrinth grows things, with frost for a coat and a sound in its chest like a kettle. It comes for you in a straight line, flat out, and it hasn't thought about the floor.");
+        tip("ice");
+        await hkFight({ name: "A Rime Hound", who: "the hound", whoShort: "the hound", field: "rimehall", fdEmb: "canine", hp: 30, ac: 13, atk: 5, n: 1, s: 8, type: "cold", bloom: 0, hesk: false, icicle: true,
+          hitWhy: "Its jaws close on you, and they're cold all the way through.", miss: "It snaps at the air where you were." });
+        await say("The hound breaks apart on the ice like a dropped jug.");
+        await rmFind(0, 1, "In its chest, where a heart would be, there's a lump of ember ash, still warm.");
       },
       async () => { await rmTwinMeet(1, { icicle: true }); },
       async () => { await rmBrazier("outer", "The Outer Brazier"); }
