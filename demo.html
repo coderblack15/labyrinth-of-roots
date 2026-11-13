@@ -2444,7 +2444,7 @@ body.pv-open { overflow: hidden; }
     { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "The game's art pack: all 50 gang emblems, the medallions and markers, and the maps.", files: [["Art pack (zip, 17 MB)", "labyrinth-of-roots-art-pack.zip"]], test: (c) => rwCh(c, "unmapped") },
     { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "The Fiftieth Ring, a printable Relicsong card made only for players who reach level 50. Print it at 2.5 × 3.5 inches and write your name on it.", files: [["Relicsong card", "relicsong-card-the-fiftieth-ring.png"]], test: () => lv() >= LV_MAX },
     // Twinbreaker comes with the Rimehold chapter: it switches on by itself once that feat exists.
-    { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A half-price itch.io key for the full game, to give to a friend.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
+    { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A key for the full game on itch.io, to give to a friend.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
   ];
   // Players who claimed a reward, as Adrian adds them: ["Name", "Ringwarden"] (the title is optional).
   const WAYFARERS = [];
@@ -2522,7 +2522,11 @@ body.pv-open { overflow: hidden; }
     return got;
   }
   const rwCodeHTML = (R) => '<span class="rw-code"><b class="rs-code">' + J.rw[R.id].code + '</b> <button class="ghost rw-copy" type="button" data-code="' + J.rw[R.id].code + '">Copy</button></span>';
-  const rwFiles = (R) => '<span class="rw-files">' + R.files.map(([label, f]) => '<a class="btn rw-dl" href="' + REWARD_BASE + f + '" target="_blank" rel="noopener" download>' + label + "</a>").join("") + "</span>";
+  // Only the public site serves the files from its own origin, where "download" saves them. Elsewhere
+  // (itch.io, a Claude artifact) a download link to another site is ignored or blocked, so the link just
+  // opens the file in a new tab, where it can be saved.
+  const rwDlAttr = location.hostname === "coderblack15.github.io" ? " download" : "";
+  const rwFiles = (R) => '<span class="rw-files">' + R.files.map(([label, f]) => '<a class="btn rw-dl" href="' + REWARD_BASE + f + '" target="_blank" rel="noopener"' + rwDlAttr + ">" + label + "</a>").join("") + "</span>";
   // What a player gets for a reward: the download buttons, or the claim (or a "coming" line while claims are shut).
   const rwGet = (R) => R.files ? R.gift + " " + rwFiles(R) : CLAIMS_OPEN ? R.gift + " To claim it, send the code to Adrian through " + rwClaim + "." : "Keep this code: this reward is coming.";
   const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">' + (CLAIM_FORM ? "the claim form" : "the game\'s itch.io page") + "</a>";
@@ -2561,7 +2565,7 @@ body.pv-open { overflow: hidden; }
     { ver: "80", name: "Rewards You Can Download", date: "13 Nov 2026", items: [
       "<b>Three reward codes now come with their reward.</b> Finish the Labyrinth of Roots for a <b>world-map wallpaper</b> (desktop and phone), finish the Unmapped for the <b>art pack</b> (all 50 gang emblems, the medallions and the maps), and reach level 50 for <b>The Fiftieth Ring</b>, a printable Relicsong card made only for Ringwardens.",
       "The download buttons are under <b>Reward codes</b> in your journal, and on the chapter card when you earn one. If you've already passed a milestone, they're waiting for you.",
-      "Your name in the credits (Siege of Rahdaria) and a half-price key for a friend (Twinbreaker) are coming: keep those codes."] },
+      "Your name in the credits (Siege of Rahdaria) and a key for a friend (Twinbreaker) are coming: keep those codes."] },
     { ver: "79", name: "The Seedheart race", date: "13 Nov 2026", items: [
       "<b>A race through the Undervaults</b>, Adrian's idea. At the gate of Rimehold you hear of the Seedheart, the first seed the Labyrinth ever grew, said to grant a wish, down in side rings under the outer ring. Two other teams want it: the Gilt Lanterns, rich and charming, and the Thinwick Few, miners whose town is drowning.",
       "<b>Your team.</b> Hire three of six hunters: Iver the Lockwright, Oona Lampreader, Ruddock Ropehand, Sefa Ashmonger, Dov the Quiet and Mother Brisk. Each one's knack clears the way at a crossroads, and they come in by the hunters' stair, so the main rings stay yours alone.",
