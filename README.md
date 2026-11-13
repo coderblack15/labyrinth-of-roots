@@ -115,6 +115,8 @@ Five milestones (finish the Labyrinth of Roots, the Siege of Rahdaria or the Unm
 
 While `CLAIMS_OPEN` is false, players earn and keep codes but see no claim link or named rewards. The journal has a Credits page listing `WAYFARERS`.
 
+The wallpaper (Labyrinth of Roots), art pack (The Unmapped) and Relicsong card (level 50) are downloads: the files live in `rewards/` and the game links to them on the public site as soon as the code is earned. The credits name (Siege of Rahdaria) and the half-price key (Twinbreaker) go through the Google Form and `tools/claim-form.gs`.
+
 Check a code with `node tools/reward-codes.js <code>`. The seal catches typos and casual tampering, but the key ships in the game, so a determined player could forge one: keep rewards small and claims one per player per milestone.
 
 ## Visitor stats (public site only)

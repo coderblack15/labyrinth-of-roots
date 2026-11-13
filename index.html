@@ -568,6 +568,8 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .rs-code { color: var(--gold); letter-spacing: .08em; }
 .rw-code { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; font-family: var(--label); }
 .rw-code .rw-copy { padding: 2px 10px; font-size: .78rem; }
+.rw-files { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rw-files .rw-dl { padding: 4px 12px; font-size: .82rem; text-decoration: none; }
 .j-sub a { color: var(--gold); }
 .ach-toasts { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; width: min(380px, calc(100vw - 32px)); pointer-events: none; }
 .ach-toast { pointer-events: auto; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; text-align: left; width: 100%;
@@ -2421,6 +2423,10 @@ body.pv-open { overflow: hidden; }
   // this browser (J.wid), the day it was earned and the hours played, sealed with HMAC-SHA256.
   // The seal stops typos and casual tampering, but the key ships in this file, so someone who reads
   // the code could make their own. Keep the rewards small, and check claims by hand.
+  // Rewards with `files` are downloads: the buttons show as soon as the code is earned, no claim needed.
+  // The files live in the repo's rewards/ folder and are served from the public site, so every build
+  // (the site, the itch.io zips, the artifact) links to the same copies. The rest are claimed through
+  // the Google Form, which a script checks (tools/claim-form.gs); they stay hidden until CLAIMS_OPEN.
   // To change a reward, edit `gift` below. To add a milestone, add a row at the END (the number is its
   // place in this list and is written into the code, so never reorder or remove rows).
   const RW_KEY = "rimed-lantern/" + "the-axe-remembers/" + "LR1";
@@ -2430,11 +2436,12 @@ body.pv-open { overflow: hidden; }
   const CLAIMS_OPEN = false;
   const CLAIM_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScKRmtXk5TiPCCXAGPtkZmKzDHidkdhJd3B1S9_K4_pjKbFPA/viewform";
   const CLAIM_URL = CLAIM_FORM || FULL_URL;
+  const REWARD_BASE = "https://coderblack15.github.io/labyrinth-of-roots/rewards/";
   const REWARDS = [
-    { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "A wallpaper of the world map.", test: (c) => rwCh(c, "labyrinth") },
+    { id: "roots", name: "Into the Roots", how: "Finish the first chapter, The Labyrinth of Roots.", gift: "A wallpaper of the world map, every chapter charted.", files: [["Desktop wallpaper", "world-map-wallpaper-desktop.jpg"], ["Phone wallpaper", "world-map-wallpaper-phone.jpg"]], test: (c) => rwCh(c, "labyrinth") },
     { id: "siege", name: "Rahdaria Stands", how: "Finish The Siege of Rahdaria.", gift: "Your name in the game's credits, in the list of Wayfarers.", test: (c) => rwCh(c, "rahdaria") },
-    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "A download of the game's art pack: emblems, medallions and maps.", test: (c) => rwCh(c, "unmapped") },
-    { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "A printable Relicsong card made only for players who reach level 50.", test: () => lv() >= LV_MAX },
+    { id: "unmapped", name: "Drawn Back In", how: "Finish The Unmapped.", gift: "The game's art pack: all 50 gang emblems, the medallions and markers, and the maps.", files: [["Art pack (zip, 17 MB)", "labyrinth-of-roots-art-pack.zip"]], test: (c) => rwCh(c, "unmapped") },
+    { id: "fifty", name: "Ringwarden", how: "Reach level 50.", gift: "The Fiftieth Ring, a printable Relicsong card made only for players who reach level 50. Print it at 2.5 × 3.5 inches and write your name on it.", files: [["Relicsong card", "relicsong-card-the-fiftieth-ring.png"]], test: () => lv() >= LV_MAX },
     // Twinbreaker comes with the Rimehold chapter: it switches on by itself once that feat exists.
     { id: "twin", name: "Twinbreaker", how: "Beat the Hollow Twin in the heart of Rimehold.", gift: "A half-price itch.io key for the full game, to give to a friend.", test: () => hasAch("rmtwin4"), soon: () => !ACH.some(a => a.id === "rmtwin4") }
   ];
@@ -2508,25 +2515,29 @@ body.pv-open { overflow: hidden; }
       J.rw[R.id] = { code: rwPack(i, rwWid(), Math.floor((Date.now() - RW_EPOCH) / 86400000), rwHours()), t: Date.now() };
       got.push(R);
       stat("reward-" + R.id, "Reward code: " + R.name);
-      achToast({ kicker: "Reward code", name: R.name, desc: CLAIMS_OPEN ? "A code for a real reward. It's in your journal." : "Keep it: rewards are coming. It's in your journal." });
+      achToast({ kicker: "Reward code", name: R.name, desc: R.files ? "Your reward is ready to download in your journal." : CLAIMS_OPEN ? "A code for a real reward. It's in your journal." : "Keep it: this reward is coming. It's in your journal." });
     });
     if (got.length) jSave();
     return got;
   }
   const rwCodeHTML = (R) => '<span class="rw-code"><b class="rs-code">' + J.rw[R.id].code + '</b> <button class="ghost rw-copy" type="button" data-code="' + J.rw[R.id].code + '">Copy</button></span>';
+  const rwFiles = (R) => '<span class="rw-files">' + R.files.map(([label, f]) => '<a class="btn rw-dl" href="' + REWARD_BASE + f + '" target="_blank" rel="noopener" download>' + label + "</a>").join("") + "</span>";
+  // What a player gets for a reward: the download buttons, or the claim (or a "coming" line while claims are shut).
+  const rwGet = (R) => R.files ? R.gift + " " + rwFiles(R) : CLAIMS_OPEN ? R.gift + " To claim it, send the code to Adrian through " + rwClaim + "." : "Keep this code: this reward is coming.";
   const rwClaim = '<a href="' + CLAIM_URL + '" target="_blank" rel="noopener">' + (CLAIM_FORM ? "the claim form" : "the game\'s itch.io page") + "</a>";
   // A line for the chapter-complete card.
-  const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + (CLAIMS_OPEN ? R.gift + " To claim it, send the code to Adrian through " + rwClaim + "." : "Keep this code: rewards are coming.") + " It's in your journal too.</p>").join("");
+  const rwCard = (list) => list.map(R => '<p class="j-list rw-card"><b>Reward code · ' + R.name + ":</b> " + rwCodeHTML(R) + " " + rwGet(R) + " It's in your journal too.</p>").join("");
   function rwSection() {
     J.rw = J.rw || {};
     const item = (R) => {
       const g = J.rw[R.id];
       return '<li class="' + (g ? "won" : "") + '"><span class="mk"></span><span><b>' + R.name + "</b> · " + (R.soon && R.soon() ? "Coming with the Rimehold chapter. " : R.how + " ") +
-        (CLAIMS_OPEN ? "<i>" + R.gift + "</i>" : "") + (g ? "<br>" + rwCodeHTML(R) : "") + "</span></li>";
+        (R.files || CLAIMS_OPEN ? "<i>" + R.gift + "</i>" : "") + (g ? "<br>" + rwCodeHTML(R) + (R.files ? " " + rwFiles(R) : CLAIMS_OPEN ? "" : ' <span class="j-sub">This reward is coming.</span>') : "") + "</span></li>";
     };
     return '<section><h3>Reward codes · ' + REWARDS.filter(R => J.rw[R.id]).length + " of " + REWARDS.length + "</h3>" +
-      (CLAIMS_OPEN ? '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here. Send it to Adrian through ' + rwClaim +
-      " with the name you'd like in the credits and an email, and Adrian will send your reward. Each code can be claimed once. Rewards are free: you never pay to get one, and they don't go by luck.</p>" : '<p class="j-sub">A few milestones will be worth something outside the game. Reach one and you get a code here. Keep it: rewards are coming, and when they\'re ready you\'ll be able to claim them from this page. Each code can be claimed once, and rewards will always be free: you never pay to get one, and they never go by luck.</p>') +
+      '<p class="j-sub">A few milestones are worth something outside the game. Reach one and you get a code here, and the reward with it: a wallpaper, an art pack or a printable card download straight from this page. ' +
+      (CLAIMS_OPEN ? "For your name in the credits or a key for a friend, send your code through " + rwClaim + " with the name you'd like credited and an email. Each code can be claimed once. "
+        : "Your name in the credits and a key for a friend are coming: keep those codes. ") + "Rewards are always free: you never pay to get one, and they never go by luck.</p>" +
       '<ul class="marks">' + REWARDS.map(item).join("") + "</ul>" +
       "</section>";
   }
@@ -2546,6 +2557,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "80", name: "Rewards You Can Download", date: "13 Nov 2026", items: [
+      "<b>Three reward codes now come with their reward.</b> Finish the Labyrinth of Roots for a <b>world-map wallpaper</b> (desktop and phone), finish the Unmapped for the <b>art pack</b> (all 50 gang emblems, the medallions and the maps), and reach level 50 for <b>The Fiftieth Ring</b>, a printable Relicsong card made only for Ringwardens.",
+      "The download buttons are under <b>Reward codes</b> in your journal, and on the chapter card when you earn one. If you've already passed a milestone, they're waiting for you.",
+      "Your name in the credits (Siege of Rahdaria) and a half-price key for a friend (Twinbreaker) are coming: keep those codes."] },
     { ver: "79", name: "The Seedheart race", date: "13 Nov 2026", items: [
       "<b>A race through the Undervaults</b>, Adrian's idea. At the gate of Rimehold you hear of the Seedheart, the first seed the Labyrinth ever grew, said to grant a wish, down in side rings under the outer ring. Two other teams want it: the Gilt Lanterns, rich and charming, and the Thinwick Few, miners whose town is drowning.",
       "<b>Your team.</b> Hire three of six hunters: Iver the Lockwright, Oona Lampreader, Ruddock Ropehand, Sefa Ashmonger, Dov the Quiet and Mother Brisk. Each one's knack clears the way at a crossroads, and they come in by the hunters' stair, so the main rings stay yours alone.",
