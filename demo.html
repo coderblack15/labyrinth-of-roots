@@ -2653,6 +2653,8 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "87", name: "Sharper Roads", date: "14 Nov 2026", items: [
+      "From Part XVIII on, and on the roads back, a creature that meets you alone on the road hits a little harder: +1 damage, and +1 more every twelve levels. A road fight there now costs about 15% of your health instead of 11–13%. Packs, gangs and story fights are unchanged." ] },
     { ver: "86", name: "The Land Gate", date: "13 Nov 2026", items: [
       "<b>A painting of the siege.</b> When the Bathyr seal Rahdaria, the Marshal's war-table painting of the land gate shows once in the story, from Adrian's art." ] },
     { ver: "85", name: "Settings", date: "13 Nov 2026", items: [
@@ -4352,7 +4354,12 @@ body.pv-open { overflow: hidden; }
   const foeAtkUp = () => Math.floor(flk() / 6) + (cascadeOn() ? nmUp() : 0) - menaceNow() + (S.unbal ? 1 : 0);
   // FOE.soft (0-1) takes that share off the level bonus: the eastern chapters' bosses (2026-11-11, Adrian:
   // "the enemies hit too hard") run at half, so their own dice and big blows carry the fight.
-  const foeDmgUp = () => { const v = Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0) + (S.unbal ? 1 : 0); return FOE.on && FOE.soft ? Math.round(v * (1 - FOE.soft)) : v; };
+  // FOE.hard: a lone road beast from Part XVIII on (and on the roads back) hits 1 harder, +1 more every
+  // 12 levels (2026-11-14, Adrian: road fights there cost too little, about 11-13% of HP; this puts them
+  // near 15%). Packs already cost 15-22% and are left alone. See tools/fight-sim.js.
+  const ROAD_HARD_FROM = 17;
+  const roadHardUp = () => FOE.on && FOE.hard ? 1 + Math.floor(flk() / 12) : 0;
+  const foeDmgUp = () => { const v = Math.floor(flk() / 4) + (cascadeOn() ? nmUp() : 0) + (S.unbal ? 1 : 0) + roadHardUp(); return FOE.on && FOE.soft ? Math.round(v * (1 - FOE.soft)) : v; };
   const relic = (k) => (S.relics || []).includes(k);
   const readKey = (n) => String(n || "").replace(/^Nightmare /, "");
   const reads = (n) => (S.reads && S.reads[readKey(n)]) || 0;
@@ -8101,7 +8108,7 @@ body.pv-open { overflow: hidden; }
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
-    Object.assign(FOE, { soft: 0, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
+    Object.assign(FOE, { soft: 0, hard: false, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
     Object.assign(FOE, { on: true, name, max, hp, unit, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
@@ -15686,7 +15693,7 @@ body.pv-open { overflow: hidden; }
     const back = document.body.dataset.light;
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
     if (F.heads) foeStart(F.name, F.heads, { unit: F.unit, ...left }); else foeStart(F.name, F.hp, left);
-    FOE.soft = F.soft || 0;
+    FOE.soft = F.soft || 0; FOE.hard = !!F.hard;
     if (F.wren && !rmIn()) await wrnJoin();
     S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
@@ -16490,7 +16497,8 @@ body.pv-open { overflow: hidden; }
     }
     const q = nm && NM_NOFLEE.includes(B.quirk) ? {} : QUIRKS[B.quirk] || {};
     const F = { name: nmName, ac: B.ac + (nm ? 1 : 0), atk: B.atk, n: B.n, s: B.s, type: B.type, bloom: 0, bleed: B.bleed || 0, hesk: false, who: B.who, hitWhy: B.hitWhy, miss: B.miss, hitLine: B.hitLine,
-      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade", reg, field: fdPick(reg, roam) || undefined, hzForce: hzK, hzFoeStuck: hzFoe, hzScene: scene, hzLate: late };
+      stolen: 0, hatch: 2, spotted, road: true, shade: B.quirk === "fade", reg, field: fdPick(reg, roam) || undefined, hzForce: hzK, hzFoeStuck: hzFoe, hzScene: scene, hzLate: late,
+      hard: !B.heads && !many && (roam || S.part >= ROAD_HARD_FROM) };
     hzLastF = F;
     if (B.heads) { F.heads = B.heads + (pack ? 1 : 0); F.unit = B.unit; } else if (many) { F.heads = many; F.unit = "standing"; } else F.hp = B.hp;
     if (haunt) F.hpLeft = haunt.hp;
