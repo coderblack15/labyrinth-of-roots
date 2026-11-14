@@ -2840,6 +2840,9 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "95", name: "The Road from the Door", date: "14 Nov 2026", items: [
+      "<b>Go back to the roads from Rimehold's door.</b> At the warning by the door in the ice there's a new choice: walk back south to the roads, level up, shop and fight anywhere you've been, then take <b>Go back north to the door in the ice</b> from the roads when you're ready. The story waits for you there, even if you close the game.",
+      "<b>Weatherend's way out says where it goes.</b> Stocking up at Weatherend from the door now ends with <b>Back up the pass to the door</b>, instead of a \"Back to the road\" that led straight back to the door."] },
     { ver: "94", name: "Which of These Is You?", date: "14 Nov 2026", items: [
       "<b>Choose your face.</b> The name card now has a gallery of eighteen paintings of the axe-bearer: swipe, tap the arrows or use the arrow keys to look through them. Your pick is yours whatever people call you; until you choose, it starts on the painting that matches He, She or They.",
       "<b>Fifteen new faces by Adrian:</b> the Old Ferryman, the Quarry Girl, the Lantern-Keeper, the Desert Courier, the Widow of the Fen, the Shaven Pilgrim, the Broken Knight, the Hunter's Daughter, the Masked Wanderer, the Young Smith, the Salt-Scarred Sailor, the Grave-Digger, the Mountain Herder, the Scholar Who Left and the Ash-Painted Exile. More are on the way.",
@@ -6173,10 +6176,12 @@ body.pv-open { overflow: hidden; }
     await mech("You died. You wake at the nearest inn with full HP. You lost " + lost + " gold from your purse. Everything else is as it was before the fight.", "hurt");
     await go("Get up");
   }
-  async function roamHub() {
+  // detour: called from the door at Rimehold mid-story. The story waits at that part, and the hub
+  // offers the way back north; it returns "north" when the player takes it.
+  async function roamHub(detour) {
     started = true;
     const first = !S.roam;
-    if (first) { S.roam = true; S.roamEnd = S.part; }
+    if (first) { S.roam = true; S.roamEnd = detour ? S.part - 1 : S.part; if (detour) S.detour = detour; }
     foeEnd();
     save();
     light("dusk");
@@ -6211,8 +6216,14 @@ body.pv-open { overflow: hidden; }
           { key: "rest", label: "Rest at an inn", tag: "full HP and a foothold back · " + (innCost() ? innCost() + " gold" : ctRank() >= 3 ? "free for a Contender" : "free"), plain: true, show: S.coins >= innCost() && (S.hp < S.maxHp || digsLeft() < DIG_MAX) },
           { key: "wait", label: calNight() ? "Sleep rough till morning" : "Make camp and wait for dark", tag: calNight() ? "a cold camp by the road · a few HP" : "it's " + CAL_WATCH[calWatch()].toLowerCase() + " · gangs on the Blood-bought Roads lie in wait at night, with fatter purses", plain: true },
           { key: "f50", label: "Follow the Ring-Chart", tag: "your gift for fifty rings · field " + ((S.f50 && S.f50.n || 0) + 1) + " of " + F50_LEGS + (S.f50 && S.f50.regs && S.f50.regs[S.f50.n] && FIELDS[S.f50.regs[S.f50.n]] ? " · " + FIELDS[S.f50.regs[S.f50.n]].name : ""), plain: true, show: f50Open() },
+          { key: "north", label: "Go back north to the door in the ice", tag: "Rimehold · the story waits there", show: S.detour === "rime" },
           { key: "journal", label: "Open your journal", plain: true }
         ]);
+        if (c === "north") {
+          await say("You turn north again. The Long White is the same white, and Weatherend's smoke is where you left it, and the Frozen Pass is empty. Two days up, the door is exactly where you left it.");
+          S.roam = false; delete S.detour; save();
+          return "north";
+        }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
         const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
         if (c === "wait") {
@@ -8118,7 +8129,7 @@ body.pv-open { overflow: hidden; }
         ...hzTownOpts(T),
         { key: "salle", label: "Climb the stairs to the salle", tag: (S.duel && S.duel.salle[T.reg + ":" + T.name] >= 3 ? "you've beaten the master here" : "duels with blunted blades · Forms and a school"), show: T.kind === "town", plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
-        { key: "leave", label: "Back to the road", plain: true }
+        { key: "leave", label: T.leave || "Back to the road", plain: true }
       ]);
       if (c === "leave") break;
       if (c === "fair") await calJoin(T, fair);
@@ -32649,7 +32660,7 @@ body.pv-open { overflow: hidden; }
   }
   // The warning at the gate: Enter, or Not yet (back to Weatherend to stock up).
   async function rmGate() {
-    const M = rm();
+    let M = rm();
     for (;;) {
       const box = add(el("section", "rm-warn",
         '<p class="eyebrow">Rimehold</p><p class="big">Turn back if you are not ready.</p>' +
@@ -32657,12 +32668,21 @@ body.pv-open { overflow: hidden; }
         '<ul><li>Vaelric’s Axe goes cold: no 1 HP hold, anywhere inside.</li><li>Fall, and you wake at the start of the ring; the melt rises.</li><li>Braziers are the only rest, and each lights once.</li><li>No shops, no healers, no company: they wait at the gate.</li>' +
         "<li>Your pack holds " + RM_SLOTS + " healing things (draughts, bandages, poultices, tonics). You carry " + rmHealN() + ".</li></ul>"));
       scrollNext = true;
-      const c = await choose([{ key: "in", label: "Enter", tag: "set the seed in the door" }, { key: "back", label: "Not yet", tag: "go back down to Weatherend and stock up", plain: true }]);
+      const c = await choose([{ key: "in", label: "Enter", tag: "set the seed in the door" }, { key: "back", label: "Not yet", tag: "go back down to Weatherend and stock up", plain: true },
+        { key: "road", label: "Go back to the roads", tag: "walk the old roads, level up, shop anywhere · the door will wait", plain: true }]);
       box.classList.add("spent");
+      if (c === "road") {
+        save();
+        await say("You put the seed away and walk back down the pass, and on south, past Weatherend and down the Long White, until the cairns stop and there are roads again. The door will keep. Doors like that always do.");
+        await roamHub("rime");
+        // The roads back may have swapped S for a checkpoint; pick the chapter's state up again.
+        M = rm(); light("lake"); SND.region(CHAPTERS[chapterAt(S.part)].slug); checkpoint();
+        continue;
+      }
       if (c === "back") {
         save();
         await say("You put the seed away and walk back down the pass, past the broken ice wall, to Weatherend. It takes two days. Nobody stops you. Nobody's waiting in the pass at all.");
-        await townVisit(Object.assign({ reg: "rime" }, TOWNS.rime[0]));
+        await townVisit(Object.assign({ reg: "rime", leave: "Back up the pass to the door" }, TOWNS.rime[0]));
         await say("Two days back up. The door is exactly where you left it.");
         continue;
       }
@@ -35249,8 +35269,8 @@ body.pv-open { overflow: hidden; }
     started = true;
     renderSheet();
     // A run on the roads back carries on there, unless new chapters have been written since.
-    if (S.roam && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
-    const go2 = () => S.roam ? roamHub() : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
+    if (S.roam && !S.detour && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
+    const go2 = () => S.roam ? roamHub().then(r => r === "north" ? play(S.part) : null) : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
     const go4 = () => S.tac === undefined ? askStyle(!resumeState || S.part === 0).then(go2) : go2();
     const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go4) : go4();
     const go1 = () => !resumeState && tipState.guide === undefined ? askGuide() : Promise.resolve();
