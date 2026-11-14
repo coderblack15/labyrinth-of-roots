@@ -1231,6 +1231,10 @@ Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes
 - **Salles.** Every town on the roads back. Journeyman, provost and master, with blunted blades (your HP comes back). The master teaches a Form you haven't found. Each salle keeps one of three schools, and your first choice of school holds for the journey; other halls remark on it. The Lantern Hall (longer to answer, ripostes +3), the Thornwheel Yard (start at 2 Pressure, broken guards +4), the Foxstep Room (feints cut for 1d4 and add 2 Pressure).
 - **Where else.** Boarding on the Open Reach: call the captain out on the quarterdeck (win and the crew strike, lose and you're thrown back). Bandit gangs: challenge the Knife to single combat (win and the gang yields the cart and counts as broken; lose and all four set on you; you can break away).
 
+## Paintings in the story
+
+Adrian's paintings show once each, in a brass-root frame (`framedPic` in index.html): Rahdaria from the last ridge on arrival (Part LVI, before the grey is described), the Marshal's land-gate painting when the city is sealed (Part LIX), and Ishbel Galt's portrait when she meets you below Ashgate.
+
 ## Ishbel Galt, the fifth Hollow Hand (companion, from Adrian's art)
 
 Six years before you came, there were five Hollow Hands. Sable had a plan for the Magistrate's vault and no key, so the fifth hand, Ishbel Galt, went down the drain-cut under the palace with a pry bar and a jar of Ysolde's acid to try the iron door the hard way. The ward ate the acid, the bar and most of the skin off her hands. Somebody up top whistled, the guard came, and the four on the rope pulled it up. She did six years feeding the glass-kilns under the palace, and walked out the drain she came in by on the night the Glass Judge's sun-mirror had every guard in Sulmara looking up.
