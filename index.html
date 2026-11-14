@@ -2649,6 +2649,7 @@ body.pv-open { overflow: hidden; }
       h += "<section><h3>All journeys</h3>" + tiles([[all.length, "begun"], [all.filter(x => x.end === "finished").length, "finished"],
         [dur(sum("ms")), "time played"], [sum("deaths"), "deaths"], [sum("earned"), "gold found"]]) + "</section>";
     }
+    h += clSection(rs);
     h += echoSection(rs);
     h += f50Section(rs);
     h += wbSection(rs);
@@ -2846,6 +2847,14 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "97", name: "Callings", date: "14 Nov 2026", items: [
+      "<b>Choose a calling.</b> After your background, pick one of six ways to carry Vaelric's axe: <b>Axe-Sworn</b>, <b>Hushwalker</b>, <b>Songwright</b>, <b>Tidereader</b>, <b>Inkbinder</b> or <b>Rootgrafter</b>. A save that's already under way picks one on Continue.",
+      "<b>Each calling leans</b> on its own checks (+2, +3 from Rank IV), starts with its own kit, and has a <b>signature move</b> in fights: Heartcleave, Go Quiet, the Tempering Note, Read the Ebb, Strike Through or Graft.",
+      "<b>Ranks every ten levels</b>, I to V. The move grows stronger, comes twice a fight from Rank III, and gains a last edge at Rank V.",
+      "<b>Your calling has its own road.</b> On the way into the Burning Sands, Carrowmere, Sulmara, Mount Corrach, Rahdaria and the Unmapped, your calling meets something nobody else would. What you choose comes back on the roads back, and some of it reaches into the chapter: the Assize jury, the blockade, the Quire's ink.",
+      "<b>Your company notices.</b> Tyra, Burr, Ishbel and the sellswords each have something to say about how you carry the axe, once, at camp.",
+      "A new journal page for your calling, and 13 new feats in a <b>Callings</b> pursuit."
+    ] },
     { ver: "96", name: "Crime and the Watch", date: "14 Nov 2026", items: [
       "<b>The Long Return opens</b> once the story's end card is behind you, or at level 50, whichever comes first. This is the first part of it.",
       "<b>Bounty boards and the watch.</b> Every town has a board with three marks a week: track them, corner them, and take them, dead or (for half again the pay) alive. Every fifth mark is a named one with a story. Ranks run from Copper to Black Reckoner. Crimes raise your <b>wanted level</b> in that region; at 3 the watch stops you at the gate, and a price goes up on your head. Pay fines, clear the price, earn the Writ of Taking or spring your people at the watch houses of Rahdaria, Sulmara, Ammaret and Raftmark.",
@@ -3778,7 +3787,20 @@ body.pv-open { overflow: hidden; }
     { id: "lrmagpie", name: "Magpie Catcher", desc: "Run down a magpie and take the whole sack.", test: () => false },
     { id: "lrcache", name: "Chalk and Earth", desc: "Read a chalk mark right and open a thieves' cache.", test: () => false },
     { id: "lrcant", name: "Fluent in Chalk", desc: "Learn all twelve marks of the thieves' cant.", test: () => false },
-    { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
+    { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length },
+    { id: "cl_axe_all", name: "Not Alone", desc: "As an Axe-Sworn, meet all six of your calling's scenes on one journey.", test: () => clIs("axe") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("axe") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_axe_use", name: "The Low Guard", desc: "Use Heartcleave thirty times on one journey.", test: () => clIs("axe") && (S.cl.uses || 0) >= 30, prog: () => [clIs("axe") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_hush_all", name: "Nobody Heard", desc: "As a Hushwalker, meet all six of your calling's scenes on one journey.", test: () => clIs("hush") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("hush") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_hush_use", name: "Quieter Than That", desc: "Use Go Quiet thirty times on one journey.", test: () => clIs("hush") && (S.cl.uses || 0) >= 30, prog: () => [clIs("hush") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_song_all", name: "Every Note Kept", desc: "As a Songwright, meet all six of your calling's scenes on one journey.", test: () => clIs("song") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("song") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_song_use", name: "Humming Steel", desc: "Use the Tempering Note thirty times on one journey.", test: () => clIs("song") && (S.cl.uses || 0) >= 30, prog: () => [clIs("song") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_tide_all", name: "The Turn of It", desc: "As a Tidereader, meet all six of your calling's scenes on one journey.", test: () => clIs("tide") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("tide") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_tide_use", name: "Ebb and Flow", desc: "Use Read the Ebb thirty times on one journey.", test: () => clIs("tide") && (S.cl.uses || 0) >= 30, prog: () => [clIs("tide") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_ink_all", name: "In the Margins", desc: "As an Inkbinder, meet all six of your calling's scenes on one journey.", test: () => clIs("ink") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("ink") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_ink_use", name: "Struck Out", desc: "Use Strike Through thirty times on one journey.", test: () => clIs("ink") && (S.cl.uses || 0) >= 30, prog: () => [clIs("ink") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_root_all", name: "Everything Takes", desc: "As a Rootgrafter, meet all six of your calling's scenes on one journey.", test: () => clIs("root") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("root") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_root_use", name: "Live Wood", desc: "Use Graft thirty times on one journey.", test: () => clIs("root") && (S.cl.uses || 0) >= 30, prog: () => [clIs("root") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "clrank5", name: "Fifth Rank", desc: "Reach Rank V in your calling (level 40).", test: () => !!cl() && clRank() >= 5, prog: () => [cl() ? clRank() : 0, 5] },
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -3851,7 +3873,9 @@ body.pv-open { overflow: hidden; }
     { id: "fifthhand", name: "The Fifth Hand", ver: "32", desc: "Ishbel Galt, the Hollow Hand who was left on the rope, and what she decides about it.",
       ids: ["isbfire", "isbbond"] },
     { id: "watch", name: "Crime and the Watch", ver: "33", desc: "The Long Return opens: bounty boards, the watch, the Tenthmen and their Trail, agents, six hunters, magpies and the thieves' cant.",
-      ids: ["lrmark", "lralive", "lrrank", "lrnamed", "lrduel", "lrtrail", "lragent", "lrcrew", "lrhunter", "lrhunters", "lrfool", "lrclean", "lrmagpie", "lrcache", "lrcant"] }
+      ids: ["lrmark", "lralive", "lrrank", "lrnamed", "lrduel", "lrtrail", "lragent", "lrcrew", "lrhunter", "lrhunters", "lrfool", "lrclean", "lrmagpie", "lrcache", "lrcant"] },
+    { id: "callings", name: "Callings", ver: "34", desc: "Six ways to carry the axe, and what each of them leaves behind.",
+      ids: ["cl_axe_all", "cl_axe_use", "cl_hush_all", "cl_hush_use", "cl_song_all", "cl_song_use", "cl_tide_all", "cl_tide_use", "cl_ink_all", "cl_ink_use", "cl_root_all", "cl_root_use", "clrank5"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4064,6 +4088,7 @@ body.pv-open { overflow: hidden; }
     underItems(items);
     companyItems(items);
     bgItems(items);
+    clItems(items);
     allyItems(items);
     rahItems(items);
     rxItems(items);
@@ -4398,6 +4423,7 @@ body.pv-open { overflow: hidden; }
     const cob = coCheck(label);
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
     if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
+    if (!atk) { const cx = clCheck(label); if (cx) { mod += cx; label += " (+" + cx + " " + CALLINGS[S.cl.k].name + ")"; } }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
     if (!atk && hasGear("ysoltmap") && /^(Survival|Perception)/.test(label)) { mod += 1; label += " (+1 Ysolt's map)"; }
     if (!atk && hasGear("quirenib") && /^(Investigation|Survival|Perception)/.test(label)) { mod += 1; label += " (+1 the Quire's nib)"; }
@@ -7599,6 +7625,7 @@ body.pv-open { overflow: hidden; }
   const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
   // A town visit, after its intro.
   async function echoTown(T) {
+    await clEchoTown(T);
     if (T.reg === "rahdaria") await unEchoTown(T);
     if (T.reg === "rahdaria") await rmEchoTown(T);
     await wlTown(T);
@@ -9485,7 +9512,7 @@ body.pv-open { overflow: hidden; }
       if ((FOE.F && FOE.F.hesk) || (S.hk && FOE.F && d(3) === 3)) got.spore = FOE.unit ? Math.min(2, FOE.max) : 1;
       Object.keys(got).forEach(k => salv()[k] += got[k]);
     }
-    if (Object.keys(SKILLS).some(k => !hasSkill(k))) S.leaves = (S.leaves || 0) + 1;
+    if (Object.keys(SKILLS).some(k => !hasSkill(k))) S.leaves = (S.leaves || 0) + 1 + (down && hasGear("inkhorn") && d(4) === 1 ? 1 : 0);
     else got.extra = true;
     const bits = [];
     if (down && salvList(got)) bits.push("you strip " + salvList(got) + " from what's left");
@@ -10012,6 +10039,7 @@ body.pv-open { overflow: hidden; }
     const k = await choose(opts);
     if (k === "sleep") { await heal(1, 6, "You sleep like a stone."); return; }
     const lv = Math.min(5, bondOf(k) + 1);
+    await clCamp(k);
     if (isMerc(k)) {
       await say(CAMP[k][Math.min(3, Math.max(1, (co().loyal[k] || 0) + 1))]);
       if (!sworn(k)) await coBond(k, 1, "An evening by the fire.");
@@ -13852,6 +13880,7 @@ body.pv-open { overflow: hidden; }
       chased: 0, wonDrink: false, fixer: false, ansel: false, turned: false, jackalDeal: false, thread: false, ykey: false, trial: false, stripped: false, verdict: "",
       tyra: S.tyra || { aff: 0, errand: null, helped: false, jobs: [], nights: 0, key: false, love: false }
     });
+    clAssize();
     renderSheet();
   }
 
@@ -13892,13 +13921,14 @@ body.pv-open { overflow: hidden; }
 
   async function heatUp(n, why) {
     if (!S.gl || S.trial) return;
+    if (n > 0 && S.clDaunt) { S.clDaunt = false; await mech(why + " But a warden sergeant with her grandfather's salute looks the other way: no Heat.", "loot"); return; }
     S.heat = Math.max(0, Math.min(10, S.heat + n)); renderSheet();
     if (n > 0) await mech(why + " Heat +" + n + ", to " + S.heat + " of 10.", "hurt");
     else if (n < 0) await mech(why + " Heat " + n + ", to " + S.heat + " of 10.", "loot");
     if (S.heat >= 10) await wardenChase();
   }
   // Going out into the city: Streetwise shaves a point off.
-  const outing = (n, why) => heatUp(Math.max(0, n - (hasSkill("street") ? 1 : 0)), why);
+  const outing = (n, why) => { const r = S.clRoofs > 0 && n > 0 ? 1 : 0; if (r) S.clRoofs--; return heatUp(Math.max(0, n - (hasSkill("street") ? 1 : 0) - r), why + (r ? " (Maudry's gutter-map: 1 less.)" : "")); };
 
   async function juryShift(f, n, why) {
     const before = S.jury[f];
@@ -15290,6 +15320,7 @@ body.pv-open { overflow: hidden; }
     if (!S.bloom && vaelricSpeaks()) await voice("\"There you are,\" Vaelric says, close again.");
   }
   async function bloomSave(dc, why) {
+    if (clIs("root") && clB("corrach")) dc -= 2;
     if (S.molt) return true;
     if (FOE.on && FOE.salt) { FOE.salt = false; await mech("The Bloom reaches for you and finds a mouthful of saltroot. It doesn't take.", "loot"); return true; }
     if (hasGear("mask")) dc -= 3;
@@ -16593,7 +16624,7 @@ body.pv-open { overflow: hidden; }
       if (dist > 6) return "It's too far for the bow, " + dist + " squares off. Get within 6 on the map.";
       return dist === 1 || fdLos(fd, fd.you, fd.foe) ? null : "There's rock in the way. Move to where you can see it.";
     }
-    if (c === "atk" || c === "fd-shove") return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
+    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe"))) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
     if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
     if (String(c).startsWith("fd-act-")) { const q = fdSpot(fd, c.slice(7)); if (!q) return "There's nothing left there to do."; return cheb(fd.you, q) <= 1 || (await closeIn(q)) ? null : "It's too far off, " + cheb(fd.you, q) + " squares. Move next to it on the map first."; }
     if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
@@ -16855,6 +16886,7 @@ body.pv-open { overflow: hidden; }
       if (bleeds().length && S.dress) opts.push({ key: "band", label: "Bandage the bleeding", tag: "1 bandage · stops " + bleedTxt() + " a round, and 1d8 + 2 HP · costs your turn · " + S.dress + " left", plain: true });
       if (S.pavise && !st.used.pavise) opts.push({ key: "pavise", label: "Plant the pavise", tag: "halves your next 3 hits, or stops a whole volley · " + S.pavise + " left · costs your turn", plain: true });
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
+      clFightOpts(F, st).forEach(o => opts.push(o));
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
@@ -16873,11 +16905,15 @@ body.pv-open { overflow: hidden; }
       if (c === BELT_WON) break;
       const rmHpB = FOE.hp;
       await rmNote(c, F, st);
-      if (c === "atk") {
+      if (c === "atk" || (c === "cls" && clIs("axe"))) {
+        const cleave = c === "cls";
+        if (cleave) clUsed(st);
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
         const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st), dc: F.ac, target: "AC", adv: st.adv, dis: dim || adrift || !!st.dis, cta: "Strike" });
         st.adv = false; st.dis = false;
+        const clx = a.ok ? clOnHit(cleave) : 0;
+        if (a.ok && st.clQuiet) { st.clQuietDmg = st.clQuiet; st.clQuiet = 0; } else if (!a.ok) st.clQuiet = 0;
         if (a.ok) {
           if (F.heads) {
             const n = Math.min(FOE.hp, await comboHeads(FOE.hp - 1)); foeHit(n);
@@ -16885,9 +16921,10 @@ body.pv-open { overflow: hidden; }
             if (!F.company) await coMob();
           } else {
             if (glaive) { await foeStrike(1, 10, 3 + fdDmg(st), "Glaive damage" + (st.fd && st.fd.charged ? " (charge)" : "")); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
-            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
+            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + clx + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (cleave ? " (Heartcleave)" : "") + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
             if (FOE.hp > 0 && F.hitLine) await say(F.hitLine);
           }
+          await clAfterHit(st);
         } else if (F.missLine) await say(F.missLine);
       } else if (c === "gems") {
         S.gemsSpent = true; renderSheet(); light("gems");
@@ -16917,7 +16954,7 @@ body.pv-open { overflow: hidden; }
         st.used.discord = true;
         SND.discord();
         await say("Their blades are held hard by a note. You find it, the way Ninefold taught you, and sing the note next to it, the one that grates.");
-        const r = await check({ label: "Wisdom check (singing the discord)", mod: 2 + (S.song >= 3 ? 2 : 0), dc: 13, cta: "Sing" });
+        const r = await check({ label: "Wisdom check (singing the discord)", mod: 2 + (S.song >= 3 ? 2 : 0) + (hasGear("tuneshell") ? 2 : 0), dc: 13, cta: "Sing" });
         if (r.ok) { st.stilled = true; st.clean = true; await say("The " + (F.heads ? "nearest blade" : "blade") + " shivers, cracks, and crumbles into white dust. It has to sing a new one from bare shell, in a hurry, and the new one is clean."); await mech("It loses its next turn, and its hits no longer carry the Bloom this fight.", "loot"); }
         else await say("Your voice cracks on the note. The blade hums on, unbothered.");
       } else if (c === "mend") {
@@ -16950,9 +16987,11 @@ body.pv-open { overflow: hidden; }
         blindSet(0);
         await say("You give ground and drag a sleeve across your eyes until the world comes back, swimming, then sharp.");
       } else if (c === "escape") {
-        const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0), dc: escapeDc(F, st), cta: "Run" });
+        const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), cta: "Run" });
         if (r.ok) { st.fled = "you"; await say("You feint high, drop low, and you're past it and running. It doesn't follow far."); }
         else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
+      } else if (c === "cls") {
+        await clFightDo(F, st);
       } else if (c === "evade") {
         st.evade = true;
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
@@ -17001,7 +17040,7 @@ body.pv-open { overflow: hidden; }
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0);
+  const evadeChance = () => (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0);
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
@@ -17018,14 +17057,19 @@ body.pv-open { overflow: hidden; }
     if (st.pzSalt > 0) { st.pzSalt--; await say("It swings blind, eyes streaming with salt, and the blow goes nowhere near you."); return false; }
     if (st.pzShaken) bonus -= 2;
     const pzDis = !!st.pzDis; st.pzDis = false;
-    const hit = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis, adv: !!st.winded, cta: "Brace" });
+    const clm = clSwingMod(st); bonus += clm.bonus;
+    if (F.hesk && clIs("song") && clB("corrach") === "trade") bonus -= 1;
+    const hit0 = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis || clm.dis, adv: !!st.winded, cta: "Brace" });
     st.winded = false;
+    const hit = hit0 && !(await clStrike(F, st));
+    const clHp0 = S.hp;
     if (hit) {
       if (st.soft && F.hesk && S.hp > 0) { const lost = S.hp; await hurt(n, s, type, o.why || F.hitWhy); const back = Math.min(2, lost - Math.max(0, S.hp)); if (back > 0 && S.hp > 0) { S.hp = Math.min(S.maxHp, S.hp + back); renderSheet(); await mech("The softened blade does " + back + " less.", "loot"); } }
       else await hurt(n, s, type, o.why || F.hitWhy);
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
+      await clAfterBlow(F, st, clHp0);
       if (FOE.dreadOn && FOE.threads > 0) await dreadAdd(1, "Its blow lands, and the Cascade-water in it gets under your skin");
-    } else if (F.miss) await say(F.miss);
+    } else if (F.miss && !hit0) await say(F.miss);
     return hit;
   }
 
@@ -22981,6 +23025,611 @@ body.pv-open { overflow: hidden; }
     items.push(["bg", "token", "Background: " + BGS[S.bg].name, BGS[S.bg].fx + (PRONOUNS[S.pr] ? " People call you " + PRONOUNS[S.pr].label.toLowerCase().replace(" / ", "/") + "." : "") + (S.origin ? " From " + ORIGINS[S.origin] + "." : "") + (S.look ? " " + LOOKS[S.look][0].toUpperCase() + LOOKS[S.look].slice(1) + "." : "")]);
   }
 
+  // ---------- callings: what you do with the axe ----------
+  // Adrian's ask (14 Nov 2026): classes. Six Callings, all native to this realm. You pick one after
+  // your background (an old save picks on Continue). Each Calling has a lean (+2 on some checks, +3
+  // from Rank IV), a signature move in menu fights (once a fight, twice from Rank III), a starting
+  // kit, and a rank every ten levels (I at 3, II at 10, III at 20, IV at 30, V at 40). On the road
+  // into six chapters (desert, Carrowmere, Sulmara, Corrach, Rahdaria, the Unmapped) a Calling has a
+  // scene of its own; each choice is kept in S.cl.b[slug], comes back on the roads back (ECHOES
+  // cl_<calling>_<slug>), and some reach into the chapter itself (the Assize jury, the blockade,
+  // the Quire's ink). The last scene, at the half milestone, reads all the others.
+  // S.cl = { k, b: { slug: choice }, rk: rank last announced, uses, heard: [companions] }.
+  const CALLINGS = {
+    axe: { name: "Axe-Sworn", who: "Vaelric's old soldiery, the ones who carried the axe-line before you", lean: "Athletics, Strength and Intimidation", re: /Athletics|Strength|Intimidation/,
+      sig: "Heartcleave", kit: "6 more max HP, 2 bandages and the Oath-Cord", gear: "oathcord",
+      blurb: "You were taught by someone who was taught by someone who stood beside Vaelric. You hold the axe the old way, low and patient.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", swing with everything: a hit counts twice toward your combo" + (r >= 5 ? ", straight to a Rootbreaker" : "") + (r >= 4 ? ", and does +2d6" : r >= 2 ? ", and does +1d6" : "") + "." },
+    hush: { name: "Hushwalker", who: "the quiet way of the Whisperers, which the Hollow Hands learned from", lean: "Stealth, Sleight of Hand and Acrobatics", re: /Stealth|Sleight|Acrobatics/,
+      sig: "Go Quiet", kit: "the Hushcloth (+2 to break away) and 10 gold", gear: "hushcloth",
+      blurb: "Somebody taught you to walk so the floor forgets you. Loud things wake what sleeps down here. You don't make loud things.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", step out of its sight: its next " + (r >= 5 ? "two blows are" : "blow is") + " at disadvantage, and your next swing has advantage" + (r >= 4 ? " and +2d6" : r >= 2 ? " and +1d6" : "") + ". Costs your turn." },
+    song: { name: "Songwright", who: "the few outsiders the Hesk ever taught a little song-forging", lean: "Persuasion, Performance and Deception", re: /Persuasion|Performance|Deception/,
+      sig: "Tempering Note", kit: "the Tuning-Shell (+2 to sing a discord) and a Draught of Mending", gear: "tuneshell",
+      blurb: "You can hear the note a blade is holding. Once, a Hesk elder let you hum along while it sang an edge out of fungus. You've never stopped humming.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", hum the axe to its note: your next " + (r >= 4 ? "three" : "two") + " hits do +" + (r >= 5 ? "2d6" : r >= 2 ? "1d8" : "1d6") + ". Against the Hesk it breaks their song: their blows stop carrying the Bloom. Costs your turn." },
+    tide: { name: "Tidereader", who: "the sea-folk who read water, weather and moons", lean: "Survival, Perception and Insight", re: /Survival|Perception|Insight/,
+      sig: "Read the Ebb", kit: "the Sounding-Line (+5% Evade) and 2 bandages", gear: "soundline",
+      blurb: "Everything has a tide: the sea, the sand, a crowd, a blow. You learned to wait for the turn of it.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", watch for the turn: its next blow that lands is " + (r >= 4 ? "quartered" : "halved") + (r >= 5 ? " and what it lost goes back into it" : "") + ", and you have +2 AC against the blow after" + (r >= 2 ? " (the two after)" : "") + ". Costs your turn." },
+    ink: { name: "Inkbinder", who: "the scholars of the old margins, who learned from the Quire's leavings", lean: "Investigation, History and Arcana", re: /Investigation|History|Arcana/,
+      sig: "Strike Through", kit: "the Inkhorn (spare leaves of the Scroll of Acquisition turn up after fights)", gear: "inkhorn",
+      blurb: "You were a copyist, until you read something in a margin you weren't meant to. Ink remembers. You make it remember what you want.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", write a line through what's coming: the next blow that lands on you is a miss instead" + (r >= 4 ? ", and so is the one after" : "") + (r >= 2 ? ", and it hits at −1 for the rest of the fight" : "") + (r >= 5 ? ". The struck-out blow lands on it" : "") + ". Costs your turn." },
+    root: { name: "Rootgrafter", who: "the healers who bind living root into wounds", lean: "Medicine, Nature and Constitution", re: /Medicine|Nature|Constitution/,
+      sig: "Graft", kit: "the Graft-Knife and 2 Draughts of Mending", gear: "graftknife",
+      blurb: "You set bones with your hands and close cuts with a sliver of live root. The labyrinth's roots know your touch, a little. They lean toward you.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", bind a sliver of root into your worst wound: regain " + (r >= 4 ? "2d8" : "1d8") + " + your level ÷ 5 HP" + (r >= 2 ? ", stop any bleeding" : "") + ", and the next blow on you is −" + (r >= 5 ? "3, and the one after too" : "2") + ". Costs your turn." }
+  };
+  const CL_RANKS = ["", "I", "II", "III", "IV", "V"];
+  const cl = () => S.cl && CALLINGS[S.cl.k] ? S.cl : null;
+  const clIs = (k) => !!(S.cl && S.cl.k === k);
+  const clB = (slug) => S.cl && S.cl.b ? S.cl.b[slug] || "" : "";
+  const clRank = () => { const L = lv(); return L >= 40 ? 5 : L >= 30 ? 4 : L >= 20 ? 3 : L >= 10 ? 2 : 1; };
+  const clUses = () => clRank() >= 3 ? 2 : 1;
+  const clLean = () => clRank() >= 4 ? 3 : 2;
+  Object.assign(GEAR, {
+    oathcord: { name: "The Oath-Cord", icon: "ring", desc: "A plaited cord of the old soldiery, tied round the axe's haft below the gems. There's a knot in it for everyone who ever stood beside you. It's getting long." },
+    hushcloth: { name: "The Hushcloth", icon: "cloak", desc: "A grey felted shawl that drinks sound. Wrapped round your feet or your fists, nothing hears you. +2 when you break away from a fight." },
+    tuneshell: { name: "The Tuning-Shell", icon: "drum", desc: "A Hesk tuning-shell the size of your palm. Tap it and it gives one true note. +2 when you sing a discord into a Hesk blade." },
+    soundline: { name: "The Sounding-Line", icon: "map", desc: "A weighted line, knotted every fathom, for reading depth and drift. You read people with it too, somehow. +5% Evade." },
+    inkhorn: { name: "The Inkhorn", icon: "scroll", desc: "A copyist's horn of black ink that never quite dries. After a fight, now and then, you copy out a spare leaf of the Scroll of Acquisition from memory." },
+    graftknife: { name: "The Graft-Knife", icon: "blade", desc: "A short curved knife with a bone handle, for cutting a live sliver of root and laying it in a wound. It's never once cut you." },
+    cl_keep_axe: { name: "The Knotted Oath", icon: "ring", desc: "The Oath-Cord, finished at the half milestone with a knot for every name. +1 to every check where your lean applies, and +4 max HP." },
+    cl_keep_hush: { name: "Ilka's Thimble", icon: "ring", desc: "A lead thimble from the half milestone, stamped with a closed mouth. Push it on, and the world hears nothing for a breath. +5% Evade, and Go Quiet comes back once more each fight." },
+    cl_keep_song: { name: "The Ninth Note", icon: "drum", desc: "A note you found in the white, where there should be nothing to hear. It lives in the axe now. Tempering Note does one more die." },
+    cl_keep_tide: { name: "The Moon-Knot", icon: "map", desc: "The last knot on your Sounding-Line, tied at the edge of the white, where the tide of the world goes out. Read the Ebb comes back once more each fight." },
+    cl_keep_ink: { name: "The Bound Margin", icon: "scroll", desc: "A strip of the Quire's own margin, sewn into your sleeve. Strike Through comes back once more each fight." },
+    cl_keep_root: { name: "The Living Graft", icon: "herb", desc: "A sliver of root you laid in your own arm at the half milestone. It took. +6 max HP, and Graft comes back once more each fight." }
+  });
+  const clKeep = () => S.cl && hasGear("cl_keep_" + S.cl.k);
+  const clUsesNow = () => clUses() + (clKeep() && !clIs("axe") ? 1 : 0);
+  // The card after the background card.
+  function askCalling(isNew) {
+    return new Promise((done) => {
+      let pick = "";
+      const box = el("section", "recap namecard bgcard clcard",
+        '<div><span class="num">' + (isNew ? "Before you go down" : "One more thing") + "</span><h3>What is your calling?</h3></div>" +
+        "<p class='recap-now'>" + (isNew ? "Everyone who carries Vaelric's axe carries it a different way. How were you taught?" : "You've carried the axe a long way. People have started to notice how you carry it. Say what you are, and the road ahead will answer to it.") + "</p>" +
+        '<div class="bg-row" data-k="cl"><span class="stat-label">Calling</span><div class="bg-opts">' +
+        Object.entries(CALLINGS).map(([k, C]) => '<button type="button" class="bg-opt" data-v="' + k + '"><b>' + C.name + "</b><small>" + C.blurb + " <i>Leans on " + C.lean + ". " + C.sig + ": " + C.sigTxt(1) + " Starts with " + C.kit + ".</i></small></button>").join("") +
+        '</div></div><div class="actions"><button class="primary" type="button" id="clGo" disabled>' + (isNew ? "Go down" : "Carry on") + "</button></div>");
+      const goB = box.querySelector("#clGo");
+      box.querySelectorAll(".bg-opt").forEach(b => b.onclick = () => {
+        pick = b.dataset.v;
+        box.querySelectorAll(".bg-opt").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+        goB.disabled = false;
+      });
+      goB.onclick = () => {
+        if (!pick) return;
+        S.cl = { k: pick, b: {}, rk: clRank(), uses: 0, heard: [] };
+        S.gear = S.gear || []; if (!S.gear.includes(CALLINGS[pick].gear)) S.gear.push(CALLINGS[pick].gear);
+        if (pick === "axe") { S.maxHp += 6; S.hp += 6; S.dress = (S.dress || 0) + 2; }
+        if (pick === "hush") S.coins += 10;
+        if (pick === "song") S.potions = (S.potions || 0) + 1;
+        if (pick === "tide") S.dress = (S.dress || 0) + 2;
+        if (pick === "root") S.potions = (S.potions || 0) + 2;
+        box.querySelectorAll("button").forEach(x => x.disabled = true);
+        box.remove();
+        save(); renderSheet();
+        stat("calling", "Chose a calling: " + CALLINGS[pick].name);
+        done();
+      };
+      scrollNext = true;
+      add(box);
+    });
+  }
+  function clItems(items) {
+    const c = cl(); if (!c) return;
+    const C = CALLINGS[c.k], r = clRank();
+    items.push(["calling", "token", "Calling: " + C.name + ", Rank " + CL_RANKS[r], "+" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + (r < 5 ? " Next rank at level " + [0, 10, 20, 30, 40][r] + "." : "")]);
+  }
+  // A rank comes every ten levels; the story says so at the start of the next part.
+  async function clRankNews() {
+    const c = cl(); if (!c) return;
+    const r = clRank();
+    if (r <= (c.rk || 1)) { c.rk = Math.max(c.rk || 1, r); return; }
+    c.rk = r;
+    const C = CALLINGS[c.k];
+    await mech("<b>" + C.name + ", Rank " + CL_RANKS[r] + ".</b> " + C.sig + ": " + C.sigTxt(r) + (r === 4 ? " Your lean is +3 now." : ""), "loot");
+    if (r >= 5) grant("clrank5");
+  }
+
+  // ---- in a fight ----
+  function clFightOpts(F, st) {
+    const c = cl(); if (!c) return [];
+    const left = clUsesNow() - (st.used.cls || 0);
+    if (left <= 0) return [];
+    const r = clRank(), C = CALLINGS[c.k], n = " · " + left + " left this fight";
+    if (c.k === "axe" && ((F.noAtk && F.noAtk(st)) || st.rmNoAtk)) return [];
+    if (c.k === "axe") return [{ key: "cls", label: "Heartcleave", tag: "an axe swing · a hit counts twice toward your combo" + (r >= 5 ? " (Rootbreaker)" : "") + (r >= 4 ? " · +2d6" : r >= 2 ? " · +1d6" : "") + n, plain: true }];
+    if (c.k === "hush") return [{ key: "cls", label: "Go Quiet", tag: "its next " + (r >= 5 ? "2 blows" : "blow") + " at disadvantage · your next swing has advantage · costs your turn" + n, plain: true }];
+    if (c.k === "song") return [{ key: "cls", label: "Hum the Tempering Note", tag: "next " + (r >= 4 ? 3 : 2) + " hits +" + (r >= 5 ? "2d6" : r >= 2 ? "1d8" : "1d6") + (F.hesk ? " · breaks the Hesk song" : "") + " · costs your turn" + n, plain: true }];
+    if (c.k === "tide") return [{ key: "cls", label: "Read the Ebb", tag: "its next blow " + (r >= 4 ? "quartered" : "halved") + " · then +2 AC · costs your turn" + n, plain: true }];
+    if (c.k === "ink") return [{ key: "cls", label: "Strike Through", tag: (r >= 4 ? "the next 2 blows that land miss" : "the next blow that lands misses") + " · costs your turn" + n, plain: true }];
+    if (c.k === "root") return (S.hp < S.maxHp || bleeds().length) ? [{ key: "cls", label: "Graft", tag: (r >= 4 ? "2d8" : "1d8") + " + " + Math.floor(lv() / 5) + " HP · next blow −" + (r >= 5 ? 3 : 2) + " · costs your turn" + n, plain: true }] : [];
+    return [];
+  }
+  function clUsed(st) { st.used.cls = (st.used.cls || 0) + 1; S.cl.uses = (S.cl.uses || 0) + 1; if (S.cl.uses >= 30) grant("cl_" + S.cl.k + "_use"); }
+  // Everything but Heartcleave (which is a swing, handled in the attack) costs the turn.
+  async function clFightDo(F, st) {
+    const c = cl(), r = clRank();
+    clUsed(st);
+    if (c.k === "hush") {
+      st.clDis = r >= 5 ? 2 : 1; st.adv = true; st.clQuiet = r >= 4 ? 2 : r >= 2 ? 1 : 0;
+      await say("You stop moving, and then you aren't where you were. " + (F.heads ? "They" : F.who[0].toUpperCase() + F.who.slice(1)) + " " + (F.heads ? "look" : "looks") + " round, once, for the place the noise went.");
+      await mech("Go Quiet: " + (st.clDis > 1 ? "its next two blows are" : "its next blow is") + " at disadvantage, and your next swing has advantage.", "loot");
+    } else if (c.k === "song") {
+      st.clTemper = r >= 4 ? 3 : 2; st.clTemperDie = r >= 5 ? [2, 6] : r >= 2 ? [1, 8] : [1, 6];
+      SND.discord && SND.discord();
+      await say("You hum low, under your breath, and lay your thumb on the axe-head until you feel it hum back. There: the note it's holding. You lean on it, and the edge brightens.");
+      if (F.hesk) { st.clean = true; await mech("Their song falters against yours: their blows no longer carry the Bloom this fight.", "loot"); }
+      await mech("Tempering Note: your next " + st.clTemper + " hits do +" + st.clTemperDie[0] + "d" + st.clTemperDie[1] + ".", "loot");
+    } else if (c.k === "tide") {
+      st.clEbb = r >= 4 ? 4 : 2; st.clEbbAc = 0;
+      await say("You stop, and watch the way it breathes: the shoulders going up, the weight going back. It's a tide like any other. You wait for the turn.");
+      await mech("Read the Ebb: its next blow that lands is " + (r >= 4 ? "quartered" : "halved") + ", and you'll have +2 AC after.", "loot");
+    } else if (c.k === "ink") {
+      st.clInk = r >= 4 ? 2 : 1;
+      await say("You see it coming before it comes, the way you see the end of a line you're copying. You draw a stroke through it in your head, clean, the way you'd strike out a wrong word.");
+      await mech("Strike Through: " + (st.clInk > 1 ? "the next two blows that land" : "the next blow that lands") + " will miss instead.", "loot");
+    } else if (c.k === "root") {
+      const n = d(8) + (r >= 4 ? d(8) : 0) + Math.floor(lv() / 5), b = S.hp;
+      S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+      st.clGraft = r >= 5 ? 2 : 1; st.clGraftN = r >= 5 ? 3 : 2;
+      await say("You give ground, cut a live sliver from the root-knot at your belt, and lay it in the worst of it. It takes hold, the way roots do, and pulls the edges together.");
+      await mech("Graft: regain " + (S.hp - b) + " HP, and the next blow on you is −" + st.clGraftN + ".", "loot");
+      if (r >= 2 && bleeds().length) await bleedStop("The graft closes the bleeding.");
+    }
+  }
+  // Called on a hit, before the damage: Heartcleave's extra combo step.
+  function clOnHit(cleave) {
+    if (!cleave || !FOE.on) return 0;
+    const r = clRank();
+    FOE.chain = r >= 5 ? 3 : Math.min(3, FOE.chain + 1); renderFoe();
+    return r >= 4 ? d(6) + d(6) : r >= 2 ? d(6) : 0;
+  }
+  // After your hit lands: the tempering note and the quiet strike.
+  async function clAfterHit(st) {
+    if (FOE.hp <= 0) return;
+    if (st.clTemper > 0) { st.clTemper--; await foeBurst(st.clTemperDie[0], st.clTemperDie[1], 0, "The tempered edge sings"); }
+    if (FOE.hp > 0 && st.clQuietDmg) { const n = st.clQuietDmg; st.clQuietDmg = 0; await foeBurst(n, 6, 0, "Out of the quiet"); }
+  }
+  // Before its blow: disadvantage, AC, the struck-out line.
+  function clSwingMod(st) {
+    let bonus = 0, dis = false;
+    if (st.clDis > 0) { st.clDis--; dis = true; }
+    if (st.clEbbAc > 0) { st.clEbbAc--; bonus -= 2; }
+    if (st.clInkAtk) bonus -= 1;
+    return { bonus, dis };
+  }
+  // A blow that landed: true if it's struck through; otherwise softens it after the fact.
+  async function clStrike(F, st) {
+    if (!(st.clInk > 0)) return false;
+    st.clInk--;
+    if (clRank() >= 2) st.clInkAtk = true;
+    await say("It lands, and doesn't: the blow you saw coming goes where you struck it out, a hand's breadth wide.");
+    await mech("Struck through: a miss." + (st.clInkAtk ? " It hits at −1 for the rest of the fight." : ""), "loot");
+    if (clRank() >= 5 && FOE.hp > 0 && !F.heads) await foeBurst(F.n || 1, F.s || 6, 0, "The struck-out blow lands on it instead");
+    return true;
+  }
+  // After a landed blow: the ebb halves it, the graft blunts it. hp0 is your HP before the blow.
+  async function clAfterBlow(F, st, hp0) {
+    const lost = hp0 - Math.max(0, S.hp);
+    if (lost <= 0 || S.hp <= 0) return;
+    let back = 0, why = "";
+    if (st.clEbb) { back = lost - Math.floor(lost / st.clEbb); why = "You rode the ebb: the blow is " + (st.clEbb > 2 ? "quartered" : "halved") + "."; st.clEbbAc = clRank() >= 2 ? 2 : 1; const q = st.clEbb; st.clEbb = 0; if (clRank() >= 5 && FOE.hp > 0 && !F.heads) { FOE.hp = Math.max(1, FOE.hp - back); renderFoe(); foePop("−" + back); why += " What it lost goes back into it: " + back + " damage."; } void q; }
+    else if (st.clGraft > 0) { st.clGraft--; back = Math.min(st.clGraftN, lost); why = "The graft holds: " + back + " less."; }
+    if (back > 0) { S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech(why, "loot"); }
+  }
+
+  // ---- the road into six chapters ----
+  const clHead = (t) => { const C = CALLINGS[S.cl.k]; const h = el("div", "part-head sub", '<span class="num">' + C.name + "</span><h2>" + t + "</h2>"); scrollNext = true; add(h); };
+  const sayV = (t) => say(t, "voice");
+  const CL_BEAT_AT = { desert: 6, carrowmere: 17, assize: 28, corrach: 34, rahdaria: 55, unmapped: 83 };
+  const CL_SLUGS = Object.keys(CL_BEAT_AT);
+  const CL_BEATS = {
+    axe: {
+      desert: { t: "The Last Picket", run: async () => {
+        await say("Half out of a dune, where the wind has scoured it clean, there's a ring of iron stakes, and inside the ring a dozen skeletons in rusted half-plate, all facing outward. They held something here until the sand came over them.");
+        await say("The one at the front still has both hands round a haft, and in the haft there are three empty sockets in a row, where gems would go. You know that grip. You were taught it. On the nearest stake, someone has cut a column of names with a knife-point.");
+        const c = await choose([{ key: "bury", label: "Bury them facing out, the way they stood", tag: "an afternoon in the sun" }, { key: "names", label: "Copy the names off the stake", tag: "somebody should know them", plain: true }, { key: "ring", label: "Take the captain's ring", tag: "they don't need it", plain: true }]);
+        if (c === "bury") { xpGain(40); await say("It takes until the shadows are long. You set them back in their ring, facing out, and pile sand over them, and set the stakes upright. The last thing you do is salute, the old way, low."); }
+        if (c === "names") { await say("Thirty-one names, in a soldier's hand. The last one was cut by someone else, shakier, after the rest: <i>Ennick Saye, who cut the others.</i> You copy them all onto the back of your map."); }
+        if (c === "ring") { S.maxHp += 3; S.hp += 3; renderSheet(); await say("It comes off easily. Iron, with a crossed-axe stamp worn almost smooth. It's warm from the sun, and it fits."); await mech("The picket-captain's ring: +3 max HP.", "loot"); }
+        return c; } },
+      carrowmere: { t: "A Boy With a Boathook", run: async () => {
+        await say("At the lake's edge a boy of fifteen or so is waiting with a boathook held like a spear, all wrong, his feet together. His name is Davin Orle. His father worked the ferry until the floodgates opened.");
+        await sayV("\"You hold that axe like the soldiers in the old songs,\" he says. \"Teach me. I'll go wherever you're going. Somebody has to pay the drowned king back.\"");
+        const c = await choose([{ key: "teach", label: "Teach him the three guards, tonight", tag: "an evening · he won't go home" }, { key: "home", label: "Give him ten gold and send him home", tag: S.coins >= 10 ? "10 gold" : "you don't have it", show: S.coins >= 10, plain: true }, { key: "refuse", label: "Tell him no, and mean it", plain: true }]);
+        if (c === "teach") { xpGain(25); await say("You teach him the low guard, the hanging guard and the gate. He falls over a great deal. By the time the fire's down, he falls over less. In the morning he's gone north, toward the cities, to find a captain who'll take him."); }
+        if (c === "home") { S.coins -= 10; renderSheet(); await say("He looks at the coins for a long time. Then he puts the boathook back in the boat where it belongs, and goes home to his mother."); }
+        if (c === "refuse") await say("He doesn't argue. He just watches you go, with the boathook, from the end of the jetty, until you're round the point.");
+        return c; } },
+      assize: { t: "The Old Salute", run: async () => {
+        await say("At Sulmara's gate a sergeant of the Glass Wardens stops you, looks at the axe, and then at your hands on it, and then at your face. Imra Daunt, her tag says. Her grandfather, she says, held a haft exactly like that, low and patient, and was laughed at for it all his life.");
+        const c = await choose([{ key: "salute", label: "Give her the old salute", tag: "she'll remember it" }, { key: "spar", label: "Offer her a bout for her purse", tag: "Athletics · DC 13", plain: true }]);
+        if (c === "salute") { await say("Her eyes go bright, and she returns it, badly, the way you'd copy a thing you only ever saw once. \"If anybody asks,\" she says, \"I never saw you.\""); await mech("Sergeant Daunt will look the other way once, the first time the city's Heat would rise.", "loot"); }
+        if (c === "spar") {
+          const r = await check({ label: "Athletics check (a bout with the sergeant)", mod: 3, dc: 13, cta: "Fight" });
+          if (r.ok) { await gold(2, 6 + 6, "You put her on the flagstones twice. She pays up, laughing, rubbing her elbow."); return "won"; }
+          await say("She puts you on the flagstones, and keeps her purse, and helps you up. \"Grandfather would've had me,\" she says. \"You fight like his friends did. Pity.\""); return "lost";
+        }
+        return c; } },
+      corrach: { t: "Drill in the Snow", run: async () => {
+        await say("Ashgate's miners have formed a watch against whatever's coming out of the mountain: forty of them, with picks and shovels and one rusty halberd, and not a soldier among them. Their foreman, Tamar Esk, sees the axe and the way you carry it, and walks straight over.");
+        await sayV("\"Three days,\" she says. \"Teach them to stand in a line and not run. That's all I want. We'll pay what we can.\"");
+        const c = await choose([{ key: "drill", label: "Drill them for nothing", tag: "three cold mornings · they'll remember" }, { key: "pay", label: "Drill them, for pay", tag: "3d6 + 10 gold", plain: true }, { key: "no", label: "You haven't the time", plain: true }]);
+        if (c === "drill") { xpGain(35); await say("Three cold mornings in the snow. On the last one they hold the line against you, all forty, and you can't get through it, and Tamar Esk laughs out loud."); }
+        if (c === "pay") { await gold(3, 6 + 10, "Three cold mornings, and a purse of Ashgate copper at the end of it."); }
+        if (c === "no") await say("She nods, as if she expected it, and goes back to her forty, and puts them in a line herself, crooked.");
+        return c; } },
+      rahdaria: { t: "The Wall Remembers", run: async () => {
+        await say("On the road down to the besieged city, a column of volunteers is going in by the Lion Gate, before the Bathyr close the last road.");
+        if (clB("carrowmere") === "teach") await say("At the head of one company is a young sergeant who stands the low guard without thinking about it: Davin Orle, taller, with a scar through his lip. He sees you and his face splits open. \"I found a captain,\" he says. \"Then she died. So now I'm it.\"");
+        if (clB("corrach") === "drill") await say("Behind them come Ashgate's miners, forty of them, in a line, not running. Tamar Esk lifts her pick to you. \"Heard there was digging,\" she says.");
+        if (clB("carrowmere") !== "teach" && clB("corrach") !== "drill") await say("None of them are anyone you know. They hold their spears like farmers. Some of them will learn on the wall, and some of them won't have time.");
+        const c = await choose([{ key: "oath", label: "Take the oath of the wall with them", tag: "you'll stand where they stand · the blockade starts better" }, { key: "send", label: "Tell them to go home while they can", plain: true }]);
+        if (c === "oath") { await say("You say it with them, in the gate's shadow, the old words that you didn't know you knew until your mouth knew them. <i>Here, and no further, and not alone.</i>"); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else await say("Some of them go. Most of them don't. \"You're going in,\" one of them says. That's that.");
+        return c; } },
+      unmapped: { t: "Names at the Half Milestone", run: async () => clLast("axe") }
+    },
+    hush: {
+      desert: { t: "Chalk on the Stones", run: async () => {
+        await say("On a wind-stone at the edge of the sands there's a chalk mark at knee height, where nobody looks: a closed eye over a cup. You know it. <i>A quiet one passed. Leave water.</i> Someone has left a skin of water under the stone, still cool.");
+        const c = await choose([{ key: "mark", label: "Drink, and leave your own mark under it", tag: "the quiet roads will know you passed" }, { key: "rub", label: "Drink, and rub the mark out", tag: "nobody follows your trail", plain: true }, { key: "leave", label: "Leave the water for whoever's next", tag: "you're thirsty", plain: true }]);
+        if (c === "mark") { await heal(1, 6, "Cool water."); await say("You add a line under the eye: a thread. One more of us."); }
+        if (c === "rub") { await heal(1, 6, "Cool water."); await say("You rub it out with your sleeve. Whoever comes after you will have to find their own water. Nobody will find you."); }
+        if (c === "leave") { xpGain(20); await say("You leave it, and add nothing, and go on dry. That's how it's supposed to work."); }
+        return c; } },
+      carrowmere: { t: "The Hush-Post", run: async () => {
+        await say("In the reeds by the lake road there's an old Whisperers' hush-post: a stone with a hollow worn in it the shape of a mouth. You whisper into it what you can't say out loud, and it keeps it. People leave coins in the hollow for luck. There are a lot of coins.");
+        const c = await choose([{ key: "tell", label: "Whisper what you did in the labyrinth", tag: S.slain ? "Ryytaa" : "the spider you left alive" }, { key: "take", label: "Take the coins", tag: "2d6 + 4 gold · nobody's watching", plain: true }]);
+        if (c === "tell") { xpGain(25); await say("You kneel and put your mouth to the hollow and say it, all of it, very quietly. The stone is cold and keeps it. You feel lighter by exactly the weight of it."); }
+        if (c === "take") await gold(2, 6 + 4, "Nobody's watching. The coins come out cold and damp.");
+        return c; } },
+      assize: { t: "The Gutter-Map", run: async () => {
+        await say("Outside Sulmara's walls a woman in grey, with felt on her shoes, falls in beside you without a sound. Maudry, she says, of the quiet roads. She has a map of the city's roofs, drawn on a handkerchief: which gutters hold, which tiles slide, where the wardens' mirrors can't see.");
+        const c = await choose([{ key: "roofs", label: "Take the map, and owe her", tag: "outings in the city cost less Heat" }, { key: "sell", label: "Take the map, then sell her to the wardens", tag: "20 gold · she'll know", plain: true }, { key: "no", label: "Thank her and go by the streets", plain: true }]);
+        if (c === "roofs") await mech("Maudry's gutter-map: your first three outings in Sulmara raise Heat by 1 less.", "loot");
+        if (c === "sell") { S.coins += 20; renderSheet(); await say("A warden pays you twenty gold and goes looking for a woman in grey. He doesn't find her. You have a feeling she watched you sell her."); await mech("Gain 20 gold.", "loot"); }
+        return c; } },
+      corrach: { t: "The Child Who Heard", run: async () => {
+        await say("The Hesk hear everything: it's what they are. But in a side-gallery under the snow line, a Hesk child, small as a dog, with its chest-drum barely started, turns round and looks straight at you, though you made no sound at all.");
+        await say("It taps once, a question. Then again. It wants to know how you did it.");
+        const c = await choose([{ key: "teach", label: "Show it how to stand still inside a sound", tag: "the Hesk will remember a quiet one" }, { key: "slip", label: "Slip away before it calls the others", plain: true }]);
+        if (c === "teach") { xpGain(30); await say("You stand beside it and slow your breathing until your heart is the loudest thing, and then quieter than that. The child copies you. For a breath, its chest-drum stops. It looks at you, astonished, and runs off to try it on somebody."); }
+        else await say("You go, and it doesn't call. It just watches you leave, the way children watch a trick.");
+        return c; } },
+      rahdaria: { t: "Lantern Lines", run: async () => {
+        await say("The night before you reach Rahdaria's gate, the Bathyr camp lies across the road in rings of blue lanterns, with sentries who listen with their whole bodies. It's the loudest silence you've ever walked into. You walk into it.");
+        const c = await choose([{ key: "chart", label: "Take their tide-chart from the command tent", tag: "the blockade starts better" }, { key: "stone", label: "Leave a hush-stone on their commander's pillow", tag: "a warning they'll understand", plain: true }]);
+        if (c === "chart") await mech("A Bathyr tide-chart, lead on oiled cloth. When the blockade begins, the Bathyr hold 5% less of the field.", "loot");
+        else { xpGain(30); await say("You set the stone down by the sleeping head, close enough to touch, and go. In the morning, all along their lines, the sentries are standing back to back."); }
+        return c; } },
+      unmapped: { t: "The Quietest Place", run: async () => clLast("hush") }
+    },
+    song: {
+      desert: { t: "The Singing Sand", run: async () => {
+        await say("At dusk the dunes begin to boom: a long low note, felt in the teeth before it's heard, as the sand slides down their faces. The caravan drivers cover their ears and pray. You stop, and listen, and find that the axe is humming with it.");
+        const c = await choose([{ key: "tune", label: "Tune the axe to the dunes' note", tag: "it'll keep it" }, { key: "busk", label: "Sing along for the caravan, for coin", tag: "Performance · DC 12", plain: true }]);
+        if (c === "tune") { xpGain(25); await say("You hold the haft against your cheek and hum until you and the dune and the axe are one note. When the sand stops, the axe doesn't. It hums very faintly, all night."); }
+        if (c === "busk") { const r = await check({ label: "Performance check (singing the dunes)", mod: 2, dc: 12, cta: "Sing" }); if (r.ok) await gold(2, 6 + 4, "The drivers stop praying and start clapping, and then paying."); else await say("You can't find the note. The drivers go back to praying, louder."); }
+        return c; } },
+      carrowmere: { t: "The Bell Under the Lake", run: async () => {
+        await say("When the wind crosses Carrowmere, a bell rings somewhere under the water: a drowned bell, in a drowned tower, still swinging. The fishers on the shore say it's bad luck to hear it. It's a perfectly good D below middle, a little flat.");
+        const c = await choose([{ key: "teach", label: "Teach the fishers to sing it back", tag: "turn the bad luck round" }, { key: "keep", label: "Keep the note for yourself", tag: "a low one is useful", plain: true }]);
+        if (c === "teach") { xpGain(30); await say("It takes an evening and most of a jug. By the end, eight fishers are singing a D to a drowned bell, badly, and laughing, and nobody covers their ears any more."); }
+        else await say("You learn it the way you'd learn a face, and fold it away. A low flat D, for drowned things.");
+        return c; } },
+      assize: { t: "The Glaziers' Work-Song", run: async () => {
+        await say("In Sulmara's kilnyards the glaziers sing while they blow glass, a work-song that keeps the breath even. You know a little about breath and a little about notes. You can hear exactly where the old tune went wrong, two hundred years ago.");
+        const c = await choose([{ key: "glaze", label: "Sing it back to them, the old way", tag: "the Glaziers' Guild will remember" }, { key: "busk", label: "Busk in the kilnyards for coin", tag: "2d6 + 6 gold", plain: true }]);
+        if (c === "glaze") { await say("The kilnyard goes quiet. Then the oldest glassblower takes her pipe out of the fire and sings it with you, the old way, and one by one the others join in."); await mech("The Glaziers' Guild jurors will start out leaning your way.", "loot"); }
+        else await gold(2, 6 + 6, "Glassblowers tip well, in cullet and coppers.");
+        return c; } },
+      corrach: { t: "The Hesk Hear You", run: async () => {
+        await say("High on the Corrach road, a Hesk elder steps out of the rocks and stands across your way, chest-drum going slow. It isn't hostile. It's listening, to you, the way you'd listen to a stranger speaking your own language with an accent.");
+        const c = await choose([{ key: "trade", label: "Trade it a song for a song", tag: "the Hesk will half-know you" }, { key: "hide", label: "Keep your song to yourself", plain: true }]);
+        if (c === "trade") { xpGain(35); await say("You give it the dunes' boom and the drowned bell. It gives you a note that makes the snow on the rocks shiver. When it goes, its drum is beating in time with your heart, and then it isn't."); await mech("The Hesk hesitate before they strike you: their blows are at −1.", "loot"); }
+        else await say("You hum nothing. After a while it goes back into the rocks, disappointed.");
+        return c; } },
+      rahdaria: { t: "The Wall-Song", run: async () => {
+        await say("Rahdaria's walls are full of frightened people, and frightened people sing badly, and badly-sung songs make them more frightened. The Bathyr, out on the flats, talk by tapping. They aren't singing at all.");
+        const c = await choose([{ key: "wall", label: "Teach the walls a song to hold to", tag: "the blockade starts better" }, { key: "tap", label: "Tap a greeting out to the Bathyr lines", tag: "they'll hear it", plain: true }]);
+        if (c === "wall") { await say("You start it on the Lion Gate, and it goes round the walls in an hour. By nightfall the whole city is singing it, low and steady, a song for holding."); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else { xpGain(30); await say("You tap it on the parapet with the axe-butt: three, a rest, two. Out on the flats, after a long pause, someone taps back. You don't know what it said. You know it was an answer."); }
+        return c; } },
+      unmapped: { t: "A Note for Nothing", run: async () => clLast("song") }
+    },
+    tide: {
+      desert: { t: "Water Under the Sand", run: async () => {
+        await say("The sand here lies in long shallow ripples that run the wrong way for the wind. You've seen ripples like that on a beach at low water. An old riverbed. And where a riverbed bends, the water's still there, a spade's depth down.");
+        const c = await choose([{ key: "seep", label: "Dig the seep, and mark it for the caravans", tag: "the desert will remember" }, { key: "sell", label: "Sell the place to a caravan master", tag: "3d6 + 6 gold", plain: true }]);
+        if (c === "seep") { await heal(2, 6, "You dig down to wet sand, then to water."); await say("You ring the seep with stones, the way the coast folk mark a spring, so the next caravan will see it."); }
+        else await gold(3, 6 + 6, "The caravan master pays, and swears you to silence, and puts a guard on it.");
+        return c; } },
+      carrowmere: { t: "The Lake Has a Tide", run: async () => {
+        await say("Carrowmere is a lake. Lakes don't have tides. This one does: twice a day it draws back from the reeds and comes in again, because the drowned king's floodgates are still breathing, somewhere down there. You watch it for an hour and get the time of it.");
+        const c = await choose([{ key: "time", label: "Teach the fishers the timing", tag: "they'll stop losing boats" }, { key: "cross", label: "Use it yourself, and cross at the ebb", tag: "a dry crossing · regain 2d6 HP", plain: true }]);
+        if (c === "time") { xpGain(30); await say("You scratch the hours on a post at the jetty. The fishers argue with you, then watch the water, then stop arguing."); }
+        else await heal(2, 6, "You cross on the ebb, on mud and old stones, dry-shod, and rest on the far side.");
+        return c; } },
+      assize: { t: "Sun and Glass", run: async () => {
+        await say("In Sulmara, light is a tide too: it pours into the lens-towers at noon and goes out in the evening, and the city lives and dies by it. You read it the way you'd read the sea. Tomorrow there'll be a flare: the towers will catch too much sun at once.");
+        const c = await choose([{ key: "warn", label: "Warn the Temple's lens-crews", tag: "the Temple jurors will remember" }, { key: "sell", label: "Sell the reading to a merchant lord", tag: "the Merchant Lords will remember · 15 gold", plain: true }]);
+        if (c === "warn") { await say("The lens-crews cover their towers at the hour you said, and the flare comes and goes and burns nobody."); await mech("The Temple of the Clear Flame's jurors will start out leaning your way.", "loot"); }
+        else { S.coins += 15; renderSheet(); await say("The merchant lord shutters his warehouses and sells shade-cloth at triple the price the next day."); await mech("Gain 15 gold. The Merchant Lords' jurors will start out leaning your way.", "loot"); }
+        return c; } },
+      corrach: { t: "Snowmelt", run: async () => {
+        await say("The snow on the Corrach road has a crust on it, and under the crust the meltwater is running: you can hear it, if you know how. Above the road, the whole slope is waiting for a reason. A salt cart is coming up toward it, slow, with a driver half asleep.");
+        const c = await choose([{ key: "cart", label: "Run down and turn the cart back", tag: "Athletics · DC 12" }, { key: "watch", label: "Get off the road and let it come", tag: "whatever's left is salvage", plain: true }]);
+        if (c === "cart") { const r = await check({ label: "Athletics check (running the snow)", mod: 2, dc: 12, cta: "Run" }); if (r.ok) { xpGain(35); await say("You get the mule's bridle and turn them, and the driver wakes up shouting, and a breath later the slope comes down across the road where they'd have been."); return "cart"; } await say("You fall, and slide, and by the time you're up the driver has seen you and turned on his own. The slope comes down behind him. He doesn't thank you. He thinks you're mad."); return "tried"; }
+        await say("It comes down. The cart goes with it. In the morning you find the driver alive in the snow, and the salt scattered over half a mile, and you walk on."); await gold(2, 6, "You fill your pockets with what salt you can carry, to sell.");
+        return c; } },
+      rahdaria: { t: "The Bathyr Tide", run: async () => {
+        await say("From the last ridge you can see the whole bay, and the Bathyr come and go with the water: they move when it moves. You watch it for a day, and you know when they'll come. The spring tide is in four nights.");
+        const c = await choose([{ key: "tell", label: "Tell the city when they'll come", tag: "the blockade starts better" }, { key: "keep", label: "Keep it to yourself, for your own work", tag: "+1 to Survival and Perception in Rahdaria", plain: true }]);
+        if (c === "tell") await mech("Rahdaria knows the hour of the tide. When the blockade begins, the Bathyr hold 5% less of the field.", "loot");
+        else await mech("You know their tide: +1 to Survival and Perception checks while you're in Rahdaria.", "loot");
+        return c; } },
+      unmapped: { t: "The White Has No Tide", run: async () => clLast("tide") }
+    },
+    ink: {
+      desert: { t: "Margins of the Sand", run: async () => {
+        await say("In a buried waystation, under a fallen roof, there's a ledger: two hundred years of who passed through and what they paid. Most of it's sand-scoured. But in the margins, in a different hand, someone has written down which travellers were Hollow Hands, and where they hid their takings.");
+        const c = await choose([{ key: "copy", label: "Copy the margins into your book", tag: "ink remembers" }, { key: "burn", label: "Burn the ledger", tag: "nobody reads those names again", plain: true }]);
+        if (c === "copy") { S.leaves = (S.leaves || 0) + 1; renderSheet(); await say("It takes all night by a shuttered lantern. In among the margins there's a page of something else, a teaching hand, that you copy too."); await mech("A leaf for the Scroll of Acquisition.", "loot"); }
+        else { xpGain(25); await say("It goes up fast, being old. You watch the margins curl, and the names in them go brown, then black, then nothing."); }
+        return c; } },
+      carrowmere: { t: "The Clerks' Ink", run: async () => {
+        await say("On the shore, washed up in the reeds, there's a drowned clerk's writing-box, with the lid sealed shut. Inside, the ink is still wet. It's been wet for forty years, under the lake. It smells of iron and old tax.");
+        const c = await choose([{ key: "keep", label: "Keep the drowned ink", tag: "it might write things that stay written" }, { key: "return", label: "Put it back in the water", tag: "it isn't yours", plain: true }]);
+        if (c === "keep") await say("You pour it into your inkhorn, where it sits on top of your own ink like oil on water, and doesn't mix.");
+        else { xpGain(25); await say("You set the box on the water and push it out. It sinks straight, as if somebody below was pulling it home."); }
+        return c; } },
+      assize: { t: "The Assize Rolls", run: async () => {
+        await say("In a bookseller's stall outside Sulmara's gate, under a pile of almanacs, there's a water-stained volume with the Assize's seal on the spine: one year of the Assize Rolls, two hundred verdicts. Nobody's opened it in a century. The bookseller wants it gone.");
+        const c = await choose([{ key: "read", label: "Buy it and read it through", tag: "5 gold · you'll know what moves the jury", show: S.coins >= 5 }, { key: "sell", label: "Buy it and sell it on to a court clerk", tag: "5 gold, sold for 25 · the clerk will owe you", plain: true, show: S.coins >= 5 }, { key: "no", label: "Leave it", plain: true }]);
+        if (c === "read") { S.coins -= 5; renderSheet(); await say("You read it in a night. By morning you know what each of the four factions of a Sulmaran jury really cares about, and what makes them change their minds."); await mech("You know the Assize Rolls.", "loot"); }
+        if (c === "sell") { S.coins += 20; renderSheet(); await say("The clerk pays twenty-five and looks at you as if you'd handed him his own lost child."); await mech("Gain 20 gold.", "loot"); }
+        return c; } },
+      corrach: { t: "Song Written Down", run: async () => {
+        await say("The Hesk say their songs can't be written down. Everyone says so. In a cold Hesk shrine above Ashgate, with a drum still beating on the wall, you sit with your inkhorn and try.");
+        const r = await check({ label: "Investigation check (writing a Hesk song)", mod: 2, dc: 13, cta: "Write" });
+        if (r.ok) { xpGain(35); await say("It isn't letters. It's a line that goes up and down, with knots in it where the drum hits. When you hold it up to the drum on the wall, the drum skips a beat, as if it recognised itself."); return "wrote"; }
+        await say("You fill three pages, and none of it is the song. But one page, a mistake, makes the shrine's drum go quiet when you hold it up. You keep that one."); return "failed"; } },
+      rahdaria: { t: "Whose Hand", run: async () => {
+        await say("Pinned on the Lion Gate there's an order of the watch, signed by the city's general. You look at it the way you look at everything with ink on it. The signature is right. The hand isn't: the down-strokes go the wrong way. Somebody in Rahdaria is writing orders that aren't theirs.");
+        const c = await choose([{ key: "take", label: "Take the order down and keep it", tag: "+1 to Investigation in Rahdaria" }, { key: "copy", label: "Copy the false hand, so you'd know it again", tag: "you'll know that hand again", plain: true }]);
+        if (c === "take") await mech("The false order: +1 to Investigation checks while you're in Rahdaria.", "loot");
+        else { xpGain(30); await say("You copy it three times until your hand does it without thinking, then burn the copies. You'd know that hand anywhere now."); }
+        return c; } },
+      unmapped: { t: "Ink Against the White", run: async () => clLast("ink") }
+    },
+    root: {
+      desert: { t: "A Red Seedling", run: async () => {
+        await say("At the edge of the dunes, out of a crack in a fallen pillar, a seedling of red root is growing: a child of the Ember Root, warm to the touch. Beside it a caravan camel is down in the sand with a split hoof gone bad, and its driver is about to cut its throat.");
+        const c = await choose([{ key: "graft", label: "Graft a sliver of the seedling into the hoof", tag: "the camel lives · the caravan will remember" }, { key: "take", label: "Take the seedling with you", tag: "a Draught of Mending's worth of healing", plain: true }]);
+        if (c === "graft") { xpGain(30); await say("The sliver takes in the wound the way a root takes in soil. By evening the camel is up, limping, and its driver has kissed you on both cheeks and sworn your name to the whole caravan."); }
+        else { S.potions = (S.potions || 0) + 1; renderSheet(); await say("You dig it out with care and wrap it in a wet cloth. The camel's driver looks at you, and at the knife in his hand, and gets on with it."); await mech("Gain a Draught of Mending.", "loot"); }
+        return c; } },
+      carrowmere: { t: "The Drowned Orchard", run: async () => {
+        await say("Along the lake shore stand the black stumps of an orchard that drowned with the valley and came up again when the water dropped. The fisherfolk's children pick at the bark. One tree, just one, has a living shoot coming out of its side.");
+        const c = await choose([{ key: "orchard", label: "Graft the shoot onto the dead trees", tag: "a day's work · it'll take years" }, { key: "cut", label: "Take cuttings for your own remedies", tag: "2 Draughts of Mending", plain: true }]);
+        if (c === "orchard") { xpGain(30); await say("You spend the day cutting and binding, a shoot to every stump that'll take one. The children carry water. Whether it works you won't know for years."); }
+        else { S.potions = (S.potions || 0) + 2; renderSheet(); await mech("Gain 2 Draughts of Mending.", "loot"); }
+        return c; } },
+      assize: { t: "The Debtors' Fever", run: async () => {
+        await say("Outside Sulmara's walls, in the shanties where the debtors' families live, there's a fever going round: a bad one, the kind that empties a street. A healer who could do something about it would be noticed by the people who owe. A glazier's wife offers good money for the only remedy.");
+        const c = await choose([{ key: "treat", label: "Treat the shanties, free", tag: "the Debtors' Commons will remember" }, { key: "sell", label: "Sell the remedy to the glazier's wife", tag: "25 gold", plain: true }]);
+        if (c === "treat") { await say("Two days and a night. You lose one, an old man. Nobody else."); await mech("The Debtors' Commons jurors will start out leaning your way.", "loot"); }
+        else { S.coins += 25; renderSheet(); await say("She pays without blinking. Her house doesn't get the fever. Half a street does."); await mech("Gain 25 gold.", "loot"); }
+        return c; } },
+      corrach: { t: "The Pale Bloom", run: async () => {
+        await say("In a miner's hut below Ashgate a man lies with the Pale Bloom on his arm, white and soft, spreading. The Bloom is why the axe can't always bring you back. You've read about it, and never seen it. You have a graft-knife and a steady hand.");
+        const c = await choose([{ key: "cut", label: "Cut it out and graft the wound clean", tag: "you'll learn how it takes" }, { key: "study", label: "Take a sample to study", tag: "you'll learn how it spreads", plain: true }]);
+        if (c === "cut") { xpGain(35); await say("It takes an hour and he screams through most of it. The graft holds. In the morning his arm is red and angry and his, not the Bloom's."); }
+        else await say("You scrape a little into a stoppered jar and watch it grow, all night, by candlelight, and by dawn you know how it thinks.");
+        await mech("You know the Bloom now: your saves against it are 2 easier.", "loot");
+        return c; } },
+      rahdaria: { t: "The Field Hospital", run: async () => {
+        await say("Inside Rahdaria's gate, in a warehouse full of straw, the wounded from the last assault are lying in rows. There are three surgeons and too many people. In the corner, chained, is a wounded Bathyr prisoner that nobody will touch.");
+        const c = await choose([{ key: "ward", label: "Work the hospital with the surgeons", tag: "the blockade starts better" }, { key: "bathyr", label: "Treat the Bathyr prisoner", tag: "they'll hear of it", plain: true }]);
+        if (c === "ward") { await say("You work until you can't hold the knife, and then a while longer. Forty people walk out of that warehouse who'd have been carried."); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else { xpGain(30); await say("Its blood is grey and cold and its wound is the same as anyone's. When you've closed it, it taps something on the chain with one finger. A guard says it means <i>debt</i>."); }
+        return c; } },
+      unmapped: { t: "Roots in the White", run: async () => clLast("root") }
+    }
+  };
+  // What each choice was, as the world remembers it, and what you find there on the roads back.
+  const CL_WHY = {
+    axe: { desert: { bury: "You buried the Last Picket facing out.", names: "You copied the Last Picket's thirty-one names.", ring: "You took the picket-captain's ring." },
+      carrowmere: { teach: "You taught Davin Orle the three guards.", home: "You sent Davin Orle home with ten gold.", refuse: "You told Davin Orle no." },
+      assize: { salute: "You gave Sergeant Daunt the old salute.", won: "You beat Sergeant Daunt in a bout at the gate.", lost: "Sergeant Daunt beat you in a bout at the gate." },
+      corrach: { drill: "You drilled Ashgate's miners for nothing.", pay: "You drilled Ashgate's miners for pay.", no: "You wouldn't drill Ashgate's miners." },
+      rahdaria: { oath: "You took the oath of the wall at the Lion Gate.", send: "You told the volunteers at the Lion Gate to go home." } },
+    hush: { desert: { mark: "You left your mark on the quiet roads.", rub: "You rubbed out a quiet one's mark.", leave: "You left the quiet one's water for the next." },
+      carrowmere: { tell: "You whispered your labyrinth into the hush-post.", take: "You robbed the hush-post." },
+      assize: { roofs: "You took Maudry's gutter-map.", sell: "You sold Maudry to the Glass Wardens.", no: "You turned down Maudry's map." },
+      corrach: { teach: "You taught a Hesk child to be quiet.", slip: "You slipped away from the Hesk child who heard you." },
+      rahdaria: { chart: "You stole the Bathyr tide-chart.", stone: "You left a hush-stone on the Bathyr commander's pillow." } },
+    song: { desert: { tune: "You tuned the axe to the singing dunes.", busk: "You sang the dunes for the caravan." },
+      carrowmere: { teach: "You taught Carrowmere's fishers to sing to the drowned bell.", keep: "You kept the drowned bell's note." },
+      assize: { glaze: "You sang the Glaziers their work-song, the old way.", busk: "You busked in Sulmara's kilnyards." },
+      corrach: { trade: "You traded songs with a Hesk elder.", hide: "You kept your song from a Hesk elder." },
+      rahdaria: { wall: "You taught Rahdaria's walls a song for holding.", tap: "You tapped a greeting to the Bathyr lines." } },
+    tide: { desert: { seep: "You dug a seep in the sands and marked it.", sell: "You sold a desert seep to a caravan master." },
+      carrowmere: { time: "You taught Carrowmere's fishers the lake's tide.", cross: "You crossed Carrowmere on the ebb." },
+      assize: { warn: "You warned the Temple's lens-crews of the flare.", sell: "You sold the flare to a merchant lord." },
+      corrach: { cart: "You turned a salt cart back from the slide.", tried: "You tried to turn a salt cart back from the slide.", watch: "You let the slide take a salt cart." },
+      rahdaria: { tell: "You told Rahdaria the hour of the Bathyr tide.", keep: "You kept the hour of the Bathyr tide to yourself." } },
+    ink: { desert: { copy: "You copied the waystation margins.", burn: "You burned the waystation ledger." },
+      carrowmere: { keep: "You kept the drowned clerks' ink.", return: "You gave the drowned clerks' ink back to the lake." },
+      assize: { read: "You read a year of the Assize Rolls.", sell: "You sold the Assize Rolls to a court clerk.", no: "You left the Assize Rolls in the stall." },
+      corrach: { wrote: "You wrote a Hesk song down.", failed: "You tried to write a Hesk song down." },
+      rahdaria: { take: "You took down a forged order of the watch.", copy: "You learned a forger's hand by heart." } },
+    root: { desert: { graft: "You grafted the Ember Root's seedling into a camel's hoof.", take: "You took the Ember Root's seedling." },
+      carrowmere: { orchard: "You grafted the drowned orchard.", cut: "You took cuttings from the drowned orchard." },
+      assize: { treat: "You treated the debtors' fever for nothing.", sell: "You sold the fever remedy to a glazier's wife." },
+      corrach: { cut: "You cut the Pale Bloom out of a miner's arm.", study: "You studied the Pale Bloom." },
+      rahdaria: { ward: "You worked Rahdaria's field hospital.", bathyr: "You treated a Bathyr prisoner." } }
+  };
+  const CL_REG = { desert: "desert", carrowmere: "mere", assize: "glass", corrach: "corrach", rahdaria: "rahdaria" };
+  const CL_WHERE = { desert: "The Burning Sands, on the roads back", carrowmere: "Carrowmere, on the roads back", assize: "Sulmara, on the roads back", corrach: "Ashgate, on the roads back", rahdaria: "Rahdaria, on the roads back" };
+  const CL_CH = { desert: "The Burning Sands", carrowmere: "Carrowmere", assize: "The Glass Assize", corrach: "The Corrach Three", rahdaria: "The Siege of Rahdaria" };
+  // On the roads back: [what you find, gold/xp/hp reward kind].
+  const CL_BACK = {
+    axe: { desert: { bury: "The caravans have a name for the ring of stakes now: the Picket. Drivers leave a cup of water at it, going by, and salute it the old way, low, because somebody told them that was how. A driver recognises your grip and won't let you pay for anything.",
+        names: "At the caravanserai, a girl asks if you're the one who knows the Picket's names. Her great-great-grandfather was Ennick Saye. You read her the list, all thirty-one, and she cries, and her mother feeds you.", ring: "A trader at the caravanserai sees the crossed-axe ring on your hand and goes white. \"That's off a dead man,\" he says, and won't serve you. The others do, but they watch." },
+      carrowmere: { teach: "The ferry's running again, and on the landing post someone has carved three little figures, each in a different guard. The ferrymen say a soldier's sent money home from the cities for it.", home: "Davin Orle is running his father's ferry again. He takes you across for nothing, and won't hear of anything else, and doesn't say a word all the way over, and grins at the end.", refuse: "The boy with the boathook is gone from the jetty. The ferrymen say he went north alone, the week after you passed. Nobody's heard of him since." },
+      assize: { salute: "At the gate, Sergeant Daunt sees you and snaps the old salute, perfectly now; she's been practising. The wardens under her do it too, because she makes them.", won: "Sergeant Daunt is waiting at the gate with a practice staff. \"Rematch,\" she says. You don't win this time. She buys the drinks anyway.", lost: "Sergeant Daunt is a captain now. She tells everyone at the gate she once beat a soldier of the old line. She doesn't say it was you. She winks." },
+      corrach: { drill: "Ashgate's watch is forty strong and holds its line in the square every evening, for practice, and children march behind them. Tamar Esk gives you a miner's lamp and won't take it back.", pay: "Ashgate's watch still stands in a line, more or less. Tamar Esk nods to you. It was a fair trade, and she paid it.", no: "Ashgate's watch stands in a crooked line in the square. Three of them have new graves on the hill. Tamar Esk doesn't look at you." },
+      rahdaria: { oath: "Rahdaria's wall has a new custom: on the anniversary of the siege, the volunteers who held it say the oath at the Lion Gate, and they've cut your name in the gate's stone beside theirs.", send: "On the Lion Gate there's a list of the volunteers who didn't go home. It's very long. You read all of it." } },
+    hush: { desert: { mark: "On the wind-stone your thread-mark is still there, and under it, three more threads, in three different hands. The quiet roads have grown. There's water, and a purse with a note: <i>For the thread at the top.</i>",
+        rub: "The wind-stone is bare. Nobody leaves water there any more. A desert courier tells you a quiet one died of thirst nearby last summer.", leave: "There's still water under the wind-stone. There always will be, now." },
+      carrowmere: { tell: "The hush-post in the reeds is warm when you touch it, as if it knows your hand. Somebody has left a coin in the hollow with your thread-mark scratched on it.", take: "The hush-post has been cracked across with a hammer. The fishers say it stopped keeping things after someone robbed it, so they broke it." },
+      assize: { roofs: "On a Sulmaran rooftop a woman in grey falls in beside you without a sound. \"You owe me,\" Maudry says, and you pay it, a little errand at night. She pays you back double.", sell: "In a Sulmaran alley a knife comes out of the dark and pins your sleeve to a door. \"That's for the wardens,\" says a voice, in grey. \"Next time it's not the sleeve.\"", no: "Maudry passes you in a Sulmaran street and doesn't look at you, on purpose." },
+      corrach: { teach: "A young Hesk stands at the edge of Ashgate's square in perfect silence, chest-drum still, and the miners have stopped being afraid of it. It's the child. It taps to you once: <i>you.</i>", slip: "The Hesk on the Corrach road go quiet when you pass, and watch you, and you can't tell if they're afraid." },
+      rahdaria: { chart: "The Bathyr who live by Rahdaria now still talk about the night their tide-chart walked out of the commander's tent. They call the thief the Low Water. They don't know it was you. They'd like to.", stone: "On Rahdaria's quay, a Bathyr sees you and stops, and slowly lays a small black stone on the ground at your feet, and steps back from it, and bows." } },
+    song: { desert: { tune: "When you pass the dunes at dusk, they boom, and the axe answers, and every driver in the caravanserai turns to look at you.", busk: "A caravan driver at the caravanserai hums the dunes' note at you, badly, and laughs, and buys you a drink." },
+      carrowmere: { teach: "Carrowmere's fishers sing to the drowned bell now when the wind gets up. It's become a custom. They've added verses. One of them's about you, and isn't kind.", keep: "The bell under the lake rings as you pass, and nobody on the shore will look at the water." },
+      assize: { glaze: "In the kilnyards they sing the old work-song now, the way you sang it. The oldest glassblower gives you a little bottle of green glass, blown on your note.", busk: "A busker in the kilnyards is singing your tune, for coin, badly." },
+      corrach: { trade: "A Hesk elder on the Corrach road steps out of the rocks and sings you the note that makes the snow shiver. You sing it back. It leaves a Hesk-blown blade-shard on a stone for you.", hide: "The Hesk on the Corrach road listen as you pass, and say nothing." },
+      rahdaria: { wall: "On Rahdaria's walls the sentries still sing your holding-song at the change of watch, low and steady.", tap: "On Rahdaria's quay a Bathyr taps three, a rest, two on a bollard as you go by, and waits, and you tap it back." } },
+    tide: { desert: { seep: "The seep you dug is a well now, with a stone curb and a bucket, and a little caravan town growing round it. They call it the Reader's Well. Water's free.", sell: "The seep you sold has a fence round it and a man with a crossbow, and water's a copper a cup." },
+      carrowmere: { time: "There's a post at the Carrowmere jetty with the lake's tide-hours cut into it, and nobody's lost a boat in a year.", cross: "You cross Carrowmere at the ebb again, dry-shod. The fishers still don't know how you do it." },
+      assize: { warn: "The Temple's lens-crews salute you when you pass under the towers: two fingers to the eyes. You saved a crew's sight.", sell: "The merchant lord who bought your reading wants another, and pays well, and you take it." },
+      corrach: { cart: "The salt driver you turned back is a carter in Ashgate, and he tells everybody the story, and it gets bigger every time. He gives you a sack of salt.", tried: "The salt driver at Ashgate still thinks you're mad. He crosses the road when he sees you.", watch: "There's a cairn by the Corrach road where the salt went under the slide. Nobody's dug it out." },
+      rahdaria: { tell: "Rahdaria's harbour master has a tide-table on the wall that she says a stranger worked out for her during the siege. It's yours. It's still right.", keep: "Rahdaria's harbour master asks you, for the hundredth time, how you knew when they'd come. You still don't tell her." } },
+    ink: { desert: { copy: "A Hollow Hand in the desert taverns knows you copied the waystation margins. She'd like a look. She pays well for one page.", burn: "In the desert taverns they say the waystation burned, and its ledger, and with it a lot of old debts. Somebody's grateful. A drink appears, unasked for." },
+      carrowmere: { keep: "On the Carrowmere landing, a drowned clerk looks at your inkhorn and says, very politely, \"That is Treasury ink.\" It takes two gold off you for the use of it, and writes you a receipt.", return: "On the Carrowmere landing a drowned clerk bows to you, and says the Treasury thanks you for the return of its ink." },
+      assize: { read: "In Sulmara, a law clerk stops you in the street to ask a point about a verdict from a hundred years ago. You know it. Word's got round.", sell: "The court clerk you sold the Rolls to is a magistrate now, and owes you, and says so.", no: "The bookseller outside the gate still has the Assize Rolls, under the same pile of almanacs." },
+      corrach: { wrote: "A page of your written Hesk song has been copied and pinned up in Ashgate's tavern, and the miners argue about what it means.", failed: "In Ashgate's tavern someone has pinned up your failed page, and the shrine's drum goes quiet when anybody holds it to the light." },
+      rahdaria: { take: "Rahdaria's watch-house keeps the forged order you took down in a frame. They say it was the first thread of the whole conspiracy.", copy: "In Rahdaria you see the false hand again, on a merchant's bill of sale, years later, and you know it at once, and say nothing yet." } },
+    root: { desert: { graft: "A caravan comes through with a camel that limps a little on one foot, and its driver sees you and shouts, and the whole caravan stops to feed you.", take: "The pillar where the red seedling grew is bare. A little way off, there's another one coming up." },
+      carrowmere: { orchard: "Along the Carrowmere shore the black stumps have leaves on them, a few, and on one there's a single small green apple. The fisherfolk's children are guarding it.", cut: "The drowned orchard on the Carrowmere shore is just black stumps, still." },
+      assize: { treat: "In the debtors' shanties outside Sulmara people know your face. An old woman presses a loaf on you. A child follows you to the gate.", sell: "The glazier's wife you sold the remedy to is the richest woman in her street now. Half of the street is new graves." },
+      corrach: { cut: "The miner whose Bloom you cut out has a red graft-scar on his arm and shows it to everyone, and buys your supper.", study: "You hear in Ashgate that the Bloom has a new remedy, from a stranger's notes. They're yours. Somebody copied them." },
+      rahdaria: { ward: "The surgeons of Rahdaria have named a ward after you, which is embarrassing.", bathyr: "On Rahdaria's quay, a Bathyr with a grey scar taps <i>debt</i> on your arm, and then <i>paid</i>, and gives you a black pearl." } }
+  };
+  // Some echoes pay: a ✓ gives gold, an ✗ costs it.
+  const CL_PAY = { "axe.desert.names": 15, "axe.carrowmere.home": 10, "axe.corrach.drill": 12, "hush.desert.mark": 20, "hush.assize.roofs": 30, "song.assize.glaze": 15, "song.corrach.trade": 15,
+    "tide.assize.sell": 20, "tide.corrach.cart": 12, "ink.desert.copy": 20, "ink.carrowmere.keep": -2, "root.rahdaria.bathyr": 40, "root.corrach.cut": 10, "root.assize.treat": 6 };
+  Object.keys(CL_WHY).forEach(k => Object.keys(CL_REG).forEach(slug => {
+    ECHOES["cl_" + k + "_" + slug] = { ch: CL_CH[slug], get why() { return (CL_WHY[k][slug] || {})[clB(slug)] || ""; }, where: CL_WHERE[slug], on: () => clIs(k) && !!clB(slug) && !!(CL_WHY[k][slug] || {})[clB(slug)] };
+  }));
+  async function clEchoTown(T) {
+    const c = cl(); if (!c) return;
+    for (const slug of Object.keys(CL_REG)) {
+      if (CL_REG[slug] !== T.reg) continue;
+      const id = "cl_" + c.k + "_" + slug;
+      if (!echoDue(id)) continue;
+      await echoMark(id);
+      const ch = clB(slug), txt = ((CL_BACK[c.k] || {})[slug] || {})[ch];
+      if (txt) await say(txt);
+      const p = CL_PAY[c.k + "." + slug + "." + ch];
+      if (p > 0) { S.coins += p; renderSheet(); await mech("Gain " + p + " gold.", "loot"); }
+      if (p < 0) { S.coins = Math.max(0, S.coins + p); renderSheet(); await mech("Pay " + (-p) + " gold.", "hurt"); }
+    }
+  }
+  // The last scene: at the half milestone before the white, everything you did as your calling
+  // comes back at once, and you finish what the calling began.
+  const CL_LAST = {
+    axe: { open: "At the half milestone, before the white, you take out the Oath-Cord and count the knots. There's one for everyone who stood beside you. You find you remember all of them.", keep: "Tie the last knot, and keep the cord", leave: "Tie the cord round the milestone, for whoever comes next" },
+    hush: { open: "The white ahead is the quietest place you've ever been: the hush the Whisperers made, gone too far, until the world forgot. At the half milestone someone has left a lead thimble stamped with a closed mouth. Ilka Moth's mark. You know it from the old roads.", keep: "Take Ilka's Thimble", leave: "Leave it, and add your thread-mark to the stone" },
+    song: { open: "There should be nothing to hear in the white. There is: a single note, very faint, at the edge of hearing, that isn't any note you know. The ninth note, the Hesk would call it, if they had nine. The axe has heard it too.", keep: "Teach the axe the note", leave: "Sing it back into the white, so the lost places have something to hear" },
+    tide: { open: "Out in the white there's no tide. Nothing comes in or goes out. Everything you know says that's impossible. You take out the Sounding-Line, and at the half milestone you let it down into the white, and it goes, and goes, and finds no bottom.", keep: "Tie the last knot where the line went slack", leave: "Cut the line and leave it hanging, a mark for the next reader" },
+    ink: { open: "The white is a page with nothing on it. You've spent your life adding to the margins of things. Here there isn't anything to add a margin to. At the half milestone there's a strip of old vellum in the grass, a ruled margin with nothing beside it, in the Quire's hand.", keep: "Sew the margin into your sleeve", leave: "Write your own name in it, and leave it at the milestone" },
+    root: { open: "Nothing grows in the white. At the half milestone, the last root before it pushes out of the ground and stops in mid-air, as if it hit a wall nobody can see. It's alive. It's straining. It wants to go on.", keep: "Graft a sliver of it into your own arm", leave: "Graft it to the milestone, so it can go on without you" }
+  };
+  async function clLast(k) {
+    const L = CL_LAST[k];
+    await say(L.open);
+    const met = Object.keys(CL_REG).filter(slug => clB(slug));
+    for (const slug of met) { const w = (CL_WHY[k][slug] || {})[clB(slug)]; if (w) await mech(w); }
+    if (!met.length) await say("You've come a long way without the calling asking much of you. It's asking now.");
+    const c = await choose([{ key: "keep", label: L.keep, tag: "a keepsake of your calling" }, { key: "leave", label: L.leave, tag: "for whoever walks this way after you · " + (40 + met.length * 15) + " XP", plain: true }]);
+    if (c === "keep") {
+      S.gear = S.gear || []; S.gear.push("cl_keep_" + k);
+      if (k === "axe") { S.maxHp += 4; S.hp += 4; }
+      if (k === "root") { S.maxHp += 6; S.hp += 6; }
+      renderSheet();
+      await mech("<b>" + GEAR["cl_keep_" + k].name + ".</b> " + GEAR["cl_keep_" + k].desc, "loot");
+    } else { xpGain(40 + met.length * 15); await say("You leave it. Somebody else will come this way, with a calling of their own, and find that somebody was here first."); }
+    return c;
+  }
+  async function clBefore(i) {
+    if (!cl() || rmIn()) return;
+    await clRankNews();
+    const slug = CL_SLUGS.find(s => CL_BEAT_AT[s] === i);
+    if (!slug || clB(slug)) return;
+    const B = (CL_BEATS[S.cl.k] || {})[slug];
+    if (!B) return;
+    clHead(B.t);
+    S.cl.b[slug] = (await B.run()) || "seen";
+    if (CL_SLUGS.every(s => clB(s))) grant("cl_" + S.cl.k + "_all");
+    save();
+  }
+  // What your company says about your calling: once each, at camp.
+  const CL_CO = {
+    axe: { tyra: "\"You hold that thing like you're waiting for it to say something,\" Tyra says. \"My mother's soldiers stood like that. They were very boring. I liked them.\"", burr: "Burr has learned to lie down in the low guard's shadow, exactly where the axe-head would fall if you swung, which is the one place it never does.", ishbel: "\"Soldier,\" Ishbel says, watching you clean the haft. \"Sable hated soldiers. Then she'd hire one, every time, for the door.\"", odran: "Odran watches your guard for a long time, and then shifts his own feet half a step, the old way. He doesn't say anything. He doesn't have to.", wenna: "\"Old school,\" Wenna says. \"Very old. Do they still teach it?\" They don't.", caddock: "\"Axe-Sworn,\" Mother Caddock says. \"I patched up a dozen of you, back when. You always got hit in the same place. Here.\" She taps your ribs. \"Keep your elbow in.\"" },
+    hush: { tyra: "\"You don't make any noise,\" Tyra says. \"At all. It's very rude. I like to know where people are.\"", burr: "Burr is the only one who always knows where you are, because he can smell you. He seems pleased about it.", ishbel: "\"Quiet roads,\" Ishbel says. \"Sable used to say the Hands learned it off the Whisperers' people, and then forgot to say thank you.\"", odran: "Odran nearly puts his shield into you twice, because he didn't hear you behind him. The third time he laughs.", wenna: "\"Don't creep up on a woman with a loaded crossbow,\" Wenna says. \"Just a general tip.\"", caddock: "\"You walk like the ones who don't come back,\" Mother Caddock says. \"Come back anyway.\"" },
+    song: { tyra: "Tyra hums along with you, off-key on purpose, until you stop. Then she laughs. Then she hums it right.", burr: "Burr howls along whenever you hum the axe. You've stopped asking him not to.", ishbel: "\"Sing something,\" Ishbel says, at camp, and you do, and she sits with her eyes shut until it's done.", odran: "Odran hums a note at you that he says his father taught him for steadying a shield. It isn't bad.", wenna: "\"You sing to your weapon,\" Wenna says. \"I name mine. We're all mad here.\"", caddock: "Mother Caddock teaches you the counting song for setting bones in harmony. It's ruder in harmony." },
+    tide: { tyra: "\"You're doing it again,\" Tyra says. \"Watching the sky like it owes you money.\"", burr: "Burr watches the weather when you do, nose up, and is right about rain about as often as you are.", ishbel: "\"How long till dawn?\" Ishbel asks, testing you. You tell her. She checks, later. You were right.", odran: "Odran asks you, very seriously, whether it'll rain on Thursday. It does.", wenna: "\"Tell me when the wind drops,\" Wenna says, and you do, and she puts a bolt through a crow at a hundred yards.", caddock: "\"Sailor's eyes,\" Mother Caddock says. \"My husband had them. Always looking at where we weren't yet.\"" },
+    ink: { tyra: "Tyra reads your notes over your shoulder and corrects your spelling of her own name.", burr: "Burr has eaten a page of your notes. It was an important page. He's not sorry.", ishbel: "\"Write my name down somewhere,\" Ishbel says. \"Somewhere it'll stay.\" You do.", odran: "Odran can't read. You teach him his name, and the word <i>shield</i>, and he practises them in the dirt for an hour.", wenna: "\"Keep a ledger of what I'm owed,\" Wenna says. \"No. Better. Keep a ledger of what you owe me.\"", caddock: "Mother Caddock dictates a recipe for a poultice and you write it down. It takes a long time because she keeps stopping to argue with it." },
+    root: { tyra: "Tyra holds out a cut finger, sheepishly, and you graft it, and she watches the root go in with her mouth open.", burr: "Burr brings you a root he's dug up, and lays it at your feet, and waits to see what you'll mend with it.", ishbel: "Ishbel lets you look at her scarred hands. \"Could you,\" she starts, and stops. \"No. Leave them. They're mine.\"", odran: "Odran shows you a knee that hasn't bent right in ten years. In the morning it bends.", wenna: "\"Can you graft a thumb?\" Wenna asks. \"Asking for a friend. The friend is me, in the future.\"", caddock: "Mother Caddock watches you graft a cut with her pipe going out in her hand. \"Well,\" she says. \"I'll be damned. Show me that again.\"" }
+  };
+  async function clCamp(k) {
+    const c = cl(); if (!c) return;
+    c.heard = c.heard || [];
+    if (c.heard.includes(k)) return;
+    const t = (CL_CO[c.k] || {})[k]; if (!t) return;
+    c.heard.push(k);
+    await say(t);
+  }
+  // Checks your calling leans on, and the Rahdaria leftovers.
+  function clCheck(label) {
+    const c = cl(); if (!c) return 0;
+    let n = 0;
+    if (CALLINGS[c.k].re.test(label)) n += clLean() + (clKeep() && c.k === "axe" ? 1 : 0);
+    if (S.rh && S.rh.on) {
+      if (c.k === "tide" && clB("rahdaria") === "keep" && /Survival|Perception/.test(label)) n += 1;
+      if (c.k === "ink" && clB("rahdaria") === "take" && /Investigation/.test(label)) n += 1;
+    }
+    return n;
+  }
+  // The blockade: what your calling did on the road in.
+  function clMom() {
+    const k = S.cl && S.cl.k, b = clB("rahdaria");
+    return (k === "axe" && b === "oath") || (k === "hush" && b === "chart") || (k === "song" && b === "wall") || (k === "tide" && b === "tell") || (k === "root" && b === "ward") ? 5 : 0;
+  }
+  // The Assize: jurors who start out leaning your way, and what you know.
+  function clAssize() {
+    const k = S.cl && S.cl.k, b = clB("assize");
+    if (!S.jury) return;
+    if (k === "song" && b === "glaze") S.jury.G = Math.min(3, S.jury.G + 1);
+    if (k === "tide" && b === "warn") S.jury.T = Math.min(3, S.jury.T + 1);
+    if (k === "tide" && b === "sell") S.jury.M = Math.min(3, S.jury.M + 1);
+    if (k === "root" && b === "treat") S.jury.D = Math.min(3, S.jury.D + 1);
+    if (k === "ink" && b === "read" && !S.know.includes("rolls")) S.know.push("rolls");
+    if (k === "hush" && b === "roofs") S.clRoofs = 3;
+    if (k === "axe" && b === "salute") S.clDaunt = true;
+  }
+  function clSection(rs) {
+    if (!rs || !rs.cl || !CALLINGS[rs.cl.k]) return "";
+    const keep = S; S = rs;
+    try {
+      const C = CALLINGS[S.cl.k], r = clRank();
+      const rows = CL_SLUGS.filter(s => s !== "unmapped").map(s => "<dt>" + CL_CH[s] + "</dt><dd>" + (clB(s) ? ((CL_WHY[S.cl.k][s] || {})[clB(s)] || "Seen.") : "<i>Not yet.</i>") + "</dd>").join("") +
+        "<dt>The half milestone</dt><dd>" + (clB("unmapped") ? (clB("unmapped") === "keep" ? "You kept " + GEAR["cl_keep_" + S.cl.k].name + "." : "You left it for whoever comes next.") : "<i>Not yet.</i>") + "</dd>";
+      return "<section><h3>Your calling · " + C.name + ", Rank " + CL_RANKS[r] + "</h3>" +
+        '<p class="j-sub">Taught by ' + C.who + ". +" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + " Used " + (S.cl.uses || 0) + " time" + ((S.cl.uses || 0) === 1 ? "" : "s") + " on this journey.</p>" +
+        '<dl class="tips">' + rows + "</dl></section>";
+    } finally { S = keep; }
+  }
+
   // ---------- Standing: tiers, gains and the discount cap ----------
   // 10: citizens greet you · 25: 5% off · 50: 10% off · 75: 15% off and the Quiet Stall's rare stock ·
   // 100: Hero of Rahdaria. Supply Guardian and the Eye of Rahdaria add 5% each, never past 20% in all.
@@ -23813,7 +24462,7 @@ body.pv-open { overflow: hidden; }
     const R = rh(), X = rx();
     if (X.path) return;
     await rxMeet();
-    X.mom = 25 + (R.f.vantryOut ? 10 : 0) + (R.hunger >= 8 ? 5 : 0) + (X.hv.stoneOut ? 5 : 0);
+    X.mom = Math.max(10, 25 + (R.f.vantryOut ? 10 : 0) + (R.hunger >= 8 ? 5 : 0) + (X.hv.stoneOut ? 5 : 0) - clMom());
     await mech("<b>Enemy control.</b> The Bathyr hold " + X.mom + "% of the field. It rises every watch the blockade holds, and whenever you retreat or a sabotage is spotted; victories push it back. If it reaches 100%, Rahdaria falls.");
     await say("Kerrow, Nerys Aldane and Inspector Holt stand round the barracks table with you while the last light goes. \"Three ways to do this,\" Kerrow says. \"Fight them. Break them. Or talk them out of it.\" He looks at you. \"Your call. You know them.\"", "voice");
     const p = await choose(Object.entries(PATHS).map(([k, P], i) => ({ key: k, label: P.name, tag: P.lead, plain: i > 0 })));
@@ -27591,7 +28240,7 @@ body.pv-open { overflow: hidden; }
     const H = S.hn || {};
     S.gear = S.gear || []; S.hh = S.hh || { hear: 0, hush: 0 };
     const ys = H.ysolt === "wake" ? "with" : "map";
-    S.unm = { on: true, done: false, ink: 26 + (ys === "with" ? 6 : 0), inkMax: 0, lost: unLostFor(H), fate: {}, mem: {}, asks: [], hob: "", met: [], ysolt: ys, spent: 0,
+    S.unm = { on: true, done: false, ink: 26 + (ys === "with" ? 6 : 0) + (S.cl && S.cl.k === "ink" ? 4 : 0), inkMax: 0, lost: unLostFor(H), fate: {}, mem: {}, asks: [], hob: "", met: [], ysolt: ys, spent: 0,
       order: false, legend: false, practice: false, rope: H.ending === "keep" ? "kept" : "", boss: "", sheet: "", effort: 0, shown: false,
       tyra: !!(S.tyra && (H.tyra || (H.taken === "tyra" && H.souls === "free"))) };
     S.unm.inkMax = S.unm.ink;
@@ -36042,6 +36691,7 @@ body.pv-open { overflow: hidden; }
       S.part = i; digRefill(i);
       if (i > fromPart) { if (!rmIn()) { await spoilsTurnIn(); await workbench(); } const k = CHAPTERS.findIndex(c => c.from === i); if (k > 0) await calJourney(k); else calPass(1); }
       await coBefore(i);
+      await clBefore(i);
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug); guideNudge(i);
       for (;;) {
@@ -36086,7 +36736,8 @@ body.pv-open { overflow: hidden; }
     if (S.roam && !S.detour && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
     const go2 = () => S.roam ? roamHub().then(r => r === "north" ? play(S.part) : null) : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
     const go4 = () => S.tac === undefined ? askStyle(!resumeState || S.part === 0).then(go2) : go2();
-    const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go4) : go4();
+    const go35 = () => S.cl === undefined ? askCalling(!resumeState || S.part === 0).then(go4) : go4();
+    const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go35) : go35();
     const go1 = () => !resumeState && tipState.guide === undefined ? askGuide() : Promise.resolve();
     if (S.name === undefined) go1().then(() => askName(!resumeState || S.part === 0)).then(go3);
     else if (S.pr === undefined) askPronoun().then(go3);
