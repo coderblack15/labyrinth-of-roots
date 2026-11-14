@@ -250,6 +250,14 @@ body.intro-open { overflow: hidden; }
 .bleed-row .drop { width: 8px; height: 11px; background: #c0392b; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; transform: rotate(180deg); flex: none; animation: drip 1.6s ease-in-out infinite; }
 @keyframes drip { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .bleed-row .drop { animation: none; } }
+.venom-row { color: #8fc46a; }
+.venom-row .vdrop { width: 9px; height: 9px; background: #6f9d3c; border-radius: 50%; box-shadow: 0 0 6px #6f9d3c; flex: none; }
+.foe-plates { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.foe-plates[hidden], .foe-stat[hidden] { display: none; }
+.foe-plates .ppips { display: inline-flex; gap: 3px; }
+.foe-plates .ppips i { width: 18px; height: 7px; border-radius: 2px; background: #2a2d2b; border: 1px solid #555b57; }
+.foe-plates .ppips i.on { background: linear-gradient(#a7adb0, #6d7477); border-color: #b9c0c3; }
+.foe-stat { margin-top: 4px; font-size: 12px; color: #9fc3d6; letter-spacing: .02em; }
 .stat-label { font-family: var(--label); font-size: .78rem; letter-spacing: .1em; color: var(--muted); }
 .stat-val { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
 .abilities { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
@@ -1947,6 +1955,8 @@ body.pv-open { overflow: hidden; }
     <div class="foe" id="foeBox" hidden>
       <div class="foe-top"><span class="foe-name" id="foeName"></span><span class="foe-lv" id="foeLv" hidden></span><span class="stat-val" id="foeVal"></span></div>
       <div class="foebar" role="meter" id="foeMeter" aria-label="Enemy health"><span class="lag" id="foeLag"></span><span class="now" id="foeBar"></span><span class="ticks" id="foeTicks"></span></div>
+      <div class="foe-plates" id="foePlates" hidden></div>
+      <div class="foe-stat" id="foeStat" hidden></div>
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
       <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
@@ -2678,6 +2688,7 @@ body.pv-open { overflow: hidden; }
     h += seaSection(rs);
     h += duelSection(rs);
     h += lrSection(rs);
+    h += lgSection(rs);
     h += hnSection(rs);
     h += unSection(rs);
     h += rmSection(rs);
@@ -2860,6 +2871,14 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "98", name: "Arms, Trinkets and Poison", date: "14 Nov 2026", items: [
+      "<b>The Long Return, part two.</b> It opens with the rest of the Long Return: at the story's end card, or at level 50.",
+      "<b>Armour.</b> Every town's armourer sells four pieces you wear: the Quilted Jack (+1 AC), Hide-and-Ring (+2, −1 Stealth), the Scale Coat (+3, Evade −10%, −2 Stealth) and Warden's Plate (+5, no Evade, and breaking away at disadvantage). Each has fitting slots, and the armourer can rework the Rahdarian Scale Shirt into a Scale Coat.",
+      "<b>Armoured foes.</b> Swordsmen, deserters, hunters and named marks wear <b>plates</b>, shown as a grey band under their health. Your blows land 2 lighter until you knock them off with a Rootbreaker, a Shield Slam or a crushing weapon.",
+      "<b>Rings and medallions.</b> Two ring slots and a medallion slot, and sixteen trinkets to fill them from bounties, caches, pockets, jewellers and the city watch. Each has an effect and a catch. The Seventeen-Year Ring becomes your first ring.",
+      "<b>Poison.</b> Poison now leaves you <b>Envenomed</b>, up to 3 stacks: 1 HP a round for each, and −1 to hit at 3. Field Mending clears one, a Bitterleaf draught or Sister Wren clears all. The Weathercloak's poison thread, the Gallnut Lining and the Gallnut Ring resist it, and a dose of spore tea a day builds <b>Bitterblood</b>: at 5, nothing can envenom you. Coat your own blade with adder-oil to envenom your foe.",
+      "<b>Scrolls you read in a fight</b>: Rimecall (frost, Chilled), Kindlebrand (fire, Burning), Gallspit (poison), Stillword (Silenced) and Mirebind (Rooted). They're rare drops (likelier from casters), turn up in caches and pockets, and Ammaret's library sells one a month.",
+      "<b>Pocketcraft.</b> Buy The Soft Hand in Sulmara, or learn it from a lifter in your crew. Lift from a person's pocket before a fight, or work a town's crowd once a day. Fail, and they hit first, or the watch hear about it. <b>Hushwalkers</b> lift at +2, and get a second try."] },
     { ver: "97", name: "Callings", date: "14 Nov 2026", items: [
       "<b>Choose a calling.</b> After your background, pick one of six ways to carry Vaelric's axe: <b>Axe-Sworn</b>, <b>Hushwalker</b>, <b>Songwright</b>, <b>Tidereader</b>, <b>Inkbinder</b> or <b>Rootgrafter</b>. A save that's already under way picks one on Continue.",
       "<b>Each calling leans</b> on its own checks (+2, +3 from Rank IV), starts with its own kit, and has a <b>signature move</b> in fights: Heartcleave, Go Quiet, the Tempering Note, Read the Ebb, Strike Through or Graft.",
@@ -3814,6 +3833,14 @@ body.pv-open { overflow: hidden; }
     { id: "cl_root_all", name: "Everything Takes", desc: "As a Rootgrafter, meet all six of your calling's scenes on one journey.", test: () => clIs("root") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("root") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
     { id: "cl_root_use", name: "Live Wood", desc: "Use Graft thirty times on one journey.", test: () => clIs("root") && (S.cl.uses || 0) >= 30, prog: () => [clIs("root") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
     { id: "clrank5", name: "Fifth Rank", desc: "Reach Rank V in your calling (level 40).", test: () => !!cl() && clRank() >= 5, prog: () => [cl() ? clRank() : 0, 5] },
+    { id: "lgarmour", name: "Meant to Stand Still", desc: "Put on Warden's Plate.", test: () => false },
+    { id: "lgplate", name: "Tin Opener", desc: "Knock every plate off an armoured foe.", test: () => false },
+    { id: "lgring", name: "Ringed and Hung", desc: "Wear two rings and a medallion at once.", test: () => false },
+    { id: "lgvenom", name: "It Was the Oil", desc: "Finish a foe with your own poison.", test: () => false },
+    { id: "lgbitter", name: "Bitterblood", desc: "Build your Bitterblood to 5 with spore tea.", test: () => false },
+    { id: "lgscroll", name: "Well Read", desc: "Read all five kinds of scroll in fights.", test: () => false },
+    { id: "lglift", name: "The Soft Hand", desc: "Lift ten pockets.", test: () => false },
+    { id: "lgcure", name: "Bitter Medicine", desc: "Clear three stacks of poison at once.", test: () => false },
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -3888,7 +3915,9 @@ body.pv-open { overflow: hidden; }
     { id: "watch", name: "Crime and the Watch", ver: "33", desc: "The Long Return opens: bounty boards, the watch, the Tenthmen and their Trail, agents, six hunters, magpies and the thieves' cant.",
       ids: ["lrmark", "lralive", "lrrank", "lrnamed", "lrduel", "lrtrail", "lragent", "lrcrew", "lrhunter", "lrhunters", "lrfool", "lrclean", "lrmagpie", "lrcache", "lrcant"] },
     { id: "callings", name: "Callings", ver: "34", desc: "Six ways to carry the axe, and what each of them leaves behind.",
-      ids: ["cl_axe_all", "cl_axe_use", "cl_hush_all", "cl_hush_use", "cl_song_all", "cl_song_use", "cl_tide_all", "cl_tide_use", "cl_ink_all", "cl_ink_use", "cl_root_all", "cl_root_use", "clrank5"] }
+      ids: ["cl_axe_all", "cl_axe_use", "cl_hush_all", "cl_hush_use", "cl_song_all", "cl_song_use", "cl_tide_all", "cl_tide_use", "cl_ink_all", "cl_ink_use", "cl_root_all", "cl_root_use", "clrank5"] },
+    { id: "arms", name: "Arms, Trinkets and Poison", ver: "35", desc: "The Long Return, part two: armour to wear and plates to break, rings and medallions, Envenomed and Bitterblood, scrolls you read in a fight, and Pocketcraft.",
+      ids: ["lgarmour", "lgplate", "lgring", "lgvenom", "lgbitter", "lgscroll", "lglift", "lgcure"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4058,13 +4087,13 @@ body.pv-open { overflow: hidden; }
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0) + (S.f50mantle ? 2 : 0) + fitAC();
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped && !lgBody() ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0) + (S.f50mantle ? 2 : 0) + fitAC() + lgAC();
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
-    renderBleed();
+    renderBleed(); renderVenom();
     $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
     $("calVal").innerHTML = calLine();
@@ -4077,6 +4106,7 @@ body.pv-open { overflow: hidden; }
     weaponItems(items);
     chestItems(items);
     fitItems(items);
+    lgItems(items);
     if (S.shield && S.pitted) items.push(["shield", "shield", "Pauldron Shield", "Pitted by slug slime. No AC bonus until someone mends it."]);
     else if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
     if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
@@ -4172,7 +4202,7 @@ body.pv-open { overflow: hidden; }
         }
       }
       // Fittings: what's fitted (and empty slots) under the item, and Fit buttons on loose fittings.
-      const fk = key === "wpn" ? wpnKey() : key.startsWith("arm-") ? key.slice(4) : key === "hk-scale" ? "scale" : ["axe", "shield", "champ"].includes(key) ? key : null;
+      const fk = key === "wpn" ? wpnKey() : key.startsWith("lga-") ? "a-" + key.slice(4) : key.startsWith("arm-") ? key.slice(4) : key === "hk-scale" ? "scale" : ["axe", "shield", "champ"].includes(key) ? key : null;
       if (fk && fitSlots(fk)) li.lastElementChild.insertAdjacentHTML("beforeend", fitLine(fk));
       if (key.startsWith("fit-") && !FOE.on) {
         const f = key.slice(4), tg = fitTargets(f).filter(k => fitsOf(k).length < fitSlots(k));
@@ -4203,6 +4233,7 @@ body.pv-open { overflow: hidden; }
           li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(sb); li.lastElementChild.appendChild(xb);
         }
       }
+      lgBtns(key).forEach(([lb, tg, fn]) => { const b = el("button", "use", lb + '<span class="tag">' + tg + "</span>"); b.type = "button"; b.onclick = fn; li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b); });
       const cb = chestBtn(key);
       if (cb) {
         const b = el("button", "use", cb[0] + '<span class="tag">' + cb[1] + "</span>");
@@ -4284,6 +4315,7 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    venom: ["Envenomed", "Poison stays in you: <b>1 HP a round for each stack</b> (up to 3), and −1 to hit at 3. It can't take your last HP, and it wears off when the fight ends. <b>Bind your wounds</b> (Field Mending) clears one, a <b>Bitterleaf draught</b> clears them all."],
     roll: ["Checks", "When something could go either way, you roll the d20. Your bonus for that skill is added (it's in the label), and you need to <b>meet or beat</b> the number shown. A natural 20 always does well; a 1 usually doesn't."],
     sheet: ["Your sheet and Bag", "Your <b>HP</b>, armour, gold and level are on the sheet. Everything you carry is in your <b>Bag</b> (on a phone, the <b>Items</b> button in the corner): tap a thing to read it or use it. Healing between fights comes from there."],
     jmap: ["Journal and map", "Your <b>journal</b> keeps this journey: what you've found, who you've met, and every tip you've seen (the Field guide). The <b>Map</b> beside it shows the realm, and the fog lifts as you go. Both are in your Bag."],
@@ -4443,6 +4475,7 @@ body.pv-open { overflow: hidden; }
     if (!atk && hasGear("firstsheet") && /^(Investigation|Survival)/.test(label)) { mod += 1; label += " (+1 the First Sheet)"; }
     if (!atk) { const dx = (hasGear("mantle") && /Investigation|Insight/.test(label) ? 1 : 0) + (S.bg === "historian" && /Investigation/.test(label) ? 1 : 0); if (dx) { mod += dx; label += " (+" + dx + (hasGear("mantle") ? " Mantle" : " Historian") + ")"; } }
     if (!atk && S.grapple && /^(Athletics|Climbing|Acrobatics)/.test(label) && /climb|rope|ladder|chain|scaffold|Brow|arches|gaps|roof|wall|pitch|rail/i.test(label)) { adv = !dis; dis = false; mod += 2; label += " (+2 Threadfang's line)"; }
+    { const lm = lgCheckMod(label, atk); if (lm[0]) { mod += lm[0]; label += " (" + lm[1] + ")"; } }
     const wm = atk ? wxYou() : 0;
     if (wm) { mod += wm; label += " (" + WX[S.wx.k].name.toLowerCase() + " " + fmt(wm) + ")"; }
     return new Promise(done => {
@@ -4634,7 +4667,7 @@ body.pv-open { overflow: hidden; }
     if (S.hp <= 0) {
       // The Pale Bloom eats roots: while you carry it, Vaelric's axe can't hold you up.
       if ((S.hk && S.bloom > 0 && !S.molt) || (S.nk && S.nk.on && S.nk.shade <= 0)) {
-        if (hasGear("ring") && !S.ringUsed) { S.ringUsed = true; S.hp = 1; saved = "ring"; }
+        if (hasGear("ring") && lgRingOk() && !S.ringUsed) { S.ringUsed = true; S.hp = 1; saved = "ring"; }
         else { S.hp = 0; renderSheet(); await mech(txt, "hurt"); throw FALLEN; }
       } else { S.hp = 1; saved = true; }
     }
@@ -4658,6 +4691,7 @@ body.pv-open { overflow: hidden; }
     const crit = FOE.crit; FOE.crit = false;
     if (FOE.on && S.hp > 0 && total > 0 && !saved) await bleedMaybe(type, sides, crit);
     if (FOE.on && S.hp > 0 && total > 0) await blindMaybe(type);
+    if (FOE.on && S.hp > 0 && total > 0 && type === "poison") await lgVenom(1, "");
     if (FOE.on && !FOE.dug && S.hp > 0 && S.hp / S.maxHp <= DIG_AT) await digIn();
     return total;
   }
@@ -5041,7 +5075,8 @@ body.pv-open { overflow: hidden; }
     hone: { name: "Hone-wire Edge", on: ["weapon"], price: 20, fx: "+1 damage on your blows" },
     lode: { name: "Lodestone Weight", on: ["weapon"], price: 18, fx: "a Rootbreaker lands +3" },
     grip: { name: "Wolfhide Grip", on: ["weapon"], price: 22, fx: "+1 to hit" },
-    ember: { name: "Ember Pin", on: ["weapon"], price: 20, fx: "every hit sears for +1d2 fire" }
+    ember: { name: "Ember Pin", on: ["weapon"], price: 20, fx: "every hit sears for +1d2 fire" },
+    gallnut: { name: "Gallnut Lining", on: ["armour"], price: 26, fx: "the first Envenomed stack each fight is shrugged off", lr: true }
   };
   const fitBag = () => (S.fitBag = S.fitBag || {});
   const fitMap = () => (S.fit = S.fit || {});
@@ -5049,10 +5084,11 @@ body.pv-open { overflow: hidden; }
   // What kind of thing an item key is, and how many slots it has (0: no fittings).
   function fitKind(key) {
     if (key === "shield") return "shield";
-    if (key === "scale" || key === "champ") return "armour";
+    if (key === "scale" || key === "champ" || key.startsWith("a-")) return "armour";
     return owns(key) || WEAPONS[key] ? "weapon" : null;
   }
   function fitSlots(key) {
+    if (key.startsWith("a-")) return S.lg && S.lg.arms.includes(key.slice(2)) && LG_ARMS[key.slice(2)] ? LG_ARMS[key.slice(2)].slots : 0;
     if (key === "shield") return S.shield ? 2 : 0;
     if (key === "scale") return hasGear("scale") ? 1 : 0;
     if (key === "champ") return S.champ ? 3 : 0;
@@ -5061,10 +5097,10 @@ body.pv-open { overflow: hidden; }
     const W = wDef(key);
     return W.t ? [1, 1, 2, 2, 3][ARM_TIERS[W.t].rank] : 1;
   }
-  const fitName = (key) => key === "shield" ? "Pauldron Shield" : key === "scale" ? "Rahdarian Scale Shirt" : key === "champ" ? "Champion Set" : wDef(key).name;
+  const fitName = (key) => key.startsWith("a-") && LG_ARMS[key.slice(2)] ? LG_ARMS[key.slice(2)].name : key === "shield" ? "Pauldron Shield" : key === "scale" ? "Rahdarian Scale Shirt" : key === "champ" ? "Champion Set" : wDef(key).name;
   // Every item you could fit something to right now.
   function fitTargets(f) {
-    const keys = ["shield", "scale", "champ"].concat(S.axe ? ["axe"].concat(arms()).concat(armLoot().map(x => "L" + x.id)) : []);
+    const keys = ["shield", "scale", "champ"].concat(S.lg ? S.lg.arms.map(k => "a-" + k) : []).concat(S.axe ? ["axe"].concat(arms()).concat(armLoot().map(x => "L" + x.id)) : []);
     return keys.filter(k => fitSlots(k) > 0 && FITTINGS[f].on.includes(fitKind(k)));
   }
   function fitAdd(f, n) { fitBag()[f] = (fitBag()[f] || 0) + (n || 1); }
@@ -5080,7 +5116,8 @@ body.pv-open { overflow: hidden; }
     const out = [];
     if (S.axe) out.push(...fitsOf(wpnKey()));
     if (S.shield && !S.pitted && !S.stripped) out.push(...fitsOf("shield"));
-    if (hasGear("scale") && !S.stripped) out.push(...fitsOf("scale"));
+    if (hasGear("scale") && !S.stripped && !lgBody()) out.push(...fitsOf("scale"));
+    if (lgBody()) out.push(...fitsOf("a-" + lgBody()));
     if (S.champ) out.push(...fitsOf("champ"));
     return out;
   }
@@ -5090,7 +5127,7 @@ body.pv-open { overflow: hidden; }
   // Fittings show on paintings as small drawn pieces, spread over the painting's slots.
   const FIT_SPOTS = { weapon: [[24, 70], [74, 30], [50, 50]], shield: [[18, 30], [82, 30], [50, 84]], armour: [[22, 26], [78, 26], [50, 80]] };
   function fitOverlay(key, kind) {
-    const fs = fitsOf(key);
+    const fs = fitsOf(key).filter(f => ICON_PIC_SRC["f_" + f]);
     if (!fs.length) return "";
     const spots = FIT_SPOTS[kind] || FIT_SPOTS.weapon;
     // Adrian's painted fitting, as a small round badge pinned to the painting.
@@ -5110,14 +5147,14 @@ body.pv-open { overflow: hidden; }
   // Won fights sometimes leave a fitting in the wreck.
   function fitDrop() {
     if (!S.axe || d(20) !== 1) return "";
-    const f = armPick(Object.keys(FITTINGS));
+    const f = armPick(Object.keys(FITTINGS).filter(x => !FITTINGS[x].lr || lrOn()));
     fitAdd(f);
     return "a fitting turns up, still good: <b>" + FITTINGS[f].name + "</b> (" + FITTINGS[f].fx + "; fit it from the Bag)";
   }
   // A tray of fittings for sale (Hobb Tallis, the town smiths). P prices it.
   async function fitShop(P, who) {
     P = P || (n => n);
-    const stock = Object.keys(FITTINGS).filter(f => fitTargets(f).length);
+    const stock = Object.keys(FITTINGS).filter(f => fitTargets(f).length && (!FITTINGS[f].lr || lrOn()));
     for (;;) {
       const fitted = Object.keys(fitMap()).filter(k => fitsOf(k).length && fitSlots(k) > 0);
       const c = await choose(stock.filter(f => S.coins >= P(FITTINGS[f].price)).map(f => ({ key: "b-" + f, label: "Buy " + FITTINGS[f].name, tag: P(FITTINGS[f].price) + " gold · " + FITTINGS[f].fx, plain: true }))
@@ -6266,7 +6303,7 @@ body.pv-open { overflow: hidden; }
         await lvNews();
         await calNews();
         await hzNews();
-        await lrNews();
+        await lrNews(); await lgNews();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
@@ -8996,6 +9033,7 @@ body.pv-open { overflow: hidden; }
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { soft: 0, hard: false, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0 });
     Object.assign(FOE, { on: true, name, max, hp, unit, felt: false, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
+    FOE.lg = null;
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     FOE.menace = menaceFor(FOE.lk); FOE.pblind = 0; document.body.classList.remove("blinded");
@@ -9032,6 +9070,7 @@ body.pv-open { overflow: hidden; }
     $("comboPips").querySelectorAll("i").forEach((p, i) => p.classList.toggle("on", i < c));
     $("comboBox").classList.toggle("ready", c >= 2);
     renderBelt();
+    lgRenderFoe();
     $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : (FOE.dread >= DREAD_CAP ? "+1 to hit (dread) · next hit is a Rootbreaker" : "+2 to hit · next hit is a Rootbreaker");
     renderDread();
   }
@@ -9065,7 +9104,7 @@ body.pv-open { overflow: hidden; }
   }
   // Roll weapon damage with the combo bonus for the hit that just landed.
   async function comboDamage(count, sides, bonus, label) {
-    if (FOE.on) bonus += dmgUp();
+    if (FOE.on) bonus += dmgUp() + lgDmg();
     const k = FOE.on ? comboLanded() : 1;
     const rb = k >= 3;
     const n = rb ? count * 2 : count;
@@ -9107,6 +9146,7 @@ body.pv-open { overflow: hidden; }
       } else if (S.shield && !S.pitted) fitsOf("shield").filter(x => x === "bitter").forEach(() => { const r = d(6); total += r; add.push("+" + r + " bitter spike"); });
       if (add.length) txt += " (Fittings: " + add.join(", ") + ": " + total + " in all.)";
     }
+    if (w || blow0 || slam0) { const lb = lgBlow(total, rb, slam0 || (w && (w.tr || []).includes("crush")) || lgCrushing()); if (lb[1]) { total = lb[0]; txt += lb[1].replace(/\.\)$/, ": " + total + " in all.)"); } }
     FOE.hp = Math.max(0, FOE.hp - total);
     renderFoe();
     foePop("−" + total, rb);
@@ -9301,7 +9341,7 @@ body.pv-open { overflow: hidden; }
   const beltReady = () => FOE.on && beltWait() === 0;
   function fightTurn() { if (!FOE.on) return; FOE.turn++; renderBelt(); }
   const bloomHalves = () => S.hk && S.bloom >= 2 && !S.molt;
-  const quickHeal = (n) => Math.ceil(n / (bloomHalves() ? 2 : 1));
+  const quickHeal = (n) => lgHeal(Math.ceil(n / (bloomHalves() ? 2 : 1)));
   function beltItems() {
     const o = [], heads = !!FOE.unit;
     if (S.potions) o.push({ key: "potion", label: "Gulp a Draught of Mending", tag: "+" + quickHeal(8) + " HP · " + S.potions + " left" });
@@ -9320,6 +9360,7 @@ body.pv-open { overflow: hidden; }
     if (S.cullet) o.push({ key: "cullet", label: "Fling a fistful of cullet", tag: "its next attack is half-blind · " + S.cullet + " left" });
     waxItems(o);
     wpnActives(o);
+    lgBelt(o);
     return o;
   }
   // The timing catch. Resolves "perfect", "clean" or "fumble".
@@ -9449,6 +9490,7 @@ body.pv-open { overflow: hidden; }
       await mech("Slowed, picking through the iron: " + (FOE.pitted > 1 ? "the next " + FOE.pitted + " attacks against you are" : "the next attack against you is") + " at −2.", "loot");
     } else if (key === "wax" || /^print\d$/.test(key)) await waxUse(key, mult, t);
     else if (key.startsWith("wa-")) await wpnActive(key.slice(3), t, mult, main);
+    else if (key.startsWith("lg-")) await lgBeltUse(key, t);
     renderSheet();
     await mech(t === "perfect" ? "Perfect timing: your hands are free again next turn." : "Your next item is ready in " + BELT_CD + " turns.");
   }
@@ -15293,6 +15335,7 @@ body.pv-open { overflow: hidden; }
       let desc = g.desc;
       if (k === "cloak") desc = "Granny Ebb's patchwork of three hides. " + (["fire", "frost", "poison"].filter(t => S.cloak[t]).map(t => t === "fire" ? "Fire thread: fire damage halved." : t === "frost" ? "Frost thread: frost damage halved." : "Poison thread: poison damage halved, and advantage on every save against the Bloom.").join(" ") || "No threads sewn in yet.");
       if (k === "ring" && S.ringUsed) desc = "The grey band has cracked through. It already saved you once.";
+      if (k === "ring" && S.lg && S.lg.tr.includes("seventeen")) return;
       items.push(["hk-" + k, g.icon, g.name, desc]);
     });
     if (S.mask2) items.push(["mask2", "ring", "The Magistrate's Gold Mask", "Beaten gold, dented, found on the deep stair under Thrumhold."]);
@@ -16874,12 +16917,14 @@ body.pv-open { overflow: hidden; }
     if ((F.road || F.trapOk) && FOE.hp > 0) await trapOpen(F, st);
     const book = ["Scroll of Moonfire", "Tome of Rootbinding", "The Thornwall Grimoire"].find(hasBook);
     if (!F.terrain && (S.arRank || 0) >= 3 && typeof sabotage === "function" && d(3) > 1) { F.terrain = OBS_TERRAIN[d(OBS_TERRAIN.length) - 1]; await mech("Adaptive Reasoning: you see it before the fight starts. " + F.terrain[0][0].toUpperCase() + F.terrain[0].slice(1) + " is loose. You could bring it down on " + (F.heads ? "them" : "it") + ".", "loot"); }
+    await lgStart(F, st);
     if (F.setup) await F.setup(st);
     if (F.reg) await hzStart(F, st);
     if ((F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       await bleedTick();
+      await lgRound(F, st); if (FOE.hp <= 0) break;
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await hzRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       if (st.fd) { FOE.fdMod = 0; await fdRound(F, st); if (FOE.hp <= 0 || st.fled) break; }
@@ -16905,6 +16950,7 @@ body.pv-open { overflow: hidden; }
       if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
       if (F.escapable) opts.push({ key: "escape", label: "Break away", tag: "Agility check DC " + escapeDc(F, st) + " · fail and it swings at your back with advantage · no XP or spoils", plain: true });
       tcFightOpts(F, st).forEach(o => opts.push(o));
+      lgFightOpts(F, st).forEach(o => opts.push(o));
       hzFightOpts(F, st).forEach(o => opts.push(o));
       if (F.extra) F.extra(st).forEach(o => opts.push(o));
       rmFightOpts(F, st).forEach(o => opts.push(o));
@@ -16923,7 +16969,7 @@ body.pv-open { overflow: hidden; }
         if (cleave) clUsed(st);
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
-        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st), dc: F.ac, target: "AC", adv: st.adv, dis: dim || adrift || !!st.dis, cta: "Strike" });
+        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st), dc: F.ac - lgAcCut(), target: "AC", adv: st.adv, dis: dim || adrift || !!st.dis, cta: "Strike" });
         st.adv = false; st.dis = false;
         const clx = a.ok ? clOnHit(cleave) : 0;
         if (a.ok && st.clQuiet) { st.clQuietDmg = st.clQuiet; st.clQuiet = 0; } else if (!a.ok) st.clQuiet = 0;
@@ -16977,6 +17023,7 @@ body.pv-open { overflow: hidden; }
         await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
         await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
         if (bleeds().length) await bleedStop("And the binding holds the bleeding shut.");
+        if (lgVen()) await lgCure(1, "You suck the worst of the poison out of the cut and spit.");
       } else if (c === "band") {
         S.dress--; const n = d(8) + 2, before = S.hp;
         S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
@@ -16993,14 +17040,14 @@ body.pv-open { overflow: hidden; }
         await mech("Quickening: " + st.quick + " turns where nothing answers you.", "loot");
       } else if (c === "breath") {
         st.used.breath = true;
-        const n = d(6) + Math.floor(lv() / 5), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+        const n = (d(6) + Math.floor(lv() / 5)) * (lgWorn("hearth") ? 2 : 1), b = S.hp; S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
         await say("You give ground, get your back to something, and make yourself breathe: in, and out, and in.");
         await mech("Catch your breath: regain " + (S.hp - b) + " HP.", "loot");
       } else if (c === "wipe") {
         blindSet(0);
         await say("You give ground and drag a sleeve across your eyes until the world comes back, swimming, then sharp.");
       } else if (c === "escape") {
-        const r = await check({ label: "Agility check (breaking away)", mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), cta: "Run" });
+        const r = await check({ label: "Agility check (breaking away)" + (lgBody() === "warden" ? " (in plate)" : ""), mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), dis: lgBody() === "warden", cta: "Run" });
         if (r.ok) { st.fled = "you"; await say("You feint high, drop low, and you're past it and running. It doesn't follow far."); }
         else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
       } else if (c === "cls") {
@@ -17013,6 +17060,7 @@ body.pv-open { overflow: hidden; }
       else if (String(c).startsWith("sd-")) await sdFightDo(c, F, st);
       else if (String(c).startsWith("pz-")) await pzFightDo(c, F, st);
       else if (String(c).startsWith("hz-")) await hzFightDo(c, F, st);
+      else if (String(c).startsWith("lg-")) await lgFightDo(c, F, st);
       else if (String(c).startsWith("fd-")) await fdDo(c, F, st);
       else if (String(c).startsWith("rm-")) await rmFightDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
@@ -17032,7 +17080,7 @@ body.pv-open { overflow: hidden; }
       if (st.rmPre) { st.rmPre = false; st.evade = false; continue; }
       // On a map it has to get to you first, even when it has a trick of its own.
       if (st.fd && !(await fdFoeTurn(F, st))) { st.evade = false; continue; }
-      if (F.turn && (await F.turn(st)) === "done") continue;
+      if (FOE.lg && FOE.lg.sil > 0) { FOE.lg.sil--; lgRenderFoe(); } else if (F.turn && (await F.turn(st)) === "done") continue;
       const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
       for (let i = 0; i < swings; i++) await foeSwing(F, st);
       st.evade = false;
@@ -17042,6 +17090,7 @@ body.pv-open { overflow: hidden; }
     F.hzSt = st.hz || null;
     fdEnd(F, st);
     foeEnd(!!st.fled);
+    await lgEnd(F, st);
     light(back);
     if (F.sgWon === 3 && !hasGear("porctower")) await porcGive();
     if (hasSkill("mend") && S.hp < S.maxHp) {
@@ -17053,7 +17102,7 @@ body.pv-open { overflow: hidden; }
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0);
+  const evadeChance = () => Math.max(0, (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (S.champ ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0) - lgEvadeCut());
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
@@ -17071,8 +17120,9 @@ body.pv-open { overflow: hidden; }
     if (st.pzShaken) bonus -= 2;
     const pzDis = !!st.pzDis; st.pzDis = false;
     const clm = clSwingMod(st); bonus += clm.bonus;
+    const lgm = lgSwingMod(F, st); bonus += lgm.bonus;
     if (F.hesk && clIs("song") && clB("corrach") === "trade") bonus -= 1;
-    const hit0 = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis || clm.dis, adv: !!st.winded, cta: "Brace" });
+    const hit0 = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : "") + (lgm.bonus ? " (chilled)" : "") + (lgm.dis ? " (the muffled bell)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis || clm.dis || lgm.dis, adv: !!st.winded, cta: "Brace" });
     st.winded = false;
     const hit = hit0 && !(await clStrike(F, st));
     const clHp0 = S.hp;
@@ -17081,6 +17131,7 @@ body.pv-open { overflow: hidden; }
       else await hurt(n, s, type, o.why || F.hitWhy);
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
       await clAfterBlow(F, st, clHp0);
+      await lgAfterHit(F, st, type);
       if (FOE.dreadOn && FOE.threads > 0) await dreadAdd(1, "Its blow lands, and the Cascade-water in it gets under your skin");
     } else if (F.miss && !hit0) await say(F.miss);
     return hit;
@@ -27359,6 +27410,7 @@ body.pv-open { overflow: hidden; }
     await say("Sister Wren is suddenly there, on her knees beside you, with a needle in her teeth. \u201c" + wrnSass() + "\u201d", "voice");
     await mech("Sister Wren patches you up: +" + h + " HP.", "loot");
     await bleedStop("She ties it off.");
+    if (lgVen()) await lgCure(3, "She squeezes something black out of the wound and wipes it on her apron.");
   }
   function furyBout(o) {
     const wk = wpnKey(), die = wNoun(wk) === "arrow" ? [1, 4, 2] : wDef(wk).die, noun = wNoun(wk) === "arrow" ? "knife" : wNoun(wk);
@@ -30672,10 +30724,10 @@ body.pv-open { overflow: hidden; }
   const LR_CRIMES = ["for robbing the post-riders", "for selling forged pardons", "for running off with a temple's silver", "for murder on the salt road", "for breaking a man out of the cells",
     "for stealing a magistrate's seal", "for passing clipped coin by the sackful", "for setting a toll-house on fire", "for stealing forty horses, one at a time", "for selling the same well to three villages"];
   const LR_STYLES = {
-    brawler: { what: "a big, cheerful brawler with a cudgel", hp: 30, ac: 13, atk: 5, n: 1, s: 8, type: "bludgeoning", hit: "The cudgel finds your ribs.", miss: "The cudgel whistles past your ear.", line: "They grunt and keep grinning." },
-    blade: { what: "a hard-faced swordsman who keeps their guard high", hp: 26, ac: 14, atk: 5, n: 1, s: 8, type: "slashing", hit: "Their blade opens your sleeve and the arm under it.", miss: "You turn their blade on your own.", line: "They step back to think again." },
-    knife: { what: "a quick, quiet knife-fighter", hp: 22, ac: 15, atk: 6, n: 1, s: 6, type: "piercing", bleed: 25, hit: "The knife goes in and out before you see it.", miss: "The knife finds nothing.", line: "They hiss and circle." },
-    heavy: { what: "a slab of a deserter still in half a soldier's harness", hp: 38, ac: 15, atk: 4, n: 1, s: 10, type: "slashing", hit: "The heavy blade hacks into you.", miss: "The swing buries itself in the doorframe.", line: "The harness rings like a bell." }
+    brawler: { what: "a big, cheerful brawler with a cudgel", hp: 30, ac: 13, atk: 5, n: 1, s: 8, type: "bludgeoning", hit: "The cudgel finds your ribs.", miss: "The cudgel whistles past your ear.", line: "They grunt and keep grinning.", plates: 1 },
+    blade: { what: "a hard-faced swordsman who keeps their guard high", hp: 26, ac: 14, atk: 5, n: 1, s: 8, type: "slashing", hit: "Their blade opens your sleeve and the arm under it.", miss: "You turn their blade on your own.", line: "They step back to think again.", plates: 2 },
+    knife: { what: "a quick, quiet knife-fighter", hp: 22, ac: 15, atk: 6, n: 1, s: 6, type: "piercing", bleed: 25, hit: "The knife goes in and out before you see it.", miss: "The knife finds nothing.", line: "They hiss and circle.", venom: 30 },
+    heavy: { what: "a slab of a deserter still in half a soldier's harness", hp: 38, ac: 15, atk: 4, n: 1, s: 10, type: "slashing", hit: "The heavy blade hacks into you.", miss: "The swing buries itself in the doorframe.", line: "The harness rings like a bell.", plates: 3 }
   };
   // Every fifth mark is one of these, once each, in order.
   const LR_NAMED = [
@@ -30753,11 +30805,11 @@ body.pv-open { overflow: hidden; }
   const lrOn = () => !!S.roam && (lv() >= LV_MAX || lrStory());
   const lrMod = () => 3 + Math.floor(lvk() / 16);
   const lrInv = () => 1 + Math.floor(lvk() / 16) + (hasGear("mantle") ? 1 : 0) + (S.bg === "historian" ? 1 : 0);
-  const lrW = (reg) => lr().w[reg] || 0;
+  const lrW = (reg) => Math.max(0, (lr().w[reg] || 0) - (lgMedal(reg) && (lr().w[reg] || 0) > 0 ? 1 : 0));
   const lrRank = () => { const n = lr().done + ((S.bounty && S.bounty.done.length) || 0); return LR_RANKS.filter(r => n >= r[0]).length - 1; };
   const lrRankName = () => LR_RANKS[lrRank()][1];
   const lrPrice = () => Object.values(lr().w).reduce((t, w) => t + (w >= 3 ? w * 40 : 0), 0) + (lr().hp || 0);
-  const lrPay = (M) => Math.round((50 + lv() * 2 + (TIER[M.reg] || 0) * 6) * (M.named ? 2 : 1));
+  const lrPay = (M) => Math.round((50 + lv() * 2 + (TIER[M.reg] || 0) * 6) * (M.named ? 2 : 1) * (lgWorn("tally") ? 1.15 : 1));
   const lrPick = (a) => a[d(a.length) - 1];
   const lrName = () => lrPick(LR_FIRST) + " " + lrPick(LR_LAST);
   const lrLog = (t) => { const L = lr(); L.log.unshift(calDate() + ": " + t); L.log.length = Math.min(L.log.length, 30); };
@@ -30769,11 +30821,14 @@ body.pv-open { overflow: hidden; }
     if (k) await mech(why + " You learn a chalk mark of the thieves' cant: " + cantSvg(k, 26) + " <b>" + CANT[k].name + "</b> (" + lr().cant.length + " of 12).", "loot");
   }
   async function lrCrime(reg, n, why) {
-    const L = lr(), was = lrW(reg);
-    L.w[reg] = Math.max(0, Math.min(5, was + n));
-    if (L.w[reg] === was) return;
+    const L = lr(), raw = L.w[reg] || 0;
+    // A crime here costs you this city's watch medallion.
+    const med = n > 0 && S.lg ? Object.keys(LG_TR).find(id => LG_TR[id].reg === reg && S.lg.tr.includes(id)) : null;
+    if (med) { S.lg.tr = S.lg.tr.filter(x => x !== med); ["r1", "r2", "m"].forEach(k => { if (S.lg.worn[k] === med) S.lg.worn[k] = null; }); await mech("The " + LG_TR[med].name + " is no good to you now. The watch will want it back, and you'd better not be wearing it when they ask.", "hurt"); }
+    L.w[reg] = Math.max(0, Math.min(5, raw + n));
+    if (L.w[reg] === raw) return;
     renderSheet();
-    await mech((why ? why + " " : "") + "Wanted in " + REGIONS[reg] + ": " + L.w[reg] + " of 5." + (L.w[reg] >= 3 && was < 3 ? " <b>There's a price on your head now, and the hunters can read.</b>" : ""), n > 0 ? "hurt" : "loot");
+    await mech((why ? why + " " : "") + "Wanted in " + REGIONS[reg] + ": " + lrW(reg) + " of 5." + (L.w[reg] >= 3 && raw < 3 ? " <b>There's a price on your head now, and the hunters can read.</b>" : ""), n > 0 ? "hurt" : "loot");
     lrLog((n > 0 ? "wanted in " : "less wanted in ") + REGIONS[reg] + " (" + L.w[reg] + ")");
   }
   // Wanted levels cool by one a week; the board turns over on Market Day.
@@ -30823,7 +30878,8 @@ body.pv-open { overflow: hidden; }
     await lrAgentsBack(T);
     await lrMagRepaid(T);
     await lrReleased(T);
-    if (town && !L.theft && S.coins >= 100 && d(100) <= 10 + 4 * L.tenth.grudge) await lrTheft(T);
+    if (town && !L.theft && S.coins >= 100 && d(100) <= (10 + 4 * L.tenth.grudge) * (lgWorn("thief") ? 2 : 1)) await lrTheft(T);
+    await lgTownIn(T);
     return true;
   }
   async function lrGate(T) {
@@ -30865,7 +30921,8 @@ body.pv-open { overflow: hidden; }
       { key: "lr:board", label: "Read the bounty board", tag: lrRankName() + " · " + L.marks.length + " mark" + (L.marks.length === 1 ? "" : "s") + " this week", show: town && L.marks.length > 0, plain: true },
       { key: "lr:trail", label: "Follow the Tenthman's trail", tag: "Trail " + (th ? th.trail : 0) + "% · " + (th && th.trail >= 20 ? "you can follow it" : "too cold to follow: search for clues"), show: !!th && !th.found && th.town === T.name, plain: true },
       { key: "lr:watch", label: LR_CITY[T.reg] ? "Go to " + LR_CITY[T.reg].title : "Look in at the watch house", tag: (lrW(T.reg) ? "wanted here " + lrW(T.reg) + " · fines" : "not wanted here") + (lrPrice() ? " · " + lrPrice() + " gold on your head" : ""), show: town, plain: true },
-      { key: "lr:agents", label: "Meet your agents", tag: L.agents.length + " of 5 · " + idle + " free for a job", show: town && L.agents.length > 0, plain: true }
+      { key: "lr:agents", label: "Meet your agents", tag: L.agents.length + " of 5 · " + idle + " free for a job", show: town && L.agents.length > 0, plain: true },
+      ...lgTownOpts(T)
     ];
   }
   async function lrTownDo(c, T) {
@@ -30873,6 +30930,7 @@ body.pv-open { overflow: hidden; }
     if (c === "lr:trail") await lrTrail(T);
     if (c === "lr:watch") await lrWatch(T);
     if (c === "lr:agents") await lrAgents(T);
+    if (c.startsWith("lr:lg-")) await lgTownDo(c, T);
   }
 
   // ----- the watch house -----
@@ -30893,6 +30951,7 @@ body.pv-open { overflow: hidden; }
         { key: "price", label: "Clear the price on your head", tag: price + " gold · every wanted level of 3 or more drops to 2, and the hunters stop coming", show: !!C && price > 0 && S.coins >= price },
         { key: "writ", label: "Ask for the Writ of Taking", tag: "for a Reckoner of 5 marks · kill a thief and it's no crime", show: !!C && !L.writ && L.done >= 5, plain: true },
         ...jail.map((a, i) => ({ key: "spring" + i, label: "Spring " + a.name + " from the cells", tag: (40 + lv()) + " gold · your " + LR_TRADES[a.trade].name.toLowerCase(), show: S.coins >= 40 + lv(), plain: true })),
+        { key: "med", label: "Ask for the watch's medallion", tag: "for a friend of the watch: wanted 1 lower here · lost if you commit a crime here", show: !!C && !lgHas("w_" + T.reg) && LG_TR["w_" + T.reg] && lgOn() && (L.w[T.reg] || 0) === 0 && L.done >= 3, plain: true },
         { key: "ask", label: "Ask about the Tenthmen", tag: L.theft && !L.theft.found ? "Trail +10%, once" : "what the watch knows", plain: true, show: !asked && !(L.theft && L.theft.asked) },
         { key: "no", label: "Leave the watch house", plain: true }]);
       if (k === "no") break;
@@ -30912,6 +30971,12 @@ body.pv-open { overflow: hidden; }
         const a = jail[+k.slice(6)], fee = 40 + lv(); S.coins -= fee; L.jailed.splice(L.jailed.indexOf(a), 1); a.loy = Math.min(5, a.loy + 1); L.agents.push(a); renderSheet();
         await say(a.name + " comes out blinking, and says nothing at all until you're outside, and then says \"Thanks,\" as if it hurt.");
         await mech(a.name + " is back with your agents, and more loyal for it (" + a.loy + " of 5).", "loot");
+        continue;
+      }
+      if (k === "med") {
+        const id = "w_" + T.reg; lgGiveTr(id); renderSheet();
+        await say("\"You've brought us more than you've cost us,\" " + C.cap.split(" ").slice(-1)[0] + " says, and slides a medallion across the desk. \"Wear that, and my people will look the other way once. Steal so much as an apple in my city, and I'll have it back.\"");
+        await mech("Gain the <b>" + LG_TR[id].name + "</b>: " + LG_TR[id].fx + ". The catch: " + LG_TR[id].catch + ". Wear it from the Bag.", "loot");
         continue;
       }
       if (k === "ask") {
@@ -30935,7 +31000,7 @@ body.pv-open { overflow: hidden; }
   function lrFoe(M) {
     const Y = LR_STYLES[M.style], N = M.named ? LR_NAMED.find(x => x.id === M.named) : null;
     const F = { name: M.name, ac: Y.ac + (M.named ? 1 : 0), atk: Y.atk + (M.named ? 1 : 0), n: Y.n, s: Y.s, type: Y.type, bloom: 0, bleed: Y.bleed || 0, escapable: true,
-      who: M.name.split(",")[0], hitWhy: Y.hit, miss: Y.miss, hitLine: Y.line };
+      who: M.name.split(",")[0], hitWhy: Y.hit, miss: Y.miss, hitLine: Y.line, person: true, plates: (Y.plates || 0) + (M.named ? 1 : 0), venom: Y.venom || 0 };
     if (M.heads) { F.heads = M.heads; F.unit = "Crake|Crakes"; } else F.hp = Y.hp + (M.named ? 10 : 0);
     if (N) F.name = N.name;
     return F;
@@ -30989,7 +31054,7 @@ body.pv-open { overflow: hidden; }
     let ran = false;
     F.before = async (st) => {
       if (surp && st.round === 1) { st.adv = true; await mech("You're on them before they're on their feet: advantage on your first swing.", "loot"); }
-      if (!cut && !F.ranTry && FOE.hp > 0 && FOE.hp <= FOE.max / 3) {
+      if (!cut && !F.ranTry && FOE.hp > 0 && FOE.hp <= FOE.max / 3 && !(FOE.lg && FOE.lg.root > 0)) {
         F.ranTry = true;
         await say(F.who + " breaks for the window.");
         const s = await check({ label: "Athletics check (catch them)", mod: lrMod(), dc: 14, cta: "Grab" });
@@ -31017,6 +31082,7 @@ body.pv-open { overflow: hidden; }
     renderSheet();
     await mech((alive ? "Brought in alive" : "Token claimed") + ": " + pay + " gold. Marks taken: " + L.done + ". " + lrRankName() + ".", "loot");
     if (lrRank() > was) await mech("New rank: <b>" + lrRankName() + "</b>.", "loot");
+    if (lgOn() && (N || d(3) === 1)) { const id = lgNewTr(); if (id) await mech("In their things: " + lgGiveTr(id) + ". Wear it from the Bag.", "loot"); }
     if (N && N.id === "crakes") { fitAdd("rivet"); await mech("Bettony's spare Rivet Plate goes into your pack: a fitting for a shield or armour.", "loot"); }
     lrLog((alive ? "brought in " : "took the token of ") + M.name);
     grant("lrmark"); if (L.alive >= 5) grant("lralive"); if (lrRank() >= 4) grant("lrrank"); if (L.named >= LR_NAMED.length) grant("lrnamed");
@@ -31027,7 +31093,7 @@ body.pv-open { overflow: hidden; }
   // ----- the Tenthmen and the Trail -----
   function lrThief() { return { name: lrName(), trade: lrPick(Object.keys(LR_TRADES)) }; }
   async function lrTheft(T) {
-    const L = lr(), amt = Math.max(1, Math.floor(S.coins / 10)), th = lrThief();
+    const L = lr(), amt = Math.max(1, Math.floor(S.coins * (lgWorn("tally") ? 0.15 : 0.1))), th = lrThief();
     await say("The street's busy, and somebody bumps you, and says sorry, and is gone.");
     const p = await check({ label: "Perception check (that wasn't an accident)", mod: lrMod(), dc: 15, cta: "Feel for your purse" });
     S.coins -= amt; L.tenth.stolen += amt; renderSheet();
@@ -31037,7 +31103,7 @@ body.pv-open { overflow: hidden; }
       if (ch.ok) { await say("You catch the brown coat at the corner of the market."); await lrCaught(th, amt, T, "street"); return; }
       await say("The brown coat goes into the crowd like a stone into a pond.");
     } else await say("It's an hour before you notice: your purse is lighter by exactly a tenth. Not a coin more. An old woman at the well tells you it's the Tithe-Ghost, who takes a tenth from the proud. It isn't. It's the Tenthmen, who are very fair, and very much alive.");
-    const base = 10 + 5 * lrInv() + (p.ok ? 10 : 0);
+    const base = 10 + 5 * lrInv() + (p.ok ? 10 : 0) + (lgWorn("thief") ? 15 : 0);
     L.theft = { amt, thief: th, town: T.name, reg: T.reg, day: calDay(), base, trail: base, searched: false, found: false };
     await mech("The Tenthmen took " + amt + " gold. <b>Trail " + base + "%</b> (10% + 5% for each point of your Investigation" + (p.ok ? " + 10% for seeing them" : "") + "). You can follow it at 20% or more; it fades 10% a day. Search the street for clues to raise it.", "hurt");
     lrLog("robbed by the Tenthmen in " + T.name + " (" + amt + " gold)");
@@ -31090,7 +31156,7 @@ body.pv-open { overflow: hidden; }
     let won;
     if (c === "duel") { const r = await duelFight({ id: "tenth", name: th.name, hp: 22, dmg: [1, 6, 1 + Math.floor(lvk() / 12)], win: 2400, chains: [0.5], escapable: true, reg: T.reg }); won = r.won; if (won) grant("lrduel"); }
     else {
-      const F = { name: th.name + ", a Tenthman", hp: 20, ac: 15, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, bleed: 20, escapable: true, who: th.name, hitWhy: "A thin knife slips past your guard.", miss: "The knife finds your belt buckle.", hitLine: "They gasp and back off." };
+      const F = { name: th.name + ", a Tenthman", hp: 20, ac: 15, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, bleed: 20, escapable: true, who: th.name, person: true, venom: 20, hitWhy: "A thin knife slips past your guard.", miss: "The knife finds your belt buckle.", hitLine: "They gasp and back off." };
       nextReg = T.reg; lrLastF = F; await hkFight(F); nextReg = null; won = !F.fled;
     }
     if (!won) { await say("They're gone with your gold, and they'll have a story about you for the other Tenthmen."); L.tenth.grudge++; return; }
@@ -31165,6 +31231,7 @@ body.pv-open { overflow: hidden; }
       const regs = Object.keys(L.w).filter(r => L.w[r] > 0);
       const j = await choose([
         { key: "go", label: "Send " + a.name + " to " + LR_TRADES[a.trade].job.toLowerCase(), tag: LR_TRADES[a.trade].days + " day" + (LR_TRADES[a.trade].days === 1 ? "" : "s") + " · " + LR_TRADES[a.trade].tag + " · caught " + Math.max(2, LR_TRADES[a.trade].risk - a.loy * 2) + "% of the time", show: a.trade !== "forge" || regs.length > 0 },
+        { key: "teach", label: "Ask " + a.name + " to teach you the soft hand", tag: "30 gold · learn Pocketcraft", show: a.trade === "lift" && lgOn() && !lg().pocket && S.coins >= 30, plain: true },
         { key: "pay", label: "Pay them a bonus", tag: (15 + lv()) + " gold · loyalty +1", show: a.loy < 5 && S.coins >= 15 + lv(), plain: true },
         { key: "let", label: "Let them go", tag: "they leave your crew", plain: true },
         { key: "no", label: "Back", plain: true }]);
@@ -31174,6 +31241,7 @@ body.pv-open { overflow: hidden; }
         a.job = { k: a.trade, back: calDay() + LR_TRADES[a.trade].days, reg };
         await say(a.name + " nods once and goes.");
       }
+      if (j === "teach") { S.coins -= 30; lg().pocket = true; renderSheet(); await say(a.name + " spends an afternoon picking your pockets until you notice, and then until you don't, and then hands you a thin book with no name on it. \"Read the first page,\" they say. \"That's all of it, really.\""); await mech("<b>Pocketcraft</b>: Lift from a person before a fight, or work a town's crowd once a day.", "loot"); }
       if (j === "pay") { S.coins -= 15 + lv(); a.loy++; renderSheet(); await mech(a.name + "'s loyalty: " + a.loy + " of 5.", "loot"); }
       if (j === "let") { L.agents.splice(L.agents.indexOf(a), 1); await say(a.name + " shrugs. \"Your loss,\" they say, and seem to mean it kindly."); lrLog("let " + a.name + " go"); }
       save();
@@ -31213,7 +31281,7 @@ body.pv-open { overflow: hidden; }
   }
 
   // ----- the hunters -----
-  const lrHuntChance = () => lrOn() && lrPrice() > 0 && d(100) <= Math.min(25, 4 + Math.floor(lrPrice() / 25));
+  const lrHuntChance = () => lrOn() && lrPrice() > 0 && d(100) <= Math.min(25, 4 + Math.floor(lrPrice() / 25)) + (lgWorn("wardmed") ? 5 : 0);
   async function lrHunted() {
     const L = lr(), now = calDay();
     const pool = LR_HUNTERS.filter(H => { const m = L.hunt[H.id]; return !m || (["sent", "fooled", "paid"].includes(m.fate) && m.back <= now); });
@@ -31252,7 +31320,7 @@ body.pv-open { overflow: hidden; }
       const r = await duelFight({ id: "hunter:" + H.id, name: H.name, hp: 30 + sharp * 6, dmg: [1, 8, 2 + Math.floor(lvk() / 12)], win: 2100 - sharp * 200, chains: [0.6, 0.3], escapable: true });
       won = r.won; if (won) grant("lrduel");
     } else {
-      const F = Object.assign({ name: H.name, bloom: 0, escapable: true, who: H.short, whoShort: H.short }, H.F);
+      const F = Object.assign({ name: H.name, bloom: 0, escapable: true, who: H.short, whoShort: H.short, person: !H.heads, plates: H.heads ? 0 : 2, venom: H.style === "poison" ? 25 : 0 }, H.F);
       F.atk += sharp;
       if (H.heads) { F.heads = H.heads; F.unit = H.style === "hounds" ? "hound|hounds" : "twin|twins"; }
       if (H.style === "nets") F.turn = async (st) => {
@@ -31312,6 +31380,7 @@ body.pv-open { overflow: hidden; }
     if (r === 2) { S.dress = (S.dress || 0) + 2; return "two bandages"; }
     if (r === 3) { const f = lrPick(Object.keys(FITTINGS)); fitAdd(f); return "a " + FITTINGS[f].name + " (a fitting)"; }
     if (r === 4) { S.elixirs = (S.elixirs || 0) + 1; return "an Elixir of Health"; }
+    if (r === 5 && lgOn() && d(2) === 1) { const G = lg(); if (d(2) === 1) { G.oil++; return "a phial of adder-oil"; } G.leaf++; return "a Bitterleaf draught"; }
     const g = 10 + d(20) + Math.floor(lv() / 2); S.coins += g; return g + " gold";
   }
   async function lrMagpie(reg) {
@@ -31385,13 +31454,14 @@ body.pv-open { overflow: hidden; }
     }
     if (M.watch === "guard") {
       await say("Somebody's been sitting on it, waiting for whoever comes. They stand up.");
-      const F = { name: "A cache-keeper", hp: 22, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, escapable: true, who: "the cache-keeper", hitWhy: "A knife comes out of nowhere.", miss: "The knife goes wide.", hitLine: "They swear." };
+      const F = { name: "A cache-keeper", hp: 22, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, escapable: true, person: true, plates: 1, who: "the cache-keeper", hitWhy: "A knife comes out of nowhere.", miss: "The knife goes wide.", hitLine: "They swear." };
       nextReg = reg; lrLastF = F; await hkFight(F); nextReg = null;
       if (F.fled) { light(back); return; }
     }
     ["where", "way", "watch"].forEach(g => lrLearn(M[g]));
     L.cache.found++;
     const g = 25 + d(30) + lv(), extra = d(3) === 1 ? lrSackItem() : "";
+    if (lgOn()) { const bits = []; if (d(10) === 1) bits.push(lgScGive()); if (d(5) === 1) { const id = lgNewTr(); if (id) bits.push(lgGiveTr(id)); } if (bits.length) await mech("Under the gold: " + bits.join(", and ") + ".", "loot"); }
     S.coins += g; renderSheet(); xpGain(25);
     await mech("A thieves' cache: " + g + " gold" + (extra ? " and " + extra : "") + ". You read all three marks, and you'll know them now.", "loot");
     grant("lrcache"); if (L.cant.length >= 12) grant("lrcant");
@@ -31415,6 +31485,459 @@ body.pv-open { overflow: hidden; }
     h += "<p>Magpies: " + L.mag.caught + " caught of " + L.mag.seen + " seen · caches found: " + L.cache.found + "</p>";
     h += '<p class="j-sub">The thieves\' cant · ' + L.cant.length + ' of 12</p><div class="cant-row">' + Object.keys(CANT).map(k => '<div class="cant-cell">' + (L.cant.includes(k) ? cantSvg(k, 30) + "<span>" + CANT[k].name + "</span>" : cantSvg(k, 30, false) + "<span>?</span>") + "</div>").join("") + "</div>";
     if (L.log.length) h += "<details><summary>What you've done</summary><ul>" + L.log.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></details>";
+    return h + "</section>";
+  }
+
+  // ---------- the Long Return: arms, trinkets and poison ----------
+  // Wave 2 of the Long Return (Adrian said yes, 2026-11-14). Opens with the rest of the Long Return
+  // (lrOn: the end card or level 50). Five parts:
+  //  1. Body armour: one worn piece (quilted jack, hide-and-ring, scale coat, warden's plate), each with
+  //     a catch. Wearing one packs the Rahdarian Scale Shirt away; the armourer can rework the shirt
+  //     into a scale coat. Armour pieces have fitting slots (1, 1, 2, 3).
+  //  2. Armoured foes: plates (a grey band under the foe's meter). While a foe has plates your blows
+  //     land 2 lighter. A Rootbreaker, a Shield Slam or a crushing weapon knocks one off.
+  //  3. Trinkets: two ring slots and a medallion slot, 16 trinkets, each with an effect and a catch.
+  //     The Seventeen-Year Ring becomes a ring you wear (worn for you the first time).
+  //  4. Poison: Envenomed (1-3 stacks, 1 HP a round per stack, -1 to hit at 3; it can't take your last
+  //     HP and wears off when the fight ends). Field Mending clears 1, a Bitterleaf draught or Sister
+  //     Wren clear all. Resist it with the Weathercloak's poison thread (1 stack at most), the Gallnut
+  //     Lining fitting or the Gallnut Ring (the first stack each fight), and Bitterblood (0-5, built a
+  //     dose of spore tea a day; at 5 nothing envenoms you, and biters taste it). Adder-oil coats your
+  //     blade so your next 3 hits envenom the foe (not the dead or the wound-up).
+  //  5. Scrolls you read mid-fight (Rimecall, Kindlebrand, Gallspit, Stillword, Mirebind), and
+  //     Pocketcraft: Lift from a person before a fight, or work a city crowd.
+  // State: S.lg { on, body, arms[], tr[], worn{r1,r2,m}, sc{}, pity, oil, leaf, coat, bb, tea, sick,
+  //   pocket, lifted, liftDay{}, wound, scM, jw{m,id}, read{}, plates }.
+  const LG_ARMS = {
+    quilted: { name: "Quilted Jack", ac: 1, price: 40, slots: 1, catch: "no catch", desc: "Layers of linen stitched tight. It turns a knife more often than you'd think." },
+    hide: { name: "Hide-and-Ring", ac: 2, price: 95, slots: 1, catch: "−1 to Stealth", desc: "Boiled hide with iron rings sewn on it. It clinks when you creep." },
+    scalecoat: { name: "Scale Coat", ac: 3, price: 190, slots: 2, catch: "Evade −10%, −2 to Stealth", desc: "Bronze scales to the knee on a leather coat. Heavy on the shoulders." },
+    warden: { name: "Warden's Plate", ac: 5, price: 450, slots: 3, catch: "no Evade, breaking away at disadvantage, −2 to Stealth, and −2 to swim, wade or climb out of sinking sand", desc: "Full plate, black with old oil, made for someone who meant to stand still and not die." }
+  };
+  const LG_TR = {
+    seventeen: { name: "Seventeen-Year Ring", slot: "ring", fx: "once, when the Bloom would let you die, you wake at 1 HP instead", catch: "only once" },
+    thief: { name: "Thief-taker's Band", slot: "ring", fx: "+15% on every Tenthman's Trail", catch: "the Tenthmen try your purse twice as often" },
+    gallnut: { name: "Gallnut Ring", slot: "ring", fx: "the first Envenomed stack each fight is shrugged off", catch: "draughts and elixirs heal 2 less" },
+    clock: { name: "Clockwound Ring", slot: "ring", fx: "every 4th round of a fight your quick hands are free again", catch: "it runs 6 fights, then needs winding in a town" },
+    bloodwell: { name: "Bloodwell Ring", slot: "ring", fx: "+1 damage on your blows", catch: "Evade −10%" },
+    tally: { name: "Tallyman's Ring", slot: "ring", fx: "bounties pay 15% more", catch: "the Tenthmen take 15%, not a tenth" },
+    hearth: { name: "Hearthstone Ring", slot: "ring", fx: "Catch your breath heals twice as much", catch: "−1 AC" },
+    mudlark: { name: "Mudlark's Ring", slot: "ring", fx: "+2 to Lift", catch: "a failed Lift in a town makes you wanted by 2, not 1" },
+    snakeknot: { name: "Snakeknot Ring", slot: "ring", fx: "adder-oil lasts 5 hits, not 3", catch: "poison on you lands 1 stack heavier" },
+    w_rahdaria: { name: "Watch Medallion of Rahdaria", slot: "med", reg: "rahdaria", fx: "wanted 1 lower in Rahdaria", catch: "lost the moment you commit a crime there" },
+    w_glass: { name: "Watch Medallion of Sulmara", slot: "med", reg: "glass", fx: "wanted 1 lower in Sulmara", catch: "lost the moment you commit a crime there" },
+    w_noon: { name: "Hourwardens' Medallion of Ammaret", slot: "med", reg: "noon", fx: "wanted 1 lower in Ammaret", catch: "lost the moment you commit a crime there" },
+    w_reach: { name: "Harbour Medallion of the Reach", slot: "med", reg: "reach", fx: "wanted 1 lower in the Stillwater Reach", catch: "lost the moment you commit a crime there" },
+    bitter: { name: "Bitter Saint's Medallion", slot: "med", fx: "each dose of spore tea gives 2 Bitterblood", catch: "the tea's check is 2 harder" },
+    wardmed: { name: "Warden's Medallion", slot: "med", fx: "+1 AC", catch: "hunters find you more often" },
+    bell: { name: "Medallion of the Muffled Bell", slot: "med", fx: "every foe's first swing at you is at disadvantage", catch: "your own first swing each fight is at −2" }
+  };
+  const LG_SC = {
+    rimecall: { name: "Rimecall", what: "2d8 frost · Chilled: its next 2 blows are −2", line: "You read the word off the scroll and the air between you freezes into a white lance." },
+    kindle: { name: "Kindlebrand", what: "2d8 fire · Burning: 1d4 a round for 3 rounds; hot plates, −1 AC", line: "The scroll catches as you read it, and you throw the fire with the last word." },
+    gallspit: { name: "Gallspit", what: "1d8 poison · Envenomed: 2 stacks", line: "The ink runs off the page in a green string and spits itself into its face." },
+    still: { name: "Stillword", what: "Silenced: no tricks of its own for 2 rounds", line: "You read a word that's mostly silence, and the silence stays." },
+    mire: { name: "Mirebind", what: "Rooted for 3 rounds: −2 AC, and it can't run", line: "The ground under it goes soft and takes hold of its ankles." }
+  };
+  const LG_IMMUNE = /wight|dead|bone|skelet|ghost|shade|spectr|wraith|revenant|clock|golem|tick-?warden|automat|construct|statue|stone|lich|husk|hollow twin|drowned/i;
+  const LG_BITER = /bite|bites|fang|teeth|jaw|maw|leech|suck|drinks? your|blood/i;
+  const LG_CASTER = /hexer|witch|mage|caster|priest|shaman|sorcer|warlock|seer|cultist|tidecaller|chanter|singer|curator/i;
+  const lg = () => (S.lg = S.lg || { on: false, body: null, arms: [], tr: [], worn: { r1: null, r2: null, m: null }, sc: {}, pity: 0, oil: 0, leaf: 0, coat: 0, bb: 0, tea: -1, sick: -1, pocket: false, lifted: 0, liftDay: {}, wound: 0, scM: -1, jw: null, read: {}, plates: 0 });
+  const lgOn = () => lrOn();
+  const lgBody = () => S.lg && S.lg.body && LG_ARMS[S.lg.body] && !S.stripped ? S.lg.body : null;
+  const lgWorn = (id) => !!(S.lg && S.lg.on && ["r1", "r2", "m"].some(k => S.lg.worn[k] === id));
+  // The Seventeen-Year Ring works as it always did until the Long Return gives it a slot.
+  const lgRingOk = () => !(S.lg && S.lg.on) || lgWorn("seventeen");
+  const lgMedal = (reg) => Object.keys(LG_TR).some(id => LG_TR[id].reg === reg && lgWorn(id));
+  const lgAC = () => (lgBody() ? LG_ARMS[lgBody()].ac : 0) - (lgWorn("hearth") ? 1 : 0) + (lgWorn("wardmed") ? 1 : 0);
+  const lgEvadeCut = () => lgBody() === "warden" ? 999 : (lgBody() === "scalecoat" ? 10 : 0) + (lgWorn("bloodwell") ? 10 : 0);
+  const lgDmg = () => lgWorn("bloodwell") ? 1 : 0;
+  const lgHeal = (n) => lgWorn("gallnut") ? Math.max(1, n - 2) : n;
+  const lgSick = () => !!(S.lg && S.lg.sick > calDay());
+  const lgVen = () => (S.lg && S.lg.ven) || 0;
+  const lgImmune = (F) => !!(F && (F.shade || F.noVenom)) || LG_IMMUNE.test(FOE.name || "");
+  const lgTrName = (id) => LG_TR[id] ? LG_TR[id].name : id;
+  const lgHas = (id) => !!(S.lg && S.lg.tr.includes(id));
+  // A trinket you don't have yet (watch medallions come from the watch, not from pockets).
+  function lgNewTr() {
+    const left = Object.keys(LG_TR).filter(id => !LG_TR[id].reg && id !== "seventeen" && !lgHas(id));
+    return left.length ? lrPick(left) : null;
+  }
+  function lgGiveTr(id) { const G = lg(); if (!id || G.tr.includes(id)) return ""; G.tr.push(id); return "<b>" + LG_TR[id].name + "</b> (" + LG_TR[id].fx + "; the catch: " + LG_TR[id].catch + ")"; }
+  function lgScGive(k) { const G = lg(); k = k || lrPick(Object.keys(LG_SC)); G.sc[k] = (G.sc[k] || 0) + 1; return "a scroll of <b>" + LG_SC[k].name + "</b> (" + LG_SC[k].what + ")"; }
+  const lgScN = () => S.lg ? Object.values(S.lg.sc).reduce((a, b) => a + b, 0) : 0;
+
+  // Once, when the Long Return's second part is open.
+  async function lgNews() {
+    if (!lgOn()) return;
+    const G = lg();
+    if (G.on) return;
+    G.on = true;
+    if (hasGear("ring") && !S.ringUsed && !G.tr.includes("seventeen")) { G.tr.push("seventeen"); G.worn.r1 = "seventeen"; }
+    save();
+    const h = el("div", "part-head sub", '<span class="num">The Long Return</span><h2>Arms, Trinkets and Poison</h2>');
+    scrollNext = true; add(h);
+    await say("Out here, the people you fight have started wearing iron, and carrying things in their pockets worth stealing, and putting things on their knives.");
+    await mech("<b>Armour</b>: town armourers sell four pieces to wear, each with a catch, and some foes wear <b>plates</b> now (a grey band under their health: your blows land 2 lighter until you knock them off with a Rootbreaker, a Shield Slam or a crushing weapon). " +
+      "<b>Rings and medallions</b>: two ring slots and one medallion, from bounties, caches, pockets and jewellers; each has an effect and a catch. " +
+      "<b>Poison</b> now leaves you <b>Envenomed</b> (up to 3 stacks). <b>Scrolls</b> can be read mid-fight, and <b>Pocketcraft</b> (The Soft Hand, from a Sulmara bookseller or a lifter in your crew) lets you lift from pockets.", "loot");
+    if (G.worn.r1 === "seventeen") await mech("The <b>Seventeen-Year Ring</b> goes on your finger as your first ring. It only works while you wear it.", "loot");
+  }
+  async function lgTownIn(T) {
+    if (!lgOn()) return;
+    await lgNews();
+    const G = lg();
+    if (lgWorn("clock") && G.wound < 6) { G.wound = 6; await mech("You wind the Clockwound Ring at the inn: good for 6 fights.", "loot"); }
+  }
+
+  // ----- in fights -----
+  function lgFoeReset(F) {
+    FOE.lg = { F, plates: 0, max: 0, chill: 0, burn: 0, ven: 0, sil: 0, root: 0, first: true, mine: true, shrug: false, immTold: false };
+    const G = lg(); G.ven = 0;
+    if (F && lgOn() && !F.heads && F.plates) { FOE.lg.plates = FOE.lg.max = F.plates; }
+    renderFoe();
+  }
+  async function lgStart(F, st) {
+    lgFoeReset(F);
+    if (!lgOn()) return;
+    const G = lg();
+    if (FOE.lg.plates) await mech(F.who[0].toUpperCase() + F.who.slice(1) + " is wearing plates (" + FOE.lg.plates + "): your blows land 2 lighter until you knock them off. A Rootbreaker, a Shield Slam or a crushing weapon cracks one away.", "hurt");
+    if (lgWorn("clock") && G.wound > 0) G.wound--;
+    // Lift from a person's pocket before it starts.
+    if (F.person && !F.heads && G.pocket && !F.lifted) {
+      F.lifted = true;
+      const dc = Math.max(12, Math.min(18, F.watch || (F.ac || 13) - 1));
+      const k = await choose([{ key: "lift", label: "Lift from " + F.who + "'s pocket first", tag: "Pocketcraft · Sleight of hand DC " + dc + (clIs("hush") ? " · Hushwalker +2 and a second try" : "") + " · fail and they get the first blow, at +2" }, { key: "no", label: "Just fight", plain: true }]);
+      if (k === "lift") {
+        let r = await check({ label: "Sleight of hand check (lifting from " + F.who + ")" + (clIs("hush") ? " (Hushwalker +2)" : ""), mod: lrMod() + (lgWorn("mudlark") ? 2 : 0) + (hasSkill("lock") ? 1 : 0) + (clIs("hush") ? 2 : 0), dc, cta: "Lift" });
+        if (!r.ok && clIs("hush")) { await say("They feel something and turn, and you're already somewhere else, looking at something else. A Hushwalker gets a second go."); r = await check({ label: "Sleight of hand check (the second try, Hushwalker +2)", mod: lrMod() + (lgWorn("mudlark") ? 2 : 0) + (hasSkill("lock") ? 1 : 0) + 2, dc, cta: "Lift" }); }
+        if (r.ok) { const got = lgPocket(); await say("You close the distance like you're going to say something, brush a shoulder, and step back with " + got + " in your sleeve."); }
+        else { await say("A hand clamps on your wrist. \"Oh, you're one of those,\" " + F.who + " says, and doesn't let go of it to hit you."); await foeSwing(F, st, { atk: (F.atk || 4) + 2 }); }
+      }
+    }
+  }
+  // A pocket: what you come away with.
+  function lgPocket() {
+    const G = lg(); G.lifted++; if (G.lifted >= 10) grant("lglift");
+    const r = d(100);
+    if (r <= 15) return lgScGive();
+    if (r <= 23) { const id = lgNewTr(); if (id) return lgGiveTr(id); }
+    if (r <= 35) { G.oil++; return "a phial of <b>adder-oil</b>"; }
+    if (r <= 45) { G.leaf++; return "a <b>Bitterleaf draught</b>"; }
+    const g = 8 + d(20) + Math.floor(lv() / 2); S.coins += g; renderSheet(); return g + " gold";
+  }
+  async function lgVenom(n, why) {
+    if (!FOE.on || !lgOn() || S.hp <= 0) return;
+    const G = lg();
+    n += lgWorn("snakeknot") ? 1 : 0;
+    if (G.bb >= 5) { await mech("Your Bitterblood shrugs the poison off. Nothing takes in you any more.", "loot"); return; }
+    if (FOE.lg && !FOE.lg.shrug && (lgWorn("gallnut") || fitN("gallnut"))) { FOE.lg.shrug = true; n--; await mech("The " + (lgWorn("gallnut") ? "Gallnut Ring" : "gallnut lining") + " takes the first of it.", "loot"); if (n <= 0) return; }
+    const cap = S.cloak && S.cloak.poison ? 1 : 3, was = G.ven || 0;
+    G.ven = Math.min(cap, was + n);
+    if (G.ven === was) return;
+    renderVenom();
+    await mech((why ? why + " " : "") + "<b>Envenomed " + G.ven + "</b>: you lose " + G.ven + " HP a round" + (G.ven >= 3 ? ", and you're −1 to hit" : "") + " until it's cleared or the fight ends." + (cap === 1 ? " (The Weathercloak's poison thread keeps it to 1.)" : ""), "hurt");
+    tip("venom");
+  }
+  async function lgCure(n, why) {
+    const G = lg();
+    if (!G.ven) return;
+    const was = G.ven;
+    G.ven = n >= 3 ? 0 : Math.max(0, G.ven - n);
+    renderVenom();
+    if (was >= 3 && !G.ven) grant("lgcure");
+    await mech((why ? why + " " : "") + (G.ven ? "Envenomed " + G.ven + "." : "The poison's cleared."), "loot");
+  }
+  function renderVenom() {
+    let e = $("venomVal");
+    if (!e) { const b = $("bleedVal"); if (!b) return; e = el("div", "bleed-row venom-row"); e.id = "venomVal"; b.after(e); }
+    const v = FOE.on ? lgVen() : 0;
+    e.hidden = !v;
+    if (v) e.innerHTML = '<span class="vdrop" aria-hidden="true"></span>Envenomed · ' + v + " of 3 · −" + v + " HP a round" + (v >= 3 ? " · −1 to hit" : "");
+  }
+  function lgRenderFoe() {
+    const p = $("foePlates"), s = $("foeStat");
+    if (!p || !s) return;
+    const L = FOE.on && FOE.lg;
+    p.hidden = !(L && L.max);
+    if (!p.hidden) p.innerHTML = '<span class="stat-label">Plates</span><span class="ppips">' + Array.from({ length: L.max }, (x, i) => "<i" + (i < L.plates ? ' class="on"' : "") + "></i>").join("") + '</span><span class="combo-note">' + (L.plates ? "your blows land 2 lighter" : "all knocked off") + "</span>";
+    const tags = L ? [["chill", "Chilled"], ["burn", "Burning"], ["ven", "Envenomed"], ["sil", "Silenced"], ["root", "Rooted"]].filter(([k]) => L[k] > 0).map(([k, n]) => n + " " + L[k]) : [];
+    s.hidden = !tags.length;
+    if (tags.length) s.textContent = tags.join(" · ");
+  }
+  // At the start of each round.
+  async function lgRound(F, st) {
+    if (!FOE.on || !FOE.lg || !lgOn()) return;
+    const G = lg(), L = FOE.lg;
+    if (G.ven > 0 && S.hp > 1) {
+      const n = Math.min(G.ven, S.hp - 1); S.hp -= n; renderSheet();
+      await mech("The poison works in you: −" + n + " HP" + (S.hp === 1 ? " (it can't take the last one)" : "") + ".", "hurt");
+    }
+    if (L.burn > 0 && FOE.hp > 0) { L.burn--; const n = d(4); FOE.hp = Math.max(0, FOE.hp - n); foePop("−" + n); await mech(FOE.name + " burns: −" + n + "." + (FOE.hp ? "" : " " + FOE.name + " is down."), "loot"); }
+    if (L.ven > 0 && FOE.hp > 0) { const n = L.ven; FOE.hp = Math.max(0, FOE.hp - n); foePop("−" + n); await mech("Your poison works in " + F.who + ": −" + n + "." + (FOE.hp ? "" : " " + FOE.name + " is down."), "loot"); if (!FOE.hp) grant("lgvenom"); }
+    if (L.root > 0) L.root--;
+    if (lgWorn("clock") && G.wound > 0 && st.round > 1 && st.round % 4 === 0 && FOE.beltAt != null) { FOE.beltAt = null; await mech("The Clockwound Ring ticks over: your quick hands are free.", "loot"); }
+    lgRenderFoe();
+  }
+  const lgAcCut = () => FOE.on && FOE.lg ? (FOE.lg.root > 0 ? 2 : 0) + (FOE.lg.burn > 0 && FOE.lg.max ? 1 : 0) : 0;
+  // On your blow: plates and the coat of oil. Returns the new total and any note.
+  function lgBlow(total, rb, crush) {
+    if (!FOE.on || !FOE.lg || FOE.unit) return [total, ""];
+    const L = FOE.lg, G = lg(), out = [];
+    if (L.plates > 0) {
+      total = Math.max(1, total - 2); out.push("its plates take 2");
+      if (rb || crush) { L.plates--; out.push(L.plates ? "a plate cracks off (" + L.plates + " left)" : "the last plate cracks off"); if (!L.plates && L.max >= 2) grant("lgplate"); }
+    }
+    if (G.coat > 0) {
+      if (lgImmune(L.F)) { if (!L.immTold) { L.immTold = true; out.push("the adder-oil does nothing to it: there's no blood to take it"); } }
+      else { G.coat--; L.ven = Math.min(3, L.ven + 1); out.push("the adder-oil goes in: Envenomed " + L.ven + (G.coat ? " (" + G.coat + " more hit" + (G.coat > 1 ? "s" : "") + " on the blade)" : " (the blade's dry)")); }
+    }
+    lgRenderFoe();
+    return [total, out.length ? " (" + out.join("; ") + ".)" : ""];
+  }
+  // Other checks: armour that clinks, plate that sinks, spore-sickness, and your own swing.
+  function lgCheckMod(label, atk) {
+    if (!S.lg || !S.lg.on) return [0, ""];
+    if (atk) { const n = lgHit(); return n ? [n, n === -1 && lgVen() >= 3 ? "envenomed −1" : "the muffled bell −2"] : [0, ""]; }
+    let n = 0; const why = [];
+    const b = lgBody();
+    if (b && /^Stealth/.test(label) && (b === "hide" || b === "scalecoat")) { n -= b === "hide" ? 1 : 2; why.push(LG_ARMS[b].name.toLowerCase() + " " + (b === "hide" ? "−1" : "−2")); }
+    if (b === "warden" && /swim|sinking|sand|flood|current|drown|surge|wade|mire|bog/i.test(label)) { n -= 2; why.push("plate −2"); }
+    if (b === "warden" && /^Stealth/.test(label)) { n -= 2; why.push("plate −2"); }
+    if (lgSick()) { n -= 1; why.push("spore-sick −1"); }
+    return [n, why.join(", ")];
+  }
+  const lgCrushing = () => S.axe && /hammer|mace|maul|club|flail|cudgel|morning/i.test(wDef(wpnKey()).name || "");
+  // Your own swing's bonus or cut (the Muffled Bell's catch, the poison's -1).
+  function lgHit() {
+    let n = 0;
+    if (lgVen() >= 3) n -= 1;
+    if (FOE.on && FOE.lg && FOE.lg.mine && lgWorn("bell")) { FOE.lg.mine = false; n -= 2; }
+    return n;
+  }
+  // The foe's swing: chill, the bell, the venom on its blade, bitter blood.
+  function lgSwingMod(F, st) {
+    if (!FOE.on || !FOE.lg) return { bonus: 0, dis: false };
+    const L = FOE.lg; let bonus = 0, dis = false;
+    if (L.chill > 0) { L.chill--; bonus -= 2; }
+    if (L.first) { L.first = false; if (lgWorn("bell")) dis = true; }
+    lgRenderFoe();
+    return { bonus, dis };
+  }
+  async function lgAfterHit(F, st, type) {
+    if (!lgOn() || !FOE.on) return;
+    const G = lg();
+    if (type !== "poison" && F.venom && d(100) <= F.venom) await lgVenom(1, "There's something on " + (F.whoShort || F.who) + "'s blade.");
+    if (G.bb >= 5 && FOE.hp > 1 && (LG_BITER.test(F.hitWhy || "") || LG_BITER.test(FOE.name))) {
+      const n = Math.min(FOE.hp - 1, d(6)); FOE.hp -= n; renderFoe(); foePop("−" + n);
+      await mech("It gets a mouthful of your Bitterblood and doesn't like it: −" + n + ".", "loot");
+    }
+  }
+  function lgFightOpts(F, st) {
+    if (!lgOn() || !S.lg) return [];
+    return Object.keys(LG_SC).filter(k => S.lg.sc[k] > 0).map(k => ({ key: "lg-" + k, label: "Read a scroll of " + LG_SC[k].name, tag: LG_SC[k].what + " · " + S.lg.sc[k] + " left · costs your turn", plain: true }));
+  }
+  async function lgFightDo(c, F, st) {
+    const k = c.slice(3), G = lg(), S0 = LG_SC[k], L = FOE.lg;
+    if (!S0 || !(G.sc[k] > 0) || !L) return;
+    G.sc[k]--; G.read[k] = true; renderSheet();
+    if (Object.keys(LG_SC).every(x => G.read[x])) grant("lgscroll");
+    await say(S0.line);
+    if (k === "rimecall") { if (F.heads) { foeHit(1); comboKeep(); } else await foeBurst(2, 8, 0, "Rimecall"); L.chill = 2; await mech("Chilled: its next 2 blows are at −2.", "loot"); }
+    if (k === "kindle") { if (F.heads) { foeHit(1); comboKeep(); } else await foeBurst(2, 8, 0, "Kindlebrand"); L.burn = 3; await mech("Burning: 1d4 a round for 3 rounds" + (L.max ? ", and its plates are too hot to hold: −1 AC while it burns" : "") + ".", "loot"); }
+    if (k === "gallspit") {
+      if (F.heads) { foeHit(1); comboKeep(); } else await foeBurst(1, 8, 0, "Gallspit");
+      if (lgImmune(F)) await mech("The poison does nothing to it: there's no blood to take it.", "hurt"); else { L.ven = Math.min(3, L.ven + 2); await mech("Envenomed " + L.ven + ": it loses " + L.ven + " a round.", "loot"); }
+    }
+    if (k === "still") { L.sil = 2; await mech("Silenced: it can't use a trick of its own for 2 rounds.", "loot"); }
+    if (k === "mire") { L.root = 3; await mech("Rooted for 3 rounds: −2 AC, and it can't run.", "loot"); }
+    lgRenderFoe();
+  }
+  // The quick-hands belt: Bitterleaf and adder-oil.
+  function lgBelt(o) {
+    if (!S.lg || !lgOn()) return;
+    if (S.lg.leaf && lgVen()) o.push({ key: "lg-leaf", label: "Gulp a Bitterleaf draught", tag: "clears Envenomed · " + S.lg.leaf + " left" });
+    if (S.lg.oil && S.axe && !S.lg.coat && !FOE.unit) o.push({ key: "lg-oil", label: "Coat your blade with adder-oil", tag: "your next " + (lgWorn("snakeknot") ? 5 : 3) + " hits envenom it · " + S.lg.oil + " left" });
+  }
+  async function lgBeltUse(key, t) {
+    const G = lg();
+    if (key === "lg-leaf") { G.leaf--; renderSheet(); if (t === "fumble") await lgCure(1, "Half of it goes down your chin."); else await lgCure(3, "It's the bitterest thing you've ever drunk, and it works."); }
+    if (key === "lg-oil") { G.oil--; G.coat = (lgWorn("snakeknot") ? 5 : 3) - (t === "fumble" ? 1 : 0); renderSheet(); await mech("You run the oil down the edge: your next " + G.coat + " hits envenom it.", "loot"); }
+  }
+  async function lgEnd(F, st) {
+    if (!S.lg) return;
+    const G = lg();
+    if (G.ven) { G.ven = 0; renderVenom(); }
+    if (!lgOn() || st.fled) return;
+    // Scroll drops: 2% from casters, 0.5% otherwise, and one by the 40th fight without.
+    G.pity++;
+    const caster = LG_CASTER.test(F.name || "") || LG_CASTER.test(F.who || "");
+    if (G.pity >= 40 || d(1000) <= (caster ? 20 : 5)) { G.pity = 0; await mech("In what's left: " + lgScGive() + ".", "loot"); }
+  }
+
+  // ----- in town -----
+  function lgTownOpts(T) {
+    if (!lgOn()) return [];
+    const G = lg(), town = T.kind === "town", day = calDay(), mo = calYear() * 12 + calMonth();
+    if (!G.jw || G.jw.m !== mo) G.jw = { m: mo, id: lgNewTr() };
+    return [
+      { key: "lr:lg-arm", label: "Look over the armourer's rack", tag: lgBody() ? "wearing the " + LG_ARMS[lgBody()].name : "four kinds of armour", show: town, plain: true },
+      { key: "lr:lg-jewel", label: "Look in at the jeweller's", tag: G.jw.id ? "one ring or medallion this month · " + lgTrPrice(G.jw.id) + " gold" : "nothing new this month", show: town && !!G.jw.id, plain: true },
+      { key: "lr:lg-apoth", label: "Go to the apothecary", tag: "Bitterleaf, adder-oil, herbs" + (hasSkill("herb") ? " · brew your own" : "") + (G.tea !== day ? " · a dose of spore tea" : ""), show: town, plain: true },
+      { key: "lr:lg-scroll", label: "Ask at the library for a scroll", tag: "one a month · " + (60 + lv()) + " gold", show: town && T.reg === "noon" && G.scM !== mo && S.coins >= 60 + lv(), plain: true },
+      { key: "lr:lg-book", label: "Buy The Soft Hand from a bookseller", tag: "30 gold · Pocketcraft: Lift from pockets", show: town && T.reg === "glass" && !G.pocket && S.coins >= 30, plain: true },
+      { key: "lr:lg-lift", label: "Work the crowd", tag: "Pocketcraft · Sleight of hand DC 14 · caught, and you're wanted here", show: town && G.pocket && G.liftDay[T.reg] !== day, plain: true }
+    ];
+  }
+  const lgTrPrice = (id) => LG_TR[id].slot === "med" ? 200 : 160;
+  async function lgTownDo(c, T) {
+    const G = lg();
+    if (c === "lr:lg-arm") await lgArmoury(T);
+    if (c === "lr:lg-jewel" && G.jw && G.jw.id && LG_TR[G.jw.id]) {
+      const id = G.jw.id, p = lgTrPrice(id);
+      await say("The jeweller keeps one good thing out on the velvet at a time, and a boy with a cudgel on the step.");
+      const k = await choose([{ key: "buy", label: "Buy the " + LG_TR[id].name, tag: p + " gold · " + LG_TR[id].fx + " · the catch: " + LG_TR[id].catch, show: S.coins >= p }, { key: "no", label: "Not today", plain: true }]);
+      if (k === "buy") { S.coins -= p; G.jw.id = null; renderSheet(); await mech("Gain " + lgGiveTr(id) + ". Wear it from the Bag.", "loot"); lgTrFeats(); }
+    }
+    if (c === "lr:lg-apoth") await lgApoth(T);
+    if (c === "lr:lg-scroll") {
+      const p = 60 + lv(); S.coins -= p; G.scM = calYear() * 12 + calMonth(); renderSheet();
+      await say("The librarian unlocks a drawer with three keys and lets you take one scroll out of it, and writes your name in a book.");
+      await mech("Gain " + lgScGive() + " (" + p + " gold).", "loot");
+    }
+    if (c === "lr:lg-book") {
+      S.coins -= 30; G.pocket = true; renderSheet();
+      await say("The Soft Hand is a thin book with no author's name, and its first page says: \"Never take what they'll miss before you're round the corner.\"");
+      await mech("<b>Pocketcraft</b>: before a fight with a person you can Lift from their pocket (Sleight of hand, DC 12 to 18), and in a town you can work the crowd once a day. Fail, and they hit first, or the watch hear of it.", "loot");
+    }
+    if (c === "lr:lg-lift") {
+      G.liftDay[T.reg] = calDay();
+      let r = await check({ label: "Sleight of hand check (the market crowd)" + (clIs("hush") ? " (Hushwalker +2)" : ""), mod: lrMod() + (lgWorn("mudlark") ? 2 : 0) + (hasSkill("lock") ? 1 : 0) + (clIs("hush") ? 2 : 0), dc: 14, cta: "Lift" });
+      if (!r.ok && clIs("hush")) { await say("A man looks round. You go quiet in the middle of the crowd, the way you were taught, and he looks straight through you."); r = await check({ label: "Sleight of hand check (the second try, Hushwalker +2)", mod: lrMod() + (lgWorn("mudlark") ? 2 : 0) + (hasSkill("lock") ? 1 : 0) + 2, dc: 14, cta: "Lift" }); }
+      if (r.ok) { const got = lgPocket(); renderSheet(); await say("You drift through the market with your hands in plain sight most of the time, and come out of it with " + got + "."); lrLog("worked the crowd in " + T.name); }
+      else { await say("A woman with a basket turns round at exactly the wrong moment and screams the street down."); await lrCrime(T.reg, lgWorn("mudlark") ? 2 : 1, "Caught with your hand in somebody's coat."); }
+    }
+  }
+  async function lgArmoury(T) {
+    const G = lg();
+    await say("The armourer has four things on the rack and an opinion about each of them.");
+    for (;;) {
+      const opts = Object.keys(LG_ARMS).filter(k => !G.arms.includes(k)).map(k => ({ key: "b-" + k, label: "Buy the " + LG_ARMS[k].name, tag: LG_ARMS[k].price + " gold · +" + LG_ARMS[k].ac + " AC · " + LG_ARMS[k].catch + " · " + LG_ARMS[k].slots + " fitting slot" + (LG_ARMS[k].slots > 1 ? "s" : ""), show: S.coins >= LG_ARMS[k].price, plain: true }));
+      opts.push({ key: "rework", label: "Have the Rahdarian Scale Shirt reworked into a Scale Coat", tag: "60 gold · +1 AC becomes +3, with the coat's catch · its fittings move over", show: hasGear("scale") && !G.arms.includes("scalecoat") && S.coins >= 60, plain: true });
+      G.arms.filter(k => k !== G.body).forEach(k => opts.push({ key: "w-" + k, label: "Put on the " + LG_ARMS[k].name, tag: "+" + LG_ARMS[k].ac + " AC · " + LG_ARMS[k].catch, plain: true }));
+      if (G.body) opts.push({ key: "off", label: "Take off the " + LG_ARMS[G.body].name, tag: hasGear("scale") ? "back to the Scale Shirt" : "no armour", plain: true });
+      opts.push({ key: "fits", label: "Look at the fittings bench", tag: "gallnut lining and the rest · taking them off (5 gold)", plain: true });
+      opts.push({ key: "no", label: "That's all", plain: true });
+      const c = await choose(opts);
+      if (c === "no") return;
+      if (c === "fits") { await fitShop(null, "smith"); continue; }
+      if (c === "off") { G.body = null; renderSheet(); continue; }
+      if (c.startsWith("w-")) { lgWear(c.slice(2)); continue; }
+      if (c === "rework") {
+        S.coins -= 60; S.gear = S.gear.filter(x => x !== "scale"); G.arms.push("scalecoat");
+        const fs = fitsOf("scale"); if (fs.length) { fitMap()["a-scalecoat"] = fs; delete fitMap()["scale"]; }
+        lgWear("scalecoat");
+        await say("The armourer cuts the shirt apart along every seam, adds a skirt of new scales to the knee, and sews it all back on a coat. It weighs twice what it did.");
+        await mech("The Rahdarian Scale Shirt is now a <b>Scale Coat</b>: +3 AC, Evade −10%, −2 to Stealth, 2 fitting slots.", "loot");
+        continue;
+      }
+      const k = c.slice(2), A = LG_ARMS[k];
+      S.coins -= A.price; G.arms.push(k); lgWear(k);
+      await mech("Gain the <b>" + A.name + "</b> (" + A.price + " gold), and you're wearing it: +" + A.ac + " AC, " + A.catch + ". " + A.desc, "loot");
+    }
+  }
+  function lgWear(k) {
+    const G = lg();
+    if (FOE.on || !G.arms.includes(k)) return;
+    G.body = k; renderSheet(); if (started) save();
+    if (k === "warden") grant("lgarmour");
+  }
+  async function lgApoth(T) {
+    const G = lg();
+    await say("The apothecary's is mostly jars, and the jars are mostly labelled, and the apothecary is mostly asleep.");
+    for (;;) {
+      const herb = hasSkill("herb") && S.bundles > 0, day = calDay();
+      const bdc = 11 + G.bb + (lgWorn("bitter") ? 2 : 0);
+      const c = await choose([
+        { key: "leaf", label: "Buy a Bitterleaf draught", tag: "30 gold · clears Envenomed in a fight", show: S.coins >= 30 },
+        { key: "oil", label: "Buy a phial of adder-oil", tag: "35 gold · coats your blade for 3 hits", show: S.coins >= 35, plain: true },
+        { key: "bundle", label: "Buy a herb bundle", tag: "4 gold", show: hasSkill("herb") && S.coins >= 4, plain: true },
+        { key: "bleaf", label: "Brew a Bitterleaf draught yourself", tag: "Herbcraft · 1 herb bundle · Wisdom DC 13", show: herb, plain: true },
+        { key: "boil", label: "Render adder-oil yourself", tag: "Herbcraft · 1 herb bundle · Wisdom DC 14", show: herb, plain: true },
+        { key: "tea", label: "Drink a measured dose of spore tea", tag: "6 gold · Constitution DC " + bdc + " · Bitterblood " + G.bb + " of 5 · fail and you're sick till tomorrow", show: G.tea !== day && G.bb < 5 && S.coins >= 6, plain: true },
+        { key: "no", label: "That's all", plain: true }]);
+      if (c === "no") return;
+      if (c === "leaf") { S.coins -= 30; G.leaf++; renderSheet(); await mech("Gain a <b>Bitterleaf draught</b>. Gulp it with quick hands when you're Envenomed.", "loot"); }
+      if (c === "oil") { S.coins -= 35; G.oil++; renderSheet(); await mech("Gain a phial of <b>adder-oil</b>. Coat your blade with quick hands in a fight.", "loot"); }
+      if (c === "bundle") { S.coins -= 4; S.bundles = (S.bundles || 0) + 1; renderSheet(); }
+      if (c === "bleaf" || c === "boil") {
+        S.bundles--; renderSheet();
+        const r = await check({ label: "Wisdom check (herbcraft, " + (c === "bleaf" ? "Bitterleaf" : "adder-oil") + ")", mod: 2, dc: c === "bleaf" ? 13 : 14, cta: "Brew" });
+        if (r.ok) { if (c === "bleaf") G.leaf++; else G.oil++; renderSheet(); await mech(c === "bleaf" ? "You brew a Bitterleaf draught, green-black and bitter enough to make your eyes water from across the room." : "You render a phial of adder-oil. It smells of nothing, which is the worrying part.", "loot"); }
+        else await say("It goes wrong in the pan, and the apothecary wakes up long enough to open a window.");
+      }
+      if (c === "tea") {
+        S.coins -= 6; G.tea = day; renderSheet();
+        await say("Spore tea is grey and thin and tastes of cellars. The apothecary measures it in a thimble. \"Every day,\" she says, \"or it doesn't take.\"");
+        const r = await check({ label: "Constitution check (spore tea)", mod: lrMod(), dc: bdc, cta: "Drink" });
+        if (r.ok) {
+          G.bb = Math.min(5, G.bb + (lgWorn("bitter") ? 2 : 1)); renderSheet();
+          await mech("<b>Bitterblood " + G.bb + " of 5.</b>" + (G.bb >= 5 ? " Nothing can envenom you now, and anything that bites you gets a mouthful of it." : " At 5, nothing can envenom you."), "loot");
+          if (G.bb >= 5) grant("lgbitter");
+        } else { G.sick = day + 1; await say("It comes back up in the yard. You spend the rest of the day feeling like the inside of a cellar."); await mech("Spore-sick: −1 on every roll until tomorrow.", "hurt"); }
+      }
+    }
+  }
+  function lgTrFeats() { const G = lg(); if (G.worn.r1 && G.worn.r2 && G.worn.m) grant("lgring"); }
+  // Wear a trinket: rings go in a free ring slot, or in place of the one you pick.
+  function lgPut(id, slot) {
+    const G = lg();
+    if (FOE.on || !G.tr.includes(id)) return;
+    ["r1", "r2", "m"].forEach(k => { if (G.worn[k] === id) G.worn[k] = null; });
+    G.worn[slot] = id;
+    renderSheet(); if (started) save(); lgTrFeats();
+    toastNote(LG_TR[id].name + " on.");
+  }
+  function lgOff(id) { const G = lg(); if (FOE.on) return; ["r1", "r2", "m"].forEach(k => { if (G.worn[k] === id) G.worn[k] = null; }); renderSheet(); if (started) save(); }
+
+  // ----- the Bag -----
+  function lgItems(items) {
+    if (!S.lg || !S.lg.on) return;
+    const G = S.lg;
+    G.arms.forEach(k => items.push(["lga-" + k, "shield", LG_ARMS[k].name, "+" + LG_ARMS[k].ac + " AC · the catch: " + LG_ARMS[k].catch + ". " + (G.body === k ? (S.stripped ? "Taken off you." : "You're wearing it.") : "In your pack.")]));
+    G.tr.forEach(id => { const T = LG_TR[id], on = lgWorn(id); items.push(["lgt-" + id, "ring", T.name, (T.slot === "med" ? "Medallion" : "Ring") + ": " + T.fx + ". The catch: " + T.catch + "." + (on ? " Worn." : " In your pack.") + (id === "clock" && on ? " Wound for " + G.wound + " more fight" + (G.wound === 1 ? "" : "s") + "." : "")]); });
+    const sc = Object.keys(LG_SC).filter(k => G.sc[k] > 0);
+    if (sc.length) items.push(["lgs", "scroll", "Scrolls", sc.map(k => LG_SC[k].name + (G.sc[k] > 1 ? " ×" + G.sc[k] : "")).join(", ") + ". Read one in a fight as your turn."]);
+    if (G.oil) items.push(["lg-oil", "vial", "Adder-oil" + (G.oil > 1 ? " ×" + G.oil : ""), "Coat your blade in a fight (quick hands): your next " + (lgWorn("snakeknot") ? 5 : 3) + " hits envenom it. Not the dead, or anything wound up."]);
+    if (G.leaf) items.push(["lg-leaf", "vial", "Bitterleaf draught" + (G.leaf > 1 ? " ×" + G.leaf : ""), "Gulp it in a fight (quick hands) to clear Envenomed."]);
+    if (G.pocket) items.push(["lg-pocket", "book", "The Soft Hand", "Pocketcraft: Lift from a person before a fight, or work a town's crowd once a day." + (G.lifted ? " Pockets lifted: " + G.lifted + "." : "")]);
+    if (G.bb) items.push(["lg-bb", "herb", "Bitterblood " + G.bb + " of 5", G.bb >= 5 ? "Nothing can envenom you, and biters get a mouthful of it." : "A dose of spore tea a day at an apothecary builds it. At 5, nothing can envenom you."]);
+  }
+  // Buttons under a Bag item: [label, tag, fn] or a list of them.
+  function lgBtns(key) {
+    if (FOE.on || !S.lg) return [];
+    const G = S.lg;
+    if (key.startsWith("lga-")) { const k = key.slice(4); return G.body === k ? [["Take it off", hasGear("scale") ? "back to the Scale Shirt" : "no armour", () => { G.body = null; renderSheet(); }]] : [["Wear it", "+" + LG_ARMS[k].ac + " AC", () => lgWear(k)]]; }
+    if (key.startsWith("lgt-")) {
+      const id = key.slice(4), T = LG_TR[id];
+      if (lgWorn(id)) return [["Take it off", "into your pack", () => lgOff(id)]];
+      if (T.slot === "med") return [[G.worn.m ? "Wear it instead" : "Wear it", G.worn.m ? "in place of the " + lgTrName(G.worn.m) : "medallion slot", () => lgPut(id, "m")]];
+      if (!G.worn.r1) return [["Wear it", "first ring", () => lgPut(id, "r1")]];
+      if (!G.worn.r2) return [["Wear it", "second ring", () => lgPut(id, "r2")]];
+      return [["In place of the " + lgTrName(G.worn.r1), "ring", () => lgPut(id, "r1")], ["In place of the " + lgTrName(G.worn.r2), "ring", () => lgPut(id, "r2")]];
+    }
+    return [];
+  }
+
+  // ----- the journal -----
+  function lgSection() {
+    if (!S.lg || !S.lg.on || !started) return "";
+    const G = S.lg, w = ["r1", "r2", "m"].map(k => G.worn[k]);
+    let h = "<section><h3>The Long Return · Arms, Trinkets and Poison</h3>" +
+      '<p class="j-sub">Armour, plates, rings and medallions, poison, scrolls and the soft hand.</p>' +
+      "<p>Armour: " + (lgBody() ? "<b>" + LG_ARMS[lgBody()].name + "</b> (+" + LG_ARMS[lgBody()].ac + " AC; " + LG_ARMS[lgBody()].catch + ")" : "none worn") + (G.arms.length > 1 ? " · " + G.arms.length + " pieces owned" : "") + "</p>" +
+      "<p>Rings: " + (w[0] || w[1] ? [w[0], w[1]].filter(Boolean).map(id => "<b>" + LG_TR[id].name + "</b>").join(", ") : "none") + " · Medallion: " + (w[2] ? "<b>" + LG_TR[w[2]].name + "</b>" : "none") + " · " + G.tr.length + " of " + Object.keys(LG_TR).length + " found</p>" +
+      "<p>Bitterblood " + G.bb + " of 5 · scrolls read: " + Object.keys(G.read).length + " of 5" + (G.pocket ? " · pockets lifted: " + G.lifted : "") + "</p>";
     return h + "</section>";
   }
 
