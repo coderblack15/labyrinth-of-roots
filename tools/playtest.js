@@ -13,6 +13,7 @@
 //   --from     start from a saved game (a save-partN.json this tool wrote earlier)
 //   --stop     stop when it reaches this part (0-based, as S.part counts)
 //   --prefer   always pick a choice whose label matches, e.g. "Climb the bell rope|Leave the rafters"
+//   --phone    play on a phone-sized touch screen (390 x 844) instead of a 1200 x 900 desktop
 //
 // Output (in --out, default ./playtest-<seed>): log.txt (every click, with HP and the foe),
 // save-partN.json at the start of each part, errors.txt, hang.txt, and final.json.
@@ -56,7 +57,8 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
 
 (async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ reducedMotion: "reduce", viewport: { width: 1200, height: 900 } });
+  const phone = process.argv.includes("--phone");
+  const ctx = await browser.newContext(phone ? { reducedMotion: "reduce", viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true } : { reducedMotion: "reduce", viewport: { width: 1200, height: 900 } });
   await ctx.addInitScript(([seed, save]) => {
     let s = seed >>> 0 || 1;
     Math.random = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };

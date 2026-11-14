@@ -1320,3 +1320,14 @@ A fallen light wakes to loud voices, so the first wardens, the Hushkeepers (foun
 *(Once every Deafstone is found.)* *"My name is Ilka Moth, and I was a shepherd. I heard the moon coming three days before it fell. The Hesk taught me how to make a frightened thing sleep, and I did it, and it worked. Then I did it to a frightened village. Then to a curious one. Then to one that was only asking. I carved this after, on the island, where nobody can hear me. Whoever has found every stone: now you know what I did. Do better than I did. Listen first."*
 
 *To be continued.*
+
+## The Long Return, part one: Crime and the Watch
+
+The Long Return opens on the roads back once the story's end card is behind you, or at level 50, whichever comes first. This first part brings the law and the people who break it.
+
+- **The watch and wanted levels.** Each region keeps a wanted level from 0 to 5. Fighting the watch, killing a thief or a hunter without the Writ of Taking, and raiding caravans raise it; it cools by one a week. At 3 the watch stops you at the gate (pay, talk, slip in under the turnips, or go through them) and a price goes up on your head. The four city watch houses have captains: Inspector Amara Holt (Rahdaria), Warden-Sergeant Ottoline Searle (Sulmara), Hourwarden Celic Ambrey (Ammaret) and Harbour-reeve Maddox Orwin (Raftmark).
+- **Bounty boards.** Three marks a week, refreshed on Market Day. Track them (questioning neighbours and reading ledgers, or reading the road), corner them (back stair, front door, or waiting by the stable), and take them. Alive pays half again. Every fifth mark is a named one: Mother Sallis Rendle, Ivo Thursk the Lamb, the Deacon of Ash, and Bettony Crake and her brothers. Reckoner ranks run Copper, Iron, Silver, Gold, Black.
+- **The Tenthmen** take a tenth of the gold you carry, never more. An old woman will tell you it's the Tithe-Ghost. The Trail starts at 10% plus 5% per point of Investigation, gains 10% for each clue at the scene, and can be followed at 20% or more; it fades 10% a day. A caught thief can be killed, turned in (with or without a word for them, which they remember when they come out), or hired.
+- **Agents** (up to five): lifters, scouts, fences, forgers and smugglers, sent on jobs that take days. A fair cut keeps them loyal.
+- **Six hunters**, each with a method a false trail has to fool: Mother Orpin (where you'll sleep), the Haskett twins (witnesses), Lisbet Varnum (your coat on the road), Teodor Weft (challenges), Grey Odell (your supplies) and Aubrey Strade (scent).
+- **Magpies and chalk marks.** Rogues running with other people's sacks, and caches marked in a twelve-symbol thieves' cant: where, which way, and what's watching it.
