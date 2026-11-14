@@ -1231,6 +1231,22 @@ Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes
 - **Salles.** Every town on the roads back. Journeyman, provost and master, with blunted blades (your HP comes back). The master teaches a Form you haven't found. Each salle keeps one of three schools, and your first choice of school holds for the journey; other halls remark on it. The Lantern Hall (longer to answer, ripostes +3), the Thornwheel Yard (start at 2 Pressure, broken guards +4), the Foxstep Room (feints cut for 1d4 and add 2 Pressure).
 - **Where else.** Boarding on the Open Reach: call the captain out on the quarterdeck (win and the crew strike, lose and you're thrown back). Bandit gangs: challenge the Knife to single combat (win and the gang yields the cart and counts as broken; lose and all four set on you; you can break away).
 
+## Paintings in the story
+
+Adrian's paintings show once each, in a brass-root frame (`framedPic` in index.html): Rahdaria from the last ridge on arrival (Part LVI, before the grey is described), the Marshal's land-gate painting when the city is sealed (Part LIX), and Ishbel Galt's portrait when she meets you below Ashgate.
+
+## Ishbel Galt, the fifth Hollow Hand (companion, from Adrian's art)
+
+Six years before you came, there were five Hollow Hands. Sable had a plan for the Magistrate's vault and no key, so the fifth hand, Ishbel Galt, went down the drain-cut under the palace with a pry bar and a jar of Ysolde's acid to try the iron door the hard way. The ward ate the acid, the bar and most of the skin off her hands. Somebody up top whistled, the guard came, and the four on the rope pulled it up. She did six years feeding the glass-kilns under the palace, and walked out the drain she came in by on the night the Glass Judge's sun-mirror had every guard in Sulmara looking up.
+
+- **Where she joins.** On the scree road below Ashgate, at the start of The Corrach Three (Part XXXV). A save already past that meets her at the start of its next chapter, as someone who has been following you since Sulmara.
+- **How she greets you** reads the vault: if you stood with Sable, she's bitter ("Nobody stood with me") and following you because Sable will turn up; if you did the Magistrate's work, the knives come up and you need Persuasion DC 14 (fail: she joins at bond 0) or 30 gold, "what he paid you"; if you slipped past everyone to the door, she recognises herself.
+- **Turn her away** and she's gone for good; you see her once more, drinking alone at an inn at the start of the next chapter.
+- **Bond 0 to 5**, like Burr and Tyra: every third fight won together, and evenings at camp. Bond 1: both knives in a foe once a fight (2d4 + bond/2). Bond 3: she goes in a second time once you're under half your HP. Bond 5: +1 to two kinds of check.
+- **The whistle.** The first camp evening at bond 2 or more, she tells you it was two notes, down and up, the way Sable called her dogs. Promise to be there when she asks Sable to her face (bond 5: Intimidation and Investigation), or tell her to leave it in the kilns (bond 5: Acrobatics and Insight). Her camp talk and her Bag entry follow what she decided.
+- She fights in company battles (two of the line, or a captain at the gorget) and on the battle maps (Two knives: fast, four squares).
+- Feats: Room at the Fire, Two Knives (pursuit set "The Fifth Hand").
+
 ## The Deafstones: lore tablets
 
 A fallen light wakes to loud voices, so the first wardens, the Hushkeepers (founded by Ilka Moth, a Greenreach shepherd the Hesk taught to hear), kept the Undermoon asleep by whispering, and whispered the lands' memories away while they were at it. Vaelric was the last of them, and the one who started to doubt. Stone, lead and gold can't hear, so the people they hushed carved the truth into them.
