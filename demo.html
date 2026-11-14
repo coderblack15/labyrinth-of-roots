@@ -371,6 +371,30 @@ body.intro-open { overflow: hidden; }
 .hero-gal .hg-hint { grid-column: 1 / -1; text-align: center; margin: 0; font-size: .75rem; color: var(--muted, #a99c84); }
 .journal .j-hero { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .journal .j-hero .hero-gal { flex: 1 1 100%; }
+/* The drowned look on the hero's painting: a sea-green tint that recolours without darkening, light
+   through water drifting over it, and bubbles (lv2) or drips (lv1). Faces stay readable on phones. */
+.drown-fx { position: relative; display: inline-block; overflow: hidden; line-height: 0; border-radius: 4px; isolation: isolate; }
+.drown-fx > img { display: block; }
+.drown-fx > i { position: absolute; pointer-events: none; }
+.drown-fx .dfx-tint { inset: 0; background: linear-gradient(180deg, #3f9c97 0%, #2a7a80 55%, #1d5d6a 100%); mix-blend-mode: color; opacity: .5; }
+.drown-fx.lv2 .dfx-tint { opacity: .72; }
+.drown-fx .dfx-caus { inset: -30%; opacity: .16; mix-blend-mode: screen;
+  background: radial-gradient(closest-side, rgba(190,255,245,.9), transparent 70%) 0 0 / 34% 22%, radial-gradient(closest-side, rgba(170,240,235,.8), transparent 70%) 17% 11% / 27% 19%;
+  animation: dfx-caus 11s ease-in-out infinite alternate; }
+.drown-fx.lv2 .dfx-caus { opacity: .24; }
+.drown-fx .dfx-line { left: 0; right: 0; top: 0; height: 9%; background: linear-gradient(180deg, rgba(200,250,245,.28), transparent); }
+.drown-fx .dfx-bub { bottom: -10px; width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(215,255,250,.75); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.75), transparent 55%); animation: dfx-bub 7s ease-in infinite; opacity: 0; }
+.drown-fx .dfx-drip { top: -2px; width: 3px; height: 12%; border-radius: 0 0 3px 3px; background: linear-gradient(180deg, rgba(200,245,240,.45), rgba(200,245,240,.05)); animation: dfx-drip 5s ease-in infinite; }
+.drown-fx.small .dfx-bub { width: 4px; height: 4px; }
+@keyframes dfx-caus { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(6%, 4%) rotate(4deg); } }
+@keyframes dfx-bub { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: .9; } 50% { transform: translate(5px, -55%); } 100% { transform: translate(-3px, -112%); opacity: 0; } }
+@keyframes dfx-drip { 0%, 40% { transform: scaleY(.3); transform-origin: top; opacity: .3; } 80% { transform: scaleY(1); opacity: .8; } 100% { transform: scaleY(1) translateY(30%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .drown-fx .dfx-caus, .drown-fx .dfx-drip { animation: none; } .drown-fx .dfx-bub { animation: none; opacity: .7; bottom: auto; top: calc(var(--y, 50) * 1%); } }
+.story .scene-pic.framed .drown-fx { display: block; }
+.story .scene-pic.framed .drown-fx > img { width: 100%; }
+.journal .j-hero .drown-fx { flex: none; }
+.journal .j-hero .drown-fx .j-hero-pic { box-shadow: none; }
+.journal .j-wet { color: #8cc7c0; font-style: italic; }
 .journal .j-hero-pic { width: 84px; height: auto; flex: none; border-radius: 4px; border: 1px solid rgba(216,181,106,.5); box-shadow: 0 0 0 2px #120e0a; }
 .journal .j-hero h3 { margin: 0 0 2px; }
 .l-hero .title-pic { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; opacity: .62; pointer-events: none; animation: title-drift 30s ease-in-out infinite alternate; }
@@ -2645,7 +2669,9 @@ body.pv-open { overflow: hidden; }
     const r = J.run, body = $("jBody");
     let h = "";
     const rs = started ? S : load(SLOT);
-    if (rs && rs.pr !== undefined) h += '<section class="j-hero">' + heroImg(rs, "j-hero-pic") + "<div><h3>" + (rs.name ? esc(rs.name) : "The adventurer") + '</h3><p class="j-note">' + (PRONOUNS[rs.pr] || PRONOUNS.they).label + (rs.lv ? " · level " + rs.lv : "") + "</p>" +
+    if (rs && rs.pr !== undefined) h += '<section class="j-hero">' + drownFx(heroImg(rs, "j-hero-pic"), soakLevel(rs), "small") + "<div><h3>" + (rs.name ? esc(rs.name) : "The adventurer") + '</h3><p class="j-note">' + (PRONOUNS[rs.pr] || PRONOUNS.they).label + (rs.lv ? " · level " + rs.lv : "") + "</p>" +
+      (soakLevel(rs) ? '<p class="j-note j-wet">' + (CHAPTERS[chapterAt(rs.part || 0)].slug === "sounding" ? (soakLevel(rs) > 1 ? "Under the water: the Sea-Sky is down round you." : "Soaked through: the Sea-Sky is sagging.") : (soakLevel(rs) > 1 ? "Under the water at " : "Soaked through from ") + esc(rs.wet.where) + ".") + "</p>"
+        : rs.drowned && rs.drowned.length ? '<p class="j-note">Has gone under at ' + esc(rs.drowned.slice(-3).join(", ")) + ".</p>" : "") +
       (started && HEROES.length > 1 ? '<p class="j-note"><button class="ghost" type="button" id="jHeroChange">Change your painting</button></p>' : "") + "</div></section>";
     if (rs && rs.part > 0) {
       h += '<section class="j-recap"><h3>The story so far · Slot ' + SLOT + "</h3>" + recapHTML(rs, true) +
@@ -2872,6 +2898,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "99", name: "What the Water Keeps", date: "14 Nov 2026", items: [
+      "<b>Your painting goes under when you do.</b> When the flood roars in at Carrowmere's treasury door, when the Tithe Fleet hauls you under the keel, and when the Sea-Sky comes down round you in Bathyrra, your hero's painting shows drowned: a sea-green cast, light moving through water, and bubbles rising (or, if you only got soaked, water still dripping).",
+      "<b>In your journal</b> your portrait stays wet for the rest of that chapter, and in The Sounding it follows the Sea-Sky: soaked when it sags, under when it's low. Afterwards the journal remembers where you went under."
+    ] },
     { ver: "98", name: "Arms, Trinkets and Poison", date: "14 Nov 2026", items: [
       "<b>The Long Return, part two.</b> It opens with the rest of the Long Return: at the story's end card, or at level 50.",
       "<b>Armour.</b> Every town's armourer sells four pieces you wear: the Quilted Jack (+1 AC), Hide-and-Ring (+2, −1 Stealth), the Scale Coat (+3, Evade −10%, −2 Stealth) and Warden's Plate (+5, no Evade, and breaking away at disadvantage). Each has fitting slots, and the armourer can rework the Rahdarian Scale Shirt into a Scale Coat.",
@@ -12792,6 +12822,7 @@ body.pv-open { overflow: hidden; }
       await say("The jaws laugh, and the door swings open, and the water stops rising.");
     } else {
       await say("The jaws snap shut. The water roars in over your head.");
+      await soak(2, "Carrowmere", "Under the flood at the treasury door");
       const s = await check({ label: "Athletics check", mod: 3, dc: 12, cta: "Hold your breath and push" });
       if (!s.ok) await hurt(2, 4, "bludgeoning", "The flood batters you against the door.");
       await say("The door gives, and you tumble through on a wave.");
@@ -15725,6 +15756,45 @@ body.pv-open { overflow: hidden; }
     if (seen.hero) return;
     seen.hero = 1;
     add(framedPic(picUrl(heroFam(S)), ITEM_PICS[heroFam(S)].alt[0], S.name ? esc(S.name) : "You, before you go down", "portrait"));
+  }
+  // ---------- the drowned look ----------
+  // The hero's painting goes under when you do. soakLevel(st) is 0 (dry), 1 (soaked: tint and drips)
+  // or 2 (under: tint, light through water and bubbles). It lasts the rest of the chapter it happened
+  // in (S.wet = { ch, lv, where }); in The Sounding it also follows the Sea-Sky (6 or less soaked,
+  // 3 or less under). soak(lv, where, cap) marks it and shows the drowned painting once per place.
+  // S.drowned keeps a list of where you went under, for the journal.
+  function soakLevel(st) {
+    st = st || S;
+    if (!st || st.pr === undefined) return 0;
+    const ch = CHAPTERS[chapterAt(st.part || 0)].slug;
+    let lv = st.wet && st.wet.ch === ch ? st.wet.lv : 0;
+    if (ch === "sounding" && st.sd && typeof st.sd.sky === "number") lv = Math.max(lv, st.sd.sky <= 3 ? 2 : st.sd.sky <= 6 ? 1 : 0);
+    return lv;
+  }
+  function drownFx(inner, lv, cls) {
+    if (!lv) return inner;
+    const fx = lv > 1
+      ? [12, 30, 52, 70, 86].map((x, k) => '<i class="dfx-bub" style="left:' + x + "%;--y:" + (20 + k * 14) + ";animation-delay:" + (k * 1.4).toFixed(1) + "s;animation-duration:" + (6 + (k % 3)) + 's"></i>').join("")
+      : [18, 47, 79].map((x, k) => '<i class="dfx-drip" style="left:' + x + "%;animation-delay:" + (k * 1.7).toFixed(1) + 's"></i>').join("");
+    return '<span class="drown-fx lv' + lv + (cls ? " " + cls : "") + '">' + inner + '<i class="dfx-tint"></i><i class="dfx-caus"></i><i class="dfx-line"></i>' + fx + "</span>";
+  }
+  async function soak(lv, where, cap) {
+    const ch = CHAPTERS[chapterAt(S.part)].slug;
+    // In The Sounding the Sea-Sky decides how wet you are, so it can dry you off again.
+    if (ch !== "sounding") S.wet = { ch, lv: Math.max(lv, S.wet && S.wet.ch === ch ? S.wet.lv : 0), where };
+    S.drowned = S.drowned || [];
+    if (!S.drowned.includes(where)) S.drowned.push(where);
+    const seen = S.portSeen = S.portSeen || {};
+    if (!seen["drown:" + where]) {
+      seen["drown:" + where] = 1;
+      const fig = framedPic(picUrl(heroFam(S)), ITEM_PICS[heroFam(S)].alt[0] + " The painting is under water.", cap, "portrait drowned");
+      const im = fig.querySelector("img");
+      im.insertAdjacentHTML("afterend", drownFx("", lv));
+      const wrap = fig.querySelector(".drown-fx");
+      wrap.prepend(im);
+      add(fig);
+    }
+    save();
   }
   // The gallery: swipe (or the arrows, or the arrow keys) to look through the paintings; the one
   // showing is the pick. Returns { get, set(id), follow(pr), show }. follow() moves it to the
@@ -25556,6 +25626,7 @@ body.pv-open { overflow: hidden; }
     D.sky = Math.max(0, Math.min(SD_SKY, D.sky - n)); renderSheet();
     if (D.sky === was) return;
     await mech((why ? why + " " : "") + (n > 0 ? "The Sea-Sky comes down to " : "The Sea-Sky lifts to ") + D.sky + " of " + SD_SKY + "." + (n > 0 && was > 3 && D.sky <= 3 ? " It's low enough now that the bowl is filling: knee-deep, cold, and rising (Evade −15%)." : "") + (n > 0 && D.sky === 0 && was > 0 ? " The sea is down. You're standing in it to the waist (Evade −25%)." : ""), n > 0 ? "hurt" : "loot");
+    if (n > 0 && was > 3 && D.sky <= 3) await soak(2, "Bathyrra", "When the Sea-Sky came down round you");
   }
   async function sdTrust(n, why) { const D = sd(); D.trust = Math.max(0, Math.min(6, D.trust + n)); renderSheet(); await mech(why + " The Bathyr's trust in you: <b>" + $("sdTrust").textContent + "</b>.", n > 0 ? "loot" : "hurt"); }
   async function sdLearn(w, how) {
@@ -26808,6 +26879,7 @@ body.pv-open { overflow: hidden; }
       const r = await check({ label: "Constitution check (under the keel)", mod: 3, dc: 13, cta: "Hold your breath" });
       if (r.ok) await hurt(1, 6, "slashing", "The barnacles on her hull open your back like a grater, but you keep your mouth shut all the way down and all the way along and all the way up.");
       else await hurt(3, 6, "slashing", "Halfway along you breathe in the sea. You come up the other side half-drowned and skinned.");
+      await soak(r.ok ? 1 : 2, "the Tithe Fleet's keel", r.ok ? "Hauled up under the keel" : "Half-drowned under the keel");
       grant("pzkeel");
       await say("When they haul you over the rail, streaming blood and water, the crew are standing round in a ring, and one of them, a huge Skerran with a bosun's whistle, starts to bang his axe-haft on the deck, slowly. Then they all do.");
       await pzName(2, "Nobody's refused and come up in years.");
