@@ -734,6 +734,12 @@ button.rh-row.on { background: #3b3018; border-color: var(--gold); }
 .gang .crew i { color: var(--muted); font-style: normal; font-size: .8rem; }
 .gang p { margin: 0; }
 .journal .gang { margin: 0; }
+.cant-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 8px; margin: 8px 0; }
+.cant-cell { display: grid; justify-items: center; text-align: center; gap: 3px; font-size: .74rem; line-height: 1.2; }
+svg.cant { display: inline-block; vertical-align: middle; }
+svg.cant .bg { fill: #2c3236; stroke: #4a5257; }
+svg.cant .ch { fill: none; stroke: #ece6d6; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: .92; }
+svg.cant .ch .f { fill: #ece6d6; }
 .gang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 8px 0; }
 .gmark { display: grid; justify-items: center; text-align: center; gap: 2px; font-size: .78rem; line-height: 1.2; }
 .gmark i { color: var(--muted); font-style: normal; font-size: .72rem; }
@@ -2658,6 +2664,7 @@ body.pv-open { overflow: hidden; }
     h += cwSection(rs);
     h += seaSection(rs);
     h += duelSection(rs);
+    h += lrSection(rs);
     h += hnSection(rs);
     h += unSection(rs);
     h += rmSection(rs);
@@ -2840,6 +2847,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "96", name: "Crime and the Watch", date: "14 Nov 2026", items: [
+      "<b>The Long Return opens</b> once the story's end card is behind you, or at level 50, whichever comes first. This is the first part of it.",
+      "<b>Bounty boards and the watch.</b> Every town has a board with three marks a week: track them, corner them, and take them, dead or (for half again the pay) alive. Every fifth mark is a named one with a story. Ranks run from Copper to Black Reckoner. Crimes raise your <b>wanted level</b> in that region; at 3 the watch stops you at the gate, and a price goes up on your head. Pay fines, clear the price, earn the Writ of Taking or spring your people at the watch houses of Rahdaria, Sulmara, Ammaret and Raftmark.",
+      "<b>The Tenthmen</b> lift a tenth of the gold you carry in towns (never banked gold). Their <b>Trail</b> is a percentage: 10%, plus 5% for each point of your Investigation, plus 10% for each clue you find by questioning neighbours, reading ledgers and checking wax. You can follow it at 20% or more, and it fades 10% a day. Catch the thief and you can kill them, turn them in, or hire them.",
+      "<b>Agents.</b> Up to five hired thieves and hunters, each with a trade (lifter, scout, fence, forger, smuggler), sent on jobs that take days. Pay them fairly or they walk.",
+      "<b>Six bounty hunters</b> come for the price on your head, each with their own way of fighting and of hunting you. If you're warned, a false trail can fool them, but only the right one for that hunter.",
+      "<b>On the roads:</b> magpies running with somebody else's sack, and chalk marks in a twelve-symbol thieves' cant that lead to caches, if you can read them. Every person you fight in the Long Return can be met with <b>Cross blades</b>, as a duel."] },
     { ver: "95", name: "The Road from the Door", date: "14 Nov 2026", items: [
       "<b>Go back to the roads from Rimehold's door.</b> At the warning by the door in the ice there's a new choice: walk back south to the roads, level up, shop and fight anywhere you've been, then take <b>Go back north to the door in the ice</b> from the roads when you're ready. The story waits for you there, even if you close the game.",
       "<b>Weatherend's way out says where it goes.</b> Stocking up at Weatherend from the door now ends with <b>Back up the pass to the door</b>, instead of a \"Back to the road\" that led straight back to the door."] },
@@ -3750,6 +3764,21 @@ body.pv-open { overflow: hidden; }
     { id: "dusalle", name: "Three Masters", desc: "Beat the masters of three salles on one journey.", test: () => false, prog: () => [Math.min(3, S.duel ? Object.values(S.duel.salle).filter(v => v >= 3).length : 0), 3] },
     { id: "ducaptain", name: "On Her Own Quarterdeck", desc: "Beat a rival captain blade to blade.", test: () => false },
     { id: "duknife", name: "Single Combat", desc: "Beat a gang's Knife in a duel on the road.", test: () => false },
+    { id: "lrmark", name: "Reckoner", desc: "Take a mark from a bounty board in the Long Return.", test: () => false },
+    { id: "lralive", name: "Bring Them In Breathing", desc: "Bring five marks in alive.", test: () => false },
+    { id: "lrrank", name: "Gold Reckoner", desc: "Reach Gold Reckoner: ten marks, counting Thrumhold's board.", test: () => false },
+    { id: "lrnamed", name: "Four Faces", desc: "Take all four named marks.", test: () => false },
+    { id: "lrduel", name: "Cross Blades", desc: "Beat a mark, a Tenthman or a hunter in a duel.", test: () => false },
+    { id: "lrtrail", name: "A Tenth Back", desc: "Follow a Tenthman's Trail all the way and catch them.", test: () => false },
+    { id: "lragent", name: "Hired Hands", desc: "Recruit an agent: a thief or a hunter you caught.", test: () => false },
+    { id: "lrcrew", name: "The Tenth Part", desc: "Have five agents at once.", test: () => false },
+    { id: "lrhunter", name: "Hunt the Hunter", desc: "Beat a bounty hunter who came for the price on your head.", test: () => false },
+    { id: "lrhunters", name: "Six Posters", desc: "Beat or fool all six hunters.", test: () => false },
+    { id: "lrfool", name: "Wrong Road", desc: "Lay a false trail that fools a hunter's own method.", test: () => false },
+    { id: "lrclean", name: "A Clean Slate", desc: "Clear the price on your head at a city watch house.", test: () => false },
+    { id: "lrmagpie", name: "Magpie Catcher", desc: "Run down a magpie and take the whole sack.", test: () => false },
+    { id: "lrcache", name: "Chalk and Earth", desc: "Read a chalk mark right and open a thieves' cache.", test: () => false },
+    { id: "lrcant", name: "Fluent in Chalk", desc: "Learn all twelve marks of the thieves' cant.", test: () => false },
     { id: "stone30", name: "Deaf to the Hush", desc: "Find every Deafstone on one journey, and read Ilka's Stone.", prog: () => [stonesN(), STONE_ALL.length], test: () => stonesN() >= STONE_ALL.length }
   ];
   // ---------- pursuits ----------
@@ -3821,7 +3850,9 @@ body.pv-open { overflow: hidden; }
     { id: "after", name: "After the Contract", ver: "31", desc: "The Root Summons after the Binding, Dunvaar after the Deep Melt: you'll need both endings for all of it.",
       ids: ["rscall", "rsblind", "rsbell", "rsmaelis", "rsholm", "rsheir", "rsfree", "rsroad", "dvcourt", "dvbetray", "dvknights", "dvbrannoc", "dvithra", "dvseal", "dvsign", "dvrefuse"] },
     { id: "fifthhand", name: "The Fifth Hand", ver: "32", desc: "Ishbel Galt, the Hollow Hand who was left on the rope, and what she decides about it.",
-      ids: ["isbfire", "isbbond"] }
+      ids: ["isbfire", "isbbond"] },
+    { id: "watch", name: "Crime and the Watch", ver: "33", desc: "The Long Return opens: bounty boards, the watch, the Tenthmen and their Trail, agents, six hunters, magpies and the thieves' cant.",
+      ids: ["lrmark", "lralive", "lrrank", "lrnamed", "lrduel", "lrtrail", "lragent", "lrcrew", "lrhunter", "lrhunters", "lrfool", "lrclean", "lrmagpie", "lrcache", "lrcant"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -6197,6 +6228,7 @@ body.pv-open { overflow: hidden; }
         await lvNews();
         await calNews();
         await hzNews();
+        await lrNews();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
@@ -6231,7 +6263,7 @@ body.pv-open { overflow: hidden; }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
         }
         if (c === "walk") await roamWalk();
-        else if (c === "raid") await roadRaid();
+        else if (c === "raid") { lrRaidReg = null; await roadRaid(); if (lrRaidReg) await lrCrime(lrRaidReg, 1, "Word of the caravan raid reaches the watch."); }
         else if (c === "sea") await seaHub();
         else if (c === "summons") await rsRoad();
         else if (c === "roads") await bnRoads();
@@ -6256,6 +6288,7 @@ body.pv-open { overflow: hidden; }
         } else if (c === "journal") jOpen();
         if (took) calPass(took);
         if (took && c !== "sea" && seaHuntChance()) await seaHunted();
+        else if (took && c !== "sea" && lrHuntChance()) await lrHunted();
         save();
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); calTo(0); }
     }
@@ -8095,6 +8128,7 @@ body.pv-open { overflow: hidden; }
     await hzTownIntro(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
     await burrLine(30);
+    if (!(await lrTownIn(T))) { light(back); return; }
     const has = (k) => T.has.includes(k) && !hzShut(T, k);
     let rested = false, drank = false, roofed = false;
     const tm = townMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
@@ -8127,6 +8161,7 @@ body.pv-open { overflow: hidden; }
         { key: "bar", label: "Buy a round and listen", tag: (ctRank() >= 2 ? "on the house for a Contender" : echoBarFree(T) ? "on the house, since the Assize" : lamps ? "on the house, for the Night of Lamps" : P(2) + " gold") + " · rumours", show: has("bar") && !drank && (ctRank() >= 2 || echoBarFree(T) || lamps || S.coins >= P(2)), plain: true },
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
         ...hzTownOpts(T),
+        ...lrTownOpts(T),
         { key: "salle", label: "Climb the stairs to the salle", tag: (S.duel && S.duel.salle[T.reg + ":" + T.name] >= 3 ? "you've beaten the master here" : "duels with blunted blades · Forms and a school"), show: T.kind === "town", plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: T.leave || "Back to the road", plain: true }
@@ -8135,6 +8170,7 @@ body.pv-open { overflow: hidden; }
       if (c === "fair") await calJoin(T, fair);
       if (c === "salle") await salleVisit(T);
       if (c.startsWith("hz:")) await hzTownDo(c, T);
+      if (c.startsWith("lr:")) await lrTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
       if (c === "almanac") {
         const p = mp(3); S.coins -= p; cal().almanac = true; calBuy(); renderSheet(); grant("calalmanac");
@@ -8213,6 +8249,7 @@ body.pv-open { overflow: hidden; }
     const roll = d(6);
     try {
       if (await echoRoad(r)) {}
+      else if (lrOn() && await lrRoad(r)) {}
       else if (cascadeOn() && roll === 6) await cascadeCompany(r);
       else if (S.unbal && roll === 2 && d(2) === 1) await hnRemnants(r);
       else if (S.unm && S.unm.done && r === "rahdaria" && (roll === 3 || (lv() >= LV_GATE && !S.unm.quire)) && d(2) === 1 && await unWrongRoad(r)) {}
@@ -28328,6 +28365,7 @@ body.pv-open { overflow: hidden; }
     const hunt = pzHunter(), regs = roamRegions();
     const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], plain: i > 0 })).concat([{ key: "back", label: "Not now", plain: true }]));
     if (r === "back") return;
+    if (!hunt && lrOn()) lrRaidReg = r;
     const back = document.body.dataset.light;
     const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[r] + "</span><h2>" + (hunt ? "Raiders on the road" : "A caravan on the road") + "</h2>");
     scrollNext = true; add(h);
@@ -29941,6 +29979,783 @@ body.pv-open { overflow: hidden; }
     } finally { roamFight = false; }
   }
   const seaHuntChance = () => S.sea && S.sea.heat >= 3 && d(100) <= 4 * S.sea.heat;
+
+  // ---------- the Long Return: crime and the watch ----------
+  // Opens when the story's end card is behind you, or at level 50, whichever comes first (lrOn). Wave 1 of the
+  // Long Return plan: a wanted level per region and a watch that reacts to it (a gate stop at 3+, a watch house
+  // to pay fines, the price on your head, the Writ of Taking, springing agents), a bounty board in every town
+  // (three marks a week: track, corner, take, alive pays half again; every fifth mark is a named one),
+  // the Tenthmen (they lift a tenth of the gold you carry, never banked gold; the Trail meter in percent
+  // starts at 10% + 5% per point of Investigation + 10% per clue at the scene, and you can only follow it at
+  // 20% or more; it fades 10% a day), what you do with a caught thief (kill, turn in, or recruit as an agent),
+  // agents and their jobs (they come back days later), six named bounty hunters once a price is on your head
+  // (each reads a different sign, so a false trail has to fool that hunter's own method), magpies (rogues
+  // running with someone else's sack) and chalk-mark caches in a twelve-symbol thieves' cant you learn as
+  // you go. Cross blades: every single person you fight here can be fought as a Blade to Blade duel instead.
+  // State: S.lr = { seen, w: {reg: 0-5}, wt: last decay day, at: last town region, wk, marks, done, alive,
+  //   named, cold, theft, tenth: {stolen, caught, grudge}, agents, jailed, hunt: {id: {met, beat, fate, back}},
+  //   hp (price added by killed hunters), mag: {seen, caught, kept, back: [{owner, reg, val, paid}]},
+  //   cant: [ids], cache: {found, wrong}, writ, log: [lines] }.
+  // Everything you choose leaves a trace (choices-must-matter): jailed thieves come out and remember how you
+  // spoke for them, hunters you send home come back better, returned sacks are repaid in the owner's town.
+  const LR_CITY = {
+    rahdaria: { cap: "Inspector Amara Holt", title: "the watch house on the Second Terrace", hi: "Holt looks up from a desk buried in other people's statements." },
+    glass: { cap: "Warden-Sergeant Ottoline Searle", title: "the glass-fronted watch house", hi: "Searle is polishing the front window from the inside, so she can see who's coming." },
+    noon: { cap: "Hourwarden Celic Ambrey", title: "the Hourwardens' lodge under the clocks", hi: "Ambrey checks the time before he looks at you, and writes both down." },
+    reach: { cap: "Harbour-reeve Maddox Orwin", title: "the reeve's hulk at the harbour mouth", hi: "Orwin has his boots on the table and a ledger of the hanged open on his knee." }
+  };
+  const LR_RANKS = [[0, "Unranked"], [1, "Copper Reckoner"], [3, "Iron Reckoner"], [6, "Silver Reckoner"], [10, "Gold Reckoner"], [15, "Black Reckoner"]];
+  const LR_FIRST = ["Hobart", "Linnet", "Sedge", "Moll", "Garrick", "Pim", "Tamsy", "Rudd", "Bettony", "Ivo", "Calla", "Dunstan", "Merry", "Orrick", "Saffi", "Wynn", "Josse", "Nettie", "Alban", "Greer"];
+  const LR_LAST = ["Crake", "Varley", "Pollard", "Thursk", "Ambler", "Cotter", "Fenn", "Larch", "Mabey", "Nutting", "Osgood", "Prowse", "Quayle", "Rendle", "Skelton", "Tibbet", "Underhay", "Wragge", "Yeo", "Daunt"];
+  const LR_NICK = ["Two-Purse", "Saltfoot", "the Parson", "Quickcandle", "Ninefingers", "the Lamb", "Soft Boots", "Ledger", "the Widow's Boy", "Halfpenny"];
+  const LR_CRIMES = ["for robbing the post-riders", "for selling forged pardons", "for running off with a temple's silver", "for murder on the salt road", "for breaking a man out of the cells",
+    "for stealing a magistrate's seal", "for passing clipped coin by the sackful", "for setting a toll-house on fire", "for stealing forty horses, one at a time", "for selling the same well to three villages"];
+  const LR_STYLES = {
+    brawler: { what: "a big, cheerful brawler with a cudgel", hp: 30, ac: 13, atk: 5, n: 1, s: 8, type: "bludgeoning", hit: "The cudgel finds your ribs.", miss: "The cudgel whistles past your ear.", line: "They grunt and keep grinning." },
+    blade: { what: "a hard-faced swordsman who keeps their guard high", hp: 26, ac: 14, atk: 5, n: 1, s: 8, type: "slashing", hit: "Their blade opens your sleeve and the arm under it.", miss: "You turn their blade on your own.", line: "They step back to think again." },
+    knife: { what: "a quick, quiet knife-fighter", hp: 22, ac: 15, atk: 6, n: 1, s: 6, type: "piercing", bleed: 25, hit: "The knife goes in and out before you see it.", miss: "The knife finds nothing.", line: "They hiss and circle." },
+    heavy: { what: "a slab of a deserter still in half a soldier's harness", hp: 38, ac: 15, atk: 4, n: 1, s: 10, type: "slashing", hit: "The heavy blade hacks into you.", miss: "The swing buries itself in the doorframe.", line: "The harness rings like a bell." }
+  };
+  // Every fifth mark is one of these, once each, in order.
+  const LR_NAMED = [
+    { id: "rendle", name: "Mother Sallis Rendle", crime: "for selling the same farm to six families", style: "brawler",
+      intro: "She's a round, pleasant woman in a good shawl, and she has a deed in her apron pocket that she's ready to sell you before you've finished saying who you are. Six families turned up at the same farm last spring with her deeds. Four of them are still fighting over the barn.",
+      end: "She sighs, and hands you the deed as if it were a consolation. It's for a farm that doesn't exist. It's very well made." },
+    { id: "lamb", name: "Ivo Thursk, the Lamb", crime: "for nine killings on the river roads", style: "knife",
+      intro: "He has a face like a choirboy and a voice to match, and he sings while he works. The watch had him twice and let him go both times, because nobody could believe it.",
+      end: "He stops singing. It's the first time in years, they say later, that anyone on the river roads has slept with the shutters open." },
+    { id: "deacon", name: "The Deacon of Ash", crime: "for burning toll-houses with the tollmen inside", style: "heavy",
+      intro: "He wears a priest's grey and a soldier's boots, and he calls the fires sermons. He's preached seven so far. He's been told about you, and he's been looking forward to it.",
+      end: "Under the grey there's an old soldier's tattoo, a regiment that was disbanded for burning a town. Some people don't change. Some people only change their coats." },
+    { id: "crakes", name: "Bettony Crake and her brothers", crime: "for robbing the Saltwrit's pay-chest, and then the Saltwrit", style: "blade", heads: 3,
+      intro: "Bettony plans, and her two brothers carry. They took the Saltwrit's pay-chest off a cutter in broad daylight and then sold the Saltwrit their own chest back. The reward's been doubled twice since.",
+      end: "Bettony tells you, while you tie her, exactly what she'd have done differently. It's a good plan. You write it down." }
+  ];
+  const LR_TRADES = {
+    lift: { name: "Lifter", job: "Work the crowds", days: 2, risk: 12, tag: "gold from other people's pockets" },
+    scout: { name: "Scout", job: "Run ahead on a bounty", days: 1, risk: 5, tag: "your next bounty track can't fail" },
+    fence: { name: "Fence", job: "Sell your salvage on the quiet", days: 2, risk: 8, tag: "half again what the market pays" },
+    forge: { name: "Forger", job: "Lose some paperwork", days: 3, risk: 15, tag: "your wanted level drops by 1 somewhere" },
+    smuggle: { name: "Smuggler", job: "Run a cargo past the watch", days: 4, risk: 25, tag: "the most gold, the most risk" }
+  };
+  // The six hunters. hint: what the warning tells you about how they hunt; trail: the false trail that fools them.
+  const LR_HUNTERS = [
+    { id: "orpin", name: "Mother Orpin", short: "Orpin", trail: "camp", hint: "She doesn't chase anybody. She finds where they'll sleep, and she's there first, with her snares.", style: "nets",
+      F: { hp: 30, ac: 14, atk: 5, n: 1, s: 8, type: "piercing", hitWhy: "Her boar-spear finds the gap under your arm.", miss: "The spear-point skids off.", hitLine: "She grunts, and resets her feet." } },
+    { id: "haskett", name: "The Haskett twins", short: "the Hasketts", trail: "witness", hint: "They're friendly. They buy drinks. They ask everybody on the road which way the stranger went, and somebody always tells them.", style: "twins", heads: 2,
+      F: { ac: 14, atk: 5, n: 1, s: 8, type: "slashing", hitWhy: "One twin feints and the other one cuts.", miss: "They get in each other's way, for once.", hitLine: "One twin swears; the other one finishes the word." } },
+    { id: "varnum", name: "Lisbet Varnum", short: "Varnum", trail: "lookalike", hint: "She sits on high ground with a long glass and a crossbow and waits to see your coat on the road. She's never once come down to look closer.", style: "bow",
+      F: { hp: 26, ac: 15, atk: 6, n: 1, s: 8, type: "piercing", hitWhy: "A bolt from her crossbow takes you at close range.", miss: "The bolt goes past and hums off the stones.", hitLine: "She drops the crossbow and draws a long knife." } },
+    { id: "weft", name: "Teodor Weft", short: "Weft", trail: "challenge", hint: "He hunts for the fight, not the money. He goes wherever there's talk of a challenge, and he wants to be the one who answers it.", style: "duel",
+      F: { hp: 32, ac: 15, atk: 6, n: 1, s: 8, type: "slashing" } },
+    { id: "odell", name: "Grey Odell", short: "Odell", trail: "supplies", hint: "He never meets anybody face to face if he can help it. He finds out where you buy your bread and your water, and gets to it first.", style: "poison",
+      F: { hp: 28, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", hitWhy: "His thin blade is wet with something.", miss: "His blade slides off your guard.", hitLine: "He coughs into a grey glove." } },
+    { id: "strade", name: "Aubrey Strade", short: "Strade", trail: "scent", hint: "He keeps four hounds and talks to them more than to people. Give them something you've worn and they'll find you in a city.", style: "hounds", heads: 3,
+      F: { ac: 13, atk: 5, n: 1, s: 8, type: "piercing", hitWhy: "A hound gets its teeth in your leg.", miss: "The hound snaps on air.", hitLine: "A hound yelps and goes down." } }
+  ];
+  const LR_TRAILS = {
+    scent: "Drag a coat you've worn down the wrong road",
+    witness: "Pay a carter to tell anyone who asks that you went north",
+    camp: "Pitch an empty camp with a good fire, and sleep cold somewhere else",
+    supplies: "Buy a week of supplies, loudly, in the wrong town",
+    lookalike: "Send somebody your size along the high road in your coat",
+    challenge: "Post a challenge in your name at a salle two towns away"
+  };
+  // The thieves' cant: twelve chalk symbols in three groups. A mark is one of each: where the cache is, which way
+  // from the mark, and what's watching it.
+  const CANT = {
+    stone: { g: "where", name: "under a stone", p: '<circle cx="20" cy="22" r="9"/><circle cx="20" cy="22" r="1.6" class="f"/>' },
+    high: { g: "where", name: "up high", p: '<path d="M9 28 L20 11 L31 28"/><path d="M20 11 V6"/>' },
+    water: { g: "where", name: "in the water", p: '<path d="M6 17 q4 -5 8 0 t8 0 t8 0 t6 0"/><path d="M6 27 q4 -5 8 0 t8 0 t8 0 t6 0"/>' },
+    buried: { g: "where", name: "buried", p: '<path d="M7 16 H33"/><path d="M14 22 L26 32 M26 22 L14 32"/>' },
+    left: { g: "way", name: "left of the mark", p: '<path d="M30 20 H9"/><path d="M16 12 L9 20 L16 28"/>' },
+    right: { g: "way", name: "right of the mark", p: '<path d="M10 20 H31"/><path d="M24 12 L31 20 L24 28"/>' },
+    behind: { g: "way", name: "behind the mark", p: '<path d="M11 10 V22 a9 9 0 0 0 18 0 V10"/>' },
+    past: { g: "way", name: "a long way past the mark", p: '<path d="M8 13 H32 M8 20 H32 M8 27 H32"/><path d="M27 8 L33 13 L27 18"/>' },
+    safe: { g: "watch", name: "nothing watching it", p: '<circle cx="20" cy="20" r="11"/>' },
+    snare: { g: "watch", name: "a snare on it", p: '<path d="M6 26 L12 14 L18 26 L24 14 L30 26 L34 18"/>' },
+    guard: { g: "watch", name: "somebody guards it", p: '<path d="M8 30 L20 9 L32 30 Z"/><circle cx="20" cy="23" r="2" class="f"/>' },
+    decoy: { g: "watch", name: "a false cache, leave it", p: '<circle cx="20" cy="20" r="11"/><path d="M12 12 L28 28 M28 12 L12 28"/>' }
+  };
+  const CANT_START = ["buried", "left", "safe"];
+  const CANT_PLACE = { stone: "Lift the stone", high: "Climb and feel along the top", water: "Wade in and feel along the bottom", buried: "Dig" };
+  const CANT_WAY = { left: "to the left of the mark", right: "to the right of the mark", behind: "behind the mark", past: "a long way past the mark" };
+  function cantSvg(k, size = 34, known = true) {
+    const C = CANT[k];
+    return '<svg class="cant" width="' + size + '" height="' + size + '" viewBox="0 0 40 40" aria-label="' + (known ? C.name : "an unknown chalk mark") + '"><rect x="1" y="1" width="38" height="38" rx="7" class="bg"/>' +
+      '<g class="ch">' + C.p + "</g></svg>";
+  }
+
+  const lr = () => (S.lr = S.lr || { seen: false, w: {}, wt: calDay(), at: "", wk: -1, marks: [], done: 0, alive: 0, named: 0, cold: 0, theft: null,
+    tenth: { stolen: 0, caught: 0, grudge: 0 }, agents: [], jailed: [], hunt: {}, hp: 0, mag: { seen: 0, caught: 0, kept: 0, back: [] }, cant: CANT_START.slice(), cache: { found: 0, wrong: 0 }, writ: false, log: [], seq: 0 });
+  const lrStory = () => !S.detour && (S.roamEnd ?? -1) >= CHAPTERS[CHAPTERS.length - 1].to;
+  const lrOn = () => !!S.roam && (lv() >= LV_MAX || lrStory());
+  const lrMod = () => 3 + Math.floor(lvk() / 16);
+  const lrInv = () => 1 + Math.floor(lvk() / 16) + (hasGear("mantle") ? 1 : 0) + (S.bg === "historian" ? 1 : 0);
+  const lrW = (reg) => lr().w[reg] || 0;
+  const lrRank = () => { const n = lr().done + ((S.bounty && S.bounty.done.length) || 0); return LR_RANKS.filter(r => n >= r[0]).length - 1; };
+  const lrRankName = () => LR_RANKS[lrRank()][1];
+  const lrPrice = () => Object.values(lr().w).reduce((t, w) => t + (w >= 3 ? w * 40 : 0), 0) + (lr().hp || 0);
+  const lrPay = (M) => Math.round((50 + lv() * 2 + (TIER[M.reg] || 0) * 6) * (M.named ? 2 : 1));
+  const lrPick = (a) => a[d(a.length) - 1];
+  const lrName = () => lrPick(LR_FIRST) + " " + lrPick(LR_LAST);
+  const lrLog = (t) => { const L = lr(); L.log.unshift(calDate() + ": " + t); L.log.length = Math.min(L.log.length, 30); };
+  const lrHere = () => lr().at || roamRegions()[roamRegions().length - 1];
+  function lrLearn(k) { const L = lr(); if (!k || L.cant.includes(k)) return ""; L.cant.push(k); if (L.cant.length >= 12) grant("lrcant"); return k; }
+  const lrUnknown = () => Object.keys(CANT).filter(k => !lr().cant.includes(k));
+  async function lrTeach(why) {
+    const k = lrLearn(lrPick(lrUnknown().length ? lrUnknown() : [null]));
+    if (k) await mech(why + " You learn a chalk mark of the thieves' cant: " + cantSvg(k, 26) + " <b>" + CANT[k].name + "</b> (" + lr().cant.length + " of 12).", "loot");
+  }
+  async function lrCrime(reg, n, why) {
+    const L = lr(), was = lrW(reg);
+    L.w[reg] = Math.max(0, Math.min(5, was + n));
+    if (L.w[reg] === was) return;
+    renderSheet();
+    await mech((why ? why + " " : "") + "Wanted in " + REGIONS[reg] + ": " + L.w[reg] + " of 5." + (L.w[reg] >= 3 && was < 3 ? " <b>There's a price on your head now, and the hunters can read.</b>" : ""), n > 0 ? "hurt" : "loot");
+    lrLog((n > 0 ? "wanted in " : "less wanted in ") + REGIONS[reg] + " (" + L.w[reg] + ")");
+  }
+  // Wanted levels cool by one a week; the board turns over on Market Day.
+  function lrTick() {
+    const L = lr(), now = calDay();
+    const weeks = Math.floor((now - L.wt) / 6);
+    if (weeks > 0) { Object.keys(L.w).forEach(r => { L.w[r] = Math.max(0, L.w[r] - weeks); }); L.wt += weeks * 6; }
+    const wk = Math.floor(now / 6);
+    if (L.wk !== wk) { L.wk = wk; L.marks = lrMarks(); }
+    if (L.theft && !L.theft.found) {
+      const fade = (now - L.theft.day) * 10;
+      L.theft.trail = Math.max(0, L.theft.base - fade);
+    }
+  }
+  function lrMarks() {
+    const L = lr(), regs = roamRegions(), out = [];
+    for (let i = 0; i < 3; i++) {
+      const due = (L.done + i + 1) % 5 === 0 && L.named < LR_NAMED.length && i === 0;
+      L.seq++;
+      if (due) { const N = LR_NAMED[L.named]; out.push({ id: "n" + N.id, name: N.name, crime: N.crime, style: N.style, reg: lrPick(regs), named: N.id, heads: N.heads || 0 }); continue; }
+      out.push({ id: "m" + L.seq, name: lrName() + (d(3) === 1 ? ", " + lrPick(LR_NICK) : ""), crime: lrPick(LR_CRIMES), style: lrPick(Object.keys(LR_STYLES)), reg: lrPick(regs) });
+    }
+    return out;
+  }
+  // Once, the first time the Long Return is open on the roads back.
+  async function lrNews() {
+    if (!lrOn()) return;
+    const L = lr(); lrTick();
+    if (L.seen) return;
+    L.seen = true; save();
+    const h = el("div", "part-head sub", '<span class="num">The Long Return</span><h2>Crime and the Watch</h2>');
+    scrollNext = true; add(h);
+    await say(lrStory() ? "The story's done with you, and the world hasn't noticed. People still steal, and the watch still chases them, and somebody still pins faces to a board by every inn door and writes a number under each one." : "Fifty years of rings on you, and the roads have started treating you like weather. People still steal, and the watch still chases them, and somebody still pins faces to a board by every inn door and writes a number under each one.");
+    await mech("<b>The Long Return opens.</b> Every town has a <b>bounty board</b> (three marks a week) and a <b>watch</b>. Crimes raise your <b>wanted level</b> in that region (0 to 5); at 3 the watch stops you at the gate and a price goes up on your head, and <b>bounty hunters</b> come for it. The <b>Tenthmen</b> lift a tenth of the gold you carry in towns (banked gold is safe), and you can follow their <b>Trail</b> once it's 20% or more. Out on the roads, watch for <b>magpies</b> and for <b>chalk marks</b> on the mileposts.");
+    await say("Somebody has chalked three little marks on the milestone beside you. You know what one of them means. You've no idea about the other two.");
+    await mech("The thieves' cant: you know " + CANT_START.map(k => cantSvg(k, 24) + " " + CANT[k].name).join(", ") + ". Your journal keeps the rest as you learn them.", "loot");
+  }
+
+  // ----- in town -----
+  // Returns false if you never get through the gate.
+  async function lrTownIn(T) {
+    if (!lrOn()) return true;
+    await lrNews();
+    const L = lr(); lrTick(); L.at = T.reg;
+    const town = T.kind === "town";
+    if (town && lrW(T.reg) >= 3 && !(await lrGate(T))) return false;
+    await lrAgentsBack(T);
+    await lrMagRepaid(T);
+    await lrReleased(T);
+    if (town && !L.theft && S.coins >= 100 && d(100) <= 10 + 4 * L.tenth.grudge) await lrTheft(T);
+    return true;
+  }
+  async function lrGate(T) {
+    const w = lrW(T.reg), fine = w * 30, C = LR_CITY[T.reg];
+    await say("There's a poster of you on the gate. It isn't a good likeness, but it's good enough: the " + (C ? "watch" : "town's two watchmen") + " at the gate have been looking at it all morning, and now they're looking at you.");
+    const c = await choose([
+      { key: "pay", label: "Pay the fine on the spot", tag: fine + " gold · wanted here back to 2", show: S.coins >= fine },
+      { key: "talk", label: "Talk your way past", tag: "Persuasion · DC " + (12 + w) },
+      { key: "slip", label: "Slip in with a cart", tag: "Stealth · DC " + (13 + w), plain: true },
+      { key: "fight", label: "Go through them", tag: "a fight with the watch · wanted +1", plain: true },
+      { key: "back", label: "Turn round", plain: true }]);
+    if (c === "back") { await say("You go back down the road before anybody decides to be brave."); return false; }
+    if (c === "pay") { S.coins -= fine; lr().w[T.reg] = 2; renderSheet(); await mech("You pay " + fine + " gold. A watchman writes you a receipt, very slowly, and lets you in. Wanted here: 2.", "loot"); return true; }
+    if (c === "talk") {
+      const r = await check({ label: "Persuasion check (the gate)", mod: lrMod(), dc: 12 + w, cta: "Talk" });
+      if (r.ok) { await say("You point out that the poster has the wrong nose, and the wrong height, and that you've been in " + REGIONS[lrHere()] + " all week. They don't believe a word of it, and they let you in anyway, because it's nearly the end of their watch."); return true; }
+      await say("They let you finish, which is polite, and then they reach for their clubs.");
+    }
+    if (c === "slip") {
+      const r = await check({ label: "Stealth check (under a load of turnips)", mod: lrMod(), dc: 13 + w, cta: "Lie still" });
+      if (r.ok) { await say("You ride in under a tarpaulin and a great many turnips, and get off at the market without anybody looking twice. You smell of turnips for the rest of the day."); return true; }
+      await say("A watchman prods the turnips with a pike. The turnips swear.");
+    }
+    nextReg = T.reg;
+    await hkFight({ name: "The town watch", heads: 3, unit: "watchman|watchmen", ac: 13, atk: 4, n: 1, s: 6, type: "bludgeoning", bloom: 0, escapable: true, who: "the watch", whoShort: "watchman",
+      hitWhy: "A watchman's club comes down on your shoulder.", miss: "The club cracks on the gatepost.", hitLine: "A watchman sits down hard and decides he's done for the day." });
+    nextReg = null;
+    if (FOE.on) foeEnd(true);
+    await lrCrime(T.reg, 1, "Fighting the watch at their own gate is a crime too.");
+    return !lrFled();
+  }
+  let lrLastF = null, lrRaidReg = null;
+  const lrFled = () => !!(lrLastF && lrLastF.fled);
+  function lrTownOpts(T) {
+    if (!lrOn()) return [];
+    const L = lr(), town = T.kind === "town", th = L.theft;
+    const idle = L.agents.filter(a => !a.job).length;
+    return [
+      { key: "lr:board", label: "Read the bounty board", tag: lrRankName() + " · " + L.marks.length + " mark" + (L.marks.length === 1 ? "" : "s") + " this week", show: town && L.marks.length > 0, plain: true },
+      { key: "lr:trail", label: "Follow the Tenthman's trail", tag: "Trail " + (th ? th.trail : 0) + "% · " + (th && th.trail >= 20 ? "you can follow it" : "too cold to follow: search for clues"), show: !!th && !th.found && th.town === T.name, plain: true },
+      { key: "lr:watch", label: LR_CITY[T.reg] ? "Go to " + LR_CITY[T.reg].title : "Look in at the watch house", tag: (lrW(T.reg) ? "wanted here " + lrW(T.reg) + " · fines" : "not wanted here") + (lrPrice() ? " · " + lrPrice() + " gold on your head" : ""), show: town, plain: true },
+      { key: "lr:agents", label: "Meet your agents", tag: L.agents.length + " of 5 · " + idle + " free for a job", show: town && L.agents.length > 0, plain: true }
+    ];
+  }
+  async function lrTownDo(c, T) {
+    if (c === "lr:board") await lrBoard(T);
+    if (c === "lr:trail") await lrTrail(T);
+    if (c === "lr:watch") await lrWatch(T);
+    if (c === "lr:agents") await lrAgents(T);
+  }
+
+  // ----- the watch house -----
+  async function lrWatch(T) {
+    const L = lr(), C = LR_CITY[T.reg], w = lrW(T.reg), price = lrPrice();
+    if (C) {
+      await say(C.hi);
+      const name = C.cap.split(" ").slice(-1)[0];
+      await say(w >= 3 ? "\"Well,\" " + name + " says, without getting up. \"You've got a nerve. I'll give you that before I give you anything else.\""
+        : L.done >= 10 ? "\"The Reckoner,\" " + name + " says, and actually smiles. \"You've filled more of my cells than my own people this year. Sit down.\""
+        : w ? "\"I've got your name on a list,\" " + name + " says. \"It's a short list. Don't make it a long one.\"" : "\"Never seen you before,\" " + name + " says. \"Let's keep it that way, unless you're here to do my job for me.\"", "voice");
+    } else await say("The watch house is one room, two cells and a sergeant asleep in a chair. He wakes up when you come in and pretends he wasn't.");
+    let asked = false;
+    for (;;) {
+      const jail = L.jailed.filter(a => a.reg === T.reg && !a.released);
+      const k = await choose([
+        { key: "fine", label: "Pay your fines here", tag: w * 30 + " gold · wanted here back to 0", show: w > 0 && S.coins >= w * 30 },
+        { key: "price", label: "Clear the price on your head", tag: price + " gold · every wanted level of 3 or more drops to 2, and the hunters stop coming", show: !!C && price > 0 && S.coins >= price },
+        { key: "writ", label: "Ask for the Writ of Taking", tag: "for a Reckoner of 5 marks · kill a thief and it's no crime", show: !!C && !L.writ && L.done >= 5, plain: true },
+        ...jail.map((a, i) => ({ key: "spring" + i, label: "Spring " + a.name + " from the cells", tag: (40 + lv()) + " gold · your " + LR_TRADES[a.trade].name.toLowerCase(), show: S.coins >= 40 + lv(), plain: true })),
+        { key: "ask", label: "Ask about the Tenthmen", tag: L.theft && !L.theft.found ? "Trail +10%, once" : "what the watch knows", plain: true, show: !asked && !(L.theft && L.theft.asked) },
+        { key: "no", label: "Leave the watch house", plain: true }]);
+      if (k === "no") break;
+      if (k === "fine") { S.coins -= w * 30; L.w[T.reg] = 0; renderSheet(); await mech("Fines paid: " + w * 30 + " gold. You're not wanted in " + REGIONS[T.reg] + ".", "loot"); lrLog("paid the fines in " + REGIONS[T.reg]); break; }
+      if (k === "price") {
+        S.coins -= price; Object.keys(L.w).forEach(r => { if (L.w[r] >= 3) L.w[r] = 2; }); L.hp = 0; renderSheet(); grant("lrclean");
+        await say("The clerk takes a long time counting it, and then a long time writing to every watch house on the roads, and then, for a wonder, it's done. Somewhere a hunter is tearing up your poster and swearing.");
+        await mech("Price cleared: " + price + " gold. No hunters will come for you unless you put a new price up.", "loot"); lrLog("cleared the price on your head"); break;
+      }
+      if (k === "writ") {
+        L.writ = true;
+        await say("It's a single sheet with four seals on it, one from each city watch, and a line at the bottom for your name. \"It means you can do what you've been doing,\" the clerk says, \"and it's legal. Don't let it go to your head.\"");
+        await mech("<b>The Writ of Taking.</b> Killing a thief or a hunter is no longer a crime for you.", "loot");
+        continue;
+      }
+      if (k.startsWith("spring")) {
+        const a = jail[+k.slice(6)], fee = 40 + lv(); S.coins -= fee; L.jailed.splice(L.jailed.indexOf(a), 1); a.loy = Math.min(5, a.loy + 1); L.agents.push(a); renderSheet();
+        await say(a.name + " comes out blinking, and says nothing at all until you're outside, and then says \"Thanks,\" as if it hurt.");
+        await mech(a.name + " is back with your agents, and more loyal for it (" + a.loy + " of 5).", "loot");
+        continue;
+      }
+      if (k === "ask") {
+        asked = true; if (L.theft) L.theft.asked = true;
+        if (L.theft && !L.theft.found) { L.theft.base += 10; lrTick(); await say("The watch have a book of the Tenthmen's faces, mostly blank. One page has a drawing that looks like the hand you felt. \"Works " + T.name + " this month,\" they say."); await mech("Trail +10%: " + L.theft.trail + "%.", "loot"); }
+        else await say("\"They take a tenth,\" the watch say. \"Never more. They think it's fair. They say it's what the world takes from everybody anyway, and they're only collecting.\"");
+        continue;
+      }
+    }
+  }
+
+  // ----- the bounty board -----
+  async function lrBoard(T) {
+    const L = lr();
+    await say("The board by the inn door is three faces and three numbers, pinned with nails, and a list of the people who claimed last week's, which is mostly your name." .replace(", which is mostly your name", L.done >= 6 ? ", which is mostly your name" : ""));
+    const k = await choose(L.marks.map((M, i) => ({ key: M.id, label: M.name, tag: M.crime + " · " + REGIONS[M.reg] + " · " + lrPay(M) + " gold dead, " + Math.round(lrPay(M) * 1.5) + " alive" + (M.cold ? " · the trail's gone cold once" : ""), plain: i > 0 }))
+      .concat([{ key: "no", label: "Not today", plain: true }]));
+    if (k === "no") return;
+    await lrHunt(L.marks.find(M => M.id === k));
+  }
+  function lrFoe(M) {
+    const Y = LR_STYLES[M.style], N = M.named ? LR_NAMED.find(x => x.id === M.named) : null;
+    const F = { name: M.name, ac: Y.ac + (M.named ? 1 : 0), atk: Y.atk + (M.named ? 1 : 0), n: Y.n, s: Y.s, type: Y.type, bloom: 0, bleed: Y.bleed || 0, escapable: true,
+      who: M.name.split(",")[0], hitWhy: Y.hit, miss: Y.miss, hitLine: Y.line };
+    if (M.heads) { F.heads = M.heads; F.unit = "Crake|Crakes"; } else F.hp = Y.hp + (M.named ? 10 : 0);
+    if (N) F.name = N.name;
+    return F;
+  }
+  async function lrHunt(M) {
+    const L = lr(), N = M.named ? LR_NAMED.find(x => x.id === M.named) : null;
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">A bounty · ' + REGIONS[M.reg] + "</span><h2>" + M.name + "</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    calPass(M.reg === lrHere() ? 1 : 2);
+    if (N) await say(N.intro); else await say("Wanted " + M.crime + ": " + LR_STYLES[M.style].what + ", last seen in " + REGIONS[M.reg] + ".");
+    // 1. Track.
+    const scout = L.agents.find(a => a.scout);
+    let found = false;
+    if (scout) { scout.scout = false; found = true; await say(scout.name + " meets you on the road with a grin and a sketch of the house where " + M.name.split(",")[0] + " is sleeping."); }
+    else {
+      const how = await choose([{ key: "inv", label: "Question the neighbours and read the inn's ledger", tag: "Investigation · DC " + (13 + (M.named ? 2 : 0)) }, { key: "sur", label: "Read the road", tag: "Survival · DC " + (13 + (M.named ? 2 : 0)), plain: true }]);
+      const r = await check({ label: (how === "inv" ? "Investigation" : "Survival") + " check (the trail)", mod: how === "inv" ? lrInv() + 2 : lrMod(), dc: 13 + (M.named ? 2 : 0), cta: "Track" });
+      found = r.ok;
+    }
+    if (!found) {
+      if (M.cold) { L.marks = L.marks.filter(x => x !== M); await say("The trail goes cold for the second time, and when you get back to the board someone's crossed the face out. Somebody else got there, or nobody ever will."); lrLog("lost the trail of " + M.name); light(back); return; }
+      M.cold = true; L.cold++;
+      await say("You lose them in the crowds and the side-roads. They're still out there; you'll have to come back to it.");
+      light(back); return;
+    }
+    // 2. Corner.
+    await say("You find the place: a back room over a cookshop, a woodshed, a stable loft. They're in there.");
+    const c = await choose([
+      { key: "stair", label: "Up the back stair", tag: "Stealth · DC 14 · catch them off guard" },
+      { key: "door", label: "Straight through the front door", tag: "Intimidation · DC 15 · they might just give up", plain: true },
+      { key: "wait", label: "Wait by the stable for them to run", tag: "Perception · DC 13 · they can't run from you", plain: true }]);
+    const r = await check({ label: { stair: "Stealth", door: "Intimidation", wait: "Perception" }[c] + " check (cornering " + M.name.split(",")[0] + ")", mod: lrMod() + (c === "door" ? menaceFor(lvk()) : 0), dc: { stair: 14, door: 15, wait: 13 }[c], cta: "Go" });
+    const F = lrFoe(M);
+    let cut = c === "wait" && r.ok, surp = c === "stair" && r.ok;
+    if (c === "door" && r.ok && !M.named) {
+      await say(M.name.split(",")[0] + " takes one look at you in the doorway and puts their hands on their head.");
+      return lrClaim(M, true, F, back);
+    }
+    if (!r.ok) await say(c === "stair" ? "The third stair creaks like a gunshot." : c === "door" ? "They don't give up. They come at you." : "They go out of the window instead of the door, and you have to run round.");
+    // 3. Take.
+    const solo = !F.heads;
+    const how = solo ? await choose([{ key: "fight", label: "Fight", tag: "Lv " + lv() + (surp ? " · you have the first blow" : "") }, { key: "duel", label: "Cross blades", tag: "a Blade to Blade duel · if they yield, they come in alive", plain: true }]) : "fight";
+    if (how === "duel") {
+      const res = await duelFight({ id: "mark:" + (M.named || M.style), name: F.name, hp: 26 + (M.named ? 10 : 0), dmg: [1, LR_STYLES[M.style].s, 1 + Math.floor(lvk() / 12)], win: 2300, chains: [0.5], escapable: true, reg: M.reg });
+      if (!res.won) { await say("You've lost the duel, and " + F.who + " is gone over the back wall before you're on your feet."); M.cold = true; light(back); return; }
+      grant("lrduel");
+      return lrClaim(M, true, F, back);
+    }
+    let ran = false;
+    F.before = async (st) => {
+      if (surp && st.round === 1) { st.adv = true; await mech("You're on them before they're on their feet: advantage on your first swing.", "loot"); }
+      if (!cut && !F.ranTry && FOE.hp > 0 && FOE.hp <= FOE.max / 3) {
+        F.ranTry = true;
+        await say(F.who + " breaks for the window.");
+        const s = await check({ label: "Athletics check (catch them)", mod: lrMod(), dc: 14, cta: "Grab" });
+        if (s.ok) await say("You get a fistful of collar and haul them back in.");
+        else { ran = true; st.fled = "mark"; }
+      }
+    };
+    nextReg = M.reg; lrLastF = F;
+    await hkFight(F);
+    nextReg = null;
+    if (ran) { await say("They're out and over the roofs. The board will have their face on it again next week, with more gold under it."); M.cold = true; light(back); return; }
+    if (F.fled) { await say("You back out of it. They'll still be on the board next week, if they're still in the realm."); light(back); return; }
+    const alive = await choose([{ key: "alive", label: "Bring them in alive", tag: "Athletics · DC 12 · half again the pay" }, { key: "dead", label: "Take their token", tag: lrPay(M) + " gold, no questions", plain: true }]);
+    let ok = false;
+    if (alive === "alive") { const t = await check({ label: "Athletics check (tie them and carry them)", mod: lrMod(), dc: 12, cta: "Tie" }); ok = t.ok; if (!ok) await say("They fight the ropes all the way and die of it, the stupid way, on the road. The watch pay for the token."); }
+    return lrClaim(M, ok, F, back);
+  }
+  async function lrClaim(M, alive, F, back) {
+    const L = lr(), N = M.named ? LR_NAMED.find(x => x.id === M.named) : null, was = lrRank();
+    const pay = alive ? Math.round(lrPay(M) * 1.5) : lrPay(M);
+    if (N) { await say(N.end); L.named++; }
+    S.coins += pay; L.done++; if (alive) L.alive++;
+    L.marks = L.marks.filter(x => x !== M);
+    xpGain(40 + lv());
+    renderSheet();
+    await mech((alive ? "Brought in alive" : "Token claimed") + ": " + pay + " gold. Marks taken: " + L.done + ". " + lrRankName() + ".", "loot");
+    if (lrRank() > was) await mech("New rank: <b>" + lrRankName() + "</b>.", "loot");
+    if (N && N.id === "crakes") { fitAdd("rivet"); await mech("Bettony's spare Rivet Plate goes into your pack: a fitting for a shield or armour.", "loot"); }
+    lrLog((alive ? "brought in " : "took the token of ") + M.name);
+    grant("lrmark"); if (L.alive >= 5) grant("lralive"); if (lrRank() >= 4) grant("lrrank"); if (L.named >= LR_NAMED.length) grant("lrnamed");
+    if (lrW(lrHere()) > 0 && alive) await lrCrime(lrHere(), -1, "The watch remember who brought them a live one.");
+    light(back);
+  }
+
+  // ----- the Tenthmen and the Trail -----
+  function lrThief() { return { name: lrName(), trade: lrPick(Object.keys(LR_TRADES)) }; }
+  async function lrTheft(T) {
+    const L = lr(), amt = Math.max(1, Math.floor(S.coins / 10)), th = lrThief();
+    await say("The street's busy, and somebody bumps you, and says sorry, and is gone.");
+    const p = await check({ label: "Perception check (that wasn't an accident)", mod: lrMod(), dc: 15, cta: "Feel for your purse" });
+    S.coins -= amt; L.tenth.stolen += amt; renderSheet();
+    if (p.ok) {
+      await say("Your purse is lighter by exactly a tenth, and you see the hand that did it: a thin " + LR_TRADES[th.trade].name.toLowerCase() + " in a brown coat, walking fast, not running yet.");
+      const ch = await check({ label: "Athletics check (after them)", mod: lrMod(), dc: 13, cta: "Run" });
+      if (ch.ok) { await say("You catch the brown coat at the corner of the market."); await lrCaught(th, amt, T, "street"); return; }
+      await say("The brown coat goes into the crowd like a stone into a pond.");
+    } else await say("It's an hour before you notice: your purse is lighter by exactly a tenth. Not a coin more. An old woman at the well tells you it's the Tithe-Ghost, who takes a tenth from the proud. It isn't. It's the Tenthmen, who are very fair, and very much alive.");
+    const base = 10 + 5 * lrInv() + (p.ok ? 10 : 0);
+    L.theft = { amt, thief: th, town: T.name, reg: T.reg, day: calDay(), base, trail: base, searched: false, found: false };
+    await mech("The Tenthmen took " + amt + " gold. <b>Trail " + base + "%</b> (10% + 5% for each point of your Investigation" + (p.ok ? " + 10% for seeing them" : "") + "). You can follow it at 20% or more; it fades 10% a day. Search the street for clues to raise it.", "hurt");
+    lrLog("robbed by the Tenthmen in " + T.name + " (" + amt + " gold)");
+  }
+  async function lrTrail(T) {
+    const L = lr(), th = L.theft;
+    lrTick();
+    const k = await choose([
+      { key: "search", label: "Search where it happened", tag: "three places · +10% for each clue · a watch", show: !th.searched },
+      { key: "follow", label: "Follow the trail", tag: "Trail " + th.trail + "% · a watch", show: th.trail >= 20, plain: th.searched ? false : true },
+      { key: "drop", label: "Let it go", tag: th.amt + " gold gone for good", plain: true },
+      { key: "no", label: "Not now", plain: true }]);
+    if (k === "no") return;
+    if (k === "drop") { L.theft = null; await say("You let it go. It's only a tenth. That's what they count on."); return; }
+    if (k === "search") {
+      th.searched = true; calPass(1);
+      const spots = [["question the neighbours who saw it", 12], ["read the stallholder's ledger", 14], ["the wax on a dropped tally", 16]];
+      for (const [where, dc] of spots) {
+        const r = await check({ label: "Investigation check (" + where + ")", mod: lrInv() + 2, dc, cta: "Search" });
+        if (r.ok) { th.base += 10; await say(["A washerwoman saw a brown coat go into the tanners' yard, and she didn't like his face. The tanner owes money to half the street; he's letting the yard to somebody for the rent.", "The stallholder's ledger has a sale crossed out at the hour it happened: a purse sold back to the man who lost it, for a tenth less than it held. Somebody here fences for them.", "A wooden tally dropped in the gutter, sealed with a blob of cheap red wax, and a thumb pressed in it: a cant mark, and a chandler's thumb, by the tallow in it."][spots.findIndex(s => s[0] === where)]); }
+      }
+      lrTick();
+      await mech("Trail " + th.trail + "%." + (th.trail < 20 ? " Too cold to follow. They're gone." : ""), th.trail >= 20 ? "loot" : "hurt");
+      if (th.trail < 20) { L.theft = null; lrLog("the Tenthmen got clean away"); }
+      return;
+    }
+    // Follow: each watch moves the trail; at 100% you find them.
+    while (th.trail >= 20 && th.trail < 100) {
+      calPass(1);
+      const dc = Math.max(10, 20 - Math.floor(th.trail / 10));
+      const r = await check({ label: "Investigation check (the trail, " + th.trail + "%)", mod: lrInv() + 2, dc, cta: "Follow" });
+      const n = r.ok ? 20 + d(10) : -10;
+      th.base += n; th.trail = Math.min(100, Math.max(0, th.trail + n));
+      await say(r.ok ? lrPick(["A fence who saw the brown coat and didn't like it.", "The same missing heel-nail, on the steps of a cookshop.", "A child who'll tell you anything for a copper, and tells you something true.", "A chalk mark you can read: they went this way and they're not watching it."]) + " Trail " + th.trail + "%."
+        : "You lose the thread for an hour and find it again further back than you were. Trail " + th.trail + "%.");
+      if (th.trail >= 100 || th.trail < 20) break;
+      const more = await choose([{ key: "on", label: "Keep after them", tag: "another watch" }, { key: "stop", label: "Leave it for today", tag: "it fades 10% a day", plain: true }]);
+      if (more === "stop") return;
+    }
+    if (th.trail < 20) { L.theft = null; await say("The trail's cold. They've gone to ground somewhere you'll never find."); lrLog("lost the Tenthman's trail"); return; }
+    th.found = true;
+    await say("You find " + th.thief.name + " in a room behind a chandler's, counting your tenth into a little ledger with a lot of other people's tenths in it.");
+    L.theft = null;
+    await lrCaught(th.thief, th.amt, T, "trail");
+  }
+  // A caught thief: fight, then kill, turn in, or recruit.
+  async function lrCaught(th, amt, T, how) {
+    const L = lr();
+    const c = await choose([{ key: "fight", label: "Fight", tag: "they've got a knife and they're not giving the gold back" }, { key: "duel", label: "Cross blades", tag: "a Blade to Blade duel", plain: true }]);
+    let won;
+    if (c === "duel") { const r = await duelFight({ id: "tenth", name: th.name, hp: 22, dmg: [1, 6, 1 + Math.floor(lvk() / 12)], win: 2400, chains: [0.5], escapable: true, reg: T.reg }); won = r.won; if (won) grant("lrduel"); }
+    else {
+      const F = { name: th.name + ", a Tenthman", hp: 20, ac: 15, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, bleed: 20, escapable: true, who: th.name, hitWhy: "A thin knife slips past your guard.", miss: "The knife finds your belt buckle.", hitLine: "They gasp and back off." };
+      nextReg = T.reg; lrLastF = F; await hkFight(F); nextReg = null; won = !F.fled;
+    }
+    if (!won) { await say("They're gone with your gold, and they'll have a story about you for the other Tenthmen."); L.tenth.grudge++; return; }
+    L.tenth.caught++;
+    if (how === "trail") grant("lrtrail");
+    await say(th.name + " sits on the floor with their back to the wall and looks at you. \"Well,\" they say. \"What's it to be?\"");
+    const k = await choose([
+      { key: "kill", label: "Kill them", tag: "your gold back and their purse · " + (L.writ ? "no crime, with the Writ" : "wanted +1 here") + " · the Tenthmen won't forget" },
+      { key: "turn", label: "Turn them in to the watch", tag: "your gold back, a reward, and less wanted here", plain: true },
+      { key: "hire", label: "Offer them a job", tag: "Persuasion · DC 13 · a " + LR_TRADES[th.trade].name.toLowerCase() + " for your agents (" + L.agents.length + " of 5)", show: L.agents.length < 5, plain: true }]);
+    if (k === "kill") {
+      const purse = 10 + d(20); S.coins += amt + purse; L.tenth.grudge++; renderSheet();
+      await say("It's quick. In their coat there's the little ledger, and you take that too. It's mostly tenths.");
+      await mech("You take back " + amt + " gold, and " + purse + " more from their purse.", "loot");
+      if (!L.writ) await lrCrime(T.reg, 1, "A body behind a chandler's is a crime, whoever it was.");
+      await lrTeach("The ledger has cant in the margins.");
+      lrLog("killed " + th.name + ", a Tenthman"); return;
+    }
+    if (k === "hire") {
+      const r = await check({ label: "Persuasion check (a better offer)", mod: lrMod(), dc: 13, cta: "Offer" });
+      if (r.ok) {
+        S.coins += amt; renderSheet();
+        const A = { name: th.name, trade: th.trade, loy: 2, job: null, jobs: 0, from: T.name };
+        L.agents.push(A);
+        await say(th.name + " gives you your gold back first, every coin, to show willing. \"A tenth of what you make me,\" they say. \"That's fair.\"");
+        await mech(th.name + " joins your agents: a <b>" + LR_TRADES[th.trade].name + "</b>. Loyalty 2 of 5. Send them on jobs from any town.", "loot");
+        grant("lragent"); if (L.agents.length >= 5) grant("lrcrew");
+        await lrTeach(th.name + " shows you a mark, as a sign of good faith.");
+        lrLog("hired " + th.name + " as an agent"); return;
+      }
+      await say("\"No,\" they say. \"I work for the Tenth. You don't leave the Tenth.\" So it's the watch after all.");
+    }
+    const reward = Math.max(10, Math.round(amt / 4));
+    S.coins += amt + reward; renderSheet();
+    await say("The watch take them off your hands, and you go along to say what happened.");
+    const w = await choose([{ key: "word", label: "Put in a word for them", tag: "a lighter sentence" }, { key: "no", label: "Tell it straight", tag: "a full sentence", plain: true }]);
+    L.jailed.push({ name: th.name, trade: th.trade, reg: T.reg, out: calDay() + (w === "word" ? 18 : 36), word: w === "word", released: true });
+    await mech("Your " + amt + " gold back, and a reward of " + reward + ". " + th.name + " goes to the cells for " + (w === "word" ? "half a season" : "a season") + ". They'll remember this.", "loot");
+    await lrCrime(T.reg, -1, "The watch like a stranger who brings them a Tenthman.");
+    await lrTeach("In their coat lining there's a scrap of chalked cloth.");
+    lrLog("turned in " + th.name + (w === "word" ? ", with a word for them" : ""));
+  }
+  // Thieves you turned in come out, and remember how you spoke for them.
+  async function lrReleased(T) {
+    const L = lr(), now = calDay();
+    const a = L.jailed.find(x => x.released && x.out <= now);
+    if (!a) return;
+    L.jailed.splice(L.jailed.indexOf(a), 1);
+    if (a.word) {
+      await say("Somebody falls into step beside you in the street. It's " + a.name + ", out of the cells and thinner. \"You spoke for me,\" they say. \"Nobody does that.\" They press a folded paper into your hand and are gone.");
+      S.coins += 20 + lv(); renderSheet();
+      await mech("A Tenthmen stash, given freely: " + (20 + lv()) + " gold.", "loot");
+      await lrTeach("The paper's covered in cant, with a key in the corner.");
+      lrLog(a.name + " came out of the cells and repaid you");
+    } else {
+      L.tenth.grudge++;
+      await say("On the wall by the inn there's a fresh chalk mark, the cant for a mark on somebody, and under it your own initials. " + a.name + " is out.");
+      await mech("The Tenthmen will try you more often now.", "hurt");
+      lrLog(a.name + " came out of the cells with a grudge");
+    }
+  }
+
+  // ----- agents -----
+  async function lrAgents(T) {
+    const L = lr();
+    for (;;) {
+      const k = await choose(L.agents.map((a, i) => ({ key: "a" + i, label: a.name + " · " + LR_TRADES[a.trade].name, tag: a.job ? "away: " + LR_TRADES[a.job.k].job.toLowerCase() + ", back " + (a.job.back > calDay() ? "in " + (a.job.back - calDay()) + " day" + (a.job.back - calDay() === 1 ? "" : "s") : "now") : "loyalty " + a.loy + " of 5 · " + LR_TRADES[a.trade].tag, show: true, plain: i > 0 }))
+        .concat([{ key: "no", label: "That's all", plain: true }]));
+      if (k === "no") return;
+      const a = L.agents[+k.slice(1)];
+      if (a.job) { await say(a.name + " isn't here. Somebody says they're expected back " + (a.job.back > calDay() ? "in a few days" : "any time now") + "."); continue; }
+      const regs = Object.keys(L.w).filter(r => L.w[r] > 0);
+      const j = await choose([
+        { key: "go", label: "Send " + a.name + " to " + LR_TRADES[a.trade].job.toLowerCase(), tag: LR_TRADES[a.trade].days + " day" + (LR_TRADES[a.trade].days === 1 ? "" : "s") + " · " + LR_TRADES[a.trade].tag + " · caught " + Math.max(2, LR_TRADES[a.trade].risk - a.loy * 2) + "% of the time", show: a.trade !== "forge" || regs.length > 0 },
+        { key: "pay", label: "Pay them a bonus", tag: (15 + lv()) + " gold · loyalty +1", show: a.loy < 5 && S.coins >= 15 + lv(), plain: true },
+        { key: "let", label: "Let them go", tag: "they leave your crew", plain: true },
+        { key: "no", label: "Back", plain: true }]);
+      if (j === "go") {
+        let reg = T.reg;
+        if (a.trade === "forge") reg = await choose(regs.map((r, i) => ({ key: r, label: REGIONS[r], tag: "wanted " + L.w[r], plain: i > 0 })));
+        a.job = { k: a.trade, back: calDay() + LR_TRADES[a.trade].days, reg };
+        await say(a.name + " nods once and goes.");
+      }
+      if (j === "pay") { S.coins -= 15 + lv(); a.loy++; renderSheet(); await mech(a.name + "'s loyalty: " + a.loy + " of 5.", "loot"); }
+      if (j === "let") { L.agents.splice(L.agents.indexOf(a), 1); await say(a.name + " shrugs. \"Your loss,\" they say, and seem to mean it kindly."); lrLog("let " + a.name + " go"); }
+      save();
+    }
+  }
+  async function lrAgentsBack(T) {
+    const L = lr(), now = calDay();
+    for (const a of L.agents.filter(x => x.job && x.job.back <= now)) {
+      const J0 = a.job, risk = Math.max(2, LR_TRADES[J0.k].risk - a.loy * 2);
+      a.job = null;
+      if (d(100) <= risk) {
+        L.agents.splice(L.agents.indexOf(a), 1); L.jailed.push({ name: a.name, trade: a.trade, reg: J0.reg, loy: a.loy, jobs: a.jobs, from: a.from, out: now + 999 });
+        await say("Word reaches you in " + T.name + ": " + a.name + " was caught in " + REGIONS[J0.reg] + " and is in the cells there.");
+        await mech("You can spring them at the watch house in " + REGIONS[J0.reg] + ", or leave them to it.", "hurt");
+        lrLog(a.name + " was caught in " + REGIONS[J0.reg]); continue;
+      }
+      a.jobs = (a.jobs || 0) + 1;
+      let g = 0, line = "";
+      if (J0.k === "lift") { g = 15 + d(20) + lv(); line = "a heavy purse of other people's money"; }
+      if (J0.k === "smuggle") { g = 40 + d(40) + lv() * 2; line = "a cargo's worth of silver and a smell of tar"; }
+      if (J0.k === "fence") { g = Math.max(10, Math.round(salvWorth() * 1.5)); S.salv = { cloth: 0, metal: 0, spore: 0 }; line = "the money for your salvage, half again what the market would give"; }
+      if (J0.k === "scout") { a.scout = true; line = "a list of every back room on the roads where somebody's hiding"; }
+      if (J0.k === "forge") { line = "a warrant that has unfortunately been lost"; }
+      await say(a.name + " finds you in " + T.name + " with " + line + ".");
+      if (J0.k === "forge") await lrCrime(J0.reg, -1, "Some paperwork goes missing.");
+      if (J0.k === "scout") await mech("Your next bounty can't lose the trail.", "loot");
+      if (g) {
+        const cut = await choose([{ key: "fair", label: "Give them a fair cut", tag: "you keep " + Math.round(g * 0.7) + " · loyalty +1" }, { key: "all", label: "Take it all", tag: g + " gold · loyalty −1", plain: true }]);
+        const keep = cut === "fair" ? Math.round(g * 0.7) : g;
+        a.loy = Math.max(0, Math.min(5, a.loy + (cut === "fair" ? 1 : -1)));
+        S.coins += keep; renderSheet();
+        await mech("Gain " + keep + " gold. " + a.name + "'s loyalty: " + a.loy + " of 5.", "loot");
+        if (a.loy === 0) { L.agents.splice(L.agents.indexOf(a), 1); await say(a.name + " counts their share twice, looks at you, and doesn't come back the next time you send for them."); lrLog(a.name + " walked out"); continue; }
+      }
+      if (d(10) <= 3) await lrTeach(a.name + " has picked up something on the job.");
+    }
+  }
+
+  // ----- the hunters -----
+  const lrHuntChance = () => lrOn() && lrPrice() > 0 && d(100) <= Math.min(25, 4 + Math.floor(lrPrice() / 25));
+  async function lrHunted() {
+    const L = lr(), now = calDay();
+    const pool = LR_HUNTERS.filter(H => { const m = L.hunt[H.id]; return !m || (["sent", "fooled", "paid"].includes(m.fate) && m.back <= now); });
+    if (!pool.length) return;
+    const H = lrPick(pool), m = (L.hunt[H.id] = L.hunt[H.id] || { met: 0, beat: 0, fate: "", back: 0 });
+    const again = m.met > 0;
+    m.met++;
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The price on your head · ' + lrPrice() + " gold</span><h2>" + H.name + "</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    // Warned first, two times in three: a chance to lay a false trail, if you can tell how this one hunts.
+    if (d(3) > 1) {
+      await say("At a roadside tavern, the landlord leans over and tells you, for nothing, that " + (again ? H.short + " is back, and asking about you." : "somebody's asking about you: " + H.name + ".") + " " + H.hint);
+      const opts = Object.keys(LR_TRAILS).sort(() => Math.random() - .5);
+      const k = await choose(opts.map(t => ({ key: t, label: LR_TRAILS[t], plain: true })).concat([{ key: "wait", label: "Let them come", tag: "and meet them", plain: true }]));
+      if (k === H.trail) {
+        m.fate = "fooled"; m.back = now + 18;
+        await say(lrPick(["It works. A week later you hear " + H.short + " is three regions away, very sure of themselves.", "It works. You hear later that " + H.short + " spent four days watching the wrong thing."]));
+        await mech("False trail: " + H.short + " won't find you for a while." + (L.hunt[H.id].fooledOnce ? "" : " They'll work it out eventually."), "loot");
+        m.fooledOnce = true; grant("lrfool"); lrLog("laid a false trail for " + H.name); light(back); return;
+      }
+      if (k !== "wait") await say("It's the wrong trick for " + H.short + ". They don't even slow down.");
+    }
+    await say(again && m.fate === "sent" ? H.short + " finds you on the road again, and this time they've thought about it." : H.short + " finds you on the road, with a copy of your poster folded in a coat pocket.");
+    const pay = Math.round(lrPrice() / 2);
+    const c = await choose([
+      { key: "fight", label: "Fight", tag: "Lv " + lv() + (again && m.fate === "sent" ? " · they've learned from last time" : "") },
+      { key: "duel", label: "Cross blades", tag: "a Blade to Blade duel", show: !H.heads, plain: true },
+      { key: "pay", label: "Pay them off", tag: pay + " gold · half the price; it stays on your head for the next one", show: H.style !== "duel" && S.coins >= pay, plain: true }]);
+    if (c === "pay") { S.coins -= pay; m.fate = "paid"; m.back = now + 24; renderSheet(); await say(H.short + " counts it twice and tips their hat. \"Nothing personal,\" they say. It never is."); lrLog("paid off " + H.name); light(back); return; }
+    let won = false;
+    const sharp = again && m.fate === "sent" ? 1 : 0;
+    if (c === "duel" || H.style === "duel") {
+      if (H.style === "duel" && c !== "duel") await say("Weft won't fight any other way. He salutes, and waits.");
+      const r = await duelFight({ id: "hunter:" + H.id, name: H.name, hp: 30 + sharp * 6, dmg: [1, 8, 2 + Math.floor(lvk() / 12)], win: 2100 - sharp * 200, chains: [0.6, 0.3], escapable: true });
+      won = r.won; if (won) grant("lrduel");
+    } else {
+      const F = Object.assign({ name: H.name, bloom: 0, escapable: true, who: H.short, whoShort: H.short }, H.F);
+      F.atk += sharp;
+      if (H.heads) { F.heads = H.heads; F.unit = H.style === "hounds" ? "hound|hounds" : "twin|twins"; }
+      if (H.style === "nets") F.turn = async (st) => {
+        if (st.round % 3) return;
+        await say("Orpin throws a weighted net.");
+        const s = await check({ label: "Dexterity saving throw (the net)", mod: 2 + lvAC(), dc: 15, cta: "Dodge" });
+        if (!s.ok) { st.dis = true; await mech("Netted: your next swing is at disadvantage.", "hurt"); }
+        else await say("The net goes over your shoulder and catches nothing.");
+        return "done";
+      };
+      if (H.style === "bow") F.setup = async () => {
+        await say("The first you know of Varnum is the bolt.");
+        const s = await check({ label: "Dexterity saving throw (the bolt)", mod: 2 + lvAC(), dc: 15, cta: "Move" });
+        if (s.ok) await say("It takes your hat off instead of your head."); else await hurt(2, 8, "piercing", "It takes you in the shoulder from a hundred yards.");
+      };
+      if (H.style === "poison") F.turn = async (st) => {
+        if (st.round % 2) return;
+        const s = await check({ label: "Constitution saving throw (Odell's blade)", mod: 2 + lvAC(), dc: 14, cta: "Grit your teeth" });
+        if (!s.ok) await hurt(1, 6, "poison", "Whatever's on the blade goes in with it.");
+      };
+      if (H.style === "hounds" && burrHere()) F.setup = async () => { await say("The hounds go for Burr first, the way Strade trained them. Burr has opinions about that."); };
+      nextReg = lrHere(); lrLastF = F;
+      await hkFight(F); nextReg = null;
+      won = !F.fled;
+    }
+    if (!won) { m.fate = "sent"; m.back = now + 12; await say("You get away, which isn't the same as winning. " + H.short + " will be back."); light(back); return; }
+    m.beat++;
+    grant("lrhunter");
+    const k = await choose([
+      { key: "kill", label: "Finish it", tag: L.writ ? "no crime, with the Writ" : "wanted +1 here, and 50 more on your head" },
+      { key: "send", label: "Send them home", tag: "they'll come back better, and remember", plain: true },
+      { key: "hire", label: "Offer them a job", tag: "Persuasion · DC 15 · a scout for your agents", show: L.agents.length < 5 && !H.heads, plain: true }]);
+    if (k === "kill") {
+      m.fate = "dead"; xpGain(60 + lv());
+      await say(lrPick(["It's done. On the road, in the cold, the way it was always going to end for one of you.", "You close their eyes. Their poster of you is in their pocket. You leave it there."]));
+      if (!L.writ) { L.hp = (L.hp || 0) + 50; await lrCrime(lrHere(), 1, "Hunters have friends at the watch house."); }
+      lrLog("killed " + H.name);
+    } else if (k === "hire") {
+      const r = await check({ label: "Persuasion check (a better job)", mod: lrMod(), dc: 15, cta: "Offer" });
+      if (r.ok) { m.fate = "hired"; L.agents.push({ name: H.name, trade: "scout", loy: 3, job: null, jobs: 0, from: "the road" }); grant("lragent"); if (L.agents.length >= 5) grant("lrcrew"); await say(H.short + " looks at you for a long time, and laughs, and shakes your hand."); await mech(H.name + " joins your agents as a <b>Scout</b>. Loyalty 3 of 5.", "loot"); lrLog("hired " + H.name); }
+      else { m.fate = "sent"; m.back = now + 24; await say("\"No,\" " + H.short + " says. \"I'd only end up hunting you anyway.\" They go home."); }
+    } else { m.fate = "sent"; m.back = now + 24; xpGain(40 + lv()); await say(H.short + " picks up what's left of their pride and goes. They'll be back, and they'll have thought about it."); lrLog("sent " + H.name + " home"); }
+    if (LR_HUNTERS.every(x => L.hunt[x.id] && L.hunt[x.id].beat > 0 || L.hunt[x.id] && L.hunt[x.id].fate === "fooled")) grant("lrhunters");
+    light(back);
+  }
+
+  // ----- on the road: magpies and chalk marks -----
+  async function lrRoad(reg) {
+    const r = d(24);
+    if (r <= 2) { await lrMagpie(reg); return true; }
+    if (r <= 5) { await lrChalk(reg); return true; }
+    return false;
+  }
+  function lrSackItem() {
+    const r = d(6);
+    if (r === 1) { S.potions = (S.potions || 0) + 1; return "a Draught of Mending"; }
+    if (r === 2) { S.dress = (S.dress || 0) + 2; return "two bandages"; }
+    if (r === 3) { const f = lrPick(Object.keys(FITTINGS)); fitAdd(f); return "a " + FITTINGS[f].name + " (a fitting)"; }
+    if (r === 4) { S.elixirs = (S.elixirs || 0) + 1; return "an Elixir of Health"; }
+    const g = 10 + d(20) + Math.floor(lv() / 2); S.coins += g; return g + " gold";
+  }
+  async function lrMagpie(reg) {
+    const L = lr(); L.mag.seen++;
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>A magpie</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    const owner = lrName();
+    await say("Somebody's shouting \"Thief!\" up the road, and a rogue with a full sack over one shoulder comes past you at a dead run, looking back. The sack has a name sewn on it: " + owner + ".");
+    if ((await choose([{ key: "go", label: "After them", tag: "a chase" }, { key: "no", label: "Not your sack", plain: true }])) === "no") { await say("You let them go. The shouting stops after a while."); light(back); return; }
+    let gap = 2; const got = [];
+    for (let step = 0; step < 6 && gap > 0 && gap < 4; step++) {
+      const c = await choose([{ key: "run", label: "Run them down", tag: "Athletics · DC 13" }, { key: "cut", label: "Cut through the yards", tag: "Acrobatics · DC 15 · two steps closer", plain: true }, { key: "throw", label: "Throw something", tag: "Dexterity · DC 17 · ends it", plain: true }]);
+      const dc = { run: 13, cut: 15, throw: 17 }[c];
+      const r = await check({ label: { run: "Athletics", cut: "Acrobatics", throw: "Dexterity" }[c] + " check (the magpie, " + gap + " ahead)", mod: lrMod(), dc, cta: "Go" });
+      if (r.ok) { gap = c === "throw" ? 0 : Math.max(0, gap - (c === "cut" ? 2 : 1)); await say(gap ? "You're gaining." : c === "throw" ? "Your flask takes them behind the knee and they go down in a heap." : "You get a hand on the sack."); }
+      else { gap++; const it = lrSackItem(); got.push(it); renderSheet(); await say("They drop something to lighten the load and keep going: " + it + ". You scoop it up."); }
+    }
+    if (gap > 0) { await say("They're gone over a wall and into the fields, lighter than they were."); if (got.length) await mech("You kept what they dropped: " + got.join(", ") + ".", "loot"); light(back); return; }
+    L.mag.caught++; grant("lrmagpie");
+    const sack = [lrSackItem(), lrSackItem()].concat(d(2) === 1 ? [lrSackItem()] : []);
+    renderSheet();
+    await say("The magpie sits in the road and gives up the sack without an argument, and a stick of chalk with it.");
+    await mech("In the sack: " + sack.concat(got).join(", ") + ".", "loot");
+    await lrTeach("The magpie's chalk is a thieves' chalk.");
+    const k = await choose([{ key: "keep", label: "Keep the sack", tag: "it's yours now" }, { key: "give", label: "Find " + owner + " and give it back", tag: "the gold and the fitting stay yours till they repay you; they live in " + REGIONS[reg], plain: true }]);
+    if (k === "give") { L.mag.back.push({ owner, reg, val: 30 + lv(), paid: false }); await say(owner + " is a carter who'd given it up for lost. They write their name and their town on a scrap for you. \"Come by,\" they say. \"I'll make it right.\""); lrLog("gave " + owner + "'s sack back"); }
+    else { L.mag.kept++; lrLog("kept a magpie's sack"); }
+    light(back);
+  }
+  async function lrMagRepaid(T) {
+    const L = lr(), b = L.mag.back.find(x => !x.paid && x.reg === T.reg);
+    if (!b) return;
+    b.paid = true;
+    S.coins += b.val; renderSheet();
+    await say(b.owner + " sees you in the street and drags you into a kitchen for a meal you don't need, and won't let you leave until you've taken a purse for the sack.");
+    await mech("Repaid: " + b.val + " gold, and a friend in " + T.name + ".", "loot");
+  }
+  async function lrChalk(reg) {
+    const L = lr();
+    const pick = (g) => lrPick(Object.keys(CANT).filter(k => CANT[k].g === g));
+    const M = { where: pick("where"), way: pick("way"), watch: d(4) === 1 ? "safe" : pick("watch") };
+    const back = document.body.dataset.light;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>A chalk mark</h2>");
+    scrollNext = true; add(h);
+    light("dusk");
+    const show = (k) => L.cant.includes(k) ? cantSvg(k, 34) + "<span>" + CANT[k].name + "</span>" : cantSvg(k, 34, false) + "<span>?</span>";
+    add(el("div", "cant-row", ["where", "way", "watch"].map(g => '<div class="cant-cell">' + show(M[g]) + "</div>").join("")));
+    await say("On a milestone, low down where only somebody looking would see it, three marks in thieves' chalk. Somebody's left something here for somebody else.");
+    // Where to look: the true place among three wrong ones.
+    const places = [[M.where, M.way]];
+    while (places.length < 4) { const p = [pick("where"), pick("way")]; if (!places.some(q => q[0] === p[0] && q[1] === p[1])) places.push(p); }
+    places.sort(() => Math.random() - .5);
+    const c = await choose(places.map(([w, y], i) => ({ key: w + ":" + y, label: CANT_PLACE[w] + " " + CANT_WAY[y], plain: i > 0 }))
+      .concat([{ key: "leave", label: "Leave it alone", tag: "it might be meant for you to find", plain: true }, { key: "walk", label: "Walk on", plain: true }]));
+    if (c === "walk") { light(back); return; }
+    calPass(1);
+    const right = c === M.where + ":" + M.way;
+    if (c === "leave") {
+      if (M.watch === "decoy") { xpGain(30); lrLearn("decoy"); await say("Later you hear a Tenthman put his foot in a snare by a milestone, digging for a cache that was never there. It was meant for somebody like you."); await mech("You read it right: a false cache. You know the mark now: " + cantSvg("decoy", 24) + " " + CANT.decoy.name + ".", "loot"); }
+      else await say("You leave it. Somebody else will be glad of it.");
+      light(back); return;
+    }
+    if (!right) { L.cache.wrong++; await say("Nothing there but earth and beetles. You've read it wrong."); light(back); return; }
+    if (M.watch === "decoy") { await hurt(1, 8, "piercing", "It's a false cache: a snare, and nothing under it."); lrLearn("decoy"); await mech("You know that mark now, the hard way: " + cantSvg("decoy", 24) + " " + CANT.decoy.name + ".", "hurt"); light(back); return; }
+    if (M.watch === "snare") {
+      const how = L.cant.includes("snare") ? "careful" : await choose([{ key: "careful", label: "Feel for a snare first", tag: "slower" }, { key: "in", label: "Go straight in", plain: true }]);
+      if (how === "in") await hurt(1, 6, "piercing", "There's a snare on it, and it goes off on your hand.");
+      else await say("There's a snare on it, a wire and a spike, and you lift it off.");
+    }
+    if (M.watch === "guard") {
+      await say("Somebody's been sitting on it, waiting for whoever comes. They stand up.");
+      const F = { name: "A cache-keeper", hp: 22, ac: 14, atk: 5, n: 1, s: 6, type: "piercing", bloom: 0, escapable: true, who: "the cache-keeper", hitWhy: "A knife comes out of nowhere.", miss: "The knife goes wide.", hitLine: "They swear." };
+      nextReg = reg; lrLastF = F; await hkFight(F); nextReg = null;
+      if (F.fled) { light(back); return; }
+    }
+    ["where", "way", "watch"].forEach(g => lrLearn(M[g]));
+    L.cache.found++;
+    const g = 25 + d(30) + lv(), extra = d(3) === 1 ? lrSackItem() : "";
+    S.coins += g; renderSheet(); xpGain(25);
+    await mech("A thieves' cache: " + g + " gold" + (extra ? " and " + extra : "") + ". You read all three marks, and you'll know them now.", "loot");
+    grant("lrcache"); if (L.cant.length >= 12) grant("lrcant");
+    light(back);
+  }
+
+  // ----- the journal -----
+  function lrSection() {
+    if (!S.lr || !started) return "";
+    const L = S.lr;
+    const ws = Object.keys(L.w).filter(r => L.w[r] > 0);
+    let h = "<section><h3>The Long Return · Crime and the Watch</h3>" +
+      '<p class="j-sub">Bounty boards, the watch, the Tenthmen, your agents and the hunters. Wanted levels cool by one a week.</p>' +
+      "<p><b>" + lrRankName() + "</b> · " + L.done + " marks taken (" + L.alive + " alive" + (L.named ? ", " + L.named + " of " + LR_NAMED.length + " named" : "") + ")" + (L.writ ? " · the Writ of Taking" : "") + "</p>" +
+      "<p>Wanted: " + (ws.length ? ws.map(r => REGIONS[r] + " " + L.w[r]).join(" · ") : "nowhere") + (lrPrice() ? " · <b>" + lrPrice() + " gold on your head</b>" : "") + "</p>" +
+      "<p>The Tenthmen: " + L.tenth.stolen + " gold lifted, " + L.tenth.caught + " caught" + (L.theft ? " · on the trail of " + L.theft.amt + " gold, " + L.theft.trail + "%" : "") + "</p>";
+    if (L.agents.length || L.jailed.length) h += "<p>Agents: " + L.agents.map(a => "<b>" + esc(a.name) + "</b> (" + LR_TRADES[a.trade].name + ", loyalty " + a.loy + (a.job ? ", away" : "") + ")").join(" · ") +
+      (L.jailed.filter(a => !a.released).length ? " · in the cells: " + L.jailed.filter(a => !a.released).map(a => esc(a.name) + " in " + REGIONS[a.reg]).join(", ") : "") + "</p>";
+    const met = LR_HUNTERS.filter(H => L.hunt[H.id]);
+    if (met.length) h += "<p>Hunters: " + met.map(H => { const m = L.hunt[H.id]; return "<b>" + H.name + "</b> (" + ({ dead: "dead", sent: "sent home", hired: "your agent", paid: "paid off", fooled: "fooled" }[m.fate] || "met") + ")"; }).join(" · ") + "</p>";
+    h += "<p>Magpies: " + L.mag.caught + " caught of " + L.mag.seen + " seen · caches found: " + L.cache.found + "</p>";
+    h += '<p class="j-sub">The thieves\' cant · ' + L.cant.length + ' of 12</p><div class="cant-row">' + Object.keys(CANT).map(k => '<div class="cant-cell">' + (L.cant.includes(k) ? cantSvg(k, 30) + "<span>" + CANT[k].name + "</span>" : cantSvg(k, 30, false) + "<span>?</span>") + "</div>").join("") + "</div>";
+    if (L.log.length) h += "<details><summary>What you've done</summary><ul>" + L.log.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul></details>";
+    return h + "</section>";
+  }
 
   // ---------- the town and the end card remember ----------
   async function seaTownLine() {
