@@ -1233,7 +1233,7 @@ Adrian asked on 2026-11-08 for turn-based swordfighting with touchscreen strokes
 
 ## Paintings in the story
 
-Adrian's paintings show once each, in a brass-root frame (`framedPic` in index.html): Rahdaria from the last ridge on arrival (Part LVI, before the grey is described), the Marshal's land-gate painting when the city is sealed (Part LIX), the first assault on the land wall as the Blockade begins (Part LX), and Ishbel Galt's portrait when she meets you below Ashgate.
+Adrian's paintings show once each, in a brass-root frame (`framedPic` in index.html): Ryytaa the Ender over her egg sacs as she unfolds in her nest (Part IV), Rahdaria from the last ridge on arrival (Part LVI, before the grey is described), the Marshal's land-gate painting when the city is sealed (Part LIX), the first assault on the land wall as the Blockade begins (Part LX), and Ishbel Galt's portrait when she meets you below Ashgate.
 
 ## Ishbel Galt, the fifth Hollow Hand (companion, from Adrian's art)
 
