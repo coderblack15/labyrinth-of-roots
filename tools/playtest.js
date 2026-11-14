@@ -17,6 +17,8 @@
 // Output (in --out, default ./playtest-<seed>): log.txt (every click, with HP and the foe),
 // save-partN.json at the start of each part, errors.txt, hang.txt, and final.json.
 // Exit code: 0 finished or out of steps, 1 script errors, 2 soft-lock, 3 hang.
+// Known slow spots that aren't bugs: the forged-orders puzzle in Rahdaria (Part LX) only checks when exactly
+// three are marked, so random toggling can take thousands of clicks; use --prefer or --from a later save.
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
@@ -39,7 +41,7 @@ const POOL = `(() => {
   const story = document.getElementById("story");
   // Duel and Fury pads: open the button pad, so the bot has strokes to press.
   document.querySelectorAll(".duel:not(.spent) details").forEach(d => d.open = true);
-  const ok = (b) => !b.disabled && b.offsetParent !== null && !b.closest("[hidden]") && !b.classList.contains("map-link") && !b.classList.contains("taken") && b.style.pointerEvents !== "none";
+  const ok = (b) => !b.disabled && b.offsetParent !== null && !b.closest("[hidden]") && !b.classList.contains("map-link") && !b.classList.contains("rw-copy") && !b.classList.contains("taken") && b.style.pointerEvents !== "none";
   const dlg = [...document.querySelectorAll("dialog[open]")];
   let pool = dlg.length ? [...dlg[dlg.length - 1].querySelectorAll("button, input[type=submit]")].filter(ok) : [];
   if (!pool.length) {

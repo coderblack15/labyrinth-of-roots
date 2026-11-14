@@ -33,7 +33,7 @@ function fight(F, L, maxHp, opt = {}) {
   const k = L - 3, fk = opt.fk != null ? opt.fk : k; // fk: the foe's level (an outgrown road beast fights below yours)
   const heads = !!F.heads;
   let fhp = heads ? F.heads + SCALE.heads(fk) : Math.round(F.hp * SCALE.mult(fk));
-  const fatk = F.atk + SCALE.atk(fk), fdmg = SCALE.dmg(fk);
+  const fatk = F.atk + SCALE.atk(fk), fdmg = SCALE.dmg(fk) + (opt.hard && V !== "old" ? 1 + Math.floor(fk / 12) : 0); // hard: a lone road beast from Part XVIII on (2026-11-14)
   let hp = maxHp, rounds = 0, chain = 0, adapt = 0, grained = false, gems = true, lowest = hp, saves = 0, bleed = [], bands = 2;
   const pHit = 5 + Math.floor(k / 9), pDmg = 3 + SCALE.pdmg(k);
   const acBase = 13 + Math.floor(k / 12) + (opt.gear || 0);
@@ -110,5 +110,6 @@ if (require.main === module) {
   const regK = (left) => lvAt(left) - 3;
   const fkFor = (k, left) => { if (V === "old" || left == null) return k; const r = regK(left === "roots" ? 6 : left); return k <= r ? k : Math.round(r + (k - r) / 2); };
   console.log("curve: " + V);
-  for (const [n, p, F, lvl, left] of FIGHTS) { const L = lvl || lvAt(p), H = hpAt(p, L), fk = fkFor(L - 3, left); console.log(n.padEnd(26), "Lv" + L + (fk !== L - 3 ? " (foe Lv" + (fk + 3) + ")" : ""), "HP" + H, JSON.stringify(stats(F, L, H, { grain: p > 5, gear: p > 20 ? 1 : 0, fk }))); }
+  const BOSS = /Coyle|Korr-Vesh|General|Curator/;
+  for (const [n, p, F, lvl, left] of FIGHTS) { const L = lvl || lvAt(p), H = hpAt(p, L), fk = fkFor(L - 3, left), hard = p >= 17 && !F.heads && !BOSS.test(n); console.log(n.padEnd(26), "Lv" + L + (fk !== L - 3 ? " (foe Lv" + (fk + 3) + ")" : ""), "HP" + H, JSON.stringify(stats(F, L, H, { grain: p > 5, gear: p > 20 ? 1 : 0, fk, hard }))); }
 }
