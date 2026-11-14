@@ -2713,6 +2713,7 @@ body.pv-open { overflow: hidden; }
     h += linkSection();
     h += cwSection(rs);
     h += seaSection(rs);
+    h += bwCase(rs);
     h += duelSection(rs);
     h += lrSection(rs);
     h += lgSection(rs);
@@ -2898,6 +2899,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "100", name: "The Brimwater", date: "14 Nov 2026", items: [
+      "<b>The Drowned Choir.</b> A colony of living water, the first of its kind: a clear sail of air, a glass body full of everything it has drowned, and stinging lines a quarter of a mile long. Sailors name it for the note its drowned hum.",
+      "<b>It grows.</b> Its buds, the brimlings, walk the roads of the Hushfen, Carrowmere, the Undermoon, Bathyrra and the Reach. Beat one and it bursts; let it get away, or let it drown you, and it goes back to the sea and the Choir grows. It grows every season you hunt it, and every time it takes a hand. At its full size it hunts ships.",
+      "<b>Held under.</b> Its lines wrap you and pull you under, with a few breaths to tear free, hack at it from inside, or look into it. Your painting goes soaked, then under.",
+      "<b>The Brimwater hunt</b>, on the roads back: sixteen leads, from a puddle that follows you on the Hushfen causeway to a drowned lock, a register of the drowned, a woman who drowned once, a tap-archive under the sea and a wreck on the bottom. Some of what you're told is wrong. Fire, frost and salt can be tested, and testing them makes it stronger. What you see from inside it is evidence.",
+      "<b>The case.</b> At sea, lay out the case file and answer four questions: what holds the colony together, when you can reach it, how it breaks and whose name. Then go out and meet it with your own ship. It's the only way to end it, and the sea will tell you if you got it wrong."
+    ] },
     { ver: "99", name: "What the Water Keeps", date: "14 Nov 2026", items: [
       "<b>Your painting goes under when you do.</b> When the flood roars in at Carrowmere's treasury door, when the Tithe Fleet hauls you under the keel, and when the Sea-Sky comes down round you in Bathyrra, your hero's painting shows drowned: a sea-green cast, light moving through water, and bubbles rising (or, if you only got soaked, water still dripping).",
       "<b>In your journal</b> your portrait stays wet for the rest of that chapter, and in The Sounding it follows the Sea-Sky: soaked when it sags, under when it's low. Afterwards the journal remembers where you went under."
@@ -3872,6 +3880,14 @@ body.pv-open { overflow: hidden; }
     { id: "lgscroll", name: "Well Read", desc: "Read all five kinds of scroll in fights.", test: () => false },
     { id: "lglift", name: "The Soft Hand", desc: "Lift ten pockets.", test: () => false },
     { id: "lgcure", name: "Bitter Medicine", desc: "Clear three stacks of poison at once.", test: () => false },
+    { id: "bwmeet", name: "Clear as Glass", desc: "Meet a brimling, a bud of the Drowned Choir.", test: () => false },
+    { id: "bwleads", name: "Exhaustive", desc: "Follow all fifteen leads of the Brimwater hunt.", test: () => false },
+    { id: "bwtests", name: "Wrong Answers", desc: "Test fire, frost and salt on it yourself.", test: () => false },
+    { id: "bwinside", name: "Seen From Inside", desc: "See three things inside it while it holds you under.", test: () => false },
+    { id: "bwsave", name: "Not That One", desc: "Get back the hand it took off your ship.", test: () => false },
+    { id: "bwsunk", name: "Down With Her", desc: "Have your ship sunk under you by the Drowned Choir.", test: () => false },
+    { id: "bwcase", name: "Right First Time", desc: "Lay the Brimwater case right the first time.", test: () => false },
+    { id: "bwend", name: "Still Water", desc: "Bring the Drowned Choir to rest.", test: () => false },
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -3948,7 +3964,9 @@ body.pv-open { overflow: hidden; }
     { id: "callings", name: "Callings", ver: "34", desc: "Six ways to carry the axe, and what each of them leaves behind.",
       ids: ["cl_axe_all", "cl_axe_use", "cl_hush_all", "cl_hush_use", "cl_song_all", "cl_song_use", "cl_tide_all", "cl_tide_use", "cl_ink_all", "cl_ink_use", "cl_root_all", "cl_root_use", "clrank5"] },
     { id: "arms", name: "Arms, Trinkets and Poison", ver: "35", desc: "The Long Return, part two: armour to wear and plates to break, rings and medallions, Envenomed and Bitterblood, scrolls you read in a fight, and Pocketcraft.",
-      ids: ["lgarmour", "lgplate", "lgring", "lgvenom", "lgbitter", "lgscroll", "lglift", "lgcure"] }
+      ids: ["lgarmour", "lgplate", "lgring", "lgvenom", "lgbitter", "lgscroll", "lglift", "lgcure"] },
+    { id: "brimwater", name: "The Brimwater", ver: "36", desc: "Sixteen leads after the Drowned Choir, the first of the drifting colonies, and what holds it together.",
+      ids: ["bwmeet", "bwleads", "bwtests", "bwinside", "bwsave", "bwsunk", "bwcase", "bwend"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4172,6 +4190,7 @@ body.pv-open { overflow: hidden; }
     unItems(items);
     rmItems(items);
     seaItems(items);
+    bwItems(items);
     bnItems(items);
     lvItems(items);
     cwItems(items);
@@ -6335,6 +6354,7 @@ body.pv-open { overflow: hidden; }
         await calNews();
         await hzNews();
         await lrNews(); await lgNews();
+        await bwTick();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
@@ -6342,6 +6362,7 @@ body.pv-open { overflow: hidden; }
           { key: "weave", label: bn().weave === 2 ? "Climb the Needle again" : "Climb to the High Weave", tag: bn().weave === 2 ? "the Weave is empty now · the view" : "the legendary gang · a hard fight", plain: true, show: bn().weave === 1 },
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "sea", label: S.sea ? "Put to sea in " + S.sea.ship.name : "Go down to your ship", tag: S.sea ? "voyages · rival captains · hull " + S.sea.ship.hull + " of " + S.sea.ship.max + (S.sea.chart.length && !S.sea.hoard ? " · chart " + S.sea.chart.length + " of 4" : "") : "the Open Reach · a ship of your own", plain: true, show: seaOpen() },
+          { key: "bw", label: S.bw && S.bw.lead ? "Follow the Brimwater" : "Ask about the water that walks", tag: S.bw && S.bw.lead ? "Lead " + Math.min(16, S.bw.lead + 1) + " of 16 · " + BW_LEADS[Math.min(15, S.bw.lead)].name + " · it's the size of " + bwSz().name : "the Hushfen · a puddle that follows people" + (S.bw && S.bw.sights.length ? " · you've seen it" : ""), plain: true, show: roamRegions().includes("fen") && !(S.bw && S.bw.end) },
           { key: "board", label: S.wb && S.wb.cur ? "Unfold the Wandering Board again" : "Walk the Wandering Board", tag: S.wb && S.wb.cur ? REGIONS[S.wb.cur.reg] + " · where you left it" : "a board for one region · sounds, wonders, a world that moves when you do", plain: true },
           { key: "summons", label: "Answer the summons", tag: "a small tear somewhere on the roads · Ringsight" + (S.rs && S.rs.road ? " · " + S.rs.road + " mended" : ""), plain: true, show: !!(S.rs && S.rs.done) },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
@@ -6363,7 +6384,7 @@ body.pv-open { overflow: hidden; }
           return "north";
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        const took = { walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
+        const took = { bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
@@ -6371,6 +6392,7 @@ body.pv-open { overflow: hidden; }
         if (c === "walk") await roamWalk();
         else if (c === "raid") { lrRaidReg = null; await roadRaid(); if (lrRaidReg) await lrCrime(lrRaidReg, 1, "Word of the caravan raid reaches the watch."); }
         else if (c === "sea") await seaHub();
+        else if (c === "bw") await bwHub();
         else if (c === "summons") await rsRoad();
         else if (c === "roads") await bnRoads();
         else if (c === "weave") await weaveClimb();
@@ -17481,7 +17503,12 @@ body.pv-open { overflow: hidden; }
       tactic: "Keep your back to the ice, not the water. When it misses, it's stranded for a breath: hit it then.",
       lore: "A fish the length of a boat that lived in the black lake under the glacier for a thousand years in the dark, getting bigger. It has no eyes. It doesn't need them.",
       intro: "The black water by the path goes flat, which is wrong. Then it comes up all at once, and the thing in it is mostly mouth.",
-      who: "the glacier pike", hitWhy: "Its jaws close on you like a door slamming.", miss: "It hits the ice where you were, and the ice cracks.", hitLine: "Black blood runs out onto the ice and freezes." }
+      who: "the glacier pike", hitWhy: "Its jaws close on you like a door slamming.", miss: "It hits the ice where you were, and the ice cracks.", hitLine: "Black blood runs out onto the ice and freezes." },
+    { id: "brimwater", unique: true, name: "The Drowned Choir (brimlings)", region: "fen", quirk: "engulf", hp: 18, ac: 11, atk: 4, n: 1, s: 6, type: "bludgeoning", notice: 13,
+      ability: ["Held under", "Every other round its stinging lines try to wrap you. Held under, you have a few breaths: tear free, hack at it from inside, or look into it. When the breath's gone, you drown."],
+      tactic: "Make your saves, or use the breaths you have. It's clear as glass, and what it keeps inside is evidence. A brimling that gets away goes back to the sea, and the Choir grows.",
+      lore: "The first of the drifting colonies: a clear sail of air, a glass body of many parts, and stinging lines a quarter of a mile long. Everything it drowns becomes part of it. The brimlings on the roads are buds of the original, sent up the rivers to look for something. Sailors call the original the Drowned Choir, for the note its drowned hum.",
+      intro: "A puddle on the road stands up.", who: "the brimling", hitWhy: "A clear line lashes you.", miss: "The lines slap the ground where you were." }
   ];
 
   // Adrian's paintings of the creatures, shown on the card once you've met them (tap for the whole painting).
@@ -17693,7 +17720,7 @@ body.pv-open { overflow: hidden; }
   // they're more afraid of what they're turning into than of you.
   const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
     cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
-    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey" };
+    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey", brimwater: "mastiff" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
   const beastById = (id) => BEASTS.find(b => b.id === id);
 
@@ -17759,16 +17786,19 @@ body.pv-open { overflow: hidden; }
   async function wildEncounter(i) { await wildMeet(i); await beastMarks(); }
   async function wildMeet(i) {
     const reg = WILD_SLOTS[i];
-    if (!reg || !S.axe || S.stripped || S.hp / S.maxHp <= 0.3 || d(100) > WILD_CHANCE) return;
+    if (!reg || !S.axe || S.stripped || S.hp / S.maxHp <= 0.3) return;
+    if (await bwGlimpse(reg)) return;
+    if (d(100) > WILD_CHANCE) return;
     await meetBeast(reg);
   }
   // A creature of the region on the road. roam: walked into on the roads back (you can let it go);
   // forced: it won't let you slip past. Once the Cascades wake, every creature is a Nightmare.
   let hzLastF = null;
   async function meetBeast(reg, { roam = false, forced = false, pack = false, hz: hzK = null, hzFoe = false, scene = "", late = false } = {}) {
+    if (roam && !forced && await bwRoam(reg)) return;
     tip("beast");
     S.met = S.met || [];
-    const pool = BEASTS.filter(b => b.region === reg), unmet = pool.filter(b => !S.met.includes(b.id));
+    const pool = BEASTS.filter(b => b.region === reg && !b.unique), unmet = pool.filter(b => !S.met.includes(b.id));
     const haunt = cascadeOn() && S.haunt && S.haunt.reg === reg ? S.haunt : null;
     if (haunt) { S.haunt = null; pack = !!haunt.pack; }
     const from = unmet.length ? unmet : pool, B = haunt ? beastById(haunt.id) : from[d(from.length) - 1];
@@ -17909,6 +17939,761 @@ body.pv-open { overflow: hidden; }
     if (haunt) await gold(2, 6, "You finish what it started. Something heavy lets go of you.");
     if (roam) await gold(nm ? 2 : 1, 6 + tier, nm ? "The Cascade-water on it has set hard into black pearls, and tinkers pay well for those." : "Word gets round that the road's clear, and somebody pays you for it.");
   }
+
+  // ---------- the Drowned Choir (the Brimwater hunt): the first of the drifting colonies ----------
+  // Adrian's living water (NEWS v100), modelled on a float-and-lines colony of the deep sea. Sailors call it the
+  // Drowned Choir, for the voices of everyone it has taken, which hum one note inside it. It's a colony, not one animal: a clear sail of air on top, a glass
+  // body below made of many parts, and long stinging lines that wrap you and pull you under. Everything it
+  // drowns becomes one more part of it, so it grows. This one is the original, three hundred years old, and
+  // the brimlings you meet on the roads are buds broken off it: beat a bud and it bursts, but one that gets
+  // away (or drowns you a little) goes back down the rivers and rejoins it. It grows each season as well, and
+  // when the hunt makes you test it with fire or frost. At size 6 it hunts ships on the Open Reach.
+  // Its weakness is the one part that holds the colony together, and you only learn it by following the
+  // sixteen Leads (BW_LEADS), filling the case file (S.bw.notes), and laying the case right in Lead 16.
+  // State: S.bw = { size 1-6, lead: next lead (0-15; 16 once the case is laid), notes: [], tests: { fire, frost, salt },
+  //   seen: [], sights: [regions], season, buds: { beaten, back }, hand: "" | "saved" | "lost", oil, theory, tries,
+  //   wrongs: [question keys], end: "" | "still", sunk, drowned }.
+  // Art: bwPic(key) shows PIC_SRC["sc_bw_" + key] when the painting has been added, and nothing until then.
+  const bw = () => (S.bw = S.bw || { size: 1, lead: 0, notes: [], tests: {}, seen: [], sights: [], season: "", buds: { beaten: 0, back: 0 }, hand: "", oil: 0, theory: null, tries: 0, wrongs: [], end: "", sunk: 0, drowned: 0 });
+  const BW_SIZES = [null,
+    { name: "a rowing boat", hp: 18, n: 1, s: 6, dc: 11 },
+    { name: "a river barge", hp: 26, n: 1, s: 8, dc: 12 },
+    { name: "a mill-pond", hp: 34, n: 2, s: 6, dc: 13 },
+    { name: "a church, laid on its side", hp: 42, n: 2, s: 8, dc: 14 },
+    { name: "a harbour", hp: 50, n: 3, s: 6, dc: 15 },
+    { name: "a leviathan that sinks ships", hp: 60, n: 3, s: 8, dc: 16 }];
+  const bwSz = () => BW_SIZES[Math.max(1, Math.min(6, bw().size))];
+  const bwOn = () => !!(S.bw && !S.bw.end);
+  const BW_WATER = ["fen", "mere", "undermoon", "bathyrra", "reach"];
+  function bwPic(key, alt, cap) {
+    if (!PIC_SRC["sc_bw_" + key]) return;
+    const seen = S.portSeen = S.portSeen || {};
+    if (seen["bw_" + key]) return;
+    seen["bw_" + key] = 1;
+    add(framedPic(picUrl("sc_bw_" + key), alt, cap));
+  }
+  async function bwGrow(n, why) {
+    const X = bw(); if (X.end || n <= 0) return;
+    const was = X.size; X.size = Math.min(6, X.size + n);
+    if (X.size === was) return;
+    renderSheet();
+    await mech((why ? why + " " : "") + "<b>The Drowned Choir grows</b>: it's the size of " + bwSz().name + " now (" + X.size + " of 6)." + (X.size >= 6 ? " It's big enough to sink a ship, and it's started hunting them." : ""), "hurt");
+  }
+  // A season that turns while you're hunting it is a season it spends eating.
+  async function bwTick() {
+    if (!bwOn() || !S.bw.lead) return;
+    const X = bw(), key = calYear() + ":" + calSeason();
+    if (!X.season) { X.season = key; return; }
+    if (X.season === key) return;
+    X.season = key;
+    await bwGrow(1, "The season turns, and out on the Reach the Drowned Choir has been eating: a fishing smack, a raft of salt-cutters, a ferry nobody missed till it was late.");
+  }
+  async function bwNote(id) {
+    const X = bw(); if (X.notes.includes(id)) return;
+    X.notes.push(id);
+    await mech("Case file: " + BW_NOTES[id], "loot");
+  }
+  const bwHas = (id) => !!(S.bw && S.bw.notes.includes(id));
+  async function bwSee(id) {
+    const X = bw(); if (!X.seen.includes(id)) X.seen.push(id);
+    if (X.seen.length >= 3) grant("bwinside");
+  }
+  const BW_NOTES = {
+    seep: "It's clear as glass. A long iron key turns slowly inside it, on a ring, like something it was given to keep.",
+    tolly: "Gammer Tolly: the water first walked the spring the Wendlock gates opened by themselves, and the first it took was a child of the lock-house.",
+    night: "Gammer Tolly: \"It walks at night, mostly.\" (Gammer Tolly is never out in the fen by day.)",
+    lintel: "Over the Wendlock lock-house door: the lock-keeper's family, Abner, Marra, Coll and Nessaly Wend.",
+    gates: "The lock-keeper's log, the year 412 of the Dyke: \"Gates opened in the night. No hand on the levers. Ness gone.\" Nothing is written after it.",
+    fire: "Tested: fire boils it off in steam, and it comes down again as rain, and gathers. Fire only takes its shape away for a while.",
+    fireWrong: "Seen from the dyke: the cutters burned it, and it burned away to nothing. Fire might be the answer.",
+    reg_ottle: "Carrowmere's register: Ottle Brisk, ferryman, drowned in 409. Fell from his ferry in the Carrow, drunk. Not at Wendlock.",
+    reg_ness: "Register: Nessaly Wend, eleven years old, drowned in 412 in the lock-chamber at Wendlock, \"the gates being opened by no one\".",
+    reg_marra: "Register: Marra Wend, drowned in 419. Walked into the lock-chamber at Wendlock of her own will.",
+    reg_coll: "Register: Coll Wend, drowned in 431 on the causeway, \"taken by water that stood up\". The first entry in the book to say so.",
+    bubble: "Seen from inside: one bubble of air at the root of its sail, the size of a fist, that never rises. Everything else in it drifts. That one bubble keeps still, and turns to watch you.",
+    frost: "Tested: frozen, it goes as hard and heavy as a floe, and it crushed the ice-cutter's punt. Cold makes it worse.",
+    frostWrong: "Brannoch Teague swears that freezing it killed it, the winter of the hard frost.",
+    moored: "Tamsin Rook, who drowned once and was brought back: \"When it held me, it went quite still, like someone listening. And the bubble came down to look at me.\"",
+    salt: "Tested: salt does nothing. It drinks brine like milk. It's lived in the sea for three hundred years.",
+    wend: "Inside it, you said \"Wend\", and the whole of it stopped for a heartbeat. It knows that name.",
+    iron: "Inside it, the axe went through the bubble like a hand through smoke, and the bubble closed behind it. Iron won't do.",
+    taps: "The Bathyr tap-archive: \"Water with air in it. It listened. Iron went through. A word: it listened.\" The Sounders spoke to it, and it listened, but none of them knew what to call it.",
+    tapsWrong: "Your reading of the Bathyr tap-archive: \"Iron broke it.\" (You weren't sure of the taps.)",
+    sounder: "The last old Sounder: \"A held breath is a word not yet said. It breaks when it's spent. Say it with your own last breath, and not before.\"",
+    wreck: "The log of the Merrow Kettle: it rose at slack water, took all hands, and was bigger the next time anyone saw it. It grows by every crew.",
+    ribbon: "Seen from inside: a child's hair ribbon tied round the root of the sail, round the bubble, with N.W. stitched on it.",
+    held: "The hand you dived after: \"It went still while it held me. Still as a held breath. Then you came.\"",
+    bell: "At sea: a ship's bell rings somewhere inside it, the Merrow Kettle's bell, though nobody's ringing it."
+  };
+  // The sixteen leads, in order. reg is where the lead is followed ("sea" needs your own ship).
+  const BW_LEADS = [
+    { id: "puddle", reg: "fen", name: "The Puddle That Follows" },
+    { id: "tolly", reg: "fen", name: "Gammer Tolly's Eel-Traps" },
+    { id: "wendlock", reg: "fen", name: "Wendlock" },
+    { id: "peat", reg: "fen", name: "Fire at the Peat-Cut" },
+    { id: "register", reg: "mere", name: "The Drowned Register" },
+    { id: "moat", reg: "mere", name: "The Moat at Carrowmere" },
+    { id: "floe", reg: "mere", name: "The Ice-Cutter's Floe" },
+    { id: "moored", reg: "undermoon", name: "The Woman Who Drowned Once" },
+    { id: "brine", reg: "undermoon", name: "Brine Under the Moon" },
+    { id: "liftwell", reg: "undermoon", name: "The Lift-Well" },
+    { id: "taps", reg: "bathyrra", name: "The Tap-Archive" },
+    { id: "sounder", reg: "bathyrra", name: "The Last Old Sounder" },
+    { id: "kettle", reg: "reach", name: "The Wreck of the Merrow Kettle" },
+    { id: "shallows", reg: "reach", name: "The Shallows at Raftmark" },
+    { id: "hand", reg: "sea", name: "It Takes a Hand" },
+    { id: "case", reg: "sea", name: "The Case Laid Out" }
+  ];
+  // The case: four questions, each with one true answer. The notes argue for and against them.
+  const BW_Q = [
+    { k: "what", q: "What holds the colony together?", a: "breath", opts: [["breath", "The bubble at the root of the sail that never rises"], ["sail", "The sail itself: cut the float and it sinks"], ["knot", "The feeding-knot where all its lines meet"], ["key", "The lock-house key it carries in its belly"]] },
+    { k: "when", q: "When can you reach it?", a: "drown", opts: [["drown", "While it's drowning someone: it goes still to listen"], ["slack", "At slack water, between the tides"], ["night", "At night, when it walks"], ["frozen", "When it's frozen hard"]] },
+    { k: "how", q: "How does it break?", a: "name", opts: [["name", "Say the first drowned one's name into it, with your own last breath"], ["iron", "Cold iron, driven through the middle of it"], ["fire", "Fire, till it boils away"], ["salt", "Salt, till it's too heavy to swim"]] },
+    { k: "who", q: "Whose name?", a: "nessaly", opts: [["nessaly", "Nessaly Wend"], ["coll", "Coll Wend"], ["marra", "Marra Wend"], ["ottle", "Ottle Brisk"]] }
+  ];
+  const BW_NAMES = { nessaly: "Nessaly Wend", coll: "Coll Wend", marra: "Marra Wend", ottle: "Ottle Brisk" };
+  const bwNamesKnown = () => Object.keys(BW_NAMES).filter(k => k === "ottle" ? bwHas("reg_ottle") : bwHas("lintel") || bwHas("reg_" + (k === "nessaly" ? "ness" : k)));
+  const bwBreathMax = () => 3 + (clIs("tide") ? 1 : 0) + (lv() >= 30 ? 1 : 0);
+  const bwBreathTxt = (n) => "<span class='pips'>" + "●".repeat(Math.max(0, n)) + "○".repeat(Math.max(0, bwBreathMax() - n)) + "</span>";
+
+  async function bwHold(F, o, more = 0) {
+    F.inside = true; F.breath = bwBreathMax() + more;
+    if (lgOn()) await lgVenom(1, "The lines sting where they wrap you.");
+    else await hurt(1, 4, "poison", "The lines sting where they wrap you.");
+    await say("It closes over your head. The world goes green and silent, and sound comes to you slow and huge, the way it does in a bath. You can see out through it, everything bent, and you can see into it: things turning slowly in the middle of it, things it has kept.");
+    await soak(1, o.where, o.cap || "Wrapped in the Drowned Choir's lines");
+    await mech("<b>Held under.</b> Breath " + bwBreathTxt(F.breath) + ". Each round under costs a breath, and when they're gone you drown. Tear free, hack at it from inside, or look into it while you can.", "hurt");
+  }
+  // A brimling on the road: a fight where its lines can wrap you and pull you under. While it holds you,
+  // you can't swing freely: tear free, hack at it from inside (at disadvantage), or look into it, which
+  // costs breath. o: { reg, where, cap, look(F) clue when you look, inside(F) extra options, onInside(c, F, st), forced }.
+  async function bwBud(o) {
+    const X = bw(), Z = bwSz(), reg = o.reg;
+    tip("brimwater");
+    const B = beastById("brimwater");
+    const isNew = !(J.beasts && J.beasts[B.id]);
+    beastLog(B, false); grant("bwmeet");
+    add(el("div", "", beastCard(B)));
+    if (isNew) await mech("New bestiary entry: " + B.name + ". Your journal keeps it.", "loot");
+    const F = { name: "A brimling (the Drowned Choir is " + bwSz().name + ")", ac: 10 + Math.ceil(X.size / 2), atk: 3 + X.size, n: Z.n, s: Z.s, type: "bludgeoning", bloom: 0, bleed: 0, hesk: false,
+      who: "the brimling", hitWhy: ["A clear line lashes across your face and stings like a nettle-bed.", "It slaps into you like a wave off a sea wall.", "A line wraps your wrist and yanks."][d(3) - 1],
+      miss: "The lines slap the ground where you were.", hitLine: ["The axe goes into it with a sound like an oar, and it comes apart round the blade and has to pull itself back together.", "You cut a line off it, and the line goes on twitching on the ground."][d(2) - 1],
+      road: true, reg, hp: Z.hp, escapable: !o.forced, inside: false, breath: 0, under: false, spat: false, looked: false };
+    F.noAtk = () => F.inside;
+    F.before = async (st) => {
+      if (FOE.hp <= 0) return;
+      if (F.inside) {
+        F.breath--;
+        if (F.breath > 0) { await mech("It holds you under. Breath: " + bwBreathTxt(F.breath) + ".", "hurt"); return; }
+        if (!F.under) { F.under = true; await soak(2, o.where, o.cap2 || "Under the Drowned Choir, with no breath left"); }
+        await hurt(Z.n, Z.s, "drowning", "Your chest is full of fire and there's nothing to breathe.");
+        if (S.hp <= Math.ceil(S.maxHp / 4)) {
+          F.inside = false; F.spat = true; X.drowned++;
+          await say("And then it lets you go. It just opens, and you come out of it on a gout of water and lie on the ground, choking. It didn't need to finish you. It's tasted you, and it will know you now.");
+          await mech("Spat out. It keeps a little of you: when this is over, it grows.", "hurt");
+        }
+        return;
+      }
+      if (st.round >= 2 && st.round % 2 === 0) {
+        await say(["Its lines come up off the ground all at once, clear as rain, and reach for you.", "The whole of it rears up and comes down over you like a dropped sheet of glass.", "A line catches your ankle, and the rest of it slides up your leg like a tide coming in."][d(3) - 1]);
+        const r = await check({ label: "Dexterity save (the stinging lines)", mod: 2 + Math.floor(lvk() / 10) + (S.shadow ? 1 : 0), dc: Z.dc, cta: "Twist away" });
+        if (r.ok) { await say("You tear your arm out of the first coil and throw yourself clear, and the lines close on nothing."); return; }
+        await bwHold(F, o);
+      }
+    };
+    // A lead that needs you to see inside it: you let it take you from the start.
+    if (o.grab) F.setup = async () => {
+      await say("You don't fight it. You stand still and let the lines come, and let it close over you.");
+      await bwHold(F, o, 1);
+    };
+    F.turn = async () => (F.inside ? "done" : undefined);
+    F.extra = () => !F.inside ? [] : [
+      { key: "bw-tear", label: "Tear free", tag: "Athletics DC " + Z.dc, plain: true },
+      { key: "bw-hack", label: "Hack at it from inside", tag: "attack at disadvantage", plain: true },
+      { key: "bw-look", label: "Look into it", tag: F.looked ? "you've looked" : "Investigation DC " + (9 + X.size) + " · costs another breath", plain: true, show: !F.looked && F.breath > 1 }
+    ].concat(o.inside ? o.inside(F) : []);
+    F.onExtra = async (c, st) => {
+      if (c === "bw-tear") {
+        const r = await check({ label: "Athletics check (tearing out of it)", mod: 3 + Math.floor(lvk() / 10), dc: Z.dc, cta: "Heave" });
+        if (r.ok) { F.inside = false; await say("You get your boots against something solid inside it and shove, and you come out of it into the air like a cork, gasping."); }
+        else await say("It gives like jelly and closes again round your arms.");
+      } else if (c === "bw-hack") {
+        const a = await check({ label: "Axe attack (from inside it)", mod: (S.dull ? 4 : 5) + rxHit(), dc: F.ac, target: "AC", dis: true, cta: "Strike" });
+        if (a.ok) await foeStrike(1, 8, S.dull ? 2 : 3, "Axe damage (from inside)");
+        else await say("The water takes the swing and slows it to nothing.");
+      } else if (c === "bw-look") {
+        F.looked = true; F.breath--;
+        const r = await check({ label: "Investigation check (looking into it)", mod: 2, dc: 9 + X.size, cta: "Look" });
+        if (!r.ok) { await say("It's all bent and green, and there's too much of it, and your chest hurts. You can't make anything out."); return; }
+        if (o.look) await o.look(F);
+        else await say(["Turning slowly near you there's a boot, and a boot-buckle, and nothing else of whoever wore them.", "There's a fish in it, alive, swimming in place and looking at you.", "A hat goes by inside it. A good hat."][d(3) - 1]);
+      } else if (o.onInside) await o.onInside(c, F, st);
+    };
+    nextReg = reg;
+    await hkFight(F);
+    nextReg = null;
+    if (F.fled === "you") { X.buds.back++; await mech("You broke away. The brimling pours itself into the nearest ditch, and from there into the river, and from there to the sea, to the rest of it.", "hurt"); await bwGrow(1, "It rejoins the Drowned Choir."); return F; }
+    beastLog(B, true); X.buds.beaten++;
+    await say(["It comes apart all at once, the way a wave does on a beach, and runs away into the ground in a hundred little streams, and the things it was carrying drop where it was.", "It bursts. There's no other word: one moment it's there and the next there's a wide wet patch, still steaming faintly, and a smell like a harbour at low tide."][d(2) - 1]);
+    await gold(1, 6 + X.size * 2, "What it was carrying is lying in the wet: coins, mostly, green with age.");
+    xpGain(20 + X.size * 5);
+    if (F.spat) await bwGrow(1, "It had a taste of you, and the burst bits of it remember the way to the sea.");
+    return F;
+  }
+
+  // For the leads where you need to see inside it.
+  const bwGrabAsk = async () => (await choose([{ key: "grab", label: "Let it take you", tag: "you'll be held under from the start, with a breath to spare" }, { key: "fight", label: "Fight it", tag: "it'll try to wrap you every other round", plain: true }])) === "grab";
+  // The hub on the roads back: shows the next lead, and follows it.
+  async function bwHub() {
+    const X = bw();
+    if (X.end) { await say("The Hushfen's water lies still now. Nothing follows you on the causeway but your own reflection."); return; }
+    if (X.lead === 0 && !X.notes.length) X.season = calYear() + ":" + calSeason();
+    const h = el("div", "part-head sub", '<span class="num">The Brimwater · Lead ' + Math.min(16, X.lead + 1) + " of 16</span><h2>" + BW_LEADS[Math.min(15, X.lead)].name + "</h2>");
+    scrollNext = true; add(h);
+    const L = BW_LEADS[Math.min(15, X.lead)];
+    if (L.reg === "sea") {
+      if (!seaOpen()) { await say("The next lead is out on the open sea, and you'll need a ship of your own to follow it."); await mech("Lead " + (X.lead + 1) + " waits on the Open Reach: it opens once you have a ship (after The Black Tithe)."); return; }
+      seaInit();
+      if (sea().ship.hull <= 0) { await say("The next lead is out at sea, and your ship is lying on the shingle at Raftmark with her planks sprung."); await mech("Mend your ship at the shipwright first (Put to sea → The shipwright)."); return; }
+    } else if (!roamRegions().includes(L.reg)) { await say("The next lead is in " + REGIONS[L.reg] + ", and you haven't come that far yet."); return; }
+    await wxRoad(L.reg === "sea" ? "reach" : L.reg);
+    const done = await BW_RUN[L.id]();
+    if (done && X.lead < 16 && BW_LEADS[X.lead].id === L.id) {
+      X.lead++;
+      if (X.lead >= 15 && !X.end) grant("bwleads");
+      await mech("Lead " + X.lead + " of 16 followed: <b>" + L.name + "</b>." + (X.lead < 16 ? " Next: " + BW_LEADS[X.lead].name + (BW_LEADS[X.lead].reg === "sea" ? ", at sea." : ", in " + REGIONS[BW_LEADS[X.lead].reg] + ".") : ""), "loot");
+    } else if (!done && !X.end) await mech("This lead isn't finished. You can come back to it.");
+    save();
+  }
+
+  const BW_RUN = {
+    async puddle() {
+      light("mire");
+      bwPic("brimling", "A painting of a brimling: a clear, glassy puddle standing up off a fen causeway, long see-through lines trailing from it, an iron key turning slowly inside it.", "A brimling on the Hushfen causeway");
+      await say("On the causeway across the Hushfen there's a puddle that's in front of you when you set out and still in front of you a mile on. It doesn't ripple when the wind blows. When you stop, it stops.");
+      await say("When you crouch to look at it, it stands up.");
+      await say("It's clear as window-glass, the height of a man and twice as wide, and it hangs together without a skin, the way water does in a dream. On top of it there's a sail of air, thin as a soap-bubble, that catches the wind and turns. Below, long clear lines trail down off it into the ditch. And in the middle, turning slowly, there's an iron key on a ring.");
+      await say("And there's a sound. Under the wind, so low you feel it in your teeth more than hear it: a lot of people, very far away, humming the same note.");
+      await bwNote("seep");
+      if (burrHere()) await say("Burr barks at it once, and then thinks better of it and gets behind your legs.");
+      await bwBud({ reg: "fen", where: "the Hushfen causeway", cap: "Caught by a brimling on the causeway", forced: true });
+      await say("Afterwards, an old woman in waders comes up out of the reeds with an eel-trap under each arm, looks at the wet patch, and looks at you. \"That's a bit of the old one,\" she says. \"It sends them up the rivers. You want to talk to me about it, you come and help with my traps.\"");
+      return true;
+    },
+    async tolly() {
+      light("mire");
+      await say("Gammer Tolly lives on a punt moored in the reeds, with a chimney and a goat. The eel-traps are the size of coffins and smell like it.");
+      for (let tries = 0; tries < 4; tries++) {
+        const c = await choose([
+          { key: "help", label: "Help her lift the traps", tag: "Survival DC 12" },
+          { key: "ask", label: "Just ask her", tag: "Persuasion DC 14", plain: true },
+          { key: "pay", label: "Pay her for her time", tag: "5 gold", plain: true, show: S.coins >= 5 }
+        ]);
+        let ok = false;
+        if (c === "help") { const r = await check({ label: "Survival check (lifting eel-traps)", mod: 2, dc: 12, cta: "Haul" }); ok = r.ok; if (ok) { bw().oil = 1; await say("You get the knack of it after the second trap: lift with the legs, tip with the wrist. She watches you do the fourth, and nods, and gives you a stone bottle of fen-oil for your trouble. \"Burns hot,\" she says. \"You'll want it.\""); } else await say("The trap comes up full of eels and goes straight back down again with your boot in it. She laughs till she has to sit down."); }
+        else if (c === "ask") { const r = await check({ label: "Persuasion check", mod: 2, dc: 14, cta: "Ask" }); ok = r.ok; if (!ok) await say("\"Ask, ask,\" she says. \"Everyone asks. Nobody lifts.\""); }
+        else { S.coins -= 5; renderSheet(); ok = true; await say("She bites the coin, and pockets it, and settles down on the trap-lid to talk."); }
+        if (!ok) continue;
+        await say("\"The water walked first the spring the gates at Wendlock opened by themselves,\" she says. \"My gran's gran saw it. Nobody opened them. And the first one it took was a child from the lock-house. Then it went down the rivers to the sea, and it's been growing out there ever since, and sending bits of itself back up to look for something.\"");
+        await say("\"It walks at night, mostly,\" she adds. You notice that Gammer Tolly is never out in the fen by day.");
+        await bwNote("tolly"); await bwNote("night");
+        return true;
+      }
+      await say("The light's going. She waves you off. \"Come back when you've got some arms on you.\"");
+      return false;
+    },
+    async wendlock() {
+      light("mire");
+      bwPic("wendlock", "A painting of Wendlock: a drowned lock on an old fen dyke, two black timber gates standing open, a lock-house with a fallen roof, still water in the chamber.", "Wendlock, where the water first walked");
+      await say("Wendlock is a lock on the old dyke, where the Hushfen used to be let down into the river a chamber at a time. The gates have stood open for three hundred years. The lock-house beside it has lost its roof, and its door is locked, and the key is somewhere in the Drowned Choir.");
+      const c = await choose([
+        { key: "lock", label: "Pick the lock", tag: hasSkill("lock") ? "Lockcraft: you can do this" : "Dexterity DC 15" },
+        { key: "force", label: "Shoulder the door", tag: "Athletics DC 14", plain: true },
+        { key: "sluice", label: "Go in through the sluice", tag: "Acrobatics DC 12 · you'll get wet", plain: true }
+      ]);
+      let ok = c === "lock" && hasSkill("lock");
+      for (let k = 0; !ok && k < 3; k++) {
+        const r = c === "lock" ? await check({ label: "Dexterity check (the lock)", mod: 3, dc: 15, cta: "Pick" }) : c === "force" ? await check({ label: "Athletics check (the door)", mod: 3, dc: 14, cta: "Shove" }) : await check({ label: "Acrobatics check (the sluice)", mod: 2, dc: 12, cta: "Squeeze" });
+        ok = r.ok;
+        if (!ok) { await hurt(1, 4, "bludgeoning", c === "force" ? "The door doesn't care." : c === "lock" ? "The pick snaps, and the broken end goes into your thumb." : "The sluice-gate drops and catches your shoulder."); }
+      }
+      if (!ok) { await say("You can't get in, not today."); return false; }
+      if (c === "sluice") await soak(1, "the Wendlock sluice", "Through the sluice at Wendlock");
+      await say("Inside, the lock-house is one room over the lock-chamber, with the gate-gear in the middle of the floor: three iron levers, each with a mark cast into its handle. A bell. A hand. A wave. The keeper's room behind is shut by an inner door that only opens when the levers are thrown in the right order, the way the lock was worked, so that nobody could flood the chamber by mistake.");
+      await say("On a nail by the levers there's a child's slate with a rhyme on it in chalk that the damp has somehow never touched: <i>Wave comes last when the bell's been rung. Hand goes after the bell. Ness counts the fill.</i>");
+      const marks = { bell: "the bell", hand: "the hand", wave: "the wave" };
+      for (let k = 0; k < 4; k++) {
+        const order = [];
+        for (let i = 0; i < 3; i++) {
+          const left = Object.keys(marks).filter(m => !order.includes(m));
+          order.push(await choose(left.map((m, j) => ({ key: m, label: "Throw the lever marked with " + marks[m], tag: ["first", "second", "third"][i], plain: j > 0 }))));
+        }
+        if (order.join() === "bell,hand,wave") break;
+        await say("The levers clank home, and somewhere under the floor the old sluice wakes up, and the chamber fills in a rush and comes up through the floorboards to your knees, your waist, before the gear trips and lets it go again.");
+        await soak(1, "the Wendlock chamber", "When the chamber filled at Wendlock");
+        await hurt(1, 6, "bludgeoning", "The water throws you against the gear.");
+        if (k === 3) { await say("You're soaked and bruised and the door's still shut. You'll come back when you've thought about it."); return false; }
+      }
+      await say("Bell, hand, wave. The inner door swings in on hinges that haven't moved in three hundred years. The keeper's room is dry. There's a bed, and a smaller bed, and over the door, carved in the lintel, four names: <b>Abner, Marra, Coll, Nessaly</b>, and under them, <b>WEND</b>.");
+      await say("On the table is the lock-keeper's log, open at the last page that has anything on it.");
+      await bwNote("lintel"); await bwNote("gates");
+      xpGain(40);
+      return true;
+    },
+    async peat() {
+      light("mire");
+      await say("In a flooded peat-cut south of the dyke a brimling has come up out of the black water, and the peat-cutters have it penned in with torches. They want it burned. They've wanted it burned for years.");
+      const c = await choose([
+        { key: "self", label: "Burn it yourself", tag: bw().oil ? "Gammer Tolly's fen-oil · it'll grow" : "buy lamp-oil off the cutters · 3 gold · it'll grow" },
+        { key: "watch", label: "Let the cutters burn it, and watch from the dyke", tag: "Perception DC 13", plain: true }
+      ].map(o => o.key === "self" ? Object.assign(o, { show: bw().oil || S.coins >= 3 }) : o));
+      if (c === "self") {
+        if (bw().oil) bw().oil = 0; else { S.coins -= 3; renderSheet(); }
+        await say("You throw the oil over it and a torch after the oil. It goes up with a sound like a breath drawn in, white steam roaring off it into the sky until it's gone, all of it, and the cutters cheer.");
+        await say("Then it starts to rain. It rains for an hour, warm, salt, smelling of peat and harbour, and only on the cut. When it stops, the water at the bottom of the cut stands up again, smaller, and slides away into a ditch, and you know where the ditch goes.");
+        bw().tests.fire = "self";
+        await bwNote("fire");
+        await bwGrow(1, "It's learned what fire is.");
+        if (bw().tests.fire && bw().tests.frost === "self" && bw().tests.salt === "self") grant("bwtests");
+        return true;
+      }
+      const r = await check({ label: "Perception check (watching from the dyke)", mod: 2, dc: 13, cta: "Watch" });
+      await say("The cutters throw oil, and a torch after the oil, and it goes up in a great white roar of steam and is gone.");
+      if (r.ok) { await say("And then, half a mile off, you see it rain, on the cut and nowhere else. And when the rain stops, something clear slides out of the cut into a ditch."); await bwNote("fire"); bw().tests.fire = bw().tests.fire || "heard"; }
+      else { await say("The cutters cheer. You go down to the cut, and there's nothing in it but black water and a smell of steam."); await bwNote("fireWrong"); }
+      return true;
+    },
+    async register() {
+      light("lake");
+      await say("Carrowmere's archive survived the flood in the castle's highest room. The Register of the Drowned is there: every soul the Hushfen's waters took, for four hundred years, written down by the castle's clerks, so that somebody would. The pages you need are at the bottom of the box, and the water got to them.");
+      const ents = [["reg_ottle", "a ferryman's entry, the ink run blue"], ["reg_ness", "a child's entry, the page cockled like bark"], ["reg_marra", "a woman's entry, half under a tide-mark"], ["reg_coll", "a man's entry, the last page before the book changes hands"]];
+      for (const [id, desc] of ents) {
+        if (bwHas(id)) continue;
+        for (let k = 0; ; k++) {
+          const r = await check({ label: "Investigation check (" + desc + ")", mod: 2, dc: 12 + (k ? 0 : 1), cta: "Read" });
+          if (r.ok) { await bwNote(id); break; }
+          await say("You can't make it out. You leave it to dry by the window, and wait.");
+          calPass(1);
+          if (k >= 2) { await mech("A watch passes for every page you wait on. Time is something the Drowned Choir has more of than you."); }
+          if (k >= 3) { const g = await choose([{ key: "on", label: "Keep at it" }, { key: "off", label: "Leave it for another day", plain: true }]); if (g === "off") return false; }
+        }
+      }
+      await say("Four Wends and a ferryman, and only one of them in the book's first hundred years who drowned at Wendlock with nobody at the gates.");
+      xpGain(40);
+      return true;
+    },
+    async moat() {
+      light("lake");
+      bwPic("inside", "A painting looking out from inside the Drowned Choir: green water, bent light, drowned things drifting, and above, a single still bubble at the root of a clear sail.", "From inside the Drowned Choir");
+      await say("At the drowned castle the moat has started standing up at dusk, and the lantern-knight's old ghosts of the treasury have nothing to do with it. A brimling the size of a hay-cart lies across the causeway like a fallen window.");
+      await say("You'll only see the middle of it from inside it. You know that the way you know a fall is going to hurt.");
+      const F = await bwBud({ reg: "mere", where: "Carrowmere's moat", cap: "Held under Carrowmere's moat", forced: true, grab: await bwGrabAsk(),
+        look: async () => { await say("Up at the root of the sail, where the clear lines all come together, there's one bubble of air the size of a fist. Everything else in it drifts. That bubble keeps still. And as you watch, it turns, slowly, the way a head turns, to look at you."); await bwSee("bubble"); await bwNote("bubble"); } });
+      if (!bwHas("bubble")) { await say("It's gone, and you never saw the middle of it. Next time, let it take you, and look."); return false; }
+      return true;
+    },
+    async floe() {
+      light("lake");
+      const winter = calSeason() === 3, scroll = lgOn() && (lg().sc.rimecall || 0) > 0;
+      await say("On the lake below Carrowmere, Brannoch Teague cuts ice in winter and sells it to the castle kitchens in summer, and he says he killed one of the walking waters once, the winter of the hard frost.");
+      const c = await choose([
+        { key: "self", label: winter ? "Freeze one yourself, out on the winter ice" : "Read Rimecall into one", tag: (winter ? "it's winter" : "1 Rimecall scroll") + " · it'll grow", show: winter || scroll },
+        { key: "ask", label: "Hear Brannoch out", tag: "Insight DC 12 · is he telling it straight?", plain: true }
+      ]);
+      if (c === "self") {
+        if (!winter) lg().sc.rimecall--;
+        await say("You find one in the reeds and freeze it where it stands. It goes white from the outside in, groaning, and for a moment it's only a strange clear statue of a wave. Then it moves. It moves frozen, heavy as a cart, and it comes down on Brannoch's punt and breaks it in half.");
+        const r = await check({ label: "Dexterity save (the floe)", mod: 2, dc: 13, cta: "Jump" });
+        if (!r.ok) await hurt(2, 6, "bludgeoning", "The edge of it catches you.");
+        await say("It thaws in an hour, and goes back into the lake, bigger by a punt and the half of a man's livelihood.");
+        bw().tests.frost = "self"; await bwNote("frost");
+        await bwGrow(1, "It's learned what ice is.");
+        if (bw().tests.fire === "self" && bw().tests.frost === "self" && bw().tests.salt === "self") grant("bwtests");
+        return true;
+      }
+      await say("\"Froze it solid,\" he says. \"Out on the ice. Stood there like a glass horse. Next morning, gone.\" He looks into his cup.");
+      const r = await check({ label: "Insight check (Brannoch's story)", mod: 2, dc: 12, cta: "Read him" });
+      if (r.ok) { await say("\"Gone,\" you say, \"and what about your brother's boat?\" He goes red. \"All right. It moved. Frozen, it moved, and heavier than a church. It sank Danny's boat.\""); await bwNote("frost"); bw().tests.frost = bw().tests.frost || "heard"; }
+      else await bwNote("frostWrong");
+      return true;
+    },
+    async moored() {
+      light("moon");
+      await say("In Kedge, on the chains over the fallen moon, lives a woman the Moored call Tamsin Who Came Back. Forty years ago she fell from the Lift into the moon-water, and something clear took her, and gave her back.");
+      const opts = [
+        { key: "gold", label: "Offer her ten gold for the story", tag: "10 gold", show: S.coins >= 10 },
+        { key: "own", label: "Tell her how it held you under", tag: "you've been under it", plain: true, show: bw().drowned > 0 || (S.drowned || []).length > 0 },
+        { key: "ask", label: "Ask her kindly", tag: "Persuasion DC 13", plain: true }
+      ];
+      for (let k = 0; k < 3; k++) {
+        const c = await choose(opts);
+        if (c === "gold") { S.coins -= 10; renderSheet(); }
+        if (c === "ask") { const r = await check({ label: "Persuasion check", mod: 2, dc: 13, cta: "Ask" }); if (!r.ok) { await say("She shakes her head and goes back to her net."); continue; } }
+        if (c === "own") await say("You tell her about the green, and the silence, and the fire in your chest. She takes your hand and holds it, and nods all the way through.");
+        await say("\"It's not cruel,\" she says. \"That's the worst of it. When it held me, it went quite still. Like someone listening. And the bubble came down to look at me, close as you are, as if it were trying to see if I was somebody it knew. Then it let me go. I wasn't.\"");
+        await bwNote("moored");
+        if (bwHas("fireWrong") && !bwHas("fire")) { await say("\"Fire?\" she says, when you ask. \"The cutters burned one in the Hushfen when I was a girl. It rained a week.\""); await bwNote("fire"); }
+        return true;
+      }
+      return false;
+    },
+    async brine() {
+      light("moon");
+      await say("Under the moon there are brine pools, where the Moored dry salt for the Lift's trade, and a brimling has come up into one of them out of the moon-water.");
+      const c = await choose([
+        { key: "self", label: "Shovel salt into it till it's heavy", tag: "Athletics DC 12" },
+        { key: "ask", label: "Ask the salt-driers what they've seen", plain: true }
+      ]);
+      if (c === "self") {
+        const r = await check({ label: "Athletics check (shovelling salt)", mod: 3, dc: 12, cta: "Shovel" });
+        await say(r.ok ? "You shovel a whole sack of salt into it. It drinks the salt the way a cat drinks milk, and turns a little cloudier, and seems pleased." : "You get half a sack into it before a line takes the shovel off you. It drinks the salt, and the shovel too.");
+        bw().tests.salt = "self";
+        if (bw().tests.fire === "self" && bw().tests.frost === "self") grant("bwtests");
+      } else await say("\"Salt?\" the driers say. \"It's been in the sea three hundred years. It likes salt.\"");
+      await bwNote("salt");
+      return true;
+    },
+    async liftwell() {
+      light("moon");
+      await say("At the bottom of the Lift there's a well of moon-water that the Moored drop their dead into, and a brimling has been coming up out of it at night to see who's next. It's bigger than the others. It's bigger every time.");
+      const names = () => bwNamesKnown();
+      await bwBud({ reg: "undermoon", where: "the Lift-well", cap: "Held under in the Lift-well", forced: true, grab: await bwGrabAsk(),
+        inside: (F) => [].concat(
+          names().length && !F.said ? [{ key: "bw-say", label: "Say a name into it", tag: "costs a breath", plain: true, show: F.breath > 1 }] : [],
+          bwHas("bubble") && !F.cutB ? [{ key: "bw-cut", label: "Swing at the bubble at the root of its sail", tag: "attack at disadvantage", plain: true }] : []),
+        onInside: async (c, F) => {
+          if (c === "bw-say") {
+            F.said = true; F.breath--;
+            const k = await choose(names().map((n, j) => ({ key: n, label: "\"" + BW_NAMES[n] + "\"", plain: j > 0 })));
+            if (k === "ottle") { await say("The name goes out of you in a string of bubbles. Nothing happens at all."); return; }
+            await say("You say it, and the word goes out of you in a string of silver bubbles, and the whole of the Drowned Choir stops. Every line, every drifting thing, the sail. For one heartbeat it's as still as a held breath. Then it remembers you, and squeezes.");
+            await bwSee("wend"); await bwNote("wend");
+          } else if (c === "bw-cut") {
+            F.cutB = true;
+            await say("You get the axe up through the water, slow as a dream, and swing it through the bubble. It goes through like a hand through smoke, and the bubble closes behind it and turns to look at you again.");
+            await bwNote("iron");
+          }
+        } });
+      if (!bwHas("wend") && !bwHas("iron")) { await say("You learned nothing from it this time, except how cold the moon-water is."); return false; }
+      return true;
+    },
+    async taps() {
+      light("noon");
+      await say("In Bathyrra, the Sounders keep a tap-archive: walls of black glass, and in the glass, rows of little dents, a record of everything that has come down through the Sea-Sky, tapped in by the people who saw it. An archivist puts your hand on one row and shows you the key.");
+      add(el("div", "puzzle-note", "<p><b>The tap key</b>: one tap, <i>air</i> · two, <i>water</i> · three, <i>iron</i> · four, <i>a word</i> · five, <i>it listened</i>. A long gap ends a thought.</p><p><b>The row</b>: <code>●● ● &nbsp;&nbsp; ●●●●● &nbsp;&nbsp; ●●● &nbsp;&nbsp; ●●●● ●●●●●</code></p>"));
+      for (let k = 0; k < 2; k++) {
+        const c = await choose([
+          { key: "b", label: "\"Air with water in it. Iron. It listened. A word broke it.\"", plain: true },
+          { key: "a", label: "\"Water with air in it. It listened. Iron went through. A word: it listened.\"", plain: true },
+          { key: "c", label: "\"Water walked. Iron broke it. It listened to no word.\"", plain: true }
+        ]);
+        if (c === "a") { await say("The archivist taps your knuckles twice: yes. Then she taps on: the Sounders tried iron, and it went through. They spoke to it, and it listened. None of them knew what to call it."); await bwNote("taps"); return true; }
+        await say("The archivist taps your knuckles once, which means no, and puts your hand back at the start of the row.");
+        calPass(1);
+      }
+      await say("You leave believing what your fingers told you.");
+      await bwNote("tapsWrong");
+      return true;
+    },
+    async sounder() {
+      light("noon");
+      await say("The last of the old Sounders lives at the foot of the Drowned Light, and she won't tell you anything for nothing. She'll tell you something for a riddle.");
+      await say("\"What breaks when it's spent,\" she taps on your palm, and an apprentice says it aloud for you, \"and is kept by being held?\"");
+      for (let k = 0; k < 3; k++) {
+        const c = await choose([["coin", "A coin"], ["promise", "A promise"], ["breath", "A held breath"], ["bell", "A bell's note"]].map(([key, label], j) => ({ key, label, plain: j > 0 })));
+        if (c === "breath") {
+          await say("She smiles with no teeth at all. \"A held breath is a word you haven't said yet,\" she taps. \"Your Drowned Choir is somebody's held breath. It breaks when it's spent. If you know the word, say it with your own last breath, and not before. Before, it isn't listening.\"");
+          await bwNote("sounder"); xpGain(40); return true;
+        }
+        await say("She taps twice on the back of your hand: no, and come back tomorrow.");
+        calDawn(1);
+      }
+      return false;
+    },
+    async kettle() {
+      light("lake");
+      bwPic("kettle", "A painting of the wreck of the Merrow Kettle: a merchantman lying on her side in shallow green water, her bell gone from its frame, light coming down through the hull.", "The Merrow Kettle, on the bottom");
+      await say("Off Raftmark the Merrow Kettle lies in five fathoms with her masts gone, and the Skerra won't dive on her. Something took her whole crew in one night, last year, and left the cargo. The log should still be in the great cabin.");
+      let breath = bwBreathMax() + 1, got = false;
+      await soak(2, "the Merrow Kettle", "Diving on the Merrow Kettle");
+      while (breath > 0 && !got) {
+        const r = await check({ label: "Athletics check (swimming down through her)", mod: 3, dc: 13, cta: "Swim" });
+        breath--;
+        if (r.ok) got = true; else await say("A hatch is jammed. You go round. Breath: " + bwBreathTxt(breath) + ".");
+      }
+      if (!got) { await hurt(1, 8, "drowning", "You have to give up and kick for the light."); return false; }
+      await say("The log is in a lead box under the captain's bunk. The last page: <i>Slack water. Rose alongside at slack water, clear as glass, with our own lantern showing through it. Took Hobbe off the bowsprit. Then the rest.</i> And in another hand, a Skerran harbour-master's, pencilled in: <i>Seen again off the Banks a month after. Bigger by a ship's company.</i>");
+      await bwNote("wreck");
+      return true;
+    },
+    async shallows() {
+      light("lake");
+      await say("A brimling has come into the Raftmark shallows that's bigger than the ships moored there, and it's lying across the harbour mouth like a sheet of ice. The Skerra have rowed out to look at it and rowed back fast. It's waiting for something. For you, probably.");
+      await bwBud({ reg: "reach", where: "the Raftmark shallows", cap: "Held under in the Raftmark shallows", forced: true, grab: await bwGrabAsk(),
+        look: async () => { await say("At the root of its sail, round the one still bubble, someone has tied a ribbon. A child's hair ribbon, faded to no colour, and stitched on it in thread that was red once: <b>N.W.</b>"); await bwSee("ribbon"); await bwNote("ribbon"); } });
+      if (!bwHas("ribbon")) { await say("It's gone, and you didn't see the middle of it. Next time, look."); return false; }
+      return true;
+    },
+    async hand() {
+      const X = sea(); light("lake");
+      calPass(4);
+      const hk = X.hands.filter(k => k !== "malloway")[0], who = hk ? SEA_HANDS[hk].split(",")[0] : "Tam Wicke, the youngest topman";
+      await say("Two days out from Raftmark the sea goes flat and glassy in a ring round the ship, and the lookout stops singing. A line comes up over the rail, clear as a rope of rain. Then twenty more. They take " + who + " off the deck the way you'd take a cup off a table, and pull them over the side.");
+      const c = await choose([{ key: "dive", label: "Go in after them", tag: "Athletics DC 14 · you'll go under" }, { key: "rail", label: "Hack at the lines from the rail", tag: "Strength DC 16", plain: true }]);
+      let saved = false;
+      if (c === "dive") {
+        await soak(2, "the Open Reach", "After the hand it took, under the Open Reach");
+        let breath = bwBreathMax();
+        while (breath > 0 && !saved) {
+          const r = await check({ label: "Athletics check (swimming down to them)", mod: 3, dc: 14, cta: "Swim" });
+          breath--; saved = r.ok;
+          if (!saved) await say("It pulls them further down. Breath: " + bwBreathTxt(breath) + ".");
+        }
+        if (saved) {
+          await say("You get an arm round them and your axe into the line, and it lets go, quite suddenly, as if it had lost interest. Down there, in the green, you hear a ship's bell ring, slow, somewhere in the middle of it.");
+          await say("On deck, coughing up the Reach, they get hold of your sleeve. \"It went still while it held me,\" they say. \"Still as a held breath. Like it was listening. Then you came.\"");
+          await bwNote("held"); grant("bwsave"); bw().hand = "saved";
+          await seaTemper(2, "The crew saw you go in.");
+        } else await hurt(1, 8, "drowning", "You come up alone.");
+      } else {
+        const r = await check({ label: "Strength check (the lines)", mod: 3, dc: 16, cta: "Hack" });
+        if (r.ok) { saved = true; bw().hand = "saved"; await say("You cut through three lines, four, and the last one lets go, and they come back up the side like a landed fish."); await bwNote("held"); }
+      }
+      if (!saved) {
+        bw().hand = "lost";
+        if (hk) X.hands = X.hands.filter(k => k !== hk);
+        await say("They don't come back up. The ring of flat water closes, and the sea is just the sea again, and you hear, very faint, down under the keel, a bell ring once.");
+        await seaTemper(-2, "The crew lost one of their own.");
+        await bwGrow(1, "It took a hand.");
+      }
+      await bwNote("bell");
+      return true;
+    },
+    async case() {
+      const X = bw();
+      if (!X.theory || X.wrongs.length) { if (!(await bwLay())) return false; }
+      else {
+        const c = await choose([{ key: "go", label: "Go out and meet it", tag: "with the case you laid" }, { key: "lay", label: "Lay the case again first", plain: true }]);
+        if (c === "lay" && !(await bwLay())) return false;
+      }
+      return bwLeviathan(true);
+    }
+  };
+
+  // Lead 16: lay out the case. Four questions; the answers become your theory, and the leviathan tests it.
+  async function bwLay() {
+    const X = bw();
+    await say("In the great cabin, with the lamp swinging, you lay the case out on the chart-table: everything you've written down, every lead, the things you saw from inside it.");
+    add(el("div", "", bwCase(S, true)));
+    const c0 = await choose([{ key: "lay", label: "Lay the case", tag: "four questions · the sea will tell you if you're wrong" }, { key: "wait", label: "Not yet", plain: true }]);
+    if (c0 === "wait") return false;
+    const T = {};
+    for (const Q of BW_Q) {
+      let opts = Q.opts;
+      if (Q.k === "who") { const kn = bwNamesKnown(); if (!kn.length) { await say("You don't know a single name that belongs to it. You'll have to guess at nothing."); T.who = ""; continue; } opts = opts.filter(([k]) => kn.includes(k)); }
+      await say("<b>" + Q.q + "</b>");
+      T[Q.k] = await choose(opts.map(([key, label], j) => ({ key, label, plain: j > 0 })));
+    }
+    X.theory = T; X.tries++; X.wrongs = [];
+    await say("You write it down at the bottom of the case file, and underline it twice, and sit with it until the lamp goes out. If you're right, you know what you have to do. You'll have to let it take you.");
+    return true;
+  }
+  const bwRight = (T) => !!T && BW_Q.every(Q => T[Q.k] === Q.a);
+
+  // The leviathan at sea: your ship against the whole of it. Each round it shows what it's about to do,
+  // and you answer: put the helm over (it leans on the hull), cut the lines (it takes hands), brace (it
+  // comes up under you), or get out from under it (it closes over the deck). Or go into it, which is the
+  // only way to its middle. planned: you went looking for it (Lead 16); otherwise it found you.
+  async function bwLeviathan(planned) {
+    const X = bw(), Y = sea(), s = Y.ship, T = X.theory, back = document.body.dataset.light;
+    X.size = Math.max(X.size, planned ? 6 : X.size);
+    const h = el("div", "part-head sub", '<span class="num">The Open Reach</span><h2>The Water Stands Up</h2>');
+    scrollNext = true; add(h);
+    light("moon");
+    bwPic("leviathan", "A painting of the Drowned Choir as a leviathan: a vast clear colony rising beside a black-sailed ship, its glass sail higher than the mainmast, drowned ships and drowned people turning inside it, one warm lantern glow at the root of the sail.", "The The Drowned Choir, alongside");
+    await say(planned ? "You lay a course for the deep water west of the Banks, where the fishing fleets have stopped going, and hang a lantern at every yard, and wait. It comes at the end of the second night." : "The sea goes flat in a ring round the ship. The lookout stops singing. Then the water alongside starts to rise, and goes on rising.");
+    await say("It comes up beside you higher than the mainmast: a clear sail of air, the size of your own mainsail, and under it the body, glass-green and full of things. Ships. Parts of ships. A whole merchantman turning slowly in it like a leaf in a stream. Cattle. People. Hundreds of people, hanging in it with their hair spread out, all of them turned the same way, toward the root of the sail, where one small bubble keeps perfectly still.");
+    await say("And they're singing. Not with their mouths: the sound comes up through the hull and through the soles of your boots, every voice it has ever taken, holding one long low note. That's why the Skerra call it the Drowned Choir. You'd thought it was a figure of speech.");
+    await say("Its lines come down out of it into the sea all round you for a quarter of a mile. Some of them are already touching the hull.");
+    tip("leviathan");
+    const TELLS = {
+      lean: ["The whole clear bulk of it leans toward you, and the sail swings round to windward.", "helm"],
+      lines: ["Lines come up over the rail, dozens of them, clear as rain, feeling for the crew.", "cut"],
+      under: ["It goes under. The sea round the ship goes flat and very quiet.", "brace"],
+      close: ["It rears up over the deck, the whole sail hanging over you like a glass bell.", "clear"]
+    };
+    let won = false, rounds = 0;
+    X.went = false;
+    const lose = () => s.hull <= 0;
+    while (!won && !lose() && rounds < 10) {
+      rounds++;
+      const k = rounds === 1 ? "lines" : ["lean", "lines", "under", "close"][d(4) - 1], [tellTxt, answer] = TELLS[k];
+      await say(tellTxt);
+      const c = await choose([
+        { key: "helm", label: "Put the helm over", tag: "it leans on her" },
+        { key: "cut", label: "Hands to the rail with axes", tag: "cut the lines", plain: true },
+        { key: "brace", label: "Brace for it", tag: "it comes up under her", plain: true },
+        { key: "clear", label: "Get the crew out from under it", tag: "it closes over the deck", plain: true },
+        { key: "guns", label: "Run out the guns and fire into it", tag: s.guns + " guns", plain: true },
+        { key: "oil", label: "Throw fire-pots into it", tag: "you think fire is the answer", plain: true, show: T && T.how === "fire" },
+        { key: "salt", label: "Break open the salt-ballast over it", tag: "you think salt is the answer", plain: true, show: T && T.how === "salt" },
+        { key: "into", label: "Go into it", tag: "over the side, into the middle of it" + (T ? " · you know what you'll do" : " · you don't know what you'll do"), plain: true }
+      ]);
+      if (c === "into") { const r = await bwInside(T, planned); if (r === "won") { won = true; break; } continue; }
+      if (c === "guns") { await say("The broadside goes into it like shot into fog. You can see the balls going on, slower and slower, through the middle of it, and stopping, and hanging there with everything else it keeps."); }
+      else if (c === "oil") { await say("The fire-pots burst on it and it roars up in steam, and for a moment there's a hole in it you could sail through. Then it rains on the deck, warm and salt, and the hole fills."); }
+      else if (c === "salt") { await say("The salt goes into it like sugar into tea. It doesn't even notice."); }
+      if (c === answer) {
+        await say({ helm: "She comes round, and its weight slides off down her side instead of rolling her over.", cut: "The hands go down the rail with hatchets and axes, and the lines fall back into the sea in twitching pieces.", brace: "Everyone grabs something, and when it comes up under her she rides it, groaning, and comes down again whole.", clear: "You get them down the hatches and off the deck, and it comes down on an empty deck and slides off again, taking the ship's boat." }[c]);
+        continue;
+      }
+      if (k === "lean") await seaHull(2, "It leans on her, and her side groans and gives.");
+      else if (k === "under") await seaHull(3, "It comes up under her keel and lifts her half out of the sea, and drops her.");
+      else if (k === "lines") {
+        const hk = Y.hands.filter(x => x !== "malloway")[d(Math.max(1, Y.hands.length)) - 1];
+        if (hk && d(2) === 1) { Y.hands = Y.hands.filter(x => x !== hk); await say("The lines take " + SEA_HANDS[hk].split(",")[0] + " off the deck and over the side, and down into it, and you see them, for a moment, turning toward the root of the sail like all the others."); await seaTemper(-1); }
+        else { await say("The lines take two topmen off the yards. You see them inside it, a moment later, turning."); await seaTemper(-1); }
+        await hurt(...[bwSz().n, bwSz().s], "poison", "A line lashes across your back as you go for them.");
+      } else {
+        await say("It comes down over the deck. Everything goes green, and slow, and the men on deck go up into it like smoke.");
+        await seaHull(1, "Its weight springs her planks.");
+        const r = await bwInside(T, planned, true);
+        if (r === "won") { won = true; break; }
+      }
+    }
+    light(back);
+    if (won) { await bwEnd(); return true; }
+    if (lose()) {
+      X.sunk++; grant("bwsunk");
+      bwPic("sinking", "A painting of a ship going down inside the Drowned Choir: her masts at an angle inside clear water, lanterns still lit, the glass sail above her.", "Down with her");
+      await say("She goes down inside it. That's the worst of it: not under the sea, but up into the middle of it, her masts tilting through the glass, her lanterns still lit, her crew turning slowly toward the root of the sail. You go with her. You don't remember the end of it.");
+      await soak(2, "inside the Drowned Choir", "Down with the ship, inside the Drowned Choir");
+      await say("You wake on the shingle at Raftmark with half your crew round you, and the other half nowhere. The Skerra pulled you out of the sea at dawn, a mile from where she went down. They say she came back up a day later, empty, and drifted in on the tide, as if it had finished with her.");
+      s.hull = 0;
+      const lost = Math.floor((S.coins || 0) / 3); S.coins -= lost; renderSheet();
+      await seaTemper(-3);
+      await mech("<b>Your ship was sunk.</b> She's lying at Raftmark with her planks sprung (mend her at the shipwright before you sail again). You lost " + lost + " gold, and the Drowned Choir is still out there." + (X.went && X.theory && !bwRight(X.theory) ? " Your case was wrong somewhere: lay it again (Lead 16)." : ""), "hurt");
+      bwWrongs();
+      return false;
+    }
+    await say("And then, without any reason you can see, it goes down. The ring of flat water closes. The lines slide off the hull. It's gone, and the sea's only the sea, and the crew stand round the deck not looking at one another.");
+    await mech("It let you go, this time.", "hurt");
+    bwWrongs();
+    return false;
+  }
+  // Only going into it tells you which parts of the case were wrong.
+  function bwWrongs() {
+    const X = bw();
+    if (X.went && X.theory && !bwRight(X.theory)) X.wrongs = BW_Q.filter(Q => X.theory[Q.k] !== Q.a).map(Q => Q.k);
+  }
+  // Inside the leviathan. Your theory decides what you try in there. Returns "won", "out" or "spat".
+  async function bwInside(T, planned, taken) {
+    const X = bw(); X.went = true;
+    await soak(2, "inside the Drowned Choir", "Inside the Drowned Choir, far out on the Reach");
+    if (!taken) await say("You go over the side and into it. It takes you gently, the way deep water does, and the noise of the ship goes away, and there's only green, and the drowned all round you, turned toward the sail.");
+    bwPic("root", "A painting from inside the Drowned Choir, looking up: drowned figures hanging in green water, all turned toward a single bubble at the root of a clear sail, a faded ribbon tied round it.", "The root of the sail");
+    let breath = bwBreathMax(), still = false;
+    for (;;) {
+      if (breath <= 1 && !still && T && T.when === "drown") {
+        still = true;
+        await say("Your breath is almost gone, and the Drowned Choir goes still. All of it. Every line, every drifting thing, every one of the drowned. It's listening. And the bubble at the root of the sail comes down through the green toward you, slowly, and stops in front of your face, close enough to touch, as if it's trying to see whether you're somebody it knows.");
+        if (bwHas("ribbon")) await say("The ribbon is tied round it. N.W.");
+      }
+      const opts = [{ key: "up", label: "Kick for the surface", tag: "Athletics DC " + bwSz().dc }];
+      if (T && T.how === "name" && T.who && breath >= 1) opts.push({ key: "say", label: "Say \"" + BW_NAMES[T.who] + "\" into it" + (still ? ", with your last breath" : ""), tag: still ? "your last breath" : "costs a breath", plain: true });
+      if (T && T.how === "iron") opts.push({ key: "iron", label: T.what === "breath" ? "Drive the axe into the bubble at the root of the sail" : T.what === "knot" ? "Drive the axe into the feeding-knot" : T.what === "sail" ? "Cut the sail from below" : "Cut the key out of it", plain: true });
+      if (T && T.what === "sail" && T.how !== "iron") opts.push({ key: "sail", label: "Swim up and tear at the sail", plain: true });
+      if (T && T.what === "key") opts.push({ key: "key", label: "Swim for the key and take it back", plain: true });
+      if (T && T.when !== "drown" && !still) opts.push({ key: "wait", label: { slack: "Wait for the tide to turn", night: "Wait for full dark", frozen: "Wait for it to go hard and still" }[T.when] || "Wait", tag: "costs a breath", plain: true });
+      if (!T) opts.push({ key: "look", label: "Look for anything that might be its heart", tag: "costs a breath", plain: true });
+      const c = await choose(opts);
+      if (c === "up") {
+        const r = await check({ label: "Athletics check (kicking for the surface)", mod: 3, dc: bwSz().dc, cta: "Kick" });
+        if (r.ok) { await say("You come up out of it into the night air, and someone gets a boathook into your belt and hauls you in."); return "out"; }
+        breath--; await say("It's like swimming through honey. Breath: " + bwBreathTxt(breath) + ".");
+      } else if (c === "say") {
+        if (!still) { breath--; await say("The name goes out of you in a string of silver bubbles, and it goes on drifting. It isn't listening. Not yet. Breath: " + bwBreathTxt(breath) + "."); }
+        else if (T.who === "nessaly" && T.what === "breath") return "won";
+        else { await say("You give it the name with the last of your breath. The bubble shivers, and holds, and turns away. That isn't her name, or that isn't her heart. And now you have nothing left to breathe."); breath = 0; }
+      } else if (c === "iron") { await say("The axe goes through it like a hand through smoke, and whatever you hit closes again behind the blade."); breath--; }
+      else if (c === "sail") { await say("You tear a hole in the sail from underneath, and it sags, and the whole of it starts to sink, with you in it, and the ship's keel coming down after. Then the hole closes, and it rises again."); breath--; await seaHull(2, "It sank and rose again under her."); }
+      else if (c === "key") { await say("You get the key. It's just a key. The water closes round your fist and takes it back."); breath--; }
+      else if (c === "wait") { await say("You wait for it, and it doesn't come. The Choir doesn't care what the tide is doing. Breath: " + bwBreathTxt(breath - 1) + "."); breath--; }
+      else if (c === "look") { await say("Up at the root of the sail there's a single bubble that doesn't move, and a hundred drowned faces turned toward it. You don't know what it is. You don't know what you'd do with it if you did."); breath--; }
+      if (breath <= 0) {
+        await hurt(bwSz().n, bwSz().s + 2, "drowning", "There's nothing left to breathe.");
+        await say("Then it spits you out, the way it spat out Tamsin Rook. You come up beside the ship in a gout of water, and the crew haul you in, and you lie on the deck being sick. It didn't want you. You weren't anybody it knew.");
+        X.drowned++;
+        return "spat";
+      }
+    }
+  }
+  async function bwEnd() {
+    const X = bw();
+    X.end = "still"; X.lead = 16; renderSheet();
+    if (X.tries === 1) grant("bwcase");
+    grant("bwend");
+    await say("You say it with your last breath: <b>Nessaly Wend</b>. It goes out of you in one silver bubble, and that bubble goes into the other one, the way two drops on a window run together.");
+    await say("The bubble rises.");
+    await say("After three hundred years, the held breath of an eleven-year-old girl who counted the fill at Wendlock goes up through the green, through the sail, and out into the night air, and is gone. And the Drowned Choir forgets it's alive.");
+    await say("The note stops. You hadn't known how loud it was until it stopped.");
+    bwPic("lies", "A painting of the Drowned Choir lying down: a vast clear shape coming apart into ordinary sea under a pale dawn, drowned ships settling slowly to the bottom, a small bubble rising alone toward the light.", "The water lies down");
+    await say("It comes apart all round you. Not violently: it just stops holding on. The sail empties. The lines go slack. The drowned, all of them, start to sink, gently, the way they should have three hundred years ago, the merchantman and the cattle and the topmen and the ferry-folk, settling down through the ordinary sea, and the sea is just the sea, cold, and salt, and it lets you go up.");
+    await say("You come up into the dawn. The crew are at the rail, every one of them, and nobody says anything for a long time. Then somebody starts the bell going, and keeps it going.");
+    if (burrHere()) await say("Burr licks the salt off your face, very thoroughly, until you push him off.");
+    if (vaelricSpeaks()) await voice("\"I knew of her,\" Vaelric says from the blade, very quietly. \"The water that walked. We thought it was hungry. It was only looking for someone to come and open the gates.\"");
+    S.maxHp += 6; S.hp = S.maxHp; renderSheet();
+    xpGain(400 + lv() * 4);
+    await seaGold(150 + lv() * 3, "The Skerra and the Saltwrit both pay the bounty that's been posted on it for a hundred years, and neither of them believed anyone would collect it.");
+    await seaTemper(3);
+    await mech("<b>The Drowned Choir is still.</b> No more brimlings on the roads, and nothing hunts ships on the Reach. You gain <b>Nessaly's Ribbon</b> (+6 max HP), healed to full.", "loot");
+    save();
+  }
+
+  // During the story: a glimpse of it in a water region, once each, before you know what it is.
+  async function bwGlimpse(reg) {
+    if (!BW_WATER.includes(reg) || (S.bw && (S.bw.end || S.bw.sights.includes(reg))) || d(5) > 1 || !S.axe) return false;
+    const X = bw(); X.sights.push(reg);
+    const h = el("div", "part-head sub", '<span class="num">On the road · ' + REGIONS[reg] + "</span><h2>Clear Water</h2>");
+    scrollNext = true; add(h);
+    await say({ fen: "A puddle on the causeway stands up as you pass, clear as glass, with something turning slowly in the middle of it, and long lines trailing off it into the ditch.", mere: "Something lies across the path at the lake's edge like a fallen window, and a sail of air on top of it turns in the wind to follow you.", undermoon: "The moon-water in a cistern stands up as you pass, and you can see the Lift's lamps through it, bent, and something drowned turning in the middle.", bathyrra: "A drop falls from the Sea-Sky that doesn't break when it lands. It just stands there, clear, as tall as you, and watches.", reach: "Off the bow, the sea goes flat and glassy in a long oval, and a clear sail of air comes up out of it, turns to look at you, and goes down again." }[reg]);
+    const r = await check({ label: "Dexterity save (its lines)", mod: 2, dc: 11 + X.size, cta: "Jump back" });
+    if (!r.ok) { await hurt(1, 6, "bludgeoning", "A clear line wraps your ankle and drags you off your feet, and for a moment your head is under."); await soak(1, REGIONS[reg] + " (clear water)", "Clear water, on the road through " + REGIONS[reg]); }
+    else await say("You jump back, and it slides away into the water and is gone.");
+    await bwGrow(1, "Whatever it was, it went back to the water bigger than it came out.");
+    await mech("Something to ask about later, on the roads back: <b>the water that walks</b>.");
+    return true;
+  }
+
+  // On the roads back, once you've started hunting it: a brimling now and then in the water regions.
+  async function bwRoam(reg) {
+    if (!bwOn() || !S.bw.lead || !BW_WATER.includes(reg) || d(6) > 1) return false;
+    const h = el("div", "part-head sub", '<span class="num">The roads back · ' + REGIONS[reg] + "</span><h2>A Brimling</h2>");
+    scrollNext = true; add(h);
+    await say(["A ditch beside the road stands up and comes after you, clear as glass, humming one low note.", "There's a sail of air turning in the wind over the reeds, and under it something clear is crossing the road toward you.", "The water in a cart-rut lifts out of the rut, all of it at once, and the lines come trailing after."][d(3) - 1]);
+    await bwBud({ reg, where: REGIONS[reg] + " roads", cap: "Held under by a brimling in " + REGIONS[reg] });
+    return true;
+  }
+  function bwCase(rs, inline) {
+    const X = rs && rs.bw;
+    if (!X) return "";
+    const L = BW_LEADS.map((l, i) => '<li class="' + (i < X.lead ? "won" : "") + '"><span class="mk"></span><span><b>' + (i + 1) + ". " + l.name + "</b> · " + (l.reg === "sea" ? "at sea" : REGIONS[l.reg]) + (i === X.lead && !X.end ? " · next" : "") + "</span></li>").join("");
+    const N = X.notes.map(n => "<li>" + BW_NOTES[n] + "</li>").join("");
+    const T = X.theory ? "<p><b>Your case:</b> " + BW_Q.map(Q => { const o = Q.opts.find(([k]) => k === X.theory[Q.k]); return (o ? o[1] : "no name") + (X.wrongs.includes(Q.k) ? " (the sea said no)" : ""); }).join(" · ") + "</p>" : "";
+    const tests = ["fire", "frost", "salt"].map(t => t + ": " + (X.tests[t] === "self" ? "tested" : X.tests[t] ? "heard" : "untried")).join(", ");
+    return (inline ? '<div class="bw-case">' : "<section>") + "<h3>The Brimwater hunt · " + (X.end ? "still" : "Lead " + Math.min(16, X.lead + (X.lead < 16 ? 1 : 0)) + " of 16") + "</h3>" +
+      '<p class="j-sub">' + (X.end ? "Nessaly Wend's held breath went up out of it, and the water lay down." : "The first of the drifting colonies: water that remembers drowning. It's the size of " + BW_SIZES[Math.max(1, X.size)].name + " (" + X.size + " of 6). Brimlings beaten: " + X.buds.beaten + ", got away: " + X.buds.back + ".") + "</p>" +
+      (inline ? "" : '<ul class="marks">' + L + "</ul>") + (N ? "<p><b>Case notes</b></p><ul>" + N + "</ul>" : "") + "<p><b>Tests:</b> " + tests + ".</p>" + T + (inline ? "</div>" : "</section>");
+  }
+  function bwItems(items) {
+    const X = S.bw; if (!X) return;
+    if (X.end) items.push(["bwribbon", "ring", "Nessaly's Ribbon", "A child's hair ribbon, faded to no colour, with N.W. stitched on it. It came up out of the sea after her. +6 max HP."]);
+    else if (X.lead) items.push(["bwcase", "writ", "The Brimwater case file", "Lead " + Math.min(16, X.lead + 1) + " of 16 · " + X.notes.length + " notes · it's the size of " + bwSz().name + " (" + X.size + " of 6)."]);
+  }
+  Object.assign(TIPS, {
+    brimwater: ["The Drowned Choir", "A colony of living water, and its buds. Every other round its <b>lines</b> try to wrap you: fail the save and you're <b>held under</b>, with a few breaths. Under, you can't swing freely: <b>tear free</b>, <b>hack from inside</b> (at disadvantage) or <b>look into it</b> (it's clear, and what it keeps is evidence). When the breath runs out you start to drown. Beat a brimling and it bursts; let it get away, or let it drown you, and it goes back to the sea and the Drowned Choir grows."],
+    leviathan: ["The leviathan", "Each round it shows what it's about to do: <b>leaning</b> on her (put the helm over), <b>lines</b> over the rail (cut them), going <b>under</b> (brace) or <b>closing</b> over the deck (clear it). Guns go through it. The only way to its heart is to <b>go into it</b>, and what you try in there is the case you laid."]
+  });
 
   // ---------- puzzles: the song, the tone-lock, the tunnel, the shell game, the shoring, the dig ----------
   const TONES = [
@@ -29881,6 +30666,7 @@ body.pv-open { overflow: hidden; }
       if (X.ship.temper <= 2) await seaGrumble();
       for (let leg = 0; leg < 3 && X.ship.hull > 0; leg++) {
         if (leg) await say(["The wind backs round and freshens, and you run on.", "A day and a night of nothing but sea.", "Dawn comes up red. The lookout sings out."][leg % 3]);
+        if (bwOn() && S.bw.size >= 6 && !met.has("bw") && d(3) === 1) { met.add("bw"); await bwLeviathan(false); continue; }
         const rivals = seaRivalsIn(w).filter(id => !met.has(id));
         const echo = seaEcho(w);
         if (echo && d(3) === 1) { await echo(); continue; }
