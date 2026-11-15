@@ -689,6 +689,10 @@ button.has-pic .pic-txt { flex: 1; min-width: 0; }
 .pgrid { display: grid; gap: 6px; justify-content: start; }
 .pgrid button { width: 52px; height: 52px; padding: 0; display: grid; place-items: center; text-align: center; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
 .pgrid button:disabled { opacity: .7; }
+.sh-tide { border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; margin: 4px 0 8px; }
+.sh-tide th, .sh-tide td { border: 1px solid #3a3322; padding: 3px 4px; text-align: center; }
+.sh-tide th { color: var(--gold); font-weight: normal; text-align: left; }
+.pgrid.sh-trim button { width: 100%; height: auto; min-height: 44px; padding: 6px 3px; font-size: .82rem; line-height: 1.15; }
 .pgrid button.on, .pgrid button.flash { background: #3b3018; border-color: var(--gold); color: var(--gold); box-shadow: 0 0 12px rgba(207, 168, 80, .35); }
 .pgrid button.rot { background: #2a1512; border-color: var(--ember); color: var(--ember); }
 .pgrid button.seen { color: var(--ink); background: #1f2a23; }
@@ -3444,6 +3448,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "110", name: "The Shipwright's Yard", date: "15 Nov 2026", items: [
+      "<b>Sixteen kinds of ship</b>, from Adrian's ask, each from a people or a water of the realm: the Skerran <b>Count-Raider</b> and <b>Tally-Sloop</b>, the Saltwrit <b>Gallows Cutter</b> and <b>Gallows Frigate</b>, the Rahdarian <b>Lantern Carrack</b>, the <b>Banks Galleass</b>, Sulmara's <b>Glass-Barque</b>, Ammaret's clockwork <b>Tick-Galley</b>, the Hushfen <b>Mire-Barge</b>, the Hesk <b>Sung-Hull</b>, Kedge's <b>Kinstone Lighter</b>, the Bathyr <b>Bell-Hull</b>, the wreckers' <b>Lamp-Brig</b>, the <b>Deepwhaler</b>, the old fleets' <b>Line-Wall</b> and the <b>Ember-Hoy</b> fireship. Every class fights differently, and every ship is generated with a builder's mark, an age and quirks (copper-bottomed, leaks at the bow, guns that burst when hot, a lucky cat, a haunted bell, green timbers...).",
+      "<b>Rename any ship</b>, your own or one you seized: type a name or take a suggestion. Hold the <b>unnaming rite</b> first, or the sea remembers her old name and a squall finds her one voyage in three. <b>Your fleet</b>: shift your flag to any ship, sail two in company, lay up three at Raftmark (four with Wickerby Mill).",
+      "<b>Build ships</b> at Ama Holt's yard: choose the hull, <b>loft her deck plan</b> yourself (level, trimmed, powder aft: get it right and she's sweet-handling, wrong and she's crank), and wait the days on the calendar. Your holding's smithy makes it cheaper, and Wickerby Mill saws the frames. <b>Break ships up</b> for planks, guns, fittings and rare parts.",
+      "<b>Seven ship quests</b> on the harbour board, each with a puzzle and a choice that stays: a tide to read over the Hushfen bars (and a grave-oak), the Hesk timber-choir's answer, a breath-held dive into a sunk clockwork galley, a salt convoy through fog and a fireship (or take it yourself), a murder in your own bread room, a ransom in Bathyr lead, and soundings for a drowned whaling station.",
+      "<b>Sea fights vary now.</b> The weather gauge, calms, squalls, fog and night, shoals to lure a ship onto, narrows and shore batteries. Shots can take away a rudder, a mast or start a fire (send the fire party). New moves: rake her, claw up to windward, false lamps, the fireship, the harpoon, break off. And after the seven captains the sea is still full: rovers, merchantmen and convoys, Saltwrit frigates when your price is high, two at once when it's higher. 13 new feats."] },
     { ver: "109", name: "A Living Settlement", date: "15 Nov 2026", items: [
       "<b>The second part of your holding</b>, from Adrian's design. <b>Pennock's satchel</b> changes every four days: rare plans (a training ground, an infirmary, a garden courtyard, a trophy hall, a war room, a treasury vault, a sally port, a stable) and goods (a second gun for the tower, a veteran called Hob Ketter, watch-hounds, caltrop fields, mortar shells, a great banner).",
       "<b>Spared leaders remember.</b> Every gang you let go is tracked by loyalty, hatred, fear and respect. <b>Feared</b> gangs keep off your road and your walls, and pay you if you put them on terms. <b>Respectful</b> ones trade through your gate. <b>Angry</b> ones raid. <b>Vengeful</b> ones build a <b>rival holding</b> that grows every month, and raid you from it with sieges, until you storm it from your war room.",
@@ -4560,6 +4570,19 @@ body.pv-open { overflow: hidden; }
     { id: "hmtrophy", name: "Every Wall Covered", desc: "Have twenty things in your trophy hall.", test: () => hmOwn() && hmHas("trophy") && hmTrophies().length >= 20 },
     { id: "hmstable", name: "Six Stalls", desc: "Build a stable at your holding.", test: () => hmOwn() && hmHas("stable") },
     { id: "hmrank", name: "Warden of the Walls", desc: "Raise your holding to the rank of Warden of the Walls.", test: () => false },
+    { id: "shname", name: "What's in a Name", desc: "Rename a ship.", test: () => false },
+    { id: "shrite", name: "Unnamed", desc: "Give a ship's old name to the sea with the unnaming rite.", test: () => false },
+    { id: "shflag", name: "Shift Your Flag", desc: "Move your flag to another ship in your fleet.", test: () => false },
+    { id: "shlaunch", name: "Off the Slip", desc: "Launch a ship you had built.", test: () => false },
+    { id: "shsweet", name: "Sweet-Handling", desc: "Loft a new ship so well she sits level and trimmed.", test: () => false },
+    { id: "shscrap", name: "Breaker's Yard", desc: "Break up a ship for salvage.", test: () => false },
+    { id: "shclass", name: "Six Kinds of Ship", desc: "Fight or sail ships of six different classes.", test: () => false, prog: () => [S.sea && S.sea.yard ? S.sea.yard.cls.length : 0, 6] },
+    { id: "shfrigate", name: "The Hunter Hunted", desc: "Beat a Saltwrit frigate that came out after you.", test: () => false },
+    { id: "shground", name: "Over the Bar", desc: "Lure a ship aground in a fight.", test: () => false },
+    { id: "shhoy", name: "Fire on the Water", desc: "Set a ship alight with an Ember-Hoy.", test: () => false },
+    { id: "shconvoy", name: "Shepherd", desc: "Bring all three of Juno Pask's salt hoys through the Saltbones.", test: () => false },
+    { id: "shmurder", name: "Dead Reckoning", desc: "Name the purser's killer, rightly.", test: () => false },
+    { id: "shquests", name: "Nothing Left on the Board", desc: "Finish all seven ship quests on the harbour board.", test: () => false, prog: () => [S.sea && S.sea.yard ? Object.keys(S.sea.yard.q).filter(k => SH_QUESTS[k]).length : 0, 7] },
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -4650,7 +4673,9 @@ body.pv-open { overflow: hidden; }
     { id: "saddle", name: "Steel, Saddle and Shell", ver: "41", desc: "A silver bar for your armour, horses with their own armour, levels and foals, wagons, and mini-mortars that knock an army back.",
       ids: ["mtride", "mtcart", "mtgallop", "mtcharge", "mthlv5", "mtplate", "mtwagon", "mtfoal", "mtflat", "mtten", "mtmend"] },
     { id: "settlement", name: "A Living Settlement", ver: "42", desc: "Pennock's satchel, spared leaders and rival holdings, sieges, and a company who live and work at home.",
-      ids: ["hmsatchel", "hmterms", "hmrival", "hmsiege", "hmspy", "hmtrain", "hmmission", "hmfriends", "hmtrophy", "hmstable"] }
+      ids: ["hmsatchel", "hmterms", "hmrival", "hmsiege", "hmspy", "hmtrain", "hmmission", "hmfriends", "hmtrophy", "hmstable"] },
+    { id: "shipyard", name: "The Shipwright's Yard", ver: "43", desc: "Sixteen kinds of ship, a yard to build them, a fleet to rename, seven ship quests, and sea fights with wind, weather and ground.",
+      ids: ["shname", "shrite", "shflag", "shlaunch", "shsweet", "shscrap", "shclass", "shfrigate", "shground", "shhoy", "shconvoy", "shmurder", "shquests"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -31908,33 +31933,33 @@ body.pv-open { overflow: hidden; }
   };
   // Rival captains. way: how they fight a broadside duel (see seaIntent). piece: a piece of the chart in the cabin.
   const SEA_RIVALS = {
-    crane: { name: "Mother Hessaly Crane", ship: "the Lamb's Quarter", water: "bones", guns: 5, hull: 9, crew: 9, way: "feint", bounty: 60, skerra: false,
+    crane: { name: "Mother Hessaly Crane", ship: "the Lamb's Quarter", cls: "lamp", water: "bones", guns: 5, hull: 9, crew: 9, way: "feint", bounty: 60, skerra: false,
       look: "a black-hulled wrecker with a lamp on every yard",
       who: "a big, soft-spoken woman in a fisherman's smock, who has lit false lamps on the Saltbones for twenty years and calls every ship she wrecks her lamb",
       trick: "She shows you one thing and does another: about one tell in three is a lie. Read her through the glass when it matters." },
-    halfhang: { name: "Bastian Sorrow, called Halfhang", ship: "the Second Rope", water: "gibbet", guns: 4, hull: 8, crew: 12, way: "board", bounty: 55, skerra: false, piece: "rope",
+    halfhang: { name: "Bastian Sorrow, called Halfhang", ship: "the Second Rope", cls: "raider", water: "gibbet", guns: 4, hull: 8, crew: 12, way: "board", bounty: 55, skerra: false, piece: "rope",
       look: "a lean brig with a noose painted round her bow",
       who: "a man with a rope-scar round his neck like a collar, who was cut down alive off the Gibbet Skerries and has been taking it out on everybody since",
       trick: "He always wants to board, and he has the men for it. Grape shot, when he comes in, is the answer." },
-    tarrow: { name: "Annick Tarrow", ship: "the Glass Eel", water: "banks", guns: 3, hull: 7, crew: 7, way: "run", bounty: 45, skerra: false,
+    tarrow: { name: "Annick Tarrow", ship: "the Glass Eel", cls: "sloop", water: "banks", guns: 3, hull: 7, crew: 7, way: "run", bounty: 45, skerra: false,
       look: "a narrow smuggler's lugger, painted the grey of the sea so you lose her in a swell",
       who: "a quick, cheerful woman with a ledger-clerk's spectacles, who has never once in eleven years stood and fought",
       trick: "She runs. Chain shot in her rigging, when she spreads her canvas, is the only way to keep her." },
-    ferrule: { name: "Odo Ferrule", ship: "the Kindly Meant", water: "banks", guns: 6, hull: 10, crew: 10, way: "rake", bounty: 70, skerra: false,
+    ferrule: { name: "Odo Ferrule", ship: "the Kindly Meant", cls: "cutter", water: "banks", guns: 6, hull: 10, crew: 10, way: "rake", bounty: 70, skerra: false,
       look: "a Saltwrit sloop with the gallows on her flag painted over in black",
       who: "a Saltwrit gunnery officer who went over to the other side with his ship and his gun crews, and kept his drill",
       trick: "He loves to cross your bow and rake you end to end. When he puts his helm over, put yours over too." },
-    quay: { name: "the Brothers Quay", ship: "the Twinned Fortune", water: "reach", guns: 6, hull: 10, crew: 11, way: "twin", bounty: 65, skerra: true,
+    quay: { name: "the Brothers Quay", ship: "the Twinned Fortune", cls: "raider", water: "reach", guns: 6, hull: 10, crew: 11, way: "twin", bounty: 65, skerra: true,
       look: "a Skerran raider with two captains' lamps at her stern, side by side",
       get who() { const e = S.pz && S.pz.ending; return e === "rise" ? "two Skerran brothers, Ennis and Lorne Quay, who wouldn't sail under a land-born captain, and took their ship out of your Fleet the night you rose, and still take the tithe" : e === "sell" ? "two Skerran brothers, Ennis and Lorne Quay, who got their ship out of Raftmark the night the Saltwrit burned it, and have been taking the tithe ever since, a tenth of every crew, for the dead" : "two Skerran brothers, Ennis and Lorne Quay, who wouldn't go home when the Fleet broke up, because they didn't want to remember, and still take the tithe"; },
       trick: "Two brothers, two watches: they fire a broadside, then try to board, turn and turn about. When one of them's hurt, they both come over the rail." },
-    drear: { name: "Absalom Drear", ship: "the Long Lament", water: "yonder", guns: 8, hull: 14, crew: 14, way: "heavy", bounty: 100, skerra: false, piece: "drear",
+    drear: { name: "Absalom Drear", ship: "the Long Lament", cls: "linewall", water: "yonder", guns: 8, hull: 14, crew: 14, way: "heavy", bounty: 100, skerra: false, piece: "drear",
       look: "a huge, slow, old ship of the line, blistered with weed, with twice your guns",
       who: "an old, careful, courteous man who has sailed the Grey Yonder for forty years and sunk every ship that came out to look for him",
       trick: "Heavy guns, and she never runs. She fires a broadside every round she isn't reloading. Sit out her broadsides with the helm over, and hit her while she reloads." }
   };
   // The Commodore, if you set him adrift: he lived, and he came back for you.
-  const SEA_PATIENCE = { name: "Commodore Idris Malloway", ship: "the Patience", water: "gibbet", guns: 8, hull: 12, crew: 14, way: "rake", bounty: 0, skerra: false,
+  const SEA_PATIENCE = { name: "Commodore Idris Malloway", ship: "the Patience", cls: "frigate", kind: "saltwrit", pirate: false, water: "gibbet", guns: 8, hull: 12, crew: 14, way: "rake", bounty: 0, skerra: false,
     look: "the Patience, his flagship, under a gallows-and-anchor flag, with a new mainmast",
     who: "the narrow grey man you put in a jolly-boat with a cask of water and no oars, who has hanged four hundred people and lived to be very angry with you",
     trick: "A Saltwrit gunnery drill: he rakes when he can. When his helm goes over, put yours over." };
@@ -31950,23 +31975,24 @@ body.pv-open { overflow: hidden; }
     hawl: "Hawl Ostrey, bosun (storms: one throw to spare)", gannet: "Gannet, powder-boy (+1 to every broadside)", dace: "Dace Mallory (Bones: a look at a bone)",
     jen: "Marrow-Jen, harpooner (the deep: the first throw)", ninian: "Ninian Rooke, quartermaster (the crew's temper holds, and votes go your way)",
     pell: "Pell Ashby, sailing master (fog: an extra cast of the lead · reads the enemy)", malloway: "Idris Malloway, clerk (Saltwrit signals · reads the enemy)",
-    cagemen: "the cage-men off the Gibbet Skerries (+2 in boarding fights)", wil: "Wil, who was the cabin boy (keeps the lookout: no surprises)"
+    cagemen: "the cage-men off the Gibbet Skerries (+2 in boarding fights)", wil: "Wil, who was the cabin boy (keeps the lookout: no surprises)",
+    tegen: "Old Tegen Hendy, whaler (sees a squall coming: they don't touch you · the deep: one more throw)"
   };
   function seaInit() {
-    if (S.sea) return S.sea;
+    if (S.sea) return shFix(S.sea);
     const P = S.pz, e = P.ending, B = SEA_SHIPS[e];
     const hands = e === "rise" ? P.crew.slice() : e === "burn" ? P.crew.filter(k => k !== "ninian") : [];
     if (e === "sell" && P.pell === "ally") hands.push("pell");
     if (e === "rise" && P.malloway === "press") hands.push("malloway");
     S.sea = { ship: { name: B.name, hull: B.max, max: B.max, guns: B.guns, temper: Math.min(9, B.temper + Math.floor(hands.length / 2)), up: [] },
       voy: 0, seen: {}, ev: {}, hands, rivals: {}, debt: [], hanged: 0, prizes: [], chart: [], hoard: "", heat: e === "sell" ? 0 : 2, hunted: 0, gold: 0 };
-    return S.sea;
+    return shFix(S.sea);
   }
   const seaHas = (k) => !!(S.sea && S.sea.hands.includes(k));
   const seaUp = (k) => !!(S.sea && S.sea.ship.up.includes(k));
   const seaHunter = () => !!(S.pz && S.pz.ending === "sell");
   const seaRover = () => !!(S.pz && S.pz.ending === "burn");
-  const seaFloor = () => seaUp("bell") ? 3 : 0;
+  const seaFloor = () => !S.sea ? 0 : Math.max(seaUp("bell") || shQ(S.sea.ship, "figure") ? 3 : 0, shC(S.sea.ship).floor || 0);
   const seaRival = (id) => id === "patience" ? SEA_PATIENCE : SEA_RIVALS[id];
   const seaR = (id) => (sea().rivals[id] = sea().rivals[id] || { met: false, fate: "", back: false, n: 0 });
   // A rival is still out there if you haven't met them, they got away, or you marooned them and they haven't come back yet.
@@ -32000,14 +32026,17 @@ body.pv-open { overflow: hidden; }
     const X = S.sea; if (!X) return;
     const s = X.ship;
     items.push(["seaship", "tally", "Your ship: " + s.name.replace(/^the /, "The "), "Hull " + s.hull + " of " + s.max + " · " + s.guns + " guns · crew " + SEA_TEMPER[s.temper].toLowerCase() + " (" + s.temper + ")" +
-      (X.prizes.length ? " · with " + X.prizes.map(id => seaRival(id).ship).join(" and ") + " in company" : "") + (s.up.length ? ". Fitted with " + s.up.map(k => SEA_UPS[k].name.toLowerCase()).join(", ") + "." : ".") +
+      " · a " + shC(s).name + (X.prizes.length ? " · with " + X.prizes.map(id => shPrizeName(id)).join(" and ") + " in company" : "") + (X.dock && X.dock.length ? " · " + X.dock.length + " laid up at Raftmark" : "") + (s.up.length ? ". Fitted with " + s.up.map(k => SEA_UPS[k].name.toLowerCase()).join(", ") + "." : ".") +
       (X.hands.length ? " Aboard: " + X.hands.map(k => SEA_HANDS[k].split(" (")[0]).join(", ") + "." : "")]);
+    shItems(X, items);
     if (X.chart.length && X.hoard === "") items.push(["seachart", "map", "The Salt King's chart: " + X.chart.length + " of 4", "Cut in four by the mutineers of the Constant Ann so no one of them could find the hoard alone. You have " + X.chart.map(k => SEA_PIECES[k]).join(", ") + "."]);
     if (X.heat >= 2) items.push(["seaheat", "writ", seaHunter() ? "A pirates' grudge" : "A price on your head", seaHeatName() + ". " + (seaHunter() ? "Pirates with a grudge come looking for you on the roads back." : "Saltwrit thief-takers come looking for you on the roads back.")]);
   }
   Object.assign(TIPS, {
     sea: ["Your ship", "Your ship has <b>hull</b> (holes in it end a voyage), <b>guns</b> (how hard your broadsides hit) and the crew's <b>temper</b> (a sullen crew grumbles, and a mutinous one does more). A voyage is three legs in one of the waters, and every choice out there is remembered. The shipwright mends and fits her out between voyages."],
     broadside: ["Broadsides", "Each round the enemy shows what she's about to do, and you answer it. <b>Round shot</b> holes her hull. <b>Chain</b> cuts her rigging, and is the only thing that stops a ship running. <b>Grape</b> sweeps her deck, and breaks a boarding. <b>Put the helm over</b> to slip a rake, or to take half a broadside. Hit her hard while she reloads. Some captains lie: <b>read her through the glass</b> to be sure. Board her when her crew is thin."],
+    seawind: ["Wind, weather and ground", "Every fight at sea has <b>a wind</b> (with the weather gauge your guns hit 1 harder and she has a harder time running; claw up to windward to take it), <b>a sky</b> (a calm stops ships without oars from turning, squalls hole everybody, fog and night hide her tells), and <b>ground</b> (shoals to lure her onto, narrows where nobody runs, a shore battery). Big hits can shoot away a <b>rudder</b>, bring down a <b>mast</b> or start a <b>fire</b>: send the fire party. Every kind of ship fights differently: read her class."],
+    shipyard: ["The shipwright's yard", "Ama Holt builds any of thirteen kinds of hull, one of them only with the right plans. Some need stuff only <b>the harbour board's ship quests</b> bring home. You <b>loft</b> her yourself: a level, well-trimmed deck plan makes her <b>sweet-handling</b>, a bad one makes her <b>crank</b>. She takes days to build. Ships you break up give planks (off a build, or mending), guns and fittings, and rare hulls give back their parts. <b>Your fleet</b>: shift your flag, sail two in company, lay up three at Raftmark, and rename any of them."],
     chart: ["The Salt King's chart", "The mutineers of the Constant Ann cut the Salt King's chart in four. With all four pieces, a course can be laid in the Grey Yonder for wherever he hid his tithe."]
   });
 
@@ -32035,13 +32064,17 @@ body.pv-open { overflow: hidden; }
       const c = await choose([
         { key: "sail", label: "Put to sea", tag: s.hull <= 0 ? "she has to be mended first" : "three legs · " + Object.keys(SEA_WATERS).filter(w => SEA_WATERS[w].open()).length + " waters open", show: s.hull > 0 },
         { key: "key", label: "Lay a course for Knucklebone Key", tag: "the Salt King's hoard · the Grey Yonder", show: X.chart.length >= 4 && !X.hoard && s.hull > 0 },
-        { key: "yard", label: "The shipwright", tag: (dmg ? "repairs " + fix + " gold · " : "") + "fit her out", plain: true },
+        { key: "yard", label: "The shipwright", tag: (dmg ? "repairs " + fix + " gold · " : "") + "fit her out · build · break up" + (X.yard && X.yard.build ? " · " + (calDay() >= X.yard.build.due ? "your new ship is ready" : "a ship on the slip") : ""), plain: true },
+        { key: "fleet", label: "Your fleet", tag: (1 + X.prizes.length + X.dock.length) + " ship" + (X.prizes.length + X.dock.length ? "s" : "") + " · rename · shift your flag · lay up", plain: true },
+        { key: "board", label: "The harbour board", tag: "ship's work · " + Object.keys(SH_QUESTS).filter(k => !shQDone(k)).length + " of " + Object.keys(SH_QUESTS).length + " jobs open", show: s.hull > 0, plain: true },
         { key: "grog", label: "Broach a cask of grog for the crew", tag: "12 gold · temper +2", show: S.coins >= 12 && s.temper < 10, plain: true },
         { key: "back", label: "Back to the roads", plain: true }
       ]);
       if (c === "back") break;
       if (c === "grog") { S.coins -= 12; renderSheet(); await say("You knock the bung out of a cask on the capstan and the crew come up from below like a tide coming in."); await seaTemper(2); }
       if (c === "yard") await seaYard();
+      if (c === "fleet") await shFleetHub();
+      if (c === "board") await shBoard();
       if (c === "sail") await seaVoyage();
       if (c === "key") await seaKey();
       save();
@@ -32052,14 +32085,17 @@ body.pv-open { overflow: hidden; }
     const X = sea(), s = X.ship;
     await say(seaHunter() ? "The Saltwrit's yard on the Gibbet Skerries: a slip, a crane, a man called Dobbin who has opinions about your caulking." : "The shipwright at Raftmark works out of a hulk with its side cut away, so the ships come right in: a Skerran woman called Ama Holt, salt-white to the elbows, who never stops chewing tar.");
     for (;;) {
+      if (X.yard && X.yard.build && calDay() >= X.yard.build.due) await shLaunch();
       const dmg = s.max - s.hull, fix = dmg * 4;
       const c = await choose([
         { key: "fix", label: "Mend her", tag: fix + " gold · hull " + s.hull + " → " + s.max, show: dmg > 0 && S.coins >= fix },
         { key: "patch", label: "Patch what you can afford", tag: Math.floor(S.coins / 4) + " of " + dmg + " · 4 gold each", show: dmg > 0 && S.coins >= 4 && S.coins < fix, plain: true },
         ...Object.keys(SEA_UPS).map(k => ({ key: "up:" + k, label: SEA_UPS[k].name, tag: SEA_UPS[k].cost + " gold · " + SEA_UPS[k].fx, show: !s.up.includes(k) && S.coins >= SEA_UPS[k].cost, plain: true })),
+        ...shYardOpts(),
         { key: "no", label: "That's all", plain: true }
       ]);
       if (c === "no") break;
+      if (c.startsWith("sh-")) { await shYardDo(c.slice(3)); continue; }
       if (c === "fix") { S.coins -= fix; s.hull = s.max; renderSheet(); await mech("She's tight again: hull " + s.hull + " of " + s.max + ". Spent " + fix + " gold.", "loot"); }
       else if (c === "patch") { const n = Math.floor(S.coins / 4); S.coins -= n * 4; s.hull += n; renderSheet(); await mech("Hull " + s.hull + " of " + s.max + ". Spent " + n * 4 + " gold.", "loot"); }
       else if (c.startsWith("up:")) {
@@ -32086,9 +32122,10 @@ body.pv-open { overflow: hidden; }
     light(w === "yonder" ? "moon" : w === "bones" ? "mire" : "lake");
     roamFight = true;
     const met = new Set();
-    X.gold = 0;
+    X.gold = 0; X.at = w;
     try {
       await say({ reach: "You stand out from Raftmark into the Reach, where the water is green and slow and the gulls follow you all day, waiting.", gibbet: "North to the Gibbet Skerries: black rocks in a white sea, and on every one of them an iron cage on a post.", bones: "Into the Saltbones, where the sea is a hand deep over a mile of sand and the old wrecks stick up out of it like ribs.", banks: "East to the Lantern Banks, where every merchant ship out of Rahdaria has to come, and the lanterns of the fishing fleet are spread out on the water at night like a town.", yonder: "West, past the last chart anybody trusts, into the Grey Yonder: long grey swells, nothing in sight from one week to the next, and very deep water." }[w]);
+      await shVoyageStart();
       if (X.ship.temper <= 2) await seaGrumble();
       for (let leg = 0; leg < 3 && X.ship.hull > 0; leg++) {
         if (leg) await say(["The wind backs round and freshens, and you run on.", "A day and a night of nothing but sea.", "Dawn comes up red. The lookout sings out."][leg % 3]);
@@ -32096,11 +32133,13 @@ body.pv-open { overflow: hidden; }
         const rivals = seaRivalsIn(w).filter(id => !met.has(id));
         const echo = seaEcho(w);
         if (echo && d(3) === 1) { await echo(); continue; }
+        if (!met.has("sail") && d(4) === 1) { met.add("sail"); await shSail(w); continue; }
         if (rivals.length && (leg === 2 || d(3) === 1)) { const id = rivals[d(rivals.length) - 1]; met.add(id); await seaMeet(id); continue; }
         const pool = W.ev.filter(k => !X.ev[k] && !met.has(k)), any = W.ev.filter(k => !met.has(k) && SEA_REPEAT[k]);
         const k = pool.length ? pool[d(pool.length) - 1] : any.length ? any[d(any.length) - 1] : null;
         if (k) { met.add(k); await SEA_EVENTS[k](); }
         else if (echo) await echo();
+        else if (!met.has("sail")) { met.add("sail"); await shSail(w); }
         else await say("Nothing comes over the horizon all day but weather, and you're glad of it.");
       }
       X.voy++; X.seen[w] = (X.seen[w] || 0) + 1;
@@ -32116,6 +32155,7 @@ body.pv-open { overflow: hidden; }
           await seaTemper(1);
         }
         xpGain(30 + lv());
+        await shVoyageEnd();
       }
       if (Object.keys(SEA_WATERS).every(k => X.seen[k])) grant("seawaters");
       grant("seafirst");
@@ -32133,6 +32173,8 @@ body.pv-open { overflow: hidden; }
     if (w === "bones" && wreck) return () => seaWreck(wreck);
     if (X.ev.bell === "cut" && !X.ev.bellPaid && w === "reach") return seaBellCost;
     if (X.ev.cages === "cut" && seaHunter() && !X.ev.cageCost) return seaCageCost;
+    const M = X.yard && X.yard.q.murder;
+    if (M && !M.right && !M.echo) return shMurderEcho;
     return null;
   }
   async function seaGrumble() {
@@ -32176,7 +32218,7 @@ body.pv-open { overflow: hidden; }
     ]);
     if (c === "away") { await say("You put the helm up and bear away, and she watches you go. You'll meet again."); if (!M.fate) M.fate = "fled"; return; }
     if (c === "black") {
-      const r = await check({ label: "Intimidation check (calling on her to strike)", mod: 3 + tier + Math.floor(X.ship.guns / 3) + (X.prizes.length ? 1 : 0), dc: 16 + Math.floor(R.guns / 2) - tier, cta: "Hail her" });
+      const r = await check({ label: "Intimidation check (calling on her to strike)", mod: 3 + tier + Math.floor(X.ship.guns / 3) + (X.prizes.length ? 1 : 0) + (shQ(X.ship, "grave") ? 2 : 0), dc: 16 + Math.floor(R.guns / 2) - tier, cta: "Hail her" });
       if (r.ok) { await say("You let her see what you are, and what you've done, and her colours come down. Nobody wants to be next."); await seaWon(id, returned); return; }
       await say("Her answer is a gun, fired to windward. No.");
     }
@@ -32191,9 +32233,13 @@ body.pv-open { overflow: hidden; }
     rake: ["She puts her helm hard over, to cross your bow.", "She's coming round fast, to pass across your stern, where you've no guns to answer.", "Her bow swings toward yours, and her forward guns are run out and waiting."],
     board: ["Her rail is crowded with men and grapnels, and she's closing.", "Her yards are full of men with pistols, and she's coming straight at you.", "A drum on her deck, and a lot of shouting, and she's coming alongside."],
     run: ["She's shaking out every scrap of canvas she has.", "Her crew are throwing barrels over the side to lighten her.", "She falls off before the wind and starts to open the distance."],
-    reload: ["Her guns are run in, and there's sponging and ramming behind the ports.", "Smoke's still hanging round her. She's reloading.", "Her deck's a mess from your last shot, and they're clearing it."]
+    reload: ["Her guns are run in, and there's sponging and ramming behind the ports.", "Smoke's still hanging round her. She's reloading.", "Her deck's a mess from your last shot, and they're clearing it."],
+    hidden: ["You can't see her. You can hear her: blocks squealing, and somebody shouting orders, and then nothing.", "Her lantern goes out. Somewhere out there she's doing something.", "A shape in the murk, and gone again. You've no idea which way she's heading."],
+    aground: ["She's hard aground on the bar, heeled over, with her boats out laying a kedge.", "She's stuck fast, and her crew are throwing guns over the side to float her off.", "She's aground, and her masts are leaning, and her captain is screaming at somebody."]
   };
-  function seaIntent(R, E, k) {
+  function seaIntent(R, E, k, C = {}) {
+    if (E.ground > 0) return "aground";
+    const HC = SH_CLS[R.cls] || {};
     const hurt = E.hull <= E.max / 2;
     const pick = (t) => { let r = Math.random() * t.reduce((a, x) => a + x[1], 0); for (const [i, w] of t) { if ((r -= w) <= 0) return i; } return t[0][0]; };
     if (E.last === "broadside" || E.last === "rake") { if (R.way !== "twin" && d(3) > 1) return "reload"; }
@@ -32202,19 +32248,57 @@ body.pv-open { overflow: hidden; }
       case "board": t = [["board", 5], ["broadside", 3], ["reload", 1]]; break;
       case "run": t = hurt ? [["run", 7], ["broadside", 2]] : [["run", 4], ["broadside", 3], ["reload", 2]]; break;
       case "rake": t = [["rake", 5], ["broadside", 3], ["reload", 1]]; break;
-      case "twin": return hurt ? "board" : k % 2 ? "board" : "broadside";
+      case "twin": t = [[hurt ? "board" : k % 2 ? "board" : "broadside", 1]]; break;
       case "heavy": t = [["broadside", 6], ["rake", 2]]; break;
       default: t = [["broadside", 4], ["rake", 2], ["board", 2], ["run", hurt ? 2 : 0], ["reload", 1]];
     }
-    if (E.rig <= 0) t = t.filter(x => x[0] !== "run" && x[0] !== "rake").concat([["broadside", 2]]);
+    const no = (k) => { t = t.filter(x => x[0] !== k); };
+    if (E.rig <= 0) { no("run"); no("rake"); }
+    if (C.sky === "calm" && !HC.oars) { no("run"); no("rake"); }
+    if (C.ground === "narrows" || E.pinned) no("run");
+    if (E.rudder > 0) { no("rake"); no("run"); }
+    if (!t.length) t = [["broadside", 2], ["reload", 1]];
     return pick(t);
   }
-  async function seaDuel(R, id, returned) {
+  // The wind, the weather and the ground for a fight (2026-11-15). gauge: who has the weather gauge ("us", "them",
+  // "beam"). sky: fair, calm, squall, fog, night. ground: open, shoals, narrows, shore (a battery that hates somebody).
+  const SH_SKY = { reach: [["fair", 5], ["calm", 2], ["squall", 1], ["fog", 1], ["night", 1]], gibbet: [["fair", 4], ["night", 3], ["squall", 2], ["fog", 1]],
+    bones: [["fog", 4], ["fair", 3], ["night", 2], ["calm", 1]], banks: [["fair", 5], ["calm", 3], ["squall", 1], ["night", 1]], yonder: [["squall", 4], ["fair", 3], ["night", 1], ["fog", 1]] };
+  const SH_GROUND = { reach: [["open", 5], ["narrows", 2], ["shore", 2]], gibbet: [["open", 3], ["narrows", 2], ["shore", 3]], bones: [["shoals", 5], ["open", 2]],
+    banks: [["open", 4], ["shoals", 2], ["shore", 1]], yonder: [["open", 1]] };
+  const shRoll = (t) => { let r = Math.random() * t.reduce((a, x) => a + x[1], 0); for (const [k, w] of t) if ((r -= w) <= 0) return k; return t[0][0]; };
+  function shCond(w, R, o = {}) {
+    const X = sea(), MC = shC(X.ship);
+    const sky = o.sky || shRoll((SH_SKY[w] || SH_SKY.reach).map(([k, n]) => [k, k === "squall" && calWinter() ? n + 2 : n]));
+    const ground = o.ground || shRoll(SH_GROUND[w] || SH_GROUND.reach);
+    const fast = MC.fast || shQ(X.ship, "reach") ? 1 : 0;
+    const gauge = o.gauge || shRoll([["us", 2 + fast], ["them", 2], ["beam", 2]]);
+    // a battery fires on pirates: on you unless you hunt them, on her if she's one and you're with the Saltwrit
+    const hates = ground !== "shore" ? "" : w === "reach" ? (seaHunter() ? "you" : R.skerra ? "" : "her") : seaHunter() ? (R.pirate === false || R.kind === "saltwrit" ? "you" : "her") : "you";
+    return { w, sky, ground, gauge, hates };
+  }
+  const SH_SKY_TXT = { fair: "A fair wind and a clear sky.", calm: "A dead calm: the sails hang like washing, and the sea's oily.", squall: "Squalls coming down the wind in grey lines, one after another.",
+    fog: "Fog, thick as wool, and her shape coming and going in it.", night: "Night: no moon, and nothing to see her by but her stern lantern." };
+  const SH_GROUND_TXT = { open: "", shoals: "There's broken water all round you: a bar to leeward and shoals under both of you.", narrows: "You're in a narrow channel between rocks, with no room to run.",
+    shore: "You're under the guns of a shore battery." };
+  const shCondLine = (C) => ({ us: "You have the weather gauge.", them: "She has the weather gauge.", beam: "You're beam to beam, and nobody has the wind of anybody." })[C.gauge] + " " + SH_SKY_TXT[C.sky] + (C.ground !== "open" ? " " + SH_GROUND_TXT[C.ground] : "") +
+    (C.hates ? " The battery's gunners don't like " + (C.hates === "you" ? "you" : "her") + "." : "");
+  const shCondTag = (C) => ["the wind: " + ({ us: "yours", them: "hers", beam: "nobody's" })[C.gauge], C.sky, C.ground !== "open" ? C.ground : ""].filter(Boolean).join(" · ");
+  async function seaDuel(R, id, returned, opt = {}) {
     tip("broadside");
-    const X = sea(), s = X.ship, plus = returned ? 2 : 0;
-    const E = { hull: R.hull + plus + Math.floor(lv() / 10), max: R.hull + plus + Math.floor(lv() / 10), guns: R.guns + plus, crew: R.crew + plus, rig: id === "tarrow" && X.ev.tarrowFound ? 1 : 2, dist: 0, last: "" };
+    const X = sea(), s = X.ship, plus = returned ? 2 : 0, MC = shC(s), HC = SH_CLS[R.cls] || {};
+    const qa = (k) => shQ(s, k), qb = (k) => (R.q || []).includes(k);
+    const C = opt.cond || shCond(X.at || SEA_RIVALS[id] && SEA_RIVALS[id].water || "reach", R);
+    if (R.cls) shNoteClass(R.cls);
+    const top = R.hull + plus + Math.floor(lv() / 10) + (qb("copper") ? 2 : 0) - (qb("green") ? 2 : 0);
+    const E = { hull: top - (qb("leak") ? 1 : 0), max: top, guns: R.guns + plus, crew: R.crew + plus, rig: id === "tarrow" && X.ev.tarrowFound ? 1 : 2, dist: 0, last: "", fire: 0, rudder: 0, ground: opt.anchor ? 1 : 0, pinned: false, fired: 0 };
+    const G = { rudder: 0, mast: 0, fire: 0, ground: 0, cat: qa("cat"), spring: MC.spring || 0, fired: 0 };
     if (id === "tarrow" && X.ev.tarrowFound) await say("You come on her where the Bathyr said she'd be, at anchor in the lee of a sandbank, and get a broadside into her rigging before she's got her anchor up.");
-    let laid = false, chain = seaUp("locker") ? 4 : 2, grape = seaUp("locker") ? 4 : 2, reads = 1 + (seaUp("glass") ? 1 : 0) + (seaHas("pell") || seaHas("malloway") ? 1 : 0), doubled = false;
+    if (opt.anchor) await say("She's lying at anchor, with her boats in the water, and it'll be a turn before she can do anything but fire.");
+    await mech(shCondLine(C) + (R.cls ? " She's a <b>" + HC.name + "</b>: " + HC.fx + "." : ""));
+    tip("seawind");
+    let laid = false, chain = (seaUp("locker") ? 4 : 2) + (MC.chain || 0), grape = seaUp("locker") ? 4 : 2, reads = 1 + (seaUp("glass") ? 1 : 0) + (seaHas("pell") || seaHas("malloway") ? 1 : 0) + (MC.sees ? 1 : 0) + (qa("ghost") ? 1 : 0), doubled = false;
+    let lamps = MC.lamps ? 2 : 1, hoyUsed = false, harp = !!MC.harpoon;
     const strike = X.hanged ? 0 : 2; // after you've hanged a captain, nobody strikes to you just because they're short of hands
     if (X.hanged && R.crew) await mech("They know what you do to captains. She'll fight till she sinks or you board her.", "hurt");
     // a captain you let go pays you back
@@ -32222,38 +32306,75 @@ body.pv-open { overflow: hidden; }
     if (owed) {
       X.debt = X.debt.filter(k => k !== owed);
       await say("Another sail comes up out of the haze, fast, and you think for a moment she's a second enemy. Then she runs up her colours: " + seaRival(owed).ship + ", " + seaRival(owed).name + "'s ship, that you let go. She fires one broadside into " + R.ship + " as she goes past, dips her colours to you, and is gone.");
-      E.hull -= 4; await mech("A debt paid. " + R.ship.replace(/^the /, "The ") + " is holed: her hull " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
+      E.hull -= 4; await mech("A debt paid. " + shCap(R.ship) + " is holed: her hull " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
     }
     const consort = Math.min(2, X.prizes.length);
-    if (consort) await say(X.prizes.map(k => seaRival(k).ship).join(" and ") + (consort > 1 ? " come" : " comes") + " up into line astern of you, guns run out.");
+    if (consort) await say(X.prizes.map(k => shPrizeName(k)).join(" and ") + (consort > 1 ? " come" : " comes") + " up into line astern of you, guns run out.");
     const box = el("div", "lockhist"); add(box);
-    const status = () => box.innerHTML = "<b>" + s.name.replace(/^the /, "The ") + "</b>: hull " + s.hull + " of " + s.max + " · chain " + chain + " · grape " + grape + (reads ? " · the glass " + reads : "") + "<br><b>" + R.ship.replace(/^the /, "The ") + "</b>: hull " + Math.max(0, E.hull) + " of " + E.max + " · crew " + E.crew + " · rigging " + ["cut to pieces", "damaged", "whole"][E.rig] + (E.dist ? " · opening the distance" : "");
+    const hurtTxt = (o) => [o.rudder ? "rudder shot away" : "", o.mast ? "a mast down" : "", o.fire ? "on fire" : "", o.ground ? "aground" : ""].filter(Boolean).join(", ");
+    const status = () => box.innerHTML = "<b>" + shCap(s.name) + "</b>: hull " + s.hull + " of " + s.max + " · chain " + chain + " · grape " + grape + (reads ? " · the glass " + reads : "") + (X.yard && X.yard.hoys && !hoyUsed ? " · fireship astern" : "") + (MC.spring ? " · spring " + G.spring + " of " + MC.spring : "") + (hurtTxt(G) ? " · <i>" + hurtTxt(G) + "</i>" : "") +
+      "<br><b>" + shCap(R.ship) + "</b>: hull " + Math.max(0, E.hull) + " of " + E.max + " · crew " + E.crew + " · rigging " + ["cut to pieces", "damaged", "whole"][E.rig] + (E.dist ? " · opening the distance" : "") + (hurtTxt(E) ? " · <i>" + hurtTxt(E) + "</i>" : "") +
+      "<br><small>" + shCondTag(C) + "</small>";
+    const calm = () => C.sky === "calm";
+    const iMove = () => !calm() || (MC.oars && (!MC.spring || G.spring > 0));
+    const shallowMe = !!MC.shallow, shallowHer = !!HC.shallow;
+    const ground = async (who) => {
+      if (who === "me") { G.ground = 1; await say("There's a long grinding shudder under your feet, and she stops dead. You're aground."); await seaHull(2, "On the bar."); }
+      else { E.ground = 2 + (shallowMe ? 1 : 0); E.hull -= 3; await say("She comes after you over the bar, and stops as if she'd hit a wall: her masts whip forward, and men fall out of her rigging. She's hard aground."); await mech("Her hull: " + Math.max(0, E.hull) + " of " + E.max + ". She's stuck for " + E.ground + " turns.", "loot"); grant("shground"); }
+    };
+    // located damage: a big hit can take away a rudder, a mast, or set a fire
+    const crit = async (who, n) => {
+      const T = who === "me" ? G : E;
+      const r = d(6), burn = who === "me" ? MC.tinder : HC.tinder;
+      if (r === 1 && !T.rudder) { T.rudder = 2; await mech(who === "me" ? "Your <b>rudder</b>'s shot away: no turning (helm, rake, the gauge or the bar) until the carpenters fix it." : "Her <b>rudder</b>'s shot away: she can't turn to rake or run.", who === "me" ? "hurt" : "loot"); }
+      else if (r === 2 && !T.mast && (who === "me" || E.rig > 0)) { if (who === "me") { G.mast = 1; await mech("Your <b>foremast</b> goes over the side in a tangle of rigging: your broadsides are 1 lighter until it's cleared.", "hurt"); } else { E.rig = 0; T.mast = 1; await mech("Her <b>foremast</b> goes over the side: she can't run now.", "loot"); } }
+      else if ((r === 3 || (burn && r <= 5)) && !T.fire) { T.fire = who === "me" ? 1 : 2; await mech(who === "me" ? "<b>Fire</b> below, by the cable tier: it'll hole her every turn until the fire party puts it out." : "<b>Fire</b> on her deck: you can see them running with buckets.", who === "me" ? "hurt" : "loot"); }
+    };
     for (let k = 0; k < 14; k++) {
       status();
-      const intent = seaIntent(R, E, k);
+      const squall = C.sky === "squall" && d(3) === 1;
+      if (squall) await say("A squall comes down on both of you in a grey wall, and the ships heel and the rain goes across the decks sideways." + (seaHas("tegen") ? " Old Tegen saw it coming and had the topsails in already." : ""));
+      const intent = seaIntent(R, E, k, C);
       let shown = intent;
-      if (R.way === "feint" && intent !== "reload" && d(3) === 1) { const o = ["broadside", "rake", "board", "run"].filter(x => x !== intent); shown = o[d(o.length) - 1]; }
+      if (R.way === "feint" && intent !== "reload" && intent !== "aground" && d(3) === 1) { const o = ["broadside", "rake", "board", "run"].filter(x => x !== intent); shown = o[d(o.length) - 1]; }
+      if (shown !== intent && MC.sees) { await mech("Through the masthead lens: what she's showing you is a lie.", "loot"); shown = intent; }
+      if (intent !== "aground" && !MC.hears && ((C.sky === "fog" && d(2) === 1) || (C.sky === "night" && d(3) === 1))) shown = "hidden";
+      if (shown === "hidden" && MC.hears) shown = intent;
       await say(SEA_TELLS[shown][d(3) - 1]);
       let m;
+      const turn = !G.rudder && !G.ground && iMove();
       for (;;) {
         m = await choose([
-          { key: "round", label: "Round shot, at her hull", tag: s.guns + " guns" + (consort ? " and " + consort + " consort" + (consort > 1 ? "s" : "") : "") + (doubled ? " · double-shotted" : "") },
+          { key: "round", label: "Round shot, at her hull", tag: s.guns + " guns" + (consort ? " and " + consort + " consort" + (consort > 1 ? "s" : "") : "") + (doubled ? " · double-shotted" : "") + (C.gauge === "us" ? " · the gauge: +1" : "") },
           { key: "chain", label: "Chain shot, at her rigging", tag: chain + " left · stops her running, and stops her raking", show: chain > 0, plain: true },
           { key: "grape", label: "Grape, at her deck", tag: grape + " left · thins her crew · breaks a boarding", show: grape > 0, plain: true },
-          { key: "helm", label: "Put the helm over", tag: "slip a rake · half a broadside · no shot this round", plain: true },
-          { key: "double", label: "Double-shot the guns and hold your fire", tag: "next round of round shot hits twice as hard", show: !doubled, plain: true },
-          { key: "lay", label: "Lay the bow-chaser yourself", tag: "once a duel · aim it by hand · a direct hit holes her badly", show: !laid, plain: true },
-          { key: "read", label: "Read her through the glass", tag: reads + " left · see what she really means", show: reads > 0, plain: true },
-          { key: "board", label: "Lay her alongside and board her", tag: "her crew: " + E.crew + (seaHas("cagemen") ? " · the cage-men with you" : ""), plain: true }
+          { key: "helm", label: "Put the helm over", tag: "slip a rake · take " + (MC.slow > 1 ? "a quarter" : MC.slow ? "a third" : qa("sweet") ? "two thirds" : "half") + " off a broadside · no shot this turn" + (C.ground === "shoals" && !shallowMe ? " · the shoals" : ""), show: turn, plain: true },
+          { key: "rake", label: "Cross her bow and rake her", tag: "if she holds her course: her whole length, and her broadside can't bear · if she's turning too, nothing", show: turn && (MC.rake || (MC.oars && calm())), plain: true },
+          { key: "gauge", label: "Claw up to windward", tag: "Seamanship · take the weather gauge · no shot this turn", show: turn && C.gauge !== "us" && !calm() && !G.mast, plain: true },
+          { key: "lure", label: "Lure her over the bar", tag: "if she follows you in, she grounds · if she stands off and fires, you take it" + (shallowMe ? " · you draw nothing" : " · you might ground too"), show: turn && C.ground === "shoals" && !E.ground && !shallowHer, plain: true },
+          { key: "lamps", label: "Show false lamps", tag: (MC.lamps ? "your yards are hung for it · her move is lost, and your guns still fire" : "1 in 2 she follows them · her move is lost") + " · " + lamps + " left", show: lamps > 0 && (C.sky === "night" || C.sky === "fog") && !E.ground, plain: true },
+          { key: "hoy", label: "Cut the fireship loose and send her in", tag: "once · best when she's reloading, boarding or aground", show: !!(X.yard && X.yard.hoys) && !hoyUsed && !calm(), plain: true },
+          { key: "harpoon", label: "Harpoon her", tag: "once · she can't run, and she can't open the distance", show: harp, plain: true },
+          { key: "party", label: "Send the fire party and the carpenters", tag: "put out the fire, mend the rudder or clear the mast · no shot this turn", show: !!(G.fire || G.rudder || G.mast || G.ground), plain: true },
+          { key: "wind", label: "Wind the paddle-spring at the capstan", tag: "no shot this turn · " + MC.spring + " turns of paddling", show: !!MC.spring && G.spring < MC.spring && calm(), plain: true },
+          { key: "double", label: "Double-shot the guns and hold your fire", tag: "next round shot hits twice as hard", show: !doubled, plain: true },
+          { key: "lay", label: "Lay the bow-chaser yourself", tag: "once a fight · aim it by hand · a direct hit holes her badly", show: !laid, plain: true },
+          { key: "read", label: "Read her through the glass", tag: reads + " left · see what she really means", show: reads > 0 && (shown !== "hidden" || MC.hears), plain: true },
+          { key: "board", label: "Lay her alongside and board her", tag: "her crew: " + E.crew + (seaHas("cagemen") ? " · the cage-men with you" : "") + (MC.board ? " · a Skerran hull: +" + MC.board : ""), show: !G.ground && (iMove() || E.ground > 0), plain: true },
+          { key: "away", label: "Break off and run", tag: "end the fight · she's still out there", show: (MC.fast || qa("reach") || C.gauge === "us") && !G.ground && !calm(), plain: true }
         ]);
         if (m !== "read") break;
         reads--;
-        await mech("Through the glass: she means to <b>" + { broadside: "fire a broadside", rake: "rake you", board: "board you", run: "run", reload: "reload" }[intent] + "</b>." + (shown !== intent ? " What she's showing you is a lie." : ""), "loot");
+        await mech("Through the glass: she means to <b>" + { broadside: "fire a broadside", rake: "rake you", board: "board you", run: "run", reload: "reload", aground: "get herself off the bar" }[intent] + "</b>." + (shown !== intent && shown !== "hidden" ? " What she's showing you is a lie." : ""), "loot");
         shown = intent;
       }
-      if (m === "board") return await seaBoard(R, id, E, false);
+      if (m === "away") { await say("You put her before the wind and crack on everything she'll carry, and she can't hold you."); return "fled"; }
+      if (m === "board") { if (MC.board) E.crew = Math.max(1, E.crew - MC.board); return await seaBoard(R, id, E, false); }
+      let lost = false; // her move this turn comes to nothing
       // your shot
-      const shotDmg = () => Math.max(1, Math.ceil(s.guns / 2) + d(4) + consort + (seaHas("gannet") ? 1 : 0) + (s.temper >= 8 ? 1 : s.temper <= 3 ? -1 : 0));
+      const shotDmg = () => Math.max(1, Math.ceil(s.guns / 2) + d(4) + consort + (seaHas("gannet") ? 1 : 0) + (s.temper >= 8 ? 1 : s.temper <= 3 ? -1 : 0) + (C.gauge === "us" ? 1 : 0) - (G.mast ? 1 : 0) - (qa("crank") ? 1 : 0) - (squall && !seaHas("tegen") ? 2 : 0) + (E.ground ? 2 : 0));
+      const hotGun = async () => { G.fired++; if (qa("hot") && G.fired > 4 && d(6) === 1 && s.guns > 2) { s.guns--; await seaHull(1, "A gun bursts on her own deck, and takes the gun crew with it."); } };
+      if (G.ground && m !== "party" && m !== "round" && m !== "grape" && m !== "chain" && m !== "double" && m !== "lay") { await say("You can't do that: you're aground."); m = "round"; }
       if (m === "lay") {
         laid = true;
         const g = await wallGun({ title: "The bow-chaser", target: R.ship, shots: 2, dist: 140 + d(160) });
@@ -32261,11 +32382,14 @@ body.pv-open { overflow: hidden; }
         E.hull -= n;
         await say(g.direct ? "The ball goes in under her counter, and there's a crash from somewhere deep inside her." : g.near ? "Close enough to send splinters across her deck." : "The shot goes into the sea.");
         if (n) await mech("Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
+        if (g.direct) await crit("her", n);
       } else if (m === "round") {
         let n = shotDmg(); if (doubled) { n *= 2; doubled = false; }
         if (intent === "reload") n += 2;
         if (intent === "run" && E.dist) n = Math.max(1, n - 2);
-        E.hull -= n; await say(n >= 8 ? "Your broadside goes into her like a fist. Splinters, and screaming, and her mizzen topmast going over the side." : "Your guns go off in a ragged roll, and you see the shot strike: splinters fly from her side."); await mech("Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
+        E.hull -= n; await hotGun();
+        await say(n >= 8 ? "Your broadside goes into her like a fist. Splinters, and screaming, and her mizzen topmast going over the side." : "Your guns go off in a ragged roll, and you see the shot strike: splinters fly from her side."); await mech("Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
+        if (n >= 7) await crit("her", n);
       } else if (m === "chain") {
         chain--; E.rig = Math.max(0, E.rig - 1); E.hull -= 1;
         await say("The chain shot goes howling through her rigging, and halyards part, and a yard comes down across her deck." + (intent === "run" ? " She was spreading canvas to run, and now she can't." : ""));
@@ -32276,25 +32400,98 @@ body.pv-open { overflow: hidden; }
         await say(intent === "board" ? "She comes alongside with her rail black with boarders, and your guns sweep it clean at twenty yards. The grapnels fall back into the sea." : "The grape goes across her deck like hail, and her people throw themselves flat.");
         await mech("Her crew: " + E.crew + ".", "loot");
       } else if (m === "double") { doubled = true; await say("You have the guns loaded with two balls each and run out, and tell the gun captains to wait for your word."); }
-      else if (m === "helm") await say("You put the helm hard over, and the ship heels and comes round, and the sea goes past white along her side.");
+      else if (m === "helm") { await say("You put the helm hard over, and the ship heels and comes round, and the sea goes past white along her side."); if (MC.spring && calm()) G.spring--; if (C.ground === "shoals" && !shallowMe && d(5) === 1) await ground("me"); }
+      else if (m === "rake") {
+        if (MC.spring && calm()) G.spring--;
+        if (intent === "rake") { await say("You both put your helms over at once, and pass each other bow to bow, close enough to throw a biscuit, and nobody's guns bear."); lost = true; }
+        else if (intent === "run") await say("You cross where her bow was, but she's already falling off before the wind, and your shot goes into her quarter.");
+        else {
+          const n = s.guns + d(3) + (C.ground === "narrows" ? 2 : 0) + (qb("rot") ? 2 : 0) + (E.ground ? 2 : 0);
+          E.hull -= n; await hotGun();
+          await say("You cross her bow at fifty yards and fire as each gun bears, and every ball goes the whole length of her deck.");
+          await mech("Raked. Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot");
+          if (n >= 7) await crit("her", n);
+          if (intent === "board") { lost = true; await say("Her boarders are on the wrong side of their own ship now."); }
+        }
+        if (C.ground === "shoals" && !shallowMe && d(4) === 1) await ground("me");
+      } else if (m === "gauge") {
+        const r = await check({ label: "Seamanship check (the weather gauge)", mod: 2 + plTier() + (MC.fast ? 3 : 0) + (seaHas("pell") ? 2 : 0) + (seaHas("hawl") ? 1 : 0) - 2 * (MC.slow || 0), dc: 13, cta: "Beat up" });
+        if (r.ok) { C.gauge = "us"; await say("You beat up to windward of her, tack by tack, and the wind's yours: your guns point down at her, and hers point at the sky."); }
+        else await say("You try to claw up to windward, and she sees it, and matches you.");
+      } else if (m === "lure") {
+        if (intent === "rake" || intent === "run" || intent === "board") { lost = true; await ground("her"); }
+        else await say("You stand in over the bar, and she doesn't follow. She stays out in deep water, with her guns run out.");
+        if (!shallowMe && d(3) === 1) await ground("me");
+      } else if (m === "lamps") {
+        lamps--;
+        if (MC.lamps || d(2) === 1) {
+          lost = true;
+          await say("You douse your own lights and hang lamps from a spar towed astern on a long line, and she goes after them, and fires into them, and you're somewhere else.");
+          if (MC.lamps) { const n = shotDmg(); E.hull -= n; await say("And from where you really are, your guns open on her."); await mech("Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot"); }
+        } else await say("You hang out false lamps, and she's not fooled for a moment.");
+      } else if (m === "hoy") {
+        hoyUsed = true; X.yard.hoys--;
+        const r = d(6) + (["reload", "board", "aground"].includes(intent) ? 2 : 0) + (C.sky === "night" ? 1 : 0) + (C.gauge === "us" ? 1 : 0);
+        if (r >= 4) {
+          E.fire = 3; E.hull -= 4; lost = true;
+          await say("Your people light the fuse and pull away in the boat, and the Ember-Hoy goes down the wind at her all alight, and fouls her bow, and the fire runs up her rigging like something alive.");
+          await mech("She's <b>on fire</b>. Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot"); grant("shhoy");
+        } else await say("The fireship goes down on her blazing, and her people fend it off with sweeps and spars, and it drifts past and burns itself out on the water.");
+      } else if (m === "harpoon") {
+        harp = false; E.pinned = true; E.dist = 0;
+        await say("The harpoon gun goes off with a thump, and the iron goes into her quarter and holds, and the line comes taut between you. She's not going anywhere you aren't.");
+      } else if (m === "party") {
+        if (G.fire) { G.fire = 0; await say("The fire party go down with wet blankets and buckets, and it's out."); }
+        else if (G.ground) { G.ground = 0; await say("You lay out a kedge anchor in the boat and heave her off on the capstan."); }
+        else if (G.rudder) { G.rudder = 0; await say("The carpenter rigs a jury rudder off the stern with a spare spar. She answers her helm again, just."); }
+        else { G.mast = 0; await say("They cut away the wreckage with axes and let it go over the side."); }
+      } else if (m === "wind") { G.spring = MC.spring; await say("Eight of them on the capstan bars, round and round, and the spring in her belly ticks tight again."); }
       if (E.hull <= 0 || E.crew <= strike) { status(); await say(E.hull <= 0 ? "She's settling, and her colours come down." : "She hasn't the hands left to fight her guns, and her colours come down."); return "won"; }
       // her move
-      if (intent === "broadside") {
-        let n = Math.ceil(E.guns / 2) + d(3); if (R.way === "heavy") n = Math.round(n * 1.4); if (m === "helm") n = Math.ceil(n / 2);
-        await say(m === "helm" ? "Her broadside comes across your quarter as you turn, and half of it goes into the sea." : "Her broadside comes into you all at once: the deck jumps under your feet, and there's a long tearing sound from below.");
+      const helmCut = (n) => MC.slow > 1 ? Math.ceil(n * 0.75) : MC.slow ? Math.ceil(n * 2 / 3) : qa("sweet") ? Math.ceil(n / 3) : Math.ceil(n / 2);
+      const catch_ = async (n) => { if (G.cat && n >= 5) { G.cat = false; await say("The ship's cat is on the rail, washing, while it happens. Half of it goes into the sea."); return Math.ceil(n / 2); } return n; };
+      if (lost || intent === "aground") { if (intent === "aground") { E.ground--; await say(E.ground ? "She's still aground, with her boats out, kedging." : "She comes off the bar at last, on a kedge, with half her crew on the capstan."); } else if (!lost) await say("She's busy reloading."); }
+      else if (intent === "broadside") {
+        let n = Math.ceil(E.guns / 2) + d(3) + (C.gauge === "them" ? 1 : 0) + (MC.frail || 0) - (qb("crank") ? 1 : 0) - (squall ? 2 : 0); if (R.way === "heavy") n = Math.round(n * 1.4); if (m === "helm") n = helmCut(n);
+        if (m === "rake") n = Math.ceil(n / 3);
+        n = Math.max(1, n); E.fired++;
+        if (qb("hot") && E.fired > 4 && d(6) === 1 && E.guns > 2) { E.guns--; E.hull -= 1; await say("One of her guns bursts, and you see the smoke go up from her deck in the wrong place."); }
+        n = await catch_(n);
+        await say(m === "helm" ? "Her broadside comes across your quarter as you turn, and " + (MC.slow ? "too much of it finds you: she turns like a barn." : "half of it goes into the sea.") : m === "rake" ? "Only her forward guns bear on you as you cross." : "Her broadside comes into you all at once: the deck jumps under your feet, and there's a long tearing sound from below.");
         await seaHull(n);
+        if (n >= 6) await crit("me", n);
       } else if (intent === "rake") {
-        if (m === "helm") { E.hull -= 2; await say("She crosses where your bow would have been, and finds nothing there, and as she goes past your guns bear on her stern."); await mech("A free shot into her stern windows. Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot"); }
-        else { const n = E.guns + d(3); await say("She crosses your bow and fires into you end to end, and the shot goes the whole length of your deck."); await seaHull(n, "Raked."); if (d(2) === 1) await seaTemper(-1); }
+        if (m === "helm" || m === "rake") { E.hull -= 2; await say("She crosses where your bow would have been, and finds nothing there, and as she goes past your guns bear on her stern."); await mech("A free shot into her stern windows. Her hull: " + Math.max(0, E.hull) + " of " + E.max + ".", "loot"); }
+        else { let n = E.guns + d(3) + (C.ground === "narrows" ? 2 : 0) + (qa("rot") ? 2 : 0); n = await catch_(n); await say("She crosses your bow and fires into you end to end, and the shot goes the whole length of your deck."); await seaHull(n, "Raked."); if (d(2) === 1) await seaTemper(-1); await crit("me", n); }
+        if (C.ground === "shoals" && !shallowHer && !E.ground && d(4) === 1) await ground("her");
       } else if (intent === "board") {
         if (m === "grape") { E.crew = Math.max(0, E.crew - 1); await say("What's left of her boarding party falls back."); }
         else if (m === "helm") await say("You slip out from under her bow as she comes in, and her grapnels fall short.");
         else { await say("Her grapnels come over your rail, and she's alongside, and they're coming across."); return await seaBoard(R, id, E, true); }
       } else if (intent === "run") {
-        if (m !== "chain") { E.dist++; await say("She's opening the distance."); }
-        if (E.dist >= (seaRover() ? 3 : 2)) return "fled";
+        const need = (seaRover() ? 3 : 2) + (qa("reach") ? 1 : 0) + (C.gauge === "us" ? 1 : 0) - (HC.fast ? 1 : 0);
+        if (m !== "chain" && !E.pinned) { E.dist++; await say("She's opening the distance."); }
+        else if (E.pinned) await say("She crowds on sail and runs, and the harpoon line twangs, and holds.");
+        if (E.dist >= Math.max(1, need)) return "fled";
       } else await say("She's busy reloading.");
       E.last = intent;
+      // the turn's end: fires, a shore battery, living timber
+      if (G.fire) await seaHull(1 + (MC.tinder ? 1 : 0), "The fire below.");
+      if (E.fire) { E.hull -= 1 + (HC.tinder ? 1 : 0); E.fire--; if (d(8) === 1) { E.hull = 0; await say("The fire reaches her magazine. There's a flash, and then a sound you feel in your teeth, and then there's a great deal of her in the sky."); X.blew = (X.blew || 0) + 1; } else await mech(E.fire ? "She's still burning." : "They get her fire out.", "loot"); }
+      if (squall) {
+        const mine = MC.stiff ? 0 : 1 * (MC.squall || 1) + (qa("crank") ? 1 : 0);
+        if (mine && !seaHas("tegen")) await seaHull(mine, "The squall lays her over on her beam ends.");
+        if (!HC.stiff) E.hull -= 1 * (HC.squall || 1) + (qb("crank") ? 1 : 0);
+      }
+      if (C.hates && d(3) === 1) {
+        const n = d(4) + 1;
+        if (C.hates === "you") { await say("The shore battery fires, and the shot comes skipping across the water at you."); await seaHull(n); }
+        else { E.hull -= n; await say("The shore battery fires on her, and one of the balls goes into her waterline."); }
+      }
+      if (MC.mend && k % 2 === 1 && s.hull > 0 && s.hull < s.max) { s.hull++; renderSheet(); await mech("Her living timber knits over a shot-hole: hull " + s.hull + " of " + s.max + ".", "loot"); }
+      if (HC.mend && k % 2 === 1 && E.hull > 0 && E.hull < E.max) E.hull++;
+      if (G.rudder > 0 && !G.fire && d(2) === 1) G.rudder--;
+      if (E.rudder > 0) E.rudder--;
       if (E.hull <= 0) { await say("She's settling, and her colours come down."); return "won"; }
       if (s.hull <= 0) return "beaten";
     }
@@ -32304,7 +32501,7 @@ body.pv-open { overflow: hidden; }
   async function seaBoard(R, id, E, theyBoard) {
     await say(theyBoard ? "They come over the rail with a roar." : "You lay her alongside, and the grapnels go across, and you go with them.");
     const caps = id === "quay" ? ["Ennis Quay", "Lorne Quay"] : [R.name.replace(/, called .*/, "")];
-    const fac = R.skerra ? SKERRA : id === "patience" ? HUNTERS : PIRATES;
+    const fac = R.skerra ? SKERRA : id === "patience" || R.kind === "saltwrit" ? HUNTERS : PIRATES;
     // Blade to blade: call the captain out on the quarterdeck. Win and the crew strike; lose and you're thrown back.
     const dm = duel().foes["sea:" + id];
     const how = await choose([
@@ -32977,6 +33174,938 @@ body.pv-open { overflow: hidden; }
     } finally { roamFight = false; }
   }
   const seaHuntChance = () => S.sea && S.sea.heat >= 3 && d(100) <= 4 * S.sea.heat;
+
+  // ---------- the Shipwright's Yard: ship classes, a ship generator, renaming, building and breaking up (2026-11-15) ----------
+  // Adrian asked for shipbuilding, ship quests, renaming a seized ship, scrapping ships and "all kinds of ships
+  // with varying differences". Every ship has a class (SH_CLS, sixteen of them, each from a people or a water
+  // of this realm), a builder's mark, an age and two or three quirks (SH_Q), and the generator (shGen) makes
+  // the enemy ships you meet under sail, so no two play alike. Your fleet: the flagship (S.sea.ship), up to two
+  // consorts (S.sea.prizes, ids) and ships laid up at Raftmark (S.sea.dock, ids). Ships that aren't your flagship
+  // live in S.sea.gp by id (a rival's id for a rival's prize, "gN" for the rest). The yard (S.sea.yard):
+  //   { timber, guns, fit[], mat{}, build: {cls, due, trim, oak}, built, scrapped[], q{quest: outcome}, hoys, grudge }.
+  // Choices that stay: names (and whether you held the unnaming rite: the sea remembers a ship's old name),
+  // ships broken up (the crew remember a ship with a history), and every ship quest's outcome.
+  const SH_CLS = {
+    raider: { name: "Count-Raider", folk: "Skerran", hull: 12, guns: 6, crew: 11, cost: 520, days: 10, mat: "oak", way: "board", draught: 3,
+      what: "a black Skerran hull with count-ropes all down her sides", fx: "+2 to your people when you board · the crew's temper never falls below 2", board: 2, floor: 2 },
+    sloop: { name: "Tally-Sloop", folk: "Skerran", hull: 8, guns: 4, crew: 6, cost: 260, days: 6, way: "run", draught: 2,
+      what: "a one-masted Skerran sloop, very low and very quick", fx: "the fastest hull afloat: you can always break off · broadsides hole her 1 more", fast: 1, frail: 1 },
+    cutter: { name: "Gallows Cutter", folk: "Saltwrit", hull: 10, guns: 6, crew: 8, cost: 380, days: 8, way: "rake", draught: 2,
+      what: "a narrow Saltwrit cutter with a gallows-and-anchor at her masthead", fx: "drilled to rake: you can cross her bow and rake her end to end", rake: 1 },
+    frigate: { name: "Gallows Frigate", folk: "Saltwrit", hull: 14, guns: 8, crew: 13, prizeOnly: 1, way: "rake", draught: 4,
+      what: "a two-decked Saltwrit hunter, sent out after names on the list", fx: "two gun decks and a full chain locker: 2 more chain, and you can rake", rake: 1, chain: 2 },
+    carrack: { name: "Lantern Carrack", folk: "Rahdarian", hull: 14, guns: 3, crew: 8, cost: 450, days: 10, way: "run", draught: 4,
+      what: "a fat Rahdarian merchantman with a lantern on her poop as big as a hut", fx: "a great hold: a trading run pays every voyage, and prizes' holds pay half again · few guns", hold: 1 },
+    galleass: { name: "Banks Galleass", folk: "Lantern Banks", hull: 11, guns: 5, crew: 12, cost: 420, days: 9, way: "", draught: 3,
+      what: "a long galleass off the Lantern Banks, oars and sails both", fx: "oars: she moves in a dead calm, and can rake in one", oars: 1 },
+    glass: { name: "Glass-Barque", folk: "Sulmaran", hull: 8, guns: 4, crew: 7, cost: 400, days: 8, mat: "lens", way: "", draught: 2,
+      what: "a Sulmaran barque with a great glass lens in a cage at her masthead", fx: "the lens sees through every feint, and gives one more read · a thin hull: broadsides hole her 1 more", sees: 1, frail: 1 },
+    tick: { name: "Tick-Galley", folk: "Ammaret", hull: 10, guns: 5, crew: 8, cost: 440, days: 9, mat: "spring", way: "rake", draught: 2, part: "spring",
+      what: "an Ammaret galley with clockwork paddles you wind at the capstan", fx: "her paddles move her without wind for 4 turns (wind her again at the capstan) · she can rake", oars: 1, spring: 4, rake: 1 },
+    mire: { name: "Mire-Barge", folk: "Hushfen", hull: 9, guns: 4, crew: 7, cost: 240, days: 6, way: "", draught: 1,
+      what: "a flat Hushfen barge with leeboards, built for water you could wade", fx: "she draws almost nothing: she never runs aground, and lures a ship over a bar for 1 more · a squall holes her twice over", shallow: 1, squall: 2 },
+    sung: { name: "Sung-Hull", folk: "Hesk", hull: 10, guns: 5, crew: 8, cost: 360, days: 8, mat: "sung", way: "board", draught: 2, part: "sung",
+      what: "a hull grown from fungus timber the Hesk sang into shape, pale as a mushroom's gills", fx: "living timber: she mends 1 hull every other turn · she burns like tinder", mend: 1, tinder: 1 },
+    kinstone: { name: "Kinstone Lighter", folk: "Kedge", hull: 13, guns: 6, crew: 9, cost: 480, days: 10, mat: "kin", way: "heavy", draught: 3, part: "kin",
+      what: "a squat Kedge lighter with kinstone in her ballast, that pulls toward the deep", fx: "she never capsizes, and squalls don't touch her · slow to turn: the helm only takes a third off a broadside", stiff: 1, slow: 1 },
+    bell: { name: "Bell-Hull", folk: "Bathyr", hull: 10, guns: 5, crew: 8, cost: 430, days: 9, mat: "lead", way: "", draught: 3, part: "lead",
+      what: "a Bathyr-built hull on a lead keel that hums when the sea moves under her", fx: "she never runs aground, hears a ship through fog and dark, and hums before anything rises from below", shallow: 1, hears: 1 },
+    lamp: { name: "Lamp-Brig", folk: "Saltbones", hull: 9, guns: 5, crew: 9, cost: 320, days: 7, way: "feint", draught: 3,
+      what: "a wrecker's brig with a lamp on every yard", fx: "false lamps: at night or in fog, her move is lost to your lamps and your guns still fire", lamps: 1 },
+    whaler: { name: "Deepwhaler", folk: "Grey Yonder", hull: 15, guns: 4, crew: 10, cost: 560, days: 12, mat: "plans", way: "heavy", draught: 4,
+      what: "a doubled-hulled whaler out of the Grey Yonder, with harpoon guns at her bow", fx: "harpoon guns: once a fight, pin a ship so she can't run · strong against anything from the deep", harpoon: 1, deep: 1 },
+    linewall: { name: "Line-Wall", folk: "the old fleets", hull: 18, guns: 10, crew: 16, prizeOnly: 1, way: "heavy", draught: 5,
+      what: "a three-decked ship of the line from the old fleets, high as a house", fx: "twice anyone's guns · she turns like a church: the helm only takes a quarter off a broadside", slow: 2 }
+  };
+  // The fireship isn't a ship you sail: you buy one at the yard and send it in.
+  const SH_HOY = { name: "Ember-Hoy", cost: 45, what: "a small hoy packed to the hatches with pitch, tar and old rope" };
+  const SH_MAT = {
+    oak: { name: "bog oak", from: "the Hushfen", quest: "oak" }, sung: { name: "sung timber", from: "Thrumhold", quest: "sung" },
+    spring: { name: "an Ammaret spring", from: "the wreck of the Tolling Hour", quest: "salvage" }, lens: { name: "a Sulmaran lens", from: "the salt convoy", quest: "convoy" },
+    kin: { name: "kinstone ballast", from: "a dead purser's sea-chest", quest: "murder" }, lead: { name: "Bathyr lead", from: "the Lanyons' ballast", quest: "ransom", buy: 90 },
+    plans: { name: "the Deepwhaler's plans", from: "the Flense on Keast Bank", quest: "soundings" }
+  };
+  // Quirks. gen: the generator can roll it. good: worth having.
+  const SH_Q = {
+    copper: { name: "copper-bottomed", fx: "+2 hull", gen: 1, good: 1 },
+    leak: { name: "leaks at the bow", fx: "starts every voyage 1 hull down", gen: 1 },
+    hot: { name: "guns that burst when they're hot", fx: "after the fourth broadside, 1 in 6 a gun bursts", gen: 1 },
+    cat: { name: "a lucky ship's cat", fx: "once a fight, half of a big hit goes into the sea", gen: 1, good: 1 },
+    ghost: { name: "a haunted bell", fx: "the crew are uneasy (temper −1 each voyage), but the bell rings before trouble: one more read", gen: 1 },
+    reach: { name: "quick on a reach", fx: "you can always break off, and a ship running from her needs one more turn to get away", gen: 1, good: 1 },
+    figure: { name: "a figurehead the crew pray to", fx: "the crew's temper never falls below 3", gen: 1, good: 1 },
+    green: { name: "green timbers", fx: "−2 hull until she's seasoned (three voyages)", gen: 1 },
+    deep: { name: "a deep hold", fx: "prizes' holds pay a quarter more", gen: 1, good: 1 },
+    rot: { name: "dry rot in her knees", fx: "a rake holes her 2 more", gen: 1 },
+    crank: { name: "crank: she heels", fx: "a squall holes her 1 more, and her broadsides are 1 lighter" },
+    sweet: { name: "sweet-handling", fx: "the helm takes two thirds off a broadside, not half", good: 1 },
+    black: { name: "black-oak knees", fx: "+3 hull", good: 1 },
+    grave: { name: "a grave-oak keel", fx: "the fen's dead sail with her: +2 when you call on a ship to strike, but the crew's temper −1 each voyage" },
+    unnamed: { name: "renamed without the rite", fx: "the sea knows her old name: a squall finds her on one voyage in three" }
+  };
+  const SH_ADJ = ["Patient", "Crooked", "Honest", "Third", "Small", "Grey", "Weeping", "Lucky", "Last", "Thrifty", "Bold", "Drowsy", "Hungry", "Long", "Quiet", "Sullen", "Merry", "Salt", "Sober", "Borrowed", "Second-Best", "Pale", "Wicked", "Humble"];
+  const SH_NOUN = ["Gull", "Mercy", "Heron", "Kettle", "Ledger", "Bride", "Thimble", "Lark", "Oyster", "Promise", "Lamb", "Bargain", "Wren", "Penny", "Comb", "Anchorite", "Errand", "Spoon", "Widow", "Hour", "Sixpence", "Shilling", "Psalm", "Tinderbox"];
+  const SH_OWN = ["Mother Rodda's", "the Bishop's", "Old Hosken's", "the Miller's", "Nobody's", "the Tinker's", "Kerensa's", "the Drowned Man's", "Everybody's", "the Ferryman's"];
+  const SH_FIRST = ["Tressa", "Senna", "Corlan", "Bryher", "Jowan", "Kerensa", "Sennen", "Jago", "Lowen", "Mabyn", "Pedrek", "Wenlo", "Tamar", "Ewny", "Rozen", "Kenwyn"];
+  const SH_LAST = ["Tregear", "Sowden", "Pellow", "Clemo", "Hocking", "Bolitho", "Carne", "Opie", "Retallick", "Blewett", "Oates", "Kneebone", "Mabe", "Ninnis", "Gweek", "Vosper", "Nancarrow", "Polglase", "Trask"];
+  const SH_NICK = ["the Tinker", "Half-Price", "the Undertaker", "Gull-Eye", "the Long Wait", "Two-Bells", "Bread-and-Salt", "the Parson", "Lantern-Jaw", "Sixpenny"];
+  const SH_MARK = {
+    Skerran: ["laid down on the old hulk-slips at Raftmark", "built by a Skerran family yard, every plank counted"], Saltwrit: ["off the Saltwrit's own slips on the Gibbet Skerries", "Saltwrit-built, with the yard's number burnt in her transom"],
+    Rahdarian: ["built on Lantern Quay below Rahdaria", "a Rahdarian merchant-yard hull, painted like a shop front"], "Lantern Banks": ["built on the Banks by an oar-guild", "a Banks hull, rebuilt twice"],
+    Sulmaran: ["built at Sulmara under a glassmaker's eye", "Sulmaran, with her lens ground at the Assize's own furnace"], Ammaret: ["from the tick-yards of Ammaret", "Ammaret-built, wound by a clockmaker"],
+    Hushfen: ["knocked together by fen-cutters at the Hushfen's mouth", "a Hushfen barge, tarred black"], Hesk: ["sung into shape by a Hesk choir under Corrach", "grown at Thrumhold, and carried down to the sea in pieces"],
+    Kedge: ["built at Kedge, under the Lift", "Kedge-built, with a kinstone in her keelson"], Bathyr: ["built by the Bathyr, nobody knows where", "Bathyr-built, and nobody on her has ever seen the yard"],
+    Saltbones: ["built by wreckers out of other people's ships", "a Saltbones hull, with three other ships' names under her paint"], "Grey Yonder": ["built at the old whaling stations of the Grey Yonder", "a Yonder whaler, doubled at the bow against the ice"],
+    "the old fleets": ["from the old fleets, before anybody now alive", "an old-fleet ship, so old her figurehead has no face left"]
+  };
+  const shC = (s) => SH_CLS[(s && s.cls) || "raider"] || SH_CLS.raider;
+  const shQ = (s, k) => !!(s && s.q && s.q.includes(k));
+  const shCap = (t) => String(t || "").replace(/^the /, "The ");
+  const yard = () => {
+    const X = sea(); const Y = X.yard = X.yard || {};
+    for (const [k, v] of [["timber", 0], ["guns", 0], ["fit", []], ["mat", {}], ["build", null], ["built", 0], ["scrapped", []], ["q", {}], ["hoys", 0], ["grudge", 0], ["seen", {}], ["cls", []]])
+      if (Y[k] === undefined) Y[k] = typeof v === "object" && v !== null ? JSON.parse(JSON.stringify(v)) : v;
+    return Y;
+  };
+  // Older saves: give the ship you already have her class, and the fleet its lists.
+  function shFix(X) {
+    if (!X) return X;
+    const s = X.ship;
+    if (!s.cls) { s.cls = { rise: "raider", sell: "cutter", burn: "sloop" }[S.pz && S.pz.ending] || "raider"; s.q = s.q || []; s.orig = true; s.mark = SH_MARK[shC(s).folk][0]; s.age = 9; }
+    s.q = s.q || [];
+    X.gp = X.gp || {}; X.dock = X.dock || []; X.pn = X.pn || {}; X.gn = X.gn || 0; X.glog = X.glog || []; X.fought = X.fought || [];
+    yard();
+    return X;
+  }
+  const shPick = (a) => a[d(a.length) - 1];
+  function shTaken() {
+    const X = sea(); const n = [X.ship.name, SEA_PATIENCE.ship].concat(Object.values(X.gp).map(g => g.name), Object.values(SEA_RIVALS).map(R => R.ship), Object.values(SEA_SHIPS).map(B => B.name));
+    return new Set(n.map(t => String(t).toLowerCase()));
+  }
+  function shName() {
+    const T = S.sea ? shTaken() : new Set();
+    for (let i = 0; i < 40; i++) {
+      const n = d(4) === 1 ? shPick(SH_OWN) + " " + shPick(SH_NOUN) : "the " + shPick(SH_ADJ) + " " + shPick(SH_NOUN);
+      if (!T.has(n.toLowerCase())) return n;
+    }
+    return "the " + shPick(SH_ADJ) + " " + shPick(SH_NOUN);
+  }
+  const shCaptain = () => shPick(SH_FIRST) + " " + shPick(SH_LAST) + (d(3) === 1 ? ", called " + shPick(SH_NICK) : "");
+  function shHullOf(cls, q, age) { return SH_CLS[cls].hull + (q.includes("copper") ? 2 : 0) + (q.includes("black") ? 3 : 0) - (q.includes("green") ? 2 : 0) - (age > 40 ? 1 : 0); }
+  // A ship: her class, a builder's mark, an age, quirks, and a name.
+  function shGen(cls, o = {}) {
+    const C = SH_CLS[cls], pool = Object.keys(SH_Q).filter(k => SH_Q[k].gen && !(o.no || []).includes(k));
+    const q = (o.q || []).slice();
+    const n = o.nq !== undefined ? o.nq : 1 + d(2);
+    while (q.length < n + (o.q || []).length && pool.length) { const k = pool.splice(d(pool.length) - 1, 1)[0]; if (!(k === "green" && (o.age || 9) > 3)) q.push(k); }
+    const age = o.age || (d(4) === 1 ? 30 + d(30) : 1 + d(25));
+    const hull = shHullOf(cls, q, age);
+    return { cls, name: o.name || shName(), mark: o.mark || shPick(SH_MARK[C.folk] || ["of no yard anybody can name"]), age, q, hull, max: hull, guns: C.guns, crew: C.crew, up: [] };
+  }
+  const shQuirks = (s) => s.q && s.q.length ? s.q.map(k => SH_Q[k] ? SH_Q[k].name : k).join(", ") : "nothing anybody's noticed yet";
+  const shDesc = (s) => shCap(s.name) + ": a " + shC(s).name + ", " + s.mark + ", " + (s.age <= 1 ? "new off the slip" : s.age + " years old") + " · " + shQuirks(s);
+  // An enemy under sail, in the shape seaDuel wants (it reads ship, name, guns, hull, crew, way, cls, q).
+  function shFoe(cls, kind, o = {}) {
+    const C = SH_CLS[cls], s = shGen(cls, o), tier = Math.floor(lv() / 12);
+    const pirate = kind !== "saltwrit" && kind !== "merchant";
+    return Object.assign({ gen: true, kind, cls, q: s.q, ship: s.name, name: o.cap || shCaptain(), guns: s.guns + tier, hull: s.max + tier, crew: s.crew + tier, way: C.way || "", mark: s.mark, age: s.age,
+      bounty: pirate ? 30 + 10 * tier + d(20) : 0, skerra: C.folk === "Skerran", pirate,
+      look: C.what + ", " + s.mark, trick: "A " + C.name + ": " + C.fx + "." + (s.q.length ? " She's " + shQuirks(s) + "." : "") }, o.extra || {});
+  }
+  // Prizes and laid-up ships, by id.
+  function shShip(id) {
+    const X = sea();
+    if (X.gp[id]) return X.gp[id];
+    const R = id === "patience" ? SEA_PATIENCE : SEA_RIVALS[id];
+    if (!R) return null;
+    const cls = R.cls || "raider";
+    return (X.gp[id] = { cls, name: R.ship, mark: R.look, age: 12, q: (R.q || []).slice(), hull: R.hull, max: R.hull, guns: R.guns, crew: R.crew, up: [], from: id });
+  }
+  const shPrizeName = (id) => { const X = S.sea; const g = X && X.gp && X.gp[id]; return g ? g.name : id === "patience" ? SEA_PATIENCE.ship : SEA_RIVALS[id] ? SEA_RIVALS[id].ship : "a prize"; };
+  const shBerths = () => 3 + (hmOwn() && S.hm.site === "mill" ? 1 : 0);
+  function shFleet() { const X = sea(); return [{ id: "flag", s: X.ship, where: "flag" }].concat(X.prizes.map(id => ({ id, s: shShip(id), where: "consort" })), X.dock.map(id => ({ id, s: shShip(id), where: "dock" }))); }
+  const shWhere = { flag: "your flagship", consort: "sailing in company", dock: "laid up at Raftmark" };
+  function shNoteClass(cls) { const Y = yard(); if (!Y.cls.includes(cls)) { Y.cls.push(cls); if (Y.cls.length >= 6) grant("shclass"); } }
+
+  // ---------- naming a ship ----------
+  const shClean = (t) => {
+    let v = String(t || "").replace(/[^\p{L}\p{N} '\-.,!]/gu, "").replace(/\s+/g, " ").trim().slice(0, 24).trim();
+    const the = /^the\s+/i.test(v); v = v.replace(/^the\s+/i, "");
+    return v ? (the ? "the " : "") + v[0].toUpperCase() + v.slice(1) : "";
+  };
+  function shAskName(title, hint, sugg, keep) {
+    return new Promise(resolve => {
+      const P = puzzleBox(title, hint);
+      const f = el("form", "name-form");
+      f.innerHTML = '<label class="stat-label" for="shNameIn">Her name</label><input id="shNameIn" type="text" maxlength="24" autocomplete="off" spellcheck="false" placeholder="A name the crew can shout">';
+      const inp = f.querySelector("input"), go = pbtn("Paint it on", "btn"); go.type = "submit"; f.append(go);
+      P.body.append(f);
+      sugg.forEach(n => { const b = pbtn("Call her " + shCap(n)); b.onclick = () => finish(n); P.ctrl.append(b); });
+      if (keep) { const no = pbtn(keep); no.onclick = () => finish(null); P.ctrl.append(no); }
+      f.onsubmit = (e) => { e.preventDefault(); const v = shClean(inp.value); if (!v) { P.status.textContent = "Letters, please: something the crew can shout across a deck."; return; } finish(v); };
+      function finish(v) { P.end(); inp.disabled = true; resolve(v); }
+    });
+  }
+  async function shRename() {
+    const X = sea(), F = shFleet();
+    const pick = F.length === 1 ? "flag" : await choose(F.map((f, i) => ({ key: f.id, label: shCap(f.s.name), tag: shC(f.s).name + " · " + shWhere[f.where] + (f.s.was && f.s.was.length ? " · once " + f.s.was.join(", once ") : ""), plain: i > 0 })).concat([{ key: "no", label: "Never mind", plain: true }]));
+    if (pick === "no") return;
+    const s = pick === "flag" ? X.ship : shShip(pick), old = s.name;
+    const nm = await shAskName("A new name for " + old, "Ama Holt has a pot of paint and a brush the width of your hand. Whatever you call her, they'll call her on every quay from Raftmark to the Banks. (Up to 24 letters; start with \"the\" if she wants one.)", [shName(), shName(), shName()], "Leave her name alone");
+    if (!nm || nm.toLowerCase() === old.toLowerCase()) { await say("You look at the name on her transom for a while, and leave it."); return; }
+    if (shTaken().has(nm.toLowerCase())) { await say("\"There's a " + nm.replace(/^the /, "") + " on the Reach already,\" Ama says. \"Two ships with one name is how you get the wrong ship hanged.\" Pick another."); return; }
+    const c = await choose([
+      { key: "rite", label: "Hold the unnaming rite", tag: "15 gold · the old name carved on a board and given to the sea · the crew rest easy", show: S.coins >= 15 },
+      { key: "paint", label: "Just paint the new name on", tag: "free · the crew don't like it, and the sea remembers", plain: true }
+    ]);
+    s.was = (s.was || []).concat([old]); s.name = nm; X.renamed = (X.renamed || 0) + 1;
+    if (c === "rite") {
+      S.coins -= 15; renderSheet(); s.q = s.q.filter(k => k !== "unnamed");
+      await say("Ama burns " + old + " off the transom with a hot iron, and cuts it again, very carefully, into a plank of the ship's own timber. At the top of the ebb the whole crew comes to the rail and says the old name once, all together, so the sea can hear it go, and you drop the plank over the side, and the tide takes it out past the hulks.");
+      await say("Then they paint her new name on, and somebody pours rum on it, and it's " + nm + ".");
+      grant("shrite");
+    } else {
+      if (!s.q.includes("unnamed")) s.q.push("unnamed");
+      await say("A boy with a pot of paint does it in an afternoon. " + nm + ". The old hands won't watch: they go below and play cards, loudly, and one of them says the old name out loud on purpose, so somebody will have heard it said.");
+      if (pick === "flag") await seaTemper(-2, "A ship renamed without the rite.");
+      await mech("She's <b>renamed without the rite</b>: the sea still knows her as " + old + ", and a squall finds her on one voyage in three. You can still hold the rite at the yard, late.", "hurt");
+    }
+    await mech("She's <b>" + nm + "</b> now." + (s.from && SEA_RIVALS[s.from] ? " " + SEA_RIVALS[s.from].name + " won't like that, wherever they are." : ""), "loot");
+    grant("shname"); save();
+  }
+  async function shLateRite() {
+    const X = sea(), F = shFleet().filter(f => shQ(f.s, "unnamed"));
+    if (!F.length || S.coins < 15) return;
+    const pk = F.length === 1 ? F[0].id : await choose(F.map((x, i) => ({ key: x.id, label: shCap(x.s.name), tag: "once " + (x.s.was || []).slice(-1)[0], plain: i > 0 })));
+    const f = F.find(x => x.id === pk);
+    S.coins -= 15; f.s.q = f.s.q.filter(k => k !== "unnamed"); renderSheet();
+    await say("It's late for it, Ama says, but the sea's not proud. You carve " + (f.s.was || ["the old name"]).slice(-1)[0] + " on a plank, and the crew say it together at the rail, and the ebb takes it.");
+    if (f.where === "flag") await seaTemper(1, "The crew breathe easier.");
+    grant("shrite");
+  }
+
+  // ---------- your fleet: shift your flag, sail in company, lay up ----------
+  async function shFleetHub() {
+    const X = sea();
+    for (;;) {
+      const F = shFleet();
+      add(el("div", "lockhist", F.map(f => "<b>" + shCap(f.s.name) + "</b> (" + shWhere[f.where] + "): " + shC(f.s).name + ", hull " + f.s.hull + " of " + f.s.max + ", " + f.s.guns + " guns. " + f.s.mark[0].toUpperCase() + f.s.mark.slice(1) + "; " + (f.s.age <= 1 ? "new" : f.s.age + " years old") + "; " + shQuirks(f.s) + "." + (f.s.was && f.s.was.length ? " <i>Once " + f.s.was.join(", once ") + ".</i>" : "")).join("<br>")));
+      const c = await choose([
+        { key: "flag", label: "Shift your flag to another ship", tag: "the crew and your hands come with you", show: F.length > 1 },
+        { key: "join", label: "Bring a laid-up ship out to sail in company", tag: X.prizes.length + " of 2 in company · +1 to your broadsides each", show: X.dock.length > 0 && X.prizes.length < 2, plain: true },
+        { key: "lay", label: "Lay a ship up at Raftmark", tag: X.dock.length + " of " + shBerths() + " berths", show: X.prizes.length > 0 && X.dock.length < shBerths(), plain: true },
+        { key: "name", label: "Rename a ship", tag: "paint on any name you like", plain: true },
+        { key: "rite", label: "Hold the unnaming rite, late", tag: "15 gold · for a ship renamed without it", show: S.coins >= 15 && F.some(f => shQ(f.s, "unnamed")), plain: true },
+        { key: "back", label: "That's all", plain: true }
+      ]);
+      if (c === "back") return;
+      if (c === "name") await shRename();
+      if (c === "rite") await shLateRite();
+      if (c === "flag") await shShiftFlag();
+      if (c === "join") {
+        const id = X.dock.length === 1 ? X.dock[0] : await choose(X.dock.map((id, i) => ({ key: id, label: shCap(shShip(id).name), tag: shC(shShip(id)).name, plain: i > 0 })));
+        X.dock = X.dock.filter(k => k !== id); X.prizes.push(id);
+        await say(shCap(shShip(id).name) + " warps out of her berth and comes to anchor astern of you, with a crew off the quay.");
+      }
+      if (c === "lay") {
+        const id = X.prizes.length === 1 ? X.prizes[0] : await choose(X.prizes.map((id, i) => ({ key: id, label: shCap(shPrizeName(id)), plain: i > 0 })));
+        shShip(id); X.prizes = X.prizes.filter(k => k !== id); X.dock.push(id);
+        await say(shCap(shPrizeName(id)) + " goes into a berth between two hulks, with her guns run in and a watchman aboard.");
+      }
+      renderSheet(); save();
+    }
+  }
+  async function shShiftFlag() {
+    const X = sea(), F = shFleet().filter(f => f.where !== "flag");
+    const id = await choose(F.map((f, i) => ({ key: f.id, label: shCap(f.s.name), tag: shC(f.s).name + " · hull " + f.s.hull + " of " + f.s.max + " · " + f.s.guns + " guns · " + SH_CLS[f.s.cls].fx, plain: i > 0 })).concat([{ key: "no", label: "Stay where you are", plain: true }]));
+    if (id === "no") return;
+    const nu = shShip(id), old = X.ship, oid = old.id && old.id !== "flag" ? old.id : "g" + (++X.gn);
+    const wasConsort = X.prizes.includes(id);
+    delete X.gp[id]; X.prizes = X.prizes.filter(k => k !== id); X.dock = X.dock.filter(k => k !== id);
+    nu.temper = old.temper; nu.id = id; nu.up = nu.up || []; nu.q = nu.q || [];
+    old.id = oid; X.gp[oid] = old;
+    if (wasConsort) X.prizes.push(oid); else X.dock.push(oid);
+    X.ship = nu;
+    await say("You go across in the gig with your sea-chest and your hands, and the crew come after you in the boats, and your flag goes up at " + nu.name + "'s masthead while the bosun pipes." + (old.orig ? " " + shCap(old.name) + ", the ship you came out of the Black Tithe in, looks smaller from over here." : ""));
+    await mech("Your flagship is <b>" + nu.name + "</b>, a " + shC(nu).name + ": " + SH_CLS[nu.cls].fx + ". " + shCap(old.name) + " is " + (wasConsort ? "sailing in company" : "laid up at Raftmark") + ".", "loot");
+    shNoteClass(nu.cls); grant("shflag"); renderSheet(); save();
+  }
+
+  // ---------- the yard: building, breaking up, spares ----------
+  function shCost(cls) {
+    const C = SH_CLS[cls], Y = yard();
+    let n = C.cost * (hmHas("smithy") ? 0.85 : 1) * (Y.grudge ? 1.15 : 1);
+    const off = Math.min(Y.timber * 10, Math.floor(n / 2));
+    return { gold: Math.round(n - off), planks: Math.ceil(off / 10) };
+  }
+  const shDays = (cls) => Math.max(3, Math.round(SH_CLS[cls].days * (hmOwn() && S.hm.site === "mill" ? 0.6 : 1)));
+  function shYardOpts() {
+    const X = sea(), Y = yard(), s = X.ship;
+    const ups = Y.fit.filter(k => !s.up.includes(k));
+    return [
+      { key: "sh-keel", label: "Lay down a keel", tag: "build a ship · " + Object.keys(SH_CLS).filter(k => !SH_CLS[k].prizeOnly).length + " kinds of hull", show: !Y.build, plain: true },
+      { key: "sh-slip", label: "Look at the ship on the slip", tag: Y.build ? "a " + (SH_CLS[Y.build.cls] || {}).name + " · " + Math.max(0, Y.build.due - calDay()) + " days to go" : "", show: !!Y.build, plain: true },
+      { key: "sh-scrap", label: "Break up a ship for salvage", tag: "timber, guns, fittings and parts", show: X.prizes.length + X.dock.length > 0, plain: true },
+      { key: "sh-guns", label: "Mount two salvaged guns", tag: Y.guns + " in the yard · 10 gold labour · +2 guns", show: Y.guns >= 2 && S.coins >= 10 && s.guns < shC(s).guns + 4, plain: true },
+      { key: "sh-fit", label: "Fit salvaged " + (ups[0] ? SEA_UPS[ups[0]].name.toLowerCase() : ""), tag: "10 gold labour · " + (ups[0] ? SEA_UPS[ups[0]].fx : ""), show: ups.length > 0 && S.coins >= 10, plain: true },
+      { key: "sh-plank", label: "Mend her with salvaged timber", tag: Y.timber + " planks · 2 hull a plank", show: Y.timber > 0 && s.hull < s.max, plain: true },
+      { key: "sh-lead", label: "Buy a pig of Bathyr lead", tag: SH_MAT.lead.buy + " gold · for a Bell-Hull's keel", show: !Y.mat.lead && S.coins >= SH_MAT.lead.buy, plain: true },
+      { key: "sh-hoy", label: "Buy an Ember-Hoy (a fireship)", tag: SH_HOY.cost + " gold · towed astern · send it in once in a fight · " + Y.hoys + " of 2", show: Y.hoys < 2 && S.coins >= SH_HOY.cost, plain: true }
+    ];
+  }
+  async function shYardDo(c) {
+    const X = sea(), Y = yard(), s = X.ship;
+    if (c === "keel") await shKeel();
+    else if (c === "slip") await shSlip();
+    else if (c === "scrap") await shScrap();
+    else if (c === "guns") { Y.guns -= 2; S.coins -= 10; s.guns += 2; await mech("Two salvaged guns go into " + s.name + "'s empty ports: " + s.guns + " guns.", "loot"); }
+    else if (c === "fit") { const k = Y.fit.find(k => !s.up.includes(k)); Y.fit = Y.fit.filter(x => x !== k); S.coins -= 10; s.up.push(k); if (SEA_UPS[k].on) SEA_UPS[k].on(s); await mech("Fitted from the salvage pile: <b>" + SEA_UPS[k].name + "</b> (" + SEA_UPS[k].fx + ").", "loot"); if (s.up.length >= Object.keys(SEA_UPS).length) grant("seafit"); }
+    else if (c === "plank") { const n = Math.min(Y.timber, Math.ceil((s.max - s.hull) / 2)); Y.timber -= n; s.hull = Math.min(s.max, s.hull + 2 * n); await mech(n + " salvaged plank" + (n > 1 ? "s" : "") + " into her: hull " + s.hull + " of " + s.max + ".", "loot"); }
+    else if (c === "lead") { S.coins -= SH_MAT.lead.buy; Y.mat.lead = (Y.mat.lead || 0) + 1; await say("A Bathyr pig of lead, grey and soft and heavier than it has any right to be, that hums very faintly when you put your ear to it."); }
+    else if (c === "hoy") { S.coins -= SH_HOY.cost; Y.hoys++; await say("Ama sells you " + SH_HOY.what + ", with a long fuse coiled on her deck and a boat to come back in. \"Don't tow her too close,\" she says. \"And don't smoke.\""); }
+    renderSheet(); save();
+  }
+  async function shKeel() {
+    const X = sea(), Y = yard();
+    if (X.dock.length >= shBerths()) { await say("\"Where would I put her?\" Ama says, and points at your berths: all full. Break one up, or bring one out to sail in company."); return; }
+    tip("shipyard");
+    if (!Y.seen.keel) { Y.seen.keel = 1; await say("Ama Holt walks you down the slips: three of them, cut into the shingle under the hulks, with the cradles still standing from the last ships she built. \"Anything you like,\" she says, chewing. \"If you bring me the timber for it. And if you can pay. And if you'll let me loft her properly, and not stand there telling me where the guns go.\""); }
+    const all = Object.keys(SH_CLS).filter(k => !SH_CLS[k].prizeOnly);
+    const ok = all.filter(k => !SH_CLS[k].mat || Y.mat[SH_CLS[k].mat]);
+    const missing = all.filter(k => !ok.includes(k));
+    if (missing.length) await mech("Not without the right stuff: " + missing.map(k => "a " + SH_CLS[k].name + " needs " + SH_MAT[SH_CLS[k].mat].name + " (" + (SH_MAT[SH_CLS[k].mat].buy ? "the yard sells it, or " : "") + "the harbour board: " + SH_QUESTS[SH_MAT[SH_CLS[k].mat].quest].name + ")").join("; ") + ".");
+    const cls = await choose(ok.map((k, i) => { const C = SH_CLS[k], P = shCost(k); return { key: k, label: "A " + C.name + " (" + C.folk + ")", tag: P.gold + " gold" + (P.planks ? " and " + P.planks + " salvaged planks" : "") + " · " + shDays(k) + " days · hull " + C.hull + " · " + C.guns + " guns · " + C.fx, show: S.coins >= P.gold, plain: i > 0 }; }).concat([{ key: "no", label: "Not yet", plain: true }]));
+    if (cls === "no") return;
+    const C = SH_CLS[cls], P = shCost(cls);
+    S.coins -= P.gold; Y.timber -= P.planks; if (C.mat) Y.mat[C.mat]--;
+    let oak = false;
+    if (C.mat !== "oak" && Y.mat.oak) {
+      const o = await choose([{ key: "oak", label: "Lay her keel in bog oak as well", tag: "uses your bog oak · black-oak knees: +3 hull" }, { key: "no", label: "Keep the bog oak", plain: true }]);
+      if (o === "oak") { Y.mat.oak--; oak = true; }
+    } else if (C.mat === "oak") oak = true;
+    renderSheet();
+    await say("Ama chalks her lines full size on the mould-loft floor, the whole length of the hulk's old gun deck, and the yard gang start cutting the moulds the same afternoon." + (hmHas("smithy") ? " The ironwork comes from your own smithy at " + hmName() + ", a cartload at a time." : ""));
+    const trim = await trimPuzzle(C);
+    Y.build = { cls, due: calDay() + shDays(cls), trim, oak, grave: oak && Y.q.oak === "grave" };
+    await mech("Her keel's down. She'll be ready in <b>" + shDays(cls) + " days</b>" + (hmOwn() && S.hm.site === "mill" ? " (the Wickerby Mill gang saw her frames on the river and float them down)" : "") + ". Come back to the yard when they've gone by, or wait at Raftmark.", "loot");
+    save();
+  }
+  async function shSlip() {
+    const Y = yard(), B = Y.build; if (!B) return;
+    const C = SH_CLS[B.cls], left = B.due - calDay();
+    if (left <= 0) return await shLaunch();
+    await say(left > C.days / 2 ? "She's frames on the slip, like a whale picked clean, with men all over her ribs with adzes." : "She's planked and caulked, and they're paying her seams with hot pitch, and the smell carries to the end of Raftmark.");
+    const c = await choose([{ key: "wait", label: "Wait at Raftmark till she's done", tag: left + " days pass" }, { key: "no", label: "Come back later", plain: true }]);
+    if (c === "wait") { calDawn(left); await say("You spend the days on the plank bridges and in the tally-house, and every morning you go and look at her."); await shLaunch(); }
+  }
+  async function shLaunch() {
+    const X = sea(), Y = yard(), B = Y.build;
+    if (!B) return;
+    Y.build = null;
+    const C = SH_CLS[B.cls];
+    const q = []; if (B.trim === "sweet") q.push("sweet"); if (B.trim === "crank") q.push("crank"); if (B.oak) q.push("black"); if (B.grave) q.push("grave");
+    const s = shGen(B.cls, { q, nq: 1, age: 1, mark: "built at Raftmark by Ama Holt", no: ["rot", "leak", "green"] });
+    if (d(3) === 1 && !s.q.includes("green")) { s.q.push("green"); s.hull = s.max = shHullOf(B.cls, s.q, 1); }
+    await say("They knock the wedges out at the top of the tide, and she goes down the slip stern first in a long shriek of tallow and timber, and hits the water, and rides up, and settles, and sits there on the Reach as if she'd always been there." + (B.trim === "crank" ? " She sits a little down to port. Ama looks at her and says nothing at all." : B.trim === "sweet" ? " She sits as level as a table. Ama spits her tar out, which you've never seen her do." : ""));
+    const nm = await shAskName("Name her", "Ama has the paint ready. A new ship takes the first name she's given without any trouble: it's only changing it the sea minds. (Up to 24 letters; start with \"the\" if she wants one.)", [shName(), shName(), shName()]);
+    s.name = nm && !shTaken().has(nm.toLowerCase()) ? nm : shName();
+    s.built = true; s.id = "g" + (++X.gn); X.gp[s.id] = s; X.dock.push(s.id);
+    Y.build = null; Y.built++;
+    await mech("<b>" + shCap(s.name) + "</b>, a " + C.name + ": hull " + s.max + ", " + s.guns + " guns. " + C.fx[0].toUpperCase() + C.fx.slice(1) + ". " + (s.q.length ? "She's " + shQuirks(s) + ". " : "") + "She's in her berth: shift your flag to her, or bring her out in company, from Your fleet.", "loot");
+    grant("shlaunch"); if (B.trim === "sweet") grant("shsweet"); shNoteClass(B.cls);
+    xpGain(40 + lv()); renderSheet(); save();
+  }
+  async function shScrap() {
+    const X = sea(), Y = yard();
+    const L = X.prizes.map(id => ({ id, where: "consort" })).concat(X.dock.map(id => ({ id, where: "dock" })));
+    const id = await choose(L.map((f, i) => { const s = shShip(f.id); return { key: f.id, label: "Break up " + shCap(s.name), tag: shC(s).name + " · " + Math.floor(s.max / 2) + " planks · " + s.guns + " guns" + (s.up.length ? " · " + s.up.length + " fittings" : "") + (shC(s).part ? " · " + SH_MAT[shC(s).part].name : "") + (s.orig || s.from || s.built ? " · she has a history" : ""), plain: i > 0 }; }).concat([{ key: "no", label: "Not today", plain: true }]));
+    if (id === "no") return;
+    const s = shShip(id), C = shC(s), hist = s.orig || s.from || s.built;
+    let off = "plain";
+    if (hist) off = await choose([
+      { key: "wake", label: "Give her a send-off first", tag: "15 gold · a wake on the slip · the crew don't hold it against you", show: S.coins >= 15 },
+      { key: "plain", label: "Just break her up", tag: "the crew's temper −2 · they remember her", plain: true }
+    ]);
+    if (off === "wake") { S.coins -= 15; await say("The night before, the crew hold a wake for her on the slip, with a fire and a cask, and tell stories about her, half of them true. In the morning her bell comes off first, and goes up on the yard wall with the others."); }
+    await say("The breakers go into her with crowbars and saws. It takes them three days. By the end there's nothing on the slip but her keel, and then there isn't that.");
+    const planks = Math.floor(s.max / 2), part = C.part;
+    Y.timber += planks; Y.guns += s.guns;
+    s.up.forEach(k => { if (!Y.fit.includes(k)) Y.fit.push(k); });
+    if (shQ(s, "copper") && !Y.fit.includes("sheath")) Y.fit.push("sheath");
+    if (part) Y.mat[part] = (Y.mat[part] || 0) + 1;
+    Y.scrapped.push(s.name + (s.orig ? "*" : ""));
+    X.prizes = X.prizes.filter(k => k !== id); X.dock = X.dock.filter(k => k !== id); delete X.gp[id];
+    await mech("Salvage: " + planks + " planks (10 gold off a build each, or 2 hull of mending), " + s.guns + " guns for your ports" + (s.up.length ? ", " + s.up.map(k => SEA_UPS[k].name.toLowerCase()).join(" and ") : "") + (part ? ", and <b>" + SH_MAT[part].name + "</b> for a new " + C.name : "") + ".", "loot");
+    if (hist && off === "plain") await seaTemper(-2, "The crew remember " + s.name + ".");
+    if (s.orig) await say("Somebody chalks her name on the yard wall where her bell would have gone. Nobody rubs it out.");
+    grant("shscrap"); renderSheet(); save();
+  }
+  // The deck plan: eight loads, eight places. She has to sit level (port = starboard), trimmed by the stern
+  // the way her class likes (aft half heavier than the fore half by exactly t), the powder aft and below
+  // the waterline, and the two long guns on opposite sides. Three floats to get it right.
+  function trimPuzzle(C) {
+    return new Promise(resolve => {
+      const t = C.fast || C.oars ? 0 : C.slow || C.hold ? -2 : 2;
+      const LOADS = [["Long gun", 3, "gun"], ["Long gun", 3, "gun"], ["Carronade", 2, ""], ["Carronade", 2, ""], ["Shot-locker", 4, ""], ["Water casks", 2, ""], ["Powder", 1, "powder"], ["Stores", 1, ""]];
+      // a solution exists for every t: find one by search, so the puzzle is always fair
+      const W = LOADS.map(l => l[1]);
+      const ok = (cells) => {
+        let p = 0, sb = 0, fore = 0, aft = 0, guns = [];
+        cells.forEach((li, i) => { if (li === null) return; const w = W[li]; if (i % 2 === 0) p += w; else sb += w; if (i < 4) fore += w; else aft += w; if (LOADS[li][2] === "gun") guns.push(i % 2); });
+        const pw = cells.indexOf(6);
+        return { level: p - sb, trim: aft - fore, powder: pw >= 6, guns: guns.length === 2 && guns[0] !== guns[1], p, sb, fore, aft };
+      };
+      const P = puzzleBox("Lofting her: the deck plan", "Ama has chalked the hold into eight places, port and starboard, from the bow (top) to the stern (bottom). Put a load in every place. She must <b>sit level</b> (as much weight to port as to starboard), be <b>trimmed " + (t > 0 ? "by the stern by " + t : t < 0 ? "by the head by " + -t : "dead even, bow and stern") + "</b> (the stern half " + (t > 0 ? t + " heavier than the bow half" : t < 0 ? -t + " lighter than the bow half" : "exactly as heavy as the bow half") + ", the way a " + C.name + " likes), with the <b>powder aft</b>, in the last row, and the two <b>long guns on opposite sides</b>. Weights: long gun 3, carronade 2, shot-locker 4, water casks 2, powder 1, stores 1. Tap a load, then a place; tap a place to take its load out. Three floats on the slip before she has to go as she is.");
+      const cells = Array(8).fill(null);
+      let sel = null, floats = 3, done = false;
+      const tray = el("div", "pgrid sh-trim"); tray.style.gridTemplateColumns = "repeat(4, 72px)"; tray.style.marginTop = "10px";
+      const grid = el("div", "pgrid sh-trim"); grid.style.gridTemplateColumns = "repeat(2, 120px)";
+      const tb = LOADS.map((L, i) => { const b = pbtn(L[0] + " (" + L[1] + ")"); b.onclick = () => { if (done || cells.includes(i)) return; sel = i; draw(); }; tray.append(b); return b; });
+      const rows = ["Bow", "Fore", "Main", "Stern"];
+      const cb = cells.map((_, i) => { const b = pbtn(""); b.setAttribute("aria-label", rows[i >> 1] + ", " + (i % 2 ? "starboard" : "port")); b.onclick = () => { if (done) return; if (cells[i] !== null) cells[i] = null; else if (sel !== null) { cells[i] = sel; sel = null; } draw(); }; grid.append(b); return b; });
+      P.body.append(el("div", "hint", "Port · Starboard"), grid, tray);
+      const fl = pbtn("Float her"), give = pbtn("Let Ama loft her as she likes");
+      P.ctrl.append(fl, give);
+      function draw() {
+        cb.forEach((b, i) => { b.textContent = cells[i] === null ? rows[i >> 1] + (i % 2 ? " · stbd" : " · port") : LOADS[cells[i]][0]; b.classList.toggle("on", cells[i] !== null); });
+        tb.forEach((b, i) => { b.disabled = done || cells.includes(i); b.classList.toggle("on", sel === i); });
+        fl.disabled = done || cells.includes(null);
+      }
+      fl.onclick = () => {
+        const r = ok(cells); floats--;
+        const good = r.level === 0 && r.trim === t && r.powder && r.guns;
+        if (good) { done = true; P.status.innerHTML = "She floats in the dock as level as a table, " + (t > 0 ? "a little down by the stern" : t < 0 ? "a little down by the head" : "dead even") + ", the way she was drawn. <b>Sweet-handling.</b>"; P.end(); setTimeout(() => resolve("sweet"), 900); return; }
+        const why = [r.level ? "she lists " + Math.abs(r.level) + " to " + (r.level > 0 ? "port" : "starboard") : "", r.trim !== t ? "her trim's " + Math.abs(r.trim - t) + " out (" + (r.trim > t ? "too heavy aft" : "too heavy forward") + ")" : "", !r.powder ? "the gunner won't have powder that far forward" : "", !r.guns ? "the long guns want to be on opposite sides" : ""].filter(Boolean).join("; ");
+        P.status.textContent = "She floats, but " + why + ". " + (floats ? floats + " float" + (floats > 1 ? "s" : "") + " left." : "");
+        if (!floats) { done = true; P.status.textContent += " She'll go as she is: crank."; P.end(); setTimeout(() => resolve("crank"), 1100); }
+        draw();
+      };
+      give.onclick = () => { done = true; P.end(); P.status.textContent = "Ama does it herself, in about the time it takes to say so, and doesn't explain."; setTimeout(() => resolve("plain"), 700); };
+      draw();
+    });
+  }
+
+  // ---------- strange sails: generated ships on a voyage ----------
+  // After the seven captains there's still a sea full of ships: rovers, merchants and convoys, Saltwrit frigates
+  // when your price is high (two at once when it's very high), and wreckers who send a fireship in first.
+  const SH_WATER_CLS = { reach: ["raider", "sloop", "sung", "kinstone", "galleass"], gibbet: ["cutter", "raider", "lamp", "sloop"], bones: ["lamp", "mire", "bell", "sloop"],
+    banks: ["galleass", "glass", "tick", "cutter", "carrack"], yonder: ["whaler", "kinstone", "bell", "linewall"] };
+  async function shSail(w) {
+    const X = sea(), hunt = seaHunter();
+    const t = [["rover", 6], ["merchant", hunt ? 1 : w === "banks" ? 5 : 2], ["frigate", !hunt && X.heat >= 4 ? 4 : 0], ["squadron", !hunt && X.heat >= 7 ? 3 : 0],
+      ["fireship", w === "bones" || w === "gibbet" ? 3 : 1]].filter(x => x[1] > 0);
+    const kind = shRoll(t);
+    if (kind === "merchant") return await shMerchant(w);
+    if (kind === "frigate" || kind === "squadron") return await shHunted(kind === "squadron");
+    let cls = shPick(SH_WATER_CLS[w] || SH_WATER_CLS.reach);
+    if (cls === "linewall" && d(3) > 1) cls = "kinstone";
+    if (cls === "carrack") cls = "galleass";
+    if (kind === "fireship") cls = "lamp";
+    const F = shFoe(cls, "rover");
+    const night = kind === "fireship" ? { sky: "night" } : {};
+    await say("A sail. The lookout watches her a long time: " + F.look + ". <b>" + shCap(F.ship) + "</b>, " + F.name + "'s ship, flying " + (F.skerra ? "a count-rope from her yard and no flag at all" : "the black") + ".");
+    await mech(F.trick);
+    if (hunt) await mech("Not on the Saltwrit's list, but they'll pay " + F.bounty + " gold for her.");
+    if (kind === "fireship") { await say("She doesn't close. She waits for dark, and then something comes down the wind at you out of the dark, low on the water, all alight."); await shFireship(); if (X.ship.hull <= 0) return; }
+    const c = await choose([
+      { key: "fight", label: "Clear for action", tag: "a broadside fight · " + SH_CLS[cls].name },
+      { key: "black", label: "Call on her to strike", tag: "Intimidation DC " + (13 + Math.floor(F.guns / 2)) + " · she gives up without a fight", show: kind !== "fireship", plain: true },
+      { key: "away", label: "Bear away and let her go", plain: true }
+    ]);
+    if (c === "away") { await say("You bear away. She lets you."); return; }
+    if (c === "black") {
+      const r = await check({ label: "Intimidation check (calling on her to strike)", mod: 3 + plTier() + Math.floor(X.ship.guns / 3) + (X.prizes.length ? 1 : 0) + (shQ(X.ship, "grave") ? 2 : 0), dc: 13 + Math.floor(F.guns / 2), cta: "Hail her" });
+      if (r.ok) { await say("Her colours come down before you've fired a gun."); return await shGenWon(F); }
+      await say("Her answer is a gun, fired to windward. No.");
+    }
+    const res = await seaDuel(F, "g" + (X.gn + 1), false, { cond: shCond(w, F, night) });
+    return await shAfter(F, res);
+  }
+  async function shAfter(F, res) {
+    if (res === "won") return await shGenWon(F);
+    if (res === "fled") await say(shCap(F.ship) + " is hull-down and gone before dusk.");
+    else await say("You haul off, holed, with the pumps going, and she lets you go.");
+    return res;
+  }
+  // The fireship: an Ember-Hoy coming down on you in the dark.
+  async function shFireship() {
+    const X = sea(), MC = shC(X.ship);
+    const c = await choose([
+      { key: "tow", label: "Grapple her and tow her clear in the boats", tag: "Athletics DC 14 · the bravest thing anybody does all year" },
+      { key: "shoot", label: "Sink her with round shot before she reaches you", tag: "DC 14 · " + X.ship.guns + " guns", plain: true },
+      { key: "helm", label: "Put the helm over and let her go by", tag: "Seamanship DC 13" + (shQ(X.ship, "sweet") ? " · sweet-handling +2" : "") + (MC.slow ? " · slow to turn" : ""), plain: true }
+    ]);
+    const r = await check(c === "tow" ? { label: "Athletics check (towing a fireship)", mod: 2 + plTier() + (seaHas("hawl") ? 2 : 0), dc: 14, cta: "Row" } :
+      c === "shoot" ? { label: "Gunnery check (the fireship)", mod: Math.floor(X.ship.guns / 2) + (seaHas("gannet") ? 1 : 0), dc: 14, cta: "Fire" } :
+      { label: "Seamanship check (dodging a fireship)", mod: 2 + plTier() + (shQ(X.ship, "sweet") ? 2 : 0) - 2 * (MC.slow || 0) + (MC.fast ? 2 : 0), dc: 13, cta: "Helm over" });
+    if (r.ok) { await say(c === "tow" ? "Six of you in the gig, with a grapnel and the heat on your faces like an oven door, and you get the line on her and pull her off, and let her go burning down the wind." : c === "shoot" ? "Your second broadside opens her up, and she goes down hissing a hundred yards off your bow, and the sea's on fire for a while where she was." : "You put the helm over and she goes by close enough to blister your paint, and burns out to leeward."); return true; }
+    await say("She fouls your bow, and the fire runs up your headsails before you can cut her loose.");
+    await seaHull(4, "Burnt."); await seaTemper(-1);
+    return false;
+  }
+  async function shMerchant(w) {
+    const X = sea(), hunt = seaHunter();
+    const F = shFoe("carrack", "merchant", { extra: { way: "run" } });
+    await say("A merchantman: " + F.look + ". <b>" + shCap(F.ship) + "</b>, Master " + F.name + ", deep-laden, with " + (w === "banks" ? "a Gallows Cutter for an escort, hull-down astern of her" : "no escort at all") + ".");
+    if (hunt) {
+      await say("She dips her colours to the Saltwrit's flag and sends a boat across with a ham and a cask of wine and the master's compliments, and the news of a rover off the Saltbones.");
+      await mech("The pirates on the Reach are a little less safe for it: you've got a name to look for.", "loot"); return;
+    }
+    const c = await choose([
+      { key: "take", label: "Run up the black and take her", tag: (w === "banks" ? "her escort first · " : "") + "a big hold · the price on your head goes up" },
+      { key: "let", label: "Let her go about her business", tag: "the Reach hears that you did", plain: true }
+    ]);
+    if (c === "let") { X.mercy = (X.mercy || 0) + 1; await say("You let her go by. Her master stands at her rail with his hat off till she's past."); if (X.heat > 0 && X.mercy % 2 === 0) await seaHeat(-1, "Word gets round that you leave honest ships alone."); return; }
+    if (w === "banks") {
+      const Esc = shFoe("cutter", "saltwrit", { extra: { name: "Lieutenant " + shPick(SH_LAST), pirate: false } });
+      await say("Her escort comes up to meet you: " + shCap(Esc.ship) + ", a Gallows Cutter, with a young lieutenant on her quarterdeck who has been waiting all his life for this.");
+      const r = await seaDuel(Esc, "g" + (X.gn + 1), false, { cond: shCond(w, Esc) });
+      if (r !== "won") return await shAfter(Esc, r);
+      await say(shCap(Esc.ship) + " strikes, and you let her go home with her lieutenant and his sword, and go after the merchantman.");
+      await seaHeat(1, "You fought a Saltwrit ship.");
+    }
+    const r = await seaDuel(F, "g" + (X.gn + 1), false, { cond: shCond(w, F, { gauge: "us" }) });
+    if (r === "won") { await seaHeat(1, "A merchantman taken."); return await shGenWon(F); }
+    return await shAfter(F, r);
+  }
+  // The Saltwrit hunting you: a Gallows Frigate, or two ships together.
+  async function shHunted(two) {
+    const X = sea();
+    const A = shFoe("frigate", "saltwrit", { cap: "Captain " + shPick(SH_FIRST) + " " + shPick(SH_LAST), extra: { pirate: false, bounty: 0 } });
+    const B = two ? shFoe("cutter", "saltwrit", { cap: "Lieutenant " + shPick(SH_LAST), extra: { pirate: false, bounty: 0 } }) : null;
+    await say("Two sails, then one, then two again: " + (two ? "a Gallows Frigate and a cutter in company, quartering the sea for you, with your name on a slate on the frigate's quarterdeck." : "a Gallows Frigate, under every stitch she has, coming straight down on you. The Saltwrit don't send frigates for small fry.") + " <b>" + shCap(A.ship) + "</b>" + (two ? " and <b>" + shCap(B.ship) + "</b>" : "") + ".");
+    await mech(A.trick);
+    const c = await choose([
+      { key: "fight", label: "Fight", tag: two ? "the cutter first, then the frigate, with no time to mend between" : "a frigate: two gun decks · take her and she's yours" },
+      { key: "run", label: "Run for it", tag: "Seamanship DC " + (14 + (two ? 2 : 0)) + (shC(X.ship).fast ? " · a sloop's legs +3" : ""), plain: true }
+    ]);
+    if (c === "run") {
+      const r = await check({ label: "Seamanship check (outrunning the Saltwrit)", mod: 2 + plTier() + (shC(X.ship).fast ? 3 : 0) + (shQ(X.ship, "reach") ? 2 : 0) + (seaHas("pell") ? 2 : 0), dc: 14 + (two ? 2 : 0), cta: "Crack on" });
+      if (r.ok) { await say("You crack on everything she'll carry, and throw the water over the side, and by nightfall they're topsails on the horizon, and then nothing."); return; }
+      await say("She has the legs of you. You'll have to fight.");
+    }
+    if (B) {
+      const r = await seaDuel(B, "g" + (X.gn + 1), false, { cond: shCond(X.at, B) });
+      if (r !== "won") return await shAfter(B, r);
+      await say(shCap(B.ship) + "'s colours come down, and the frigate comes on through her smoke.");
+      X.gn++;
+    }
+    const r = await seaDuel(A, "g" + (X.gn + 1), false, { cond: shCond(X.at, A) });
+    if (r === "won") { grant("shfrigate"); await seaHeat(1, "You took a Saltwrit frigate. Everybody will hear."); return await shGenWon(A); }
+    return await shAfter(A, r);
+  }
+  // You beat a generated ship. Her hold, and what you do with her.
+  async function shGenWon(F) {
+    const X = sea(), hunt = seaHunter(), C = SH_CLS[F.cls];
+    const id = "g" + (++X.gn);
+    xpGain(40 + 2 * lv());
+    let hold = Math.round(((hunt ? 10 : 25) + lv() + (F.bounty || 30) / 2) * (C.hold ? 2 : 1) * (F.q.includes("deep") || shQ(X.ship, "deep") ? 1.25 : 1) * (shC(X.ship).hold ? 1.5 : 1));
+    if (X.blew) { X.blew = 0; hold = Math.round(hold / 2); await say("Half of what was in her went up with her magazine."); }
+    await seaGold(hold, "Her hold and her strongbox:");
+    const own = { cls: F.cls, name: F.ship, mark: F.mark, age: F.age, q: F.q.slice(), hull: Math.max(2, Math.ceil(SH_CLS[F.cls].hull / 2)), max: shHullOf(F.cls, F.q, F.age), guns: SH_CLS[F.cls].guns, crew: SH_CLS[F.cls].crew, up: [], taken: F.name };
+    const c = await choose([
+      { key: "prize", label: "Put a prize crew aboard and keep her in company", tag: "she sails with you · +1 to your broadsides · a " + C.name, show: X.prizes.length < 2 },
+      { key: "dock", label: "Send her in to Raftmark with a prize crew", tag: "laid up · " + X.dock.length + " of " + shBerths() + " berths · rename her, sail her, or break her up", show: X.dock.length < shBerths(), plain: true },
+      { key: "sunk", label: "Take her people off and sink her", tag: hunt && F.pirate ? F.bounty + " gold bounty" : "Plunder +1", plain: true },
+      { key: "freed", label: "Let her go, with her captain", tag: "the Reach hears that you did", plain: true },
+      { key: "handed", label: "Carry " + F.name.replace(/, called .*/, "") + " back to the Saltwrit in irons", tag: Math.round(F.bounty * seaFifth()) + " gold", show: hunt && F.pirate, plain: true }
+    ]);
+    X.glog.unshift({ ship: F.ship, cls: F.cls, cap: F.name, fate: c, day: calDay() }); X.glog = X.glog.slice(0, 12);
+    if (c === "prize" || c === "dock") {
+      own.id = id; X.gp[id] = own;
+      if (c === "prize") X.prizes.push(id); else X.dock.push(id);
+      await say(c === "prize" ? shCap(F.ship) + " comes into line astern of you with your people at her wheel." : "A prize crew takes " + F.ship + " in to Raftmark with her pumps going.");
+      await mech("She's yours: a " + C.name + " (" + C.fx + "). " + (F.q.length ? "She's " + shQuirks(F) + ". " : "") + "At the yard you can rename her, mend her, sail her as your flagship, or break her up.", "loot");
+      if (X.prizes.length >= 2) grant("seafleet");
+    } else if (c === "sunk") {
+      await say("You take them off in the boats, and put a slow-match in her magazine, and stand off.");
+      if (hunt && F.pirate) await seaGold(F.bounty, "The Saltwrit pay for a pirate sunk:"); else S.plunder = (S.plunder || 0) + 1;
+    } else if (c === "handed") {
+      await seaGold(Math.round(F.bounty * seaFifth()), "The Saltwrit's bounty:");
+    } else {
+      S.hh.hear++; await say(F.name.replace(/, called .*/, "") + " touches a hat to you, and goes.");
+      if (X.heat > 0 && d(2) === 1) await seaHeat(-1, "Word gets round.");
+    }
+    renderSheet(); save();
+    return "won";
+  }
+
+  // ---------- the harbour board: seven ship quests ----------
+  // Each is sailed from Raftmark (or the Saltwrit station), each has a puzzle, and each outcome stays in
+  // S.sea.yard.q[id] for the yard, the towns and the journal to read. Six of them bring home the stuff a new
+  // hull needs (SH_MAT); the ransom brings Bathyr lead.
+  const SH_QUESTS = {
+    oak: { name: "The Keel-Timber", tag: "bog oak from the Hushfen's mouth · a tide to read", open: () => true },
+    sung: { name: "The Singing Wood", tag: "sung timber from Thrumhold · the Hesk want it sung right", open: () => true },
+    salvage: { name: "The Wreck of the Tolling Hour", tag: "an Ammaret galley on the Lantern Banks · one breath at a time", open: () => true },
+    convoy: { name: "The Salt Convoy", tag: "three salt hoys through the Saltbones · fog and wreckers", open: () => true },
+    murder: { name: "Dead Reckoning", tag: "a dead purser in your own bread room", open: () => sea().voy >= 1 },
+    ransom: { name: "A Ransom in Lead", tag: "a Rahdarian merchant's daughter on a rock in the Skerries", open: () => sea().voy >= 1 },
+    soundings: { name: "The Yonder Soundings", tag: "find a drowned hill in the Grey Yonder, and what's on it", open: () => SEA_WATERS.yonder.open() }
+  };
+  const shQDone = (k) => !!(S.sea && S.sea.yard && S.sea.yard.q[k]);
+  async function shBoard() {
+    const X = sea(), Y = yard();
+    await say(seaHunter() ? "The notice-board outside the Saltwrit station is mostly hanging-lists, but down at the bottom there's ship's work, pinned up by the harbour clerk." : "The harbour board at Raftmark is a hulk's old hatch-cover nailed to a post on the plank bridge, with notes on it in five hands and three languages.");
+    const L = Object.keys(SH_QUESTS).filter(k => !Y.q[k]);
+    const c = await choose(L.map((k, i) => ({ key: k, label: SH_QUESTS[k].name, tag: SH_QUESTS[k].tag + (SH_QUESTS[k].open() ? "" : " · not yet (sail more voyages)"), show: SH_QUESTS[k].open(), plain: i > 0 }))
+      .concat([{ key: "no", label: L.length ? "Not today" : "Nothing left on it you haven't done", plain: true }]));
+    if (c === "no") return;
+    if (X.ship.hull <= 0) { await say("Not in a ship with her planks sprung. Mend her first."); return; }
+    const h = el("div", "part-head sub", '<span class="num">The Open Reach · ship\'s work</span><h2>' + SH_QUESTS[c].name + "</h2>");
+    scrollNext = true; add(h);
+    roamFight = true;
+    try { await SH_QRUN[c](); } finally { roamFight = false; }
+    if (Object.keys(SH_QUESTS).every(k => Y.q[k])) grant("shquests");
+    achCheck(); renderSheet(); save();
+  }
+  const shGive = async (k, how) => { const Y = yard(); Y.mat[k] = (Y.mat[k] || 0) + 1; await mech((how ? how + " " : "") + "<b>" + shCap(SH_MAT[k].name) + "</b>, for the yard. Ama can build " + Object.keys(SH_CLS).filter(c => SH_CLS[c].mat === k).map(c => "a " + SH_CLS[c].name).join(" or ") + " with it.", "loot"); };
+
+  // At the start and end of a voyage: what her quirks and her class do.
+  async function shVoyageStart() {
+    const X = sea(), s = X.ship;
+    if (shQ(s, "leak") && s.hull > 1) await seaHull(1, "She's leaking at the bow again: the pumps were going all night in harbour.");
+    if (shQ(s, "ghost") || shQ(s, "grave")) await seaTemper(-1, shQ(s, "grave") ? "Somebody saw a woman in a leather apron standing on the keelson in the night." : "The bell rang on its own in the middle watch.");
+    if (shQ(s, "unnamed") && d(3) === 1) { await say("Out past the hulks, a squall finds her out of a clear sky, and nobody else on the Reach. The old hands say her old name under their breath."); await seaHull(2); }
+  }
+  async function shVoyageEnd() {
+    const X = sea(), s = X.ship;
+    if (shQ(s, "green")) { s.seas = (s.seas || 0) + 1; if (s.seas >= 3) { s.q = s.q.filter(k => k !== "green"); s.max += 2; s.hull += 2; await mech(shCap(s.name) + "'s timbers have seasoned: +2 hull, " + s.max + " in all.", "loot"); } }
+    if (shC(s).hold && !seaHunter()) await seaGold(20 + lv(), "Her great hold carried trade both ways, as well as everything else:");
+  }
+  // The wrong name in Dead Reckoning: whoever did it is still aboard.
+  async function shMurderEcho() {
+    const X = sea(), M = X.yard.q.murder; M.echo = true;
+    const N = { cook: "Merryn Coad", carp: "Cadan Pengelly", lead: "Kitto Rowse", surg: "Anwen Treloar" };
+    await say("In the middle watch the cabin boy is found at the foot of the forward ladder with his arm broken, saying somebody pushed him. He'd been asking questions about the purser.");
+    await say("In the morning " + N[M.killer] + " is gone, with a boat and the purser's purse, and you know, too late, who it was.");
+    await seaTemper(-2, "The crew know you named the wrong one.");
+    M.known = true;
+  }
+  function shItems(X, items) {
+    const Y = X.yard; if (!Y) return;
+    const mats = Object.keys(Y.mat).filter(k => Y.mat[k] > 0);
+    if (Y.build) items.push(["shbuild", "tally", "On the slip at Raftmark", "A " + SH_CLS[Y.build.cls].name + ", " + (calDay() >= Y.build.due ? "ready to launch" : Math.max(0, Y.build.due - calDay()) + " days from launching") + "."]);
+    if (mats.length || Y.timber || Y.guns || Y.hoys) items.push(["shyard", "tally", "In the yard at Raftmark", [mats.map(k => SH_MAT[k].name + (Y.mat[k] > 1 ? " ×" + Y.mat[k] : "")).join(", "), Y.timber ? Y.timber + " salvaged planks" : "", Y.guns ? Y.guns + " salvaged guns" : "", Y.fit.length ? Y.fit.map(k => SEA_UPS[k].name.toLowerCase()).join(", ") : "", Y.hoys ? Y.hoys + " Ember-Hoy" + (Y.hoys > 1 ? "s" : "") : ""].filter(Boolean).join(" · ") + "."]);
+  }
+  function shTownLines(X, L) {
+    const Y = X.yard; if (!Y) return;
+    const ren = shFleet().find(f => f.s.was && f.s.was.length);
+    if (ren) L.push(shQ(ren.s, "unnamed") ? "On the harbour-master's slate, " + ren.s.was.slice(-1)[0] + " is crossed out and " + ren.s.name + " written over it, and under that somebody's written " + ren.s.was.slice(-1)[0] + " again, in a different hand." : "Nobody on the plank bridges calls " + ren.s.name + " " + ren.s.was.slice(-1)[0] + " any more. The sea's forgotten it, and so have they.");
+    if (Y.q.convoy === "taken") L.push("Juno Pask's salt-house is shut, with a notice on the door. Half of Raftmark has stopped talking to you.");
+    if (Y.q.convoy === "all") L.push("Juno Pask stands you a drink every time you're in, whether you want one or not.");
+    if (Y.q.oak === "grave") L.push("A fen-cutter on the quay with a load of peat looks at your ship's keel, and at you, and takes his cap off to the keel.");
+    if (Y.q.ransom === "cheated" || Y.q.ransom === "stormed-kept") L.push("A Rahdarian factor won't sell to you. \"The Lanyons are my cousins,\" she says.");
+    if (Y.q.salvage === "buried") L.push("A parcel waits for you at the tally-house: a pocket clock from Ammaret, with Tulley's name engraved inside the lid.");
+    if (Y.scrapped.some(n => n.endsWith("*"))) L.push("Your old ship's name is still chalked on the yard wall. Somebody keeps freshening it.");
+    if (Y.built) L.push("Ama Holt points out your new ship to anybody who'll listen, with her pipe-stem, and never mentions you.");
+  }
+  function shJournal(X) {
+    if (!X || !X.yard) return "";
+    const Y = X.yard, F = [{ s: X.ship, w: "flagship" }].concat((X.prizes || []).map(id => ({ s: X.gp[id], id, w: "in company" })), (X.dock || []).map(id => ({ s: X.gp[id], id, w: "laid up" })));
+    const QO = { grave: "took the grave-oak", dug: "dug a new oak out of the fen", "dug-poor": "dug and found nothing", bought: "bought the split oak", sang: "answered the choir", paid: "paid the choir", green: "took green timber", buried: "carried Tulley home", left: "left Tulley where he sat", lost: "lost it", taken: "took the convoy yourself", all: "brought all three hoys through", some: "brought some of them through", none: "lost every hoy", stormed: "stormed the rover", "stormed-kept": "stormed the rover and kept the ransom", cheated: "paid in lead", caught: "were caught paying in lead", passage: "gave Tegen passage home", copied: "copied the plans", "copied-poor": "copied most of the plans", door: "took the door" };
+    const qs = Object.keys(SH_QUESTS).filter(k => Y.q[k]).map(k => { const v = Y.q[k]; return "<li class=\"won\"><span class=\"mk\"></span><span><b>" + SH_QUESTS[k].name + "</b>: " + (typeof v === "object" ? (v.acc === "bell" ? "blamed the bell" : v.right ? "named the killer" : "named the wrong one" + (v.known ? ", and found out" : "")) : QO[v] || v) + ".</span></li>"; }).join("");
+    return '<p class="j-sub">Your fleet: ' + F.filter(f => f.s).map(f => shCap(f.s.name) + " (" + shC(f.s).name + ", " + f.w + (f.s.was && f.s.was.length ? ", once " + f.s.was.join(", once ") : "") + ")").join("; ") + "." + (Y.built ? " Ships built: " + Y.built + "." : "") + (Y.scrapped.length ? " Broken up: " + Y.scrapped.map(n => n.replace("*", "")).join(", ") + "." : "") + (Y.cls.length ? " Kinds of ship fought or sailed: " + Y.cls.length + " of " + Object.keys(SH_CLS).length + "." : "") + "</p>" +
+      (qs ? '<ul class="marks">' + qs + "</ul>" : "");
+  }
+  // The tide over three bars. Rule of twelfths: the tide makes 1, 2, 3, 3, 2, 1 twelfths of its range in the
+  // six hours after low water, and goes out the same way. Cross the bars an hour apart; at each one the water
+  // (low-water depth + the tide) must be at least her draught.
+  function shTidePuzzle(draught) {
+    return new Promise(resolve => {
+      const H = [0, 1, 3, 6, 9, 11, 12, 11, 9, 6, 3, 1, 0];
+      let bars, good;
+      for (let n = 0; n < 200; n++) {
+        bars = [0, 1, 2].map(() => d(9) - 7);
+        good = [...Array(10).keys()].filter(h => bars.every((b, i) => b + H[h + i] >= draught));
+        if (good.length === 1) break;
+      }
+      const P = puzzleBox("The bars at the Hushfen's mouth", "Three bars across the channel, an hour's sail apart. The fen-cutters' almanac gives the depth over each at dead low water (a minus is dry sand): <b>" + bars.map((b, i) => "bar " + (i + 1) + ": " + b + " ft").join(" · ") + "</b>. The tide here makes 12 feet; the table gives how high it stands above low water, hour by hour. She draws <b>" + draught + " ft</b>. Choose the hour after low water to reach the first bar; you'll reach the second an hour later, and the third an hour after that. Two tides to try it on.");
+      const tb = el("table", "sh-tide"); tb.innerHTML = "<tr><th>Hour</th>" + H.slice(0, 12).map((x, i) => "<td>" + i + "h</td>").join("") + "</tr><tr><th>Tide</th>" + H.slice(0, 12).map(x => "<td>" + x + "</td>").join("") + "</tr>";
+      P.body.append(tb);
+      let tries = 2;
+      const btns = [...Array(10).keys()].map(h => { const b = pbtn(h + "h"); b.setAttribute("aria-label", "Reach the first bar " + h + " hours after low water"); b.onclick = () => go(h); P.ctrl.append(b); return b; });
+      const give = pbtn("Kedge her over on the anchors"); give.onclick = () => { P.end(); resolve({ ok: false, forced: true }); }; P.ctrl.append(give);
+      function go(h) {
+        const short = bars.map((b, i) => draught - (b + H[h + i]));
+        const bad = short.findIndex(x => x > 0);
+        if (bad < 0) { P.status.textContent = "She goes over all three with a foot to spare, and the fen opens out in front of you, flat and brown and endless."; P.end(); setTimeout(() => resolve({ ok: true, tries: 2 - tries }), 800); return; }
+        tries--;
+        P.status.textContent = "She touches on bar " + (bad + 1) + ", " + short[bad] + " ft short of water, and you have to lay out an anchor and warp her back off. " + (tries ? "One more tide." : "No more tides to waste.");
+        btns[h].disabled = true;
+        if (!tries) { P.end(); setTimeout(() => resolve({ ok: false }), 1000); }
+      }
+    });
+  }
+  const SH_QRUN = {
+    async oak() {
+      const X = sea(), Y = yard(), C = shC(X.ship);
+      await say("Ama Holt's note on the board is two lines long: <i>Wanted, a keel of bog oak. The fen-cutters at the Hushfen's mouth have them. I can't get there, and you've a ship.</i>");
+      await say("Bog oak is oak that fell into the fen a thousand years ago and lay there under the peat going black and hard as iron, and the fen-cutters dig it out and sell it to anybody who can get a boat over the bars at the river's mouth, which isn't many.");
+      if (C.shallow) await say(shCap(X.ship.name) + " draws next to nothing. You go over the bars on the top of the tide without even looking at the almanac.");
+      else {
+        const r = await shTidePuzzle(4 + 2 * C.draught);
+        if (!r.ok) { await seaHull(2, "On the bar."); if (r.forced) await say("You kedge her over the bars on the anchors, a cable's length at a time, which takes all day and all the skin off everybody's hands."); else { await say("You give up and send the boats in instead, and lose two days rowing."); calDawn(2); } }
+      }
+      await say("The fen-cutters live in a village on stilts where the river loses itself in reeds: tall, slow, mud-coloured people in leather aprons, who speak very little and never in a hurry. Their headwoman, Senna Ninnis, takes you to the cutting.");
+      await say("There are two trunks out of the peat on the bank: one long and straight and sound, black all through, and one shorter, split along half its length. \"The long one's from under the Burying Mere,\" Senna says. \"Where we put our dead, under the peat, with the old oaks. It's the best timber you'll ever see. It's also my grandmother's grave.\"", "voice");
+      const c = await choose([
+        { key: "grave", label: "Take the long trunk anyway", tag: "the finest keel there is · the fen remembers" },
+        { key: "dig", label: "Help them dig a third one out of the open fen", tag: "Constitution DC 14 · a day in the peat" , plain: true },
+        { key: "buy", label: "Buy the split one", tag: "40 gold · a lesser keel, but a keel", show: S.coins >= 40, plain: true }
+      ]);
+      if (c === "grave") {
+        Y.q.oak = "grave"; S.hh.hush++;
+        await say("Senna doesn't argue. She sends for six men and a sledge, and they float it out to your ship on the tide, and nobody in the village comes to the water to watch it go.");
+        await shGive("oak", "The long black trunk, lashed alongside.");
+        await mech("A ship laid down on it will carry <b>a grave-oak keel</b>: the fen's dead sail with her.", "hurt");
+      } else if (c === "dig") {
+        const r = await check({ label: "Constitution check (a day in the peat)", mod: 2 + plTier(), dc: 14, cta: "Dig" });
+        if (r.ok) { Y.q.oak = "dug"; S.hh.hear++; await say("You dig all day beside them, up to the waist in black water, and toward evening the spades ring on something that isn't peat. A whole oak, as long as the first and nobody's grave. Senna Ninnis shakes your hand with a hand like a root."); await shGive("oak"); }
+        else { Y.q.oak = "dug-poor"; await hurt(1, 6, "bludgeoning", "The peat-face slides in on you, and they dig you out by the hair."); await say("You don't find another trunk. Senna sells you the split one for half what it's worth, because you tried."); S.coins = Math.max(0, S.coins - 20); await shGive("oak"); }
+      } else { Y.q.oak = "bought"; S.coins -= 40; await say("The split one floats out to your ship on the next tide. It'll do: there's a keel's length in it, if Ama's careful."); await shGive("oak"); }
+      xpGain(40 + lv());
+    },
+    async sung() {
+      const Y = yard();
+      await say("The note is from Ama: <i>Sung timber. Thrumhold. Ask for a timber-choir. Take something they'd want.</i> It's a long way up from the coast to the Corrach, by the river road and then the mule-track, and the ship waits for you at Ashgate's landing.");
+      await say("The Hesk timber-choir is seven of them in a dark gallery where the mushroom trees grow out of the rock, pale as candles, and they sing to the trees until the trees grow the way they're sung. They'll sing you a keel's worth. But the song has to be answered, they say, the way it always is, or the timber grows wrong.");
+      const r = await shSongPuzzle();
+      if (r.ok) { Y.q.sung = "sang"; await say("When you've answered the last phrase, the eldest of them taps her forelegs together, which is a Hesk laughing. The timber's already growing, a long pale beam, straight as a ray of light."); }
+      else {
+        const c = await choose([{ key: "pay", label: "Pay them to sing it without you", tag: "60 gold", show: S.coins >= 60 }, { key: "take", label: "Take what grew", tag: "it'll be green timber", plain: true }]);
+        if (c === "pay") { S.coins -= 60; Y.q.sung = "paid"; await say("They sing it themselves, in a quarter of the time, and much better."); }
+        else { Y.q.sung = "green"; await say("What grew is twisted and green, but there's a keel in it."); }
+      }
+      const g = await choose([
+        { key: "name", label: "Let them sing your ship's name into the wood", tag: "the Hesk will know her when they hear her" },
+        { key: "no", label: "Just take the timber", plain: true }
+      ]);
+      if (g === "name") { Y.q.sungName = sea().ship.name; await say("They sing her name, " + sea().ship.name + ", over and over in their scraping voices, until the wood rings with it when you knock on it."); }
+      await shGive("sung", "A beam of sung timber, wrapped in wet sacking.");
+      xpGain(40 + lv());
+    },
+    async salvage() {
+      const Y = yard();
+      await say("The note's from Ammaret, written in a clockmaker's tiny hand: <i>The galley Tolling Hour went down on the Lantern Banks in the spring with Master Pascoe Tulley aboard and the finest paddle-spring ever wound. Reward for the spring. Reward for Master Tulley.</i>");
+      await say("You find her in five fathoms, on the edge of the Banks, sitting upright on the sand, with her paddle-boxes open and the fish going in and out of them. The spring room's in the middle of her, past a lot of other rooms.");
+      let got = false;
+      for (let dive = 0; dive < 2 && !got; dive++) {
+        const r = await shBreathPuzzle();
+        if (r.ok) got = true; else await hurt(1, 4, "bludgeoning", "You come up with your lungs on fire and your hands empty.");
+      }
+      if (!got) { Y.q.salvage = "lost"; await say("The weather turns before you can go down again. The Tolling Hour keeps her spring."); const c = await choose([{ key: "buy", label: "Buy a spring from Ammaret's tick-yards instead", tag: "120 gold", show: S.coins >= 120 }, { key: "no", label: "Leave it", plain: true }]); if (c === "buy") { S.coins -= 120; await shGive("spring", "It comes by carrier."); } return; }
+      await say("The spring is the size of a millstone, wound tight, in a brass drum. And beside it, sitting on a bench with his hands folded, as if he'd sat down to wait for something, is Master Pascoe Tulley.");
+      const c = await choose([{ key: "bury", label: "Bring him up too, and carry him home to Ammaret", tag: "a day's sail out of your way" }, { key: "leave", label: "Leave him where he sat down", tag: "it's a grave as good as any", plain: true }]);
+      Y.q.salvage = c === "bury" ? "buried" : "left";
+      if (c === "bury") { calDawn(1); await say("They bury him in Ammaret with all the clocks in the street stopped for a minute. His daughter gives you the reward for the spring and won't take any for him."); await seaGold(30, "Tulley's reward:"); }
+      await shGive("spring", "The Tolling Hour's spring.");
+      xpGain(40 + lv());
+    },
+    async convoy() {
+      const X = sea(), Y = yard(), hunt = seaHunter();
+      await say("Juno Pask, the salt factor, has three hoys loaded for Rahdaria and no escort, and the only road there goes through the Saltbones. \"Eighty gold,\" she says, \"and a Sulmaran lens out of the cargo, that I was meant to sell and won't, if you bring them through.\"", "voice");
+      const t = await choose([
+        { key: "escort", label: "Take the job", tag: "three hoys · the fog · and whoever's waiting in it" },
+        { key: "take", label: "Take the job, and then take the convoy", tag: "everything they carry, the lens too · Raftmark won't forget", show: !hunt, plain: true }
+      ]);
+      if (t === "take") {
+        await say("You see them out past the hulks, and at the edge of the Saltbones you run up the black and put a gun across the leading hoy's bow. The hoys' masters don't fight. One of them, an old man, cries.");
+        Y.q.convoy = "taken"; Y.grudge = 1; S.plunder = (S.plunder || 0) + 2;
+        await seaGold(120 + 3 * lv(), "Salt, and the purse Juno Pask gave her masters for the road:");
+        await shGive("lens", "In the third hoy's cabin, wrapped in wool:");
+        await seaHeat(2, "Raftmark has a name for you now.");
+        await mech("Ama Holt builds for you still, but it costs a sixth more: Juno Pask is her cousin.", "hurt");
+        return;
+      }
+      let hoys = 3;
+      await say("Into the Saltbones in the morning, with the three hoys strung out astern on a tow, and the fog coming down by noon.");
+      const r = await fogPuzzle({ casts: 6 + (seaHas("pell") ? 1 : 0) + (shC(X.ship).hears ? 2 : 0) });
+      if (r.strikes) { const n = Math.min(2, r.strikes); hoys -= n; await say(n > 1 ? "Two of the hoys strike the rocks behind you and go down in a hiss of salt." : "The last hoy strikes, and you get her people off before she goes."); }
+      await say("Night, and the fog thinning, and lamps where there shouldn't be any. Then something low and burning, coming down the wind at the hoys.");
+      const f = await shFireship();
+      if (!f && hoys > 1) { hoys--; await say("It drifts on into the hoys, and one of them goes up like a torch."); }
+      const F = shFoe("lamp", "rover");
+      await say("And behind it, the wrecker: <b>" + shCap(F.ship) + "</b>, a Lamp-Brig, " + F.name + "'s ship, with every lamp on her yards lit.");
+      const res = await seaDuel(F, "g" + (X.gn + 1), false, { cond: shCond("bones", F, { sky: "night", ground: "shoals" }) });
+      if (res === "won") await shGenWon(F); else { if (hoys) hoys--; await say("She gets in among the hoys before you can stop her."); }
+      Y.q.convoy = hoys === 3 ? "all" : hoys ? "some" : "none";
+      if (hoys === 3) grant("shconvoy");
+      if (hoys) { await say(hoys + " of the hoys come into Rahdaria behind you, and Juno Pask meets you on the quay."); await seaGold(30 * hoys, "Juno Pask pays by the hoy:"); await shGive("lens", "And the lens, as promised:"); }
+      else await say("You come into Rahdaria alone. Juno Pask doesn't meet you.");
+      xpGain(50 + lv());
+    },
+    async murder() {
+      const X = sea(), Y = yard();
+      const SUS = {
+        cook: { name: "Merryn Coad", what: "the cook", hand: "left", stain: "flour", watch: "below", owed: true },
+        carp: { name: "Cadan Pengelly", what: "the carpenter", hand: "right", stain: "tar", watch: "below", owed: true },
+        lead: { name: "Kitto Rowse", what: "the leadsman", hand: "left", stain: "tar", watch: "deck", owed: false },
+        surg: { name: "Anwen Treloar", what: "the surgeon", hand: "right", stain: "lamp oil", watch: "below", owed: false }
+      };
+      const K = shPick(Object.keys(SUS)), V = SUS[K];
+      await say("The second morning out, the cabin boy comes aft white as paper. The purser, Gwynn Bastable, is in the bread room with his head broken, and he's been dead since the middle watch.");
+      await say("Nobody came aboard. Nobody left. Whoever did it is in your crew. Four of them had any business near the bread room in the night: " + Object.values(SUS).map(s => s.name + ", " + s.what).join("; ") + ".");
+      await say("The crew have their own opinion already. \"It's the bell,\" they say. \"Somebody whistled on deck yesterday, and the bell rang on its own.\"", "voice");
+      const CL = {
+        body: () => "He was struck from behind, on the " + (V.hand === "left" ? "left" : "right") + " side of his head: somebody " + V.hand + "-handed.",
+        floor: () => "On the bread-room floor, a smear on the boards by the door, of " + V.stain + ".",
+        bill: () => "The watch bill, and the officer of the watch: whoever went down to the bread room went down the " + (V.watch === "deck" ? "after hatch, from the deck, in the middle of their watch" : "forward ladder, from below, where the watch below sleeps") + ".",
+        chest: () => V.owed ? "His sea-chest has a false bottom, and in it a ledger of the money he lent the crew at interest. The page for this month is torn out." : "His sea-chest has a false bottom, and in it his ledger of loans, complete, with nothing torn out. His purse is gone.",
+        talk: () => "The fo'c'sle talk: everybody saw the bell ring. Nobody saw anything else. Two of them swear it rang thirteen."
+      };
+      const seen = [];
+      await mech("<b>The body</b>: " + CL.body());
+      for (let i = 0; i < 3; i++) {
+        const c = await choose([["floor", "Search the bread room floor"], ["bill", "Read the watch bill"], ["chest", "Open his sea-chest"], ["talk", "Listen to the fo'c'sle talk"]].filter(([k]) => !seen.includes(k)).map(([k, l], j) => ({ key: k, label: l, tag: (3 - i) + " searches before the crew start burying him and scrubbing the deck", plain: j > 0 })));
+        seen.push(c); await mech(CL[c]());
+      }
+      await mech("Under the sea-chest's false bottom, too: <b>kinstone</b>, a whole block of it, smuggled out of Kedge. He was carrying it for somebody, and now it's yours.", "loot");
+      const ask = await choose([{ key: "ask", label: "Question one of them, hard", tag: "Insight DC 13 · one name" }, { key: "no", label: "You've seen enough", plain: true }]);
+      if (ask === "ask") {
+        const who = await choose(Object.keys(SUS).map((k, i) => ({ key: k, label: SUS[k].name + ", " + SUS[k].what, plain: i > 0 })));
+        const r = await check({ label: "Insight check (" + SUS[who].name + ")", mod: 2 + plTier(), dc: 13, cta: "Watch them" });
+        await mech(r.ok ? (who === K ? SUS[who].name + " answers every question a beat too fast, and won't look at the bread-room door." : SUS[who].name + " is frightened, but only the way everybody is. You'd bet they didn't do it.") : SUS[who].name + " gives you nothing you can read.");
+      }
+      const acc = await choose(Object.keys(SUS).map((k, i) => ({ key: k, label: "Name " + SUS[k].name, tag: SUS[k].what + " · " + SUS[k].hand + "-handed" + (seen.includes("floor") ? " · works with " + SUS[k].stain : "") + (seen.includes("bill") ? " · " + (SUS[k].watch === "deck" ? "on deck in the middle watch" : "the watch below") : ""), plain: i > 0 })).concat([{ key: "bell", label: "Say it was the bell", tag: "the crew will believe you", plain: true }]));
+      const right = acc === K;
+      const pun = acc === "bell" ? "bell" : await choose([
+        { key: "hang", label: "Hang them from the yard", tag: "the old law" },
+        { key: "maroon", label: "Put them ashore on the first rock", plain: true },
+        { key: "saltwrit", label: "Carry them to the Saltwrit for trial", plain: true }
+      ]);
+      Y.q.murder = { killer: K, acc, right, pun };
+      if (acc === "bell") { await say("You let them think it was the bell, and they take it down and throw it over the side, and are happier, and " + V.name + " goes on cooking, or caulking, or sounding, or stitching, as before."); await mech("Whoever did it is still aboard.", "hurt"); }
+      else {
+        await say(SUS[acc].name + " " + (right ? "doesn't deny it, in the end. Bastable had found out what they owed and who they'd sold to, and meant to say." : "swears to the last they never went near the bread room.") + " " + (pun === "hang" ? "They go up from the main yard at the change of the watch." : pun === "maroon" ? "You put them ashore on a rock with a flask and a knife." : "You carry them to the Saltwrit, and the Saltwrit try them, which takes ten minutes."));
+        if (pun === "hang") { S.hh.hush++; X.hanged++; }
+        if (right) { grant("shmurder"); await seaTemper(1, "The crew sleep easier."); } else await mech("You'll find out later whether you were right.", "hurt");
+      }
+      await shGive("kin");
+      xpGain(40 + lv());
+    },
+    async ransom() {
+      const X = sea(), Y = yard();
+      await say("Elowen Lanyon is a Rahdarian merchant who's come all the way to Raftmark herself, which merchants don't, with a chest. Her daughter Ysella was taken off a packet-boat by a rover a month ago, and the rover wants two hundred gold, left on a rock in the Gibbet Skerries, and then he'll put her ashore.");
+      await say("\"I can't sail there,\" Elowen says. \"You can. The chest's ballasted with Bathyr lead to make it sink if anybody drops it overboard. Keep the lead. Bring my daughter.\"", "voice");
+      const F = shFoe(shPick(["raider", "lamp", "sloop"]), "rover");
+      await say("The rock's a black stump with a cage on it and the rover lying at anchor in its lee: <b>" + shCap(F.ship) + "</b>, " + F.name + "'s ship. Ysella Lanyon is in the cage. She's reading a book.");
+      const c = await choose([
+        { key: "pay", label: "Leave the ransom on the rock, as agreed", tag: "200 gold of Elowen's · the honest way" },
+        { key: "storm", label: "Attack the rover where she lies", tag: "she's at anchor · if it goes wrong, so does Ysella", plain: true },
+        { key: "cheat", label: "Swap the gold for lead, and leave him that", tag: "Sleight of Hand DC 15 · keep the 200 · he'll know, eventually", show: !seaHunter(), plain: true }
+      ]);
+      if (c === "pay") {
+        await say("You row the chest to the rock and leave it, and pull off, and the rover's boat comes and takes it, and puts Ysella in the cage's place, and that's that. He dips his colours to you as he goes, very politely.");
+        Y.q.ransom = "paid"; await seaGold(40, "Elowen Lanyon, in tears on the quay:");
+      } else if (c === "storm") {
+        const r = await seaDuel(F, "g" + (X.gn + 1), false, { anchor: true, cond: shCond("gibbet", F, { gauge: "us" }) });
+        if (r === "won") { await shGenWon(F); Y.q.ransom = "stormed"; await say("Ysella Lanyon comes out of the cage with her finger in her book to keep her place."); const k = await choose([{ key: "back", label: "Give Elowen back her two hundred", tag: "the whole ransom" }, { key: "keep", label: "Keep it, for your trouble", tag: "200 gold", plain: true }]); if (k === "keep") { Y.q.ransom = "stormed-kept"; await seaGold(200, "The ransom, which nobody's paid:"); await mech("Elowen Lanyon says nothing at all. Rahdaria will hear about it.", "hurt"); } else { S.hh.hear++; await say("Elowen Lanyon counts it, very carefully, and then counts it again, and then embraces you, which Rahdarians don't."); } }
+        else { Y.q.ransom = "lost"; await say("The rover cuts her cable and is gone round the rock, and the cage is empty when you get there."); await mech("You never hear what happened to Ysella Lanyon.", "hurt"); }
+      } else {
+        const r = await check({ label: "Sleight of Hand check (a chest of lead)", mod: 2 + plTier(), dc: 15, cta: "Swap it" });
+        if (r.ok) { Y.q.ransom = "cheated"; await say("You pour the gold into your own sea-chest and fill the ransom chest with Bathyr lead and a layer of coin on top, and row it to the rock, and by the time anybody opens it you're hull-down."); await seaGold(200, "Elowen's ransom, which the rover never got:"); await mech(F.name + " will remember the lead.", "hurt"); X.grudgeCap = F.name; }
+        else { Y.q.ransom = "caught"; await say("His boat-crew open the chest on the rock, right there, and look at the lead, and look at you. The cage is empty when you get there."); await mech("You never hear what happened to Ysella Lanyon.", "hurt"); S.hh.hush++; }
+      }
+      await shGive("lead", "The ransom chest's ballast:");
+      xpGain(40 + lv());
+    },
+    async soundings() {
+      const Y = yard();
+      await say("An old note, so old the pin's rusted: <i>The Flense on Keast Bank. Whalers' station. Went quiet in the winter. Somebody look.</i> Keast Bank's a drowned hill out in the Grey Yonder, and nobody's sure where any more.");
+      const r = await shSoundPuzzle();
+      if (!r.ok) { await say("You find it in the end the slow way, by sailing in squares for two days."); calDawn(2); }
+      await say("The Flense is a whaling station on piles on the bank's top, at low water a hand's breadth above the sea: try-works, a long shed, a slipway with the bones of a ship on it. One person's still there. Old Tegen Hendy, a whaler with a face like a boot and a harpoon across her knees, who says the others went home when the whales stopped coming, and she didn't.");
+      await say("\"You'll be wanting the plans,\" she says. \"Everybody did, that came.\" They're cut into the door of the long shed: the lines of a Deepwhaler, doubled at the bow, with the harpoon guns drawn in.", "voice");
+      const c = await choose([
+        { key: "pass", label: "Offer her passage home, for the plans", tag: "Tegen joins your crew" },
+        { key: "copy", label: "Copy them", tag: "Intelligence DC 14 · a day in the shed", plain: true },
+        { key: "door", label: "Take the door off its hinges", tag: "she can't stop you", plain: true }
+      ]);
+      if (c === "pass") { Y.q.soundings = "passage"; sea().hands.push("tegen"); await say("She thinks about it for a long time, and then gets up and puts her harpoon over her shoulder. \"There's nothing here,\" she says. \"I've been waiting for somebody to tell me so.\""); await mech("<b>Old Tegen Hendy</b> joins your crew: " + SEA_HANDS.tegen.replace(/^[^(]*\(/, "(") + ".", "loot"); }
+      else if (c === "copy") { const k = await check({ label: "Intelligence check (copying a ship's lines)", mod: 2 + plTier(), dc: 14, cta: "Copy" }); Y.q.soundings = k.ok ? "copied" : "copied-poor"; if (!k.ok) await say("You get most of it. Ama will make sense of the rest, swearing."); calDawn(1); }
+      else { Y.q.soundings = "door"; S.hh.hush++; await say("You take the door. Tegen watches you do it, and doesn't say anything, and when you sail she's sitting in the doorway with the wind going through it."); }
+      await shGive("plans", "The Deepwhaler's lines.");
+      xpGain(50 + lv());
+    }
+  };
+  // The Hesk answer: the timber-choir sings a phrase, and the answer follows one hidden rule. Two examples, then three to answer.
+  function shSongPuzzle() {
+    return new Promise(resolve => {
+      const T = ["high", "mid", "low"], G = { high: "▲", mid: "■", low: "▼" };
+      const down = (x) => T[(T.indexOf(x) + 1) % 3], up = (x) => T[(T.indexOf(x) + 2) % 3];
+      const RULES = [(p) => p.slice().reverse(), (p) => p.map(down), (p) => p.slice().reverse().map(up), (p) => [p[p.length - 1]].concat(p.slice(1, -1), [p[0]]).map(down)];
+      const rule = shPick(RULES);
+      const phrase = () => [0, 1, 2, 3].map(() => shPick(T));
+      const fmt = (p) => p.map(x => G[x]).join(" ");
+      const ex = [phrase(), phrase()];
+      const P = puzzleBox("The timber-choir's answer", "▲ high · ■ middle · ▼ low. The choir sings a phrase, and the timber answers it, always by the same rule. You heard it twice: <b>" + fmt(ex[0]) + "</b> was answered <b>" + fmt(rule(ex[0])) + "</b>, and <b>" + fmt(ex[1]) + "</b> was answered <b>" + fmt(rule(ex[1])) + "</b>. Now you answer. Three phrases; one wrong answer is forgiven, two and the wood grows wrong.");
+      let n = 0, wrong = 0;
+      function next() {
+        if (n >= 3) { P.end(); resolve({ ok: true }); return; }
+        const p = phrase(), a = rule(p), opts = [a];
+        RULES.forEach(R => { const o = R(p); if (!opts.some(x => x.join() === o.join())) opts.push(o); });
+        while (opts.length < 4) { const o = phrase(); if (!opts.some(x => x.join() === o.join())) opts.push(o); }
+        opts.sort(() => Math.random() - 0.5);
+        P.ctrl.innerHTML = "";
+        P.status.innerHTML = "They sing: <b>" + fmt(p) + "</b>";
+        opts.forEach(o => { const b = pbtn(fmt(o)); b.onclick = () => { if (o.join() === a.join()) { n++; next(); } else { wrong++; if (wrong >= 2) { P.status.textContent = "The timber shudders and twists as it grows."; P.end(); setTimeout(() => resolve({ ok: false }), 900); } else { P.status.innerHTML = "The wood creaks: wrong. They sing it again: <b>" + fmt(p) + "</b>"; b.disabled = true; } } }; P.ctrl.append(b); });
+      }
+      next();
+    });
+  }
+  // The Tolling Hour's rooms: a 3×3 grid, each room costs breath to swim through. Swim from the hatch to the
+  // spring room; coming back the same way costs the same again.
+  function shBreathPuzzle() {
+    return new Promise(resolve => {
+      const cost = Array.from({ length: 9 }, () => d(3));
+      cost[0] = 1; cost[8] = 1;
+      // the cheapest route (only right/down/left/up through unvisited rooms): a small search
+      let best = 99;
+      const walk = (i, seen, c) => { if (c >= best) return; if (i === 8) { best = c; return; } const r = i / 3 | 0, k = i % 3; [[r - 1, k], [r + 1, k], [r, k - 1], [r, k + 1]].forEach(([y, x]) => { const j = y * 3 + x; if (y >= 0 && y < 3 && x >= 0 && x < 3 && !seen.has(j)) { seen.add(j); walk(j, seen, c + cost[j]); seen.delete(j); } }); };
+      walk(0, new Set([0]), cost[0]);
+      const breath = 2 * best + 1;
+      const P = puzzleBox("Into the Tolling Hour", "Her rooms are flooded, and some are full of wreckage. The number in each is how much breath it takes to get through it. Swim from the hatch (top left) to the spring room (bottom right), one room at a time, and you'll come back the way you went, which costs the same again. You have <b>" + breath + "</b> breath.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(3, 56px)";
+      const path = [0];
+      const btns = cost.map((c, i) => { const b = pbtn(i === 8 ? "⚙ " + c : String(c)); b.setAttribute("aria-label", "Room costing " + c + " breath"); b.onclick = () => go(i); grid.append(b); return b; });
+      P.body.append(grid);
+      const draw = () => { const used = path.reduce((a, j) => a + cost[j], 0); btns.forEach((b, i) => b.classList.toggle("on", path.includes(i))); P.status.textContent = "Breath spent going in: " + used + " · coming back: " + used + " · you have " + breath + "."; return used; };
+      function go(i) {
+        const at = path[path.length - 1], r = at / 3 | 0, k = at % 3, y = i / 3 | 0, x = i % 3;
+        if (path.includes(i) || Math.abs(r - y) + Math.abs(k - x) !== 1) return;
+        path.push(i);
+        const used = draw();
+        if (2 * used > breath) { P.status.textContent = "Halfway through the next bulkhead you know you won't get back if you go on. You turn round."; P.end(); setTimeout(() => resolve({ ok: false }), 900); return; }
+        if (i === 8) { P.status.textContent = "The spring room. You get a line on the drum and go back the way you came, with spots in front of your eyes."; P.end(); setTimeout(() => resolve({ ok: true }), 900); }
+      }
+      draw();
+    });
+  }
+  // Keast Bank: a hidden hill in a 5×5 sea. A cast of the lead anywhere gives the depth, which is 3 fathoms
+  // over the top and 4 more for every square away from it (across and down counted together). Find the top
+  // in five casts or fewer, and anchor on it.
+  function shSoundPuzzle() {
+    return new Promise(resolve => {
+      const N = 5, top = d(N * N) - 1, ty = top / N | 0, tx = top % N;
+      const depth = (i) => 3 + 4 * (Math.abs((i / N | 0) - ty) + Math.abs(i % N - tx));
+      const P = puzzleBox("Sounding for Keast Bank", "Somewhere under you is a drowned hill. Cast the lead in any square: it gives the depth, which is <b>3 fathoms over the hilltop, and 4 more for every square away from it</b> (squares across and squares down added together). Five casts. When you're sure, anchor on the top.");
+      const grid = el("div", "pgrid"); grid.style.gridTemplateColumns = "repeat(" + N + ", 44px)";
+      let casts = 5, mode = "cast";
+      const btns = [...Array(N * N).keys()].map(i => { const b = pbtn("·"); b.setAttribute("aria-label", "Square " + (i + 1)); b.onclick = () => tap(i); grid.append(b); return b; });
+      P.body.append(grid);
+      const m = pbtn("Anchor here instead"); m.onclick = () => { mode = mode === "cast" ? "anchor" : "cast"; m.textContent = mode === "cast" ? "Anchor here instead" : "Cast the lead instead"; P.status.textContent = mode === "anchor" ? "Tap the square to anchor on." : casts + " casts left."; }; P.ctrl.append(m);
+      function tap(i) {
+        if (mode === "anchor") { P.end(); const ok = i === top; P.status.textContent = ok ? "The anchor bites at three fathoms, on rock. Keast Bank." : "The cable runs out and out and finds nothing. Wrong."; setTimeout(() => resolve({ ok }), 900); return; }
+        if (!casts) return;
+        casts--; btns[i].textContent = depth(i); btns[i].classList.add("on");
+        P.status.textContent = casts + " cast" + (casts === 1 ? "" : "s") + " left.";
+        if (depth(i) === 3) { P.end(); P.status.textContent = "Three fathoms, and rock: you're right on top of it."; setTimeout(() => resolve({ ok: true }), 900); return; }
+        if (!casts) { mode = "anchor"; m.disabled = true; P.status.textContent = "No casts left. Anchor where you think it is."; }
+      }
+      P.status.textContent = "5 casts left.";
+    });
+  }
 
   // ---------- the Long Return: crime and the watch ----------
   // Opens when the story's end card is behind you, or at level 50, whichever comes first (lrOn). Wave 1 of the
@@ -36021,7 +37150,8 @@ body.pv-open { overflow: hidden; }
     if (X.ev.lights === "doused" || X.ev.lights === "ambushed") L.push("A ship's master buys you a drink. \"No ship's gone on the Saltbones since you put the lamps out,\" he says.");
     const back = Object.keys(X.rivals).filter(k => X.rivals[k].fate === "marooned");
     if (back.length) L.push("There's talk in the tavern about " + seaRival(back[0]).name + ", whom you left on a rock. Somebody's seen a sail with a shirt for a flag.");
-    if (X.prizes.length) L.push(seaRival(X.prizes[0]).ship.replace(/^the /, "The ") + " is moored outside, with your people aboard her, and children rowing out to look.");
+    shTownLines(X, L);
+    if (X.prizes.length) L.push(shCap(shPrizeName(X.prizes[0])) + " is moored outside, with your people aboard her, and children rowing out to look.");
     if (X.ev.mutiny) L.push("Somebody's scratched a mark on the plank bridge, the same one that was cut in your mast before the mutiny. It's been scrubbed at, but not very hard.");
     if (L.length) await say(L[d(L.length) - 1]);
   }
@@ -36038,7 +37168,7 @@ body.pv-open { overflow: hidden; }
     const FATE = { "": "Not met yet.", fled: "Still out there.", marooned: "Marooned on a rock.", sunk: "Sunk.", prize: "Taken as a prize: she sails with you.", hanged: "Hanged from the yard.", handed: "Handed to the Saltwrit.", freed: "Let go, on their word." };
     return "<section><h3>The Open Reach · " + X.voy + " voyage" + (X.voy === 1 ? "" : "s") + "</h3>" +
       '<p class="j-sub">' + X.ship.name.replace(/^the /, "The ") + ": hull " + X.ship.hull + " of " + X.ship.max + ", " + X.ship.guns + " guns, the crew " + SEA_TEMPER[X.ship.temper].toLowerCase() + ". Chart pieces: " + X.chart.length + " of 4." + (X.hoard ? " The hoard is found." : "") + "</p>" +
-      '<ul class="marks">' + R.map(id => { const M = X.rivals[id] || {}, V = seaRival(id); return '<li class="' + (M.fate && M.fate !== "fled" && M.fate !== "marooned" ? "won" : "") + '"><span class="mk"></span><span><b>' + V.name + "</b>, " + V.ship + " · " + (M.met ? FATE[M.fate || ""] : "Not met yet.") + "</span></li>"; }).join("") + "</ul></section>";
+      '<ul class="marks">' + R.map(id => { const M = X.rivals[id] || {}, V = seaRival(id); return '<li class="' + (M.fate && M.fate !== "fled" && M.fate !== "marooned" ? "won" : "") + '"><span class="mk"></span><span><b>' + V.name + "</b>, " + V.ship + " · " + (M.met ? FATE[M.fate || ""] : "Not met yet.") + (M.fate === "prize" && X.gp && X.gp[id] && X.gp[id].name !== V.ship ? " She sails as " + X.gp[id].name + " now." : "") + "</span></li>"; }).join("") + "</ul>" + shJournal(X) + "</section>";
   }
 
   // ---------- blade duels: the stroke pad (2026-11-08) ----------
