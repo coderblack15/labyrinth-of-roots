@@ -1,8 +1,8 @@
 // Labyrinth of Roots: languages
 // ------------------------------------------------------------------
 // This file adds a Language switch to Settings and translates the game's
-// menus, buttons, sheet labels and title screens. The story itself stays
-// in English for now.
+// menus, buttons, sheet labels and title screens. The story is translated
+// chapter by chapter in lang/story-*.js (Chapter 1 so far).
 //
 // How it works: every bit of on-screen text outside the story is checked
 // against the TABLE below. If the English matches a row, it is swapped for
@@ -40,12 +40,12 @@
     label: ["Language", "Idioma", "Langue", "Sprache", "Idioma", "言語"],
     close: ["Close", "Cerrar", "Fermer", "Schließen", "Fechar", "閉じる"],
     note: [
-      "Menus and title screens change language. The story itself is still told in English.",
-      "Cambia el idioma de los menús y las pantallas de inicio. La historia en sí sigue en inglés.",
-      "Change la langue des menus et des écrans d'accueil. L'histoire elle-même reste en anglais.",
-      "Ändert die Sprache von Menüs und Startbildschirmen. Die Geschichte selbst bleibt auf Englisch.",
-      "Muda o idioma dos menus e das telas iniciais. A história em si continua em inglês.",
-      "メニューとタイトル画面の言語を切り替えます。物語本文は英語のままです。",
+      "Menus, title screens and the first chapter's story change language. Later chapters are still told in English for now.",
+      "Cambia el idioma de los menús, las pantallas de inicio y la historia del primer capítulo. Los capítulos siguientes siguen en inglés por ahora.",
+      "Change la langue des menus, des écrans d'accueil et de l'histoire du premier chapitre. Les chapitres suivants restent en anglais pour l'instant.",
+      "Ändert die Sprache von Menüs, Startbildschirmen und der Geschichte des ersten Kapitels. Spätere Kapitel sind vorerst noch auf Englisch.",
+      "Muda o idioma dos menus, das telas iniciais e da história do primeiro capítulo. Os capítulos seguintes continuam em inglês por enquanto.",
+      "メニュー、タイトル画面、第1章の物語の言語を切り替えます。以降の章は今のところ英語のままです。",
     ],
   };
 
@@ -153,6 +153,7 @@
     ["Dread", "Pavor", "Effroi", "Grauen", "Pavor", "恐怖"],
     ["Item", "Objeto", "Objet", "Gegenstand", "Item", "アイテム"],
     ["Enemy health", "Salud del enemigo", "Santé de l'ennemi", "Gegnergesundheit", "Vida do inimigo", "敵の体力"],
+    ["Bag", "Bolsa", "Sac", "Beutel", "Bolsa", "袋"],
     ["Saves", "Partidas", "Sauvegardes", "Spielstände", "Jogos salvos", "セーブ"],
     ["Map", "Mapa", "Carte", "Karte", "Mapa", "地図"],
     ["Journal", "Diario", "Journal", "Tagebuch", "Diário", "日誌"],
@@ -401,6 +402,34 @@
   // A quick check for anyone editing the table: every row needs one entry per language.
   TABLE.forEach(r => { if (r.length !== LANGS.length) console.warn("languages.js: row needs " + LANGS.length + " entries:", r[0]); });
   PATTERNS.forEach(p => { if (p.length !== LANGS.length + 1) console.warn("languages.js: pattern needs " + LANGS.length + " entries:", p[0]); });
+
+  // ---- the story ----
+  // Story translations live in lang/story-*.js, one file per chapter. Each pushes rows in the same
+  // column order as TABLE onto window.LOR_STORY. The game calls LOR_TR on every line before it fills
+  // in pronouns, so keys keep their {g:a|b|c} and {he} markers. A line with HTML in it (a choice and
+  // its tag, a first-time note) is matched whole first, then piece by piece between the tags.
+  let story = new Map(), storyLen = -1;
+  function storyMap() {
+    const rows = window.LOR_STORY || [];
+    if (rows.length !== storyLen) {
+      story = new Map(rows.map(r => [r[0], r]));
+      storyLen = rows.length;
+      rows.forEach(r => { if (r.length !== LANGS.length) console.warn("languages: story row needs " + LANGS.length + " entries:", r[0]); });
+    }
+    return story;
+  }
+  function storyLine(s) {
+    const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s);
+    const row = m[2] && storyMap().get(m[2]);
+    return row && row[col] ? m[1] + row[col] + m[3] : null;
+  }
+  window.LOR_TR = function (html) {
+    if (!col || typeof html !== "string" || !/[A-Za-z]/.test(html)) return html;
+    const whole = storyLine(html);
+    if (whole != null) return whole;
+    if (html.indexOf("<") < 0) return html;
+    return html.split(/(<[^>]*>)/).map(p => p[0] === "<" ? p : (storyLine(p) ?? p)).join("");
+  };
 
   window.LOR_LANG = { set: setLang, get: () => CODES[col], list: () => LANGS.slice() };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
