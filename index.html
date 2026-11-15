@@ -2543,6 +2543,14 @@ body.pv-open { overflow: hidden; }
         mVib(t + 0.8, end, 4.8, 7, os);
       },
       trem(P, t, m, dur, v) { MI.bow(P, t, m, dur, v * 1.1, true); },
+      drum(P, t, m, dur, v) {                           // a low skin drum, felt more than heard
+        const p = mPan(P, 0.15), o = mOsc("sine", 92, t, t + 0.7, mEnv(p, t, 0.003, 0, 0.45, v));
+        o.frequency.exponentialRampToValueAtTime(41, t + 0.35);
+        const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.connect(filt("bandpass", 190, 1.2, mEnv(p, t, 0.002, 0, 0.09, v * 0.5))); s.start(t, Math.random(), 0.15);
+      },
+      tick(P, t, m, dur, v) {                           // a rim, or a knuckle on a coffin lid
+        const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.connect(filt("bandpass", rnd(3800, 5200), 4, mEnv(mPan(P, 0.6), t, 0.001, 0, 0.05, v))); s.start(t, Math.random(), 0.08);
+      },
       choir(P, t, m, dur, v) {                          // voices with no mouths
         const p = mPan(P, 0.5), a = Math.min(4, dur * 0.45), r = Math.max(2, dur * 0.6), end = t + dur + r * 1.5;
         const g = mEnv(p, t, a, Math.max(0, dur - a), r, v);
@@ -2635,6 +2643,10 @@ body.pv-open { overflow: hidden; }
       MP("blood-ears", "Blood in the Ears", "fight", 38, "phr", { step: 1.15, pad: ["sawtooth", 600, 0.12], lead: "trem", lo: 12, lv: 0.035, bass: "bow", wrong: 0.06, len: [150, 240], fx: { rev: 0.05, scrape: 0.015 } }),
       MP("hold-breath", "Hold Your Breath", "fight", 40, "loc", { step: 1.15, lead: "bow", lv: 0.045, counter: "pluck", len: [150, 240], fx: { rev: 0.04 } }),
       MP("iron-pulse", "Iron and Pulse", "fight", 36, "hun", { step: 1.15, lead: "piano", lo: 12, counter: "trem", cv: 0.025, len: [150, 240], fx: { rev: 0.05, knock: 0.008 } }),
+      // Fight tempo (15 Nov 2026): the same night music with a pulse, at the war drum's pace (575 ms a beat)
+      MP("teeth-dark", "Teeth in the Dark", "fight", 38, "phr", { step: 0.2875, bar: 16, rub: 0, pad: ["sawtooth", 650, 0.1], lead: "bow", ls: 4, lv: 0.04, sink: 0.25, beat: "X...x..tX.x...t.", ost: [0, null, 0, null, 1, null, 0, null, 0, null, 0, null, -1, null, 0, null], ov: 0.05, counter: "glass", cp: 0.01, len: [160, 260], fx: { rev: 0.008, scrape: 0.003 } }),
+      MP("hunt-heartbeat", "The Hunt Has a Heartbeat", "fight", 40, "loc", { step: 0.2875, bar: 16, rub: 0, pad: ["triangle", 700, 0.1], lead: "trem", ls: 4, lo: 12, lv: 0.035, beat: "X..X..x.X..X..t.", ost: [0, null, null, 0, null, null, 0, null, 1, null, null, 1, null, null, 0, null], osti: "piano", ol: 12, ov: 0.035, len: [160, 260], fx: { rev: 0.008, knock: 0.002 } }),
+      MP("keeps-time", "Something Keeps Time", "nightmare", 37, "oct", { step: 0.2875, bar: 14, rub: 0, pad: ["sawtooth", 550, 0.09], lead: "box", ls: 3, box: 30, wrong: 0.12, shadow: 0.25, drone: [0, 1], beat: "X.x.X.t.X..t.t", ost: [0, null, 1, null, 0, null, null, 0, null, 4, null, 0, null, null], ov: 0.05, len: [160, 260], fx: { rev: 0.01, whisper: 0.006, winddown: 0.0015 } }),
       MP("learned-face", "It Learned Your Face", "nightmare", 37, "oct", { step: 1.4, box: 35, counter: "glass", wrong: 0.12, shadow: 0.3, drone: [0, 1], len: [150, 260], fx: { rev: 0.06, whisper: 0.025, scrape: 0.02 } }),
       MP("falling-up", "Black Water Falling Up", "nightmare", 35, "whl", { step: 1.6, lead: "bow", lv: 0.045, sink: 0.6, drone: [0, 6], len: [150, 260], fx: { rev: 0.05, choirswell: 0.008 } }),
       MP("wrong-lullaby", "The Wrong Lullaby", "nightmare", 41, "hun", { step: 1.2, lead: "hum", lv: 0.045, counter: "box", wrong: 0.1, len: [150, 260], fx: { lull: 0.015, winddown: 0.012, knock: 0.008 } }),
@@ -2702,7 +2714,7 @@ body.pv-open { overflow: hidden; }
       const up = Math.random() < 0.2 ? 12 : 0;
       let tt = t;
       mo.forEach((x, i) => {
-        const dur = x.l * sp.step * slow;
+        const dur = x.l * sp.step * slow * (sp.ls || 1);
         if (i === 0 || Math.random() > (1 - P.arc) * 0.35) {
           let m = P.deg(x.d) + sp.lo + up;
           if (Math.random() < wrong) m += Math.random() < 0.7 ? 1 : -1;
@@ -2722,10 +2734,14 @@ body.pv-open { overflow: hidden; }
           const root = P.prog[Math.floor(P.k / sp.bar) % P.prog.length];
           let ns = [0, 2, 4].map(x => P.deg(root + x) + sp.po);
           if (Math.random() < sp.shadow * (0.5 + P.arc)) { const s = Math.random() < 0.6 ? 1 : 6; ns = ns.map(m => m + s); }
-          P.chord = ns;
+          P.chord = ns; P.croot = root;
           if (sp.pad) MI.pad(P, t, ns, sp.step * sp.bar, sp.pad);
           if (sp.bass && Math.random() < 0.7) MI[sp.bass](P, t, P.deg(root) + (sp.po - 12), sp.step * sp.bar * 0.7, sp.bv);
         }
+        // fight tempo: a drum line and an ostinato on a strict grid (rub 0), quiet while the piece wakes
+        const pulse = 0.55 + 0.45 * P.arc;
+        if (sp.beat && el > 0.06 && el < 0.94) { const c = sp.beat[P.k % sp.beat.length]; if (c === "X") MI.drum(P, t, 0, 0, 0.17 * pulse); else if (c === "x") MI.drum(P, t, 0, 0, 0.09 * pulse); else if (c === "t") MI.tick(P, t, 0, 0, 0.025 * pulse); }
+        if (sp.ost) { const o = sp.ost[P.k % sp.ost.length]; if (o !== null && Math.random() > (1 - P.arc) * 0.3) MI[sp.osti || "pluck"](P, t, P.deg((P.croot || 0) + o) + (sp.ol || 0), sp.step * 2, sp.ov * pulse); }
         if (sp.lead && t >= P.leadAt && el < 0.9) P.leadAt = mPhrase(P, t, Math.floor(el * 4));
         if (sp.counter && P.chord.length && Math.random() < sp.cp * P.arc) MI[sp.counter](P, t + Math.random() * sp.step * 0.5, pick(P.chord) + (sp.counter === "pluck" ? 0 : 12 + (Math.random() < 0.5 ? 12 : 0)), sp.step * 2, sp.cv * 1.6);
         for (const k in sp.fx) if (Math.random() < sp.fx[k] * (0.4 + P.arc)) MFX[k](P, t + Math.random() * sp.step);
@@ -3368,6 +3384,8 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "105", name: "Fight tempo", date: "15 Nov 2026", items: [
+      "Three new pieces of night music with a pulse: a low drum and a figure under it that keeps time with the war drum. <b>Teeth in the Dark</b> and <b>The Hunt Has a Heartbeat</b> play in fights, and <b>Something Keeps Time</b>, which limps in sevens, plays in Nightmares. Like the rest, they carry the theme of the chapter you're in."] },
     { ver: "104", name: "The Lost Hand", date: "15 Nov 2026", items: [
       "<b>A new chapter after the Root Summons and Dunvaar</b>, Parts CXII to CXVIII, from Adrian's mission. A job goes wrong for the Hollow Hands across the Narrow Sea, and <b>Grell</b> is hanging in a cage over a waterfall at Cutwater, the walled hold of <b>Kline Gerrand</b>, a bailiff who has been buying up the jungle holding by holding.",
       "<b>A new continent: Selvaine</b>, east across the Narrow Sea, and its jungle, the Wetwood. Your map grows to fit it, with a painting of Cutwater from the ridge and a plan of the hold you draw yourself.",
