@@ -242,6 +242,25 @@ body.intro-open { overflow: hidden; }
 .vitals { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; }
 .hpbar { height: 8px; background: var(--panel-2); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
 .hpbar span { display: block; height: 100%; background: var(--ember); transition: width .5s ease; }
+/* Armour wear: a silver bar under HP (Steel, Saddle and Shell). */
+.armrow { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; margin-top: -2px; }
+.armrow[hidden] { display: none; }
+.armrow svg { width: 12px; height: 14px; flex: none; }
+.armbar { flex: 1 1 auto; min-width: 0; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; border: 1px solid var(--line); }
+.armbar span { display: block; height: 100%; background: linear-gradient(180deg, #eef2f5, #aab3ba 55%, #7f8890); transition: width .5s ease; }
+.arm-num { font-family: var(--label); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.armrow.dented .armbar span { background: linear-gradient(180deg, #d9dde0, #8f979d 55%, #6a7177); }
+.armrow.dented .arm-num { color: #c9b27a; }
+.armrow.broken .armbar { border-color: #8a3a2a; }
+.armrow.broken .arm-num { color: #e0573f; }
+.horserow svg { width: 14px; height: 14px; }
+.hbars { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.hbars .armbar { flex: none; }
+.hbars .bardbar { height: 4px; }
+.hbars .bardbar[hidden] { display: none; }
+.hbars .hhpbar { height: 5px; }
+.hhpbar span { background: linear-gradient(180deg, #c69a5c, #8a6a42); }
+.horserow .arm-num { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
 .bleed-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e0796a; letter-spacing: .02em; }
 .bleed-row[hidden] { display: none; }
 .cal-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-family: var(--label); font-size: .78rem; letter-spacing: .06em; color: var(--muted); }
@@ -1288,6 +1307,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .vitals { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
   .vitals .vp { display: inline-flex; align-items: baseline; gap: 8px; white-space: nowrap; }
   .vitals .hpbar { order: 1; flex: 1 1 100%; align-self: center; }
+  .vitals .armrow { order: 1; flex: 1 1 100%; margin-top: 0; }
   .vitals .bleed-row { order: 2; flex: 1 1 100%; }
   .vitals .cal-row { order: 3; flex: 1 1 100%; font-size: .72rem; }
   .sheet-row { gap: 10px; }
@@ -1890,6 +1910,8 @@ body.pv-open { overflow: hidden; }
       <span class="vp"><span class="stat-label">HP</span>
       <span class="stat-val" id="hpVal">24 / 24</span></span>
       <div class="hpbar" style="grid-column: 1 / -1"><span id="hpBar" style="width:100%"></span></div>
+      <div class="armrow" id="armRow" hidden><svg viewBox="0 0 16 18" aria-hidden="true"><path d="M8 1l6 2.4v5.2c0 4-2.6 6.9-6 8.4c-3.4-1.5-6-4.4-6-8.4V3.4z" fill="#c9d0d6" stroke="#6d757c" stroke-width="1.2"/><path d="M8 3.6v11" stroke="#8d969e" stroke-width="1"/></svg><div class="armbar" role="meter" aria-label="Armour"><span id="armBar" style="width:100%"></span></div><span class="arm-num" id="armVal"></span></div>
+      <div class="armrow horserow" id="horseRow" hidden><svg viewBox="0 0 26 26" aria-hidden="true"><path d="M6 22l1-7c-1-3 0-6 3-7l3-4l1 3c3 0 6 2 7 6l1 3l-2 1l-2-2l-2 1v6h-2l-1-5h-3l-1 5z" fill="#8a6a42" stroke="#3b2816" stroke-width=".8"/></svg><div class="hbars"><div class="armbar bardbar"><span id="bardBar" style="width:100%"></span></div><div class="armbar hhpbar"><span id="hHpBar" style="width:100%"></span></div></div><span class="arm-num" id="horseVal"></span></div>
       <div class="bleed-row" id="bleedVal" hidden></div>
       <span class="vp"><span class="stat-label">Armor class</span>
       <span class="stat-val" id="acVal">13</span></span>
@@ -3421,6 +3443,15 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "108", name: "Steel, Saddle and Shell", date: "15 Nov 2026", items: [
+      "<b>A silver bar for your armour</b>, from Adrian's idea. It sits under your HP, and it's as long as the armour you wear: your shield, the scale shirt, the Champion Set, the Long Return's armour and a rivet plate all add to it. Blows that land wear it down (a big one twice as fast). At half it's <b>dented</b>, −1 AC; at nothing it's <b>broken</b>, and half the AC your gear gives you is gone. It mends a little every part and all the way at a chapter's end; an inn mends half, a smith, a stable or Hobb Tallis's cart mends it all for a gold a point, and a piece of scrap iron at a bench patches 5.",
+      "<b>A horse of your own.</b> From the Burning Sands on, Hobb Tallis will sell you his grey (90 gold), and you name her. Town stables on the roads back sell horses with a trait each: <b>Fast</b>, <b>Armoured</b>, <b>Enduring</b> or <b>Fearless</b>. Where a horse can go: +1 step on the battle maps, a <b>mounted charge</b> hits +4 instead of +2, breaking away from a road fight is at advantage, the long roads back take one watch instead of two, and on the Wandering Board you can <b>gallop</b>, a step the world doesn't get to take.",
+      "<b>Her health and her armour</b> are two more bars under yours: silver barding over brown health. On the battle maps 1 blow in 4 lands on her, and her barding takes it first. Without it, or once it breaks, a blow on her can throw you, and hurt she loses her extra step. Four kinds: <b>Leather Harness</b>, <b>Reinforced Studded Armour</b>, <b>Steel Barding</b> and, from level 30, <b>Legendary Warhorse Plate</b>.",
+      "<b>Horse levels</b>, 1 to 10, from fights she's in, mounted charges, gallops and long roads: more health every level, tougher barding at 3, <b>Trample</b> at 5 (a mounted charge knocks it back), a gallop more at 7, and at 10 a <b>Warhorse</b> who never throws you.",
+      "<b>Breeding</b> at any stable: put her to a stud (40 gold) and a month later there's a foal with the stud's trait and one of hers, and from horse level 8 a third. The stable keeps three more horses, and you can ride any of them.",
+      "<b>Wagons.</b> A cart (60 gold) carries 8 mortar shells instead of 4 and sells your salvage for a quarter more, and saddlebags carry 2 more. The catch: hitched, the long roads take two watches again, there's no galloping, people come for what's in it, and the axle wants greasing. Armour it (120) and ambushes come half as often, and in a company battle on the road it's your cover. Unhitch it whenever you like.",
+      "<b>Mini-mortars</b>, from Rahdaria on, at Hobb's cart or any bench (45 gold). Every shell that lands <b>knocks the whole line back</b>: they lose their swings, their Drill breaks, a charge they drummed for is broken, and they <b>panic</b> (−2 to hit next round, and one may run). Five shells: <b>iron</b>, <b>shrapnel</b> (more down), <b>concussion</b> (they lose their swings next round too), <b>incendiary</b> (they keep burning) and <b>smoke</b> (−4 to hit, no volleys, an easy way out). Two a battle. On the grid it's a card that lobs over cover and throws everything in a + of squares a square back; on the road it knocks a pack flat.",
+      "Eleven new feats in a <b>Steel, Saddle and Shell</b> pursuit."] },
     { ver: "107", name: "A Holding of Your Own", date: "15 Nov 2026", items: [
       "<b>Buy a home on the roads back</b>, from Adrian's design: <b>Bellamy Pennock</b>, land-broker, sells you one of three ruined holdings, for good. <b>Gorsehill</b> is a ring-fort with a crag on one side and no water. <b>Wickerby Mill</b> pays well and has a river anybody can row up. <b>Amblecote</b> is a roofless manor with a park and no wall at all.",
       "<b>Grow it from a camp to a mansion estate</b>: camp, outpost, compound, fort, manor, mansion. Through Pennock you buy a wall for each side (palisade, stone, bastions), a gate, a watchtower and a gun tower, a ditch, a well, a strongroom, a smithy, a herb garden, fields, a market cross, an alarm bell and a hall of colours. Everything takes days to build, and the plan of your holding is drawn as it grows.",
@@ -4463,6 +4494,17 @@ body.pv-open { overflow: hidden; }
     { id: "cl_ink_use", name: "Struck Out", desc: "Use Strike Through thirty times on one journey.", test: () => clIs("ink") && (S.cl.uses || 0) >= 30, prog: () => [clIs("ink") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
     { id: "cl_root_all", name: "Everything Takes", desc: "As a Rootgrafter, meet all six of your calling's scenes on one journey.", test: () => clIs("root") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("root") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
     { id: "cl_root_use", name: "Live Wood", desc: "Use Graft thirty times on one journey.", test: () => clIs("root") && (S.cl.uses || 0) >= 30, prog: () => [clIs("root") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "mtride", name: "Saddle Up", desc: "Buy a horse.", test: () => false },
+    { id: "mtcart", name: "Room in the Back", desc: "Hitch a cart behind your horse.", test: () => false },
+    { id: "mtgallop", name: "Before the World Turns", desc: "Gallop on the Wandering Board.", test: () => false },
+    { id: "mtcharge", name: "Ridden Down", desc: "Land ten mounted charges on the battle maps.", test: () => false },
+    { id: "mtflat", name: "Knocked Flat", desc: "Land a mini-mortar shell on an army.", test: () => false },
+    { id: "mtten", name: "Ten Down the Tube", desc: "Land ten mini-mortar shells.", test: () => false },
+    { id: "mthlv5", name: "Old Friend", desc: "Bring a horse to horse level 5.", test: () => false },
+    { id: "mtplate", name: "Iron Mare", desc: "Put Legendary Warhorse Plate on your horse.", test: () => false },
+    { id: "mtwagon", name: "Rolling Fort", desc: "Armour your cart.", test: () => false },
+    { id: "mtfoal", name: "Bloodline", desc: "Breed a foal at a livery stable.", test: () => false },
+    { id: "mtmend", name: "Back in One Piece", desc: "Have broken armour or barding mended.", test: () => false },
     { id: "cl_kin25", name: "Kindled", desc: "Use your path's kindled move twenty-five times on one journey.", test: () => !!cl() && (S.cl.kin || 0) >= 25, prog: () => [cl() ? Math.min(25, S.cl.kin || 0) : 0, 25] },
     { id: "clrank5", name: "Fifth Rank", desc: "Reach Rank V in your calling (level 40).", test: () => !!cl() && clRank() >= 5, prog: () => [cl() ? clRank() : 0, 5] },
     { id: "lgarmour", name: "Meant to Stand Still", desc: "Put on Warden's Plate.", test: () => false },
@@ -4587,7 +4629,9 @@ body.pv-open { overflow: hidden; }
     { id: "paths", name: "Paths of the Calling", ver: "39", desc: "Twelve paths, two for every calling, and the moves that kindle while you fight.",
       ids: ["cl_kin25"] },
     { id: "holding", name: "A Holding of Your Own", ver: "40", desc: "A home on the roads back, built up from a camp to a mansion, and the gangs you let go coming for its walls.",
-      ids: ["hmdeed", "hmhall", "hmwalls", "hmraid", "hmread", "hmthree", "hmfull", "hmsworn", "hmhang", "hmrebuild", "hmrich", "hmrank"] }
+      ids: ["hmdeed", "hmhall", "hmwalls", "hmraid", "hmread", "hmthree", "hmfull", "hmsworn", "hmhang", "hmrebuild", "hmrich", "hmrank"] },
+    { id: "saddle", name: "Steel, Saddle and Shell", ver: "41", desc: "A silver bar for your armour, horses with their own armour, levels and foals, wagons, and mini-mortars that knock an army back.",
+      ids: ["mtride", "mtcart", "mtgallop", "mtcharge", "mthlv5", "mtplate", "mtwagon", "mtfoal", "mtflat", "mtten", "mtmend"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4716,6 +4760,8 @@ body.pv-open { overflow: hidden; }
 
   // ---------- sheet ----------
   const ICONS = {
+    horse: '<svg viewBox="0 0 26 26"><path d="M6 22l1-7c-1-3 0-6 3-7l3-4l1 3c3 0 6 2 7 6l1 3l-2 1l-2-2l-2 1v6h-2l-1-5h-3l-1 5z" fill="#8a6a42" stroke="#3b2816" stroke-width=".8"/><path d="M13 4c-2 2-4 3-6 3" stroke="#3b2816" stroke-width="1.4" fill="none" stroke-linecap="round"/><circle cx="17" cy="10" r=".9" fill="#1a120a"/></svg>',
+    mortar: '<svg viewBox="0 0 26 26"><path d="M9 8l7-3l3 8l-7 3z" fill="#b58a4a" stroke="#5e4424" stroke-width=".9"/><ellipse cx="12.5" cy="6.5" rx="3.6" ry="1.6" transform="rotate(-22 12.5 6.5)" fill="#3a2a16"/><path d="M14 15l-2 8M17 14l3 8M10 23h12" stroke="#6b5430" stroke-width="1.6" stroke-linecap="round"/></svg>',
     bow: '<svg viewBox="0 0 26 26"><path d="M8 2c9 4 9 18 0 22" fill="none" stroke="#8a6a42" stroke-width="2.4" stroke-linecap="round"/><path d="M8 2v22" stroke="#d8d0bc" stroke-width=".9"/><path d="M5 13h16" stroke="#b9c0c4" stroke-width="1.4"/><path d="M21 13l-3-2v4z" fill="#b9c0c4"/><path d="M5 13l-2-2M5 13l-2 2" stroke="#79ab92" stroke-width="1.2"/></svg>',
     chest: '<svg viewBox="0 0 26 26"><rect x="3" y="10" width="20" height="12" rx="1.5" fill="#6b4a2b" stroke="#3b2816"/><path d="M3 11c0-5 4-7 10-7s10 2 10 7z" fill="#80583a" stroke="#3b2816"/><path d="M3 11h20M8 4.6v17.4M18 4.6v17.4" stroke="#cfa850" stroke-width="1.4"/><rect x="11" y="11" width="4" height="5" rx="1" fill="#cfa850"/></svg>',
     dagger: '<svg viewBox="0 0 26 26"><path d="M13 2l2.2 3.5v9.5h-4.4V5.5z" fill="#cdd5dc"/><path d="M8 15h10M13 15v7" stroke="#8a7a62" stroke-width="2.2" stroke-linecap="round"/><circle cx="13" cy="23" r="1.6" fill="#cfa850"/></svg>',
@@ -4757,14 +4803,14 @@ body.pv-open { overflow: hidden; }
     roadlore: '<svg viewBox="0 0 26 26"><path d="M6 23c2-6 5-9 7-20c2 11 5 14 7 20" stroke="#8a6c3a" stroke-width="1.5" fill="none"/><path d="M13 7v3M13 13v3M13 19v3" stroke="#cfa850" stroke-width="1.6" stroke-linecap="round"/></svg>',
     grain: '<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="2.2" fill="#cfa850"/><ellipse cx="13" cy="13" rx="5.5" ry="4.8" fill="none" stroke="#b08a48" stroke-width="1.2"/><ellipse cx="13.5" cy="13" rx="8.5" ry="7.6" fill="none" stroke="#8a6c3a" stroke-width="1.1"/><ellipse cx="13" cy="13.5" rx="11" ry="10.4" fill="none" stroke="#6b5430" stroke-width="1" stroke-dasharray="5 2"/></svg>'
   };
-  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped && !lgBody() ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0) + (S.f50mantle ? 2 : 0) + fitAC() + lgAC();
+  const acNow = () => 13 + (S.shield && !S.pitted && !S.stripped ? 1 : 0) + ((S.gear || []).includes("scale") && !S.stripped && !lgBody() ? 1 : 0) + (FOE.on ? FOE.dig : 0) + lvAC() + (relic("gauntlet") ? 1 : 0) + adaptAC() + (hasGear("eyecoat") ? 1 : 0) + (hasGear("crest") ? 1 : 0) + (S.champ ? 2 : 0) + (S.f50mantle ? 2 : 0) + fitAC() + lgAC() - armPen();
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
     renderSheetPic();
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
-    renderBleed(); renderVenom();
+    renderBleed(); renderVenom(); armRender();
     $("acVal").textContent = acNow();
     $("coinVal").textContent = S.coins + " gp";
     $("calVal").innerHTML = calLine();
@@ -4798,6 +4844,7 @@ body.pv-open { overflow: hidden; }
     spoilsItems(items);
     tcItems(items);
     lastwellItems(items);
+    mountItems(items);
     assizeItems(items);
     heskItems(items);
     noonItems(items);
@@ -4989,6 +5036,10 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    armour: ["Armour wear", "The <b>silver bar</b> under your HP is your armour. Blows that land wear it down: at half it's <b>dented</b> (−1 AC), and at nothing it's <b>broken</b> (half the AC your gear gives you is gone). It mends a little at the start of every part, all the way at a chapter's end, by half at an inn, and fully at a smith or Hobb Tallis's cart. A piece of scrap iron at a bench patches 5."],
+    barding: ["Horse armour", "With your horse on a battle map, <b>1 blow in 4 lands on her</b>. Her barding (the silver bar over her brown health bar) takes it first. With no barding, or once it breaks, a blow on her can <b>throw you</b> (its next attack has advantage), and with broken barding or half her health she loses her extra step. At 0 she's lame until she rests. Barding mends with your armour."],
+    horse: ["Your horse", "Where a horse can go, it goes with you: <b>+1 step</b> on the battle maps, and a mounted charge hits <b>+2</b> harder. Breaking away from a road fight is at advantage, the long roads back take one watch, and on the Wandering Board you can <b>gallop</b> twice a board, a step the world doesn't get. She waits outside the Labyrinth, the Hushfen, the cities under the ground and the sea."],
+    mortar: ["Mini-mortars", "In a company battle, <b>Fire the mini-mortar</b> (Dexterity DC 12, two shells a battle): a shell that lands drops 1d3+1 soldiers and <b>knocks the line back</b>, so they lose their swings and their Drill breaks; a big roll catches a captain too. On the grid it lobs over cover onto a + of squares. Pack shells at a bench."],
     home: ["Your holding", "Build through <b>Bellamy Pennock</b>: one job at a time, days on the calendar. Rent comes into the <b>strongbox</b> every month. Gangs you <b>let go</b> on the roads come for your walls: you get a few days' warning. <b>Read the signs</b> (a watch each), then on the <b>war table</b> cross off what can't be true and mark one ★ for the side and the way they'll come. Get it right and they come in much weaker; get it wrong and a building on their side burns."],
     city: ["The deep cities", "In Rahdaria, Sulmara, Ammaret and Raftmark you can <b>walk the districts</b>: each walk takes a watch. Good work raises the city's <b>reputation</b> (Rahdaria's is its Standing): <b>25</b> gets 5% off, <b>50</b> gets 10% off and a gentler watch, <b>75</b> gets 15%, and <b>100</b> makes you free of the city. Crimes there cost you 4 a level."],
     kindle: ["Kindled", "Your path's move is <b>ready</b>. It kindles while you fight: a spark every round, and one more when your hit lands (the Edge paths) or a blow lands on you (the Mend paths). Spending it starts the sparks over, so a long fight gets it more than once. The sparks show in the foe box."],
@@ -5346,8 +5397,12 @@ body.pv-open { overflow: hidden; }
     if (FOE.on && !FOE.felt && total > 1 && fitN("felt")) { FOE.felt = true; feltCut = Math.min(2, total - 1); total -= feltCut; }
     const caught = coBlock(total);
     if (caught) total -= caught.cut;
+    const onHorse = horseTakes(total, type);
+    if (onHorse) total = 0;
     S.hp -= total;
+    const armTxt = onHorse || armWear(rolled, type);
     let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (lvx ? ", +" + lvx + (cascadeOn() ? " from a Nightmare at your level" : " from its level") + " = " + (halved + lvx) : "") + (slowed ? ", and the heartgrain slows it by " + slowed + (caught ? "" : " to " + total) : "") + (caught ? ". " + caught.line + ", and it takes " + caught.cut + " off: you take " + total : "") + ".";
+    if (armTxt) txt += armTxt;
     let saved = false;
     if (S.hp <= 0 && rmCold()) { S.hp = 0; renderSheet(); await mech(txt, "hurt"); throw RM_FALL; }
     if (S.hp <= 0) {
@@ -7001,7 +7056,7 @@ body.pv-open { overflow: hidden; }
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
           { key: "walk", label: "Walk the old roads", tag: (cascadeOn() ? "Nightmares" : "creatures") + " at level " + lv() + (top ? " · gold" : " · XP and gold") },
-          { key: "roads", label: "Take the Blood-bought Roads", tag: "bandit gangs · " + bnBroken() + " of " + ROAD_GANGS.length + " broken · " + bnTitle(), plain: true, show: roamRegions().length >= 2 },
+          { key: "roads", label: "Take the Blood-bought Roads", tag: (hasHorse() && !horseLame() ? "on " + horseName() + (cartOn() ? ", with the cart" : ", one watch") + " · " : "") + "bandit gangs · " + bnBroken() + " of " + ROAD_GANGS.length + " broken · " + bnTitle(), plain: true, show: roamRegions().length >= 2 },
           { key: "weave", label: bn().weave === 2 ? "Climb the Needle again" : "Climb to the High Weave", tag: bn().weave === 2 ? "the Weave is empty now · the view" : "the legendary gang · a hard fight", plain: true, show: bn().weave === 1 },
           { key: "raid", label: pzHunter() ? "Hunt road-raiders for the Saltwrit" : "Raid a caravan", tag: pzHunter() ? "bounties · a fifth more with the pardon" : "Plunder " + (S.plunder || 0) + " · " + PL_TIERS[plTier()][1], plain: true, show: !!(S.pz && S.pz.done) },
           { key: "sea", label: S.sea ? "Put to sea in " + S.sea.ship.name : "Go down to your ship", tag: S.sea ? "voyages · rival captains · hull " + S.sea.ship.hull + " of " + S.sea.ship.max + (S.sea.chart.length && !S.sea.hoard ? " · chart " + S.sea.chart.length + " of 4" : "") : "the Open Reach · a ship of your own", plain: true, show: seaOpen() },
@@ -7020,15 +7075,18 @@ body.pv-open { overflow: hidden; }
           { key: "wait", label: calNight() ? "Sleep rough till morning" : "Make camp and wait for dark", tag: calNight() ? "a cold camp by the road · a few HP" : "it's " + CAL_WATCH[calWatch()].toLowerCase() + " · gangs on the Blood-bought Roads lie in wait at night, with fatter purses", plain: true },
           { key: "f50", label: "Follow the Ring-Chart", tag: "your gift for fifty rings · field " + ((S.f50 && S.f50.n || 0) + 1) + " of " + F50_LEGS + (S.f50 && S.f50.regs && S.f50.regs[S.f50.n] && FIELDS[S.f50.regs[S.f50.n]] ? " · " + FIELDS[S.f50.regs[S.f50.n]].name : ""), plain: true, show: f50Open() },
           { key: "north", label: "Go back north to the door in the ice", tag: "Rimehold · the story waits there", show: S.detour === "rime" },
+          { key: "hitch", label: S.mount && S.mount.hitched === false ? "Hitch the cart up again" : "Unhitch the cart and travel light", tag: S.mount && S.mount.hitched === false ? "8 shells, salvage a quarter dearer · slower, and it draws ambushes" : "quicker roads and gallops · it waits at the livery", show: hasHorse() && !!S.mount.cart, plain: true },
           { key: "journal", label: "Open your journal", plain: true }
         ]);
+        if (c === "hitch") { S.mount.hitched = S.mount.hitched === false; renderSheet(); await mech(S.mount.hitched ? "The cart is hitched up again." : "You leave the cart at the nearest livery and travel light.", "loot"); save(); continue; }
         if (c === "north") {
           await say("You turn north again. The Long White is the same white, and Weatherend's smoke is where you left it, and the Frozen Pass is empty. Two days up, the door is exactly where you left it.");
           S.roam = false; delete S.detour; save();
           return "north";
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        const took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
+        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
+        if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
@@ -7057,9 +7115,11 @@ body.pv-open { overflow: hidden; }
           const ic = innCost(); S.coins -= ic; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
           calTo(1);
           await say("A bed, a bowl of something hot, and a landlord who doesn't ask where you've been. You sleep through till noon.");
+          await armRest();
           await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". " + (ic ? "Spent " + ic + " gold." : ctRank() >= 3 ? "On the house, for a Contender." : "The landlord won't take your money: the navvies' wages are paid."), "loot");
         } else if (c === "journal") jOpen();
         if (took) calPass(took);
+        if (took) await cartRoad(took);
         if (took && c !== "sea" && seaHuntChance()) await seaHunted();
         else if (took && c !== "sea" && lrHuntChance()) await lrHunted();
         save();
@@ -7317,8 +7377,10 @@ body.pv-open { overflow: hidden; }
       const listenOk = wbAhead(B).some(n => !n.seen && !n.vis);
       const c = await wbPick(B, [
         { key: "listen", label: "Stop and listen", tag: "a watch passes, and the world moves · find out what's ahead", show: listenOk },
+        { key: "gallop", label: B.galOn ? "Rein " + horseName() + " in" : "Give " + horseName() + " her head", tag: B.galOn ? "walk the next step after all" : "your next step is a gallop: the world doesn't get a step · " + (B.gal ?? galMax()) + " of " + galMax() + " left on this board", show: horseOk(B.reg) && !cartOn() && (B.galOn || (B.gal ?? galMax()) > 0) },
         { key: "fold", label: "Fold the board away for now", tag: "it keeps until you come back" }
       ]);
+      if (c === "gallop") { B.galOn = !B.galOn; await say(B.galOn ? "You gather the reins. " + horseName() + " feels it, and dances." : "You let the reins out again. " + horseName() + " sighs through her nose."); continue; }
       if (c === "fold") { await say("You fold the board. The ink keeps moving under the fold; you can feel it."); light(back); save(); return; }
       if (c === "listen") {
         const m = wbWorld(B);
@@ -7331,9 +7393,13 @@ body.pv-open { overflow: hidden; }
       const to = B.N[c];
       wbAhead(B).filter(n => n.id !== c).forEach(n => wbPassBy(B, n));
       B.at = c; to.vis = to.seen = true;
-      const m = wbWorld(B); wbHearAround(B);
+      const gal = !!B.galOn && horseOk(B.reg) && !cartOn(); B.galOn = false;
+      let galUp = "";
+      if (gal) { B.gal = (B.gal ?? galMax()) - 1; S.mount.rides = (S.mount.rides || 0) + 1; grant("mtgallop"); galUp = horseXp(5); }
+      const m = gal ? [] : wbWorld(B); wbHearAround(B);
       const hd = el("div", "part-head sub", '<span class="num">The Wandering Board · ' + REGIONS[B.reg] + "</span><h2>" + to.name + "</h2>");
       scrollNext = true; add(hd);
+      if (gal) await mech("At a gallop, " + horseName() + " has you there before the world can take a step. (" + B.gal + " gallop" + (B.gal === 1 ? "" : "s") + " left on this board.)" + galUp, "loot");
       for (const x of m) await mech(x, "hurt");
       if (B.gang.alive && B.gang.at === B.at) await wbGang(B, to);
       if (B.car.alive && B.car.state === "travelling" && B.car.at === B.at) await wbCaravan(B, to);
@@ -8948,7 +9014,8 @@ body.pv-open { overflow: hidden; }
         { key: "elixir", label: "Buy an Elixir of Health", tag: MP(20) + " gold" + mOff + " · " + (S.elixirs || 0) + " carried", show: has("market") && S.coins >= MP(20), plain: true },
         { key: "band", label: "Buy two bandages", tag: MP(5) + " gold" + mOff + " · they stop bleeding · " + (S.dress || 0) + " carried", show: has("market") && S.coins >= MP(5), plain: true },
         { key: "sell", label: "Sell your salvage", tag: salvWorth() + " gold", show: has("market") && salvWorth() > 0, plain: true },
-        { key: "smith", label: "Visit the smith", tag: (smithLeft.length ? "weapons, " : "") + "fittings" + (!S.whet ? " and honing" : ""), show: has("smith") && S.axe, plain: true },
+        { key: "smith", label: "Visit the smith", tag: (smithLeft.length ? "weapons, " : "") + "fittings" + (!S.whet ? " and honing" : "") + (armWorn() ? " · armour mended" : ""), show: has("smith") && S.axe, plain: true },
+        { key: "stable", label: "The livery stable", tag: S.mount ? horseName() + (S.mount.cart ? " and the cart" : " · a cart") + " · grooming" : "horses and carts", show: town && has("market") && !HORSE_NO.has(T.reg), plain: true },
         { key: "bank", label: "The bank", tag: S.bank && S.bank.open ? (S.bank.bal || 0) + " gold on deposit" : "15 gold to open an account", show: has("bank"), plain: true },
         { key: "library", label: "Browse the library", tag: P(30) + " gold" + cOff + " · learn a skill", show: has("library") && skillsLeft.length > 0 && S.coins >= P(30), plain: true },
         { key: "healer", label: "Ask Sister Wren to teach you Field Mending", tag: S.ansel ? "free, for Brother Orrin" : P(10) + " gold" + cOff, show: has("healer") && !hasSkill("mend") && (S.ansel || S.coins >= P(10)), plain: true },
@@ -8963,6 +9030,7 @@ body.pv-open { overflow: hidden; }
       if (c === "leave") break;
       if (c === "fair") await calJoin(T, fair);
       if (c === "salle") await salleVisit(T);
+      if (c === "stable") await stableVisit(T, P);
       if (c.startsWith("hz:")) await hzTownDo(c, T);
       if (c.startsWith("lr:")) await lrTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
@@ -8976,6 +9044,7 @@ body.pv-open { overflow: hidden; }
         const b = S.hp; S.hp = S.maxHp; S.digs = DIG_MAX; if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(T.kind === "sanctuary" && T.reg === "corrach" ? "Sister Wren burns sage over you, binds what needs binding, and makes you sleep on a white terrace in the sun." : "You sleep in the quiet, and nothing comes for you, and you wake up feeling like yourself.");
         await mech("Rested: regain " + (S.hp - b) + " HP, and footholds back to " + DIG_MAX + ".", "loot");
+        await armRest();
         if (S.sick) await cure("The sanctuary's water washes the last of it out of you.");
         if (S.bloom) await bloomDown(S.bloom, "Here, the Bloom can't hold on.");
         await calMonthNote();
@@ -8985,6 +9054,7 @@ body.pv-open { overflow: hidden; }
         S.coins -= fee; S.hp = S.maxHp; S.digs = Math.min(DIG_MAX, digsLeft() + 1); if (S.shawl) S.shawl.charge = 1; renderSheet();
         await say(candle ? "The landlord won't take your money. \"Not on the Long Candle,\" she says. \"Nobody pays to come in out of the cold tonight. They pay double tomorrow.\"" : !fee && !free ? "The landlord won't take your money. \"You're the one who paid the navvies,\" she says. \"My great-grandmother was on that list.\"" : free ? "The landlord won't take your money. \"A Contender sleeps here for nothing,\" she says, \"and tells the taproom about it in the morning.\"" : "A bed, a bowl of something hot, and a landlord who doesn't ask where you've been.");
         await mech("Rested: full HP, footholds " + S.digs + " of " + DIG_MAX + ". " + (fee ? "Spent " + fee + " gold." : "On the house."), "loot");
+        await armRest();
         await dryLine("inn", { chance: 50 });
         await calMonthNote();
       } else if (c === "purse") await ctPurse(T);
@@ -8998,8 +9068,9 @@ body.pv-open { overflow: hidden; }
         await dryLine("smith", { chance: 40 });
         const k = await choose(smithLeft.filter(w => S.coins >= P(WEAPONS[w].price)).map(w => ({ key: w, pic: weaponPic(w), label: "Buy the " + WEAPONS[w].name, tag: P(WEAPONS[w].price) + " gold" + cOff + " · " + WEAPONS[w].fx, plain: true }))
           .concat([{ key: "whet", label: "Have the axe honed and balanced", tag: (hone ? hone + " gold" : "free for a Contender") + " · +1 axe damage", show: !S.whet && S.coins >= hone, plain: true },
-            { key: "fits", label: "Look at the fittings bench", tag: "studs, spikes, wire, weights, wraps · and taking them off (5 gold)", plain: true }, { key: "no", label: "Nothing today", plain: true }]));
+            { key: "fits", label: "Look at the fittings bench", tag: "studs, spikes, wire, weights, wraps · and taking them off (5 gold)", plain: true }, armSmithOpt(ctRank() >= 5 ? (() => 0) : P), { key: "no", label: "Nothing today", plain: true }]));
         if (k === "fits") await fitShop(P, "smith");
+        else if (k === "armfix") await armSmithDo(ctRank() >= 5 ? 0 : P(Math.max(2, armWorn())));
         else if (k === "whet") { S.coins -= hone; S.whet = true; renderSheet(); await mech("The smith hones the axe until it shaves the hair off your arm. +1 axe damage, for good.", "loot"); }
         else if (k !== "no") await buyWeapon(k, P(WEAPONS[k].price), "The smith tests the edge on a thumbnail and nods.");
       } else if (c === "bank") {
@@ -9762,7 +9833,7 @@ body.pv-open { overflow: hidden; }
     renderFoe(true);
     if (!unit) tip("fight");
   }
-  function foeEnd(lost) { if (!lost && FOE.on) rmGrow(); if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.lk = null; FOE.menace = 0; bfxClose(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { if (!lost && mountedNow()) horseXp(10); if (!lost && FOE.on) rmGrow(); if (!lost) { spoilsWon(); fightWon(); coWon(); } FOE.lk = null; FOE.menace = 0; bfxClose(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -10278,7 +10349,7 @@ body.pv-open { overflow: hidden; }
   const LEAVES = 4;
   const SALV = { cloth: ["cloth scrap", "cloth scraps", 1], metal: ["piece of scrap metal", "pieces of scrap metal", 3], spore: ["Bloom spore sack", "Bloom spore sacks", 6] };
   const salv = () => (S.salv = S.salv || { cloth: 0, metal: 0, spore: 0 });
-  const salvWorth = () => Object.keys(SALV).reduce((t, k) => t + salv()[k] * SALV[k][2], 0);
+  const salvWorth = () => { const n = Object.keys(SALV).reduce((t, k) => t + salv()[k] * SALV[k][2], 0); return cartOn() ? Math.round(n * 1.25) : n; };
   const salvList = (o) => Object.keys(SALV).filter(k => o[k]).map(k => o[k] + " " + SALV[k][o[k] > 1 ? 1 : 0]).join(", ");
   function spoilsWon() {
     if (!FOE.on || !started || FOE.swallowed) return;
@@ -10776,6 +10847,7 @@ body.pv-open { overflow: hidden; }
     if (i === C.from && ch >= ISB_CH() && !rmIn()) { if (c.isb === undefined) await meetIshbel(i); else if (c.isb === false && !c.isbSeen && C.slug !== ISB_AT) await isbGlimpse(); }
     if (i === C.from && POSTS[C.slug] && c.post !== C.slug && !c.merc) await hirePost(C);
     if (i === C.from && S.axe) await armoury(C);
+    if (i === C.from && S.axe) await hobbStable(C);
     if (i === C.from && S.axe) await chestStall(C);
     if (i === C.from && coAll().length > 2 && !(c.party && c.party.length === 2 && c.party.every(id => coAll().includes(id)))) await rxParty();
   }
@@ -11910,10 +11982,14 @@ body.pv-open { overflow: hidden; }
         { key: "mine", label: M ? "Pack a " + M.name : "", tag: M ? "1 iron + " + M.cost + " gold for " + M.fill + " · Dexterity DC 12 · " + M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") : "", show: !!M && S.iron >= 1 && S.coins >= (M ? M.cost : 0) },
         { key: "cal", label: "Forge a bag of caltrops", tag: "2 iron · Dexterity DC 12 · 18+ makes a fine bag", show: S.iron >= 2 },
         { key: "dress", label: "Roll a bandage", tag: (salv().cloth >= 2 ? "2 cloth scraps" : "3 gold for linen") + " · stops bleeding and heals 1d8 + 2 · you have " + (S.dress || 0), show: salv().cloth >= 2 || S.coins >= 3, plain: true },
+        ...mountOpts("bench"),
+        { key: "armiron", label: "Patch your armour with scrap iron", tag: "1 iron · +5 · " + armDur() + " of " + armMax(), show: armWorn() > 0 && S.iron >= 1, plain: true },
         { key: "pavise", label: "Buy a pavise", tag: "15 gold · a tall shield you plant in a fight: halves your next 3 hits, or stops a whole volley · you have " + (S.pavise || 0), show: S.coins >= 15, plain: true },
         { key: "done", label: "Leave the bench", plain: true }
       ]);
       if (c === "done") return;
+      if (String(c).startsWith("mt-")) { await mountDo(c, "bench"); continue; }
+      if (c === "armiron") { S.iron--; const n = armMend(5); renderSheet(); await mech("You rivet a strip of scrap iron over the worst of it: +" + n + ", " + armDur() + " of " + armMax() + ".", "loot"); continue; }
       if (c === "iron") { S.coins -= 4; S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron. 4 gold.", "loot"); }
       if (c === "dress") { if (salv().cloth >= 2) salv().cloth -= 2; else S.coins -= 3; S.dress = (S.dress || 0) + 1; renderSheet(); await mech("A bandage: a pad, a roll of linen and a smear of salve. You have " + S.dress + ".", "loot"); }
       if (c === "pavise") { S.coins -= 15; if (!S.pavise && !S.paviseSeen) { S.paviseSeen = true; picCard(null, { fam: "pavise", glow: "tempered" }, "Pavise"); } S.pavise = (S.pavise || 0) + 1; renderSheet(); await mech("A pavise: a tall shield of planked oak with a spike at the foot, to plant in the ground and crouch behind. You have " + S.pavise + ".", "loot"); }
@@ -11935,11 +12011,13 @@ body.pv-open { overflow: hidden; }
   function munFightOpts(F, st) {
     if (F.company) return [];
     const o = [];
+    const mo = mortarPackOpt(F, st); if (mo) o.push(mo);
     if (calTotal() && !st.used.cal) o.push({ key: "mun-cal", label: "Scatter caltrops", tag: ((S.calFine || 0) > 0 ? "fine: 1d6 a round" + (F.heads ? ", one drops each round" : "") : "crude: 1d4 a round") + ", −1 to hit, 3 rounds · costs your turn", plain: true });
     if ((st.mines || 0) < MINE_CAP) rmineKeys().forEach(k => { const M = REGION_MINES[k]; o.push({ key: "mun-" + k, label: "Lay a " + M.name, tag: M.dice[0] + "d" + M.dice[1] + " " + M.type + (M.fxTxt ? ", " + M.fxTxt : "") + " · Dex DC 11 to draw " + (F.heads ? "them" : "it") + " onto it · " + rmines()[k] + " left · costs your turn", plain: true }); });
     return o;
   }
   async function munFightDo(c, F, st) {
+    if (c === "mun-mortar") { await mortarPackDo(F, st); return true; }
     if (st.fd && String(c).startsWith("mun-") && (await fdLay(c, F, st))) return true;
     if (c === "mun-cal") {
       st.used.cal = true;
@@ -16647,7 +16725,7 @@ body.pv-open { overflow: hidden; }
     return () => pick;
   }
   const fdState = () => { const D = S.fd = S.fd || {}; for (const [k, v] of [["seen", false], ["won", 0], ["fields", []], ["w", false], ["charges", 0], ["shoves", 0], ["traps", 0], ["turned", 0], ["siege", []], ["sgseen", []]]) if (D[k] === undefined) D[k] = v; return D; };
-  const fdSteps = (round) => (S.f50boots ? 3 : 2) + (round === 1 && hasGear("porctower") ? 1 : 0);
+  const fdSteps = (round, key) => (S.f50boots ? 3 : 2) + (round === 1 && hasGear("porctower") ? 1 : 0) + (key && horseStep(key) ? 1 : 0);
   // Half the East (parts 76–82) and the Unmapped (83–89) run on the rahdaria key; on the story road they get their own ground.
   // Road fights sometimes go to one of the big fields: the Calving Stair in the north, the Twice-Fought Field below the
   // Ostle wall, and the Drowned Quay on the Welling coasts. Never the same big field twice running.
@@ -16960,7 +17038,7 @@ body.pv-open { overflow: hidden; }
     if (W) k += at(W, '<ellipse cx="4" cy="10" rx="26" ry="11" fill="#000" opacity=".5"/><circle r="34" fill="none" stroke="' + (W.grudge ? "#ff5a3c" : "#e8c56a") + '" stroke-width="2" stroke-dasharray="' + (W.grudge ? "3 3" : "10 5") + '" class="' + (W.grudge ? "fd-mad" : "fd-calm") + '"/><g transform="scale(1.12)">' + fdMedal(W.emb, "wild") + "</g>" + bar(W.hp / W.max, -42, "#b07cd6"));
     k += at(fd.you, '<ellipse cx="3" cy="9" rx="25" ry="10" fill="#000" opacity=".5"/><circle r="27" fill="url(#fdAura)" class="fd-aura"/><image href="' + markerSrc() + '" x="-28" y="-28" width="56" height="56"/>' + (fd.you.stuck ? sunk : ""));
     fd.svg.querySelector(".fd-toks").innerHTML = k;
-    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of " + (fd.smax || fdSteps()) + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? " · charging" : "") : "";
+    fd.stepsEl.textContent = fd.live ? "Steps " + fd.steps + " of " + (fd.smax || fdSteps()) + (horseOk(fd.key) ? " · on " + horseName() : "") + (fd.mv.length >= 2 && fdIsCharge(fd.mv) ? (horseOk(fd.key) ? " · riding it down" : " · charging") : "") : "";
   }
   function fdInfo(fd, x, y) {
     const t = fdTile(fd, x, y), R = FD_RULES[t], who = fdAt(fd, x, y);
@@ -17034,12 +17112,12 @@ body.pv-open { overflow: hidden; }
     const fd = st.fd; if (!fd) return 0;
     let n = 0;
     if (fdTile(fd, fd.you.x, fd.you.y) === "h" && fdTile(fd, fd.foe.x, fd.foe.y) !== "h") n += 1;
-    if (fdIsCharge(fd.mv) && fdTile(fd, fd.foe.x, fd.foe.y) !== "r") { n += 2; fd.charged = true; }
+    if (fdIsCharge(fd.mv) && fdTile(fd, fd.foe.x, fd.foe.y) !== "r") { n += 2 + (horseOk(fd.key) ? 2 + (S.mount.bard === "warhorse" && !bardBroken() ? 1 : 0) : 0); fd.charged = true; fd.rode = horseOk(fd.key); if (fd.rode && horseLv() >= 5 && !fd.trampled) { fd.trampled = true; fd.trampleNow = true; st.stilled = true; } }
     return n;
   }
   async function fdAfterBlow(st) {
     const fd = st.fd; if (!fd) return;
-    if (fd.charged) { fd.charged = false; fdState().charges++; if (fdState().charges >= 10) grant("fdcharge"); }
+    if (fd.charged) { fd.charged = false; fdState().charges++; if (fdState().charges >= 10) grant("fdcharge"); if (fd.rode) { fd.rode = false; S.mount.rides = (S.mount.rides || 0) + 1; fdState().rides = (fdState().rides || 0) + 1; if (fdState().rides >= 10) grant("mtcharge"); const up = horseXp(5); if (fd.trampleNow) { fd.trampleNow = false; await mech(horseName() + " tramples it: it's knocked back, and loses its next attack.", "loot"); } if (up) await mech(up.trim(), "loot"); } }
     fd.mv = [];
   }
   // Walk a unit along a path within a budget; a laid trap stops it.
@@ -17090,7 +17168,7 @@ body.pv-open { overflow: hidden; }
   async function fdStart(F, st, B) {
     const D = fdState(), key = F.field && FIELDS[F.field] ? F.field : F.reg, f = FIELDS[key], ys = F.fdYou || f.you;
     const fd = st.fd = { key, f, G: f.grid.map(r => r.split("")), you: { x: ys[0], y: ys[1] }, foe: { x: f.foe[0], y: f.foe[1] }, emb: F.fdEmb || BEAST_EMB[B && B.id] || "canine",
-      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(1), mv: [], live: false, wd: null, bow: 0,
+      fly: !!(B && FD_FLY.includes(B.id)), heads: !!F.heads, traps: {}, steps: fdSteps(1, key), mv: [], live: false, wd: null, bow: 0,
       ph: 0, spots: (f.spots || []).map(([x, y, k]) => ({ x, y, k, done: false })), next: f.dyn ? f.dyn.from : 0, warn: null, tideI: 0, flips: 0, saved: 0, green: false };
     if (f.then) fd.Gs = [fd.G, f.then.map(r => r.split(""))];
     if (!D.fields.includes(key)) D.fields.push(key);
@@ -17391,7 +17469,7 @@ body.pv-open { overflow: hidden; }
   }
   async function fdRound(F, st) {
     const fd = st.fd; if (!fd) return;
-    fd.steps = fd.smax = fdSteps(st.round); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
+    fd.steps = fd.smax = fdSteps(st.round, fd.key); fd.mv = []; fd.sel = null; if (fd.bow > 0) fd.bow--;
     if (fd.wdAt && st.round === fd.wdAt && !fd.wd && FOE.hp > 0) await fdWdEnter(F, st);
     else if (fdWd(fd) && st.round > fd.wdAt) await fdWdTurn(F, st);
     if (st.fled) return;
@@ -17838,8 +17916,8 @@ body.pv-open { overflow: hidden; }
         blindSet(0);
         await say("You give ground and drag a sleeve across your eyes until the world comes back, swimming, then sharp.");
       } else if (c === "escape") {
-        const r = await check({ label: "Agility check (breaking away)" + (lgBody() === "warden" ? " (in plate)" : ""), mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), dis: lgBody() === "warden", cta: "Run" });
-        if (r.ok) { st.fled = "you"; await say("You feint high, drop low, and you're past it and running. It doesn't follow far."); }
+        const r = await check({ label: "Agility check (breaking away)" + (lgBody() === "warden" ? " (in plate)" : ""), mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), dis: lgBody() === "warden" && !horseOk(F.reg), adv: horseOk(F.reg) && lgBody() !== "warden", cta: horseOk(F.reg) ? "Ride" : "Run" });
+        if (r.ok) { st.fled = "you"; await say(horseOk(F.reg) ? "You get a foot in the stirrup and " + horseName() + " is moving before you're up. It doesn't follow far." : "You feint high, drop low, and you're past it and running. It doesn't follow far."); }
         else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
       } else if (c === "cls") {
         await clFightDo(F, st);
@@ -23219,9 +23297,11 @@ body.pv-open { overflow: hidden; }
         { key: "kit", label: "Buy parchment and ink from the Archive window", tag: priceTag(6) + " · 2 blank + 1 ink", show: S.coins >= rhPrice(6), plain: true },
         { key: "scribe", label: "Scribe rune mines", tag: S.blank + " blank, " + S.ink + " ink", show: S.blank > 0 && S.ink > 0 },
         { key: "pitch", label: "Pack Pitch-pots", tag: "Rahdaria's own mine: Bathyr pitch and lamp oil", plain: true },
+        ...mountOpts("bench"),
         { key: "done", label: "Leave the bench", plain: true }
       ]);
       if (c === "done") return;
+      if (String(c).startsWith("mt-")) { await mountDo(c, "bench"); continue; }
       if (c === "iron") { S.coins -= rhPrice(4); S.iron += 2; renderSheet(); await mech("Two pieces of scrap iron: a hoop off a water-butt and a fistful of horseshoe nails. " + rhPrice(4) + " gold.", "loot"); }
       if (c === "kit") { S.coins -= rhPrice(6); S.blank += 2; S.ink += 1; renderSheet(); await mech("Two sheets of parchment and a measure of lamp-black ink. " + rhPrice(6) + " gold.", "loot"); }
       if (c === "scribe") await scribe();
@@ -23882,6 +23962,438 @@ body.pv-open { overflow: hidden; }
     } else await mech(r.shots ? "Every shot goes wide. The tower rolls on, and the gunner's boy looks at his feet." : "You stand the gun down.", r.shots ? "hurt" : "");
     await shawlCheck();
   }
+  // ---------- Steel, Saddle and Shell: armour wear, horses and wagons, mini-mortars ----------
+  // Adrian's ask (2026-11-15, three messages): a silver bar for armour; a horse and wagon for getting
+  // about, with horse armour, a horse level and breeding; and mini-mortars with shell types that knock
+  // an army back. (The compound, raids, the broker and rival factions are a separate piece of work;
+  // the horse records below are kept plain so a compound stable can hold them too.)
+  //
+  //  1. Armour wear. The AC your gear gives you (shield, scale shirt, Champion Set, worn body armour,
+  //     a rivet plate) has a durability shown as a silver bar under HP: 8 + 4 for each point of gear
+  //     AC. Every weapon blow that lands on you in a fight wears it by 1 (2 for a blow that rolled 10
+  //     or more). At half it's dented (−1 AC); at nothing it's broken (half your gear AC, rounded down,
+  //     at least 1, is gone). It mends 2 at the start of every part, fully at a chapter's end camp,
+  //     by half at an inn or sanctuary, fully at a smith, a stable or Hobb Tallis's cart (a gold a
+  //     point), or 5 for a piece of scrap iron at a bench. Horse barding mends the same way.
+  //  2. Horses. Hobb Tallis sells his grey from the Burning Sands on (90 gold); a town's livery stable
+  //     on the roads back sells horses with a trait each (Fast, Armoured, Enduring, Fearless), barding,
+  //     saddlebags, wagons, grooming and breeding. A horse stays outside where it can't go (HORSE_NO).
+  //     Where it goes: +1 step on the battle maps, a mounted charge hits +4 instead of +2, breaking away
+  //     from a road fight is at advantage, the long roads back take one watch, not two, and the
+  //     Wandering Board gives two gallops (a step the world doesn't take).
+  //     Horse health and barding: a second pair of bars under yours, silver barding over brown health.
+  //     On the battle maps 1 blow in 4 that would land on you lands on her instead: barding takes it
+  //     first, the rest comes off her health. With no barding (or broken barding) a blow on her throws
+  //     you 1 time in 3 (its next attack has advantage) unless she's Fearless or wears Warhorse Plate.
+  //     Broken barding or half health and she loses the extra step (unless Fast). At 0 she's lame: no
+  //     horse until she's rested at an inn, a sanctuary, a stable or a chapter's end.
+  //     Barding: Leather Harness (10), Reinforced Studded Armour (18), Steel Barding (28, one gallop a
+  //     board), Legendary Warhorse Plate (40, from level 30: never thrown, mounted charge +1).
+  //     Horse level 1–10, from her XP: a fight won with her on the field +10, a mounted charge +5, a
+  //     gallop +5, a long road +3. Each level +2 HP. 3: barding a quarter stronger. 5: Trample (once a
+  //     fight a mounted charge also knocks it back: it loses its next attack). 7: a gallop more. 10:
+  //     Warhorse (never thrown, keeps the extra step hurt).
+  //     Breeding: at a stable, 40 gold and a stud with a trait; a month later the foal is born with
+  //     the stud's trait and one of the mare's, and from horse level 8 a third. The stable keeps up to
+  //     3 more horses (S.stable); you can ride any of them.
+  //  3. Wagons. A cart (60) carries 8 mortar shells instead of 4 and sells your salvage for a quarter
+  //     more. Saddlebags (25) carry 2 shells more. The catch: hitched, the long roads take two watches
+  //     again and there's no galloping on the Board; 1 time in 6 on a long road somebody comes for
+  //     what's in it; and the axle wants greasing every 12 watches on the road (a stable or smith, 2
+  //     gold), or you lose a watch to it. Armour the cart (120): ambushes come half as often, and in a
+  //     company battle on the road it's cover that takes 2 more before it's matchwood. Unhitch it at
+  //     any time on the roads back.
+  //  4. Mini-mortars. A bronze tube on a spade foot (45 gold at a bench or Hobb's cart, from Rahdaria
+  //     on). Shells: iron (1d3+1 down), shrapnel (1d3+3), concussion (1d2, and they lose their swings
+  //     next round too), incendiary (1d3, then one burns each of their next 3 turns), smoke (none down,
+  //     but −4 to hit for 2 rounds, no volleys, and the way out is DC 7). Every shell that lands knocks
+  //     the line back: they lose this round's swings, the Drill breaks, a drummed charge is broken, and
+  //     they panic: −2 to hit next round, and 1 in 2 one of them runs. Dexterity DC 12, two a battle,
+  //     18+ catches a captain for 1d6. On the grid: a card that lobs over cover onto a + of squares;
+  //     on the road: against a pack, once a fight.
+  // State: S.arm = { w }; S.mount = horse { name, traits[], hp, max, bard, bw, xp, rides, cart,
+  //   hitched, armoured, bags, axle, foal: { due, stud } }; S.stable = [horse]; S.mortar = { tube,
+  //   sh: { iron, shrap, conc, fire, smoke }, fired, flat }.
+  const HORSE_NO = new Set(["roots", "fen", "noon", "undermoon", "bathyrra", "reach", "deck", "vault", "rimehall", "calving"]);
+  const HORSE_NAMES = ["Thistle", "Oatcake", "Old Mortimer"];
+  const FOAL_NAMES = ["Sixpence", "Lark", "Bracken", "Mizzle", "Tallow", "Flint", "Wren-foot", "Parsnip", "Brindle", "Hob", "Sloe", "Gorse"];
+  const HORSE_PRICE = 90, CART_PRICE = 60, ARMCART_PRICE = 120, BAGS_PRICE = 25, MORTAR_PRICE = 45, MORTAR_FIGHT = 2, HORSE_HP = 30, HORSE_LV = 10, STABLE_MAX = 3;
+  const HORSE_TRAITS = {
+    fast: { name: "Fast", fx: "a gallop more on every board, and she keeps her extra step on the maps when she's hurt" },
+    armoured: { name: "Armoured", fx: "a thick hide: her barding lasts half again as long" },
+    enduring: { name: "Enduring", fx: "+12 HP" },
+    fearless: { name: "Fearless", fx: "she never throws you" }
+  };
+  const BARDING = {
+    harness: { name: "Leather Harness", tier: "light", dur: 10, price: 35, fx: "takes the blows meant for her until it's cut through" },
+    studded: { name: "Reinforced Studded Armour", tier: "medium", dur: 18, price: 80, fx: "boiled leather and iron studs" },
+    steel: { name: "Steel Barding", tier: "heavy", dur: 28, price: 170, fx: "heavy: one gallop a board, not two" },
+    warhorse: { name: "Legendary Warhorse Plate", tier: "elite", dur: 40, price: 520, lv: 30, fx: "she never throws you while it holds, and a mounted charge hits 1 harder" }
+  };
+  const SHELLS = {
+    iron: { name: "iron shell", gold: 4, iron: 1, what: "1d3+1 down" },
+    shrap: { name: "shrapnel shell", gold: 6, iron: 2, what: "1d3+3 down" },
+    conc: { name: "concussion shell", gold: 8, iron: 1, what: "1d2 down, and they lose their swings next round too" },
+    fire: { name: "incendiary shell", gold: 8, iron: 1, what: "1d3 down, then one burns each of their next 3 turns" },
+    smoke: { name: "smoke shell", gold: 6, iron: 0, what: "none down: −4 to hit for 2 rounds, no volleys, the way out DC 7" }
+  };
+  function newHorse(name, traits) {
+    const h = { name, traits: (traits || []).slice(0, 3), bard: null, bw: 0, xp: 0, rides: 0 };
+    h.max = HORSE_HP + (h.traits.includes("enduring") ? 12 : 0); h.hp = h.max;
+    return h;
+  }
+  // Older saves from this release's first build: fill the horse in.
+  function horseFix(h) {
+    if (!h || !h.name) return h;
+    if (!h.traits) h.traits = [];
+    if (h.xp == null) h.xp = 0;
+    if (h.max == null) { h.max = HORSE_HP + (h.traits.includes("enduring") ? 12 : 0); h.hp = h.max; }
+    return h;
+  }
+  const hz0 = () => horseFix(S.mount);
+  const hasHorse = () => !!(S.mount && S.mount.name);
+  const hTrait = (t) => hasHorse() && (S.mount.traits || []).includes(t);
+  const horseLv = (h) => { h = h || S.mount; if (!h || !h.name) return 0; let L = 1, x = h.xp || 0; while (L < HORSE_LV && x >= 40 * L) { x -= 40 * L; L++; } return L; };
+  const horseMax = () => hasHorse() ? (hz0().max || HORSE_HP) + 2 * (horseLv() - 1) : 0;
+  const horseHp = () => hasHorse() ? Math.min(horseMax(), hz0().hp ?? horseMax()) : 0;
+  const horseLame = () => hasHorse() && horseHp() <= 0;
+  const horseOk = (key) => hasHorse() && !horseLame() && !HORSE_NO.has(key || "");
+  const horseName = () => hasHorse() ? S.mount.name : "the horse";
+  const cartOn = () => hasHorse() && !!S.mount.cart && S.mount.hitched !== false;
+  const bardMax = () => hasHorse() && S.mount.bard && BARDING[S.mount.bard] ? Math.round(BARDING[S.mount.bard].dur * (hTrait("armoured") ? 1.5 : 1) * (horseLv() >= 3 ? 1.25 : 1)) : 0;
+  const bardWorn = () => bardMax() ? Math.min(bardMax(), S.mount.bw || 0) : 0;
+  const bardDur = () => bardMax() - bardWorn();
+  const bardBroken = () => bardMax() > 0 && bardDur() <= 0;
+  const noThrow = () => hTrait("fearless") || horseLv() >= 10 || (S.mount && S.mount.bard === "warhorse" && !bardBroken());
+  // The extra step on the battle maps goes when she's hurt, unless she's Fast or a Warhorse.
+  const horseStep = (key) => horseOk(key) && (hTrait("fast") || horseLv() >= 10 || (!bardBroken() && horseHp() * 2 > horseMax()));
+  const galMax = () => !hasHorse() ? 0 : Math.max(1, 2 + (hTrait("fast") ? 1 : 0) + (horseLv() >= 7 ? 1 : 0) - (S.mount.bard === "steel" ? 1 : 0));
+  const shellCap = () => (hasHorse() ? (cartOn() ? 8 : 4) : 2) + (hasHorse() && S.mount.bags ? 2 : 0);
+  function mortarFix() {
+    const M = S.mortar;
+    if (!M || !M.tube) return M;
+    if (!M.sh) { M.sh = { iron: M.shells || 0 }; delete M.shells; }
+    return M;
+  }
+  const shells = () => { const M = mortarFix(); return M && M.tube ? Object.values(M.sh).reduce((a, b) => a + (b || 0), 0) : 0; };
+  const shellKinds = () => { const M = mortarFix(); return M && M.tube ? Object.keys(SHELLS).filter(k => (M.sh[k] || 0) > 0) : []; };
+  function shellTake(k) { const M = mortarFix(); k = k && M.sh[k] > 0 ? k : shellKinds()[0]; if (!k) return null; M.sh[k]--; M.fired = (M.fired || 0) + 1; renderSheet(); return k; }
+  function shellAdd(k, n) { const M = mortarFix(); const room = Math.max(0, shellCap() - shells()); n = Math.min(n, room); M.sh[k] = (M.sh[k] || 0) + n; return n; }
+  const shellA = (k) => /^[aeiou]/.test(SHELLS[k].name) ? "an " : "a ";
+  const shellList = () => shellKinds().map(k => SHELLS[k].name.replace(/ shell$/, "") + " ×" + S.mortar.sh[k]).join(", ");
+  // Horse XP. Returns a line when she goes up a level.
+  function horseXp(n) {
+    if (!hasHorse()) return "";
+    const L = horseLv(); hz0().xp = (S.mount.xp || 0) + n;
+    const L2 = horseLv();
+    if (L2 <= L) return "";
+    hz0().hp = Math.min(horseMax(), horseHp() + 2 * (L2 - L));
+    if (L2 >= 5) grant("mthlv5");
+    const perk = { 3: "she takes a blow on the shoulder now: her barding lasts a quarter longer", 5: "<b>Trample</b>: once a fight, a mounted charge also knocks it back, and it loses its next attack", 7: "a gallop more on every Wandering Board", 10: "<b>Warhorse</b>: she never throws you, and keeps her extra step when she's hurt" }[L2];
+    return " " + horseName() + " is horse level " + L2 + " (+2 HP" + (perk ? "; " + perk : "") + ").";
+  }
+  function armGear() {
+    if (S.stripped) return 0;
+    return (S.shield && !S.pitted ? 1 : 0) + ((S.gear || []).includes("scale") && !lgBody() ? 1 : 0) + (S.champ ? 2 : 0) + (lgBody() ? LG_ARMS[lgBody()].ac : 0) + fitAC();
+  }
+  const armMax = () => { const g = armGear(); return g ? 8 + 4 * g : 0; };
+  const armDur = () => Math.max(0, armMax() - Math.min(armMax(), (S.arm && S.arm.w) || 0));
+  // What wear costs you: dented at half (−1), broken at nothing (half your gear AC, at least 1).
+  function armPen() {
+    const g = armGear(), m = armMax(), dur = armDur();
+    if (!g) return 0;
+    if (dur <= 0) return Math.max(1, Math.floor(g / 2));
+    return dur * 2 <= m ? 1 : 0;
+  }
+  const armState = () => !armGear() ? "" : armDur() <= 0 ? "broken" : armDur() * 2 <= armMax() ? "dented" : "sound";
+  // A blow landed on you. Returns a line to add to the hit, when the armour got worse.
+  function armWear(rolled, type) {
+    if (!FOE.on || !armGear() || !/^(slashing|piercing|bludgeoning)$/.test(type)) return "";
+    const was = armState();
+    S.arm = S.arm || { w: 0 };
+    S.arm.w = Math.min(armMax(), (S.arm.w || 0) + (rolled >= 10 ? 2 : 1));
+    const now = armState();
+    if (now === was) return "";
+    tip("armour");
+    return now === "broken" ? " <b>Your armour gives way</b>: straps cut, plates sprung. −" + armPen() + " AC until it's mended." : " <b>Your armour is dented</b>: −1 AC until it's mended.";
+  }
+  // On a battle map with her under you, 1 blow in 4 lands on the horse. Returns null, or what's left
+  // of the blow for you (0) and a line.
+  const mountedNow = () => !!(FOE.on && FOE.F && FOE.F.st && FOE.F.st.fd && horseOk(FOE.F.st.fd.key));
+  function horseTakes(total, type) {
+    if (!mountedNow() || total <= 0 || !/^(slashing|piercing|bludgeoning)$/.test(type) || d(4) !== 1) return null;
+    const h = hz0(); let left = total, txt = " <b>The blow lands on " + h.name + " instead.</b>";
+    if (bardMax() && !bardBroken()) {
+      const soak = Math.min(bardDur(), left); h.bw = bardWorn() + soak; left -= soak;
+      txt += " Her " + BARDING[h.bard].name + " takes " + soak + (bardBroken() ? ", and gives way" : "") + ".";
+    }
+    if (left > 0) {
+      h.hp = Math.max(0, horseHp() - left);
+      txt += " " + left + " to her (" + h.hp + " of " + horseMax() + ").";
+      if (h.hp <= 0) txt += " <b>" + h.name + " goes down</b>, and gets up lame. She's out of it until she's rested.";
+      else if (!noThrow() && d(3) === 1) { FOE.prone = true; txt += " She shies and <b>throws you</b>: its next attack has advantage."; }
+    }
+    tip("barding");
+    return txt;
+  }
+  function armMend(n) {
+    let got = 0;
+    if (S.arm && S.arm.w) { const w = Math.min(armMax(), S.arm.w), g = Math.min(w, n); S.arm.w = w - g; got += g; n -= g; }
+    if (n > 0 && bardWorn()) { const g = Math.min(bardWorn(), n); S.mount.bw = bardWorn() - g; got += g; }
+    return got;
+  }
+  const armWorn = () => (S.arm ? Math.min(armMax(), S.arm.w || 0) : 0) + bardWorn();
+  const horseRest = (n) => { if (!hasHorse()) return 0; const b = horseHp(); hz0().hp = Math.min(horseMax(), b + (n == null ? horseMax() : n)); return horseHp() - b; };
+  function armRender() {
+    const row = $("armRow"), hr = $("horseRow");
+    if (!row || !hr) return;
+    const m = armMax();
+    row.hidden = !m;
+    if (m) {
+      const dur = armDur(), st = armState();
+      $("armBar").style.width = (dur / m * 100) + "%";
+      $("armVal").textContent = dur + " / " + m;
+      row.className = "armrow " + st;
+      row.title = "Armour " + dur + " of " + m + (st === "dented" ? ": dented, −1 AC" : st === "broken" ? ": broken, −" + armPen() + " AC" : "");
+    }
+    hr.hidden = !hasHorse();
+    if (hasHorse()) {
+      const bm = bardMax();
+      $("bardBar").parentNode.hidden = !bm;
+      if (bm) $("bardBar").style.width = (bardDur() / bm * 100) + "%";
+      $("hHpBar").style.width = (horseHp() / horseMax() * 100) + "%";
+      $("horseVal").textContent = horseName() + " " + horseHp() + "/" + horseMax();
+      hr.className = "armrow horserow" + (horseLame() ? " broken" : bardBroken() ? " dented" : "");
+      hr.title = horseName() + ", horse level " + horseLv() + ": " + horseHp() + " of " + horseMax() + " HP" + (bm ? ", " + BARDING[S.mount.bard].name + " " + bardDur() + " of " + bm : ", no barding") + (horseLame() ? " (lame)" : "");
+    }
+  }
+  // At the start of every part you knock out what dents you can by the fire, and she grazes.
+  function armBefore() { if (armWorn()) armMend(2); horseRest(5); }
+  async function armCamp() {
+    const n = armMend(armWorn()), h = horseRest();
+    if (n || h) { renderSheet(); await mech("At the camp you sit up late with a whetstone, a mallet and the last of the light" + (n ? ", and your armour is sound again (+" + n + ")" : "") + (h ? ". " + horseName() + " has a long night's grazing (+" + h + " HP)" : "") + ".", "loot"); }
+  }
+  async function armRest() {
+    const n = armMend(Math.ceil((armMax() + bardMax()) / 2)), h = horseRest();
+    if (n || h) { renderSheet(); await mech((n ? "You mend your armour while you rest: +" + n + (armMax() ? " (" + armDur() + " of " + armMax() + ")" : "") + "." : "") + (h ? (n ? " " : "") + horseName() + " is stabled and fed: +" + h + " HP." : ""), "loot"); }
+  }
+  // A smith (or Hobb, or the stable) beats the dents out, a gold a point.
+  function armSmithOpt(P) {
+    const w = armWorn(), p = P ? P(Math.max(2, w)) : Math.max(2, w);
+    return { key: "armfix", label: "Have your armour mended" + (bardWorn() ? (armMax() && S.arm && S.arm.w ? ", and " + horseName() + "'s barding" : "") : ""), tag: p + " gold" + (armMax() ? " · " + armDur() + " of " + armMax() + (armState() !== "sound" ? " · " + armState() : "") : "") + (bardWorn() ? " · barding " + bardDur() + " of " + bardMax() : ""), show: w > 0 && S.coins >= p, plain: true, price: p };
+  }
+  async function armSmithDo(p, who) {
+    const wasBroken = armState() === "broken" || bardBroken();
+    S.coins -= p; const n = armMend(armWorn()); renderSheet();
+    if (wasBroken) grant("mtmend");
+    await say(who || "The smith takes your armour off you, lays it on the anvil and beats it back into its shape without a word.");
+    await mech("Mended: +" + n + (armMax() ? ", armour " + armDur() + " of " + armMax() : "") + (bardMax() ? ", barding " + bardDur() + " of " + bardMax() : "") + ". " + p + " gold.", "loot");
+  }
+  // Bag lines for the horse, the wagon and the mortar.
+  function mountItems(items) {
+    if (hasHorse()) {
+      const h = hz0(), tr = h.traits.map(t => HORSE_TRAITS[t].name).join(", ");
+      items.push(["mount", "horse", h.name + " · horse level " + horseLv() + (horseLame() ? " · lame" : ""), (tr ? tr + ". " : "") + horseHp() + " of " + horseMax() + " HP" + (h.bard ? ", " + BARDING[h.bard].name + " " + bardDur() + " of " + bardMax() : ", no barding") + ". Where she can go: +1 step on the battle maps, a mounted charge +4, break away at advantage, the long roads back in one watch, " + galMax() + " gallops on every Wandering Board. " + (horseLv() < HORSE_LV ? "Next level: " + horseXpLeft() + " XP." : "")]);
+      if (h.cart) items.push(["cart", "chest", (h.armoured ? "Armoured wagon" : "Cart") + (h.hitched === false ? " (unhitched)" : ""), (h.hitched === false ? "Left at the inn. " : "") + "Carries " + (8 + (h.bags ? 2 : 0)) + " mortar shells and sells your salvage a quarter dearer. Hitched, the long roads take two watches, no galloping, and it draws ambushes" + (h.armoured ? " (half as often)" : "") + ". The axle wants greasing every 12 watches: " + Math.max(0, 12 - (h.axle || 0)) + " to go."]);
+    }
+    const S2 = S.stable || [];
+    if (S2.length) items.push(["stable", "horse", "At the livery: " + S2.map(x => x.name).join(", "), S2.map(x => x.name + " (level " + horseLv(x) + (x.traits && x.traits.length ? ", " + x.traits.map(t => HORSE_TRAITS[t].name).join(", ") : "") + ")").join("; ") + ". Swap at any stable."]);
+    if (S.mortar && S.mortar.tube) items.push(["mortar", "mortar", "Mini-mortar" + (shells() ? " · " + shells() + " shell" + (shells() > 1 ? "s" : "") : ""), (shells() ? shellList() + ". " : "") + "In a company battle a shell that lands knocks the line back: no swings, Drill broken, panic (−2 to hit next round). Two a battle; on the grid it lobs over cover. You carry " + shellCap() + " at most. Pack more at a bench."]);
+  }
+  const horseXpLeft = () => { let L = 1, x = S.mount.xp || 0; while (L < HORSE_LV && x >= 40 * L) { x -= 40 * L; L++; } return 40 * L - x; };
+  // Buying: who is "hobb" | "stable" | "bench".
+  function mountOpts(who, P) {
+    P = P || ((n) => n);
+    const o = [];
+    if (who !== "bench") {
+      if (who === "hobb") o.push({ key: "mt-horse", label: "Buy Hobb's grey", tag: P(HORSE_PRICE) + " gold · Enduring · +1 step on the battle maps, mounted charges, quicker roads, gallops on the Board", show: !hasHorse() && S.coins >= P(HORSE_PRICE), plain: true });
+      o.push({ key: "mt-cart", label: "Buy a cart for " + horseName(), tag: P(CART_PRICE) + " gold · 8 shells, salvage a quarter dearer · slower, and it draws ambushes", show: hasHorse() && !S.mount.cart && S.coins >= P(CART_PRICE), plain: true });
+      o.push({ key: "mt-bags", label: "Buy saddlebags", tag: P(BAGS_PRICE) + " gold · 2 mortar shells more", show: hasHorse() && !S.mount.bags && S.coins >= P(BAGS_PRICE), plain: true });
+      Object.keys(BARDING).forEach(k => { const B = BARDING[k]; if (who === "hobb" && B.tier !== "light" && B.tier !== "medium") return; o.push({ key: "mt-bard-" + k, label: "Buy " + B.name + " for " + horseName(), tag: P(B.price) + " gold · " + B.tier + " · " + Math.round(B.dur * (hTrait("armoured") ? 1.5 : 1) * (horseLv() >= 3 ? 1.25 : 1)) + " durability · " + B.fx, show: hasHorse() && S.mount.bard !== k && S.coins >= P(B.price) && !(B.lv && lv() < B.lv) && !(S.mount.bard && BARDING[S.mount.bard].dur > B.dur), plain: true }); });
+      if (who === "stable") o.push({ key: "mt-armcart", label: "Armour the cart", tag: P(ARMCART_PRICE) + " gold · ambushes half as often, and it's cover in a company battle that takes 2 more", show: hasHorse() && S.mount.cart && !S.mount.armoured && S.coins >= P(ARMCART_PRICE), plain: true });
+    }
+    if (who !== "stable") {
+      o.push({ key: "mt-tube", label: "Buy a mini-mortar", tag: P(MORTAR_PRICE) + " gold · knocks a company back · comes with 2 iron shells", show: !(S.mortar && S.mortar.tube) && S.coins >= P(MORTAR_PRICE), plain: true });
+      if (who === "bench") Object.keys(SHELLS).forEach(k => { const H = SHELLS[k]; o.push({ key: "mt-sh-" + k, label: "Pack " + shellA(k) + H.name, tag: (H.iron ? H.iron + " iron + " : "") + H.gold + " gold · " + H.what + " · " + shells() + " of " + shellCap() + " carried", show: !!(S.mortar && S.mortar.tube) && shells() < shellCap() && (S.iron || 0) >= H.iron && S.coins >= H.gold, plain: true }); });
+      else o.push({ key: "mt-sh-buy", label: "Buy two iron shells", tag: P(8) + " gold · " + shells() + " of " + shellCap() + " carried", show: !!(S.mortar && S.mortar.tube) && shells() < shellCap() && S.coins >= P(8), plain: true });
+    }
+    return o;
+  }
+  async function nameHorse(list) {
+    const pool = list.filter(n => n !== horseName() && !(S.stable || []).some(x => x.name === n));
+    return choose(pool.slice(0, 3).map((n, i) => ({ key: n, label: "Call it " + n, plain: i > 0 })));
+  }
+  async function mountDo(k, who, P) {
+    P = P || ((n) => n);
+    if (k === "mt-horse") {
+      const p = P(HORSE_PRICE); S.coins -= p; renderSheet();
+      await say("Hobb unhitches the grey from the back of his cart. \"She pulls when the bay won't,\" he says, \"and she's never once bolted, which is more than I can say for me.\"");
+      const nm = await nameHorse(HORSE_NAMES);
+      S.mount = newHorse(nm, ["enduring"]);
+      renderSheet(); grant("mtride"); tip("horse");
+      await mech("<b>" + nm + "</b> is yours (" + p + " gold), and she's Enduring (+12 HP). On the battle maps you have a step more and a mounted charge hits harder, you break away from road fights at advantage, the long roads back take one watch, and on the Wandering Board you can gallop. Her health and barding are the bars under yours. She waits outside wherever a horse can't go.", "loot");
+    } else if (k === "mt-cart") {
+      const p = P(CART_PRICE); S.coins -= p; S.mount.cart = true; S.mount.hitched = true; S.mount.axle = 0; renderSheet(); grant("mtcart");
+      await say(who === "hobb" ? "Hobb has a spare cart, with one wheel newer than the other. \"It goes round,\" he says. \"That's all a cart has to do.\"" : "The wheelwright next door has a two-wheeled cart with a canvas tilt, and " + horseName() + " looks at it the way you'd look at a long walk.");
+      await mech("A cart for " + horseName() + " (" + p + " gold): 8 mortar shells, and salvage a quarter dearer. The catch: hitched, the long roads take two watches, there's no galloping on the Board, people come for what's in it, and the axle wants greasing every 12 watches. You can unhitch it on the roads back.", "loot");
+    } else if (k === "mt-bags") {
+      const p = P(BAGS_PRICE); S.coins -= p; S.mount.bags = true; renderSheet();
+      await mech("Saddlebags, double-stitched, with a flap for each side (" + p + " gold). You can carry 2 more mortar shells.", "loot");
+    } else if (k === "mt-armcart") {
+      const p = P(ARMCART_PRICE); S.coins -= p; S.mount.armoured = true; renderSheet(); grant("mtwagon");
+      await say("The wheelwright and the smith between them plank the cart's sides with oak and face the oak with iron, and cut two slits in it to shoot through.");
+      await mech("An <b>armoured wagon</b> (" + p + " gold): ambushes come half as often, and in a company battle on the road it's cover that takes 2 more before it's matchwood.", "loot");
+    } else if (k.startsWith("mt-bard-")) {
+      const b = k.slice(8), B = BARDING[b], p = P(B.price); S.coins -= p; S.mount.bard = b; S.mount.bw = 0; renderSheet(); tip("barding");
+      if (b === "warhorse") grant("mtplate");
+      await say(b === "warhorse" ? "It comes out of the back of the stable in pieces, on a handcart, under sacking: a chanfron with a spike, a crinet of lames, a peytral like a church door. It takes three of them to put it on her, and when it's on she stands up taller." : "The ostler fits it and lets out every strap a hole, then takes them all in again. " + horseName() + " stamps once and decides to put up with it.");
+      await mech("<b>" + B.name + "</b> for " + horseName() + " (" + p + " gold): " + bardMax() + " durability, the silver bar over her health. On the battle maps it takes the blows meant for her first. " + B.fx[0].toUpperCase() + B.fx.slice(1) + ".", "loot");
+    } else if (k === "mt-tube") {
+      const p = P(MORTAR_PRICE); S.coins -= p; S.mortar = { tube: true, sh: { iron: 0 }, fired: 0, flat: 0 }; shellAdd("iron", 2); renderSheet(); tip("mortar");
+      await say(who === "hobb" ? "Under the blades Hobb has something wrapped in sacking: a bronze tube no longer than your forearm, on a foot like a spade. \"For knocking a crowd over,\" he says. \"Point it at the crowd, not your boots.\"" : "On the end of the bench is a mini-mortar: a squat bronze tube on a spade foot, for driving into the ground and lobbing a shell over the front rank.");
+      await mech("A <b>mini-mortar</b>, with " + shells() + " iron shell" + (shells() > 1 ? "s" : "") + " (" + p + " gold). In a company battle, a shell that lands drops soldiers and knocks the line back: they lose their swings, their Drill breaks, and they panic. Benches pack shrapnel, concussion, incendiary and smoke shells too.", "loot");
+    } else if (k === "mt-sh-buy") {
+      const p = P(8); S.coins -= p; shellAdd("iron", 2); renderSheet(); await mech("Iron shells (" + p + " gold). You have " + shells() + ".", "loot");
+    } else if (k.startsWith("mt-sh-")) {
+      const s = k.slice(6), H = SHELLS[s]; S.iron -= H.iron; S.coins -= H.gold; shellAdd(s, 1); renderSheet();
+      await mech("A " + H.name + ": " + H.what + ". You have " + shellList() + ".", "loot");
+    }
+  }
+  // Hobb's cart at the start of a chapter: the horse from the Burning Sands on, the mortar from
+  // Rahdaria on, light barding, and he'll mend your armour.
+  async function hobbStable(C) {
+    const ch = CHAPTERS.indexOf(C);
+    if (ch < 1 || S.mtSeen === C.slug) return;
+    const opts = () => mountOpts("hobb").filter(x => x.key.startsWith("mt-tube") || x.key.startsWith("mt-sh") ? ch >= 9 : true).concat([armSmithOpt(null)]);
+    if (!opts().some(shown)) return;
+    S.mtSeen = C.slug;
+    if (!S.mtHobb) { S.mtHobb = true; await say("Two horses are cropping the verge behind Hobb's cart, a bay and a grey. \"I only need the one,\" he says, \"most days.\""); }
+    for (;;) {
+      const c = await choose(opts().concat([{ key: "no", label: "On your way", plain: true }]));
+      if (c === "no") return;
+      if (c === "armfix") { await armSmithDo(armSmithOpt(null).price, "Hobb lays your armour over the tailboard and goes at it with a mallet, humming. \"It's not pretty,\" he says. \"It's on.\""); continue; }
+      await mountDo(c, "hobb");
+      save();
+    }
+  }
+  // A town's livery stable on the roads back: horses, barding, wagons, breeding, and swapping.
+  const STUD_NAMES = { fast: "a long-legged bay called Whistler", armoured: "a hairy-heeled dray called Old Anvil", enduring: "a mountain cob called Bellows", fearless: "a scarred black called Nothing-Doing" };
+  function stableHorses() {
+    // Three horses for sale, the same for a month at a time in each town.
+    const seed = (calMonth() * 7 + calYear() * 13) % 4, ks = Object.keys(HORSE_TRAITS);
+    return [0, 1, 2].map(i => ({ trait: ks[(seed + i) % 4], price: HORSE_PRICE + 10 * i }));
+  }
+  async function stableVisit(T, P) {
+    await say("The livery stable is at the end of the street, where the smell is. The ostler has a straw in his mouth and a long opinion about every horse he's ever sold.");
+    for (;;) {
+      const h = hasHorse() ? hz0() : null, kept = S.stable || [];
+      const dam = [h].concat(kept).find(x => x && x.foal && calDay() >= x.foal.due), foal = dam && dam.foal, due = !!dam && kept.length < STABLE_MAX;
+      const c = await choose([
+        ...stableHorses().map((x, i) => ({ key: "buy-" + i, label: "Buy the " + HORSE_TRAITS[x.trait].name.toLowerCase() + " one", tag: P(x.price) + " gold · " + HORSE_TRAITS[x.trait].fx + (h ? " · your " + horseName() + " goes into the stable here" : ""), show: S.coins >= P(x.price) && (!h || kept.length < STABLE_MAX), plain: true })),
+        ...mountOpts("stable", P),
+        { key: "foal", label: "See " + (dam ? dam.name : "") + "'s foal", tag: "born · name it", show: !!due },
+        { key: "sellh", label: "Sell a horse from the stable", tag: "45 gold" + (dam && !due ? " · " + dam.name + "'s foal is born, and needs a stall (" + STABLE_MAX + " kept)" : ""), show: kept.length > 0, plain: true },
+        { key: "breed", label: "Put " + horseName() + " to a stud", tag: P(40) + " gold · a foal in a month, with the stud's trait and one of hers", show: !!h && !h.foal && kept.length < STABLE_MAX && S.coins >= P(40), plain: true },
+        { key: "swap", label: "Ride a different horse", tag: kept.map(x => x.name).join(", "), show: kept.length > 0, plain: true },
+        { key: "hitch", label: S.mount && S.mount.hitched === false ? "Hitch the cart up again" : "Leave the cart here for now", tag: S.mount && S.mount.hitched === false ? "8 shells, salvage a quarter dearer · slower" : "quicker roads and gallops again", show: !!(h && h.cart), plain: true },
+        { key: "grease", label: "Have the cart's axle greased", tag: P(2) + " gold · " + (h ? Math.max(0, 12 - (h.axle || 0)) : 0) + " watches left on it", show: !!(h && h.cart && (h.axle || 0) > 0) && S.coins >= P(2), plain: true },
+        { key: "rest", label: "Stable " + horseName() + " for the night", tag: P(2) + " gold · she's back to full health", show: !!h && horseHp() < horseMax() && S.coins >= P(2), plain: true },
+        { key: "armfix", label: "Have " + horseName() + "'s barding mended", tag: P(Math.max(2, bardWorn())) + " gold · " + bardDur() + " of " + bardMax(), show: bardWorn() > 0 && S.coins >= P(Math.max(2, bardWorn())), plain: true },
+        { key: "no", label: "Leave the stable", plain: true }]);
+      if (c === "no") return;
+      if (c.startsWith("buy-")) {
+        const x = stableHorses()[+c.slice(4)], p = P(x.price); S.coins -= p;
+        await say("The ostler walks it out into the yard and lets it look at you. It puts its nose in your coat and won't take it out.");
+        const nm = await nameHorse(FOAL_NAMES.concat(HORSE_NAMES));
+        if (h) { S.stable = kept.concat([h]); await mech(h.name + " stays at the livery. You can ride her again from any stable.", "loot"); }
+        const nh = newHorse(nm, [x.trait]); if (h) { ["cart", "hitched", "armoured", "bags", "axle"].forEach(f => { nh[f] = h[f]; delete h[f]; }); }
+        S.mount = nh; renderSheet(); grant("mtride"); tip("horse");
+        await mech("<b>" + nm + "</b> is yours (" + p + " gold): " + HORSE_TRAITS[x.trait].name + ", " + HORSE_TRAITS[x.trait].fx + ".", "loot");
+      } else if (c === "foal") {
+        const tr = [foal.stud]; const mine = (dam.traits || []).filter(t => t !== foal.stud); if (mine.length) tr.push(mine[d(mine.length) - 1]);
+        if (horseLv(dam) >= 8) { const rest = Object.keys(HORSE_TRAITS).filter(t => !tr.includes(t)); if (rest.length) tr.push(rest[d(rest.length) - 1]); }
+        delete dam.foal;
+        await say("The foal is all legs and opinions, and it has " + dam.name + "'s way of looking at you sideways.");
+        const nm = await nameHorse(FOAL_NAMES);
+        S.stable = kept.concat([newHorse(nm, tr)]); renderSheet(); grant("mtfoal");
+        await mech("<b>" + nm + "</b>, " + tr.map(t => HORSE_TRAITS[t].name).join(" and ") + ", is in the stable here. Ride her from any stable.", "loot");
+      } else if (c === "sellh") {
+        const pick = await choose(kept.map((x, i) => ({ key: "" + i, label: "Sell " + x.name, tag: "level " + horseLv(x) + (x.foal ? " · in foal" : ""), plain: true })).concat([{ key: "no", label: "Keep them all", plain: true }]));
+        if (pick === "no") continue;
+        const x = kept[+pick]; S.stable = kept.filter((y, i) => i !== +pick); S.coins += 45; renderSheet();
+        await mech("The ostler buys " + x.name + " for 45 gold and promises she'll go to someone who talks to her.", "loot");
+      } else if (c === "breed") {
+        const st = await choose(Object.keys(HORSE_TRAITS).map((t, i) => ({ key: t, label: "Put her to " + STUD_NAMES[t], tag: HORSE_TRAITS[t].name + " · " + HORSE_TRAITS[t].fx, plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
+        if (st === "no") continue;
+        S.coins -= P(40); h.foal = { due: calDay() + CAL_MD, stud: st }; renderSheet();
+        await mech("The ostler shakes your hand on it (" + P(40) + " gold). Come back to any stable in a month, " + calDate(calDay() + CAL_MD) + ", and there'll be a foal: " + HORSE_TRAITS[st].name + " like its sire, and like its dam in one thing more" + (horseLv() >= 8 ? ", and from a mare of " + horseName() + "'s standing, maybe a third" : "") + ".", "loot");
+      } else if (c === "swap") {
+        const pick = await choose(kept.map((x, i) => ({ key: "" + i, label: "Ride " + x.name, tag: "level " + horseLv(x) + (x.traits.length ? " · " + x.traits.map(t => HORSE_TRAITS[t].name).join(", ") : ""), plain: i > 0 })).concat([{ key: "no", label: "Stay on " + horseName(), plain: true }]));
+        if (pick === "no") continue;
+        const nh = kept[+pick]; ["cart", "hitched", "armoured", "bags", "axle"].forEach(f => { nh[f] = h[f]; delete h[f]; });
+        S.stable = kept.filter((x, i) => i !== +pick).concat([h]); S.mount = horseFix(nh); renderSheet();
+        await mech("You ride <b>" + nh.name + "</b> now. " + h.name + " stays at the livery.", "loot");
+      } else if (c === "hitch") { h.hitched = h.hitched === false; renderSheet(); await mech(h.hitched ? "The cart's hitched up again." : "The cart stays at the livery. You travel light.", "loot"); }
+      else if (c === "grease") { S.coins -= P(2); h.axle = 0; renderSheet(); await mech("The ostler's boy greases the axle and checks the pins (" + P(2) + " gold).", "loot"); }
+      else if (c === "rest") { S.coins -= P(2); const g = horseRest(); renderSheet(); await mech(horseName() + " gets a stall, a rub-down and a bucket of oats: +" + g + " HP.", "loot"); }
+      else if (c === "armfix") { const p = P(Math.max(2, bardWorn())), was = bardBroken(); S.coins -= p; h.bw = 0; renderSheet(); if (was) grant("mtmend"); await mech(horseName() + "'s barding is mended (" + p + " gold).", "loot"); }
+      else await mountDo(c, "stable", P);
+      save();
+    }
+  }
+  // On the roads back with the cart hitched: ambushes and the axle. Called after an errand that took watches.
+  async function cartRoad(took) {
+    if (!cartOn() || !took) return;
+    const h = S.mount; h.axle = (h.axle || 0) + took;
+    if (h.axle >= 12) {
+      h.axle = 0; calPass(1);
+      await say("The cart starts to squeal, then to smoke, and you spend a watch at the side of the road with the wheel off, greasing the axle with tallow out of your own supper.");
+      await mech("You lose a watch to the axle. (A stable or smith greases it for 2 gold.)", "hurt");
+    }
+    if (took >= 2 && d(h.armoured ? 12 : 6) === 1) {
+      await say("You've been seen. A loaded cart on a long road is a story people tell each other, and three of them have come to find out what's in it.");
+      const regs = roamRegions(), reg = regs[d(regs.length) - 1];
+      roamFight = true;
+      try { await meetBeast(reg, { roam: true, forced: true, pack: true }); } finally { roamFight = false; }
+    }
+  }
+  // ---- the mini-mortar in a company battle ----
+  function mortarOpt(G, soldiers) {
+    if (!shells() || soldiers <= 0 || (G.mort || 0) >= MORTAR_FIGHT) return null;
+    return { key: "mortar", label: "Fire the mini-mortar", tag: "Dexterity DC 12 · knocks the line back: no swings, Drill broken, panic · " + shellList() + " · costs your turn", plain: true };
+  }
+  // Pick a shell (if there's a choice) and fire it. Returns { k, cap } on a hit, null on a miss.
+  async function mortarFire(label) {
+    let k = shellKinds()[0];
+    if (shellKinds().length > 1) k = await choose(shellKinds().map((x, i) => ({ key: x, label: "Load " + shellA(x) + SHELLS[x].name, tag: SHELLS[x].what + " · " + S.mortar.sh[x] + " left", plain: i > 0 })));
+    shellTake(k);
+    await say("You drive the mortar's foot into the ground, tip " + shellA(k) + SHELLS[k].name + " down the tube and put the slow-match to it, and step back with your fingers in your ears.");
+    const r = await check({ label: "Dexterity check (laying the mortar on " + label + ")", mod: 3 + Math.floor(lvk() / 10), dc: 12, cta: "Touch it off" });
+    if (!r.ok) { await say("It goes up with a cough, and comes down long, behind them, where it makes a hole in nothing at all."); return null; }
+    return { k, cap: r.total >= 18 && k !== "smoke" };
+  }
+  async function mortarFlat() {
+    S.mortar.flat = (S.mortar.flat || 0) + 1;
+    grant("mtflat"); if (S.mortar.flat >= 10) grant("mtten");
+  }
+  // ---- a pack on the road (hkFight with heads) ----
+  function mortarPackOpt(F, st) {
+    if (!F.heads || F.company || !shells() || st.used.mortar || FOE.hp <= 1) return null;
+    return { key: "mun-mortar", label: "Fire the mini-mortar into the pack", tag: "Dexterity DC 12 · some down, and the rest lose their swings · " + shellList() + " · costs your turn", plain: true };
+  }
+  async function mortarPackDo(F, st) {
+    st.used.mortar = true;
+    const r = await mortarFire("the pack");
+    if (!r) return;
+    const n = r.k === "smoke" ? 0 : Math.min(FOE.hp, d(2) + (r.k === "shrap" ? 2 : r.k === "conc" ? 0 : 1)); if (n) foeHit(n);
+    await say(r.k === "smoke" ? "The shell bursts into a grey wall, and they come out of the far side of it coughing, in ones and twos, with no idea where you are." : "The shell bursts in the middle of them, and the ones it doesn't drop it throws flat.");
+    if (r.k === "smoke") F.atk -= 2;
+    if (r.k === "fire") st.burn = 3;
+    await mech("Mini-mortar: " + (n ? n + " down, and the" : "the") + " rest are knocked back: they lose their swings this round" + (r.k === "smoke" ? ", and fight at −2 to hit for the rest of the fight" : r.k === "fire" ? ", and the fire keeps burning" : "") + ".", "loot");
+    if (FOE.hp > 0) st.stilled = true;
+    await mortarFlat();
+  }
+
   // ---------- company battles: a full company, with armoured captains ----------
   // A company fight is a mob fight with ranks: rank-and-file soldiers who go down in one blow, and
   // armoured captains, each with their own health, who don't attack you but steady the line (+1 to hit for
@@ -23925,12 +24437,12 @@ body.pv-open { overflow: hidden; }
     const baseAc = F.ac; F.company = true;
     // order: this round's order; last: the one before; drill: the company's combo links;
     // stagger: soldiers lose this round's swings; reach: only this many soldiers can reach you; braced: the coming charge is broken.
-    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0, stance: null, hunt: null, out: {}, coverT: 0, coverHp: 3 };
+    const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0, stance: null, hunt: null, out: {}, coverT: 0, coverHp: 3 + (o.wagon ? 2 : 0), panic: 0, smoke: 0, burnN: 0, conc: false };
     // Cover: the field has one piece (o.cover). Taking cover costs your swing and lasts 2 of their
     // turns: arrows can't reach you, and soldiers attack at disadvantage. It takes 3 volleys or
     // charges before it's matchwood. Volleys: a captain calls "Loose!" while 3+ soldiers stand,
     // and the bowmen loose four arrows (1d6 each) that turn. Cover or a planted pavise stops them all.
-    const coverName = o.cover || "an overturned cart";
+    const coverName = o.wagon ? "your armoured wagon" : o.cover || "an overturned cart";
     // ---- your company on the field ----
     // At the start you set a stance: hold (they guard you: one fewer soldier reaches you), press
     // (they cut into the ranks: better odds), or captains (the blades go for the captains' gorgets).
@@ -24004,6 +24516,7 @@ body.pv-open { overflow: hidden; }
       const mineRoom = (G.laid || 0) < MINE_CAP;
       if (S.scrolls && soldiers() > 0 && mineRoom) Object.keys(MINES).filter(k => S.scrolls[k] > 0).forEach(k => out.push({ key: "mine-" + k, label: "Lay " + MINES[k].name, tag: { fire: "1d3+1 down", poison: "1d3 down, the rest −1 to hit", frost: "1d2 down, they lose their swings" }[k] + " · Arcana DC 12 · " + S.scrolls[k] + " left · costs your turn", plain: true }));
       if (soldiers() > 0 && mineRoom) rmineKeys().forEach(k => { const M = REGION_MINES[k]; out.push({ key: "rmine-" + k, label: "Set a " + M.name, tag: (M.dice[0] >= 3 ? "1d3+1" : "1d3") + " down" + (M.fx === "still" ? ", they lose their swings" : M.fx === "blind" || M.fx === "soft" ? ", the rest −1 to hit" : "") + " · " + rmines()[k] + " left · costs your turn", plain: true }); });
+      const mo = mortarOpt(G, soldiers()); if (mo) { out.push(mo); tip("mortar"); }
       out.push({ key: "out", label: "Fight your way out", tag: "Dexterity DC " + outDc() + " · cut one down as you go · ends the fight", plain: true });
       tip("battle");
       if (G.order === "volley") tip("cover");
@@ -24014,6 +24527,7 @@ body.pv-open { overflow: hidden; }
     F.onExtra = async (k, st) => {
       if (k === "breaker") return breaker();
       if (k === "out") return fightOut(st);
+      if (k === "mortar") return mortarCo();
       if (k === "cover") { G.coverT = 2; await say("You get down behind " + coverName + ", with your back to it and your axe across your knees."); await mech("In cover for their next 2 turns.", "loot"); return; }
       if (k === "cal") return scatter();
       if (String(k).startsWith("mine-")) return layMine(k.slice(5));
@@ -24075,11 +24589,13 @@ body.pv-open { overflow: hidden; }
         await say(n > 1 ? "Two of them come down on the caltrops, hard, and don't get up." : "One of them comes down on the caltrops and doesn't get up.");
         if (!G.cal) await mech("The caltrops are trodden flat now.", "loot");
       }
-      F.atk = o.F.atk + (alive().length ? 1 : 0) - (G.cal > 0 ? 1 : 0) - G.rot;
+      if (G.burnN > 0 && soldiers() > 0) { G.burnN--; foeHit(1); await say("One of them is still burning, and goes down rolling."); }
+      F.atk = o.F.atk + (alive().length ? 1 : 0) - (G.cal > 0 ? 1 : 0) - G.rot - (G.panic > 0 ? 2 : 0) - (G.smoke > 0 ? 4 : 0);
+      if (G.panic > 0) G.panic--; if (G.smoke > 0) G.smoke--;
       return freeze;
     }
     let st0 = {};
-    const outDc = () => G.stagger || !alive().length ? 9 : 11;
+    const outDc = () => G.smoke > 0 ? 7 : G.stagger || !alive().length ? 9 : 11;
     async function fightOut(st) {
       const r = await check({ label: "Dexterity check (fighting your way out)", mod: 3, dc: outDc(), cta: "Break away" });
       if (r.ok) {
@@ -24090,6 +24606,22 @@ body.pv-open { overflow: hidden; }
       } else await say("They close the gap before you reach it, and you're back in the middle of them.");
     }
     const huntOrder = (id) => ({ call: "Cut down " + (id === "burr" ? "the dog" : coName(id)) + "!", what: "three of them break off to go for " + coName(id) + ", who'll be out of the fight next round if nobody covers", ans: "Cover " + coName(id), tag: "you put yourself between them · " + coName(id) + " fights on, and gets a free blow in · costs your turn" });
+    // The mini-mortar: a shell on the front rank knocks the whole line back.
+    async function mortarCo() {
+      G.mort = (G.mort || 0) + 1;
+      const r = await mortarFire("the front rank");
+      if (!r || soldiers() <= 0) return;
+      const k = r.k, n = k === "smoke" ? 0 : Math.min(soldiers(), k === "shrap" ? d(3) + 3 : k === "conc" ? d(2) : k === "fire" ? d(3) : d(3) + 1);
+      if (n) foeHit(n);
+      G.stagger = true; G.drill = 0; G.panic = 2;
+      if (k === "smoke") G.smoke = 3; if (k === "conc") G.conc = true; if (k === "fire") G.burnN = 3;
+      const broke = G.order === "drum" || G.order === "charge" || (k === "smoke" && G.order === "volley"); if (broke) G.order = null;
+      await say(k === "smoke" ? "The shell lands in front of the line and splits into a grey wall, and the whole company walks backwards out of it, coughing, shouting for each other." : "The shell comes down on the front rank and bursts, and the whole line goes back: a step, then three, the front of it thrown into the ones behind.");
+      await mech("Mini-mortar (" + SHELLS[k].name + "): " + (n ? n + " down, and the" : "the") + " line is knocked back. They lose their swings this round, their Drill is gone" + (broke ? ", and so is the order they were following" : "") + ", and they panic: −2 to hit next round" + (k === "smoke" ? "; in the smoke, −4 more for 2 rounds, no volleys, and the way out is DC 7" : k === "conc" ? "; the concussion takes their swings next round too" : k === "fire" ? "; one will burn on each of their next 3 turns" : "") + ".", "loot");
+      if (soldiers() > 0 && d(2) === 1) { foeHit(1); await say("One of the back rank has had enough and is off down the road."); }
+      if (r.cap && alive().length) { const c = alive()[0]; await capHit(c, d(6), "The blast catches " + c.name + ": 1d6", true); }
+      await mortarFlat();
+    }
     async function breaker() {
       const dc = 11 + G.drill;
       await say("You see the rhythm of it, the step-and-cut they've drilled ten thousand times, and you step into the beat instead of away from it.");
@@ -24156,6 +24688,7 @@ body.pv-open { overflow: hidden; }
       }
       // The captains call this round's order.
       G.stagger = false; G.reach = 0; F.ac = baseAc;
+      if (G.conc) { G.conc = false; G.stagger = true; await mech("The concussion still has them: the line is on its knees, and loses its swings again.", "loot"); }
       if (!G.halved && soldiers() > 0 && soldiers() <= o.soldiers / 2) {
         G.halved = true; const n = Math.min(d(2), soldiers()); foeHit(n);
         await say("Half the company is down, and the back rank has seen enough: " + (n > 1 ? "two of them slip away" : "one of them slips away") + " into the smoke.");
@@ -24169,7 +24702,7 @@ body.pv-open { overflow: hidden; }
       }
       if (soldiers() <= 0) return;
       if (G.last === "drum") G.order = "charge";
-      else { const pool = ["wall", "flank", "ranks", "drum"].concat(field().length && st.round > 1 ? ["hunt"] : []).concat(soldiers() >= 3 ? ["volley"] : []).filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
+      else { const pool = ["wall", "flank", "ranks", "drum"].concat(field().length && st.round > 1 ? ["hunt"] : []).concat(soldiers() >= 3 && !(G.smoke > 0) ? ["volley"] : []).filter(k => k !== G.last && !(k === "ranks" && st.round === 1)); G.order = pool[d(pool.length) - 1]; }
       if (G.order === "hunt") { const f = field(); G.hunt = f[d(f.length) - 1]; }
       const ord = G.order === "hunt" ? huntOrder(G.hunt) : CAP_ORDERS[G.order], who = alive()[d(alive().length) - 1].name;
       if (G.order === "wall") F.ac = baseAc + 3;
@@ -30872,6 +31405,7 @@ body.pv-open { overflow: hidden; }
   }
   async function companyOr(map, o) {
     const reg = tacReg; tacReg = null;
+    if (map === "road" && cartOn() && S.mount.armoured) o = Object.assign({ wagon: true }, o);
     if (await tacWanted()) return tacCompany(o, map, reg);
     return companyFight(o);
   }
@@ -30895,7 +31429,8 @@ body.pv-open { overflow: hidden; }
     pzpowder: { name: "Powder Flash", min: 1, max: 3, auto: [2, 6, 2], aoe: true, once: true, trick: true, text: "2d6 + 2 fire across a + of squares, no roll." },
     pzsalt: { name: "Salt in the Eyes", min: 1, max: 1, salt: true, once: true, trick: true, text: "Its next two blows miss outright." },
     pzblack: { name: "Run Up the Black", min: 0, max: 0, black: true, once: true, trick: true, text: "Every foe within 2 squares may throw down its arms." },
-    loose: { name: "Loose", min: 2, max: 4, ranged: true, text: "An arrow from range." }
+    loose: { name: "Loose", min: 2, max: 4, ranged: true, text: "An arrow from range." },
+    mortar: { name: "Mini-mortar", min: 3, max: 6, aoe: true, mortar: true, uses: 2, text: "Lobs over cover onto a + of squares: 2d6 to every foe in it (shrapnel and incendiary +1d6, concussion stuns, smoke blinds instead), and each is thrown a square back. Twice a battle, a shell each." }
   };
   // Your company on the grid. hp is a share of your max HP; hit and ac are offsets from yours.
   const TA_CO = {
@@ -30935,8 +31470,8 @@ body.pv-open { overflow: hidden; }
     const spots = (ax, ay) => { const P = fdPaths(fd, ax, ay, 99, () => false); return Object.entries(P.best).sort((a, b) => a[1] - b[1]).map(([k]) => k.split(",").map(Number)).filter(([x, y]) => tile(x, y) !== "~"); };
     const place = (u, list) => { const s = list.find(([x, y]) => !at(x, y)); if (s) { u.x = s[0]; u.y = s[1]; } return u; };
     const youSp = spots(f.you[0], f.you[1]), foeSp = spots(f.foe[0], f.foe[1]);
-    const me = place(mk({ id: "you", side: "you", kind: "you", name: S.name || "Wayfarer", tag: (S.name || "You").slice(0, 2), hp: S.hp, max: S.maxHp, hit: myHit, ac: acNow(), die: [myDie[0], myDie[1], myDie[2] + lvDmg()], spd: 10, mv: fdSteps() + 1,
-      cards: ["strike", "heavy", "shove", hasGear("bow") ? "reckon" : "sling"].concat(hasSkill("mend") ? ["mend"] : [], (S.tricks || []).map(k => "pz" + k)) }), youSp);
+    const me = place(mk({ id: "you", side: "you", kind: "you", name: S.name || "Wayfarer", tag: (S.name || "You").slice(0, 2), hp: S.hp, max: S.maxHp, hit: myHit, ac: acNow(), die: [myDie[0], myDie[1], myDie[2] + lvDmg()], spd: 10, mv: fdSteps(0, key) + 1,
+      cards: ["strike", "heavy", "shove", hasGear("bow") ? "reckon" : "sling"].concat(hasSkill("mend") ? ["mend"] : [], shells() ? ["mortar"] : [], (S.tricks || []).map(k => "pz" + k)) }), youSp);
     company().forEach(id => {
       const c = taCoDef(id), m = Math.max(8, Math.round(S.maxHp * c.hp));
       place(mk({ id, side: "you", kind: "co", name: coName(id).split(" ")[0], tag: coName(id).slice(0, 2), hp: m, max: m, hit: myHit + c.hit, ac: acNow() + c.ac, die: [1, 6, 1 + Math.floor(lv() / 5) + bondOf(id)], spd: c.spd, mv: c.mv, cards: c.cards }), youSp);
@@ -30986,7 +31521,7 @@ body.pv-open { overflow: hidden; }
       }
       return out;
     }
-    const cardOk = (u, k) => { const c = TA_CARDS[k]; return !(c.cost > u.res) && !(c.once && u.used[k]) && !(c.uses && (u.used[k] || 0) >= c.uses); };
+    const cardOk = (u, k) => { const c = TA_CARDS[k]; return !(c.mortar && !shells()) && !(c.cost > u.res) && !(c.once && u.used[k]) && !(c.uses && (u.used[k] || 0) >= c.uses); };
     function mods(a, t, c, from) {
       from = from || a; const m = []; const ta = tile(from.x, from.y), tt = tile(t.x, t.y);
       if (c.auto || c.ally || c.black || c.salt) return m;
@@ -31024,7 +31559,7 @@ body.pv-open { overflow: hidden; }
         const die = c.die || a.die, n = (crit ? 2 : 1) * (c.twice ? 2 : 1);
         dmg = taRoll([die[0] * n, die[1], die[2]]);
         if (tile(a.x, a.y) === "h" && tile(t.x, t.y) !== "h") dmg += 1;
-        if (isCharge(a, t, c)) { dmg += 2; log(a.name + " charges!"); }
+        if (isCharge(a, t, c)) { const rode = a === me && horseOk(key); dmg += rode ? 4 : 2; log(a.name + (rode ? " rides " + t.name + " down!" : " charges!")); }
         if (c.sneak && taSide(a, t) !== "front") dmg += d(6);
       }
       t.hp -= dmg; pop(t, "−" + dmg + (crit ? "!" : ""), "dmg");
@@ -31061,6 +31596,21 @@ body.pv-open { overflow: hidden; }
         if (c.heal) { const g = Math.min(taRoll(c.heal), t.max - t.hp); t.hp += g; pop(t, "+" + g, "heal"); log(u.name + " patches " + (t === u ? "themself" : t.name) + " (+" + g + ")."); }
         if (c.buff === "ac") { t.guard = 1; pop(t, "+2 AC", "heal"); log(t.name + " holds the line."); }
         if (c.buff === "ct") { t.ct += 50; pop(t, "SOONER", "heal"); log(u.name + " calls the count for " + t.name + "."); }
+        return Promise.resolve();
+      }
+      if (c.mortar) {
+        const sk = shellTake(null);
+        if (!sk || d(20) + 3 + Math.floor(lvk() / 10) < 12) { log(u.name + "'s mortar shell comes down wide."); pop({ x, y }, "WIDE", ""); return Promise.resolve(); }
+        log(u.name + " lobs " + shellA(sk) + SHELLS[sk].name + ".");
+        const caught = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].map(([a2, b2]) => at(x + a2, y + b2)).filter(t => t && t.side !== u.side);
+        caught.forEach(t => {
+          if (sk === "smoke") { t.salt = 1; pop(t, "SMOKE", "law"); return; }
+          const n = taRoll([2, 6, 0]) + (sk === "shrap" || sk === "fire" ? d(6) : 0); t.hp -= n; pop(t, "−" + n, "dmg");
+          if (sk === "conc" && t.hp > 0) t.stun = 1;
+        });
+        // Thrown back: away from the burst, and the one under it away from you.
+        caught.forEach(t => { if (t.hp <= 0) return down(t); shove(t.x === x && t.y === y ? u : { x, y }, t); });
+        if (caught.length) { log(caught.length > 1 ? caught.length + " of them are thrown back." : caught[0].name + " is thrown back."); mortarFlat(); }
         return Promise.resolve();
       }
       const hits = c.aoe ? [[x, y], [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]].map(([a2, b2]) => at(a2, b2)).filter(Boolean) : [at(x, y)].filter(Boolean);
@@ -41252,6 +41802,7 @@ body.pv-open { overflow: hidden; }
       S.part = i; digRefill(i);
       if (i > fromPart) { if (!rmIn()) { await spoilsTurnIn(); await workbench(); } const k = CHAPTERS.findIndex(c => c.from === i); if (k > 0) await calJourney(k); else calPass(1); }
       await coBefore(i);
+      armBefore();
       await clBefore(i);
       await wxSet(null);
       checkpoint(); jPart(i); achCheck({ part: true }); SND.region(CHAPTERS[chapterAt(i)].slug); guideNudge(i);
@@ -41262,6 +41813,7 @@ body.pv-open { overflow: hidden; }
       xpGain(PART_XP + (CHAPTERS.some(c => c.to === i) ? CHAPTER_XP : 0));
       await jChapterDone(i);
       await coChapterEnd(i);
+      if (CHAPTERS.some(c => c.to === i)) await armCamp();
     }
     if (DEMO_END) { S.part = DEMO_END; save(); demoEnd(); return; }
     S.part = PARTS.length - 1; save();
