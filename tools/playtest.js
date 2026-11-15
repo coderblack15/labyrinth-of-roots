@@ -75,7 +75,7 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Debugger.enable");
   const finish = async (code) => {
-    try { fs.writeFileSync(path.join(out, "final.json"), JSON.stringify(await page.evaluate(() => ({ S: window.__g.S, J: window.__g.J })), null, 1)); } catch (e) {}
+    try { fs.writeFileSync(path.join(out, "final.json"), JSON.stringify(await page.evaluate(() => ({ S: window.__g.S, J: window.__g.J, LT: window.__lt || undefined })), null, 1)); } catch (e) {}
     fs.writeFileSync(path.join(out, "errors.txt"), errors.join("\n\n"));
     await browser.close();
     process.exit(code || (errors.length ? 1 : 0));
