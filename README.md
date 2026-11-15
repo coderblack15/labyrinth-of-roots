@@ -41,6 +41,17 @@ python3 tools/build-languages.py
 python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/labyrinth-of-roots
 ```
 
+## Music
+
+Under the sound there is night music: 48 slow, quiet pieces made live with Web Audio (no audio files). Each piece in `MUSIC` (inside `SND` in `index.html`) is a seed: a key, a mode, a pace and a few instruments. Each chapter has a theme (`mTheme(slug)`, a short tune seeded from the slug) that both its pieces carry, and fights, Nightmares and towns play the current chapter's theme; the start screen plays the Labyrinth's. A piece's own seed fixes its chords and the rhythm of the theme; each time it plays, the bars are written out fresh. Pieces run four to seven minutes, with silences between. Each chapter has two (`pool` = the chapter's slug, so **a new chapter adds two `MUSIC` entries**); fights, Nightmares, the Underdream, towns and the start screen have their own, the roads back draw from all chapters and towns, and while the Cascades are open chapter and town pieces play warped. Settings has Off / Faint / Soft / Fuller, what's playing, and Next piece.
+
+To hear a piece outside the game (it needs Playwright, and ffmpeg for `--ogg`):
+
+```
+node tools/music-render.js --list
+node tools/music-render.js --ids moored,wrong-lullaby --secs 240 --ogg
+```
+
 ## Playtesting
 
 `tools/playtest.js` plays the game by itself in a headless browser: it reads each scene, picks choices (preferring ones it hasn't tried), rolls the dice and pokes at the puzzles, and stops with a report if the page throws a script error, leaves nothing to press (a soft-lock), or freezes (it records where). It saves the game at the start of every part, so one chapter can be replayed from its first part. It needs Playwright (`npm i playwright`).
