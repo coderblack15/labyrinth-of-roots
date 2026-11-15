@@ -32,7 +32,7 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 ## Languages
 
-Settings has a **Language** switch: English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens. The story itself is still told in English. The choice is remembered per browser.
+The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens. The story itself is still told in English. The choice is remembered per browser.
 
 The translations live in `languages.js`, one row per piece of text (English first, then one column per language). To add a string, add a row; to add a language, add a column to every row. Then copy it into the game, since the game ships as one file:
 

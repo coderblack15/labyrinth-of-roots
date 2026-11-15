@@ -39248,6 +39248,7 @@ body.pv-open { overflow: hidden; }
   // Words for the Language row in Settings.
   const UI = {
     label: ["Language", "Idioma", "Langue", "Sprache", "Idioma", "言語"],
+    close: ["Close", "Cerrar", "Fermer", "Schließen", "Fechar", "閉じる"],
     note: [
       "Menus and title screens change language. The story itself is still told in English.",
       "Cambia el idioma de los menús y las pantallas de inicio. La historia en sí sigue en inglés.",
@@ -39507,10 +39508,66 @@ body.pv-open { overflow: hidden; }
     if (old) old.replaceWith(langRow()); else body.appendChild(langRow());
   }
 
+  // The Language button on the start menu and in the items bar, and the small
+  // picker they open. All marked .lor-lang so the translator leaves them alone.
+  const label = () => UI.label[col] + (col ? " · Language" : "");
+  function langDlg() {
+    let d = document.getElementById("langDlg");
+    if (!d) {
+      d = document.createElement("dialog");
+      d.className = "journal set-dlg lor-lang";
+      d.id = "langDlg";
+      d.setAttribute("aria-labelledby", "langTitle");
+      d.innerHTML = '<div class="j-head"><h2 id="langTitle"></h2><button class="ghost" id="langClose" type="button"></button></div><div class="j-body" id="langBody"></div>';
+      document.body.appendChild(d);
+      const shut = () => { if (d.close) d.close(); else d.removeAttribute("open"); };
+      d.querySelector("#langClose").onclick = shut;
+      d.addEventListener("click", e => { if (e.target === d) shut(); });
+    }
+    d.querySelector("#langTitle").textContent = label();
+    d.querySelector("#langClose").textContent = UI.close[col];
+    const row = langRow();
+    row.querySelector("h3").remove(); // the dialog's own title already says it
+    d.querySelector("#langBody").replaceChildren(row);
+    return d;
+  }
+  function openPicker() {
+    const d = langDlg();
+    if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
+    const cur = d.querySelector('button[aria-pressed="true"]');
+    if (cur) cur.focus();
+  }
+  function menuButtons() {
+    const mk = (id, text, title) => {
+      let b = document.getElementById(id);
+      if (!b) { b = document.createElement("button"); b.id = id; b.type = "button"; b.onclick = openPicker; }
+      b.className = "ghost lor-lang" + (id === "langOpenBtn" ? " j-open" : "");
+      b.textContent = text;
+      b.title = title;
+      b.setAttribute("aria-label", title);
+      return b;
+    };
+    const start = document.getElementById("startActions");
+    if (start) {
+      const b = mk("langStartBtn", "🌐 " + LANGS[col][1], label());
+      const set = document.getElementById("setStartBtn");
+      if (!b.parentNode) set && set.parentNode === start ? start.insertBefore(b, set) : start.appendChild(b);
+    }
+    const bar = document.querySelector("#invPanel .head-btns");
+    if (bar) {
+      const b = mk("langOpenBtn", "🌐", label() + ": " + LANGS[col][1]);
+      const set = document.getElementById("setOpenBtn");
+      if (!b.parentNode) set && set.parentNode === bar ? set.after(b) : bar.prepend(b);
+    }
+  }
+
   function apply() {
     document.documentElement.lang = CODES[col];
     walk(document.body);
     addRow();
+    menuButtons();
+    const d = document.getElementById("langDlg");
+    if (d) langDlg();
   }
 
   function setLang(code) {
