@@ -264,6 +264,15 @@ body.intro-open { overflow: hidden; }
 .abilities div { background: var(--panel-2); border-radius: 4px; padding: 6px 0 4px; }
 .abilities b { display: block; font-variant-numeric: tabular-nums; }
 .abilities small { font-family: var(--label); letter-spacing: .08em; color: var(--muted); font-size: .7rem; }
+/* The hero's painting, to the left of the stats. Hidden until the hero has one (after the name card). */
+.sheet-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.sheet-row.has-pic { grid-template-columns: 74px minmax(0, 1fr); }
+.sheet-stats { display: grid; gap: 16px; min-width: 0; }
+.sheet-pic { line-height: 0; }
+.sheet-pic[hidden] { display: none; }
+.sheet-pic img { width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; display: block; border-radius: 4px; border: 1px solid rgba(216,181,106,.5); box-shadow: 0 0 0 2px #120e0a; }
+.sheet-pic .drown-fx { width: 100%; }
+.sheet-pic .drown-fx img { box-shadow: none; }
 .inv { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .inv li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
 .inv svg { width: 26px; height: 26px; }
@@ -1263,6 +1272,9 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
   .vitals .hpbar { order: 1; }
   .vitals .bleed-row { order: 2; }
   .vitals .cal-row { order: 3; font-size: .72rem; }
+  .sheet-row { gap: 10px; }
+  .sheet-row.has-pic { grid-template-columns: 46px minmax(0, 1fr); }
+  .sheet-stats { gap: 8px; }
   .inv { gap: 8px; }
   .inv li { grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
   .inv svg { width: 20px; height: 20px; }
@@ -1825,6 +1837,9 @@ body.pv-open { overflow: hidden; }
       <h2 id="heroName">The Wanderer</h2>
       <div class="sub" id="lvSub">Level 3 adventurer</div>
     </div>
+    <div class="sheet-row">
+    <div class="sheet-pic" id="sheetPic" hidden></div>
+    <div class="sheet-stats">
     <div class="vitals">
       <span class="stat-label">HP</span>
       <span class="stat-val" id="hpVal">24 / 24</span>
@@ -1841,6 +1856,8 @@ body.pv-open { overflow: hidden; }
       <span class="stat-val" id="lvVal">3</span>
       <span class="xp-num" id="xpVal">0 / 60 XP</span>
       <div class="xpbar" role="meter" id="xpMeter" aria-label="Experience"><span id="xpBar" style="width:0%"></span></div>
+    </div>
+    </div>
     </div>
     <div class="lw" id="lwBox" hidden>
       <span class="stat-label">Water</span>
@@ -2904,6 +2921,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "102", name: "A Face on the Sheet", date: "15 Nov 2026", items: [
+      "<b>Your painting on the character sheet.</b> The hero you picked on the name card now stands beside your HP, armor, purse and level, on a desk or a phone. Change your painting in the journal and the sheet follows.",
+      "<b>It gets wet too.</b> When the water takes you, the painting on the sheet goes soaked or under with the rest of you, and dries off when the chapter does."
+    ] },
     { ver: "101", name: "The Brimwater", date: "14 Nov 2026", items: [
       "<b>The Drowned Choir.</b> A colony of living water, the first of its kind: a clear sail of air, a glass body full of everything it has drowned, and stinging lines a quarter of a mile long. Sailors name it for the note its drowned hum.",
       "<b>It grows.</b> Its buds, the brimlings, walk the roads of the Hushfen, Carrowmere, the Undermoon, Bathyrra and the Reach. Beat one and it bursts; let it get away, or let it drown you, and it goes back to the sea and the Choir grows. It grows every season you hunt it, and every time it takes a hand. At its full size it hunts ships.",
@@ -4163,6 +4184,7 @@ body.pv-open { overflow: hidden; }
   let lastItems = new Set();
   function renderSheet() {
     $("heroName").textContent = (S.name || "The Wanderer") + (S.title ? ", " + S.title : "");
+    renderSheetPic();
     $("hpVal").textContent = S.hp + " / " + S.maxHp;
     $("hpBar").style.width = Math.max(0, S.hp / S.maxHp * 100) + "%";
     renderBleed(); renderVenom();
@@ -15801,6 +15823,18 @@ body.pv-open { overflow: hidden; }
   const heroKey = (st) => { st = st || S || {}; return HEROES.some(h => h.id === st.hero) ? st.hero : heroDefault(st.pr); };
   const heroFam = (st) => "hero_" + heroKey(st);
   const heroImg = (st, cls) => '<img class="' + (cls || "hero-port") + '" alt="' + ITEM_PICS[heroFam(st)].alt[0] + '" src="' + picUrl(heroFam(st)) + '" decoding="async">';
+  // The painting beside the stats on the character sheet. Only rebuilt when the painting or how wet it is changes.
+  function renderSheetPic() {
+    const box = $("sheetPic");
+    if (!box) return;
+    const on = S.pr !== undefined && !!ITEM_PICS[heroFam(S)];
+    const key = on ? heroFam(S) + ":" + soakLevel(S) : "";
+    if (box.dataset.k === key) return;
+    box.dataset.k = key;
+    box.hidden = !on;
+    box.parentNode.classList.toggle("has-pic", on);
+    box.innerHTML = on ? drownFx(heroImg(S, "sheet-pic-img"), soakLevel(S), "small") : "";
+  }
   function heroPortrait() {
     const seen = S.portSeen = S.portSeen || {};
     if (seen.hero) return;
