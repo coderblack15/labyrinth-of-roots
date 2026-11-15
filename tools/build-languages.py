@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Copy languages.js into index.html.
+"""Copy languages.js and lang/*.js into index.html.
 
 Usage: python3 tools/build-languages.py
 
 The game ships as one file, so languages.js is pasted into index.html just
 before </body>, between two marker comments. Running this again replaces the
-old copy, so edit languages.js and re-run. Then rebuild the demo with
+old copy, so edit languages.js or a lang/story-*.js file and re-run. Then rebuild the demo with
 tools/build-demo.py so it picks up the change too.
 """
 import pathlib
@@ -16,7 +16,9 @@ END = "<!-- languages.js: end -->"
 
 def main():
     root = pathlib.Path(__file__).resolve().parent.parent
-    src = (root / "languages.js").read_text(encoding="utf-8")
+    # languages.js first (the engine and menu text), then each chapter's story file in order.
+    parts = [root / "languages.js"] + sorted((root / "lang").glob("*.js"))
+    src = "\n".join(f.read_text(encoding="utf-8").rstrip() for f in parts)
     if "</script" in src.lower():
         raise SystemExit("build-languages: languages.js must not contain '</script'")
     page_path = root / "index.html"
