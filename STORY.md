@@ -1377,4 +1377,4 @@ Adrian asked (15 November 2026) what we could do about shipbuilding and ship que
 
 **Fights at sea** now have a wind (the weather gauge), a sky (fair, calm, squall, fog, night) and ground (open, shoals, narrows, a shore battery), located damage (rudder, mast, fire), and new moves (rake, claw to windward, lure her over the bar, false lamps, the fireship, the harpoon, the fire party, break off). After the seven captains the sea keeps sending ships: rovers, merchantmen and convoys, Saltwrit frigates when your price is high, two at once when it's higher.
 
-**The ships, painted (v111).** Adrian painted all sixteen kinds of ship on one sheet; each is cut out and shows in Your fleet, along the slips when a keel is laid, framed when a ship is launched, side by side at the start of every sea fight, when a fireship comes in, and in the journal.
+**The ships, painted (v112).** Adrian painted all sixteen kinds of ship on one sheet; each is cut out and shows in Your fleet, along the slips when a keel is laid, framed when a ship is launched, side by side at the start of every sea fight, when a fireship comes in, and in the journal.
