@@ -2543,6 +2543,14 @@ body.pv-open { overflow: hidden; }
         mVib(t + 0.8, end, 4.8, 7, os);
       },
       trem(P, t, m, dur, v) { MI.bow(P, t, m, dur, v * 1.1, true); },
+      brass(P, t, m, dur, v) {                          // horns in a stone hall, opening as they swell
+        const p = mPan(P, 0.35), a = Math.min(1.2, dur * 0.3), r = Math.max(1.2, dur * 0.4), end = t + dur + r * 1.5;
+        const g = mEnv(p, t, a, Math.max(0, dur - a), r, v), f = ctx.createBiquadFilter();
+        f.type = "lowpass"; f.Q.value = 1; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(1500 + P.arc * 900, t + a * 1.3); f.frequency.setTargetAtTime(700, t + dur, r / 3); f.connect(g);
+        const os = [-7, 0, 7].map(dt => mOsc("sawtooth", hz(m), t, end, f, dt + mDrift(P) * 0.3));
+        os.push(mOsc("sawtooth", hz(m - 12), t, end, gain(0.4, f)));
+        mVib(t + 0.6, end, 5, 6, os);
+      },
       drum(P, t, m, dur, v) {                           // a low skin drum, felt more than heard
         const p = mPan(P, 0.15), o = mOsc("sine", 92, t, t + 0.7, mEnv(p, t, 0.003, 0, 0.45, v));
         o.frequency.exponentialRampToValueAtTime(41, t + 0.35);
@@ -2647,6 +2655,11 @@ body.pv-open { overflow: hidden; }
       MP("teeth-dark", "Teeth in the Dark", "fight", 38, "phr", { step: 0.2875, bar: 16, rub: 0, pad: ["sawtooth", 650, 0.1], lead: "bow", ls: 4, lv: 0.04, sink: 0.25, beat: "X...x..tX.x...t.", ost: [0, null, 0, null, 1, null, 0, null, 0, null, 0, null, -1, null, 0, null], ov: 0.05, counter: "glass", cp: 0.01, len: [160, 260], fx: { rev: 0.008, scrape: 0.003 } }),
       MP("hunt-heartbeat", "The Hunt Has a Heartbeat", "fight", 40, "loc", { step: 0.2875, bar: 16, rub: 0, pad: ["triangle", 700, 0.1], lead: "trem", ls: 4, lo: 12, lv: 0.035, beat: "X..X..x.X..X..t.", ost: [0, null, null, 0, null, null, 0, null, 1, null, null, 1, null, null, 0, null], osti: "piano", ol: 12, ov: 0.035, len: [160, 260], fx: { rev: 0.008, knock: 0.002 } }),
       MP("keeps-time", "Something Keeps Time", "nightmare", 37, "oct", { step: 0.2875, bar: 14, rub: 0, pad: ["sawtooth", 550, 0.09], lead: "box", ls: 3, box: 30, wrong: 0.12, shadow: 0.25, drone: [0, 1], beat: "X.x.X.t.X..t.t", ost: [0, null, 1, null, 0, null, null, 0, null, 4, null, 0, null, null], ov: 0.05, len: [160, 260], fx: { rev: 0.01, whisper: 0.006, winddown: 0.0015 } }),
+      // Adrianna (Adrian's ask): the Empress's anthem, the one epic piece. Its theme is its own, not the chapter's.
+      // It turns up in any fight, and in half of them while you wear Empress Adrianna's Champion Set.
+      MP("adrianna", "Adrianna", "anthem", 36, "aeo", { also: ["fight"], step: 0.2875, bar: 16, rub: 0, pad: ["sawtooth", 900, 0.13], lead: "brass", ls: 4, lo: 12, lv: 0.05, counter: "choir", cp: 0.012, cv: 0.035, bass: "bow", bv: 0.05, beat: "X..xX.x.X..xX.tt", dk: 1.35, ost: [0, null, 0, 0, null, 0, null, 4, 0, null, 0, 0, null, 2, null, 1], ov: 0.05, drone: [0, 7, 12], dv: 0.03, wrong: 0.01, shadow: 0.03, wet: 0.7, len: [180, 280], fx: { toll: 0.003, choirswell: 0.003, rev: 0.006 } }),
+      // Rahdaria (Adrian's ask): the siege's own war music, on Rahdaria's theme; it plays in fights in Rahdaria.
+      MP("rahdaria", "Rahdaria", "fight", 40, "hrm", { region: "rahdaria", theme: "rahdaria", step: 0.2875, bar: 16, rub: 0, pad: ["sawtooth", 800, 0.12], lead: "brass", ls: 4, lo: 12, lv: 0.045, counter: "piano", cp: 0.02, cv: 0.04, bass: "bow", bv: 0.05, beat: "X.X.x.X.X.X.x.tt", dk: 1.3, ost: [0, null, 1, 0, null, 0, null, -1, 0, null, 1, 0, null, 4, null, 0], osti: "pluck", ol: -12, ov: 0.06, drone: [0, 7], dv: 0.03, wrong: 0.02, shadow: 0.06, len: [180, 280], fx: { toll: 0.003, sub: 0.002, rev: 0.006 } }),
       MP("learned-face", "It Learned Your Face", "nightmare", 37, "oct", { step: 1.4, box: 35, counter: "glass", wrong: 0.12, shadow: 0.3, drone: [0, 1], len: [150, 260], fx: { rev: 0.06, whisper: 0.025, scrape: 0.02 } }),
       MP("falling-up", "Black Water Falling Up", "nightmare", 35, "whl", { step: 1.6, lead: "bow", lv: 0.045, sink: 0.6, drone: [0, 6], len: [150, 260], fx: { rev: 0.05, choirswell: 0.008 } }),
       MP("wrong-lullaby", "The Wrong Lullaby", "nightmare", 41, "hun", { step: 1.2, lead: "hum", lv: 0.045, counter: "box", wrong: 0.1, len: [150, 260], fx: { lull: 0.015, winddown: 0.012, knock: 0.008 } }),
@@ -2656,6 +2669,7 @@ body.pv-open { overflow: hidden; }
     ];
     const MPOOLS = new Set(MUSIC.map(x => x.pool));
     const M_SHARED = new Set(["title", "town", "fight", "nightmare", "underdream"]);
+    let mFightRoll = null;
 
     // Every chapter has a theme: a short tune of its own, made from its name, that runs through all
     // its music. Its two pieces both carry it (the first states it, in the chapter's own key and mode;
@@ -2673,6 +2687,7 @@ body.pv-open { overflow: hidden; }
       return (mThemes[slug] = out);
     }
     function mThemeFor(sp) {
+      if (sp.theme) return sp.theme;
       if (sp.pool === "title") return "labyrinth";
       if (MPOOLS.has(sp.pool) && !M_SHARED.has(sp.pool)) return sp.pool;
       return MPOOLS.has(want) && !M_SHARED.has(want) ? want : "labyrinth";
@@ -2684,7 +2699,7 @@ body.pv-open { overflow: hidden; }
       const cand = [0, 3, 4, 5, 1, 2, 6].filter(x => x < n), plen = 3 + Math.floor(R() * 4), prog = [0];
       while (prog.length < plen) { const c = cand[Math.floor(R() * cand.length)]; if (c !== prog[prog.length - 1]) prog.push(c); }
       // the tune is the chapter's theme; the piece's own seed only gives it a rhythm
-      const quick = sp.pool === "fight" || sp.pool === "nightmare";
+      const quick = /^(fight|nightmare|anthem)$/.test(sp.pool);
       const theme = mThemeFor(sp), motif = mTheme(theme).map(d => ({ d, l: quick ? [1, 1, 2][Math.floor(R() * 3)] : [1, 1, 1, 2, 2, 3, 4][Math.floor(R() * 7)] }));
       // the Underdream's pieces sing back whatever you heard last, upside down and slowed
       let mo = motif;
@@ -2740,7 +2755,7 @@ body.pv-open { overflow: hidden; }
         }
         // fight tempo: a drum line and an ostinato on a strict grid (rub 0), quiet while the piece wakes
         const pulse = 0.55 + 0.45 * P.arc;
-        if (sp.beat && el > 0.06 && el < 0.94) { const c = sp.beat[P.k % sp.beat.length]; if (c === "X") MI.drum(P, t, 0, 0, 0.17 * pulse); else if (c === "x") MI.drum(P, t, 0, 0, 0.09 * pulse); else if (c === "t") MI.tick(P, t, 0, 0, 0.025 * pulse); }
+        if (sp.beat && el > 0.06 && el < 0.94) { const c = sp.beat[P.k % sp.beat.length]; const dk = sp.dk || 1; if (c === "X") MI.drum(P, t, 0, 0, 0.17 * pulse * dk); else if (c === "x") MI.drum(P, t, 0, 0, 0.09 * pulse * dk); else if (c === "t") MI.tick(P, t, 0, 0, 0.025 * pulse * dk); }
         if (sp.ost) { const o = sp.ost[P.k % sp.ost.length]; if (o !== null && Math.random() > (1 - P.arc) * 0.3) MI[sp.osti || "pluck"](P, t, P.deg((P.croot || 0) + o) + (sp.ol || 0), sp.step * 2, sp.ov * pulse); }
         if (sp.lead && t >= P.leadAt && el < 0.9) P.leadAt = mPhrase(P, t, Math.floor(el * 4));
         if (sp.counter && P.chord.length && Math.random() < sp.cp * P.arc) MI[sp.counter](P, t + Math.random() * sp.step * 0.5, pick(P.chord) + (sp.counter === "pluck" ? 0 : 12 + (Math.random() < 0.5 ? 12 : 0)), sp.step * 2, sp.cv * 1.6);
@@ -2768,14 +2783,19 @@ body.pv-open { overflow: hidden; }
     function mWant() {
       let pr = {};
       try { pr = (mProbe && mProbe()) || {}; } catch (e) {}
+      if (!pr.fight) mFightRoll = null;
+      else if (!pr.nm && pr.champ) { if (mFightRoll === null) mFightRoll = Math.random() < 0.5; if (mFightRoll) return ["anthem", false]; }
       if (pr.fight) return [pr.nm ? "nightmare" : "fight", false];
       if (pr.title) return ["title", false];
       if (mPlace) return [mPlace, mPlace !== "underdream" && !!pr.warp];
       return [MPOOLS.has(want) ? want : "labyrinth", !!pr.warp];
     }
-    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream"]);
+    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem"]);
     function mPick(mood) {
-      const list = MUSIC.filter(x => mood === "roads" ? !M_NOT_ROADS.has(x.pool) : x.pool === mood);
+      let list = MUSIC.filter(x => mood === "roads" ? !M_NOT_ROADS.has(x.pool) : (x.pool === mood || (x.also || []).includes(mood)) && (!x.region || x.region === want));
+      // a fight in a chapter with its own war music plays it half the time
+      const own = list.filter(x => x.region);
+      if (own.length && Math.random() < 0.5) list = own;
       const last = mLast[mood] || [];
       let c = list.filter(x => !last.includes(x.id));
       if (!c.length) c = list;
@@ -2786,7 +2806,7 @@ body.pv-open { overflow: hidden; }
     function mLoop() {
       if (!mbus || !live() || document.hidden || mLevel === "0") return;
       const [mood, warp] = mWant(), t = ctx.currentTime;
-      const quick = mood === "fight" || mood === "nightmare" || mMood === "fight" || mMood === "nightmare";
+      const quick = /^(fight|nightmare|anthem)$/.test(mood) || /^(fight|nightmare|anthem)$/.test(mMood || "");
       if (mood !== mMood || (mPiece && mPiece.warp !== warp)) {
         if (mPiece) mStop(mPiece, quick);
         mPiece = null; mGap = t + (quick ? 1 : 4); mMood = mood;
@@ -3385,7 +3405,8 @@ body.pv-open { overflow: hidden; }
   // Newest first. A release adds an entry at the top.
   const NEWS = [
     { ver: "105", name: "Fight tempo", date: "15 Nov 2026", items: [
-      "Three new pieces of night music with a pulse: a low drum and a figure under it that keeps time with the war drum. <b>Teeth in the Dark</b> and <b>The Hunt Has a Heartbeat</b> play in fights, and <b>Something Keeps Time</b>, which limps in sevens, plays in Nightmares. Like the rest, they carry the theme of the chapter you're in."] },
+      "Three new pieces of night music with a pulse: a low drum and a figure under it that keeps time with the war drum. <b>Teeth in the Dark</b> and <b>The Hunt Has a Heartbeat</b> play in fights, and <b>Something Keeps Time</b>, which limps in sevens, plays in Nightmares. Like the rest, they carry the theme of the chapter you're in.",
+      "Two epic ones, with horns and heavier drums. <b>Adrianna</b> is the Empress's anthem, on a theme of its own: it can turn up in any fight, and in half your fights while you wear Empress Adrianna's Champion Set. <b>Rahdaria</b> is the siege's war music, on Rahdaria's theme, and it plays in half the fights in Rahdaria."] },
     { ver: "104", name: "The Lost Hand", date: "15 Nov 2026", items: [
       "<b>A new chapter after the Root Summons and Dunvaar</b>, Parts CXII to CXVIII, from Adrian's mission. A job goes wrong for the Hollow Hands across the Narrow Sea, and <b>Grell</b> is hanging in a cage over a waterfall at Cutwater, the walled hold of <b>Kline Gerrand</b>, a bailiff who has been buying up the jungle holding by holding.",
       "<b>A new continent: Selvaine</b>, east across the Narrow Sea, and its jungle, the Wetwood. Your map grows to fit it, with a painting of Cutwater from the ridge and a plan of the hold you draw yourself.",
@@ -40138,7 +40159,7 @@ body.pv-open { overflow: hidden; }
   const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call", "The Empty Hand", "Four Days Before the Rains", "The Palisade", "The Trapwright's Yard", "The Gum Works", "Cutwater", "What the Land Remembers"];
 
   let started = false;
-  SND.musProbe(() => ({ title: !started, fight: FOE.on, nm: FOE.on && FOE.lvd && cascadeOn(), warp: cascadeOn() }));
+  SND.musProbe(() => ({ title: !started, fight: FOE.on, nm: FOE.on && FOE.lvd && cascadeOn(), warp: cascadeOn(), champ: !!S.champ }));
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
   let CHECK = null;
   function checkpoint() { CHECK = JSON.stringify(S); save(); jCheckpoint(); }
