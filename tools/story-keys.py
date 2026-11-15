@@ -3,8 +3,8 @@
 
 Usage: python3 tools/story-keys.py --from 6 --to 9 --saves DIR [--seeds 8] [--col 5] [--out keys.json]
 
-It plays the chapter several times with tools/playtest.js (starting from DIR/save-partN.json,
-which a long playtest run writes), records every line the game shows, keeps the ones that are
+It plays each part of the chapter several times with tools/playtest.js (starting from
+DIR/save-partN.json, which a long playtest run writes), records every line the game shows, keeps the ones that are
 written out in index.html (lines built from numbers or names can't be matched), splits lines
 with HTML into the pieces between tags, and drops anything lang/*.js already translates in
 column --col (5 = Japanese). The result is a JSON list of [part, english] in the order they
@@ -29,18 +29,24 @@ def main():
     i = src.rindex("</body>")
     tmp = pathlib.Path(tempfile.mkdtemp())
     (tmp / "game.html").write_text(src[:i] + rec + src[i + 7:], encoding="utf-8")
-    start = pathlib.Path(a.saves) / ("save-part%d.json" % a.frm)
-    def run(seed):
-        out = tmp / ("run%d" % seed)
-        cmd = ["node", str(root / "tools/playtest.js"), "--seed", str(seed), "--stop", str(a.to + 1),
-               "--steps", "8000", "--file", str(tmp / "game.html"), "--out", str(out)]
-        if a.frm > 0: cmd += ["--from", str(start)]
-        subprocess.run(cmd, capture_output=True, timeout=900)
+    # Play each part on its own, from the save at its start, so a long part can't eat the budget.
+    def run(job):
+        part, seed = job
+        save = pathlib.Path(a.saves) / ("save-part%d.json" % part)
+        out = tmp / ("run%d-%d" % (part, seed))
+        cmd = ["node", str(root / "tools/playtest.js"), "--seed", str(seed), "--stop", str(part + 1),
+               "--steps", "3000", "--file", str(tmp / "game.html"), "--out", str(out)]
+        if part > 0:
+            if not save.exists(): return {}
+            cmd += ["--from", str(save)]
+        try: subprocess.run(cmd, capture_output=True, timeout=600)
+        except subprocess.TimeoutExpired: pass
         try: return json.loads((out / "final.json").read_text()).get("LT") or {}
         except Exception: return {}
+    jobs = [(part, seed) for part in range(a.frm, a.to + 1) for seed in range(100, 100 + a.seeds)]
     seen = {}
     with cf.ThreadPoolExecutor(4) as ex:
-        for lt in ex.map(run, range(100, 100 + a.seeds)):
+        for lt in ex.map(run, jobs):
             for k, v in lt.items():
                 if a.frm <= v <= a.to and (k not in seen or v < seen[k]): seen[k] = v
     # what lang/*.js already covers
