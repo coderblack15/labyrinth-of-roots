@@ -331,7 +331,7 @@
   ["Cardsharp", "Tahúr", "", "", "", "いかさま師"],
   ["At High Glass, peek at the next card once a game.", "En el Cristal Alto, mira la siguiente carta una vez por partida.", "", "", "", "ハイ・グラスで、一勝負に一度次のカードを覗ける。"],
   ["Streetwise", "Calle", "", "", "", "世慣れ"],
-  ["Every outing in the city raises your Heat by 1 less.", "Cada salida por la ciudad te sube 1 menos el Acoso.", "", "", "", "街に出るたびに上がる熱が1少なくなる。"],
+  ["Every outing in the city raises your Heat by 1 less.", "Cada salida por la ciudad te sube 1 menos el Calor.", "", "", "", "街に出るたびに上がる熱が1少なくなる。"],
   ["Glasswright", "Vidriero", "", "", "", "硝子細工"],
   ["Crafting: turn 2 cullet into a shatter flask (2d6, no roll), or 3 into a burning lens. Dexterity DC 12.", "Artesanía: convierte 2 de casco de vidrio en un frasco estallante (2d6, sin tirada), o 3 en una lente ardiente. Destreza CD 12.", "", "", "", "製作：硝子くず2つで破砕フラスコ（2d6、ロールなし）、3つで燃えるレンズを作る。敏捷DC12。"],
   ["Crafting: brew a Draught of Mending from a bundle of herbs. Wisdom DC 12.", "Artesanía: prepara un Trago Reparador con un manojo de hierbas. Sabiduría CD 12.", "", "", "", "製作：薬草の束から癒やしの薬を作る。判断力DC12。"],
