@@ -30,6 +30,17 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 `TIP_URL` (the Support the creator link) and `FULL_URL` (where the demo's "Play the full game" button goes) are set near the top of the script in `index.html`.
 
+## Languages
+
+The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens. The story itself is still told in English. The choice is remembered per browser.
+
+The translations live in `languages.js`, one row per piece of text (English first, then one column per language). To add a string, add a row; to add a language, add a column to every row. Then copy it into the game, since the game ships as one file:
+
+```
+python3 tools/build-languages.py
+python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/labyrinth-of-roots
+```
+
 ## Playtesting
 
 `tools/playtest.js` plays the game by itself in a headless browser: it reads each scene, picks choices (preferring ones it hasn't tried), rolls the dice and pokes at the puzzles, and stops with a report if the page throws a script error, leaves nothing to press (a soft-lock), or freezes (it records where). It saves the game at the start of every part, so one chapter can be replayed from its first part. It needs Playwright (`npm i playwright`).
@@ -132,6 +143,7 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 | --- | --- |
 | `index.html` | The playable game |
 | `STORY.md` | The full game master script for all sixty-two parts |
+| `languages.js` | The translations for the Language switch (copied into `index.html` by `tools/build-languages.py`) |
 
 ## Status
 
