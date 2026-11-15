@@ -32,9 +32,9 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 ## Languages
 
-The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens. The story itself is still told in English. The choice is remembered per browser.
+The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens, and the story is being translated chapter by chapter: **Chapter 1, The Labyrinth of Roots** (Parts I–VI, its fights and first-time notes) is done. Later chapters, the story-so-far recap, and lines built from numbers or your name (damage rolls, spoils) are still in English. The choice is remembered per browser.
 
-The translations live in `languages.js`, one row per piece of text (English first, then one column per language). To add a string, add a row; to add a language, add a column to every row. Then copy it into the game, since the game ships as one file:
+The translations live in `languages.js`, one row per piece of text (English first, then one column per language). To add a string, add a row; to add a language, add a column to every row. Story translations live in `lang/story-NN-chapter.js`, one or two files per chapter, in the same row format; the English column must match the game's line exactly, `{g:…}` and `{he}` markers included. Then copy it into the game, since the game ships as one file:
 
 ```
 python3 tools/build-languages.py
