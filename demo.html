@@ -2034,6 +2034,7 @@ body.pv-open { overflow: hidden; }
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
       <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
+      <div class="belt kin" id="kinBox" hidden><span class="stat-label" id="kinLbl">Path</span><span class="belt-note" id="kinNote"></span></div>
     </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
@@ -3405,6 +3406,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "106", name: "Paths of the Calling", date: "15 Nov 2026", items: [
+      "<b>Every calling now splits into two paths</b>, from Adrian's idea: an <b>Edge</b> path for players who like to end fights with one big blow, and a <b>Mend</b> path for players who like to outlast them. You choose at the start of your next part, and the path stays with you.",
+      "<b>Each path has a move that kindles while you fight.</b> It gains a spark every round, and one more when your hit lands (Edge) or a blow lands on you (Mend). At four sparks (three from Rank IV) it's ready, and once you spend it, it kindles all over again, so a long fight gets it two or three times. The sparks show in the foe box.",
+      "<b>The Edge moves are critical swings</b>: the damage dice are doubled. Oathfall (Axe-Sworn, +2 to hit), The Unheard Cut (Hushwalker, with advantage), The Breaking Note (Songwright, breaks the Hesk song), Riptide (Tidereader, +3 to hit), Rubric Stroke (Inkbinder, only misses on a 1) and Thornheart (Rootgrafter, leaves thorns in it).",
+      "<b>The Mend moves heal</b>: Hold the Line (Axe-Sworn, and blunts the next blow), Breath in the Dark (Hushwalker, and its next blow is at disadvantage), Cradle Song (Songwright, stops bleeding and clears your eyes), Turning Tide (Tidereader, and +2 AC), Fair Copy (Inkbinder, gives back half of what you've lost this fight) and Heartwood (Rootgrafter, the biggest heal, and draws out poison).",
+      "They work on the battle maps too (an Edge swing needs reach, like any swing), in company battles, and in every menu fight. Rank III adds a die to the Edge criticals, and at Rank V every fight starts with a spark. There's a new feat, <b>Kindled</b>, for twenty-five uses on one journey."] },
     { ver: "105", name: "Fight tempo", date: "15 Nov 2026", items: [
       "Three new pieces of night music with a pulse: a low drum and a figure under it that keeps time with the war drum. <b>Teeth in the Dark</b> and <b>The Hunt Has a Heartbeat</b> play in fights, and <b>Something Keeps Time</b>, which limps in sevens, plays in Nightmares. Like the rest, they carry the theme of the chapter you're in.",
       "Two epic ones, with horns and heavier drums. <b>Adrianna</b> is the Empress's anthem, on a theme of its own: it can turn up in any fight, and in half your fights while you wear Empress Adrianna's Champion Set. <b>Rahdaria</b> is the siege's war music, on Rahdaria's theme, and it plays in half the fights in Rahdaria."] },
@@ -4434,6 +4441,7 @@ body.pv-open { overflow: hidden; }
     { id: "cl_ink_use", name: "Struck Out", desc: "Use Strike Through thirty times on one journey.", test: () => clIs("ink") && (S.cl.uses || 0) >= 30, prog: () => [clIs("ink") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
     { id: "cl_root_all", name: "Everything Takes", desc: "As a Rootgrafter, meet all six of your calling's scenes on one journey.", test: () => clIs("root") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("root") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
     { id: "cl_root_use", name: "Live Wood", desc: "Use Graft thirty times on one journey.", test: () => clIs("root") && (S.cl.uses || 0) >= 30, prog: () => [clIs("root") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_kin25", name: "Kindled", desc: "Use your path's kindled move twenty-five times on one journey.", test: () => !!cl() && (S.cl.kin || 0) >= 25, prog: () => [cl() ? Math.min(25, S.cl.kin || 0) : 0, 25] },
     { id: "clrank5", name: "Fifth Rank", desc: "Reach Rank V in your calling (level 40).", test: () => !!cl() && clRank() >= 5, prog: () => [cl() ? clRank() : 0, 5] },
     { id: "lgarmour", name: "Meant to Stand Still", desc: "Put on Warden's Plate.", test: () => false },
     { id: "lgplate", name: "Tin Opener", desc: "Knock every plate off an armoured foe.", test: () => false },
@@ -4541,7 +4549,9 @@ body.pv-open { overflow: hidden; }
     { id: "brimwater", name: "The Brimwater", ver: "37", desc: "Sixteen leads after the Drowned Choir, the first of the drifting colonies, and what holds it together.",
       ids: ["bwmeet", "bwleads", "bwtests", "bwinside", "bwsave", "bwsunk", "bwcase", "bwend"] },
     { id: "losthand", name: "The Lost Hand", ver: "38", desc: "Grell in the cage at Cutwater, Kline Gerrand, and the Hollow Hands who came across the Narrow Sea for him.",
-      ids: ["lhwho", "lhtobbin", "lhquiet", "lhfloor", "lhpins", "lhbond", "lhcords", "lhsluice", "lhgrell", "lhland", "lhghost", "lhwhole"] }
+      ids: ["lhwho", "lhtobbin", "lhquiet", "lhfloor", "lhpins", "lhbond", "lhcords", "lhsluice", "lhgrell", "lhland", "lhghost", "lhwhole"] },
+    { id: "paths", name: "Paths of the Calling", ver: "39", desc: "Twelve paths, two for every calling, and the moves that kindle while you fight.",
+      ids: ["cl_kin25"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4943,6 +4953,7 @@ body.pv-open { overflow: hidden; }
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
     city: ["The deep cities", "In Rahdaria, Sulmara, Ammaret and Raftmark you can <b>walk the districts</b>: each walk takes a watch. Good work raises the city's <b>reputation</b> (Rahdaria's is its Standing): <b>25</b> gets 5% off, <b>50</b> gets 10% off and a gentler watch, <b>75</b> gets 15%, and <b>100</b> makes you free of the city. Crimes there cost you 4 a level."],
+    kindle: ["Kindled", "Your path's move is <b>ready</b>. It kindles while you fight: a spark every round, and one more when your hit lands (the Edge paths) or a blow lands on you (the Mend paths). Spending it starts the sparks over, so a long fight gets it more than once. The sparks show in the foe box."],
     venom: ["Envenomed", "Poison stays in you: <b>1 HP a round for each stack</b> (up to 3), and −1 to hit at 3. It can't take your last HP, and it wears off when the fight ends. <b>Bind your wounds</b> (Field Mending) clears one, a <b>Bitterleaf draught</b> clears them all."],
     roll: ["Checks", "When something could go either way, you roll the d20. Your bonus for that skill is added (it's in the label), and you need to <b>meet or beat</b> the number shown. A natural 20 always does well; a 1 usually doesn't."],
     sheet: ["Your sheet and Bag", "Your <b>HP</b>, armour, gold and level are on the sheet. Everything you carry is in your <b>Bag</b> (on a phone, the <b>Items</b> button in the corner): tap a thing to read it or use it. Healing between fights comes from there."],
@@ -9787,6 +9798,7 @@ body.pv-open { overflow: hidden; }
     const blow0 = /^Axe damage/.test(label), slam0 = /^Slam damage/.test(label);
     const w = wpnStrike(count, sides, bonus, label);
     if (w) ({ count, sides, bonus, label } = w);
+    if (/\(critical\)/.test(label)) count *= 2;
     let { total, txt, rb } = await comboDamage(count, sides, bonus, label);
     if (w) {
       const add = [];
@@ -10161,6 +10173,7 @@ body.pv-open { overflow: hidden; }
     await mech(t === "perfect" ? "Perfect timing: your hands are free again next turn." : "Your next item is ready in " + BELT_CD + " turns.");
   }
   function renderBelt() {
+    renderKin();
     const b = $("beltBox");
     if (!b) return;
     const has = FOE.on && beltItems().length > 0;
@@ -17406,7 +17419,7 @@ body.pv-open { overflow: hidden; }
       if (dist > 6) return "It's too far for the bow, " + dist + " squares off. Get within 6 on the map.";
       return dist === 1 || fdLos(fd, fd.you, fd.foe) ? null : "There's rock in the way. Move to where you can see it.";
     }
-    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe"))) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
+    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit())) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
     if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
     if (String(c).startsWith("fd-act-")) { const q = fdSpot(fd, c.slice(7)); if (!q) return "There's nothing left there to do."; return cheb(fd.you, q) <= 1 || (await closeIn(q)) ? null : "It's too far off, " + cheb(fd.you, q) + " squares. Move next to it on the map first."; }
     if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
@@ -17629,6 +17642,7 @@ body.pv-open { overflow: hidden; }
     S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
+    kinStart(st);
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
     if (hasGear("bow")) {
@@ -17650,6 +17664,7 @@ body.pv-open { overflow: hidden; }
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       await bleedTick();
+      await kinRound(st); if (FOE.hp <= 0) break;
       await lgRound(F, st); if (FOE.hp <= 0) break;
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await hzRound(F, st); if (FOE.hp <= 0 || st.fled) break;
@@ -17671,6 +17686,7 @@ body.pv-open { overflow: hidden; }
       if (S.pavise && !st.used.pavise) opts.push({ key: "pavise", label: "Plant the pavise", tag: "halves your next 3 hits, or stops a whole volley · " + S.pavise + " left · costs your turn", plain: true });
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       clFightOpts(F, st).forEach(o => opts.push(o));
+      kinOpts(F, st).forEach(o => opts.push(o));
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
@@ -17690,26 +17706,30 @@ body.pv-open { overflow: hidden; }
       if (c === BELT_WON) break;
       const rmHpB = FOE.hp;
       await rmNote(c, F, st);
-      if (c === "atk" || (c === "cls" && clIs("axe"))) {
-        const cleave = c === "cls";
+      if (c === "atk" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit())) {
+        const cleave = c === "cls", kc = c === "kin" ? kinSwing(F, st) : null;
+        if (kc) await say(clPath().say);
         if (cleave) clUsed(st);
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
-        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st), dc: F.ac - lgAcCut(), target: "AC", adv: st.adv, dis: dim || adrift || !!st.dis, cta: "Strike" });
+        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st) + (kc ? " (" + clPath().mv + ")" : ""), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (kc ? kc.hit : 0), dc: kc && kc.sure ? 2 : F.ac - lgAcCut(), target: "AC", adv: st.adv || !!(kc && kc.adv), dis: dim || adrift || !!st.dis, cta: "Strike" });
         st.adv = false; st.dis = false;
         const clx = a.ok ? clOnHit(cleave) : 0;
+        if (!kc && a.ok) kinSpark(st);
         if (a.ok && st.clQuiet) { st.clQuietDmg = st.clQuiet; st.clQuiet = 0; } else if (!a.ok) st.clQuiet = 0;
         if (a.ok) {
           if (F.heads) {
-            const n = Math.min(FOE.hp, await comboHeads(FOE.hp - 1)); foeHit(n);
+            const n = Math.min(FOE.hp, (await comboHeads(FOE.hp - 1)) + (kc ? 1 : 0)); foeHit(n);
+            if (kc) await mech(clPath().mv + ": a critical, and it carries through into another of them.", "combo");
             await say(n > 1 ? "You go through the first and into the second, and both of their chest-drums stop at once." : (F.hitLine || "One of them folds up like a dropped coat and stops singing."));
             if (!F.company) await coMob();
           } else {
-            if (glaive) { await foeStrike(1, 10, 3 + fdDmg(st), "Glaive damage" + (st.fd && st.fd.charged ? " (charge)" : "")); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
-            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + clx + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (cleave ? " (Heartcleave)" : "") + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
+            if (glaive) { await foeStrike(kc ? 2 : 1, 10, 3 + fdDmg(st), "Glaive damage" + (kc ? " (critical)" : "") + (st.fd && st.fd.charged ? " (charge)" : "")); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
+            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + clx + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (cleave ? " (Heartcleave)" : "") + (kc ? " (critical)" : "") + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
             if (FOE.hp > 0 && F.hitLine) await say(F.hitLine);
           }
           await clAfterHit(st);
+          if (kc) await kinAfterCrit(F, st);
         } else if (F.missLine) await say(F.missLine);
       } else if (c === "gems") {
         S.gemsSpent = true; renderSheet(); light("gems");
@@ -17778,6 +17798,8 @@ body.pv-open { overflow: hidden; }
         else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
       } else if (c === "cls") {
         await clFightDo(F, st);
+      } else if (c === "kin") {
+        await kinDo(F, st);
       } else if (c === "evade") {
         st.evade = true;
         await say("You stop trying to hit " + F.who + " and just watch: the shoulders, the feet, the blade. You keep your weight light and your knees loose.");
@@ -17857,6 +17879,7 @@ body.pv-open { overflow: hidden; }
       else await hurt(n, s, type, o.why || F.hitWhy);
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
       await clAfterBlow(F, st, clHp0);
+      await kinAfterBlow(st, clHp0);
       await lgAfterHit(F, st, type);
       if (FOE.dreadOn && FOE.threads > 0) await dreadAdd(1, "Its blow lands, and the Cascade-water in it gets under your skin");
     } else if (F.miss && !hit0) await say(F.miss);
@@ -24688,6 +24711,7 @@ body.pv-open { overflow: hidden; }
     const c = cl(); if (!c) return;
     const C = CALLINGS[c.k], r = clRank();
     items.push(["calling", "token", "Calling: " + C.name + ", Rank " + CL_RANKS[r], "+" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + (r < 5 ? " Next rank at level " + [0, 10, 20, 30, 40][r] + "." : "")]);
+    if (clPath()) items.push(["calling-path", "token", "Path: " + clPath().name, kinTxt(c.k, c.path, r)]);
   }
   // A rank comes every ten levels; the story says so at the start of the next part.
   async function clRankNews() {
@@ -24786,6 +24810,146 @@ body.pv-open { overflow: hidden; }
     if (st.clEbb) { back = lost - Math.floor(lost / st.clEbb); why = "You rode the ebb: the blow is " + (st.clEbb > 2 ? "quartered" : "halved") + "."; st.clEbbAc = clRank() >= 2 ? 2 : 1; const q = st.clEbb; st.clEbb = 0; if (clRank() >= 5 && FOE.hp > 0 && !F.heads) { FOE.hp = Math.max(1, FOE.hp - back); renderFoe(); foePop("−" + back); why += " What it lost goes back into it: " + back + " damage."; } void q; }
     else if (st.clGraft > 0) { st.clGraft--; back = Math.min(st.clGraftN, lost); why = "The graft holds: " + back + " less."; }
     if (back > 0) { S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech(why, "loot"); }
+  }
+
+  // ---- Paths: two ways to carry each calling, and the move that kindles in a fight ----
+  // Asked at the first part start once you have a calling (S.cl.path = "edge" | "mend"). The Edge
+  // paths kindle a critical swing and gain a spark when a hit of yours lands; the Mend paths kindle
+  // a heal and gain a spark when a blow lands on you. Every round adds a spark too. Ready at
+  // kinNeed() sparks, spent on use, so a long fight gets it more than once.
+  const CL_PATHS = {
+    axe: {
+      edge: { name: "The Felling Line", style: "for those who end fights early", mv: "Oathfall", kind: "crit", hit: 2,
+        say: "You set your feet the old way, low, and say the oath under your breath. Then you bring the axe down with all of it behind it." },
+      mend: { name: "The Standing Line", style: "for those who outlast", mv: "Hold the Line", kind: "heal", guard: 2,
+        say: "You plant your feet and stop giving ground. The old soldiery never broke, and you don't either. You breathe, and the hurt goes back where it came from." } },
+    hush: {
+      edge: { name: "The Knife-Path", style: "for those who strike from nowhere", mv: "The Unheard Cut", kind: "crit", adv: true,
+        say: "You're gone for a heartbeat, and when you come back you're already behind it, and already cutting." },
+      mend: { name: "The Long Hush", style: "for those who slip away and come back whole", mv: "Breath in the Dark", kind: "heal", dis: 1,
+        say: "You fall out of its sight, the way you were taught, and in the quiet you let yourself breathe and bind what's bleeding." } },
+    song: {
+      edge: { name: "The Edge-Song", style: "for those who sing the blade sharp", mv: "The Breaking Note", kind: "crit", hit: 2, hesk: true,
+        say: "You find the note the axe is holding and push it a hair too high. The edge goes white with it, and you swing before it cracks." },
+      mend: { name: "The Cradle-Song", style: "for those who sing themselves whole", mv: "Cradle Song", kind: "heal", clean: true,
+        say: "You hum the oldest thing you know, the tune you'd hum over a cradle. Your own blood slows to the pace of it, and the cuts close a little, listening." } },
+    tide: {
+      edge: { name: "The Undertow", style: "for those who wait for the opening", mv: "Riptide", kind: "crit", hit: 3,
+        say: "You've watched it breathe long enough. There, at the bottom of the swing, the guard goes slack like the sea before a wave. You go in on the turn." },
+      mend: { name: "The Slack Water", style: "for those who ride the blows out", mv: "Turning Tide", kind: "heal", ac: 2,
+        say: "You give with it, like a hull on a swell, and let the tide go out of the fight for a breath. When it comes back in, you're steadier." } },
+    ink: {
+      edge: { name: "The Red Rubric", style: "for those who make every stroke count", mv: "Rubric Stroke", kind: "crit", sure: true,
+        say: "You see the line of the blow before you make it, written in red, the way a copyist marks a heading. Then you follow it exactly." },
+      mend: { name: "The Fair Copy", style: "for those who rewrite how the fight went", mv: "Fair Copy", kind: "heal", copy: true,
+        say: "You read back over the fight in your head, the way you'd read back a page, and copy it out fair: the same, but with half the wounds left out." } },
+    root: {
+      edge: { name: "The Thorn-Graft", style: "for those who grow teeth", mv: "Thornheart", kind: "crit", hit: 2, thorn: true,
+        say: "You lay a sliver of blackthorn root along the axe-head, and it takes, the way your grafts always take. The edge comes up barbed." },
+      mend: { name: "The Heartwood", style: "for those who will not fall", mv: "Heartwood", kind: "heal", big: true,
+        say: "You press your palm flat to the nearest root and ask. It answers, slow and green, and pushes its heartwood into you until the worst of it closes." } }
+  };
+  const clPath = () => { const c = cl(); return c && c.path && CL_PATHS[c.k] ? CL_PATHS[c.k][c.path] : null; };
+  const kinNeed = () => clRank() >= 4 ? 3 : 4;
+  const kinCrit = () => { const p = clPath(); return !!p && p.kind === "crit"; };
+  // What the move does, for the card and the journal.
+  function kinTxt(k, path, r) {
+    const P = CL_PATHS[k][path], need = r >= 4 ? 3 : 4, ex = r >= 3 ? " +1d6" : "", hb = Math.floor(lv() / 4);
+    const rc = "Kindles in a fight: a spark every round, and one more each time " + (P.kind === "crit" ? "a hit of yours lands" : "a blow lands on you") + "; ready at " + need + (r >= 5 ? ", and you start each fight with 1" : "") + ". It kindles again after you use it.";
+    let t = "";
+    if (P.kind === "crit") t = "A swing" + (P.hit ? " at +" + P.hit : "") + (P.adv ? " with advantage" : "") + (P.sure ? " that hits on anything but a natural 1" : "") + ". If it lands, it's a critical: the damage dice are doubled" + ex + (P.hesk ? ", and against the Hesk it breaks their song" : "") + (P.thorn ? ", and the thorns stay in it: 1d6 more at the end of the next round" : "") + ".";
+    else if (P.copy) t = "Get back half the HP you've lost this fight (at least 2d6), and stop any bleeding. Costs your turn.";
+    else t = "Regain " + (P.big ? "3d8" : "2d8") + " + " + (P.big ? Math.floor(lv() / 3) : hb) + " HP" + (P.big || P.clean ? ", stop any bleeding" : "") + (P.clean ? ", clear your eyes" : "") + (P.guard ? ", and its next blow is −" + P.guard : "") + (P.dis ? ", and its next blow is at disadvantage" : "") + (P.ac ? ", and +2 AC against its next two blows" : "") + ". Costs your turn.";
+    return "<b>" + P.mv + "</b>: " + t + " " + rc;
+  }
+  function askPath() {
+    return new Promise((done) => {
+      const k = S.cl.k, C = CALLINGS[k], r = clRank();
+      let pick = "";
+      const box = el("section", "recap namecard bgcard clcard pathcard",
+        '<div><span class="num">' + C.name + "</span><h3>Which path?</h3></div>" +
+        "<p class='recap-now'>There are two ways to carry a calling. One looks for the blow that ends it. The other looks for the breath that lets you stay in it. Each has a move that kindles while you fight, and comes back every time you spend it.</p>" +
+        '<div class="bg-row" data-k="path"><span class="stat-label">Path</span><div class="bg-opts">' +
+        ["edge", "mend"].map(p => { const P = CL_PATHS[k][p]; return '<button type="button" class="bg-opt" data-v="' + p + '"><b>' + P.name + "</b><small>" + P.style[0].toUpperCase() + P.style.slice(1) + ". <i>" + kinTxt(k, p, r) + "</i></small></button>"; }).join("") +
+        '</div></div><p class="recap-now"><small>The path stays with you: the road ahead remembers how you fought.</small></p><div class="actions"><button class="primary" type="button" id="pathGo" disabled>Walk it</button></div>');
+      const goB = box.querySelector("#pathGo");
+      box.querySelectorAll(".bg-opt").forEach(b => b.onclick = () => {
+        pick = b.dataset.v;
+        box.querySelectorAll(".bg-opt").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
+        goB.disabled = false;
+      });
+      goB.onclick = () => {
+        if (!pick) return;
+        S.cl.path = pick; S.cl.kin = 0;
+        box.querySelectorAll("button").forEach(x => x.disabled = true);
+        box.remove();
+        save(); renderSheet();
+        stat("calling", "Chose a path: " + CL_PATHS[k][pick].name);
+        done();
+      };
+      scrollNext = true;
+      add(box);
+    });
+  }
+  // The meter in the foe box.
+  function renderKin() {
+    const b = $("kinBox"); if (!b) return;
+    const p = clPath(), st = FOE.on && FOE.F ? FOE.F.st : null;
+    b.hidden = !p || !st;
+    if (b.hidden) return;
+    const n = Math.min(kinNeed(), st.kin || 0), ready = n >= kinNeed();
+    b.classList.toggle("ready", ready);
+    $("kinLbl").textContent = p.mv;
+    $("kinNote").textContent = "●".repeat(n) + "○".repeat(kinNeed() - n) + (ready ? " Ready" : "");
+  }
+  function kinStart(st) { if (!clPath()) return; st.kin = clRank() >= 5 ? 1 : 0; st.kHp0 = S.hp; renderKin(); }
+  function kinSpark(st, n = 1) { if (!clPath() || st.kin == null) return; const was = st.kin >= kinNeed(); st.kin = Math.min(kinNeed(), st.kin + n); renderKin(); if (!was && st.kin >= kinNeed()) tip("kindle"); }
+  async function kinRound(st) {
+    if (st.kThorn > 0 && FOE.hp > 0) { st.kThorn = 0; await foeBurst(1, 6, 0, "The thorns work deeper"); }
+    kinSpark(st);
+  }
+  function kinOpts(F, st) {
+    const p = clPath(); if (!p || st.kin == null || st.kin < kinNeed()) return [];
+    if (p.kind === "crit") {
+      if ((F.noAtk && F.noAtk(st)) || st.rmNoAtk) return [];
+      return [{ key: "kin", label: p.mv, tag: "kindled · a swing" + (p.hit ? " at +" + p.hit : "") + (p.adv ? " with advantage" : "") + (p.sure ? " that only misses on a 1" : "") + " · a hit is a critical" + (clRank() >= 3 ? " +1d6" : "") + (p.hesk && F.hesk ? " · breaks the Hesk song" : "") + (p.thorn ? " · thorns" : "") }];
+    }
+    if (S.hp >= hpCap() && !bleeds().length) return [];
+    const lost = Math.max(0, (st.kHp0 || S.hp) - S.hp);
+    return [{ key: "kin", label: p.mv, tag: "kindled · " + (p.copy ? "half of the " + lost + " HP you've lost" : (p.big ? "3d8 + " + Math.floor(lv() / 3) : "2d8 + " + Math.floor(lv() / 4)) + " HP") + (p.guard ? " · its next blow −" + p.guard : "") + (p.dis ? " · its next blow at disadvantage" : "") + (p.ac ? " · +2 AC for 2 blows" : "") + " · costs your turn", plain: true }];
+  }
+  function kinUse(st) { st.kin = 0; S.cl.kin = (S.cl.kin || 0) + 1; renderKin(); if (S.cl.kin >= 25) grant("cl_kin25"); }
+  // The swing's numbers: { mod, adv, dc } changes for check(), and whether it's the kindled one.
+  function kinSwing(F, st) { const p = clPath(); kinUse(st); return { hit: p.hit || 0, adv: !!p.adv, sure: !!p.sure }; }
+  async function kinAfterCrit(F, st) {
+    const p = clPath();
+    if (clRank() >= 3 && FOE.hp > 0) await foeBurst(1, 6, 0, p.mv);
+    if (p.hesk && F.hesk && !st.clean) { st.clean = true; await mech("The note breaks their song: their blows no longer carry the Bloom this fight.", "loot"); }
+    if (p.thorn && FOE.hp > 0 && !F.heads) st.kThorn = 1;
+  }
+  async function kinDo(F, st) {
+    const p = clPath(); kinUse(st);
+    await say(p.say);
+    const b = S.hp;
+    let n;
+    if (p.copy) { const lost = Math.max(0, (st.kHp0 || S.hp) - S.hp); n = Math.max(d(6) + d(6), Math.ceil(lost / 2)); }
+    else n = d(8) + d(8) + (p.big ? d(8) + Math.floor(lv() / 3) : Math.floor(lv() / 4));
+    S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
+    await mech(p.mv + ": regain " + (S.hp - b) + " HP.", "loot");
+    if (p.guard) st.kGuard = p.guard;
+    if (p.dis) st.clDis = (st.clDis || 0) + p.dis;
+    if (p.ac) st.clEbbAc = Math.max(st.clEbbAc || 0, 2);
+    if ((p.big || p.clean || p.copy) && bleeds().length) await bleedStop("And the bleeding stops.");
+    if (p.clean && blindNow()) { blindSet(0); await mech("Your eyes clear.", "loot"); }
+    if (p.big && typeof lgVen === "function" && lgVen()) await lgCure(1, "The heartwood draws the poison out.");
+  }
+  // After a blow lands on you: the Mend paths spark, and Hold the Line blunts it.
+  async function kinAfterBlow(st, hp0) {
+    const p = clPath(); if (!p || S.hp <= 0) return;
+    const lost = hp0 - S.hp;
+    if (lost <= 0) return;
+    if (p.kind === "heal") kinSpark(st);
+    if (st.kGuard > 0) { const back = Math.min(st.kGuard, lost); st.kGuard = 0; S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech("You hold the line: " + back + " less.", "loot"); }
   }
 
   // ---- the road into six chapters ----
@@ -25126,6 +25290,7 @@ body.pv-open { overflow: hidden; }
     return c;
   }
   async function clBefore(i) {
+    if (cl() && !S.cl.path) await askPath();
     if (!cl() || rmIn()) return;
     await clRankNews();
     const slug = CL_SLUGS.find(s => CL_BEAT_AT[s] === i);
@@ -41400,6 +41565,33 @@ body.pv-open { overflow: hidden; }
   ["Swap weapon", "Cambiar de arma", "Changer d'arme", "Waffe wechseln", "Trocar de arma", "武器を持ち替える"],
   ["2 steps", "2 pasos", "2 pas", "2 Schritte", "2 passos", "2歩"],
   ["Evade", "Esquivar", "Esquiver", "Ausweichen", "Esquivar", "回避"],
+  ["Oathfall", "Caída del juramento", "Chute du serment", "Eidfall", "Queda do juramento", "誓いの一撃"],
+  ["Hold the Line", "Mantener la línea", "Tenir la ligne", "Die Linie halten", "Manter a linha", "戦列を守る"],
+  ["The Unheard Cut", "El corte no oído", "La coupe inouïe", "Der ungehörte Schnitt", "O corte não ouvido", "聞こえぬ一閃"],
+  ["Breath in the Dark", "Aliento en la oscuridad", "Souffle dans le noir", "Atem im Dunkeln", "Fôlego no escuro", "闇の中の呼吸"],
+  ["The Breaking Note", "La nota que quiebra", "La note brisante", "Der brechende Ton", "A nota que quebra", "砕ける音"],
+  ["Cradle Song", "Canción de cuna", "Berceuse", "Wiegenlied", "Canção de berço", "子守歌"],
+  ["Riptide", "Resaca", "Contre-courant", "Brandungsrückstrom", "Ressaca", "離岸流"],
+  ["Turning Tide", "Cambio de marea", "Renverse de marée", "Gezeitenwende", "Virada da maré", "潮の変わり目"],
+  ["Rubric Stroke", "Trazo de rúbrica", "Trait de rubrique", "Rubrikstrich", "Traço de rubrica", "朱書きの一撃"],
+  ["Fair Copy", "Copia en limpio", "Copie au propre", "Reinschrift", "Cópia a limpo", "清書"],
+  ["Thornheart", "Corazón de espino", "Cœur d'épine", "Dornherz", "Coração de espinho", "棘の心"],
+  ["Heartwood", "Duramen", "Bois de cœur", "Kernholz", "Cerne", "心材"],
+  ["Which path?", "¿Qué senda?", "Quelle voie ?", "Welcher Pfad?", "Qual caminho?", "どの道を行く？"],
+  ["Walk it", "Recorrerla", "La suivre", "Ihn gehen", "Percorrê-lo", "その道を行く"],
+  ["Path", "Senda", "Voie", "Pfad", "Caminho", "道"],
+  ["The Felling Line", "La línea que tala", "La ligne qui abat", "Die fällende Linie", "A linha que derruba", "伐り倒す戦列"],
+  ["The Standing Line", "La línea en pie", "La ligne debout", "Die stehende Linie", "A linha de pé", "立ち続ける戦列"],
+  ["The Knife-Path", "La senda del cuchillo", "La voie du couteau", "Der Messerpfad", "O caminho da faca", "刃の道"],
+  ["The Long Hush", "El largo silencio", "Le long silence", "Die lange Stille", "O longo silêncio", "長い静寂"],
+  ["The Edge-Song", "El canto del filo", "Le chant du fil", "Das Schneidenlied", "O canto do fio", "刃の歌"],
+  ["The Cradle-Song", "El canto de cuna", "Le chant du berceau", "Das Wiegenlied", "O canto de berço", "揺り籠の歌"],
+  ["The Undertow", "La resaca de fondo", "Le ressac", "Der Sog", "A corrente de fundo", "引き波"],
+  ["The Slack Water", "El repunte", "L'étale", "Das Stauwasser", "A estofa", "潮止まり"],
+  ["The Red Rubric", "La rúbrica roja", "La rubrique rouge", "Die rote Rubrik", "A rubrica vermelha", "赤い朱書き"],
+  ["The Fair Copy", "La copia en limpio", "La copie au propre", "Die Reinschrift", "A cópia a limpo", "清書の道"],
+  ["The Thorn-Graft", "El injerto de espino", "La greffe d'épine", "Der Dornpfropf", "O enxerto de espinho", "棘の接ぎ木"],
+  ["The Heartwood", "El duramen", "Le bois de cœur", "Das Kernholz", "O cerne", "心材の道"],
   ["Heartcleave", "Hiende-corazones", "Fend-cœur", "Herzspalter", "Racha-corações", "ハートクリーヴ"],
   ["Go Quiet", "Silenciarse", "Se faire silence", "Still werden", "Silenciar-se", "気配を消す"],
   ["Read the Ebb", "Leer la bajamar", "Lire le reflux", "Die Ebbe lesen", "Ler a vazante", "引き潮を読む"],
