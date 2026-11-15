@@ -1209,6 +1209,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 @media (max-width: 600px) {
   .map-frame { overflow-x: auto; overscroll-behavior-x: contain; }
   .map-svg { width: 560px; max-width: none; }
+  .map-svg.wide { width: 710px; }
 }
 
 @media (max-width: 860px) {
@@ -1477,6 +1478,35 @@ body.in-fight.in-lab.blinded .story > *:not(:nth-last-child(-n+4)) { opacity: 1;
 .rs-strip { display: flex; gap: 2px; font-family: inherit; letter-spacing: 1px; }
 .rs-strip span { display: inline-grid; place-items: center; line-height: 1; padding: 0; width: 30px; height: 40px; border-radius: 4px; background: #1b221d; color: var(--muted); font-size: 1.05em; }
 .rs-strip span.slot { background: #3a3020; color: var(--gold); box-shadow: inset 0 0 0 2px var(--gold); font-weight: 700; }
+/* 2026-11-15 (Adrian's mission, the Lost Hand): the Watch Round, the Counting Floor, the pin lock and the sluices. */
+.lh-grid { display: grid; grid-template-columns: repeat(var(--w), minmax(0, 1fr)); gap: 3px; max-width: 430px; margin: 4px auto 8px; }
+.lh-cell { aspect-ratio: 1; min-height: 38px; min-width: 0; padding: 0; font-size: 1.15em; line-height: 1; display: grid; place-items: center; border-radius: 6px; background: #1c231c; border: 1px solid #2c362c; }
+.lh-cell.wall { background: #3a3226; color: #6b5a40; }
+.lh-cell.bush { background: #1d3320; color: #6fa86a; }
+.lh-cell.lit { background: #4a3a18; box-shadow: inset 0 0 0 1px rgba(243, 181, 74, .45); }
+.lh-cell.bush.lit { background: #3a4220; }
+.lh-cell.guard { color: #f3b54a; font-weight: 700; }
+.lh-cell.you { color: #fff; background: #5a2a20; box-shadow: inset 0 0 0 2px #d9503a; }
+.lh-cell.near { outline: 1px dashed rgba(207, 168, 80, .55); outline-offset: -4px; }
+.lh-floor .lh-cell { background: #3a3428; }
+.lh-floor .lh-cell.open { background: #6a5e48; color: #1a140c; font-weight: 700; }
+.lh-floor .lh-cell.sprung { background: #5a2018; color: #ffb0a0; }
+.lh-floor .lh-cell.chalk { color: #f2f2f2; background: #4a4438; }
+.lh-floor .lh-cell.far { box-shadow: inset 0 3px 0 rgba(127, 208, 160, .5); }
+.lh-pins { display: flex; gap: 10px; justify-content: center; margin: 6px 0; }
+.lh-pin { display: grid; gap: 4px; justify-items: center; }
+.lh-pin button { min-width: 44px; min-height: 40px; padding: 0; }
+.lh-pv { font-size: 1.5em; font-weight: 700; color: var(--gold); min-width: 2.2em; text-align: center; }
+.lh-pin.known .lh-pv { color: #9ad6a0; }
+.lh-hist { margin: 4px auto; padding-left: 1.6em; font-size: .9em; color: var(--muted); max-width: 320px; }
+.lh-tanks { display: flex; gap: 16px; justify-content: center; align-items: flex-end; margin: 6px 0 10px; }
+.lh-tank { position: relative; width: 72px; height: 120px; border: 2px solid #6b5a40; border-top: none; border-radius: 0 0 8px 8px; background: #17140e; display: flex; flex-direction: column; justify-content: flex-end; }
+.lh-water { background: linear-gradient(#5f8f9a, #2f5a66); width: 100%; transition: height .5s; border-radius: 0 0 6px 6px; }
+.lh-tv { position: absolute; top: 4px; left: 0; right: 0; text-align: center; font-weight: 700; }
+.lh-tn { position: absolute; top: 100%; left: -12px; right: -12px; text-align: center; font-size: .72em; color: var(--muted); margin-top: 4px; line-height: 1.2; }
+.lh-tank.goal { border-color: var(--gold); }
+.lh-pours { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 30px; }
+.lh-pours button { min-height: 44px; }
 /* 2026-11-08 (Adrian): an ordinary fight gets only a thin ember border that beats with the drum, so the
    page stays easy to read. The screen goes dark only while you're Blinded (body.blinded), which is a real penalty. */
 #bfx { position: fixed; inset: 0; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .6s ease, box-shadow .6s ease; box-shadow: inset 0 0 0 2px rgba(217, 80, 58, .45), inset 0 0 36px rgba(0, 0, 0, .35); }
@@ -2359,6 +2389,13 @@ body.pv-open { overflow: hidden; }
         every(sc, 4, 9, () => blip(sc.out, rnd(700, 1000), { type: "sine", a: 0.002, dec: 0.5, vol: 0.011, bend: 0.75 }));
         every(sc, 18, 36, () => bell(sc.out, hz(pick([60, 63, 67])), 0.012, 7));
       },
+      hand(sc) {        // the Wetwood: warm rain on leaves, frogs counting, a far waterfall, a bell on a gum barge
+        wind(sc, { type: "lowpass", cut: 700, q: 0.5, vol: 0.05, sweep: 200, rate: 0.03 });
+        drone(sc, [38, 45, 50], { cut: 320, vol: 0.02, wob: 0.02 });
+        every(sc, 1.5, 4, () => { const n = 2 + Math.floor(Math.random() * 4); for (let i = 0; i < n; i++) blip(sc.out, rnd(320, 420), { type: "triangle", a: 0.004, dec: 0.09, vol: 0.012, bend: 0.9, at: i * 0.16 }); });
+        every(sc, 6, 14, () => { for (let i = 0; i < 8; i++) hiss(sc.out, { f: 4200, q: 2, a: 0.002, dec: 0.03, vol: 0.02, at: i * 0.05 }); });
+        every(sc, 20, 40, () => bell(sc.out, hz(pick([57, 60])), 0.012, 5));
+      },
       unmapped(sc) {    // the Unmapped: almost nothing. Thin high air, a nib scratching somewhere, a far small bell
         wind(sc, { type: "highpass", cut: 2600, q: 0.4, vol: 0.018, sweep: 400, rate: 0.02 });
         drone(sc, [60, 67], { cut: 900, vol: 0.012, wob: 0.01 });
@@ -2569,6 +2606,8 @@ body.pv-open { overflow: hidden; }
       MP("under-floor", "Under the Floorboards", "welling", 36, "loc", { fx: { knock: 0.02, creak: 0.02 } }),
       MP("the-contract", "The Contract", "summons", 38, "hrm", { step: 2.6, lead: "bow", lv: 0.045, counter: "bell", cp: 0.02, fx: { toll: 0.008, whisper: 0.008 } }),
       MP("roots-names", "The Roots Remember Names", "summons", 36, "phr", { step: 2.4, lead: "choir", lv: 0.04, counter: "pluck", fx: { breath: 0.02, rev: 0.02 } }),
+      MP("rain-in-gum", "Rain in the Gum", "hand", 37, "dor", { step: 2.2, lead: "pluck", lo: 12, lv: 0.06, counter: "box", fx: { breath: 0.02, knock: 0.01 } }),
+      MP("cage-over-falls", "A Cage Over the Falls", "hand", 39, "aeo", { step: 2.8, lead: "bow", lv: 0.045, counter: "bell", fx: { rev: 0.03, creak: 0.015 } }),
       MP("before-wake", "Before You Wake", "title", 38, "aeo", { step: 2.6, counter: "glass", fx: { lull: 0.004, rev: 0.02 } }),
       MP("lantern-stair", "A Lantern on the Stair", "title", 41, "dor", { step: 2.2, lead: "piano", fx: { breath: 0.02 } }),
       MP("shutters-dusk", "Shutters at Dusk", "town", 43, "dor", { lead: "piano", counter: "box", wrong: 0.02, shadow: 0.05, fx: { whisper: 0.006 } }),
@@ -2929,10 +2968,11 @@ body.pv-open { overflow: hidden; }
     ["The Undermoon", "undermoon", 48, 54], ["The Siege of Rahdaria", "rahdaria", 55, 61],
     ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75],
     ["Half the East", "hinge", 76, 82], ["The Unmapped", "unmapped", 83, 89],
-    ["Rimehold", "rime", 90, 98], ["The Welling", "welling", 99, 103], ["The Root Summons", "summons", 104, 110]
+    ["Rimehold", "rime", 90, 98], ["The Welling", "welling", 99, 103], ["The Root Summons", "summons", 104, 110],
+    ["The Lost Hand", "hand", 111, 117]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   // After the Deep Melt the same seven parts are Dunvaar.
-  Object.defineProperty(CHAPTERS[CHAPTERS.length - 1], "name", { get: () => (typeof S !== "undefined" && S && S.rm && S.rm.ending === "melt" ? "Dunvaar" : "The Root Summons") });
+  Object.defineProperty(CHAPTERS.find(c => c.slug === "summons"), "name", { get: () => (typeof S !== "undefined" && S && S.rm && S.rm.ending === "melt" ? "Dunvaar" : "The Root Summons") });
   const chapterAt = (p) => Math.max(0, CHAPTERS.findIndex(c => p >= c.from && p <= c.to));
   const NOT_ITEMS = new Set(["stones", "bank", "bloom", "sick", "rank", "tyra", "dig", "roadlore", "co-burr", "co-ishbel", "co-odran", "co-wenna", "co-caddock", "ins", "adapt", "mimic", "cascade", "rhrep", "rhcase", "bg", "rhinq", "rhpath", "ally-lysa", "ally-stone", "ally-talia", "ally-harrow", "ally-rowan", "sdwords", "sdforgot", "sdquiet", "pztricks", "pzcrew", "plunder", "pzpardon", "pzcap", "seaship", "seachart", "seaheat", "hnmap", "hnreaped", "unink", "unplaces", "contender", "roadname", "colours", "rmread", "rmsight", "rmspirit"]);
   const COUNTS = ["ms", "deaths", "close", "earned", "lost", "fights"];
@@ -3131,6 +3171,7 @@ body.pv-open { overflow: hidden; }
     h += rmSection(rs);
     h += wlSection(rs);
     h += rsSection(rs);
+    h += lhSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -3308,6 +3349,14 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "103", name: "The Lost Hand", date: "15 Nov 2026", items: [
+      "<b>A new chapter after the Root Summons and Dunvaar</b>, Parts CXII to CXVIII, from Adrian's mission. A job goes wrong for the Hollow Hands across the Narrow Sea, and <b>Grell</b> is hanging in a cage over a waterfall at Cutwater, the walled hold of <b>Kline Gerrand</b>, a bailiff who has been buying up the jungle holding by holding.",
+      "<b>A new continent: Selvaine</b>, east across the Narrow Sea, and its jungle, the Wetwood. Your map grows to fit it, with a painting of Cutwater from the ridge and a plan of the hold you draw yourself.",
+      "<b>Four days before the rains</b> to find out who sold the job: seven places, one a day, and then you name someone. Name the wrong one and it costs you.",
+      "<b>Who comes with you depends on the desert.</b> Stood by the Hollow Hands? Sable, Ysolde and maybe Tobbin. Sold them out? Only Ysolde, and Grell remembers. Each Hand does you one favour on the job, and Ishbel comes if she's with you.",
+      "<b>Four new puzzles</b>: the Watch Round (yardmen walking their beats with lanterns; take them down from behind), the Counting Floor (pressure plates that count their neighbours), the counting-house pin lock (clicks and ticks), and the sluices that hold Grell's cage over the falls. An <b>alarm</b> runs all night: the more Cutwater wakes, the more you fight.",
+      "<b>Kline Gerrand</b> fights with a catchpole and his own yard: he pulls cords, and you cut them or get out of the way. Bond-tappers to free, a yard-boss to deal with, an offer to refuse (or not), and the deeds to every holding in the Wetwood.",
+      "<b>On the roads back:</b> Selvaine as a new region, with Brindle Landing, Amberlow, two new beasts, a battle map, a Wandering Board and a hidden thing. 12 new feats in a <b>Lost Hand</b> pursuit."] },
     { ver: "102", name: "Night music", date: "15 Nov 2026", items: [
       "<b>Music</b>, under the sound: forty-eight slow, quiet pieces, made for long nights of play. Nothing loops. Each piece keeps its own tune and chords, but the game writes the bars out fresh every time it plays, so you won't hear the same four minutes twice.",
       "<b>Every chapter has its own theme</b>, a short tune that runs through all of its music. The first piece you hear in a chapter states it; the second bends it into another key and mode. Fights, Nightmares and towns play the theme of the chapter you're in, in their own colours, so a fight in Lastwell sounds like Lastwell. The start screen plays the Labyrinth's theme, the game's own.",
@@ -3679,6 +3728,10 @@ body.pv-open { overflow: hidden; }
   //   art:    [glyph, x, y, scale] from MAP_ART
   //   labels: [text, x, y, size, style] style: "" region, "s" small town, "u" under the ground
   const MAP = {
+    hand: { at: [700, 236], parts: { 111: [318, 308], 112: [664, 290], 117: [664, 290] }, clear: [[694, 246, 84], [606, 298, 34]],
+      road: [[330, 300], [432, 290], [560, 302], [612, 300], [664, 290]],
+      art: [["selvaine", 650, 230, 1], ["jungle", 712, 268, .9], ["jungle", 690, 160, .8], ["palisade", 700, 236, .8]],
+      labels: [["Selvaine", 706, 120, 15, ""], ["the Wetwood", 716, 304, 10, "s"], ["Brindle Landing", 664, 322, 9, "s"], ["Cutwater", 700, 200, 9, "s"], ["the Narrow Sea", 606, 356, 9, "s"]] },
     summons: { get at() { return S.rm && S.rm.ending === "melt" ? [196, 44] : [200, 292]; }, clear: [[196, 50, 40]],
       art: [["gate", 196, 44, .7]],
       get labels() { return S.rm && S.rm.ending === "melt" ? [["Dunvaar, under the ice", 196, 22, 10, ""]] : [["Hollow Holm", 150, 270, 9, "s"]]; } },
@@ -3817,6 +3870,15 @@ body.pv-open { overflow: hidden; }
     fleet: () => '<g fill="' + INK + '" fill-opacity=".8">' + [[-16, -4], [2, 2], [-6, 10], [14, -8]].map(([x, y]) => '<path d="M' + (x - 6) + " " + y + "h12l-2 3h-8z\"/>").join("") + "</g>" +
       '<path d="M-26 16q4-3 8 0t8 0 8 0 8 0 8 0" fill="none" stroke="' + WATER + '" stroke-width="1"/>'
   });
+  Object.assign(MAP_ART, {
+    selvaine: () => '<path d="M-14 -170c-10 20 8 34-4 54s-18 26-6 44-10 30-2 48 14 26 0 46-12 24-4 42 4 22-4 36L130 180V-170z" fill="' + GLASS + '" fill-opacity=".14"/>' +
+      '<path d="M-14 -170c-10 20 8 34-4 54s-18 26-6 44-10 30-2 48 14 26 0 46-12 24-4 42 4 22-4 36" fill="none" stroke="' + INK + '" stroke-width="1.8"/>' +
+      '<path d="M-6 -150q14 4 18 -6M-2 -60q16 6 22 -4M4 30q14 6 20 -2M-4 120q14 4 20 -6" fill="none" stroke="' + INK2 + '" stroke-width=".8" opacity=".7"/>' +
+      '<path d="M-38 -120q4-3 8 0M-44 -40q4-3 8 0M-40 40q4-3 8 0M-46 110q4-3 8 0" fill="none" stroke="' + WATER + '" stroke-width="1.1"/>',
+    jungle: () => [[-18, -10], [0, -16], [18, -8], [-8, 6], [12, 8], [28, 4], [-26, 8]].map(([x, y]) => '<g transform="translate(' + x + " " + y + ')"><circle r="6" fill="' + GLASS + '" fill-opacity=".35" stroke="' + INK + '" stroke-width="1"/><path d="M0 6v5" stroke="' + INK + '" stroke-width="1"/></g>').join(""),
+    palisade: () => '<rect x="-10" y="-10" width="20" height="18" fill="none" stroke="' + INK + '" stroke-width="1.6" stroke-dasharray="1.6 1.4"/><path d="M-12 -12l3 3M12 -12l-3 3" stroke="' + INK + '" stroke-width="1.2"/>' +
+      '<path d="M10 -2q8 2 10 14" fill="none" stroke="' + WATER + '" stroke-width="2.2"/><rect x="-3" y="-4" width="6" height="6" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>'
+  });
   const mapPath = (pts) => pts.map((p, k) => (k ? "L" : "M") + p[0] + " " + p[1]).join("");
   const mapSmooth = (pts) => {
     if (pts.length < 3) return mapPath(pts);
@@ -3856,8 +3918,10 @@ body.pv-open { overflow: hidden; }
         '<path d="M-2.5 -1h5M-2.5 1.5h5M-2.5 4h3" stroke="' + (whole ? PAPER : INK) + '" stroke-width=".8"/></g>';
     }).join("");
   }
+  // The map grows east when Selvaine is charted: a second continent across the Narrow Sea.
+  const mapW = (st) => st.reached.includes("hand") ? 760 : 600;
   function mapSVG(st) {
-    const seen = mapSeen(), parts = [], fresh = [];
+    const seen = mapSeen(), parts = [], fresh = [], MW = mapW(st);
     let holes = "", art = "", roads = "", labels = "";
     st.reached.forEach(slug => {
       const m = MAP[slug];
@@ -3878,7 +3942,7 @@ body.pv-open { overflow: hidden; }
     const you = st.rs ? '<g class="mp-you" transform="translate(' + pos[0] + " " + pos[1] + ')"><circle class="mp-pulse" r="9"/>' +
       '<path d="M-5 -5l10 10M5 -5l-10 10" stroke="#a3281c" stroke-width="2.6" stroke-linecap="round"/>' +
       '<text y="-12" class="mp-youtxt">you are here</text></g>' : "";
-    return '<svg class="map-svg" viewBox="0 0 600 420" role="img" aria-labelledby="mpTitle mpDesc">' +
+    return '<svg class="map-svg' + (MW > 600 ? " wide" : "") + '" viewBox="0 0 ' + MW + ' 420" role="img" aria-labelledby="mpTitle mpDesc">' +
       '<title id="mpTitle">Your map of the realm</title><desc id="mpDesc">' + esc(mapDesc(st)) + "</desc>" +
       '<defs><filter id="mpWob" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>' +
       '<filter id="mpGrain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .22 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>' +
@@ -3886,16 +3950,16 @@ body.pv-open { overflow: hidden; }
       '<feColorMatrix values="0 0 0 0 .8  0 0 0 0 .79  0 0 0 0 .74  0 0 0 -1.7 1.55"/><feComposite in2="SourceGraphic" operator="in"/></filter>' +
       '<radialGradient id="mpHole"><stop offset=".55" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>' +
       '<radialGradient id="mpStain" cx=".5" cy=".45" r=".7"><stop offset=".6" stop-color="' + PAPER + '"/><stop offset="1" stop-color="#b89a68"/></radialGradient>' +
-      '<mask id="mpFog" maskUnits="userSpaceOnUse" x="0" y="0" width="600" height="420"><rect width="600" height="420" fill="#fff"/>' + holes + "</mask></defs>" +
-      '<rect width="600" height="420" fill="url(#mpStain)"/><rect width="600" height="420" fill="#000" filter="url(#mpGrain)"/>' +
+      '<mask id="mpFog" maskUnits="userSpaceOnUse" x="0" y="0" width="' + MW + '" height="420"><rect width="' + MW + '" height="420" fill="#fff"/>' + holes + "</mask></defs>" +
+      '<rect width="' + MW + '" height="420" fill="url(#mpStain)"/><rect width="' + MW + '" height="420" fill="#000" filter="url(#mpGrain)"/>' +
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
-      '<g mask="url(#mpFog)"><rect width="600" height="420" fill="#a7a597"/><rect width="600" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
+      '<g mask="url(#mpFog)"><rect width="' + MW + '" height="420" fill="#a7a597"/><rect width="' + MW + '" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
       (st.reached.includes("tithe") ? '<text x="22" y="70" class="mp-label mp-unk" transform="rotate(-90 22 70)">Uncharted</text>' : st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
       labels + mapStones(st) + cwMapLayer(st) + you +
-      '<g transform="translate(556 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
+      '<g transform="translate(' + (MW - 44) + ' 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
       '<path d="M0 -22l4 16-4 4z" fill="' + INK + '"/><text y="-26" class="mp-label" font-size="11">N</text></g>' +
-      '<rect x="6" y="6" width="588" height="408" fill="none" stroke="' + INK + '" stroke-width="1.6" rx="3"/><rect x="11" y="11" width="578" height="398" fill="none" stroke="' + INK2 + '" stroke-width=".7" rx="2"/>' +
+      '<rect x="6" y="6" width="' + (MW - 12) + '" height="408" fill="none" stroke="' + INK + '" stroke-width="1.6" rx="3"/><rect x="11" y="11" width="' + (MW - 22) + '" height="398" fill="none" stroke="' + INK2 + '" stroke-width=".7" rx="2"/>' +
       "</svg>";
   }
   function mapDesc(st) {
@@ -3922,7 +3986,7 @@ body.pv-open { overflow: hidden; }
     // On a phone the map is wider than the screen: scroll it so "you are here" is in view.
     const fr = $("mapFrame"), hm = MAP[st.here];
     if (fr && hm && fr.scrollWidth > fr.clientWidth) {
-      const x = ((hm.parts && hm.parts[st.part]) || hm.at)[0] / 600 * fr.scrollWidth;
+      const x = ((hm.parts && hm.parts[st.part]) || hm.at)[0] / mapW(st) * fr.scrollWidth;
       fr.scrollLeft = Math.max(0, x - fr.clientWidth / 2);
     }
   }
@@ -4211,6 +4275,18 @@ body.pv-open { overflow: hidden; }
     { id: "rmfair", name: "A Fair Race", desc: "Win the Seedheart without sabotaging anyone.", test: () => false },
     { id: "rmallhome", name: "Everyone Home", desc: "Finish the Seedheart race without losing a single hunter.", test: () => false },
     { id: "rmknife", name: "Knife in the Dark", desc: "Sabotage rivals three times in the Undervaults.", test: () => false },
+    { id: "lhwho", name: "Who Sold It", desc: "Name the one who sold the Hollow Hands' job to Kline Gerrand.", test: () => false },
+    { id: "lhtobbin", name: "The Old Drain", desc: "Go under the culvert at Cutwater by Tobbin's side tunnel.", test: () => false },
+    { id: "lhquiet", name: "Lights Out", desc: "Take down five of Gerrand's yardmen without a sound.", test: () => false },
+    { id: "lhfloor", name: "Counted", desc: "Cross the Counting Floor without springing a plate.", test: () => false },
+    { id: "lhpins", name: "Four Clicks", desc: "Open the counting-house lock in four tries or fewer.", test: () => false },
+    { id: "lhbond", name: "Bond Broken", desc: "Free the bond-tappers of Cutwater.", test: () => false },
+    { id: "lhcords", name: "Cut Cords", desc: "Cut two of Gerrand's yard-cords in one fight.", test: () => false },
+    { id: "lhsluice", name: "Arithmetic", desc: "Swing Grell's cage in to the ledge in the fewest pours there are.", test: () => false },
+    { id: "lhgrell", name: "Spare", desc: "Be given Grell's lockpick.", test: () => false },
+    { id: "lhland", name: "Holding by Holding", desc: "Give every holding in the Wetwood back.", test: () => false },
+    { id: "lhghost", name: "Nobody Saw", desc: "Get Grell out with Cutwater's alarm at 1 or less, and never be seen.", test: () => false },
+    { id: "lhwhole", name: "The Whole Job", desc: "Name the right one, free the tappers the night you come, refuse Gerrand, and swing the cage in clean.", test: () => false },
     { id: "rscall", name: "When I Call", desc: "Answer Ammeroth's first summons.", test: () => false },
     { id: "rsblind", name: "Without Looking", desc: "Mend a tear without looking through the rings once.", test: () => false },
     { id: "rsbell", name: "One Bell", desc: "Mend the tear under the Belfry at Lastwell.", test: () => false },
@@ -4400,7 +4476,9 @@ body.pv-open { overflow: hidden; }
     { id: "cities", name: "The Deep Cities", ver: "36", desc: "The Long Return, part three: four cities with six districts each, a name in each of them, eleven people with work for you, and Ammaret's clockwork.",
       ids: ["lcfree", "lcquest", "lcsix", "lcall", "lcvault", "lctick", "lcgad", "lcgood"] },
     { id: "brimwater", name: "The Brimwater", ver: "37", desc: "Sixteen leads after the Drowned Choir, the first of the drifting colonies, and what holds it together.",
-      ids: ["bwmeet", "bwleads", "bwtests", "bwinside", "bwsave", "bwsunk", "bwcase", "bwend"] }
+      ids: ["bwmeet", "bwleads", "bwtests", "bwinside", "bwsave", "bwsunk", "bwcase", "bwend"] },
+    { id: "losthand", name: "The Lost Hand", ver: "38", desc: "Grell in the cage at Cutwater, Kline Gerrand, and the Hollow Hands who came across the Narrow Sea for him.",
+      ids: ["lhwho", "lhtobbin", "lhquiet", "lhfloor", "lhpins", "lhbond", "lhcords", "lhsluice", "lhgrell", "lhland", "lhghost", "lhwhole"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -4806,6 +4884,14 @@ body.pv-open { overflow: hidden; }
     sheet: ["Your sheet and Bag", "Your <b>HP</b>, armour, gold and level are on the sheet. Everything you carry is in your <b>Bag</b> (on a phone, the <b>Items</b> button in the corner): tap a thing to read it or use it. Healing between fights comes from there."],
     jmap: ["Journal and map", "Your <b>journal</b> keeps this journey: what you've found, who you've met, and every tip you've seen (the Field guide). The <b>Map</b> beside it shows the realm, and the fog lifts as you go. Both are in your Bag."],
     saves: ["Saves", "The game saves itself as you go, in this browser. You can keep three runs at once: <b>Saves</b> in your Bag switches between them. If you fall, you pick up again from your last checkpoint."],
+    watch: ["The Watch Round", "Guards walk their beats, there and back. Each sees his own square and two ahead (the lit ones); walls and vats block the look, and in a bush you're only seen from right next to it. Move one square, or wait, and then they all take a step. Stand beside a guard who isn't facing you and tap him to take him down (that takes your turn)."],
+    floor: ["The Counting Floor", "Each flag you've stood on shows how many plates touch it, all eight ways round. You can only step next to where you've already been. Use chalk mode to mark the plates you've worked out. Four sprung plates and the yard wakes up. You never have to guess."],
+    pins: ["The pin lock", "Set four pins (1 to 5) and try them. A <b>click</b> is a right height on the right pin; a <b>tick</b> is a right height on the wrong pin. It doesn't tell you which. Eight tries."],
+    sluice: ["The sluices", "Pour one cistern into another and it runs until the first is empty or the second is full. Get exactly the measure asked for into the counterweight. There's always a way, and a shortest one."],
+    lhgang: ["The Hollow Hands' favours", "Each Hollow Hand with you can do one thing for you on this job, once. When a favour would help, it turns up as a choice or a button."],
+    lhdays: ["Four days", "Each day, go to one place. Some places tell you who sold the job; some give you a way in, or a trick for later. You won't get to all of them. When the days are up you name someone, or nobody."],
+    lhalarm: ["The alarm", "Cutwater's alarm runs from 0 to 6. A failed check, being seen or springing plates raises it. The higher it is, the more yardmen come, and the harder Gerrand is."],
+    lhcords: ["Gerrand's cords", "Every few rounds Gerrand backs to the balustrade and takes hold of a yard-cord. Cut it before his turn, or Evade, or take what comes. Crossing the Counting Floor cleanly makes the cords easier to cut."],
     tear: ["Tears", "Touch a thing and it turns (◇ ◈ ◆), and so do the things either side of it. Set each back the way it was. You can only see the way it was by <b>looking</b>, a few times, for a breath each; the count always says how many are right. A rough mend costs you."],
     court: ["The drowned court", "One of the three opened the Queen's stair. You have time to search three places. An alibi clears someone; a thing left on the stair points at someone. Then you stand with one of them, and it matters who."],
     dunvaar: ["Dunvaar", "Dunvaar is a new region. When the chapter's done, its <b>Wandering Board</b>, its beasts, a town and a hidden thing are on the roads back."],
@@ -4956,6 +5042,7 @@ body.pv-open { overflow: hidden; }
     if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
     if (!atk) { const cx = clCheck(label); if (cx) { mod += cx; label += " (+" + cx + " " + CALLINGS[S.cl.k].name + ")"; } }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
+    if (!atk && hasGear("grellpick") && /Sleight|lock/i.test(label)) { mod += 1; label += " (+1 Grell's lockpick)"; }
     if (!atk && hasGear("ysoltmap") && /^(Survival|Perception)/.test(label)) { mod += 1; label += " (+1 Ysolt's map)"; }
     if (!atk && hasGear("quirenib") && /^(Investigation|Survival|Perception)/.test(label)) { mod += 1; label += " (+1 the Quire's nib)"; }
     if (!atk && hasGear("firstsheet") && /^(Investigation|Survival)/.test(label)) { mod += 1; label += " (+1 the First Sheet)"; }
@@ -6748,12 +6835,16 @@ body.pv-open { overflow: hidden; }
       where: "At Tallowby, where the Long White begins, a Cascade pours up out of the frozen pond, and the ice round it melts in a perfect circle, and something comes up to the surface and turns over, slowly.",
       find: "It's a disc of black wood the size of a plate, polished by water, with rings in it so fine you need to hold it to the light: a thousand of them, exactly. The outermost ring is torn, and the tear has healed. It's warm.",
       on: () => { S.maxHp += 6; S.hp += 6; const M = rm(); M.kin = (M.kin || 0) + 3; } },
+    wetwood: { key: "firsttap", icon: "ember", name: "The First Tap", fx: "A bead of the oldest red gum in the Wetwood, with a seed inside it that's still alive: +8 max HP.", hint: "the oldest weeping-bole above Amberlow",
+      where: "Above Amberlow, where the oldest weeping-bole in the Wetwood stands with a thousand healed cuts in its bark, a Cascade pours up out of the first cut anybody ever made in it, and the gum in the cup under it starts to glow.",
+      find: "It's a bead of red gum the size of a thumb-joint, gone hard and clear as glass, and inside it there's a seed, and the seed puts out one pale root while you're watching. It's warm.",
+      on: () => { S.maxHp += 8; S.hp += 8; } },
     dunvaar: { key: "weircrown", icon: "ring", name: "The Weir-Crown", fx: "The drowned kings' circlet of green ice that won't melt: +6 max HP, and +1 to hit.", hint: "the throne room of Dunvaar",
       where: "In the throne room of Dunvaar, a Cascade pours up out of the empty throne, and the ice of the seat goes soft round something that has been frozen into it for a thousand years.",
       find: "It's a circlet of green ice, thin as a wedding ring for a giant, that doesn't melt in your hand. The last king of Dunvaar wore it when the water came. He didn't take it off.",
       on: () => { S.maxHp += 6; S.hp += 6; } }
   };
-  const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part) && (r !== "dunvaar" || !!(S.dv && S.dv.done)));
+  const roamRegions = () => Object.keys(TIER).filter(r => TIER[r] <= chapterAt(S.roamEnd ?? S.part) && (r !== "dunvaar" || !!(S.dv && S.dv.done)) && (r !== "wetwood" || !!(S.lh && S.lh.done)));
   const relicsLeft = () => roamRegions().filter(r => RELICS[r] && !relic(RELICS[r].key));
   async function roamFall() {
     foeEnd(true);
@@ -6898,7 +6989,7 @@ body.pv-open { overflow: hidden; }
     elite: ["The Grey Ledge", "The Notch", "The Old Kill"]
   };
   // The top of each region's board: who holds it.
-  const WB_TOP = { roots: "The Heartwood Gate", desert: "The Red Mesa", fen: "The Reed Throne", mere: "The Drowned Barbican", lastwell: "The Gallows Rise", glass: "The Cullet Heaps", corrach: "The Pale Cirque", noon: "The Gnomon Steps", undermoon: "The Last Mooring", rahdaria: "The Seventh Terrace", bathyrra: "The Sounding Rock", reach: "The Wreckers' Light", hinge: "Ostle Weir", rime: "The Last Cairn", dunvaar: "The Green Throne" };
+  const WB_TOP = { roots: "The Heartwood Gate", desert: "The Red Mesa", fen: "The Reed Throne", mere: "The Drowned Barbican", lastwell: "The Gallows Rise", glass: "The Cullet Heaps", corrach: "The Pale Cirque", noon: "The Gnomon Steps", undermoon: "The Last Mooring", rahdaria: "The Seventh Terrace", bathyrra: "The Sounding Rock", reach: "The Wreckers' Light", hinge: "Ostle Weir", rime: "The Last Cairn", dunvaar: "The Green Throne", wetwood: "The Falls at Cutwater" };
   const WB_WONDERS = [
     { k: "choir", name: "The Glass Choir", text: "Round the bend the path stops at the foot of a frozen waterfall a hundred feet high. The wind comes down the gorge and through the ice, and the whole fall sings: long, low chords, changing as the light changes. Nobody has ever heard it sing the same thing twice." },
     { k: "stags", name: "The Pale Crossing", text: "On the ridge above you, against the last of the sun, a herd of stags is crossing: pale as bone, dozens of them, and every antler is grown thick with the glowing fungus of the deep roots. They don't hurry and they don't look at you. It takes them the best part of an hour to go by." },
@@ -7707,7 +7798,7 @@ body.pv-open { overflow: hidden; }
   const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
   const CAL_MD = 12, CAL_YEAR = 144;
   // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
-  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9, 6];
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9, 6, 8];
   // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
   const CAL_FAIRS = [
     { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
@@ -8037,6 +8128,12 @@ body.pv-open { overflow: hidden; }
   // any of them: an inn, a market, a smith, a bank, a library, a bar, and the sanctuaries, where you
   // can rest for nothing and be healed of what the road gave you.
   const TOWNS = {
+    wetwood: [
+      { name: "Brindle Landing", kind: "town", has: ["inn", "market", "bar"],
+        get intro() { return S.lh && S.lh.land === "burn" ? "Brindle Landing on its stilts over the river mud: plank walks, rope bridges, the smell of hot gum, and nobody owning anything, loudly." : "Brindle Landing on its stilts over the river mud: plank walks, rope bridges, the smell of hot gum, and the gum-traders' ketches tied up three deep."; } },
+      { name: "Amberlow", kind: "sanctuary", has: ["sanctum"],
+        intro: "Up at Amberlow they give you a bunk in a round house over the honey-coloured pool, and somebody brings you a cup of something hot with gum in it, and the frogs count you to sleep." }
+    ],
     dunvaar: [
       { name: "The Weir-House", kind: "town", get has() { return S.dv && S.dv.seal === "risen" ? ["inn", "market"] : ["inn"]; },
         get intro() { return S.dv && S.dv.seal === "risen" ? "The Weir-House is an inn now, the Steward's idea: a drowned lord's hall with a fire in it, and a market in the courtyard where the newly-woken sell things a thousand years out of fashion to the Rimehand, who love them." : "The Weir-House stands empty in the ice, with frost on the tables. Somebody keeps a fire laid in the hearth, all the same, for whoever comes down." ; } },
@@ -8171,6 +8268,7 @@ body.pv-open { overflow: hidden; }
     if (T.reg === "rahdaria") await rmEchoTown(T);
     await wlTown(T);
     await rsTown(T);
+    await lhTown(T);
     if (T.reg === "rahdaria" && S.hn && S.hn.done) {
       if (echoDue("hnEast")) { await echoMark("hnEast"); await say({ whole: "In the market they're selling Ostle bread again, and somebody's painted a tower falling over on the inn sign. Children play Hingebreaker in the street, and argue about who has to be Corvane.", scarred: "The bread's dearer since the east was scarred. A woman at a stall tells you her sister lived at Hobble Cross. She doesn't say anything else, and she gives you the loaf for nothing.", half: "There's a queue for bread that goes round two terraces. The Bathyr camp on the salt flats has soldiers round it now, and nobody will say whose." }[S.hn.east]); }
       if (echoDue("hnYsolt")) { await echoMark("hnYsolt"); await say("Ysolt has a little shop on the third terrace now, with maps in the window, and her eyes are grey and short-sighted behind thick spectacles. Everything she draws is exactly what's there. She gives you one for nothing."); S.coins += 10; renderSheet(); await mech("Ysolt's map of the roads round Rahdaria sells for 10 gold to a carter, the same afternoon.", "loot"); }
@@ -8399,6 +8497,11 @@ body.pv-open { overflow: hidden; }
   const DRY = {
     calSeason: CAL_SEASON_LINES, calFair: CAL_FAIR_LINES, calName: CAL_NAME_WHY,
     wayside: {
+      hand: [
+        "A notice on a tree in the Wetwood says: THIS TREE IS THE PROPERTY OF K. GERRAND. Somebody has carved under it: THE TREE DISAGREES.",
+        "A gum-tapper offers you a cup of red gum, still warm. You ask what you do with it. She says you wait a thousand years.",
+        "The frogs in the Wetwood all stop at once. Then one of them starts again, on its own, and after a while the others join in, as if it's been forgiven."
+      ],
       get summons() { return S.rm && S.rm.ending === "melt" ? [
         "A drowned courtier in the street bows to you, and asks the year. You tell him. He thanks you, and goes and lies down again.",
         "There's a fishmonger's stall in Dunvaar with a thousand-year-old fish on it, frozen, priced. Nobody has bought it. Nobody has marked it down.",
@@ -8505,6 +8608,8 @@ body.pv-open { overflow: hidden; }
     },
     // Townsfolk on the roads back, by region. A function can return "" when the town isn't there any more.
     town: {
+      wetwood: ["In Brindle Landing they measure distance in jars of gum. It's four jars to Amberlow. Nobody can tell you how long a jar is.",
+        "A trader on the Landing tells you the rains last six months. You ask what they do for the other six. He says dry out."],
       dunvaar: ["The Steward has introduced market days. Nobody in Dunvaar has bought anything for a thousand years, and they've all forgotten how to haggle, and the Rimehand are making a killing.",
         "A drowned lady at the Weir-House asks you whether the war is over. You ask which war. She thinks for a long time, and says she doesn't remember, and orders another drink."],
       rime: ["The reeve of Weatherend says they had a summer once. It was on a Thursday. They all went out and stood in it.",
@@ -10665,6 +10770,7 @@ body.pv-open { overflow: hidden; }
   };
   // Which weather each region's roads can roll. Underground roads get none, but they can shake.
   const REGION_WX = {
+    wetwood: { k: ["rain", "fog", "rain", "storm"], quake: 0 },
     dunvaar: { k: ["fog", "snow", "fog", "wind"], quake: 8 },
     rime: { k: ["snow", "wind", "snow", "fog"], quake: 10 },
     roots: { k: [], quake: 20 }, desert: { k: ["heat", "heat", "wind"], quake: 0 }, fen: { k: ["fog", "rain", "fog"], quake: 0 },
@@ -11608,6 +11714,7 @@ body.pv-open { overflow: hidden; }
   const OBS_TERRAIN = [["a cracked pillar", "large"], ["an overhang of loose stone", "large"], ["a leaning stack of timber", "small"], ["a rotten beam overhead", "small"]];
   // Things on the road worth bringing down, by region: [what, size].
   const ROAD_TERRAIN = {
+    wetwood: [["a strangler-fig leaning over the track", "large"], ["a gum-tapper's cup-rack on a post", "small"]],
     dunvaar: [["a frozen tower leaning over the street", "large"], ["a sheet of black ice over deep water", "small"]],
     rime: [["a cornice of wind-packed snow overhanging the track", "large"], ["a cairn with a black stone on top", "small"]],
     roots: [["a cracked root-pillar", "small"], ["a hanging slab of old ceiling", "large"]],
@@ -11649,6 +11756,7 @@ body.pv-open { overflow: hidden; }
   // fx: still = loses its next turn · blind = −2 to hit for the fight · soft = −1 AC for the fight ·
   // bleed = 1d4 a round for 3 rounds · shade = double against shades.
   const REGION_MINES = {
+    wetwood: { name: "Gum-pot", fill: "a jar of hot red gum with a fuse in the wax", cost: 14, dice: [3, 6], type: "fire", fx: "still", fxTxt: "it's stuck fast in the gum: it loses its next turn" },
     dunvaar: { name: "Thaw-jar", fill: "a drowned court's wine jar full of meltwater that freezes as it breaks", cost: 14, dice: [3, 6], type: "cold", fx: "still", fxTxt: "it freezes to the spot: it loses its next turn" },
     rime: { name: "Frost-pot", fill: "a Rimehand clay pot of something that freezes as it spills", cost: 14, dice: [3, 6], type: "cold", fx: "still", fxTxt: "it freezes to the spot: it loses its next turn" },
     roots: { name: "Rootsnare", fill: "a fist of living labyrinth root", cost: 8, dice: [2, 6], type: "piercing", fx: "still", fxTxt: "roots hold it: it loses its next turn" },
@@ -15783,6 +15891,7 @@ body.pv-open { overflow: hidden; }
     quirenib: { name: "The Quire's nib", icon: "scroll", desc: "A steel nib on a bone handle, from the clean desk in the paper house. Your hand knows how to draw a straight line without a rule. +1 to Investigation, Survival and Perception checks, and +5 max HP." },
     firstsheet: { name: "The First Sheet", icon: "map", desc: "The Quire's map of everything, rolled up, warm, and lighter than it should be. Somewhere inside the roll a nib is still drawing a coast at its edge. +1 to Survival and Investigation checks. Hollin Marrisk will want it back." },
     soullantern: { name: "Corvane's lantern", icon: "lantern", desc: "Black glass, cracked, warm in your hand, full of quiet light: the dead Mardek Corvane took, and you kept. +8 max HP, for good. Dogs won't come near you." },
+    grellpick: { name: "Grell's lockpick", icon: "key", desc: "Long and thin and worn bright, from behind Grell's ear, where it lived for twenty years. It tastes faintly of whatever he had for dinner. +1 to Sleight of Hand checks, and to any check on a lock." },
     ysoltmap: { name: "Ysolt's waking map", icon: "map", desc: "The sheet she was drawing when you left her dreaming: the country a little way ahead of you, still changing. +1 to Survival and Perception checks." },
     cloak: { name: "The Weathercloak", icon: "cloak" },
     mirror: { name: "Mirrorwake", icon: "blade", desc: "Corvin Dray's thin blade. Once a fight, two copies of you step out of it: each of the next 3 attacks on you has a 2 in 3 chance to strike a copy instead." },
@@ -15949,6 +16058,7 @@ body.pv-open { overflow: hidden; }
   }
   // Palettes: g ground, gd dark, gl light, cov cover, tall, tallL, rug, hi, cliff, sink, sinkD, acc (plants and lichen).
   const FD_PAL = {
+    wetwood:   { g: "#4e5a34", gd: "#3a4426", gl: "#6a7848", cov: "#2e3a1e", tall: "#1c2814", tallL: "#4e6a34", rug: "#46502c", hi: "#8a9a5a", cliff: "#2a2418", sink: "#5a3a1e", sinkD: "#3a2412", acc: "#c2441e" },
     dunvaar:   { g: "#5a7a74", gd: "#46625c", gl: "#7a9a92", cov: "#3a524c", tall: "#22342f", tallL: "#6a8a82", rug: "#4e6a64", hi: "#a8d0c4", cliff: "#1a2a26", sink: "#1d3a44", sinkD: "#0e2028", acc: "#7fe0c0" },
     rime:      { g: "#c9d6dc", gd: "#a3b4bc", gl: "#e6eef2", cov: "#8a9aa2", tall: "#5a6a72", tallL: "#b4c4cc", rug: "#a8b8c0", hi: "#f2f6f8", cliff: "#4a5a62", sink: "#5a8aa0", sinkD: "#2a4a5a", acc: "#7fc0e0" },
     roots:     { g: "#4a3d2c", gd: "#33281b", gl: "#6a5843", cov: "#5f4a30", tall: "#3a2c1c", tallL: "#6e5638", rug: "#3f3222", hi: "#6d5a40", cliff: "#2a2016", sink: "#2c2a1a", sinkD: "#141208", acc: "#9fbf6a" },
@@ -15976,6 +16086,8 @@ body.pv-open { overflow: hidden; }
   };
   // One hand-built field per region. style picks the art: sand, fen, scree, stone or deck.
   const FIELDS = {
+    wetwood: { name: "The Tapping Ground", style: "fen", pal: "wetwood", blurb: "A clearing of weeping-boles in the Wetwood, every trunk cut and cupped, red gum pooled sticky between the roots, and the rain coming down through the canopy in ropes.",
+      grid: ["#.c.r.#", "..~..c.", "r.#.~..", ".c..#.r", "..~..c.", "c.r...#"], you: [3, 5], foe: [3, 0] },
     dunvaar: { name: "The Drowned Street", style: "scree", pal: "dunvaar", blurb: "A street of Dunvaar under its sky of ice: black water standing still between the houses, slicks of black ice, fallen statues for cover, and the frozen dead lying where they fell.",
       grid: ["c#.i.#c", "..iii..", "c.i~i.c", "..ii.r.", ".r..i..", "c..o..c"], you: [3, 5], foe: [3, 0] },
     rime: { name: "The Frozen Pass", style: "scree", pal: "rime", blurb: "The narrows of the pass under the blue ice cliffs: fallen blocks of the Rimehand's wall for cover, drifts as deep as your waist, and black ice where the wind has scoured the snow away.",
@@ -16042,6 +16154,7 @@ body.pv-open { overflow: hidden; }
   };
   // Wanderers: one per region, on nobody's side.
   const WANDERERS = {
+    wetwood: { name: "Moss-monitor", emb: "lizard", home: "~", enter: "A Moss-monitor comes up out of the gum-pools onto the field: a lizard as long as a boat, green with moss along its back where nothing has disturbed it for a hundred years. It tastes the air, and decides you're both disturbing it.", lash: "The Moss-monitor whips round with its tail", why: "It's like being hit by a wet log with opinions." },
     dunvaar: { name: "A drowned courtier", emb: "shade", home: "c", enter: "A drowned courtier in a ruff a thousand years out of fashion comes stiffly out of a doorway onto the field, looking for the ball. There isn't one. It decides you're the reason.", lash: "The drowned courtier lunges with a little silver knife", why: "The silver knife is very cold, and very sharp." },
     rime: { name: "Hoarback calf", emb: "ox", home: "h", enter: "A Hoarback calf comes blundering down off the drifts onto the field, as big as a pony already and frosted like a cake, looking for its mother. It doesn't find her. It finds both of you, and it's frightened, and it's very large.", lash: "The Hoarback calf panics and charges", why: "It shoves you off your feet with its frosted head." },
     roots: { name: "Lanternstag", emb: "stag", home: "c", enter: "Through the root-curtains steps a stag made of the labyrinth: bark for a hide, and antlers grown thick with pale fungus that glows like a row of lanterns. It looks at the two of you as if you were in its hall.", lash: "The Lanternstag lowers its glowing antlers and drives in", why: "Antler-tines of hard root open you up." },
@@ -16134,7 +16247,7 @@ body.pv-open { overflow: hidden; }
   });
   const BEAST_EMB = { ticks: "tick", hound: "canine", skimmer: "lizard", picker: "hood", hulk: "mound", wader: "wader", crab: "crab", lamprey: "eel", crows: "crow", reeve: "horn",
     cutter: "shards", mastiff: "flamehound", lurker: "rockeye", mites: "mites", shearer: "shears", cutshade: "shade", kiteeel: "kite", plumbmaw: "maw", brinehound: "canine",
-    rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull", hoarback: "ox", rimeshrikes: "hawk", thawlings: "mites", icepike: "gar" };
+    rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull", hoarback: "ox", rimeshrikes: "hawk", thawlings: "mites", icepike: "gar", needlewings: "hawk", stiltcat: "canine" };
   // Beasts that fly or swim over the ground: every square costs them 1, and sinking ground doesn't hold them.
   const FD_FLY = ["crows", "wreckgulls", "kiteeel", "brackray"];
   // Your marker: a medallion, picked on the name card or from the map, kept per save slot.
@@ -17774,10 +17887,10 @@ body.pv-open { overflow: hidden; }
   // ---------- the bestiary: creatures of the realm ----------
   // Between some parts there's a chance of meeting one of the realm's creatures on the road. Each has
   // a trick (its quirk) that changes how the fight goes, wired into hkFight through before/turn hooks.
-  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach", rime: "The Rimewaste", dunvaar: "Dunvaar" };
-  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11, rime: 14, dunvaar: 16 };
+  const REGIONS = { roots: "The Labyrinth", desert: "The Burning Sands", fen: "The Hushfen", mere: "Carrowmere", lastwell: "Lastwell", glass: "Sulmara", corrach: "Mount Corrach", noon: "Ammaret", undermoon: "The Undermoon", rahdaria: "Rahdaria", bathyrra: "Bathyrra", reach: "The Stillwater Reach", rime: "The Rimewaste", dunvaar: "Dunvaar", wetwood: "The Wetwood" };
+  const TIER = { roots: 0, desert: 1, fen: 2, mere: 3, lastwell: 4, glass: 5, corrach: 6, noon: 7, undermoon: 8, rahdaria: 9, bathyrra: 10, reach: 11, rime: 14, dunvaar: 16, wetwood: 17 };
   // Part index → the region whose creatures walk the road before that part.
-  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria", 84: "rahdaria", 85: "rahdaria", 87: "rahdaria", 91: "rime", 93: "rime", 101: "reach", 103: "rahdaria", get 105() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "glass"; }, get 107() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "rime"; } };
+  const WILD_SLOTS = { 4: "roots", 6: "desert", 9: "desert", 11: "fen", 14: "fen", 17: "mere", 20: "mere", 23: "lastwell", 24: "lastwell", 29: "glass", 30: "glass", 35: "corrach", 36: "corrach", 39: "corrach", 42: "noon", 43: "noon", 44: "noon", 49: "undermoon", 50: "undermoon", 51: "undermoon", 56: "rahdaria", 57: "rahdaria", 59: "rahdaria", 62: "bathyrra", 63: "bathyrra", 66: "bathyrra", 70: "reach", 71: "reach", 73: "reach", 77: "rahdaria", 78: "rahdaria", 80: "rahdaria", 84: "rahdaria", 85: "rahdaria", 87: "rahdaria", 91: "rime", 93: "rime", 101: "reach", 103: "rahdaria", get 105() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "glass"; }, get 107() { return S.rm && S.rm.ending === "melt" ? "dunvaar" : "rime"; }, 112: "wetwood", 115: "wetwood" };
   const WILD_CHANCE = 50;
   const BEASTS = [
     { id: "ticks", name: "Burrow-ticks", region: "roots", quirk: "latch", heads: 3, unit: "tick|ticks", ac: 11, atk: 3, n: 1, s: 4, type: "piercing", notice: 12,
@@ -17948,6 +18061,18 @@ body.pv-open { overflow: hidden; }
       lore: "A fish the length of a boat that lived in the black lake under the glacier for a thousand years in the dark, getting bigger. It has no eyes. It doesn't need them.",
       intro: "The black water by the path goes flat, which is wrong. Then it comes up all at once, and the thing in it is mostly mouth.",
       who: "the glacier pike", hitWhy: "Its jaws close on you like a door slamming.", miss: "It hits the ice where you were, and the ice cracks.", hitLine: "Black blood runs out onto the ice and freezes." },
+    { id: "needlewings", name: "Needlewings", region: "wetwood", quirk: "mob", heads: 6, unit: "needlewing|needlewings", ac: 14, atk: 6, n: 1, s: 4, type: "piercing", notice: 13, bleed: 25,
+      ability: ["Mob", "While three or more are left, three of them strike each round instead of two, quick as thrown pins."],
+      tactic: "Thin them fast. Below three they go back to the flowers, which they like better than you.",
+      lore: "Birds of the Wetwood no longer than your finger, with bills like darning needles and wings you can't see, that drink the red gum out of the tappers' cups and anything else that's warm. A cloud of them sounds like a kettle coming to the boil.",
+      intro: "There's a sound like a kettle coming to the boil, and it's coming from everywhere.",
+      who: "the needlewings", hitWhy: "A bill goes into your neck like a pin into a cushion.", miss: "Something whirs past your ear, and then something else does.", hitLine: "A needlewing drops into the leaf-litter like a thrown jewel." },
+    { id: "stiltcat", name: "Stilt-cat", region: "wetwood", quirk: "lunge", hp: 36, ac: 14, atk: 7, n: 1, s: 10, type: "slashing", notice: 14,
+      ability: ["Lunge", "It comes down out of the canopy from far off, all at once, legs first."],
+      tactic: "Get something over your head: a branch, a roof, a ledge. When it misses it's on the ground, long and awkward: hit it then.",
+      lore: "A jungle cat with legs twice as long as they ought to be, that lives in the high canopy of the Wetwood and hunts by dropping. The tappers wear wicker hats with spikes on top. They say it helps.",
+      intro: "Overhead, a branch you'd taken for a branch unfolds.",
+      who: "the stilt-cat", hitWhy: "It lands on you claws first, and both of you go down.", miss: "It lands where you were and folds up like a dropped easel.", hitLine: "The stilt-cat goes back up into the canopy, leaving a lot of itself behind." },
     { id: "brimwater", unique: true, name: "The Drowned Choir (brimlings)", region: "fen", quirk: "engulf", hp: 18, ac: 11, atk: 4, n: 1, s: 6, type: "bludgeoning", notice: 13,
       ability: ["Held under", "Every other round its stinging lines try to wrap you. Held under, you have a few breaths: tear free, hack at it from inside, or look into it. When the breath's gone, you drown."],
       tactic: "Make your saves, or use the breaths you have. It's clear as glass, and what it keeps inside is evidence. A brimling that gets away goes back to the sea, and the Choir grows.",
@@ -18164,7 +18289,7 @@ body.pv-open { overflow: hidden; }
   // they're more afraid of what they're turning into than of you.
   const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
     cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
-    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey", brimwater: "mastiff" };
+    wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey", brimwater: "mastiff", needlewings: "crows", stiltcat: "hound" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
   const beastById = (id) => BEASTS.find(b => b.id === id);
 
@@ -38470,7 +38595,7 @@ body.pv-open { overflow: hidden; }
     }
     R.done = true; renderSheet(); xpGain(200); save();
     await mech("<b>The Root Summons</b> go on, on the roads back: smaller tears, wherever the glue lets go." + (R.free ? " You're free; you can answer them anyway, if you like." : ""), "loot");
-    await endCard();
+    await go("Back to the roads");
   }
 
   // ---------- on the roads back: a small tear ----------
@@ -38704,7 +38829,7 @@ body.pv-open { overflow: hidden; }
     }
     D.done = true; renderSheet(); xpGain(200); save();
     await mech("<b>Dunvaar</b> is on the roads back now" + (D.seal === "sunk" ? ", sunk under the ice: its board is a cold one" : D.seal === "risen" ? ", risen, with a town in it" : "") + ". Walk its Wandering Board.", "loot");
-    await endCard();
+    await go("Back to the roads");
   }
   // ---------- the chapter's seven parts, either way ----------
   async function partAfter1() { heading("CV", rsMelt() ? "Under the Ice" : "The First Call"); return rsMelt() ? dvUnder() : rsFirstCall(); }
@@ -38714,6 +38839,900 @@ body.pv-open { overflow: hidden; }
   async function partAfter5() { heading("CIX", rsMelt() ? "The Meltwater Queen" : "The Rings of the Knot"); return rsMelt() ? dvIthra() : rsLedger(); }
   async function partAfter6() { heading("CX", rsMelt() ? "The Seal" : "Hollow Holm"); return rsMelt() ? dvSeal() : rsTornYear(); }
   async function partAfter7() { heading("CXI", rsMelt() ? "The Second Contract" : "The Last Call"); return rsMelt() ? dvSecond() : rsLastCall(); }
+
+  // ---------- The Lost Hand (2026-11-15, Adrian's mission) ----------
+  // A job goes wrong for the Hollow Hands across the Narrow Sea, on Selvaine, the jungle continent east of
+  // Sulmara: Grell, the broad one who picks his teeth with a lockpick, is caught in a trap at Cutwater, the
+  // walled hold of Kline Gerrand, an enforcer who has been buying up the Wetwood holding by holding. Four
+  // days to find out who sold the job, then in over the palisade: the Watch Round (guards on patrol, take
+  // them down from behind), the Counting Floor (pressure plates that count their neighbours), the pin lock
+  // on the counting-house, the gum works and its bonded tappers, Gerrand himself with his yard-cords, and
+  // the sluices that hold Grell's cage over the falls. State in S.lh. How you left the crew in the desert
+  // (isbSide: friend, self or sold) decides who comes, and how Grell meets you.
+  const lh = () => (S.lh = S.lh || { on: false, side: "self", gang: [], help: {}, days: 0, seen: [], clues: [], accused: null, right: false,
+    ossel: null, route: null, alarm: 0, downed: 0, spotted: 0, plan: false, chain: false, pass: false, amber: false,
+    floor: null, lock: null, deeds: false, tappers: null, ruckley: null, offer: null, gerrand: null, cage: null, grell: null, land: null, done: false });
+  const LH_GANG = {
+    sable: { name: "Sable", fav: "Sable's whistle", why: "a talker and a planner" },
+    ysolde: { name: "Ysolde", fav: "Ysolde's acid", why: "the alchemist, stained to the wrists" },
+    tobbin: { name: "Tobbin", fav: "Tobbin's tunnels", why: "the one they raised, who once sold them" },
+    ishbel: { name: "Ishbel", fav: "Ishbel's knives", why: "the fifth Hand, who was left on the rope" }
+  };
+  const lhHas = (k) => lh().gang.includes(k) && !(k === "tobbin" && lh().accused === "tobbin");
+  const lhFav = (k) => lhHas(k) && lh().help[k] !== false;
+  const lhUse = (k) => { lh().help[k] = false; save(); };
+  const lhAlarm = async (n, why) => {
+    const L = lh(); L.alarm = Math.min(6, L.alarm + n); save(); renderSheet();
+    await mech((why ? why + " " : "") + "<b>Alarm " + L.alarm + " of 6</b>: Cutwater is " + ["asleep", "uneasy", "awake", "looking", "hunting", "hunting you", "ringing every bell it has"][L.alarm] + ".", "hurt");
+  };
+  const lhGrellHook = () => isbSide() === "sold";
+  // Kline Gerrand's men: yardmen in gum-stiffened leather with catchpoles and cudgels.
+  const YARD = (o) => Object.assign({ ac: 15, atk: 6, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the yardmen", whoShort: "yardmen", road: true, reg: "wetwood",
+    hitWhy: "A catchpole's hook bites and hauls you half off your feet.", miss: "The cudgel whistles past your ear.", hitLine: "A yardman goes down in the red mud and stays there." }, o);
+
+  // ---------- the pictures: Cutwater from the ridge, and the plan of the hold ----------
+  const LH_INK = "#2b2216", LH_INK2 = "#5a4630", LH_PAPER = "#d9c7a0";
+  const lhUri = (svg) => "data:image/svg+xml," + encodeURIComponent(svg);
+  function lhViewSvg() {
+    // Night over the Wetwood. The hold sits on three terraces of an old stone ruin above a waterfall;
+    // a palisade of sharpened trunks round it, four watchtowers with lanterns, gum smoke from the works,
+    // and a boom out over the falls with a cage hanging from it.
+    const trees = [];
+    // a fringe of canopy along the bottom edge and up the sides, so the hold stays in view
+    for (let i = 0; i < 30; i++) { const x = i * 23 - 12, side = x < 120 || x > 560, h = side ? 90 + (i * 37) % 60 : 18 + (i * 29) % 26, base = 362; trees.push('<path d="M' + x + ' ' + base + ' q3 -' + h + ' 10 -' + (h + 10) + ' q8 10 10 ' + (h + 10) + 'z" fill="#0c1811"/>' + '<ellipse cx="' + (x + 10) + '" cy="' + (base - h - 10) + '" rx="' + (16 + i % 4 * 3) + '" ry="' + (10 + i % 3 * 3) + '" fill="' + (i % 2 ? "#10221a" : "#132a1f") + '"/>' + (side ? '<path d="M' + (x + 10) + ' ' + (base - h - 6) + ' q-14 4 -22 14 M' + (x + 10) + ' ' + (base - h - 6) + ' q14 4 22 14" stroke="#1d3a2a" stroke-width="2" fill="none"/>' : "")); }
+    const stakes = []; for (let x = 150; x <= 470; x += 7) stakes.push('<path d="M' + x + ' 236 l3 -16 l3 16z" fill="#2a1d12" stroke="#120c07" stroke-width=".8"/>');
+    const tower = (x, y) => '<g transform="translate(' + x + " " + y + ')"><path d="M-8 0 l2 -40 h12 l2 40z" fill="#22170e" stroke="#0e0905"/><path d="M-11 -40 h22 l-11 -12z" fill="#1a110a"/><rect x="-4" y="-38" width="8" height="7" fill="#f3b54a"/><circle cx="0" cy="-35" r="16" fill="url(#lhGlow)"/></g>';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">' +
+      '<defs><linearGradient id="lhSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset=".6" stop-color="#1b2a2a"/><stop offset="1" stop-color="#2d3a2a"/></linearGradient>' +
+      '<radialGradient id="lhGlow"><stop offset="0" stop-color="#ffcf6a" stop-opacity=".55"/><stop offset="1" stop-color="#ffcf6a" stop-opacity="0"/></radialGradient>' +
+      '<linearGradient id="lhFall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe2dc" stop-opacity=".9"/><stop offset="1" stop-color="#7aa49a" stop-opacity=".35"/></linearGradient>' +
+      '<filter id="lhMist"><feGaussianBlur stdDeviation="6"/></filter></defs>' +
+      '<rect width="640" height="360" fill="url(#lhSky)"/>' +
+      '<circle cx="520" cy="60" r="22" fill="#e9e2c4" opacity=".85"/><circle cx="512" cy="56" r="22" fill="#0b1420" opacity=".25"/>' +
+      '<path d="M0 210 q80 -40 160 -24 t160 -30 t170 20 t150 -16 V360 H0z" fill="#132219"/>' +
+      // the old ruin's stone face under the hold, with vines down it, and its terraces
+      '<path d="M142 250 h338 l10 96 h-358z" fill="#2c261c"/>' + Array.from({ length: 6 }, (_, r) => '<path d="M' + (140 - r * 2) + ' ' + (262 + r * 14) + ' h' + (342 + r * 4) + '" stroke="#1b170f" stroke-width="1"/>' + Array.from({ length: 9 }, (_, c) => '<path d="M' + (150 + c * 38 + (r % 2) * 19) + ' ' + (250 + r * 14) + ' v12" stroke="#1b170f" stroke-width="1"/>').join("")).join("") +
+      '<path d="M190 250 q-6 30 4 60 t-2 40 M300 250 q8 26 -2 50 M410 250 q-10 34 2 70" fill="none" stroke="#1f4a2c" stroke-width="2.4"/>' +
+      '<path d="M296 346 v-20 h14 v20" fill="#0e0b07"/>' +
+      '<path d="M140 250 h340 l-10 -14 h-320z" fill="#3b3226"/><path d="M170 236 h280 l-8 -22 h-264z" fill="#463b2c"/><path d="M210 214 h200 l-6 -20 h-188z" fill="#514433"/>' +
+      '<g stroke="#2a2218" stroke-width=".8" opacity=".7"><path d="M150 244 h320M178 228 h264M216 206 h190"/></g>' +
+      stakes.join("") + tower(160, 236) + tower(468, 236) + tower(214, 214) + tower(406, 214) +
+      // the counting-house: a squat stone block with one lit window
+      '<path d="M270 194 v-34 l40 -16 l40 16 v34z" fill="#3a3024" stroke="#16110b"/><rect x="304" y="168" width="10" height="9" fill="#f3b54a"/><path d="M262 160 l48 -20 l48 20" fill="none" stroke="#16110b" stroke-width="2"/>' +
+      // the gum works: vats and smoke
+      '<g fill="#2b2116" stroke="#120c07"><ellipse cx="230" cy="232" rx="14" ry="5"/><ellipse cx="258" cy="232" rx="14" ry="5"/></g><ellipse cx="230" cy="231" rx="9" ry="2.6" fill="#c2441e" opacity=".8"/><ellipse cx="258" cy="231" rx="9" ry="2.6" fill="#c2441e" opacity=".7"/>' +
+      '<path d="M230 226 q-10 -30 6 -50 t-4 -60 M258 226 q12 -26 -2 -44 t10 -56" fill="none" stroke="#6e6a5c" stroke-width="7" opacity=".35" filter="url(#lhMist)"/>' +
+      // the falls and the boom with the cage
+      '<path d="M482 250 q14 30 10 110 h46 q-8 -70 0 -110z" fill="url(#lhFall)"/><path d="M490 260 v96 M504 256 v100 M520 258 v98" stroke="#e6f2ee" stroke-width="1.2" opacity=".5"/>' +
+      '<ellipse cx="510" cy="352" rx="60" ry="14" fill="#cfe2dc" opacity=".35" filter="url(#lhMist)"/>' +
+      '<path d="M452 214 l78 -40" stroke="#1a110a" stroke-width="5"/><path d="M452 214 l30 -2" stroke="#1a110a" stroke-width="3"/><path d="M526 176 v38" stroke="#1a110a" stroke-width="1.2"/>' +
+      '<g transform="translate(526 226)"><rect x="-9" y="-12" width="18" height="22" fill="none" stroke="#1a110a" stroke-width="2"/><path d="M-4.5 -12v22M0 -12v22M4.5 -12v22" stroke="#1a110a" stroke-width="1.2"/><circle cx="0" cy="-2" r="3.2" fill="#3a2a1a"/><path d="M-3 2 h6 v6 h-6z" fill="#3a2a1a"/></g>' +
+      '<path d="M470 214 q30 70 40 120" fill="none" stroke="#8a7a5a" stroke-width=".8" stroke-dasharray="3 3"/>' +
+      trees.join("") +
+      '<path d="M0 360 V338 q60 -10 120 0 t120 4 t130 -6 t140 6 t130 -4 V360z" fill="#08110c"/>' +
+      '<g fill="#f3b54a"><circle cx="196" cy="246" r="1.4"/><circle cx="350" cy="246" r="1.4"/><circle cx="420" cy="230" r="1.4"/></g>' +
+      "</svg>";
+  }
+  // The plan of the hold. Zones: the river gate, the culvert, the canopy wall, the front gate, the yard,
+  // the counting-house, the gum works and the falls. What you've done is inked in.
+  const LH_ZONES = {
+    front: { x: 300, y: 380, name: "the front gate" }, river: { x: 520, y: 330, name: "the river gate" }, drain: { x: 120, y: 330, name: "the culvert" }, canopy: { x: 80, y: 180, name: "the canopy wall" },
+    yard: { x: 250, y: 260, name: "the trapwright's yard" }, house: { x: 300, y: 140, name: "the counting-house" }, works: { x: 140, y: 120, name: "the gum works" }, falls: { x: 500, y: 110, name: "the falls" }
+  };
+  function lhPlanSvg(at) {
+    const L = lh(), done = (k) => L.seen.includes("z:" + k);
+    const P = LH_PAPER, I = LH_INK, I2 = LH_INK2;
+    const stakes = (x1, y1, x2, y2) => { let s = ""; const n = Math.round(Math.hypot(x2 - x1, y2 - y1) / 9); for (let k = 0; k <= n; k++) { const x = x1 + (x2 - x1) * k / n, y = y1 + (y2 - y1) * k / n; s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.6" fill="' + I + '"/>'; } return s; };
+    const lbl = (t, x, y, sz) => '<text x="' + x + '" y="' + y + '" font-size="' + (sz || 11) + '" text-anchor="middle" fill="' + I + '" font-family="Georgia,serif" font-style="italic">' + t + "</text>";
+    const zone = (k) => { const Z = LH_ZONES[k]; return done(k) ? '<path d="M' + (Z.x - 7) + " " + (Z.y - 18) + " l4 4 l8 -9" + '" stroke="#7a2418" stroke-width="2.2" fill="none"/>' : ""; };
+    const route = L.route ? { front: [[300, 400], [300, 330], [250, 260]], river: [[600, 360], [520, 330], [440, 280], [250, 260]], drain: [[40, 370], [120, 330], [190, 290], [250, 260]], canopy: [[20, 200], [80, 180], [160, 220], [250, 260]] }[L.route] : null;
+    const path = route ? '<path d="M' + route.map(p => p.join(" ")).join(" L") + '" fill="none" stroke="#7a2418" stroke-width="1.6" stroke-dasharray="5 4"/>' : "";
+    const you = at && LH_ZONES[at] ? '<g transform="translate(' + LH_ZONES[at].x + " " + (LH_ZONES[at].y + 4) + ')"><path d="M-5 -5l10 10M5 -5l-10 10" stroke="#a3281c" stroke-width="2.6" stroke-linecap="round"/></g>' : "";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 440" width="640" height="440">' +
+      '<defs><radialGradient id="lpS" cx=".5" cy=".45" r=".7"><stop offset=".6" stop-color="' + P + '"/><stop offset="1" stop-color="#b29466"/></radialGradient></defs>' +
+      '<rect width="640" height="440" fill="url(#lpS)"/>' +
+      // jungle round it: little inked crowns
+      Array.from({ length: 46 }, (_, k) => { const x = (k * 97) % 640, y = (k * 53) % 440, busy = [[320, 26], [40, 160], [60, 362], [590, 312], [600, 186], [572, 88], [300, 414], [560, 330], [290, 395]]; return (x > 60 && x < 580 && y > 40 && y < 400) || busy.some(([a, b]) => Math.hypot(a - x, b - y) < 34) ? "" : '<g transform="translate(' + x + " " + y + ')" stroke="' + I2 + '" fill="none" stroke-width="1"><circle r="9"/><circle cx="7" cy="4" r="6"/><circle cx="-6" cy="5" r="5"/></g>'; }).join("") +
+      // the river and the falls (east edge)
+      '<path d="M640 300 q-60 10 -80 40 t-40 100" fill="none" stroke="#4d6d68" stroke-width="16" opacity=".55"/><path d="M560 60 q-10 30 -40 50" fill="none" stroke="#4d6d68" stroke-width="10" opacity=".55"/>' +
+      '<path d="M520 110 q30 0 60 -10" stroke="' + I + '" stroke-width="4"/><rect x="566" y="94" width="14" height="16" fill="none" stroke="' + I + '" stroke-width="1.6"/>' +
+      '<g stroke="#4d6d68" stroke-width="1.2" opacity=".8"><path d="M590 120 v40 M600 118 v44 M610 122 v38"/></g>' +
+      // terraces
+      '<path d="M90 70 h440 v300 h-440z" fill="none" stroke="' + I2 + '" stroke-width="1" stroke-dasharray="2 3"/><path d="M110 190 h400 M110 300 h400" stroke="' + I2 + '" stroke-width=".8" stroke-dasharray="6 4"/>' +
+      // the palisade
+      stakes(70, 50, 550, 50) + stakes(550, 50, 550, 390) + stakes(550, 390, 70, 390) + stakes(70, 390, 70, 50) +
+      ['70 50', '550 50', '70 390', '550 390'].map(p => { const [x, y] = p.split(" "); return '<rect x="' + (x - 8) + '" y="' + (y - 8) + '" width="16" height="16" fill="' + P + '" stroke="' + I + '" stroke-width="1.6"/><circle cx="' + x + '" cy="' + y + '" r="3" fill="#c58a2c"/>'; }).join("") +
+      // gates
+      '<rect x="285" y="384" width="30" height="12" fill="' + P + '" stroke="' + I + '" stroke-width="1.6"/><rect x="544" y="318" width="12" height="26" fill="' + P + '" stroke="' + I + '" stroke-width="1.6"/>' +
+      '<path d="M40 370 q40 -10 80 -40" stroke="' + I2 + '" stroke-width="5" fill="none" stroke-dasharray="1 4"/>' +
+      // the yard: a grid of plates
+      '<g transform="translate(200 220)">' + Array.from({ length: 30 }, (_, k) => '<rect x="' + (k % 6) * 16 + '" y="' + Math.floor(k / 6) * 14 + '" width="14" height="12" fill="none" stroke="' + I2 + '" stroke-width=".8"/>').join("") + "</g>" +
+      // the counting-house
+      '<path d="M260 120 h80 v44 h-80z" fill="' + P + '" stroke="' + I + '" stroke-width="2"/><path d="M260 120 l40 -18 l40 18" fill="none" stroke="' + I + '" stroke-width="1.6"/><path d="M296 164 v-12 h8 v12" fill="none" stroke="' + I + '"/>' +
+      // the gum works: vats and bunk-sheds
+      [[120, 100], [150, 100], [120, 130], [150, 130]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="10" fill="#c2441e" fill-opacity=".25" stroke="' + I + '" stroke-width="1.4"/>').join("") +
+      '<rect x="176" y="92" width="50" height="16" fill="none" stroke="' + I + '" stroke-width="1.2"/><rect x="176" y="118" width="50" height="16" fill="none" stroke="' + I + '" stroke-width="1.2"/>' +
+      // kennels
+      '<rect x="420" y="220" width="60" height="22" fill="none" stroke="' + I + '" stroke-width="1.2"/><path d="M430 220 v22 M440 220 v22 M450 220 v22 M460 220 v22 M470 220 v22" stroke="' + I2 + '" stroke-width=".7"/>' +
+      lbl("Cutwater", 320, 30, 18) + lbl("the counting-house", 300, 186) + lbl("the gum works", 150, 160) + lbl("the trapwright's yard", 248, 300) + lbl("catch-dogs", 450, 258, 9) +
+      lbl("the falls", 600, 186, 10) + lbl("the cage", 572, 88, 9) + lbl("river gate", 590, 312, 9) + lbl("culvert", 60, 362, 9) + lbl("front gate", 300, 414, 10) + lbl("canopy", 40, 160, 9) +
+      ["front", "river", "drain", "canopy", "yard", "house", "works", "falls"].map(zone).join("") + path + you +
+      '<rect x="6" y="6" width="628" height="428" fill="none" stroke="' + I + '" stroke-width="1.6" rx="3"/>' +
+      "</svg>";
+  }
+  function lhPlan(at, cap) {
+    add(framedPic(lhUri(lhPlanSvg(at)), "A hand-inked plan of Cutwater: a square palisade of sharpened stakes with a watchtower at each corner, a front gate to the south, a river gate on the east wall by the waterfall, a culvert in the south-west, a grid of pressure plates in the yard, a stone counting-house in the middle, gum vats and bunk-sheds to the north-west, kennels, and a boom over the falls with a cage hanging from it.", cap || "Cutwater, as you've drawn it", "wide"));
+  }
+
+  // ---------- the Watch Round: guards on patrol, and you between them ----------
+  // A grid at night. Each guard walks a fixed beat, there and back, and sees two squares ahead of
+  // him (walls and gum vats block the look; in a bush you're only seen from right next to it).
+  // Each turn you move one square or wait, and then every guard takes a step. Get to the far gate.
+  // Step up beside a guard who isn't facing you and you can take him down.
+  const LH_ROUNDS = {
+    wall: { title: "Inside the palisade", goal: "the yard gate",
+      map: ["#b..E..#", "#..#...b", "b.....#.", ".#b..b..", "...g....", "b......b", "#..S...#"],
+      guards: [[[1, 2], [5, 2]], [[6, 1], [6, 5]], [[1, 4], [1, 5], [6, 5]]] },
+    works: { title: "The gum works by night", goal: "the falls path",
+      map: ["E....b.#", ".gg.#...", "b...b..b", "..#....#", "#b..gg..", "b.......", "#..b.S.#"],
+      guards: [[[0, 2], [6, 2]], [[3, 0], [3, 2]], [[1, 5], [6, 5]], [[7, 1], [7, 3]]] }
+  };
+  function lhBeat(wps) {
+    const p = [wps[0].slice()];
+    for (let k = 1; k < wps.length; k++) { let [x, y] = p[p.length - 1]; const [tx, ty] = wps[k]; while (x !== tx || y !== ty) { if (x !== tx) x += Math.sign(tx - x); else y += Math.sign(ty - y); p.push([x, y]); } }
+    const back = p.slice(1, -1).reverse();
+    return p.concat(back);
+  }
+  function lhWatch(key, o = {}) {
+    tip("watch");
+    const R = LH_ROUNDS[key], H = R.map.length, W = R.map[0].length;
+    return new Promise(resolve => {
+      const tile = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? "#" : R.map[y][x];
+      const solid = (t) => t === "#" || t === "g";
+      let you = null, goal = null;
+      R.map.forEach((row, y) => row.split("").forEach((t, x) => { if (t === "S") you = { x, y }; if (t === "E") goal = { x, y }; }));
+      const G = R.guards.map(w => ({ beat: lhBeat(w), i: 0, down: false }));
+      const gAt = (g) => g.beat[g.i % g.beat.length];
+      const gFace = (g) => { const a = gAt(g), b = g.beat[(g.i + 1) % g.beat.length]; return [Math.sign(b[0] - a[0]), Math.sign(b[1] - a[1])]; };
+      const sees = (g) => {
+        const out = [], [x0, y0] = gAt(g), [dx, dy] = gFace(g);
+        out.push([x0, y0]);
+        for (let k = 1; k <= 2; k++) { const x = x0 + dx * k, y = y0 + dy * k; if (solid(tile(x, y))) break; out.push([x, y]); if (tile(x, y) === "b") break; }
+        return out;
+      };
+      const seen = () => G.some(g => !g.down && sees(g).some(([x, y], k) => x === you.x && y === you.y && (tile(x, y) !== "b" || k <= 1)));
+      let turns = 0, freeze = 0, forgive = o.forgive ? 1 : 0, done = false, downed = 0, knife = !!o.knife, whistle = !!o.whistle;
+      const P = puzzleBox(R.title, "Get to " + R.goal + " (⛩). Tap a square next to you to move, or wait. Then every guard takes a step along his beat. A guard sees his own square and two ahead (the lit ones); walls and vats block the look, and in a bush (♣) you can only be seen from right next to it. Stand beside a guard who isn't facing you and take him down.");
+      const grid = el("div", "lh-grid"); grid.style.setProperty("--w", W);
+      const cells = [];
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
+      P.body.appendChild(grid);
+      const waitB = pbtn("Wait a breath"), knifeB = pbtn("Ishbel's knives"), whistleB = pbtn("Sable's whistle"), loudB = pbtn("Go in loud");
+      P.ctrl.append(waitB); if (knife) P.ctrl.append(knifeB); if (whistle) P.ctrl.append(whistleB); P.ctrl.append(loudB);
+      const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ downed, turns }, r)), 600); };
+      function step() {
+        turns++;
+        if (freeze > 0) freeze--; else G.forEach(g => { if (!g.down) g.i++; });
+        if (G.some(g => !g.down && gAt(g)[0] === you.x && gAt(g)[1] === you.y) || seen()) return spot();
+        if (turns >= 60) { P.status.textContent = "The night's going grey at the edges. Somebody is bound to look your way soon."; return finish({ ok: false, late: true }); }
+        draw();
+      }
+      function spot() {
+        if (forgive > 0) { forgive--; P.status.textContent = "A lantern swings across you, and you go still as a post, and the guard looks right through you. (Your scouting bought you that once.)"; draw(); return; }
+        draw(); P.status.textContent = "A lantern stops on you. Somebody shouts."; finish({ ok: false });
+      }
+      function tap(x, y) {
+        if (done) return;
+        const g = G.find(g => !g.down && gAt(g)[0] === x && gAt(g)[1] === y);
+        if (g) {
+          const near = Math.abs(x - you.x) + Math.abs(y - you.y) === 1, [fx, fy] = gFace(g);
+          if (near && !(x + fx === you.x && y + fy === you.y)) { g.down = true; downed++; P.status.textContent = "You come up behind him, and he goes down without a sound."; step(); return; }
+          P.status.textContent = near ? "He's facing you. You can't take him down from the front." : "He's too far to reach.";
+          return;
+        }
+        if (Math.abs(x - you.x) + Math.abs(y - you.y) !== 1 || solid(tile(x, y)) || tile(x, y) === "~") return;
+        you = { x, y };
+        if (x === goal.x && y === goal.y) { draw(); P.status.textContent = "You're through, and nobody saw a thing. (" + turns + " turns, " + downed + " taken down)"; return finish({ ok: true }); }
+        if (seen()) return spot();
+        step();
+      }
+      waitB.onclick = () => { if (!done) step(); };
+      knifeB.onclick = () => {
+        if (done || !knife) return;
+        const g = G.find(g => { if (g.down) return false; const [x, y] = gAt(g), dx = x - you.x, dy = y - you.y; if ((dx && dy) || Math.abs(dx + dy) > 2) return false; const mx = you.x + Math.sign(dx), my = you.y + Math.sign(dy); return !solid(tile(mx, my)); });
+        if (!g) { P.status.textContent = "Ishbel needs a guard in a straight line, two squares off at most."; return; }
+        knife = false; knifeB.disabled = true; g.down = true; downed++; P.status.textContent = "Ishbel's knife goes past your ear, and the guard sits down and doesn't get up."; o.onUse && o.onUse("ishbel"); draw();
+      };
+      whistleB.onclick = () => { if (done || !whistle) return; whistle = false; whistleB.disabled = true; freeze = 2; P.status.textContent = "Somewhere off to the left Sable whistles like a nightbird with a grievance, and every guard stops to look the wrong way. (2 turns)"; o.onUse && o.onUse("sable"); draw(); };
+      loudB.onclick = () => { if (!done) { P.status.textContent = "You stop sneaking."; finish({ ok: false, loud: true }); } };
+      function draw() {
+        const lit = new Set(); G.forEach(g => { if (!g.down) sees(g).forEach(([x, y]) => lit.add(x + "," + y)); });
+        cells.forEach((b, k) => {
+          const x = k % W, y = Math.floor(k / W), t = tile(x, y), g = G.find(g => gAt(g)[0] === x && gAt(g)[1] === y && !g.down), dn = G.find(g => g.down && gAt(g)[0] === x && gAt(g)[1] === y);
+          let txt = t === "#" ? "▦" : t === "g" ? "◍" : t === "b" ? "♣" : t === "E" ? "⛩" : "", lab = t === "#" ? "wall" : t === "g" ? "gum vat" : t === "b" ? "bush" : t === "E" ? R.goal : "open ground";
+          if (dn) { txt = "✕"; lab = "a guard, down"; }
+          if (g) { const [fx, fy] = gFace(g); txt = fx > 0 ? "▶" : fx < 0 ? "◀" : fy > 0 ? "▼" : "▲"; lab = "a guard, facing " + (fx > 0 ? "east" : fx < 0 ? "west" : fy > 0 ? "south" : "north"); }
+          if (you.x === x && you.y === y) { txt = "◆"; lab = "you"; }
+          b.textContent = txt; b.setAttribute("aria-label", lab + (lit.has(x + "," + y) ? ", in a lantern's look" : ""));
+          b.className = "lh-cell" + (t === "#" || t === "g" ? " wall" : "") + (t === "b" ? " bush" : "") + (lit.has(x + "," + y) ? " lit" : "") + (g ? " guard" : "") + (you.x === x && you.y === y ? " you" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && !solid(t) ? " near" : "");
+        });
+        if (!done) P.status.textContent = P.status.textContent && /down|whistle|knife|Ishbel|through|looks right/.test(P.status.textContent) ? P.status.textContent : "Turn " + turns + " · " + downed + " taken down" + (freeze ? " · they're looking the wrong way" : "");
+      }
+      draw();
+    });
+  }
+
+  // ---------- the Counting Floor: pressure plates that count ----------
+  // The trapwright's yard is paved with numbered flags. Some are plates. Step on a flag and it shows how
+  // many plates touch it (all eight ways round). You can step onto any flag that touches one you've
+  // already stood on. Chalk the ones you think are plates. Get to the far side.
+  function lhFloorMake(W, H, n) {
+    const nb = (x, y) => { const o = []; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if ((i || j) && x + i >= 0 && y + j >= 0 && x + i < W && y + j < H) o.push([x + i, y + j]); return o; };
+    for (let tries = 0; tries < 400; tries++) {
+      const M = new Set();
+      while (M.size < n) { const x = d(W) - 1, y = d(H - 1) - 1; M.add(x + "," + y); }
+      const num = (x, y) => nb(x, y).filter(([a, b]) => M.has(a + "," + b)).length;
+      // Can a careful player get across without guessing?
+      const open = new Set(), mine = new Set();
+      for (let x = 0; x < W; x++) open.add(x + "," + (H - 1));
+      let moved = true;
+      while (moved) {
+        moved = false;
+        for (const k of [...open]) {
+          const [x, y] = k.split(",").map(Number), N = nb(x, y), unk = N.filter(([a, b]) => !open.has(a + "," + b) && !mine.has(a + "," + b)), m = N.filter(([a, b]) => mine.has(a + "," + b)).length, v = num(x, y);
+          if (!unk.length) continue;
+          if (v - m === 0) { unk.forEach(([a, b]) => open.add(a + "," + b)); moved = true; }
+          else if (v - m === unk.length) { unk.forEach(([a, b]) => mine.add(a + "," + b)); moved = true; }
+        }
+        if (!moved) {
+          // pairs: if one flag's unknowns sit inside another's, the difference is decided
+          const ks = [...open];
+          outer: for (const k1 of ks) for (const k2 of ks) {
+            if (k1 === k2) continue;
+            const f = (k) => { const [x, y] = k.split(",").map(Number); const N = nb(x, y); return { u: N.filter(([a, b]) => !open.has(a + "," + b) && !mine.has(a + "," + b)).map(p => p.join(",")), r: num(x, y) - N.filter(([a, b]) => mine.has(a + "," + b)).length }; };
+            const A = f(k1), B = f(k2);
+            if (!A.u.length || !B.u.length || !A.u.every(u => B.u.includes(u))) continue;
+            const rest = B.u.filter(u => !A.u.includes(u));
+            if (!rest.length) continue;
+            if (B.r - A.r === 0) { rest.forEach(u => open.add(u)); moved = true; break outer; }
+            if (B.r - A.r === rest.length) { rest.forEach(u => mine.add(u)); moved = true; break outer; }
+          }
+        }
+        if ([...open].some(k => k.endsWith("," + 0))) break;
+      }
+      if ([...open].some(k => k.endsWith("," + 0))) return { M, num, nb };
+    }
+    const M = new Set(["1,1", "4,2", "2,3", "0,4", "5,0", "3,4"]);
+    return { M, num: (x, y) => nb(x, y).filter(([a, b]) => M.has(a + "," + b)).length, nb };
+  }
+  function lhFloor(o = {}) {
+    tip("floor");
+    const W = 6, H = 6, F = lhFloorMake(W, H, o.plates || 8);
+    return new Promise(resolve => {
+      const P = puzzleBox("The Counting Floor", "Each flag you stand on shows how many plates touch it, all eight ways round. You can step onto any flag next to one you've stood on. Chalk (✎) the flags you think are plates, so you don't forget. Get to the far row.");
+      const grid = el("div", "lh-grid lh-floor"); grid.style.setProperty("--w", W);
+      const open = new Set(), chalk = new Set(), sprung = new Set(), cells = [];
+      for (let x = 0; x < W; x++) open.add(x + "," + (H - 1));
+      (o.marks || []).length; // survey marks: a couple of plates already chalked
+      if (o.chain) { [...F.M].slice(0, 2).forEach(k => chalk.add(k)); }
+      let mode = "step", done = false;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
+      P.body.appendChild(grid);
+      const modeB = pbtn("✎ Chalk mode: off"), giveB = pbtn("Run for it");
+      P.ctrl.append(modeB, giveB);
+      modeB.onclick = () => { mode = mode === "step" ? "chalk" : "step"; modeB.textContent = "✎ Chalk mode: " + (mode === "chalk" ? "on" : "off"); };
+      giveB.onclick = () => { if (done) return; done = true; P.end(); P.status.textContent = "You stop counting and run, and the floor does what floors here do."; setTimeout(() => resolve({ ok: false, sprung: sprung.size, ran: true }), 500); };
+      const reach = (x, y) => F.nb(x, y).some(([a, b]) => open.has(a + "," + b) || sprung.has(a + "," + b));
+      function tap(x, y) {
+        if (done) return;
+        const k = x + "," + y;
+        if (open.has(k) || sprung.has(k)) return;
+        if (mode === "chalk") { chalk.has(k) ? chalk.delete(k) : chalk.add(k); draw(); return; }
+        if (chalk.has(k)) { P.status.textContent = "You've chalked that one. Rub the chalk off first if you're sure."; return; }
+        if (!reach(x, y)) { P.status.textContent = "That's too far. Step next to it first."; return; }
+        if (F.M.has(k)) { sprung.add(k); o.onSpring && o.onSpring(sprung.size); P.status.textContent = "Click. Something in the yard wall answers it."; }
+        else open.add(k);
+        if (y === 0 && !F.M.has(k)) { done = true; draw(); P.end(); P.status.textContent = sprung.size ? "You're across, with " + sprung.size + " plate" + (sprung.size > 1 ? "s" : "") + " sprung behind you." : "You're across, and not one plate has moved."; setTimeout(() => resolve({ ok: true, sprung: sprung.size }), 600); return; }
+        if (sprung.size >= 4) { done = true; draw(); P.end(); P.status.textContent = "The fourth plate goes, and the whole yard wakes up at once."; setTimeout(() => resolve({ ok: false, sprung: sprung.size }), 600); return; }
+        draw();
+      }
+      function draw() {
+        cells.forEach((b, i) => {
+          const x = i % W, y = Math.floor(i / W), k = x + "," + y, n = F.num(x, y);
+          b.className = "lh-cell" + (open.has(k) ? " open" : "") + (sprung.has(k) ? " sprung" : "") + (chalk.has(k) ? " chalk" : "") + (!open.has(k) && !sprung.has(k) && reach(x, y) ? " near" : "") + (y === 0 ? " far" : "");
+          b.textContent = sprung.has(k) ? "✖" : open.has(k) ? (n || "·") : chalk.has(k) ? "✎" : "";
+          b.setAttribute("aria-label", sprung.has(k) ? "a sprung plate" : open.has(k) ? "a flag you've stood on: " + n + " plates touch it" : chalk.has(k) ? "a flag you've chalked" : "an unknown flag" + (y === 0 ? " on the far row" : ""));
+        });
+        if (!done && !/Click|chalked|too far/.test(P.status.textContent)) P.status.textContent = sprung.size + " plate" + (sprung.size === 1 ? "" : "s") + " sprung · 4 and the yard wakes";
+      }
+      draw();
+      P.status.textContent = sprung.size + " plates sprung · 4 and the yard wakes";
+    });
+  }
+
+  // ---------- the pin lock on the counting-house ----------
+  // Four pins, each set to one of five heights. Try the pins and the lock answers: a click for each pin at
+  // the right height, a tick for each right height on the wrong pin. Eight tries; past the fifth, the
+  // lock bites.
+  function lhPins(o = {}) {
+    tip("pins");
+    return new Promise(resolve => {
+      const N = 4, K = 5, secret = Array.from({ length: N }, () => d(K)), cur = Array(N).fill(1), known = new Set();
+      if (o.acid) known.add(d(N) - 1);
+      known.forEach(i => cur[i] = secret[i]);
+      const P = puzzleBox("The counting-house lock", "Four brass pins, each set from 1 to 5. Try them, and the lock answers: a <b>click</b> for each pin at the right height, a <b>tick</b> for each right height that's on the wrong pin. Eight tries. After the fifth, a needle in the keyhole starts to bite." + (known.size ? " Ysolde's acid has eaten one pin clean: it's set, and marked ✓." : ""));
+      const row = el("div", "lh-pins"), hist = el("ol", "lh-hist");
+      const vals = cur.map((v, i) => {
+        const c = el("div", "lh-pin"), up = pbtn("▲"), dn = pbtn("▼"), val = el("span", "lh-pv", String(v));
+        up.setAttribute("aria-label", "Raise pin " + (i + 1)); dn.setAttribute("aria-label", "Lower pin " + (i + 1));
+        up.onclick = () => { if (known.has(i) || done) return; cur[i] = cur[i] % K + 1; draw(); };
+        dn.onclick = () => { if (known.has(i) || done) return; cur[i] = (cur[i] + K - 2) % K + 1; draw(); };
+        c.append(up, val, dn); row.appendChild(c); return { val, c };
+      });
+      P.body.append(row, hist);
+      const tryB = pbtn("Try the pins", "primary"), forceB = pbtn("Force it");
+      P.ctrl.append(tryB, forceB);
+      let tries = 0, done = false, bites = 0;
+      tryB.onclick = () => {
+        if (done) return;
+        tries++;
+        let click = 0, tick = 0; const a = [], b = [];
+        cur.forEach((v, i) => { if (v === secret[i]) click++; else { a.push(v); b.push(secret[i]); } });
+        a.forEach(v => { const j = b.indexOf(v); if (j >= 0) { tick++; b.splice(j, 1); } });
+        hist.appendChild(el("li", "", cur.join(" ") + " → " + click + " click" + (click === 1 ? "" : "s") + ", " + tick + " tick" + (tick === 1 ? "" : "s")));
+        if (tries > 5 && click < N) { bites++; o.onBite && o.onBite(); }
+        if (click === N) { done = true; P.end(); P.status.textContent = "Four clicks, and the bolt goes back like a sigh. (" + tries + " tries)"; setTimeout(() => resolve({ ok: true, tries, bites }), 500); return; }
+        if (tries >= 8) { done = true; P.end(); P.status.textContent = "The eighth try, and the lock seizes solid. Somewhere inside, a little bell rings."; setTimeout(() => resolve({ ok: false, tries, bites }), 500); return; }
+        draw();
+      };
+      forceB.onclick = () => { if (done) return; done = true; P.end(); P.status.textContent = "You put your shoulder to it."; setTimeout(() => resolve({ ok: false, tries, bites, forced: true }), 400); };
+      function draw() {
+        vals.forEach((x, i) => { x.val.textContent = cur[i] + (known.has(i) ? " ✓" : ""); x.c.classList.toggle("known", known.has(i)); });
+        P.status.textContent = "Try " + (tries + 1) + " of 8" + (tries >= 5 ? " · the needle's awake" : "");
+      }
+      draw();
+    });
+  }
+
+  // ---------- the sluices: water to hold the cage ----------
+  // Grell's cage hangs off a boom over the falls. Its counterweight is a cistern: with the right weight in it,
+  // the boom swings the cage in to the ledge. Pour between three cisterns (each pour runs until one's empty
+  // or the other's full) to leave exactly the right measure in the counterweight.
+  function lhSluices(o = {}) {
+    tip("sluice");
+    const SETS = [[8, 5, 3, 4], [10, 7, 3, 5], [12, 7, 5, 6], [9, 7, 4, 6]];
+    const solve = (cap, tgt) => { const start = [cap[0], 0, 0], key = (s) => s.join(","), seen = new Map([[key(start), 0]]), q = [start]; while (q.length) { const s = q.shift(), n = seen.get(key(s)); if (s[0] === tgt) return n; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) { if (i === j) continue; const t = s.slice(), m = Math.min(t[i], cap[j] - t[j]); if (!m) continue; t[i] -= m; t[j] += m; if (!seen.has(key(t))) { seen.set(key(t), n + 1); q.push(t); } } } return 99; };
+    const S0 = SETS[d(SETS.length) - 1], cap = S0.slice(0, 3), tgt = S0[3], min = solve(cap, tgt), max = min + (o.extra ?? 4);
+    return new Promise(resolve => {
+      const names = ["the counterweight", "the gum vat", "the rain-butt"], lv0 = [cap[0], 0, 0];
+      const P = puzzleBox("The sluices", "The boom swings the cage in to the ledge when <b>the counterweight</b> holds exactly <b>" + tgt + "</b> measures. Open a sluice to pour one cistern into another: it runs until the first is empty or the second is full. There's nowhere else for the water to go. You have " + max + " pours before the rope gives.");
+      const box = el("div", "lh-tanks");
+      const tanks = cap.map((c, i) => { const t = el("div", "lh-tank", '<div class="lh-water"></div><span class="lh-tv"></span>'); t.append(el("span", "lh-tn", names[i] + " (" + c + ")")); box.appendChild(t); return t; });
+      const pours = el("div", "lh-pours");
+      const btns = [];
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if (i !== j) { const b = pbtn(["Weight", "Vat", "Butt"][i] + " → " + ["weight", "vat", "butt"][j]); b.onclick = () => pour(i, j); pours.appendChild(b); btns.push(b); }
+      P.body.append(box, pours);
+      let n = 0, done = false;
+      function pour(i, j) {
+        if (done) return;
+        const m = Math.min(lv0[i], cap[j] - lv0[j]); if (!m) return;
+        lv0[i] -= m; lv0[j] += m; n++; draw();
+        if (lv0[0] === tgt) { done = true; P.end(); P.status.textContent = "The boom groans and swings, and the cage comes in over the ledge and bumps down on the rock. (" + n + " pours)"; setTimeout(() => resolve({ ok: true, pours: n, best: n <= min }), 600); return; }
+        if (n >= max) { done = true; P.end(); P.status.textContent = "The rope gives."; setTimeout(() => resolve({ ok: false, pours: n }), 600); }
+      }
+      function draw() {
+        tanks.forEach((t, i) => { t.querySelector(".lh-water").style.height = (lv0[i] / cap[i] * 100) + "%"; t.querySelector(".lh-tv").textContent = lv0[i] + " of " + cap[i]; t.classList.toggle("goal", i === 0); });
+        if (!done) P.status.textContent = "Pour " + (n + 1) + " of " + max + " · the counterweight needs " + tgt;
+      }
+      draw();
+    });
+  }
+
+  // ---------- Part CXII: The Empty Hand ----------
+  async function lhLetter() {
+    const L = lh(), side = isbSide(); L.on = true; L.side = side;
+    light("dusk");
+    tacReg = "wetwood";
+    await say("It's waiting for you on the roads back, nailed to the door of an inn you've never stopped at before: an iron badge with an open hand on it and a hole through the middle of the palm. Under the nail, a folded note.");
+    if (side === "friend") {
+      await say("<i>We had a job across the Narrow Sea, and it went wrong, and they've got Grell. I wouldn't ask. I'm asking. The den. Come quick. S.</i>");
+      await say("The den under the dunes is quieter than you remember. Sable is at the long table with a map held down by four knives. Ysolde is grinding something in a mortar too hard." + (S.tobbin ? " Tobbin is in the corner shuffling a deck of cards, and he doesn't look up when you come in, which is how you know he's frightened." : "") + " Grell's chair is empty, and his tooth-pick, a long thin lockpick worn bright, is on the table in front of it.");
+      L.gang = ["sable", "ysolde"].concat(S.tobbin ? ["tobbin"] : []);
+    } else if (side === "sold") {
+      await say("<i>You owe him a hand. You know which one. Cutwater, on Selvaine. If you've any shame left come to the den, and don't expect a drink. Y.</i>");
+      await say("The lamp at the top of the den steps goes out as you come down them, the way it always does now. Ysolde is waiting at the bottom with her arms folded and acid-stained gloves on. Sable isn't there. \"She won't be in a room with you,\" Ysolde says. \"She sent me. That's how bad it is.\"", "voice");
+      L.gang = ["ysolde"];
+    } else {
+      await say("<i>You turned down a job of ours once, and gave us back a waterskin. We need somebody now who isn't one of us and isn't scared of a lock. The den. S.</i>");
+      await say("The den under the dunes takes a while to find without a token. Sable lets you in herself. She looks older, and tired, and she doesn't make a joke, which you've never seen. Ysolde is at the long table with a map held down by four knives.");
+      L.gang = ["sable", "ysolde"];
+    }
+    if (company().includes("ishbel")) {
+      L.gang.push("ishbel");
+      await say("Ishbel comes down the steps behind you, and stops, and looks at Grell's empty chair for a long time. \"He always said he'd be the one hauling the rope,\" she says. \"Never the one on it.\"");
+    }
+    L.gang.forEach(k => L.help[k] = true);
+    await say("Ysolde tells it. A village across the Narrow Sea, on Selvaine, in the jungle they call the Wetwood: Amberlow, a gum-tappers' village, and its headwoman hired the Hollow Hands to steal back the village's deeds. A man called <b>Kline Gerrand</b> has them. He used to be a bailiff in the debt courts of Sulmara. Now he's on Selvaine, buying the Wetwood up holding by holding, from people who don't want to sell, and building himself a hold on the falls at Cutwater with a palisade round it.");
+    await say("\"Grell went in by the culvert,\" she says. \"The way we always do. And the culvert was waiting for him. A pit with a cage at the bottom that came up on a rope as soon as he dropped into it. They swung him out on a boom over the falls, and he's hanging there now, with the whole Wetwood watching him.\" She puts a letter on the table. \"This came the day after.\"");
+    await say("The letter is in a clerk's round hand, very neat, on thick paper the colour of honey. <i>To the Hollow Hands, at the sign of the empty hand. I hold one of yours. The cage hangs from a rope and the rope from a counterweight and the counterweight is a cistern under the sky, and the rains come in a week. When the cistern fills, the boom tips. Come and talk to me about what that's worth. Yours in good standing, K. Gerrand, of Cutwater.</i>", "voice");
+    await say("\"Somebody sold him the job,\" Ysolde says. \"He knew the route, the night and the man. One of the people we used over there.\" She looks at " + (side === "sold" ? "you, for a long moment, and then away." : S.tobbin && side === "friend" ? "Tobbin, and then away, and Tobbin's hands stop on the cards." : "the map."));
+    await say("You cross the Narrow Sea on a gum-trader's ketch out of a Sulmaran creek, four days east with the wind behind you, and the sea goes from grey to green to a brown like strong tea where the Wetwood rivers run out into it. Then there's Selvaine: a wall of trees along the whole horizon, steaming in the sun.");
+    if (!S.lhMapNote) { S.lhMapNote = true; await mech("<b>A new continent.</b> Selvaine is on your map now, east across the Narrow Sea. The map has grown to fit it.", "loot"); }
+    await say("Brindle Landing is a harbour town built on stilts over the mud of a river mouth, all plank walks and rope bridges and the smell of hot gum. Half the houses have a notice nailed to the door in the same neat clerk's hand: <i>This holding is the property of K. Gerrand. Rent is due on the first.</i>");
+    tip("lhgang");
+    await mech("<b>The Hollow Hands</b> with you: " + L.gang.map(k => LH_GANG[k].name).join(", ") + ". Each can do you one favour on this job: " + L.gang.map(k => LH_GANG[k].fav).join(", ") + ". You'll see them when they'd help.", "loot");
+    xpGain(60); save();
+    await go("Start asking questions");
+  }
+
+  // ---------- Part CXIII: Four Days Before the Rains ----------
+  const LH_PLACES = [
+    { k: "fence", label: "Corbel Fettle's back room", tag: "the crew's fence in Brindle Landing" },
+    { k: "office", label: "The land office", tag: "Gerrand's ledgers · Investigation" },
+    { k: "boat", label: "Iddo Mabry's boat", tag: "the boatman who rowed the crew upriver" },
+    { k: "amber", label: "Amberlow", tag: "the gum-tappers' village, and the headwoman who hired the job" },
+    { k: "ridge", label: "The ridge over Cutwater", tag: "scout the hold · Perception" },
+    { k: "camp", label: "The gum-buyers' camp", tag: "the people Gerrand sells to" },
+    { k: "stones", label: "Gerrand's survey stones", tag: "where his men mark out the land they take" }
+  ];
+  const lhSuspects = () => [
+    { k: "ossel", label: "Ossel Ashlowe", tag: "the headwoman's son" },
+    { k: "iddo", label: "Iddo Mabry", tag: "the boatman" },
+    { k: "corbel", label: "Corbel Fettle", tag: "the fence" },
+    S.tobbin && lhHas("tobbin") ? { k: "tobbin", label: "Tobbin", tag: "he's done it before" } : { k: "pellan", label: "Pellan Quillfern", tag: "the gum-buyer" }
+  ];
+  async function lhVisit(k) {
+    const L = lh(), clue = (c) => { if (!L.clues.includes(c)) L.clues.push(c); };
+    if (k === "fence") {
+      await say("Corbel Fettle keeps a chandler's shop on the plank walk, and the chandlery is a front for the back room, and the back room is a front for the cellar, where he buys whatever comes across the Narrow Sea without its papers. He's a little anxious man who owns three cats and is frightened of all of them.");
+      await say("\"Somebody sold Gerrand the job, aye,\" he says. \"Not me. I'd never get my money. I heard his yardmen talk: the plan they had was on <b>gum-paper</b>. The yellow stuff they make up at Amberlow, from the bark. Nobody down here writes on it. It's for prayers.\"", "voice");
+      clue("paper");
+      if (S.tobbin && lhHas("tobbin")) { await say("\"And your boy,\" he says, nodding at Tobbin, \"was in my cellar all that night, losing at Hollowjack to my wife till sun-up. He owes her nine silver. Tell him she's counting.\""); clue("tobbin"); }
+      else { await say("\"And that gum-buyer, Quillfern, that everybody blames for everything? He was in my cellar all that night, losing at Hollowjack to my wife. He owes her nine silver.\""); clue("pellan"); }
+    } else if (k === "office") {
+      await say("The land office is the only stone building in Brindle Landing, and it's Gerrand's. A clerk with a pen behind each ear is copying deeds by lamplight, and there are a great many deeds.");
+      const r = await check({ label: "Investigation check (the land office ledgers)", mod: 2 + Math.floor(lv() / 8), dc: 14, cta: "Read the ledgers" });
+      await say("In the harbour book on the counter, anyone can read the tide-warden's log for the night of the job: <i>Out at dusk to the reef, back at dawn: I. Mabry, boat, with one passenger, C. Fettle, and his cats.</i> Iddo Mabry and Corbel Fettle spent the night on the reef together, with three cats, a long way from Cutwater.");
+      clue("tide");
+      if (r.ok) {
+        await say("And in the holdings ledger, in the clerk's round hand: <i>Amberlow, nine holdings, taken as surety on a debt of play, signed O. Ashlowe.</i> And a line under it, dated the morning after the job: <i>Surety discharged. Debt forgiven in full by K. Gerrand.</i>");
+        clue("surety");
+      } else await say("The holdings ledger is thick as a door and the clerk is watching. You don't get far into it.");
+      L.chainSeen = true;
+    } else if (k === "boat") {
+      await say("Iddo Mabry lives on his boat, a long flat gum-barge with a roof of palm thatch, and he's an old man with arms like rope who only ever says what's needed. \"I rowed them up,\" he says. \"I'd row you. There's a gate on the river side where the falls come down, under the mist. They open it at the change of the watch to let the gum barges out.\"", "voice");
+      await say("He spits over the side. \"Night of the job I was on the reef. With Fettle and his cats. Ask the tide-warden.\"");
+      L.boat = true; clue("iddo");
+    } else if (k === "amber") {
+      await say("Amberlow is a village of round houses up on stilts round a pool the colour of honey, and every tree round it has a cut in the bark with a cup under it, and the cups are full of red gum, and all of it is Gerrand's now. Headwoman <b>Nennet Ashlowe</b> is a tall grey woman with gum on her hands to the elbow, and her son <b>Ossel</b> is standing behind her in a pair of brand-new boots.");
+      await say("\"Nine of our holdings he took,\" Nennet says, \"for a debt. I don't know whose. He wouldn't tell me. When I hired your friends, I told nobody but my own house.\" Behind her Ossel looks at his boots.", "voice");
+      const r = await check({ label: "Insight check (Ossel)", mod: 2 + Math.floor(lv() / 8), dc: 13, cta: "Watch him" });
+      if (r.ok) { await say("He's not frightened of you. He's frightened of his mother. And on the post by the door there's his tally-stick, the one every tapper carries with his debts notched in it, and his has been planed smooth."); clue("tally"); }
+      else await say("He's a nervous young man in new boots, and that's all you can tell.");
+      await say("Before you go, Nennet takes you to the edge of the pool, where the tappers who've been taken up to Cutwater on Gerrand's bond have left their cups upside down on the posts. \"If you get in there,\" she says, \"they're ours. Tell them Amberlow sent you, and they'll know what to do.\"");
+      L.amber = true;
+    } else if (k === "ridge") {
+      await say("You climb a strangler-fig on the ridge above Cutwater before dawn, with the whole Wetwood steaming below you, and lie in the crook of it all day, drawing.");
+      add(framedPic(lhUri(lhViewSvg()), "A painting of a walled hold at night in a jungle: three stone terraces of an old ruin above a waterfall, ringed by a palisade of sharpened trunks, four watchtowers with lanterns, smoke rising from gum vats, a stone counting-house in the middle with one lit window, and a boom reaching out over the falls with a cage hanging from it.", "Cutwater, from the ridge", "wide"));
+      const r = await check({ label: "Perception check (the guard rounds)", mod: 2 + Math.floor(lv() / 8), dc: 13, cta: "Watch the walls" });
+      await say("By dusk you've got it all down: the palisade, the four towers, the yard paved with flags that the yardmen walk round and never across, the counting-house, the gum works with its vats and its bunk-sheds, the kennels, and the boom over the falls.");
+      await say("And the cage. It's turning slowly on its rope in the spray, and there's a big man in it, sitting with his back to the bars and his knees up. Once, at noon, he gets up and spits through the bars into the falls, carefully, as if he's aiming at something. It's Grell.");
+      L.plan = true; if (r.ok) L.rounds = true;
+      lhPlan(null, "Cutwater, as you drew it from the ridge");
+      if (r.ok) await mech("You've learned the guards' rounds: once inside, the first lantern that would catch you won't.", "loot");
+    } else if (k === "camp") {
+      await say("The gum-buyers' camp is a cluster of tents on the riverbank below the hold, where the barges come down from Cutwater loaded with red gum in wax-sealed jars. The buyers come from all over the Narrow Sea, and they have the look of people who don't ask where things come from.");
+      if (S.tobbin && lhHas("tobbin")) await say("Tobbin knows a few of them. He's been down here every night since the job, it turns out, drinking, and asking who sold it. He looks like he hasn't slept.");
+      const r = await check({ label: "Deception check (passing as a buyer)", mod: 2 + Math.floor(lv() / 8) + (lhHas("sable") ? 2 : 0), dc: 13, cta: "Talk prices" });
+      if (r.ok) { await say("You talk prices with a buyer from Rahdaria until he likes you, and then you buy his pass, a little wax seal on a cord, for a jar of nothing. Buyers walk in at the front gate of Cutwater every morning to taste the gum."); L.pass = true; }
+      else await say("The buyers close up like clams. One of them goes up the hill to the hold in a hurry.");
+      if (!r.ok) await lhAlarm(1, "Somebody will tell Cutwater there are strangers asking.");
+    } else if (k === "stones") {
+      await say("Out in the Wetwood, where Gerrand's men have marked out new holdings, there are survey stones every hundred paces with his mark on them: a K inside a square. At one of them a yardman has left his kit while he relieves himself in the trees: a surveyor's chain, and a little book.");
+      const r = await check({ label: "Sleight of Hand check (the surveyor's book)", mod: 2 + Math.floor(lv() / 8), dc: 13, cta: "Lift it" });
+      if (r.ok) { await say("The book is Gerrand's yard-plan: the flags of the trapwright's yard, numbered, and a few of them inked in. It's not all of them. It's the ones the yardmen have to know so as not to step on them."); L.chain = true; }
+      else { await say("He comes back out of the trees buttoning himself up and sees you, and runs."); await lhAlarm(1, "He's running for Cutwater."); }
+    }
+    L.seen.push(k); save();
+  }
+  async function lhAsk() {
+    const L = lh();
+    light("mire");
+    tip("lhdays");
+    L.days = 4 + (lhHas("sable") ? 1 : 0);
+    await say("The rains come in a week, Gerrand said, and the gum-traders in Brindle Landing agree: they can see them, a grey wall out at sea. You've got four days to find out who sold the job and how to get in, and then you'll have to go, ready or not." + (lhHas("sable") ? " Sable works the plank walks for you while you're busy, which buys you a fifth." : ""));
+    for (let day = 1; day <= L.days; day++) {
+      await mech("<b>Day " + day + " of " + L.days + ".</b> Where do you go?" + (L.clues.length ? " What you know: " + lhClueText() : ""), "");
+      const c = await choose(LH_PLACES.filter(p => !L.seen.includes(p.k)).map((p, i) => ({ key: p.k, label: p.label, tag: p.tag, plain: i > 0 })));
+      await lhVisit(c);
+    }
+    await say("On the last night the gang sits up in a stilt-house on the edge of Brindle Landing, with the rain coming in off the sea and the frogs going like a mill, and puts it together.");
+    await mech("What you know: " + (lhClueText() || "not much."), "");
+    const c = await choose(lhSuspects().map(s => ({ key: s.k, label: "It was " + s.label, tag: s.tag, plain: true })).concat([{ key: "none", label: "Name nobody", tag: "go in without knowing", plain: true }]));
+    L.accused = c === "none" ? null : c; L.right = c === "ossel";
+    if (c === "ossel") {
+      await say("You go back up to Amberlow in the rain and ask Ossel Ashlowe, in front of his mother, why his tally-stick is smooth.");
+      await say("He tells it all at once, the way a dam goes. Hollowjack in Brindle Landing, a winter of it, nine holdings of his mother's signed away as surety. And then Gerrand's clerk came up the river with an offer: the debt forgiven, every notch of it, for the night and the route of the thieves his mother had hired. \"He said nobody would get hurt,\" Ossel says. \"He said it was just a cage.\"");
+      const o = await choose([
+        { key: "mother", label: "Leave him to his mother", tag: "Amberlow's own justice" },
+        { key: "turn", label: "Make him open the river gate for you", tag: "he takes the gum barges out · an easier way in", plain: true },
+        { key: "run", label: "Let him run", tag: "into the Wetwood, before Gerrand hears", plain: true }
+      ]);
+      L.ossel = o;
+      if (o === "mother") await say("Nennet Ashlowe looks at her son for a long time. Then she takes his new boots off him, one and then the other, and throws them in the honey-coloured pool, and sends him to sit on the tappers' bench with an empty cup until she's decided what he's worth.");
+      else if (o === "turn") await say("Ossel drives the gum barges for the hold, it turns out; that was the job Gerrand gave him. Tomorrow night at the change of the watch he'll leave the river gate's bar off. He swears it on his mother. His mother says that's not worth much, and he'd better do it anyway.");
+      else await say("He goes the same night, with a bundle and no boots, into the trees. Nennet watches him go from the door, and doesn't say anything, and doesn't shut it.");
+      grant("lhwho");
+    } else if (c === "tobbin") {
+      await say("Everybody turns and looks at Tobbin, because everybody already was. He puts the cards down. \"Corbel's wife,\" he says, very quietly. \"Ask Corbel's wife where I was.\"" + (L.clues.includes("tobbin") ? " You already know where he was. You say it anyway." : ""));
+      await say("He gets up and puts his coat on, and goes out into the rain, and he doesn't come back. Sable sits looking at the door for a long time.");
+      L.tobbinGone = true;
+    } else if (c === "iddo") {
+      await say("You go down to the river to have it out with Iddo Mabry, and he hears you out, and spits over the side, and casts off. \"Ask the tide-warden,\" he says, from the middle of the river. Nobody will be rowing you to the river gate now.");
+      L.boat = false;
+    } else if (c === "corbel") {
+      await say("Corbel Fettle goes white, and then pink, and then he locks his shop with you outside it. Whatever you'd have wanted from his cellar, you won't be getting it.");
+    } else if (c === "pellan") {
+      await say("Pellan Quillfern laughs in your face, and pays Corbel's wife her nine silver in front of you, and asks if there's anybody else you'd like to blame. Word gets round the camp. Nobody's selling you a buyer's pass now.");
+      L.pass = false;
+    } else await say("You go in without a name. Whoever sold the job is still out there, and they'll still be selling.");
+    if (!L.right && (L.clues.includes("surety") || L.clues.includes("tally"))) await mech("You had what you needed to name the right one.", "hurt");
+    xpGain(90); save();
+    await go("Go up to Cutwater");
+  }
+  function lhClueText() {
+    const L = lh(), T = {
+      paper: "the plan Gerrand had was on Amberlow gum-paper", tobbin: "Tobbin was in Corbel's cellar all night", pellan: "Pellan Quillfern was in Corbel's cellar all night",
+      tide: "Iddo Mabry and Corbel Fettle were on the reef all night", surety: "O. Ashlowe's debt was forgiven the morning after the job", iddo: "Iddo says he was on the reef with Fettle",
+      tally: "Ossel's tally-stick has been planed smooth"
+    };
+    return L.clues.map(c => T[c]).filter(Boolean).join("; ") + (L.clues.length ? "." : "");
+  }
+
+  // ---------- Part CXIV: The Palisade ----------
+  async function lhWall() {
+    const L = lh();
+    light("dark");
+    tacReg = "wetwood";
+    await say("The first of the rain comes the night you go up: not falling so much as standing in the air, warm as breath, so that the whole Wetwood drips and steams and the frogs go quiet one by one.");
+    if (L.plan) lhPlan(null, "Cutwater: which way in?");
+    tip("lhalarm");
+    const c = await choose([
+      { key: "river", label: "Up the river to the water-gate", tag: (L.ossel === "turn" ? "Ossel's left the bar off" : "Iddo's boat · Stealth") + " · under the falls' mist", show: L.boat || L.ossel === "turn" },
+      { key: "drain", label: "Through the culvert", tag: "the way Grell went · Athletics" + (lhFav("tobbin") ? " · Tobbin knows a side tunnel" : "") },
+      { key: "canopy", label: "Over the wall by the canopy", tag: "a rope from a strangler-fig · Acrobatics" + (S.grapple ? " · Threadfang's line" : ""), plain: true },
+      { key: "front", label: "In at the front gate as a gum-buyer", tag: "the buyer's pass · Deception" + (lhHas("sable") ? " · Sable talks" : ""), plain: true, show: L.pass }
+    ]);
+    L.route = c; L.seen.push("z:" + c);
+    if (c === "river") {
+      if (L.ossel === "turn") {
+        await say("Iddo Mabry, or Ossel on a gum barge, it doesn't matter which; the river gate swings open at the change of the watch with the bar off, the way Ossel swore it would, and you're inside with the spray of the falls in your face before anybody's turned round.");
+      } else {
+        await say("Iddo rows you up under the mist of the falls without a word, the oars wrapped in sacking. The river gate opens at the change of the watch to let the gum barges out.");
+        const r = await check({ label: "Stealth check (in past the barges)", mod: 2 + Math.floor(lv() / 8), dc: 14, cta: "Slip in" });
+        if (!r.ok) await lhAlarm(1, "A bargeman sees you go over the side.");
+      }
+    } else if (c === "drain") {
+      await say("The culvert comes out of the bottom of the palisade in the south-west corner, a stone mouth older than Cutwater, older than Gerrand, breathing out warm air that smells of gum and rot. Grell went in this way. You can see where the pit was dug: a square of new planking in the floor of it, a little way in, and scratches on the stone where something big went down fighting.");
+      if (lhFav("tobbin")) {
+        lhUse("tobbin");
+        await say("Tobbin crouches, and puts his ear to the wall, and knocks twice, and grins for the first time since you met him in the den. \"It's hollow,\" he says. \"Old drain, under the new one. They built over it.\" He goes first, on his belly, and you follow, and you come up through a grate in the yard with nothing sprung at all.");
+        grant("lhtobbin");
+      } else {
+        const r = await check({ label: "Athletics check (bridging the pit)", mod: 2 + Math.floor(lv() / 8), dc: 15, cta: "Brace and climb" });
+        if (r.ok) await say("You put your back against one wall and your boots against the other, and go across above the planking like a chimney-sweep, and come down past it into the dark.");
+        else { await hurt(2, 6, "piercing", "Your boot slips onto the planking. It drops, and you catch the edge, and the spikes under it find your legs."); await lhAlarm(1, "Somewhere above you a little bell is ringing."); }
+      }
+    } else if (c === "canopy") {
+      await say("There's a strangler-fig outside the north-west tower with a limb that reaches almost to the stakes. Almost.");
+      const r = await check({ label: "Acrobatics check (a rope over the palisade)", mod: 2 + Math.floor(lv() / 8), dc: 15, cta: "Swing" });
+      if (r.ok) await say("You throw a line round the next limb out and swing, and let go at the top of it, and land on the walkway behind the stakes as softly as a cat landing on a cushion it doesn't approve of.");
+      else { await hurt(2, 6, "bludgeoning", "You come down short, on the stakes, and roll off them and into a gum-shed roof."); await lhAlarm(1, "The roof is loud."); }
+    } else {
+      if (lhFav("sable")) { lhUse("sable"); await say("Sable does the talking at the gate, as a buyer from Rahdaria with very particular views on the colour of gum, and the gatekeeper is so busy agreeing with her he forgets to look at you at all."); }
+      else {
+        const r = await check({ label: "Deception check (the buyer's pass)", mod: 2 + Math.floor(lv() / 8), dc: 13, cta: "Show the seal" });
+        if (!r.ok) await lhAlarm(1, "The gatekeeper lets you in, and then sends a boy running.");
+      }
+      await say("Inside, you let the other buyers go on up to the tasting shed and step sideways into the dark between two gum-stores.");
+    }
+    await say("Inside the palisade it's dark and close and smells of hot gum, and the yardmen walk their rounds with shuttered lanterns that throw a long thin light ahead of them.");
+    const r = await lhWatch("wall", { forgive: L.rounds, knife: lhFav("ishbel"), whistle: lhFav("sable"), onUse: lhUse });
+    L.downed += r.downed;
+    
+    if (!r.ok) {
+      L.spotted++;
+      await lhAlarm(r.loud ? 1 : 2, r.loud ? "You give up on the shadows." : "A yardman's whistle, then another.");
+      await hkFight(YARD({ name: "Cutwater yardmen", heads: Math.max(2, 2 + L.alarm - r.downed), unit: "yardman|yardmen", hitLine: "A yardman goes down in the red mud." }));
+    } else await say("You come out at the gate to the yard without a single lantern having found you, and behind you " + (r.downed ? r.downed + " yardm" + (r.downed > 1 ? "en are" : "an is") + " asleep in the gum where you left them." : "the rounds go on, round and round, with nobody in them."));
+    xpGain(100); save();
+    await go("Into the yard");
+  }
+
+  // ---------- Part CXV: The Trapwright's Yard ----------
+  async function lhYard() {
+    const L = lh();
+    light("torch");
+    L.seen.push("z:yard");
+    await say("Kline Gerrand doesn't only catch thieves. He sells the means. The yard in the middle of Cutwater is where he tries them: a square of numbered flags in the lamplight, with the trap-makers' prototypes standing round the walls like a sculpture garden. Drop-nets on gantries. A rail of dart-tubes. A deadfall of gum-glued logs. A row of iron jaws in different sizes, labelled.");
+    await say("On a post at the edge of the flags there's a painted board, very neat: <i>THE COUNTING FLOOR. Each flag will tell you how many of its neighbours would rather you didn't. K.G.</i>");
+    if (L.chain) await mech("Gerrand's yard-book: two of the plates are already chalked for you.", "loot");
+    const f = await lhFloor({ chain: L.chain, plates: 8 + Math.min(2, L.alarm >> 1), onSpring: () => {} });
+    L.floor = f.ok && !f.sprung ? "clean" : f.ok ? "rough" : "woke";
+    if (f.sprung) await hurt(f.sprung + (f.ran ? 2 : 0), 6, "piercing", "Each plate that went fired something: darts out of the rail, a net that only half drops, a log that misses.");
+    if (L.floor === "clean") grant("lhfloor");
+    if (!f.ok || f.sprung >= 2) await lhAlarm(f.ok ? 1 : 2, "The yard's traps make a lot of noise for traps.");
+    if (L.alarm >= 3) {
+      await say("They come out of the kennel-yard and the gum-stores all at once, yardmen with catchpoles and shields and two big catch-dogs on chains, and they form up at the edge of the flags, and none of them will step on one.");
+      tacReg = "wetwood";
+      const F = await companyOr("road", { soldiers: Math.min(6, 1 + L.alarm), captains: ["The kennel-master"], capHp: 26, capThem: "him", cover: "the trap gantries",
+        capMiss: "The kennel-master's catchpole rings off your guard.",
+        F: YARD({ name: "Cutwater yardmen" }) });
+      if (F && F.fled) await say("You break away through the gantries, and they don't follow you off the flags.");
+    }
+    await say("The counting-house stands in the middle of the hold, built out of the blocks of the old ruin: a squat stone box with one door, one lit window, and on the door a lock with four brass pins in a row, like teeth.");
+    lhPlan("house");
+    const acid = lhFav("ysolde") && (await choose([{ key: "y", label: "Ask Ysolde for a drop of acid", tag: "one pin eaten clean · her favour" }, { key: "n", label: "Do it yourself", plain: true }])) === "y";
+    if (acid) { lhUse("ysolde"); await say("Ysolde unstoppers a little bottle with her teeth, and puts one drop into the keyhole, and the lock hisses like a cat."); }
+    const p = await lhPins({ acid, onBite: () => { S.hp = Math.max(1, S.hp - (1 + Math.floor(lv() / 10))); renderSheet(); } });
+    if (p.bites) await mech("The needle in the keyhole bit you " + p.bites + " time" + (p.bites > 1 ? "s" : "") + ". Your fingers are going numb.", "hurt");
+    L.lock = p.ok ? "open" : "forced"; if (!p.ok) L.tallies = true;
+    if (p.ok) {
+      if (p.tries <= 4) grant("lhpins");
+      await say("Inside, the counting-house is one room, very tidy, lined with pigeonholes, and every pigeonhole has a deed in it, rolled and tied with red tape. There are hundreds. Amberlow's nine are in a box of their own on the desk, waiting to be filed. And under them, in a different hand, older, there's one you weren't expecting: <i>the holding of the dunes above the den of the empty hand, in the Burning Sands, by purchase from the Magistrate's estate.</i>");
+      await say("He's been buying the ground the Hollow Hands sleep under. You take the lot: the box, the deed to the den, and the bond-tallies of every tapper in the gum works, hung on a board by the door like keys.");
+      L.deeds = true; L.tallies = true;
+    } else {
+      await say("You put your shoulder into the door, and it doesn't care, and inside the little bell goes on ringing. You get in through the window in the end, cut and swearing, and the deeds are there in their pigeonholes, hundreds of them, but there's a lamp on the floor now, kicked over, and the gum-paper is going up like kindling.");
+      await lhAlarm(1, "Smoke out of the counting-house window.");
+      const r = await check({ label: "Dexterity check (out of the fire)", mod: 2 + Math.floor(lv() / 8), dc: 14, cta: "Grab what you can" });
+      if (r.ok) { await say("You come out through the smoke with the box from the desk under your arm, Amberlow's nine, and the board of bond-tallies. Everything else burns."); L.deeds = "some"; }
+      else { await say("You come out with the board of bond-tallies and your eyebrows, and nothing else. Every deed in Cutwater burns behind you, including the ones that were somebody's before they were his."); L.deeds = false; }
+    }
+    xpGain(110); save();
+    await go("Go round to the gum works");
+  }
+
+  // ---------- Part CXVI: The Gum Works ----------
+  async function lhWorks() {
+    const L = lh();
+    light("torch");
+    L.seen.push("z:works");
+    await say("The gum works are at the back of the hold, under the old ruin's top terrace: four great iron vats of red gum simmering over charcoal pits, and the smell of it thick enough to chew. The tappers sleep in bunk-sheds between the vats, chained to a running rail by one ankle each. There are thirty-one of them. Each one has a tag on the chain with a number on it, and the number is what they owe.");
+    await say("You'll have to get across the works to the sheds first, between the vats, and the yardmen are walking the rounds there too, with their lanterns shuttered against the gum fumes.");
+    const w = await lhWatch("works", { forgive: L.rounds && !L.spotted, knife: lhFav("ishbel"), whistle: lhFav("sable"), onUse: lhUse });
+    L.downed += w.downed;
+    if (!w.ok) { L.spotted++; await lhAlarm(1, "A lantern finds you between the vats."); }
+    if (L.downed >= 5) grant("lhquiet");
+    await say("\"Bond-tappers,\" says a woman on the end bunk, without opening her eyes. \"We sold him the land, and then we sold him the work, and then we owed him the rent on our own houses.\" She opens her eyes. \"You're not a yardman.\"");
+    if (L.amber) await say("You tell her Amberlow sent you. She sits up. Up and down the shed, in the dark, other people sit up too.");
+    const c = await choose([
+      { key: "free", label: "Free them now", tag: (L.tallies ? "you've got their bond-tallies · " : "pick thirty-one locks · ") + "the hold will hear" + (L.amber ? " · Amberlow's sign: they'll fight" : "") },
+      { key: "later", label: "Tell them to wait", tag: "you'll come back for them once Grell's out", plain: true }
+    ]);
+    L.tappers = c;
+    if (c === "free") {
+      if (L.tallies) await say("You read the numbers off the board of bond-tallies, and snap each stick across your knee, and the woman on the end bunk takes the keys off the hook where they've always been, a yard out of reach, and the chains come off one at a time.");
+      else { await say("You work down the rail, lock by lock, with " + (lhHas("ysolde") ? "Ysolde's acid smoking in the worst of them" : "a bent nail and a lot of patience") + ". It takes too long."); await lhAlarm(1, "Somebody hears the chains."); }
+      if (L.amber) { await say("When the last chain's off, the tappers don't run. They pick up their tapping knives, which are hooked and very sharp, and stand behind you."); L.tapRise = true; }
+      else await say("When the last chain's off, they go out over the back wall into the Wetwood in their bare feet, silent, and are gone.");
+      grant("lhbond");
+    } else await say("\"Wait,\" says the woman on the end bunk. \"We've been doing that.\" She lies down again, and turns her face to the wall.");
+    await say("Then a voice from the top of the vat-stairs, a big cheerful voice with a whistle in it: \"There you are.\" It's <b>Hessary Ruckley</b>, Gerrand's yard-boss: a huge man in a gum-stiffened apron, with a bailiff's brass-headed staff and a row of iron keys at his belt for every chain in the place.");
+    await say("\"Mister Gerrand said you'd come in by the culvert,\" Ruckley says. \"He was very disappointed when you didn't.\" He leans on the rail. \"You'll be wanting the falls path. It's behind me.\"", "voice");
+    const soldiers = Math.max(2, Math.min(7, 2 + L.alarm) - (L.tapRise ? 3 : 0));
+    if (L.tapRise) await say("Behind you, thirty-one tappers with hooked knives come out of the bunk-sheds, and Ruckley's whistle stops halfway through.");
+    tacReg = "wetwood";
+    const F = await companyOr("road", { soldiers, captains: ["Hessary Ruckley"], capHp: 34, capThem: "him", cover: "the gum vats",
+      capMiss: "Ruckley's brass-headed staff rings off your guard.",
+      F: YARD({ name: "Ruckley's yardmen", who: "Ruckley's yardmen" }) });
+    if (F && F.fled) { L.ruckley = "fled"; await say("You get past them up the vat-stairs and onto the falls path, with Ruckley bellowing behind you."); await lhAlarm(1); }
+    else {
+      await say("Ruckley goes down at the foot of the vat-stairs, and sits there in the gum with his staff across his knees, laughing, holding his ribs.");
+      const r = await choose([
+        { key: "chain", label: "Chain him to his own rail", tag: "the tappers will decide about him" + (L.tappers === "free" ? "" : " when they're free") },
+        { key: "vat", label: "Tip him into the gum", tag: "the gum sets hard as amber", plain: true },
+        { key: "let", label: "Let him go", tag: "he'll run, or he'll run to Gerrand", plain: true }
+      ]);
+      L.ruckley = r;
+      if (r === "chain") await say("You put his own ankle-chain on him, the one at the end of the rail, and hang the key on the hook a yard out of reach. \"Fair,\" Ruckley says, and lies back on the bunk, and laughs till he coughs.");
+      else if (r === "vat") await say("He goes into the nearest vat backwards, with a sound like a boot pulled out of mud, and the gum closes over him. When it sets, he'll be there for a thousand years, a big surprised man in amber, still holding his staff.");
+      else { await say("He picks himself up and touches his forehead to you, very polite, and goes off up the falls path ahead of you, at a run."); await lhAlarm(1, "He's gone to tell Gerrand."); }
+    }
+    xpGain(120); save();
+    await go("Up the falls path");
+  }
+
+  // ---------- Part CXVII: Cutwater ----------
+  async function lhFalls() {
+    const L = lh(), side = L.side;
+    light("lake");
+    L.seen.push("z:falls");
+    await say("The falls path comes out on the top terrace of the old ruin, on a shelf of black rock with the whole river going over the edge beside it in a roar you can feel in your teeth. The boom reaches out from the shelf over the drop, a great tarred beam on a pivot, with a rope down from the end of it to the cage. Behind the pivot, the counterweight: a stone cistern open to the sky, with the rain pocking its surface, already three-quarters full.");
+    await say("Grell is in the cage. He stands up when he sees you" + (side === "sold" ? ". The hook where his left hand was clacks on the bars. His burned face doesn't change." : ", slowly, and puts his face to the bars, and nods once, the way he nodded on the road the day you met.") + "");
+    await say("And between you and the boom, at a little table under an oiled-silk awning, with a ledger open in front of him and a lamp and a pot of tea, is <b>Kline Gerrand</b>.");
+    await say("He's a neat, narrow man in a bailiff's black coat buttoned to the throat, with grey hair cut very short and a clerk's ink-stained middle finger. He has a long catchpole leaning on the table beside him, the kind with a spring-hook at the end for taking hold of a man by the neck. He finishes the line he's writing before he looks up.");
+    await say("\"The Warden's tenant,\" he says. He has a pleasant voice, a little dry, like a man reading out a will. \"You came in by " + { river: "the river gate. I'll have words with Ossel.", drain: "the culvert after all. I'm touched.", canopy: "the canopy. Nobody's done that. I'll need a taller fence.", front: "my front door, as a customer. I respect that." }[L.route] + "\"", "voice");
+    await say("\"Everybody's land is somebody's,\" he says. \"I just write it down first. Sit, if you like. I've an offer.\"", "voice");
+    const den = L.deeds === true;
+    await say(den ? "\"You've got my deeds in that box, I expect. Including the one for the dunes over the Hollow Hands' den. Keep that one. Keep it, and walk away, and leave me the man in the cage, and I'll write you fifteen hundred gold on the Sulmaran bank besides. The Hands can pay rent to you instead of me. You'd be kinder about it. Everybody wins but him.\" He nods at the cage." : "\"Walk away and leave me the man in the cage, and I'll write you fifteen hundred gold on the Sulmaran bank. He's a thief. He came to rob me. I'm only asking what the law would.\"", "voice");
+    const o = await choose([
+      { key: "no", label: "Say no", tag: "and take Grell out of that cage" },
+      { key: "bluff", label: "Tell him his counting-house is on fire", tag: L.lock === "forced" ? "it is · no roll" : "Deception · he'll look", plain: true },
+      { key: "yes", label: "Take his offer", tag: "1,500 gold" + (den ? " and the den's deed" : "") + " · leave Grell to the rains", plain: true }
+    ]);
+    L.offer = o;
+    let edge = false;
+    if (o === "yes") {
+      await say("You take the pen. Gerrand watches you sign, and blots it, and puts it away in the ledger.");
+      await say("Grell sits back down in his cage without a word. " + (lhHas("ysolde") ? "Ysolde makes a sound behind you like something tearing." : "") + " Then " + (side === "friend" ? "Sable" : lhHas("ysolde") ? "Ysolde" : "the rain") + " " + (side === "friend" || lhHas("ysolde") ? "goes past you at a run, for the boom." : "goes on falling."));
+      await say("Gerrand sighs, and stands, and picks up his catchpole. \"I did say it was an offer for you,\" he says. \"I didn't say it was an offer for them.\"", "voice");
+      S.coins += 1500; renderSheet();
+      await mech("You took Kline Gerrand's 1,500 gold. The Hollow Hands will remember. So will Grell.", "hurt");
+      L.sold = true;
+    } else if (o === "bluff") {
+      const r = L.lock === "forced" ? { ok: true } : await check({ label: "Deception check (fire in the counting-house)", mod: 2 + Math.floor(lv() / 8) + (lhHas("sable") ? 1 : 0), dc: 15, cta: "Point" });
+      if (r.ok) { edge = true; await say("He looks. It's only for a breath, over his shoulder, down at the counting-house roof" + (L.lock === "forced" ? " with the smoke coming out of it" : "") + ", but it's a breath, and you're across the shelf before he's turned back."); }
+      else await say("He doesn't look. \"I'd smell it,\" he says. \"I've a very good nose for my own property.\"");
+    } else await say("\"No,\" he says, as if he's writing it down. \"Well. I did ask.\" He closes the ledger, and stands, and picks up his catchpole, and walks out from under the awning into the rain.");
+    tip("lhcords");
+    const TRAPS = [
+      { name: "the drop-net", why: "A weighted net comes down out of the dark above the shelf, and he hauls you across the rock in it." },
+      { name: "the dart rail", why: "A rail of dart-tubes along the old balustrade coughs, all at once, and a dozen little gum-tipped darts find you." },
+      { name: "the deadfall", why: "A gum-glued log comes down on its chains from the ruin above like the end of the world." },
+      { name: "the jaws", why: "Iron jaws come up out of the rock under your boot, and he holds the cord taut while you get them off." }
+    ];
+    const cut = () => L.floor === "clean" ? 3 : L.floor === "rough" ? 1 : 0;
+    await hkFight({ name: "Kline Gerrand", hp: 56 + L.alarm * 3, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "Gerrand", whoShort: "Gerrand", reg: "wetwood",
+      hitWhy: "The catchpole's spring-hook takes you by the collar and slams you into the rock.", miss: "The spring-hook snaps shut on the rain where your neck was.", hitLine: "Gerrand steps back, and touches the place, and looks at the blood on his fingers as if it's a figure that doesn't add up.",
+      setup: async (st) => { st.cordAt = 0; st.trap = 0; if (edge) st.adv = true; if (L.tapRise) await say("The tappers from the gum works come up the falls path behind you with their hooked knives, and stop at the edge of the shelf, and watch. This is yours. They'll make sure nobody else comes up."); },
+      before: async (st) => {
+        if (st.round >= 2 && !st.cord && st.round - st.cordAt >= 2) { st.cord = true; st.cordAt = st.round; await say("Gerrand gives ground to the old balustrade, where a dozen yard-cords come up out of the rock and run off into the ruin, and puts his free hand on one of them."); await mech("He's going to pull a cord. Cut it before he does, or get out of the way.", "hurt"); }
+      },
+      extra: (st) => st.cord ? [{ key: "lh-cut", label: "Cut the cord", tag: "Dexterity DC " + (15 - cut()) + (cut() ? " · you counted the floor" : "") + " · costs your turn", plain: true }] : [],
+      onExtra: async (c, st) => {
+        if (c !== "lh-cut") return;
+        const r = await check({ label: "Dexterity check (cut the cord)", mod: 2 + Math.floor(lv() / 8), dc: 15 - cut(), cta: "Cut" });
+        if (r.ok) { st.cord = false; st.cutN = (st.cutN || 0) + 1; await say("You cut it through an inch from his hand. Somewhere in the ruin, something that was going to fall doesn't."); if (st.cutN >= 2) grant("lhcords"); }
+        else await say("The blade bounces off the gum-stiff cord.");
+      },
+      turn: async (st) => {
+        if (!st.cord) return;
+        st.cord = false;
+        const T = TRAPS[st.trap++ % TRAPS.length];
+        if (st.evade && d(2) === 1) { await say("He pulls the cord, and you're already moving. " + T.name[0].toUpperCase() + T.name.slice(1) + " goes off where you were."); return "done"; }
+        await hurt(2, 8, T.name === "the deadfall" ? "bludgeoning" : "piercing", "He pulls the cord. " + T.why);
+        return "done";
+      } });
+    await say("Kline Gerrand goes down on one knee on the wet rock, and the catchpole goes over the edge and into the falls, and he watches it go. Then he does the only fast thing you ever see him do: he pulls his little knife and cuts the boom's brake-line.");
+    await say("The boom swings. The cage drops a yard on its rope and stops with a jerk that throws Grell into the bars, and the counterweight cistern sloshes, and the beam begins, very slowly, to tip toward the river. \"Arithmetic,\" Gerrand says, and sits down in the rain.", "voice");
+    const r = await lhSluices({ extra: L.alarm >= 4 ? 3 : 4 });
+    if (r.ok) {
+      L.cage = r.best ? "clean" : "safe";
+      if (r.best) grant("lhsluice");
+      await say("You pull the pin out of the cage door, and it swings open, and Grell climbs out onto the rock, stiff as a man of seventy, and stands up straight.");
+    } else {
+      L.cage = "fell";
+      await say("The rope gives, and the cage drops into the spray, and without thinking about it at all you go off the ledge after it.");
+      const a = await check({ label: "Athletics check (the plunge pool)", mod: 3 + Math.floor(lv() / 8), dc: 14, cta: "Swim" });
+      await hurt(a.ok ? 2 : 4, 8, "bludgeoning", "The falls hit you like a building coming down.");
+      await say("You get the cage door open on the bottom of the plunge pool, in the white dark, by feel, and you get Grell out of it, and somehow you get him up. He's alive. His right leg isn't right, and won't be again.");
+    }
+    if (side === "sold") {
+      await say("Grell looks at you for a long time, with the rain running off his burned face. He holds up the hook. Then he holds out his right hand, the one he's got, and waits to see if you'll take it.");
+    } else await say("Grell looks at you for a long time. Then he takes the lockpick out from behind his ear, where it's been all along, and picks his teeth with it, and says, in a voice like a door that hasn't been opened in a year: \"Took your time.\"");
+    if (L.sold && side !== "sold") await say("He doesn't say anything else to you. He's seen you sign. He goes past you to " + (lhHas("sable") ? "Sable" : "Ysolde") + ", and doesn't look back.");
+    xpGain(150); save();
+    await go("Down from the falls");
+  }
+
+  // ---------- Part CXVIII: What the Land Remembers ----------
+  async function lhAfter() {
+    const L = lh(), side = L.side;
+    light("sun");
+    await say("The rains come in properly at dawn, a grey roaring wall of them, and Cutwater stands in the middle of the Wetwood with its gates open and its lanterns out and nobody on the walls.");
+    if (L.tappers === "later") { await say("You go back down to the gum works first, as you promised. The tappers are waiting, chained, exactly where you left them. You break the chains one at a time. Nobody thanks you. They didn't think you'd come."); grant("lhbond"); }
+    await say("Kline Gerrand is sitting on the shelf above the falls where you left him, with his ledger open on his knee and the rain running off his short grey hair, making notes. \"I should have bought the rain,\" he says.", "voice");
+    const g = await choose([
+      { key: "amber", label: "Give him to Amberlow", tag: "the tappers' justice · a bond, a cup and a knife" },
+      { key: "reeve", label: "Take him down to the harbour-reeve at Brindle Landing", tag: "the law · he'll buy his way out, maybe", plain: true },
+      { key: "grell", label: "Let Grell decide", tag: "it's his cage", plain: true, show: L.cage !== "fell" || side !== "sold" },
+      { key: "falls", label: "Put him over the falls", tag: "where his catchpole went", plain: true }
+    ]);
+    L.gerrand = g;
+    if (g === "amber") await say("Nennet Ashlowe comes up from Amberlow in the rain with a cup and a tapping-knife and a tally-stick with no notches in it. She gives them to Gerrand. \"Rent's due on the first,\" she says. He looks at the stick for a long time. Then he writes it down.");
+    else if (g === "reeve") await say("The harbour-reeve of Brindle Landing is very pleased to see Kline Gerrand in irons, and very respectful, and asks after his health. You get the feeling the irons are a formality. Still: they're on.");
+    else if (g === "grell") await say("Grell looks at Gerrand for a while. Then he picks him up by the coat, one-handed, carries him into the cage, and shuts the door, and leaves the key on the ledge a yard out of reach. \"Rains,\" Grell says. He doesn't say whether he means the cistern will fill. Gerrand doesn't ask.");
+    else await say("He doesn't fight it. He closes the ledger first, and holds it out for you to take, and goes over the edge after his catchpole without another word, very neat about it, the way he did everything.");
+    if (L.deeds) {
+      await say("That leaves the box of deeds" + (L.deeds === true ? ": Amberlow's nine, all the others that weren't burned, and the one for the dunes over the den." : ": Amberlow's nine, all you saved from the fire."));
+      const c = await choose([
+        { key: "give", label: "Give every holding back", tag: "to whoever's name was on it before his" },
+        { key: "den", label: "Give them back, but keep the den's deed", tag: "the ground over the Hollow Hands is yours · rent from the den", plain: true, show: L.deeds === true },
+        { key: "burn", label: "Burn the lot", tag: "nobody owns the Wetwood, then", plain: true }
+      ]);
+      L.land = c;
+      if (c === "give") { await say("It takes Nennet Ashlowe three days to read the names out in the square at Amberlow, holding by holding, and by the end of it the whole of the Wetwood's come up the river to listen."); grant("lhland"); }
+      else if (c === "den") await say("You give back every holding in the Wetwood, holding by holding, and put the den's deed inside your coat. The Hollow Hands have a landlord now. " + (side === "friend" ? "Sable thinks it's the funniest thing she's ever heard, and then she stops laughing, and looks at you." : "Ysolde looks at the deed, and at you, and doesn't say anything."));
+      else await say("You burn them in the yard, every one, on the Counting Floor. The plates go off in the heat one at a time, all night, like slow fireworks, and the tappers stand round and watch and don't say whether it was right.");
+    }
+    // Grell, after
+    if (L.sold) {
+      await say("Grell goes home with " + (side === "friend" ? "the Hands" : "Ysolde") + ". You go home on your own, with Gerrand's gold.");
+      L.grell = "gone";
+    } else if (side === "sold") {
+      const t = await choose([{ key: "take", label: "Take his hand", tag: "the one he's got" }, { key: "no", label: "Don't", plain: true }]);
+      if (t === "take") {
+        await say("You take it. His grip is the same as it was on the road. \"Square,\" Grell says. It's the first thing he's said to you since the desert, and he says it like he's been holding it in his mouth for years.");
+        await say("Then he presses the lockpick into your palm: the long thin one he picks his teeth with, worn bright.");
+        L.grell = "square";
+      } else { await say("He lowers his hand, and nods, as if that's fair, and goes."); L.grell = "gone"; }
+    } else {
+      await say("At the Landing, waiting for the ketch, Grell sits down on the plank walk next to you with his bad " + (L.cage === "fell" ? "leg out straight" : "back against a post") + ", and after a long time he takes the lockpick from behind his ear and holds it out to you. The long thin one he picks his teeth with, worn bright.");
+      await say("\"Spare,\" he says. You've never seen him without it. You don't think he has a spare.");
+      L.grell = "pick";
+    }
+    if (L.grell !== "gone") {
+      S.gear = S.gear || []; if (!hasGear("grellpick")) S.gear.push("grellpick"); renderSheet();
+      await mech("<b>Grell's lockpick.</b> " + GEAR.grellpick.desc, "loot");
+      grant("lhgrell");
+    }
+    if (L.ossel === "mother" && L.right) await say("Ossel Ashlowe is on the tappers' bench at Amberlow, with an empty cup, when you go by on the way down. He doesn't look up. His mother brings him his supper, and stands over him while he eats it.");
+    if (L.tobbinGone) await say("Nobody has seen Tobbin since the night in the stilt-house. Corbel Fettle's wife says somebody left nine silver on her doorstep.");
+    if (L.alarm <= 1 && !L.spotted) grant("lhghost");
+    if (L.right && L.cage === "clean" && L.offer !== "yes" && L.tappers === "free") grant("lhwhole");
+    const gold = L.sold ? 0 : 300 + 20 * lv();
+    if (gold) { S.coins += gold; renderSheet(); await mech((side === "friend" ? "Sable splits what was in Gerrand's strongbox with you, even shares, the way the Hands do: " : "Amberlow pays the crew's fee to you, in red gum and silver: ") + gold + " gold.", "loot"); }
+    S.title = L.sold ? "Gerrand's Tenant" : "Hand of the Hollow Hands";
+    L.done = true; xpGain(200); save();
+    await mech("<b>Selvaine</b> is on the roads back now: Brindle Landing, Amberlow, the Wetwood's beasts, its board and a hidden thing. Your title is <b>" + S.title + "</b>.", "loot");
+    await endCard();
+  }
+  async function partLostHand1() { heading("CXII", "The Empty Hand"); return lhLetter(); }
+  async function partLostHand2() { heading("CXIII", "Four Days Before the Rains"); return lhAsk(); }
+  async function partLostHand3() { heading("CXIV", "The Palisade"); return lhWall(); }
+  async function partLostHand4() { heading("CXV", "The Trapwright's Yard"); return lhYard(); }
+  async function partLostHand5() { heading("CXVI", "The Gum Works"); return lhWorks(); }
+  async function partLostHand6() { heading("CXVII", "Cutwater"); return lhFalls(); }
+  async function partLostHand7() { heading("CXVIII", "What the Land Remembers"); return lhAfter(); }
+
+  // ---------- traces ----------
+  async function lhTown(T) {
+    const L = S.lh;
+    if (!L || !L.done || T.kind !== "town") return;
+    if (T.reg === "desert" && !L.seenD) {
+      L.seenD = true;
+      if (L.grell === "gone") await say(L.sold ? "In the den, Grell's chair is back at the table, and Grell is in it. He watches you come down the steps and doesn't move. Nobody else does either." : "Grell is at the long table in the den, with his hook on the wood. He doesn't look up.");
+      else await say("In the den, Grell's chair is back at the table, with Grell in it, picking his teeth with a new lockpick that isn't as good as the old one" + (L.cage === "fell" ? ", and a stick hooked over the back of it for the leg" : "") + ". He nods to you. Somebody has painted a little cage on the wall over his head, with the door open.");
+      if (L.land === "den") { const n = 40 + lv(); S.coins += n; renderSheet(); await mech("The den pays its rent to its landlord, in a purse left on the step with a dead scorpion in it: " + n + " gold.", "loot"); }
+    }
+    if (T.reg === "wetwood" && !L.seenW) {
+      L.seenW = true;
+      await say({ give: "In Brindle Landing the notices are gone off the doors, and somebody's nailed up a new one on the land office: CLOSED, in big wobbly letters, and under it, smaller, BY ORDER OF NOBODY.", den: "In Brindle Landing the notices are gone off the doors. The land office is a tavern now.", burn: "In Brindle Landing nobody owns anything any more, and they're arguing about it on every plank walk, cheerfully, at the top of their voices." }[L.land] || "In Brindle Landing the notices are still on the doors, in the same neat hand. The rent is still due on the first. Somebody else collects it now.");
+      if (L.gerrand === "amber") await say("Up at Amberlow there's a narrow grey man on the tappers' bench with a cup and a knife, working his way down a tally-stick of his own. He nods to you, politely, and makes a note.");
+      if (L.gerrand === "reeve") await say("Kline Gerrand is out. Of course he's out. You see him once, across the harbour, buying a broadsheet. He tips his hat.");
+    }
+  }
+  function lhCoda() {
+    const L = S.lh;
+    if (!L || !L.done) return "";
+    return " Across the Narrow Sea, the Wetwood is " + ({ give: "back in the hands of the people who tapped it", den: "back in the hands of its tappers, and you own the ground over the Hollow Hands' den", burn: "nobody's" }[L.land] || "still Gerrand's on paper") + ", and Grell " + (L.grell === "gone" ? "is home, and doesn't speak of you" : "is home, picking his teeth with the wrong lockpick") + ".";
+  }
+  function lhSection(rs0) {
+    const L = rs0 && rs0.lh;
+    if (!L || !L.on) return "";
+    const li = (on, t) => "<li" + (on ? ' class="won"' : "") + '><span class="mk"></span><span>' + t + "</span></li>";
+    const S2 = { ossel: "Ossel Ashlowe", iddo: "Iddo Mabry", corbel: "Corbel Fettle", tobbin: "Tobbin", pellan: "Pellan Quillfern" };
+    return "<section><h3>The Lost Hand</h3><p class=\"j-sub\">Grell in Kline Gerrand's cage over the falls at Cutwater, and the Hollow Hands who came for him.</p><ul class=\"marks\">" +
+      li(L.right, "Who sold the job: " + (L.accused ? "you named " + S2[L.accused] + (L.right ? ", and you were right" : ", and you were wrong") : L.days ? "you named nobody" : "not yet")) +
+      li(L.route && L.alarm <= 2, "The way in: " + ({ river: "the river gate", drain: "the culvert", canopy: "over the canopy wall", front: "the front gate, as a buyer" }[L.route] || "not yet") + (L.route ? " · alarm " + L.alarm + " of 6 · " + L.downed + " yardmen taken down quietly" : "")) +
+      li(L.floor === "clean", "The Counting Floor: " + ({ clean: "crossed without a plate", rough: "crossed, with plates sprung", woke: "the yard woke up" }[L.floor] || "not yet")) +
+      li(L.deeds === true, "The deeds: " + (L.lock ? (L.deeds === true ? "every one" : L.deeds ? "Amberlow's, out of the fire" : "burned") : "not yet")) +
+      li(L.tappers === "free", "The bond-tappers: " + ({ free: "freed, the night you came", later: "freed, afterwards" }[L.tappers] || "not yet")) +
+      li(L.offer && L.offer !== "yes", "Gerrand's offer: " + ({ yes: "taken", no: "refused", bluff: "refused, with a lie" }[L.offer] || "not yet")) +
+      li(L.cage === "clean" || L.cage === "safe", "The cage: " + ({ clean: "swung in, cleanly", safe: "swung in", fell: "fell, and you went after it" }[L.cage] || "not yet")) +
+      li(L.grell && L.grell !== "gone", "Grell: " + ({ pick: "gave you his lockpick", square: "said \"Square\"", gone: "went home without you" }[L.grell] || "not yet")) + "</ul></section>";
+  }
 
   // ---------- traces ----------
   async function rsTown(T) {
@@ -38775,7 +39794,7 @@ body.pv-open { overflow: hidden; }
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done, RSD = (S.rs && S.rs.done) || (S.dv && S.dv.done);
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done, RSD = (S.rs && S.rs.done) || (S.dv && S.dv.done), LHD = !!(S.lh && S.lh.done);
     const TITHE = {
       rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
       sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
@@ -38787,11 +39806,11 @@ body.pv-open { overflow: hidden; }
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (RSD ? "CXII" : WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (LHD ? "CXIX" : RSD ? "CXII" : WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (RSD ? (S.dv && S.dv.done ? "You stand at the top of the deep stair under Rimehold, with the glacier quiet over your head, with " : "You stand in the heart of Rimehold, by the knot, with ") : WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (LHD ? "You stand on the plank walk at Brindle Landing, with the rains coming in off the Narrow Sea, with " : RSD ? (S.dv && S.dv.done ? "You stand at the top of the deep stair under Rimehold, with the glacier quiet over your head, with " : "You stand in the heart of Rimehold, by the knot, with ") : WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() + rsCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() + rsCoda() + lhCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
@@ -38955,6 +39974,17 @@ body.pv-open { overflow: hidden; }
         M.ending === "bind" ? "In the heart, you signed Ammeroth's contract. The Cascade never happened, and you're the only one who remembers." : M.ending === "melt" ? "In the heart, the ice gave way. Dunvaar rose under the glacier, and Ithra Coldvein woke." : ""
       ];
     },
+    hand: (s) => {
+      const L = s.lh || {}, N = { ossel: "Ossel Ashlowe", iddo: "Iddo Mabry", corbel: "Corbel Fettle", tobbin: "Tobbin", pellan: "Pellan Quillfern" };
+      return [
+        "Across the Narrow Sea, on Selvaine, Kline Gerrand caught Grell of the Hollow Hands in a cage over the falls at Cutwater, and you went after him" + (L.side === "sold" ? ", though you'd sold the Hands out in the desert." : "."),
+        L.accused ? "You named " + N[L.accused] + " as the one who sold the job" + (L.right ? ", and you were right." : ", and you were wrong.") : "",
+        L.route ? "You went in " + { river: "by the river gate", drain: "by the culvert", canopy: "over the canopy wall", front: "at the front gate, as a buyer" }[L.route] + "." : "",
+        L.tappers ? "You freed the bond-tappers of the gum works." : "",
+        L.offer === "yes" ? "You took Gerrand's fifteen hundred gold." : L.offer ? "You turned down Gerrand's offer." : "",
+        L.cage ? (L.cage === "fell" ? "The cage fell, and you went into the falls after it." : "You swung the cage in to the ledge.") : ""
+      ];
+    },
     summons: (s) => {
       const R = s.rs, D = s.dv;
       if (D && D.on) return [
@@ -39050,8 +40080,8 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround, partAfter1, partAfter2, partAfter3, partAfter4, partAfter5, partAfter6, partAfter7];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround, partAfter1, partAfter2, partAfter3, partAfter4, partAfter5, partAfter6, partAfter7, partLostHand1, partLostHand2, partLostHand3, partLostHand4, partLostHand5, partLostHand6, partLostHand7];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call", "The Empty Hand", "Four Days Before the Rains", "The Palisade", "The Trapwright's Yard", "The Gum Works", "Cutwater", "What the Land Remembers"];
 
   let started = false;
   SND.musProbe(() => ({ title: !started, fight: FOE.on, nm: FOE.on && FOE.lvd && cascadeOn(), warp: cascadeOn() }));
