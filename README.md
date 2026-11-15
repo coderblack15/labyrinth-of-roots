@@ -32,7 +32,7 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 ## Languages
 
-The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens, and the story is being translated chapter by chapter: **Chapter 1, The Labyrinth of Roots** is done in every language, and the whole story, **Chapters 1–17** (through The Root Summons), is done in Japanese. The other languages have Chapter 1 so far. The story-so-far recap, and lines built from numbers or your name (damage rolls, spoils) are still in English. The choice is remembered per browser.
+The start menu and the items bar have a **🌐 Language** button (it is in Settings too): English, Español, Français, Deutsch, Português and 日本語. It changes the menus, buttons, character sheet labels, save slots, Settings and the title and landing screens, and the story is being translated chapter by chapter: **Chapter 1, The Labyrinth of Roots** is done in every language, and the whole story, **Chapters 1–18** (through The Lost Hand), is done in Japanese. The other languages have Chapter 1 so far. The story-so-far recap, and lines built from numbers or your name (damage rolls, spoils) are still in English. The choice is remembered per browser.
 
 The translations live in `languages.js`, one row per piece of text (English first, then one column per language). To add a string, add a row; to add a language, add a column to every row. Story translations live in `lang/story-NN-chapter.js`, one or two files per chapter, in the same row format; the English column must match the game's line exactly, `{g:…}` and `{he}` markers included. Then copy it into the game, since the game ships as one file:
 
@@ -43,7 +43,7 @@ python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/l
 
 ### Translating the story, chapter by chapter
 
-Japanese is being finished first, then the other languages. Done so far: Chapter 1 in all five languages, and every chapter (1–17) in Japanese. To do the next chapter:
+Japanese is being finished first, then the other languages. Done so far: Chapter 1 in all five languages, and every chapter (1–18) in Japanese. To do the next chapter:
 
 ```
 node tools/playtest.js --seed 61 --steps 14000 --out /tmp/saves            # saves at the start of every part
@@ -53,7 +53,18 @@ python3 tools/story-file.py --keys keys.json --tr ja.txt --title "Chapter 7, The
 python3 tools/build-languages.py && python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/labyrinth-of-roots
 ```
 
-The part ranges are in `CHAPTERS` in `index.html`. A long playtest can stop partway through the game; carry on from its last save with `--from`. Carved inscriptions (Deafstones and the like) are left in English, since they're rubbing puzzles. The bot never clears Rimehold's rings (it floods and jumps to Part XCIX), so the lines of Parts XCVI–XCVIII were read straight from the source and are in `lang/story-15b-rimehold-rings.js`.
+The part ranges are in `CHAPTERS` in `index.html`. A long playtest can stop partway through the game; carry on from its last save with `--from`. Carved inscriptions (Deafstones and the like) are left in English, since they're rubbing puzzles. The bot never clears Rimehold's rings (it floods and jumps to Part XCIX), so the lines of Parts XCVI–XCVIII were read straight from the source and are in `lang/story-15b-rimehold-rings.js`. The Lost Hand's lines were checked the same way against its `lh…` functions.
+
+## Music
+
+Under the sound there is night music: slow, quiet pieces (five of them fight-tempo, with a drum line `beat` and an ostinato `ost` on a strict grid; `region` limits a piece to one chapter's fights, `theme` fixes its theme, and `Adrianna` plays in half the fights while S.champ is worn) made live with Web Audio (no audio files). Each piece in `MUSIC` (inside `SND` in `index.html`) is a seed: a key, a mode, a pace and a few instruments. Each chapter has a theme (`mTheme(slug)`, a short tune seeded from the slug) that both its pieces carry, and fights, Nightmares and towns play the current chapter's theme; the start screen plays the Labyrinth's. A piece's own seed fixes its chords and the rhythm of the theme; each time it plays, the bars are written out fresh. Pieces run four to seven minutes, with silences between. Each chapter has two (`pool` = the chapter's slug, so **a new chapter adds two `MUSIC` entries**); fights, Nightmares, the Underdream, towns and the start screen have their own, the roads back draw from all chapters and towns, and while the Cascades are open chapter and town pieces play warped. Settings has Off / Faint / Soft / Fuller, what's playing, and Next piece.
+
+To hear a piece outside the game (it needs Playwright, and ffmpeg for `--ogg`):
+
+```
+node tools/music-render.js --list
+node tools/music-render.js --ids moored,wrong-lullaby --secs 240 --ogg
+```
 
 ## Playtesting
 

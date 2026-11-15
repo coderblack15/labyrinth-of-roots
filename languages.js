@@ -45,12 +45,14 @@
       "Change la langue des menus, des écrans d'accueil et de l'histoire du premier chapitre. Les chapitres suivants restent en anglais pour l'instant.",
       "Ändert die Sprache von Menüs, Startbildschirmen und der Geschichte des ersten Kapitels. Spätere Kapitel sind vorerst noch auf Englisch.",
       "Muda o idioma dos menus, das telas iniciais e da história do primeiro capítulo. Os capítulos seguintes continuam em inglês por enquanto.",
-      "メニュー、タイトル画面、物語の言語を切り替えます。物語は全17章が日本語です。",
+      "メニュー、タイトル画面、物語の言語を切り替えます。物語は全18章が日本語です。",
     ],
   };
 
   // Text that has numbers or names in it. $1, $2 are the parts that carry over.
   const PATTERNS = [
+    [/^· on the theme of (.+)$/, "· on the theme of $1", "· sobre el tema de $1", "· sur le thème de $1", "· über das Thema von $1", "· sobre o tema de $1", "· $1のテーマで"],
+    [/^You've heard (\d+) of (\d+) \((\d+) pieces, and (\d+) of them warped\)\.$/, "You've heard $1 of $2 ($3 pieces, and $4 of them warped).", "Has oído $1 de $2 ($3 piezas, y $4 de ellas deformadas).", "Vous en avez entendu $1 sur $2 ($3 morceaux, dont $4 déformés).", "Du hast $1 von $2 gehört ($3 Stücke, davon $4 verzerrt).", "Você ouviu $1 de $2 ($3 peças, e $4 delas distorcidas).", "$2曲中$1曲を聴きました（$3曲と、その歪んだ版$4曲）。"],
     [/^Battle style · Slot (\d+)$/, "Battle style · Slot $1", "Estilo de combate · Ranura $1", "Style de combat · Emplacement $1", "Kampfstil · Platz $1", "Estilo de batalha · Espaço $1", "戦闘スタイル · スロット$1"],
     [/^Slot (\d+)( · .*)?$/, "Slot $1$2", "Ranura $1$2", "Emplacement $1$2", "Platz $1$2", "Espaço $1$2", "スロット$1$2"],
     [/^Part ([IVXLCDM]+) · (.+)$/, "Part $1 · $2", "Parte $1 · $2", "Partie $1 · $2", "Teil $1 · $2", "Parte $1 · $2", "パート$1 · $2"],
@@ -172,6 +174,16 @@
     // ---- Settings ----
     ["Sound", "Sonido", "Son", "Ton", "Som", "サウンド"],
     ["A quiet bed of sound for each region, and the songs and blows out loud.", "Un suave fondo sonoro para cada región, y los cantos y golpes en voz alta.", "Un fond sonore discret pour chaque région, et les chants et les coups à voix haute.", "Ein leiser Klangteppich für jede Region, dazu Gesänge und Hiebe hörbar.", "Um fundo sonoro discreto para cada região, e as canções e golpes em voz alta.", "地域ごとの静かな環境音と、歌や打撃の音。"],
+    ["Music", "Música", "Musique", "Musik", "Música", "音楽"],
+    ["Slow, quiet night music under the sound, written fresh each time it plays. Each chapter has its own theme, carried by its two pieces and by its fights, Nightmares and towns. It plays when Sound is on.", "Música nocturna lenta y suave bajo el sonido, escrita de nuevo cada vez que suena. Cada capítulo tiene su propio tema, que llevan sus dos piezas y sus combates, Pesadillas y pueblos. Suena cuando el Sonido está encendido.", "Une musique de nuit lente et discrète sous le son, réécrite à chaque écoute. Chaque chapitre a son propre thème, porté par ses deux morceaux, ses combats, ses Cauchemars et ses villes. Elle joue quand le Son est activé.", "Langsame, leise Nachtmusik unter dem Ton, bei jedem Abspielen neu geschrieben. Jedes Kapitel hat sein eigenes Thema, getragen von seinen zwei Stücken und seinen Kämpfen, Albträumen und Städten. Sie spielt, wenn der Ton an ist.", "Música noturna lenta e suave sob o som, escrita de novo a cada vez que toca. Cada capítulo tem o seu próprio tema, levado pelas suas duas peças e pelas suas lutas, Pesadelos e cidades. Toca quando o Som está ligado.", "音の下に流れる、静かでゆっくりとした夜の音楽。再生のたびに新しく書かれます。各章には独自のテーマがあり、その章の2曲と、戦闘・悪夢・町の音楽に流れます。サウンドがオンのときに流れます。"],
+    ["Faint", "Muy baja", "Très bas", "Ganz leise", "Bem baixa", "かすか"],
+    ["Soft", "Baja", "Doux", "Leise", "Baixa", "小さめ"],
+    ["Fuller", "Más alta", "Plus fort", "Voller", "Mais alta", "大きめ"],
+    ["Now playing:", "Ahora suena:", "En ce moment :", "Gerade läuft:", "Tocando agora:", "再生中："],
+    ["a silence between pieces", "un silencio entre piezas", "un silence entre deux morceaux", "eine Stille zwischen zwei Stücken", "um silêncio entre peças", "曲と曲の間の静けさ"],
+    ["nothing", "nada", "rien", "nichts", "nada", "なし"],
+    ["(warped by the Cascades)", "(deformada por las Cascadas)", "(déformé par les Cascades)", "(verzerrt von den Kaskaden)", "(distorcida pelas Cascatas)", "（カスケードで歪んでいる）"],
+    ["Next piece", "Siguiente pieza", "Morceau suivant", "Nächstes Stück", "Próxima peça", "次の曲"],
     ["Text size", "Tamaño del texto", "Taille du texte", "Textgröße", "Tamanho do texto", "文字サイズ"],
     ["Makes the story, the sheet and the menus bigger or smaller.", "Agranda o reduce la historia, la hoja y los menús.", "Agrandit ou réduit l'histoire, la fiche et les menus.", "Macht Geschichte, Bogen und Menüs größer oder kleiner.", "Deixa a história, a ficha e os menus maiores ou menores.", "物語、シート、メニューの大きさを変えます。"],
     ["Smaller", "Más pequeño", "Plus petit", "Kleiner", "Menor", "小"],
