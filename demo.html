@@ -3090,6 +3090,44 @@ body.pv-open { overflow: hidden; }
     const M_SHARED = new Set(["title", "town", "fight", "nightmare", "underdream"]);
     let mFightRoll = null;
 
+    // Two composed fight songs (2026-11-16, Adrian sent reference samples and asked for fight songs):
+    // Rootbreaker for boss fights, Thorn and Cudgel for every other fight. Unlike the night music they
+    // are recordings, in music/ (.ogg, or .m4a where a browser can't play Ogg). Each file is the intro,
+    // then a loop that repeats seamlessly while the fight lasts (loopAt/loopLen in seconds). They load
+    // once music first plays; until then, or if they can't load (a copy opened from disk), the night
+    // music's fight pieces play as before. Nightmares keep their own music. In a chapter with its own
+    // war music (Rahdaria), an ordinary fight plays that half the time. Sources: tools/fight-songs/.
+    const REC = {
+      boss: { id: "rootbreaker", name: "Rootbreaker", file: "music/rootbreaker", loopAt: 588000 / 44100, loopLen: 4116000 / 44100, v: 0.4, buf: null, busy: false },
+      fight: { id: "thorn-and-cudgel", name: "Thorn and Cudgel", file: "music/thorn-and-cudgel", loopAt: 320727 / 44100, loopLen: 3207273 / 44100, v: 0.33, buf: null, busy: false }
+    };
+    const REC_EXT = (() => { try { return document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"') ? ".ogg" : ".m4a"; } catch (e) { return ".m4a"; } })();
+    function mRecLoad() {
+      if (!ctx || !window.fetch) return;
+      Object.values(REC).forEach(R => {
+        if (R.buf || R.busy) return;
+        R.busy = true;
+        fetch(R.file + REC_EXT).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+          .then(a => new Promise((ok, no) => { const p = ctx.decodeAudioData(a, ok, no); if (p && p.then) p.then(ok, no); }))
+          .then(b => { R.buf = b; }).catch(() => {}).finally(() => { R.busy = false; R.tried = true; });
+      });
+    }
+    // which recording a fight should play, if any: { k } for a recording, { own: true } for the chapter's own war music
+    function mRecFor(mood) {
+      if (mood === "boss") return REC.boss.buf ? { k: "boss" } : null;
+      if (mood !== "fight") return null;
+      if (MUSIC.some(x => x.pool === "fight" && x.region && x.region === want) && Math.random() < 0.5) return { own: true };
+      return REC.fight.buf ? { k: "fight" } : null;
+    }
+    function mRecStart(k, t) {
+      const R = REC[k], src = ctx.createBufferSource(), out = gain(0, mbus);
+      src.buffer = R.buf; src.loop = true; src.loopStart = R.loopAt; src.loopEnd = R.loopAt + R.loopLen;
+      src.connect(out);
+      out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(R.v, t + 0.3);
+      src.start(t);
+      return { rec: k, src, out, send: out, drone: [], ending: false, dead: false, warp: false, doneAt: 0 };
+    }
+
     // Every chapter has a theme: a short tune of its own, made from its name, that runs through all
     // its music. Its two pieces both carry it (the first states it, in the chapter's own key and mode;
     // the second bends it into another), and a fight, a Nightmare or a town plays it in their own colours
@@ -3159,6 +3197,7 @@ body.pv-open { overflow: hidden; }
       return tt + sp.step * (2 + Math.random() * sp.bar * 1.6 * (1.3 - P.arc));
     }
     function mRun(P, horizon) {
+      if (P.rec) return;
       const sp = P.sp;
       while (!P.ending && P.next < horizon) {
         const t = P.next, el = (t - P.t0) / P.len;
@@ -3195,6 +3234,7 @@ body.pv-open { overflow: hidden; }
       const t = ctx.currentTime, g = P.out.gain;
       if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); }
       g.setTargetAtTime(0, t, fast ? 0.6 : 2);
+      if (P.src) { try { P.src.stop(t + 6); } catch (e) {} }
       P.drone.forEach(o => { try { o.stop(t + 12); } catch (e) {} });
       setTimeout(() => { try { P.out.disconnect(); P.send.disconnect(); } catch (e) {} }, 13000);
     }
@@ -3203,18 +3243,19 @@ body.pv-open { overflow: hidden; }
       let pr = {};
       try { pr = (mProbe && mProbe()) || {}; } catch (e) {}
       if (!pr.fight) mFightRoll = null;
+      else if (!pr.nm && pr.boss && REC.boss.buf) return ["boss", false];
       else if (!pr.nm && pr.champ) { if (mFightRoll === null) mFightRoll = Math.random() < 0.5; if (mFightRoll) return ["anthem", false]; }
       if (pr.fight) return [pr.nm ? "nightmare" : "fight", false];
       if (pr.title) return ["title", false];
       if (mPlace) return [mPlace, mPlace !== "underdream" && !!pr.warp];
       return [MPOOLS.has(want) ? want : "labyrinth", !!pr.warp];
     }
-    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem"]);
-    function mPick(mood) {
+    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem", "boss"]);
+    function mPick(mood, ownOnly) {
       let list = MUSIC.filter(x => mood === "roads" ? !M_NOT_ROADS.has(x.pool) : (x.pool === mood || (x.also || []).includes(mood)) && (!x.region || x.region === want));
       // a fight in a chapter with its own war music plays it half the time
       const own = list.filter(x => x.region);
-      if (own.length && Math.random() < 0.5) list = own;
+      if (own.length && (ownOnly || Math.random() < 0.5)) list = own;
       const last = mLast[mood] || [];
       let c = list.filter(x => !last.includes(x.id));
       if (!c.length) c = list;
@@ -3225,7 +3266,7 @@ body.pv-open { overflow: hidden; }
     function mLoop() {
       if (!mbus || !live() || document.hidden || mLevel === "0") return;
       const [mood, warp] = mWant(), t = ctx.currentTime;
-      const quick = /^(fight|nightmare|anthem)$/.test(mood) || /^(fight|nightmare|anthem)$/.test(mMood || "");
+      const quick = /^(fight|nightmare|anthem|boss)$/.test(mood) || /^(fight|nightmare|anthem|boss)$/.test(mMood || "");
       if (mood !== mMood || (mPiece && mPiece.warp !== warp)) {
         if (mPiece) mStop(mPiece, quick);
         mPiece = null; mGap = t + (quick ? 1 : 4); mMood = mood;
@@ -3235,7 +3276,14 @@ body.pv-open { overflow: hidden; }
         mRun(mPiece, t + 2.5);
         if (mPiece.ending && t > mPiece.doneAt) { mStop(mPiece); mPiece = null; mGap = t + (quick ? 2 : rnd(18, 50)); mNow = null; mPaint(); }
       } else if (t >= mGap) {
-        const sp = mPick(mood);
+        const rec = mRecFor(mood);
+        if (rec && rec.k) {
+          mPiece = mRecStart(rec.k, t + 0.05);
+          mNow = { id: REC[rec.k].id, name: REC[rec.k].name, warp: false, theme: null };
+          mPaint();
+          return;
+        }
+        const sp = mPick(mood, rec && rec.own);
         mPiece = mMake(sp, warp); mStart(mPiece, t + 0.1); mRun(mPiece, t + 2.5);
         mNow = { id: sp.id, name: sp.name, warp, theme: mPiece.theme };
         if (!mHeard.has(sp.id + (warp ? "~" : ""))) { mHeard.add(sp.id + (warp ? "~" : "")); try { localStorage.setItem(MHKEY, JSON.stringify([...mHeard])); } catch (e) {} }
@@ -3245,6 +3293,7 @@ body.pv-open { overflow: hidden; }
     function mHalt() { if (mPiece) mStop(mPiece, true); mPiece = null; mMood = null; mNow = null; mPaint(); }
     function mWake() {
       if (!mbus) mBus(mLvl());
+      mRecLoad();
       if (!mTimer) mTimer = setInterval(mLoop, 500);
       mLoop();
     }
@@ -3826,6 +3875,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "125", name: "Fight Songs", date: "16 Nov 2026", items: [
+      "Two composed fight songs, from samples Adrian sent. <b>Rootbreaker</b> plays when a boss stands in front of you: war drums on a three-three-two beat, low strings sawing underneath, a horn tune, a choir, a smith's anvil when it's at its worst, and a climb up a step before the end.",
+      "<b>Thorn and Cudgel</b> plays in every other fight: lighter and quicker, with hand drums, a bouzouki, a low whistle and fiddles, so a boss still sounds like one when it comes.",
+      "Both open with a short intro, then loop without a seam for as long as the fight lasts. Nightmares keep their own music, and Rahdaria's fights still play its war music half the time. Turn music up or down in Settings, under Music."] },
     { ver: "124", name: "Far Holds and Spar", date: "16 Nov 2026", items: [
       "<b>Far holds</b>, painted by Adrian. Once the house at home is a compound, Bellamy Pennock has three old strongholds on a second ledger: <b>Saltwarden</b> on a dune-ridge in the Burning Sands, <b>Corrie Hold</b> on its own peak above the Corrach passes, and <b>Hoarfast</b> at the edge of the Long White. Buy one as a root-choked ruin, pay his crews to make it whole, and watch the painting change.",
       "Then choose once what it's for: a <b>garrison</b> (no gang of that region can raise a rival holding against you) or a <b>caravan stop</b> (twice the rent). Rival holdings have their own paintings now too.",
@@ -10733,6 +10786,10 @@ body.pv-open { overflow: hidden; }
     const b = document.body; b.classList.remove("fight-hit"); void b.offsetWidth; b.classList.add("fight-hit");
     setTimeout(() => b.classList.remove("fight-hit"), 380);
   }
+  // Boss fights get Rootbreaker (2026-11-16). A boss is a story foe with 40 or more HP before level
+  // scaling (no road beast has that many), or one of the earlier chapters' smaller bosses, named here.
+  const BOSS_NAMES = /^(Ryytaa the Ender|The Warden Golem|The Wringer|Hesper Coyle|Corvin Dray|Korr-Vesh|Ser Oswin|The Gravepike|The Blackjackal|Corwen Lisk|Thessk|Grell$|The Thorn Prince|The Echo of|Captain Dorran Vesk|The Hollow-Crown Sentinel|The Silent General|The Curator|The Underdream|Mardek Corvane|Maelis)/;
+  function foeIsBoss(name, base, unit) { return BOSS_NAMES.test(name || "") || (!unit && base >= 40); }
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
     FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); nextReg = null;
@@ -10740,7 +10797,7 @@ body.pv-open { overflow: hidden; }
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
     Object.assign(FOE, { soft: 0, hard: false, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, chill: 0, burn: 0, rtWard: false });
-    Object.assign(FOE, { on: true, name, max, hp, unit, felt: false, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
+    Object.assign(FOE, { on: true, boss: foeIsBoss(name, base, unit), name, max, hp, unit, felt: false, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     FOE.lg = null; FOE.ar = 0; FOE.arMax = 0; FOE.sund = false; FOE.fx = null; FOE.face = null; FOE.armF = null;
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
@@ -46624,7 +46681,7 @@ body.pv-open { overflow: hidden; }
       io.observe(v);
     } else go();
   })();
-  SND.musProbe(() => ({ title: !started, fight: FOE.on, nm: FOE.on && FOE.lvd && cascadeOn(), warp: cascadeOn(), champ: champOn() }));
+  SND.musProbe(() => ({ title: !started, fight: FOE.on, boss: FOE.on && !!FOE.boss, nm: FOE.on && FOE.lvd && cascadeOn(), warp: cascadeOn(), champ: champOn() }));
   // A death in the Bloom throws FALLEN out of the part: restore the last checkpoint and replay it.
   let CHECK = null;
   function checkpoint() { CHECK = JSON.stringify(S); save(); jCheckpoint(); }
