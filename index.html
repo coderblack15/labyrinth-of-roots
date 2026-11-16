@@ -1762,6 +1762,160 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
   .bfx-intro { background: radial-gradient(ellipse at center, rgba(0, 0, 0, .35), rgba(0, 0, 0, .6)); }
 }
 
+/* 2026-11-16 (Adrian: "Fix the fight screen. We need to rework it."): the fight board. In a fight the foe's card
+   leaves the sheet and sits on a board pinned above the story, beside a card for you, with the scene's own
+   pieces (gears, thorn marks, the Sentinel's lanes, the crown) under them. The name comes up on the board
+   instead of blacking out the screen, the moves are sorted into groups, and on phones the sheet steps aside. */
+.wrap > .fstage, .wrap > .story { grid-column: 1; }
+.wrap > .sheet { grid-column: 2; grid-row: 1 / span 2; }
+.fstage { position: sticky; top: 0; z-index: 6; align-self: start; margin: 0 0 4px; padding: 10px 14px 12px; max-width: 40rem;
+  background: linear-gradient(180deg, #1f1613, #151b17); border: 1px solid #4a2a24; border-top: 0; border-radius: 0 0 10px 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .45); display: grid; gap: 8px; }
+.fstage[hidden] { display: none; }
+.fs-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--label); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); min-height: 1em; }
+.fs-hint { color: var(--gold); text-align: right; }
+.fs-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 8px 16px; align-items: start; }
+.fstage #foeBox { display: contents; }
+.fstage #foeBox[hidden] { display: none; }
+.fstage .foe-main { grid-column: 1; grid-row: 1; grid-template-columns: auto minmax(0, 1fr); }
+.fstage .fs-you { grid-column: 2; grid-row: 1; }
+.fstage .foe-meters { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.fstage .foe-meters > div { background: rgba(0, 0, 0, .25); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; gap: 6px; }
+.fstage .foe-meters > [hidden] { display: none; }
+.fstage .combo .combo-note, .fstage .belt-note { font-size: .74rem; }
+.fstage .foe-face { width: 92px; height: 92px; border-radius: 10px; grid-column: 1; grid-row: 1 / span 2; align-self: start; }
+.fstage .foe-main > .foe-top { grid-column: 2; grid-row: 1; flex-wrap: wrap; }
+.fstage .foe-main > .foe-col { grid-column: 2; grid-row: 2; align-self: start; }
+.fstage .foe-top { gap: 8px; }
+.fstage .foe-name { font-size: 1rem; }
+.fstage .foebar { height: 14px; border-radius: 6px; }
+.fstage .foe-col { gap: 6px; }
+.fs-you { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; padding-left: 14px; border-left: 1px solid var(--line); }
+.fs-yface { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid #3c4a40; background: radial-gradient(circle at 50% 40%, #24302a, #0e1210 75%); }
+.fs-yface:empty { display: none; }
+.fs-yface img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.fs-ycol { display: grid; gap: 5px; min-width: 0; }
+.fs-ytop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.fs-yname { font-family: var(--label); font-weight: 700; letter-spacing: .08em; color: #9fd0b4; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-yhp { font-family: var(--label); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.fs-ybar { position: relative; height: 12px; background: #142019; border: 1px solid #2f4a3a; border-radius: 6px; overflow: hidden; }
+.fs-ybar span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #2f7a52, #5fbf86); transition: width .3s ease; }
+.fs-you.low .fs-ybar span { background: linear-gradient(90deg, #8f2a22, #e0573f); }
+.fs-you.low .fs-yhp { color: #ef7a62; }
+.fs-ystat { display: flex; flex-wrap: wrap; gap: 4px; font-family: var(--label); font-size: .72rem; letter-spacing: .05em; }
+.fs-ystat span { border: 1px solid var(--line); border-radius: 999px; padding: 0 7px; color: var(--muted); white-space: nowrap; }
+.fs-ystat .bad { color: #ef8a72; border-color: #6b3328; }
+.fs-ystat .good { color: #9fd0b4; border-color: #2f4a3a; }
+.fs-scene { border-top: 1px dashed #3a2a24; padding-top: 8px; display: grid; gap: 6px; font-size: .92rem; }
+.fs-scene[hidden] { display: none; }
+.fs-scene .fs-lbl { font-family: var(--label); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+/* The name comes up on the board itself, not over the whole screen. */
+.fs-intro { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; text-align: center; padding: 0 12px;
+  background: radial-gradient(ellipse at center, rgba(40, 10, 6, .92), rgba(14, 10, 8, .97)); border-radius: 0 0 10px 10px; }
+.fstage.intro .fs-intro { display: flex; animation: bfxIn 1.7s ease forwards; }
+.fs-intro .nm { font-size: clamp(22px, 5vw, 38px); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #f2e2c4; text-shadow: 0 0 18px rgba(200, 40, 20, .8), 0 3px 0 #000; animation: bfxSlam .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.fs-intro .mn { font-family: var(--label); font-size: .8rem; color: #e7b36a; letter-spacing: .12em; text-transform: uppercase; }
+/* Gears over the foe's painting: wounds that haven't landed yet, and when they will. */
+.ff-gears { position: absolute; top: 2px; right: 2px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; z-index: 2; }
+.ff-gears span { display: inline-flex; align-items: center; gap: 1px; background: rgba(10, 8, 4, .78); border: 1px solid #b08a3c; border-radius: 999px; padding: 0 4px 0 2px; font: 700 10px/14px var(--label); color: #ffd27a; }
+.ff-gears svg { width: 12px; height: 12px; animation: fsGear 3s linear infinite; }
+.ff-gears span.now { border-color: #ffd27a; box-shadow: 0 0 6px rgba(255, 210, 122, .7); }
+@keyframes fsGear { to { transform: rotate(360deg); } }
+/* Moves, sorted. */
+.choices.grouped { display: grid; gap: 10px; }
+.fc-grp { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.fc-grp::before { content: attr(data-l); flex: 1 0 100%; font-family: var(--label); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: -2px; }
+.choices.grouped button { text-align: left; }
+.choices.grouped button .tag { display: block; margin: 2px 0 0; font-size: .72rem; line-height: 1.3; letter-spacing: .05em; }
+.fc-grp.g-atk button.primary { font-size: 1.08rem; padding: 12px 22px; box-shadow: 0 0 0 1px rgba(217, 80, 58, .25), 0 4px 14px rgba(217, 80, 58, .18); }
+.fc-grp.g-leave button { border-style: dashed; }
+.choices.spent.grouped { display: flex; }
+.choices.spent .fc-grp { display: contents; }
+.choices.spent .fc-grp::before { content: none; }
+.choices.spent .fc-grp > :not(.chosen) { display: none; }
+/* A round mark in the log. */
+.fs-rd { display: flex; align-items: center; gap: 10px; margin: 14px 0 6px; font-family: var(--label); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: #8a6a5a; }
+.fs-rd::before, .fs-rd::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #4a2a24, transparent); }
+body.in-fight #story > * { scroll-margin-top: calc(var(--fs-h, 0px) + 14px); }
+/* Blinded no longer blacks out the screen anywhere: a smudged edge and a smeared foe meter. */
+body.in-fight.blinded #bfx { animation: none; box-shadow: inset 0 0 0 2px rgba(170, 160, 140, .55), inset 0 0 30px 4px rgba(0, 0, 0, .75); background: radial-gradient(ellipse 75% 60% at 50% 50%, transparent 60%, rgba(10, 8, 6, .45) 100%); }
+body.in-fight.blinded .story > *:not(:nth-last-child(-n+4)) { opacity: .65; filter: none; }
+body.in-fight.blinded #foeBox .foebar { filter: blur(2px); opacity: .55; }
+body.in-fight.blinded .foe-face img { filter: blur(3px) brightness(.6); }
+body.in-fight[data-light="dark"] .story { filter: none; }
+@media (max-width: 860px) {
+  .wrap > .sheet { grid-column: 1; grid-row: auto; }
+  .fstage { margin: -20px calc(-1 * var(--bleed-r)) 0 calc(-1 * var(--bleed-l)); padding: 8px 12px 10px; border-left: 0; border-right: 0; border-radius: 0 0 10px 10px; top: env(safe-area-inset-top, 0px); max-width: none; gap: 6px; }
+  /* The sheet steps aside in a fight: the board carries your HP. The Bag pill stays. */
+  body.in-fight .sheet { position: static; padding: 0; border: 0; background: none; min-height: 0; }
+  body.in-fight .sheet > :not(.inv-toggle):not(.inv-panel):not(.inv-scrim) { display: none; }
+  .fs-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .fstage .foe-main { grid-column: 1; grid-row: 1; }
+  .fstage .fs-you { grid-column: 1; grid-row: 2; padding-left: 0; border-left: 0; grid-template-columns: auto minmax(0, 1fr); gap: 8px; }
+  .fstage .foe-face { width: 60px; height: 60px; }
+  .fs-yface { width: 30px; height: 30px; border-radius: 6px; }
+  .fs-ycol { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; }
+  .fs-ytop { gap: 6px; }
+  .fs-yname { max-width: 6em; font-size: .8rem; }
+  .fs-yhp { font-size: .9rem; }
+  .fs-ybar { flex: 1 1 80px; height: 10px; }
+  .fs-ystat { display: contents; font-size: .68rem; }
+  .fs-head { display: none; }
+  .fstage .foe-meters > div { font-size: .8rem; }
+  .fstage .foe-meters .stat-label { font-size: .66rem; }
+  .fstage .belt-note { font-size: .66rem; }
+  .fstage .foe-meters { gap: 4px; }
+  .fstage .foe-meters > div { padding: 1px 8px; }
+  .fstage .combo .combo-note { display: none; }
+  .fstage .combo.ready .combo-note { display: inline; }
+  .fc-grp > button { flex: 1 1 calc(50% - 4px); min-width: 0; }
+  .fc-grp.g-atk > button.primary { flex-basis: 100%; }
+  .choices.spent .fc-grp > button.chosen { flex: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fstage.intro .fs-intro { animation: bfxIn 1.7s linear forwards; }
+  .fs-intro .nm, .ff-gears svg { animation: none; }
+  .fs-ybar span { transition: none; }
+}
+
+/* The Heart's scene pieces: the King's afterimages, the warm line and the Weeper, the Prince's mark, the
+   Sentinel's lanes, the crown, and the false victory. */
+.lh-cell.after { color: #f3b54a; }
+.lh-cell.after.a1 { opacity: .55; }
+.lh-cell.after.a2 { opacity: .28; }
+.lh-cell.you.behind { box-shadow: inset 0 0 0 2px #9fd0b4, 0 0 10px rgba(159, 208, 180, .5); }
+.lh-cell.ember { background: #4a2a10; color: #ffb45a; box-shadow: inset 0 0 0 1px rgba(255, 170, 70, .8), 0 0 10px rgba(255, 150, 50, .45); }
+.lh-cell.weeper { color: #c9b0e0; background: #2a1c30; font-weight: 700; }
+.ht-mark { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ht-mark b { font-family: var(--label); letter-spacing: .08em; color: #e8d6b8; }
+.ht-mark .thorns { color: #c9d0c0; letter-spacing: .1em; text-shadow: -3px 0 0 rgba(200, 200, 190, .25), 3px 0 0 rgba(200, 200, 190, .25); }
+.ht-mnote { font-family: var(--label); font-size: .74rem; letter-spacing: .04em; color: var(--muted); }
+.snt-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.snt-lane { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; min-height: 0; text-align: center; background: #18140e; border-color: #4a3a22; }
+.snt-lane.aimed { border-color: var(--gold); background: #2a2010; box-shadow: 0 0 10px rgba(207, 168, 80, .35); }
+.snt-ln { font-family: var(--label); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.snt-fig { height: 1.3em; font-size: 1.1rem; }
+.snt-now { color: #e68a76; }
+.snt-ghost { color: #e68a76; }
+.snt-ghost.g0 { opacity: .45; }
+.snt-ghost.g1 { opacity: .22; }
+.snt-aim { font-family: var(--label); font-size: .68rem; color: #b8a070; }
+.ht-crownrow { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 10px; align-items: center; }
+.ht-crownpic { width: 54px; height: 72px; object-fit: cover; border-radius: 6px; border: 1px solid #5a4a30; }
+.ht-crownpips { display: flex; gap: 6px; margin: 4px 0; }
+.ht-crownpips i { width: 26px; height: 8px; border-radius: 3px; border: 1px solid #6a5a3a; background: #1a160e; }
+.ht-crownpips i.on { background: linear-gradient(90deg, #8a6a2a, #e8c070); border-color: #e8c070; }
+.tbc.ht-fake { position: relative; }
+.tbc.ht-fake::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: .55;
+  background: linear-gradient(118deg, transparent 63%, rgba(0, 0, 0, .7) 63.4%, transparent 64%), linear-gradient(68deg, transparent 22%, rgba(0, 0, 0, .6) 22.3%, transparent 22.8%), linear-gradient(160deg, transparent 84%, rgba(0, 0, 0, .55) 84.3%, transparent 84.8%); }
+.ht-vic { margin: -4px 0 10px; }
+.ht-vic img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid #3a2e22; }
+button.ht-ear { display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px 4px 4px; border-color: #b08a3c; background: #1a140c; }
+button.ht-ear img { width: 56px; height: auto; border-radius: 999px; display: block; }
+button.ht-ear:not(:disabled) { animation: htEar 2.4s ease-in-out infinite; }
+@keyframes htEar { 0%, 100% { box-shadow: 0 0 0 rgba(255, 200, 110, 0); } 50% { box-shadow: 0 0 14px rgba(255, 200, 110, .45); } }
+@media (prefers-reduced-motion: reduce) { button.ht-ear:not(:disabled) { animation: none; } }
+
 /* ---- battle maps (the field) ---- */
 .field-card { margin: 14px 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .fd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -2067,6 +2221,21 @@ body.pv-open { overflow: hidden; }
 </div>
 
 <main class="wrap">
+  <section class="fstage" id="fightStage" hidden aria-label="The fight">
+    <div class="fs-intro" id="fsIntro" aria-hidden="true"><div class="nm" id="fsIntroNm"></div><div class="mn" id="fsIntroMn"></div></div>
+    <div class="fs-head"><span class="fs-turn" id="fsTurn"></span><span class="fs-hint" id="fsHint"></span></div>
+    <div class="fs-row" id="fsRow">
+      <div class="fs-you" id="fsYou">
+        <div class="fs-yface" id="fsYFace"></div>
+        <div class="fs-ycol">
+          <div class="fs-ytop"><span class="fs-yname" id="fsYName">You</span><span class="fs-yhp" id="fsYHp"></span></div>
+          <div class="fs-ybar" role="meter" id="fsYMeter" aria-label="Your health"><span id="fsYBar"></span></div>
+          <div class="fs-ystat" id="fsYStat"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fs-scene" id="fsScene" hidden></div>
+  </section>
   <article class="story" id="story" aria-live="polite"></article>
   <div id="bfx" aria-hidden="true"></div>
 
@@ -2243,11 +2412,13 @@ body.pv-open { overflow: hidden; }
       <div class="foe-plates" id="foePlates" hidden></div>
       <div class="foe-stat" id="foeStat" hidden></div>
       </div></div>
+      <div class="foe-meters">
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
       <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
       <div class="belt kin" id="kinBox" hidden><span class="stat-label" id="kinLbl">Path</span><span class="belt-note" id="kinNote"></span></div>
       <div class="belt kin" id="cxBox" hidden><span class="stat-label" id="cxLbl">Smoulder</span><span class="belt-note" id="cxNote"></span></div>
+      </div>
     </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
@@ -3622,6 +3793,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "123", name: "The Fight Board", date: "16 Nov 2026", items: [
+      "<b>The fight screen, reworked</b> (Adrian: \"we need to rework it\"). In a fight the foe's card comes off the sheet onto a <b>fight board</b> pinned above the story: its painting, health, armour and burns on one side, <b>you</b> on the other (your painting, HP, AC, and anything wrong with you: bleeding, blinded, poisoned, rooted). Combo, Dread, your item and your calling's meter sit under them as small chips, and the turn count is up top.",
+      "<b>No more blackout.</b> The foe's name slams onto the board instead of darkening the whole screen, and Blinded is now a smudged edge and a smeared foe bar on every screen size, not a black veil. Each new round gets a thin mark in the log, so you can see where one ends.",
+      "<b>Your moves, sorted.</b> Big fight menus are grouped: <b>Attack</b>, <b>Guard and mend</b>, <b>Tricks and tactics</b>, <b>Items and weapons</b>, and the <b>Way out</b>. The main strike is the big button; the small print sits under each move. On phones the moves sit two to a row, the sheet steps aside while you fight, and the board carries your HP.",
+      "<b>Wounds that land later show as gears</b> on the foe's painting, with the rounds to go: echo cuts, the Second Hand, the Verdict, and the Hourblade's new move, <b>Delayed Death</b>: a swing that lands nothing now and arrives next round with +1d6. Stack them, each a round slower, or <b>Strike early</b> to call them all in at once.",
+      "<b>The Heart Beneath the Roots, sharper</b>, with Adrian's paintings. The Blind King's last two steps hang in the air behind him, and if he walks through you while you hold still, you're at his back: one knot cut makes no sound. The Thorn Prince wears your last move as a mark on the board: do the same thing twice in a row and his twin afterimages answer it, and you're <b>rooted</b> for a turn. On the Weeping Paths something walks the true paths after you, and asking your companion lights a warm line on the next three true squares.",
+      "<b>New in the Heart:</b> the <b>Root-Clock Sentinel</b> by the gallery door. Wind it with your blood and it fights the Echoes for you, a turn late: aim its blow at a lane under the board, and read where the Echo is going, not where it is. At half its strength the First Seed stops fighting you and starts <b>crowning</b> the one it chose: tear the crown away or put the Seed down first. If the crown lands, there are only two ways left. And the false victory in the orchard is now Adrian's painted Victory card, with a glowing ear to <b>Listen</b>."] },
     { ver: "121", name: "The Heart Beneath the Roots", date: "16 Nov 2026", items: [
       "<b>A new chapter after the Lost Hand</b>, Parts CXIX to CXXV, from Adrian's mission. Every year one message comes up out of the labyrinth cut into living bark: THE HEART STILL BEATS. This year there's a fifth line, and it isn't finished. Back to where it all began: the Library of Roots, and down.",
       "<b>The labyrinth was never a maze.</b> It's a cage, drawn round Ommeral, the First Seed, and the Heart that keeps it alive isn't a thing. It's a person: <b>your most loyal companion</b>, or you, if you've kept nobody close. The signs creep in quietly at the camps of earlier chapters, from the Corrach on.",
@@ -4675,6 +4853,8 @@ body.pv-open { overflow: hidden; }
     { id: "htstill", name: "Be a Stone", desc: "Let the Blind King walk straight through you.", test: () => false },
     { id: "htking", name: "Never Heard", desc: "Cut the Blind King's three knots without him once hearing you.", test: () => false },
     { id: "htprince", name: "Never Twice", desc: "Beat the Thorn Prince without him once reading your move.", test: () => false },
+    { id: "htsent", name: "A Turn Late", desc: "Land two of the Root-Clock Sentinel's blows in one fight.", test: () => false },
+    { id: "htnotyet", name: "Not Yet", desc: "Put the First Seed down before its crown comes all the way down.", test: () => false },
     { id: "htlisten", name: "Listen", desc: "Don't walk out of the Orchard of False Ends.", test: () => false },
     { id: "htdoubt", name: "A Little Before You", desc: "Notice that the Heart in the orchard is beating early.", test: () => false },
     { id: "htexec", name: "The Execution", desc: "End the First Seed the only way it can end.", test: () => false },
@@ -5148,6 +5328,7 @@ body.pv-open { overflow: hidden; }
     $("coinVal").textContent = S.coins + " gp";
     $("calVal").innerHTML = calLine();
     renderXp();
+    try { if (FOE.on) fsYou(); } catch (e) {}
     const items = [];
     if (S.blessing) items.push(["blessing", "blessing", "Strangers' Blessing", "Reroll one failed check."]);
     if (S.torch) items.push(["torch", "torch", "Torch", "Cloth, stick and flint."]);
@@ -5347,7 +5528,8 @@ body.pv-open { overflow: hidden; }
       scrollNext = false;
       requestAnimationFrame(() => {
         const r = node.getBoundingClientRect();
-        if (r.top > innerHeight * 0.7 || r.top < 0) node.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        const top = FOE.on ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fs-h")) || 0 : 0;
+        if (r.top > innerHeight * 0.7 || r.top < top) node.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
       });
     }
     return node;
@@ -5405,6 +5587,9 @@ body.pv-open { overflow: hidden; }
     htechoes: ["Root Echoes", "Heroes who died down here, grown back out of root: they fight with what they carried and how they fought. Every third round they do their old trick. Lay them to rest or take what they had: the ones you rest stand with you at the end, and the ones you rob stand against you."],
     htking: ["The Blind King", "He walks his round and hears feet. Walking within 2 squares of him (the lit ones), or cutting a knot within 3, and he hears you. Holding still is always safe: he walks straight through you. Cut his three knots."],
     htprince: ["The Thorn Prince", "A move is what you do after what you did last turn: Swing after Feint isn't Swing after Swing. Make the same move twice and he's ready: it does nothing, and he answers it. Options he's read are marked. Vary everything."],
+    ticks: ["Delayed Death", "A Tick is a cut that arrives late: the swing lands nothing now, and the wound comes due next round with +1d6. Stack more and each waits a round longer. The gears on its painting show how many are turning and when each lands. <b>Strike early</b> calls them all in at once, without the bonus."],
+    htsent: ["The Root-Clock Sentinel", "The Sentinel's blows land a round late. Each round, tap a lane under the board to aim its next blow; at the start of the next round it comes down there. The Echo moves between the lanes on a pattern: its last two places hang in the air, so read where it's going, not where it is. Aiming is free: you still make your own move."],
+    htcrown: ["The Crowning", "Once the Seed is half gone, it stops fighting you and starts crowning the one it chose. The crown comes down a step every round. Tear it away (Strength) to push it back, or put the Seed down before it lands. If it lands, the Seed has its heart, and the ending changes."],
     htorchard: ["The Orchard of False Ends", "It happens once, here, and nowhere else in the game."],
     htseed: ["The First Seed", "Every third round it pulls on the Heart. Spend that turn holding on, or it drinks and heals."],
     tear: ["Tears", "Touch a thing and it turns (◇ ◈ ◆), and so do the things either side of it. Set each back the way it was. You can only see the way it was by <b>looking</b>, a few times, for a breath each; the count always says how many are right. A rough mend costs you."],
@@ -5504,7 +5689,9 @@ body.pv-open { overflow: hidden; }
     return new Promise(resolve => {
       const box = el("div", "choices");
       let detach = null;
-      opts.filter(shown).forEach((o, i) => {
+      const vis = opts.filter(shown), grouped = main && FOE.on && vis.length >= 4, grp = {};
+      if (grouped) { box.classList.add("grouped"); FC_GROUPS.forEach(([k, l]) => { grp[k] = el("div", "fc-grp g-" + k); grp[k].dataset.l = l; }); }
+      vis.forEach((o, i) => {
         const txt = wpnTxt(o.label) + (o.tag ? '<span class="tag">' + wpnTxt(o.tag) + "</span>" : "");
         const b = el("button", (i === 0 && !o.plain ? "primary" : "") + (o.pic ? " has-pic" : ""), o.pic ? picHTML(o.pic, "ipic-sm") + '<span class="pic-txt">' + txt + "</span>" : txt);
         b.type = "button";
@@ -5515,14 +5702,26 @@ body.pv-open { overflow: hidden; }
           scrollNext = true;
           resolve(o.key);
         };
-        box.appendChild(b);
+        (grouped ? grp[fcGroup(o, i)] : box).appendChild(b);
       });
       // In a fight, every prompt carries the quick-hands item button.
-      swapAttach(box, null);
-      detach = beltAttach(box, box, main ? () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (detach) detach(); resolve(BELT_WON); } : null);
+      const hands = grouped ? grp.hands : box;
+      swapAttach(hands, null);
+      detach = beltAttach(box, hands, main ? () => { box.querySelectorAll("button").forEach(x => x.disabled = true); if (detach) detach(); resolve(BELT_WON); } : null);
+      if (grouped) FC_GROUPS.forEach(([k]) => { if (grp[k].children.length) box.appendChild(grp[k]); });
       if (FOE.on) { fightCompact(); box.classList.add("fc"); }
       add(box);
     });
+  }
+  // The fight menu, sorted: attacks first, then guarding and mending, then tricks, then your hands, then the way out.
+  const FC_GROUPS = [["atk", "Attack"], ["guard", "Guard and mend"], ["more", "Tricks and tactics"], ["hands", "Items and weapons"], ["leave", "Way out"]];
+  function fcGroup(o, i) {
+    const k = String(o.key), t = String(o.tag || "");
+    if (i === 0 && !o.plain) return "atk";
+    if (/^(escape|flee|run|yield|leave|retreat)/.test(k)) return "leave";
+    if (/^(evade|wipe|mend|band|breath|pavise|quick|ground|cx-step|ht-hold|ht-tear|dig|heal|guard|brace)/.test(k) || /regain|\bHP\b|bandage/i.test(t) && !/damage/i.test(t)) return "guard";
+    if (/^(atk|cls|kin|low|feint|gems|book|shard|cx-s-|cx-grasp|cx-hand|cx-tick|cx-mid|cx-verd|tk-|snt-)/.test(k) || /\d+d\d+|swing|strike|damage|no roll/i.test(t)) return "atk";
+    return "more";
   }
   const go = (label) => choose([{ key: 1, label }]);
 
@@ -6102,6 +6301,15 @@ body.pv-open { overflow: hidden; }
     sc_rime_b: "art/sc_rime_b.webp",
     p_wringer_b: "art/p_wringer_b.webp",
     sc_rmheart: "art/sc_rmheart.webp",
+    sc_ht_kinggrid: "art/sc_ht_kinggrid.webp",
+    sc_ht_listen: "art/sc_ht_listen.webp",
+    sc_ht_crown: "art/sc_ht_crown.webp",
+    sc_ht_heart: "art/sc_ht_heart.webp",
+    sc_ht_victory: "art/sc_ht_victory.webp",
+    sc_ht_map: "art/sc_ht_map.webp",
+    p_ht_prince: "art/p_ht_prince.webp",
+    p_ht_king: "art/p_ht_king.webp",
+    ht_ear: "art/ht_ear.webp",
     sc_rmtwin: "art/sc_rmtwin.webp",
     sc_rslib: "art/sc_rslib.webp",
     sc_rslib_b: "art/sc_rslib_b.webp",
@@ -10315,15 +10523,8 @@ body.pv-open { overflow: hidden; }
   const menaceNow = () => FOE.on && FOE.menace && FOE.turn <= MENACE_TURNS ? FOE.menace : 0;
   let bfxTimer = 0, bfxBeat = 0;
   function bfxOpen(name, menace) {
-    document.querySelectorAll(".bfx-intro").forEach(x => x.remove());
-    const nmTxt = String(name || "").replace(/<[^>]*>/g, "");
-    const box = el("div", "bfx-intro", "<div class='nm'></div><div class='mn'></div>");
-    box.setAttribute("aria-hidden", "true");
-    box.querySelector(".nm").textContent = nmTxt;
-    box.querySelector(".mn").textContent = "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns";
-    document.body.appendChild(box);
-    setTimeout(() => box.remove(), 2000);
     document.body.classList.add("in-fight");
+    fsOpen(name, menace);
     try { SND.menace(); } catch (e) {}
     clearInterval(bfxTimer); bfxBeat = 0;
     bfxTimer = setInterval(() => {
@@ -10334,7 +10535,81 @@ body.pv-open { overflow: hidden; }
       if (low || bfxBeat % 2 === 0) { try { SND.drum(low); } catch (e) {} }
     }, 575);
   }
-  function bfxClose() { clearInterval(bfxTimer); bfxTimer = 0; FOE.pblind = 0; document.body.classList.remove("in-fight", "fight-low", "fight-hit", "blinded"); }
+  function bfxClose() { clearInterval(bfxTimer); bfxTimer = 0; FOE.pblind = 0; document.body.classList.remove("in-fight", "fight-low", "fight-hit", "blinded"); fsClose(); }
+  // ---------- the fight board ----------
+  // In a fight the foe's card (#foeBox) leaves the sheet for a board pinned above the story (#fightStage), next to
+  // a card for you. The name slams onto the board instead of blacking out the screen. fsScene(html) fills the
+  // strip under the cards with a scene's own pieces; fsGears lists wounds that land later (shown as gears on the
+  // foe's painting). It all clears when the fight ends. On phones the sheet steps aside while the board is up.
+  let fsHome = null, fsIntroT = 0, fsRO = null;
+  function fsOpen(name, menace) {
+    const st = $("fightStage"), box = $("foeBox");
+    if (!st || !box) return;
+    if (!fsHome && box.parentNode !== $("fsRow")) fsHome = { parent: box.parentNode, next: box.nextElementSibling };
+    $("fsRow").insertBefore(box, $("fsYou"));
+    st.hidden = false;
+    fsScene("");
+    $("fsIntroNm").textContent = String(name || "").replace(/<[^>]*>/g, "");
+    $("fsIntroMn").textContent = menace ? "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns" : "";
+    st.classList.remove("intro"); void st.offsetWidth; st.classList.add("intro");
+    clearTimeout(fsIntroT); fsIntroT = setTimeout(() => st.classList.remove("intro"), 1700);
+    if (!fsRO && typeof ResizeObserver === "function") { fsRO = new ResizeObserver(fsSize); fsRO.observe(st); }
+    fsYou(); fsSize();
+  }
+  function fsClose() {
+    const st = $("fightStage"), box = $("foeBox");
+    if (!st || !box) return;
+    if (fsHome && box.parentNode !== fsHome.parent) fsHome.parent.insertBefore(box, fsHome.next && fsHome.next.parentNode === fsHome.parent ? fsHome.next : null);
+    st.hidden = true; st.classList.remove("intro");
+    fsScene(""); fsSize();
+  }
+  function fsSize() {
+    const st = $("fightStage");
+    document.documentElement.style.setProperty("--fs-h", (st && !st.hidden ? st.offsetHeight : 0) + "px");
+  }
+  // The strip under the cards: a scene's own pieces. Empty hides it.
+  function fsScene(html) {
+    const b = $("fsScene"); if (!b) return;
+    b.innerHTML = html || ""; b.hidden = !html;
+  }
+  // You, on the board: your painting, HP, AC and what's wrong with you.
+  function fsYou() {
+    const y = $("fsYou"); if (!y || !FOE.on) return;
+    const max = S.maxHp || 1, hp = Math.max(0, S.hp);
+    $("fsYName").textContent = S.name || "You";
+    $("fsYHp").textContent = hp + " / " + max + " HP";
+    $("fsYBar").style.width = Math.min(100, hp / max * 100) + "%";
+    const m = $("fsYMeter"); m.setAttribute("aria-valuemin", 0); m.setAttribute("aria-valuemax", max); m.setAttribute("aria-valuenow", hp);
+    y.classList.toggle("low", hp <= Math.max(1, max * 0.3));
+    const f = $("fsYFace"), on = S.pr !== undefined && typeof ITEM_PICS !== "undefined" && !!ITEM_PICS[heroFam(S)], key = on ? heroFam(S) : "";
+    if (f.dataset.k !== key) { f.dataset.k = key; f.innerHTML = on ? heroImg(S, "fs-yimg") : ""; }
+    const bits = ['<span title="Armour class">AC ' + acNow() + "</span>"];
+    if (bleeds().length) bits.push('<span class="bad">Bleeding ' + bleedTxt() + "</span>");
+    if (FOE.pblind > 0) bits.push('<span class="bad">Blinded ' + FOE.pblind + "</span>");
+    if (lgVen()) bits.push('<span class="bad">Poisoned ' + lgVen() + "</span>");
+    if (FOE.dig) bits.push('<span class="good">Dug in</span>');
+    const F = FOE.F, st = F && F.st;
+    if (st && st.quick > 0) bits.push('<span class="good">Quickened ' + st.quick + "</span>");
+    if (st && st.split > 0) bits.push('<span class="good">Mirrorwake ' + st.split + "</span>");
+    if (st && st.adv) bits.push('<span class="good">Next swing: advantage</span>');
+    if (st && st.htRoot > 0) bits.push('<span class="bad">Rooted</span>');
+    $("fsYStat").innerHTML = bits.join("");
+    const h = $("fsHint"); if (h) h.textContent = S.hp <= Math.max(1, max * 0.3) ? "You're badly hurt" : "";
+    const t = $("fsTurn"); if (t) t.textContent = FOE.turn ? "Turn " + FOE.turn : "";
+  }
+  // Wounds that land later, as gears on the foe's painting: [turns, what]. Each scene can add its own.
+  function fsGears() {
+    const F = FOE.F, st = F && F.st, g = [];
+    if (!st) return g;
+    (st.cxEcho || []).forEach(e => g.push([1, e[2]]));
+    if (st.cxClack > 0) g.push([st.cxClack, "Second Hand"]);
+    if (st.cxVerdict > 0) g.push([st.cxVerdict, "The Verdict"]);
+    if (st.cxZero && st.cxDeath) g.push([st.quick || 1, "Death Marks"]);
+    (st.tk || []).forEach(t => g.push([t.n, "Tick"]));
+    if (st.snt && st.snt.aim != null) g.push([1, "The Sentinel's blow"]);
+    return g;
+  }
+  const GEAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffd27a" d="M10.3 2h3.4l.5 2.6 1.9.8 2.2-1.5 2.4 2.4-1.5 2.2.8 1.9 2.6.5v3.4l-2.6.5-.8 1.9 1.5 2.2-2.4 2.4-2.2-1.5-1.9.8-.5 2.6h-3.4l-.5-2.6-1.9-.8-2.2 1.5-2.4-2.4 1.5-2.2-.8-1.9L2 13.7v-3.4l2.6-.5.8-1.9-1.5-2.2 2.4-2.4 2.2 1.5 1.9-.8zM12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/></svg>';
   function bfxHit() {
     if (!FOE.on) return;
     const b = document.body; b.classList.remove("fight-hit"); void b.offsetWidth; b.classList.add("fight-hit");
@@ -10389,9 +10664,10 @@ body.pv-open { overflow: hidden; }
     renderFoeFace();
     $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : (FOE.dread >= DREAD_CAP ? "+1 to hit (dread) · next hit is a Rootbreaker" : "+2 to hit · next hit is a Rootbreaker");
     renderDread();
+    fsYou();
   }
   // On phones the sheet is a sticky top bar, so scroll targets need to clear its real height.
-  function sheetH() { const sh = $("sheet"); if (sh) document.documentElement.style.setProperty("--sheet-h", sh.offsetHeight + "px"); }
+  function sheetH() { const sh = $("sheet"), fs = $("fightStage"); if (sh) document.documentElement.style.setProperty("--sheet-h", (fs && !fs.hidden && matchMedia("(max-width: 860px)").matches ? fs.offsetHeight : sh.offsetHeight) + "px"); }
   function foePop(text, rb) {
     const box = $("foeBox");
     if (!box || box.hidden) return;
@@ -10661,11 +10937,13 @@ body.pv-open { overflow: hidden; }
       box.dataset.k = key;
       const pic = f.src ? '<img alt="' + (f.alt || FOE.name).replace(/"/g, "&quot;") + '" src="' + f.src + '" decoding="async">' : FACE_SVG[f.kind] || FACE_SVG.beast;
       box.innerHTML = (f.bid ? '<button type="button" class="bpic-btn" data-beast="' + f.bid + '" aria-label="Look at the painting">' + pic + "</button>" : pic) +
-        '<i class="ff-tint fr"></i><i class="ff-tint vn"></i>' + FLAMES + RIME + '<span class="ff-ven" aria-hidden="true"><b></b><b></b><b></b></span><span class="ff-badges"></span>';
+        '<i class="ff-tint fr"></i><i class="ff-tint vn"></i>' + FLAMES + RIME + '<span class="ff-ven" aria-hidden="true"><b></b><b></b><b></b></span><span class="ff-badges"></span><span class="ff-gears"></span>';
     }
     const b = fxOn("burn"), fr = fxOn("frost"), v = FOE.fx && FOE.fx.ven ? FOE.fx.ven : FOE.lg && FOE.lg.ven ? FOE.lg.ven : 0;
     box.classList.toggle("burn", b > 0); box.classList.toggle("frost", fr > 0); box.classList.toggle("ven", v > 0); box.classList.toggle("sund", !!FOE.sund);
     const bd = box.querySelector(".ff-badges"); bd.classList.toggle("n3", !!(b && fr && v));
+    const gz = box.querySelector(".ff-gears");
+    if (gz) { const gs = fsGears(); gz.innerHTML = gs.slice(0, 4).map(x => '<span class="' + (x[0] <= 1 ? "now" : "") + '" title="' + x[1] + ": lands in " + x[0] + (x[0] === 1 ? " turn" : " turns") + '">' + GEAR_SVG + x[0] + "</span>").join(""); }
     bd.innerHTML = (b ? '<span class="b-burn" title="Burning">🔥<i>' + b + "</i></span>" : "") + (fr ? '<span class="b-frost" title="Chilled">❄<i>' + fr + "</i></span>" : "") + (v ? '<span class="b-ven" title="Poisoned">☠<i>' + v + "</i></span>" : "");
     const row = $("foeArmRow");
     if (row) {
@@ -17232,6 +17510,14 @@ body.pv-open { overflow: hidden; }
     sc_harbour_c: "A painting of a wet harbour wall at dusk: a bell on a rope and a slate of names fixed to the stone, the sea already up over the steps.",
     sc_rime_b: "A painting of a lit door cut into a glacier, and a line of shaggy pack beasts struggling towards it through the snow.",
     p_wringer_b: "A painting of a village well at night, and a long pale hand with too many joints reaching up out of it to grip the stones.",
+    sc_ht_kinggrid: "A painting of a dark tiled hall seen from above: a tall figure robed in roots walks the grid, and a small cloaked figure stands very still in his path.",
+    sc_ht_listen: "A painting of a cracked stone plaque wrapped in thorny roots and hung with skulls, a crowned tree shield on it, and a glowing brass ear set below.",
+    sc_ht_crown: "A painting of a living crown of thorny roots coming down out of the dark, its roots wrapping a figure underneath it.",
+    sc_ht_heart: "A painting of a heart grown out of roots, glowing red, hanging over a cloaked figure who kneels on a floor cracked with red lines.",
+    sc_ht_victory: "A painting of a stone victory card framed in thorns and skulls. It reads: Victory. The orchard is silent. Or so you believe. Below it, a glowing Listen button.",
+    sc_ht_map: "A painting of a hooded figure tracing a glowing line of gold across a map of tangled root-tunnels.",
+    p_ht_prince: "A painting of the Thorn Prince: a slender figure grown out of white thorn, crowned with spikes, swirling ribbons of grey afterimage round him.",
+    p_ht_king: "A painting of the Blind King: a towering figure robed in roots and thorns, his hood empty, walking the tiles of his hall.",
     sc_rmheart: "A painting of the heart of Rimehold: a vast torn knot of roots in a whirl of ice and mist, and a tall grey figure waiting beside it.",
     sc_rmtwin: "A painting of two figures of clear ice on a frozen shore, the same figure twice, each holding a long blade.",
     sc_rslib: "A painting of an old librarian reading at a desk in a hall of books overgrown with pale roots, a single lamp lit.",
@@ -18571,6 +18857,7 @@ body.pv-open { overflow: hidden; }
     if ((F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
+      if (st.round > 1) add(el("div", "fs-rd", "Round " + st.round));
       await bleedTick();
       await kinRound(st); if (FOE.hp <= 0) break;
       await cxRound(F, st); if (FOE.hp <= 0) break;
@@ -26596,7 +26883,7 @@ body.pv-open { overflow: hidden; }
   function cxStart(st) {
     if (!cxOn()) return;
     st.cx = clIs("bloom") ? (clB("desert") === "coal" ? 1 : 0) + (cxAsc() ? 3 : 0) : (hasGear("protoeye") ? 1 : 0);
-    st.cxOnce = {}; st.cxEcho = []; st.cxHeads = FOE.hp; st.cxDeath = 0;
+    st.cxOnce = {}; st.cxEcho = []; st.cxHeads = FOE.hp; st.cxDeath = 0; st.tk = [];
     renderCx();
   }
   // Land a fixed amount on it (stored wounds, the Colossus). Head-count fights lose one per 10.
@@ -26623,6 +26910,14 @@ body.pv-open { overflow: hidden; }
       if (r >= 3 && st.round % 3 === 0 && !(st.cxMark > 0)) { st.cxMark = 1; await mech("Clockwork Sight: bronze gears flicker over " + (F.heads ? "one of them" : F.who) + " for a breath. A weak point: your next hit on it is a critical.", "loot"); }
     }
     st.cxHeads = FOE.hp;
+    // Delayed Death: each Tick set on it counts down, and lands when its hand comes round.
+    if (st.tk && st.tk.length) {
+      st.tk.forEach(t => t.n--);
+      const due = st.tk.filter(t => t.n <= 0); st.tk = st.tk.filter(t => t.n > 0);
+      for (const t of due) { if (FOE.hp <= 0) break; await cxLand(F, t.dmg, "A Tick comes due"); }
+      if (due.length && FOE.hp <= 0) await say("The last gear over " + (F.heads ? "them" : F.who) + " shatters, and the cut you made " + (due.length > 1 ? "rounds" : "a round") + " ago finally arrives.");
+      renderFoe();
+    }
     // Late wounds: the echo of a cut, or of a thorn-stroke.
     const ec = st.cxEcho || []; st.cxEcho = [];
     for (const e of ec) { if (FOE.hp <= 0) break; if (F.heads) await cxLand(F, 10, e[2]); else await foeBurst(e[0], e[1], e[3] || 0, e[2]); }
@@ -26727,6 +27022,8 @@ body.pv-open { overflow: hidden; }
       if (r >= 4) add("cx-grove", 5, "Funeral Grove", "once a fight · the rest of the fight its blows are −1 and you regain 2 HP a round · costs your turn", !st.cxOnce.grove);
       if (r >= 5) add("cx-guard", 6, "The Colossus Stands", "once a fight · the Withered Colossus stands up beside you for " + (cxAsc() ? 4 : 3) + " rounds and halves the blows on you · costs your turn", !st.cxOnce.guard);
     } else {
+      if (!noAtk) o.push({ key: "cx-tick", label: "Delayed Death", tag: "a swing · it lands nothing now · next round the wound arrives with +1d6 · each one you stack waits a round longer" + (st.tk.length ? " · " + st.tk.length + " gear" + (st.tk.length > 1 ? "s" : "") + " already turning" : ""), plain: true });
+      if (!noAtk && st.tk.length) o.push({ key: "cx-early", label: "Strike early", tag: "a swing · and every gear on it lands now, without the +1d6", plain: true });
       add("cx-step", cxT(1), r >= 4 ? "Pendulum Step" : "Tick Step", (r >= 4 && st.cxLast ? "back to where you stood: regain the " + st.cxLast + " HP its last blow took · " : "") + "its next blow at disadvantage · your next swing from behind, with advantage · costs your turn");
       add("cx-s-prec", cxT(3) - (r >= 3 ? 1 : 0), "Precision Strike", "a swing at +2, +1d6 · a critical if you're behind it", !noAtk);
       if (r >= 3) add("cx-hand", 6, "Second Hand", "no roll · a silver clock over it stores 2d8 + " + Math.floor(lv() / 3) + ", and every hit you land adds 1d6 · it all lands at once, the round after next · costs your turn", !(st.cxClack > 0));
@@ -26738,6 +27035,28 @@ body.pv-open { overflow: hidden; }
   }
   async function cxDo(c, F, st) {
     const r = clRank();
+    if (c === "cx-tick") {
+      await say(st.tk.length ? "You cut it again in the same place, and the wound waits in line behind the first." : "You cut it, and nothing happens. A small brass gear hangs in the air over the cut, turning. The wound is on its way. It's just not here yet.");
+      const a = await check({ label: "Delayed Death (" + (wpnKey() === "axe" ? "axe" : wDef(wpnKey()).name) + ")" + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + cxAtk(st), dc: F.ac - lgAcCut(), target: "AC", adv: st.adv, dis: !!st.dis, cta: "Strike" });
+      st.adv = false; st.dis = false;
+      if (!a.ok) { if (F.missLine) await say(F.missLine); else await say("The gear spins up and comes apart in the air. Missed."); return; }
+      kinSpark(st); cxGain(st, cxT(1));
+      const dmg = d(8) + (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + d(6) + Math.floor(dmgUp() / 2) + (cxCritNow(st) ? d(8) : 0);
+      if (st.cxMark > 0) st.cxMark--;
+      st.tk.push({ n: 1 + st.tk.length, dmg });
+      tip("ticks");
+      await mech("A Tick is set: " + dmg + " damage lands in " + st.tk[st.tk.length - 1].n + " round" + (st.tk[st.tk.length - 1].n > 1 ? "s" : "") + ". Gears turning over it: " + st.tk.length + ".", "loot");
+      renderFoe();
+      return;
+    }
+    if (c === "cx-early") {
+      const due = st.tk; st.tk = [];
+      await say("You don't wait for the hands. You go in and finish it the plain way, and every gear over it shatters at once.");
+      const dealt = await cxSwing(F, st, { name: "Strike early" });
+      for (const t of due) { if (FOE.hp <= 0) break; await cxLand(F, Math.max(1, t.dmg - 3), "A Tick, called in early"); }
+      renderFoe();
+      return dealt;
+    }
     if (c === "cx-s-rend") {
       cxPay(st, 3);
       await say("You sweep the blade across, low and wide, and " + (r >= 3 ? "behind you something huge moves the same way." : "the thorns along your arm move with it."));
@@ -44813,15 +45132,27 @@ body.pv-open { overflow: hidden; }
       M = new Set(T); let lies = 0;
       while (lies < 4) { const k = d(W * Hh) - 1, x = k % W, y = Math.floor(k / W); if ((x === start.x && y === start.y) || (x === goal.x && y === goal.y)) continue; if (M.has(k)) M.delete(k); else M.add(k); lies++; }
       let you = Object.assign({}, start), steps = 0, bumps = 0, asks = 0, done = false, since = 0;
-      const P = puzzleBox("The Weeping Paths", "Get to the far side (⛩). Tap a square next to you to walk. Your map shows the roots (▦), but the map is wrong in places, and every 4 steps the roots move and it gets wronger. Walk into a root that isn't on your map and it costs you. <b>Ask " + who + "</b> and you'll see the true paths for two squares round you, every time. " + (htSelf() ? "(It's your own eyes that see them. Each look lets a little more of it in.)" : "Each time, the line under " + htW().their + " skin goes a little further."));
+      // The ambush: a Weeper walks the true paths after you, a step for every two of yours. The warm line is
+      // the next three true squares toward the far side, lit by whoever sees for you; the roots' next move puts it out.
+      const wHome = { x: 0, y: 0 }; let wp = Object.assign({}, wHome), caught = 0, ember = new Set();
+      const truePath = (from, to) => { const prev = new Map([[at(from.x, from.y), -1]]), q = [from]; while (q.length) { const p = q.shift(); if (p.x === to.x && p.y === to.y) break; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const x = p.x + dx, y = p.y + dy, k = at(x, y); if (inb(x, y) && !T.has(k) && !prev.has(k)) { prev.set(k, at(p.x, p.y)); q.push({ x, y }); } }); } const path = []; let k = at(to.x, to.y); if (!prev.has(k)) return []; while (k !== at(from.x, from.y)) { path.unshift(k); k = prev.get(k); } return path; };
+      function weep() {
+        if (steps % 2) return "";
+        const p = truePath(wp, you);
+        if (p.length > 1) { const k = p[0]; wp = { x: k % W, y: Math.floor(k / W) }; }
+        if (Math.abs(wp.x - you.x) + Math.abs(wp.y - you.y) <= 1) { caught++; wp = Object.assign({}, wHome); return " The Weeper comes out of the dark beside you and rakes you with a hand like wet bark, and the roots pull it back. (" + caught + ")"; }
+        return "";
+      }
+      const P = puzzleBox("The Weeping Paths", "Get to the far side (⛩). Tap a square next to you to walk. Your map shows the roots (▦), but the map is wrong in places, and every 4 steps the roots move and it gets wronger. Walk into a root that isn't on your map and it costs you. Something walks the true paths after you (❦), a step for every two of yours; if it gets next to you, it rakes you. <b>Ask " + who + "</b> and you'll see the true paths for two squares round you, and a warm line on the next three true squares toward the far side, until the roots move again. " + (htSelf() ? "(It's your own eyes that see them. Each look lets a little more of it in.)" : "Each time, the line under " + htW().their + " skin goes a little further."));
       const grid = el("div", "lh-grid"); grid.style.setProperty("--w", W);
       const cells = [];
       for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
       P.body.appendChild(grid);
       const askB = pbtn(htSelf() ? "Look the way the roots look" : "Ask " + who + " which way"), cutB = pbtn("Hack straight through");
       P.ctrl.append(askB, cutB);
-      const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ steps, bumps, asks }, r)), 600); };
+      const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ steps, bumps, asks, caught }, r)), 600); };
       function shift() {
+        ember = new Set();
         // Two roots let go and two grow somewhere else, never on you or next to you, and the way through stays.
         for (let tries = 0; tries < 60; tries++) {
           const N = new Set(T), ws = [...N].filter(w => Math.abs(w % W - you.x) + Math.abs(Math.floor(w / W) - you.y) > 1), free = [];
@@ -44839,10 +45170,11 @@ body.pv-open { overflow: hidden; }
           P.status.textContent = "There's a root there as thick as a door, whatever the map says. You walk into it in the dark, hard. (" + bumps + ")";
           draw(); return;
         }
-        M.delete(at(x, y)); you = { x, y }; steps++; since++;
-        if (x === goal.x && y === goal.y) { draw(); P.status.textContent = "You're through. (" + steps + " steps, " + bumps + " roots walked into, " + asks + " asked)"; return finish({ ok: true }); }
-        if (since >= 4) { since = 0; shift(); P.status.textContent = "Somewhere close a root as thick as a tower turns over in its sleep, slow as a tide. Your map hasn't noticed."; }
-        else P.status.textContent = "Step " + steps + " · " + bumps + " roots walked into";
+        M.delete(at(x, y)); you = { x, y }; steps++; since++; ember.delete(at(x, y));
+        if (x === goal.x && y === goal.y) { draw(); P.status.textContent = "You're through. (" + steps + " steps, " + bumps + " roots walked into, " + asks + " asked" + (caught ? ", raked " + caught + " times" : "") + ")"; return finish({ ok: true }); }
+        const wt = weep();
+        if (since >= 4) { since = 0; shift(); P.status.textContent = "Somewhere close a root as thick as a tower turns over in its sleep, slow as a tide. Your map hasn't noticed." + wt; }
+        else P.status.textContent = "Step " + steps + " · " + bumps + " roots walked into" + wt;
         if (steps >= 40) { P.status.textContent = "You've been walking in circles for hours, and the map's no use at all now."; return finish({ ok: false, lost: true }); }
         draw();
       }
@@ -44850,16 +45182,17 @@ body.pv-open { overflow: hidden; }
         if (done) return;
         asks++;
         for (let y = you.y - 2; y <= you.y + 2; y++) for (let x = you.x - 2; x <= you.x + 2; x++) if (inb(x, y)) { if (T.has(at(x, y))) M.add(at(x, y)); else M.delete(at(x, y)); }
+        ember = new Set(truePath(you, goal).slice(0, 3)); ember.forEach(k => M.delete(k));
         P.status.textContent = htSelf() ? "You shut your eyes and look the other way, the way the roots do, and the dark lays itself out for you, warm and clear. It's easy. It's too easy." : who + " looks, and points, and is right. “There,” " + htW().they + " says. “And there. Can't you see it?” You can't.";
         draw();
       };
       cutB.onclick = () => { if (!done) { P.status.textContent = "You stop trusting anything and start cutting."; finish({ ok: false, hack: true }); } };
       function draw() {
         cells.forEach((b, k) => {
-          const x = k % W, y = Math.floor(k / W), wall = M.has(k), isY = you.x === x && you.y === y, isG = goal.x === x && goal.y === y;
-          b.textContent = isY ? "◆" : isG ? "⛩" : wall ? "▦" : "";
-          b.setAttribute("aria-label", isY ? "you" : isG ? "the far side" : wall ? "a root, on your map" : "open, on your map");
-          b.className = "lh-cell" + (wall ? " wall" : "") + (isY ? " you" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && !wall ? " near" : "");
+          const x = k % W, y = Math.floor(k / W), wall = M.has(k), isY = you.x === x && you.y === y, isG = goal.x === x && goal.y === y, isW = wp.x === x && wp.y === y && !isY, em = ember.has(k);
+          b.textContent = isY ? "◆" : isW ? "❦" : isG ? "⛩" : wall ? "▦" : em ? "•" : "";
+          b.setAttribute("aria-label", isY ? "you" : isW ? "the Weeper" : isG ? "the far side" : wall ? "a root, on your map" : em ? "the warm line: a true path" : "open, on your map");
+          b.className = "lh-cell" + (wall ? " wall" : "") + (isY ? " you" : "") + (isW ? " weeper" : "") + (em ? " ember" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && !wall ? " near" : "");
         });
       }
       draw();
@@ -44870,9 +45203,11 @@ body.pv-open { overflow: hidden; }
     await say("Past the Library, past the Pathway where you first woke with roots in your hair, past the webs and the nest where Ryytaa was, the labyrinth goes on down further than it ever went before. The roots are bigger here. They're the size of streets, then houses, then castles, and the tunnels between them are wet, always, as if the wood is weeping sap.");
     await say("You brought a map. Fallowes' best: four hundred years of the Bark-Readers' work. Within the first hour, it's wrong.");
     if (!htSelf()) await say(hx("{N} doesn't look at the map at all."));
+    scenePic("ht_map", PIC_ALT.sc_ht_map, "The map, and the line only one of you can see");
     const r = await htMaze();
     H.asks += r.asks; H.bumps = r.bumps; H.grow += Math.min(3, r.asks);
     if (r.bumps) await hurt(Math.min(4, r.bumps), 4, "bludgeoning", "You walked into the roots the map said weren't there.");
+    if (r.caught) { H.raked = r.caught; await hurt(Math.min(3, r.caught), 6, "slashing", "The Weeper caught you in the dark."); }
     if (r.hack) { await say("You give up on the map and cut your way through, root after root, for hours, and the sap runs down the axe-haft into your sleeves. It's warm. You come out on the far side soaked to the elbow and shaking."); await hurt(2, 6, "slashing", "The roots fight back, as roots do."); }
     if (r.lost) { await say(htSelf() ? "In the end you shut your eyes and walk the way the warmth pulls you, and it brings you straight out. You don't like how easy that was." : hx("In the end {N} takes your hand, without a word, and leads you out, quick and sure, never once looking down. {Their} hand is warmer than it should be.")); H.grow++; }
     if (r.asks >= 3) grant("htasked");
@@ -44936,6 +45271,41 @@ body.pv-open { overflow: hidden; }
     H.echoes = list; save();
     return list;
   }
+  // ---------- the Root-Clock Sentinel (a commanded fight) ----------
+  // A Bark-Reader machine of gears and root in the gallery. Wound with your blood, it fights the Echoes for you,
+  // but it's slow: you aim its blow at one of three lanes, and the blow comes down there at the start of the next
+  // round. The Echo moves between the lanes on a loop; its last two places hang in the air on the board.
+  const SNT_LANES = ["Left", "Centre", "Right"];
+  function sntStart(st) {
+    const loops = [[0, 1, 2, 1], [2, 1, 0, 1], [0, 2, 1], [1, 0, 1, 2], [2, 0, 1]];
+    st.snt = { loop: loops[d(loops.length) - 1], i: 0, aim: null, trail: [], hits: 0 };
+    st.snt.i = d(st.snt.loop.length) - 1;
+    tip("htsent");
+    sntDraw(st);
+  }
+  const sntLane = (st) => st.snt.loop[st.snt.i % st.snt.loop.length];
+  async function sntRound(F, st) {
+    const T = st.snt;
+    if (st.round > 1) { T.trail.unshift(sntLane(st)); T.trail = T.trail.slice(0, 2); T.i++; }
+    if (T.aim != null && FOE.hp > 0) {
+      const lane = sntLane(st), aim = T.aim; T.aim = null;
+      if (aim === lane) {
+        T.hits++;
+        await say("The Sentinel's arm comes down on the " + SNT_LANES[lane].toLowerCase() + " lane like a felled tree, a full turn after you asked it to, and the Echo is standing right under it.");
+        await cxLand(F, roll(3, 8) + Math.floor(lv() / 3), "The Root-Clock Sentinel");
+        if (T.hits >= 2) grant("htsent");
+      } else await say("The Sentinel's arm comes down on the " + SNT_LANES[aim].toLowerCase() + " lane, a turn late, and the Echo isn't there. It's " + (lane === 1 ? "in the centre" : "on the " + SNT_LANES[lane].toLowerCase()) + ".");
+    }
+    sntDraw(st);
+  }
+  function sntDraw(st) {
+    const T = st.snt; if (!T || !FOE.on) return;
+    const lane = sntLane(st);
+    fsScene('<div class="fs-lbl">The Root-Clock Sentinel · aim its next blow (it lands at the start of next round)</div><div class="snt-lanes">' +
+      SNT_LANES.map((n, i) => { const tr = T.trail.indexOf(i); return '<button type="button" class="snt-lane' + (T.aim === i ? " aimed" : "") + '" data-i="' + i + '"><span class="snt-ln">' + n + '</span><span class="snt-fig">' + (lane === i ? '<b class="snt-now">◆</b>' : tr >= 0 ? '<b class="snt-ghost g' + tr + '">◆</b>' : "") + '</span><span class="snt-aim">' + (T.aim === i ? "⚙ aimed" : "aim here") + "</span></button>"; }).join("") + "</div>" +
+      '<div class="ht-mnote">◆ is where the Echo stands now; the faint ones are where it stood. Its blows so far: ' + T.hits + " landed.</div>");
+    document.querySelectorAll("#fsScene .snt-lane").forEach(b => b.onclick = () => { T.aim = +b.dataset.i; sntDraw(st); renderFoe(); });
+  }
   async function htEchoFight(E, k) {
     const H = ht();
     await say("Out of the gallery wall a root unwinds, and stands up, and it's " + (E.self ? "you." : "a person, or the shape of one: " + E.name + ", " + E.what + "."));
@@ -44943,9 +45313,10 @@ body.pv-open { overflow: hidden; }
     const L = lv(), trick = HT_TRICK[E.cl] || HT_TRICK.axe;
     await mech("<b>Root Echo</b>: it fights the way " + (E.self ? "you did" : E.name + " did") + ". Every third round, " + trick + ".", "hurt");
     const F = { name: "The Echo of " + (E.self ? "Yourself" : E.name), hp: 36 + (E.slot ? 6 : 0) + (E.self ? 10 : 0), ac: 14 + Math.floor(L / 12), atk: 6, n: 1, s: E.cl === "axe" ? 10 : 8, type: E.cl === "hush" || E.cl === "ink" ? "piercing" : "slashing", bloom: 0, hesk: false,
-      who: "the Echo", whoShort: "the Echo", reg: "roots", road: false,
+      who: "the Echo", whoShort: "the Echo", reg: "roots", road: false, person: true,
       hitWhy: "It hits you with " + E.wpn + ", and it's the real thing.", miss: "Its blow goes past, slow as a branch in wind.", hitLine: "Pale splinters fly, and something under them that isn't sap.",
-      setup: async (st) => { if (H.drop && k === 0) { st.adv = true; await say("You drop on it from the ledge before it knows you're there."); } },
+      setup: async (st) => { if (H.drop && k === 0) { st.adv = true; await say("You drop on it from the ledge before it knows you're there."); } if (H.sentinel === "wound") sntStart(st); },
+      before: async (st) => { if (st.snt) await sntRound(F, st); },
       turn: async (st) => {
         if (st.round % 3) return;
         if (E.cl === "axe") { await say("It takes its weapon in both hands and swings with everything, the old way, low and patient."); await foeSwing(F, st, { n: 2, s: 10, why: "It nearly cuts you in half." }); return "done"; }
@@ -44979,6 +45350,21 @@ body.pv-open { overflow: hidden; }
     await say("The sound like a crowd a long way off is a crowd. The gallery is full of people standing very still among the roots, hundreds of them, in old armour and older coats, with their faces turned to the walls.");
     await say("The roots keep what they kill. Everyone who ever came down here to find the Heart is still here, more or less. And when you walk in among them, some of them turn round.");
     tip("htechoes");
+    if (!H.sentinel) {
+      await say("By the gallery door stands a machine the height of two men, wound down: a Root-Clock Sentinel, the Bark-Readers' work, all brass gears gone green and roots grown through the gears like ivy through a gate. One arm is raised to strike and has been for a hundred years. In its chest there's a keyhole, and the key in it is a thorn.");
+      const w = await choose([
+        { key: "wind", label: "Wind it with your blood", tag: "−1d6 HP · it fights the Echoes for you, a turn late · the roots taste you" },
+        { key: "leave", label: "Leave it wound down", tag: "you face the Echoes alone", plain: true }
+      ]);
+      H.sentinel = w === "wind" ? "wound" : "left";
+      if (w === "wind") {
+        await say("You press your palm onto the thorn and turn it. It drinks, and the gears turn, and the raised arm creaks, and an eye of green glass comes up in its face like a lamp.");
+        await hurt(1, 6, "piercing", "The thorn key drinks.");
+        H.grow++;
+        await mech("<b>The Root-Clock Sentinel</b> walks with you through the gallery. Under the fight board, aim its next blow at a lane: it comes down there a round later.", "loot");
+      } else await say("You leave it with its arm raised. Somebody else can wake it. Something else probably will.");
+      save();
+    }
     for (let k = 0; k < list.length; k++) {
       if ((H.echoDone || 0) > k) continue;
       await htEchoFight(list[k], k);
@@ -45003,10 +45389,10 @@ body.pv-open { overflow: hidden; }
       let start = null; const knots = [];
       HT_HALL.forEach((row, y) => row.split("").forEach((t, x) => { if (t === "S") start = { x, y }; if (t === "k") knots.push({ x, y, cut: false }); }));
       const beat = lhBeat([[1, 1], [5, 1], [5, 3], [1, 3], [1, 1]]);
-      let ki = 0, you = Object.assign({}, start), heard = 0, turns = 0, done = false, forgive = H.reading ? 1 : 0, pause = 0;
+      let ki = 0, you = Object.assign({}, start), heard = 0, turns = 0, done = false, forgive = H.reading ? 1 : 0, pause = 0, behind = 0, trail = [];
       const king = () => beat[ki % beat.length];
       const dist = (a, b) => Math.abs(a[0] - b.x) + Math.abs(a[1] - b.y);
-      const P = puzzleBox("The Blind King", "Cut his three knots (✳). Tap a square next to you to walk, <b>Hold still</b>, or stand on or beside a knot and <b>Cut the knot</b>. Then he takes a step (♛). He hears feet within 2 squares, and a cut within 3 (the lit squares are where he'd hear you walk). If he walks into you while you're holding still, he walks straight through you. Three times heard and he'll fight you blind.");
+      const P = puzzleBox("The Blind King", "Cut his three knots (✳). Tap a square next to you to walk, <b>Hold still</b>, or stand on or beside a knot and <b>Cut the knot</b>. Then he takes a step (♛). He hears feet within 2 squares, and a cut within 3 (the lit squares are where he'd hear you walk). His last two steps hang in the air behind him (faint ♛), so you can read his round. If he walks into you while you're holding still, he walks straight through you, and for one turn you're at his back: a knot cut then makes no sound he can hear. Three times heard and he'll fight you blind.");
       const grid = el("div", "lh-grid"); grid.style.setProperty("--w", W);
       const cells = [];
       for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
@@ -45016,12 +45402,14 @@ body.pv-open { overflow: hidden; }
       const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ heard, turns }, r)), 600); };
       async function kingStep(noise) {
         turns++;
+        if (behind > 0) behind--;
+        const was = king();
         if (pause > 0) pause--;
-        else ki++;
+        else { ki++; trail.unshift(was); trail = trail.slice(0, 2); }
         if (!htSelf() && H.grow >= 3 && turns % 5 === 0 && dist(king(), you) <= 2 && !pause) { pause = 1; P.status.textContent = hx("He stops, and turns his blank face toward {N}, and stands there a long time, as if listening to an old song. Then he'll move on. Not yet."); }
         const kp = king();
         if (kp[0] === you.x && kp[1] === you.y) {
-          if (!noise) { P.status.textContent = "He walks straight through where you are. His robe of roots drags across your face like cobweb. He doesn't stop."; grant("htstill"); draw(); return; }
+          if (!noise) { behind = 1; P.status.textContent = "He walks straight through where you are. His robe of roots drags across your face like cobweb. He doesn't stop. You're at his back now: cut a knot this turn and he won't hear it."; grant("htstill"); draw(); return; }
           return heardIt();
         }
         if (noise && dist(kp, you) <= noise) return heardIt();
@@ -45049,10 +45437,11 @@ body.pv-open { overflow: hidden; }
         const n = knots.find(k => !k.cut && Math.abs(k.x - you.x) + Math.abs(k.y - you.y) <= 1);
         if (!n) { P.status.textContent = "There's no knot within reach. Stand on one, or next to it."; return; }
         n.cut = true;
+        const quiet = behind > 0;
         const left = knots.filter(k => !k.cut).length;
         if (!left) { draw(); P.status.textContent = "The last knot parts under the blade, and the Blind King stops dead in the middle of his round, lost in his own hall."; return finish({ ok: true }); }
-        P.status.textContent = "The knot parts with a sound like a long sigh. " + left + " left.";
-        kingStep(3);
+        P.status.textContent = quiet ? "You cut it at his back, under the sound of his own robe dragging. He doesn't turn. " + left + " left." : "The knot parts with a sound like a long sigh. " + left + " left.";
+        kingStep(quiet ? 0 : 3);
       };
       fightB.onclick = () => { if (!done) { P.status.textContent = "You stop hiding."; finish({ ok: false, loud: true }); } };
       function draw() {
@@ -45060,11 +45449,12 @@ body.pv-open { overflow: hidden; }
         for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (Math.abs(kp[0] - x) + Math.abs(kp[1] - y) <= 2) ear.add(x + "," + y);
         cells.forEach((b, k) => {
           const x = k % W, y = Math.floor(k / W), t = tile(x, y), kn = knots.find(q => q.x === x && q.y === y), isK = kp[0] === x && kp[1] === y, isY = you.x === x && you.y === y;
-          b.textContent = isY ? "◆" : isK ? "♛" : kn ? (kn.cut ? "✕" : "✳") : t === "#" ? "▦" : "";
+          const ai = trail.findIndex(q => q[0] === x && q[1] === y), aft = ai >= 0 && !isK && !isY && !kn;
+          b.textContent = isY ? "◆" : isK ? "♛" : kn ? (kn.cut ? "✕" : "✳") : t === "#" ? "▦" : aft ? "♛" : "";
           b.setAttribute("aria-label", isY ? "you" : isK ? "the Blind King" : kn ? (kn.cut ? "a cut knot" : "a knot") : t === "#" ? "root wall" : "open" + (ear.has(x + "," + y) ? ", in his hearing" : ""));
-          b.className = "lh-cell" + (t === "#" ? " wall" : "") + (ear.has(x + "," + y) && t !== "#" ? " lit" : "") + (isK ? " guard" : "") + (isY ? " you" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && t !== "#" ? " near" : "");
+          b.className = "lh-cell" + (t === "#" ? " wall" : "") + (ear.has(x + "," + y) && t !== "#" ? " lit" : "") + (isK ? " guard" : "") + (isY ? " you" : "") + (aft ? " after a" + (ai + 1) : "") + (isY && behind > 0 ? " behind" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && t !== "#" ? " near" : "");
         });
-        if (!done && !P.status.textContent) P.status.textContent = "Turn " + turns + " · heard " + heard + " of 3 · knots left " + knots.filter(k => !k.cut).length;
+        if (!done && !P.status.textContent) P.status.textContent = "Turn " + turns + " · heard " + heard + " of 3 · knots left " + knots.filter(k => !k.cut).length + (behind > 0 ? " · at his back" : "");
       }
       draw();
     });
@@ -45075,6 +45465,7 @@ body.pv-open { overflow: hidden; }
     await say("He's twice your height and thin as a winter tree, robed in roots that trail behind him and crowned with them, and where his face should be there's smooth grey wood, tilted, listening. He walks a round of his hall, slow and endless, and as he walks his long fingers trail along the walls, and the walls move under them: he's reading every path in the labyrinth, all at once, and redrawing them.");
     await say("He sees every path there is. He has never once seen a person.");
     if (H.reading) await say("Be a stone, the Bark-Reader said.");
+    scenePic("ht_kinggrid", PIC_ALT.sc_ht_kinggrid, "The Blind King walks his round");
     const r = await htKingGrid();
     H.heard = r.heard;
     if (r.heard) await hurt(r.heard, 6, "bludgeoning", "The roots of the hall came down on you.");
@@ -45085,7 +45476,7 @@ body.pv-open { overflow: hidden; }
     } else {
       H.king = "fought";
       await say("He comes for you across the hall with his long hands out, not fast, never fast, and the walls come with him.");
-      await hkFight({ name: "The Blind King", hp: 58 + (r.tired ? 0 : 6), ac: 15, atk: 7, n: 2, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the Blind King", whoShort: "the King", reg: "roots",
+      await hkFight({ name: "The Blind King", pic: picUrl("p_ht_king"), picAlt: PIC_ALT.p_ht_king, person: true, hp: 58 + (r.tired ? 0 : 6), ac: 15, atk: 7, n: 2, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the Blind King", whoShort: "the King", reg: "roots",
         hitWhy: "His long fingers close on you and the walls close with them.", miss: "His hand goes past your face, feeling, and finds the wall instead.", hitLine: "He flinches, and turns his blank face the wrong way.",
         before: async (st) => { if (st.round === 1) await mech("He can't see you: Evade works on him better than on anything you've fought (+15%).", "loot"); },
         turn: async (st) => { if (st.evade && d(100) <= 15) { await say("You go still in the middle of the fight, and he loses you completely, and stands with his hands out, listening."); st.evade = false; return "done"; } }
@@ -45102,7 +45493,7 @@ body.pv-open { overflow: hidden; }
   // He knows every choice you'll make. In the fight, a move is what you do this turn after what you did
   // last turn (Swing after Feint is not Swing after Swing). Make the same move twice and he's ready
   // for it: it does nothing, and he answers it. F.filter marks the moves he's read; F.onChoice counters.
-  const HT_MOVE = { atk: "Swing", evade: "Evade", feint: "Feint", low: "Low cut", thorn: "Cut the thorns", ground: "Give ground", breath: "Catch your breath", gems: "the gems", book: "the book", cls: "your calling", kin: "your path", mend: "Bind your wounds", band: "Bandage", start: "the start" };
+  const HT_MOVE = { atk: "Swing", evade: "Evade", feint: "Feint", low: "Low cut", thorn: "Cut the thorns", ground: "Give ground", breath: "Catch your breath", gems: "the gems", book: "the book", cls: "your calling", kin: "your path", mend: "Bind your wounds", band: "Bandage", "cx-tick": "Delayed Death", "cx-early": "Strike early", "cx-step": "Tick Step", "cx-s-prec": "Precision Strike", start: "the start" };
   const htMv = (k) => HT_MOVE[k] || (String(k).replace(/^[a-z]+-/, "").replace(/-/g, " ") || "that");
   async function htPrince() {
     const H = ht();
@@ -45110,13 +45501,22 @@ body.pv-open { overflow: hidden; }
     await say("He's slender and princely and grown entirely out of thorn, and he's smiling the way you smile at someone who's about to say something you've heard before.");
     await say("“You're going to ask who I am,” he says, before you've opened your mouth. “Then you're going to look at the gap behind you. Then you're going to draw. I know. I know everything you'll do. I've known it since before you were born. It's terribly dull.” He stands, and bows. “Do something I don't expect. Anything. Please.”", "voice");
     if (H.reading) await say("Never do it twice, the Bark-Reader said.");
+    if (!(S.portSeen || {}).htprince) { (S.portSeen = S.portSeen || {}).htprince = 1; add(framedPic(picUrl("p_ht_prince"), PIC_ALT.p_ht_prince, "The Thorn Prince", "portrait")); }
     tip("htprince");
     const LINE = (a, b) => a + ">" + b;
     let known = {};
-    const F = { name: "The Thorn Prince", hp: 64, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "the Thorn Prince", whoShort: "the Prince", reg: "roots",
+    // His mark on the board: the last thing you did, and how deep his thorns are in it.
+    const mark = (st) => {
+      const n = Object.keys(known).length, k = st.prev && st.prev !== "start" ? htMv(st.prev) : "";
+      fsScene('<div class="fs-lbl">The Prince\'s mark</div><div class="ht-mark">' + (k ? "<b>" + htCap(k) + "</b> " + '<span class="thorns">' + "✢".repeat(Math.max(1, st.htDeep || 1)) + "</span>" + '<span class="ht-mnote">do it again now and he counters it twice</span>' : '<span class="ht-mnote">Nothing yet. Whatever you do first, don\'t do it twice.</span>') + "</div>" +
+        (n ? '<div class="ht-mnote">He has read ' + n + " pair" + (n > 1 ? "s" : "") + " of moves (marked on your choices)." + (st.htRoot > 0 ? " <b>Rooted:</b> you can't give ground, evade or break away this turn." : "") + "</div>" : st.htRoot > 0 ? "<div class=\"ht-mnote\"><b>Rooted:</b> you can't give ground, evade or break away this turn.</div>" : ""));
+    };
+    const F = { name: "The Thorn Prince", pic: picUrl("p_ht_prince"), picAlt: PIC_ALT.p_ht_prince, person: true, hp: 64, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "the Thorn Prince", whoShort: "the Prince", reg: "roots",
       hitWhy: "The thorn rapier goes in where he knew you'd be, and out, and he steps back to watch you bleed.", miss: "He lunges, and stops himself, and laughs: he's changed his mind about where you'll be.", hitLine: "He looks at the cut with delight. “Oh, I didn't see that one coming,” he says. He did.",
-      setup: async (st) => { st.prev = "start"; st.htThorn = 0; F.ac0 = F.ac; },
+      setup: async (st) => { st.prev = "start"; st.htThorn = 0; st.htDeep = 0; F.ac0 = F.ac; mark(st); },
       before: async (st) => {
+        st.htRoot = st.htRootNext ? 1 : 0; st.htRootNext = false;
+        mark(st); fsYou();
         if (st.round > 1 && st.round % 3 === 1) { st.htThorn = Math.min(3, (st.htThorn || 0) + 1); F.ac = F.ac0 + st.htThorn; await say("The thorns on the lawn grow up round him, a ring of them, and he stands in it like a man in a doorway. (+" + st.htThorn + " to his guard until you cut them)"); }
         const n = Object.keys(known).length;
         if (n) await mech("He's read " + n + " of your moves: " + Object.keys(known).slice(-4).map(k => { const [a, b] = k.split(">"); return htMv(b) + " after " + htMv(a); }).join(", ") + (n > 4 ? ", and more" : "") + ". Make any of them again and he's ready.", "hurt");
@@ -45127,15 +45527,32 @@ body.pv-open { overflow: hidden; }
         { key: "thorn", label: "Cut the thorns", tag: st.htThorn ? "takes away his +" + st.htThorn + " guard" : "nothing to cut yet", plain: true },
         { key: "ground", label: "Give ground", tag: "1d4 + 1 HP · he follows", plain: true }
       ],
-      filter: (opts, st) => { opts.forEach(o => { if (known[LINE(st.prev, o.key)]) o.tag = (o.tag ? o.tag + " · " : "") + "he's read this after " + htMv(st.prev); }); },
+      filter: (opts, st) => {
+        if (st.htRoot > 0) for (let i = opts.length - 1; i >= 0; i--) if (/^(evade|ground|escape)$/.test(opts[i].key)) opts.splice(i, 1);
+        opts.forEach(o => { if (o.key === st.prev) o.tag = (o.tag ? o.tag + " · " : "") + "✢ you just did this: he'll counter it twice"; else if (known[LINE(st.prev, o.key)]) o.tag = (o.tag ? o.tag + " · " : "") + "he's read this after " + htMv(st.prev); });
+      },
       onChoice: async (c, st) => {
-        const line = LINE(st.prev, c);
+        const line = LINE(st.prev, c), again = c === st.prev;
         st.prev = c;
-        if (!known[line]) { known[line] = true; return; }
+        if (again) {
+          // The same thing twice in a row: his twin afterimages meet it, and the thorns root you where you stand.
+          known[line] = true; st.htDeep = Math.min(3, (st.htDeep || 1) + 1);
+          H.countered = (H.countered || 0) + 1;
+          await say("“" + htCap(htMv(c)) + ", and " + htMv(c) + " again,” he says, and there are two of him, a breath apart, a grey afterimage stepping out of each side of him, and both rapiers are already where you're going to be.");
+          st.winded = true; st.htSkip = true; st.htRootNext = true;
+          await foeSwing(F, st, { why: "The first afterimage's rapier finds you." });
+          if (S.hp > 0) await foeSwing(F, st, { why: "The second comes through the hole the first one made." });
+          await mech("Thorns come up through the lawn round your boots: <b>rooted</b> next turn (no giving ground, no evading, no breaking away).", "hurt");
+          mark(st);
+          return "countered";
+        }
+        st.htDeep = 1;
+        if (!known[line]) { known[line] = true; mark(st); return; }
         H.countered = (H.countered || 0) + 1;
         await say(["“" + htMv(c) + ", after " + htMv(line.split(">")[0]) + ",” he says, already there. “You did that before.”", "He's moving before you are. He's moving before you've decided.", "He sighs, and steps into it, and it isn't there any more, and he is."][d(3) - 1]);
         st.winded = true; st.htSkip = true;
         await foeSwing(F, st, { why: "He answers it with the rapier, exactly where you knew he would." });
+        mark(st);
         return "countered";
       },
       onExtra: async (c, st) => {
@@ -45168,16 +45585,19 @@ body.pv-open { overflow: hidden; }
     const H = ht();
     const carried = carriedList().filter(x => !/Burr|Ishbel|Tyra|Odran|Wenna|Caddock/.test(x)).slice(0, 4);
     return new Promise(resolve => {
-      const box = el("section", "tbc",
+      const box = el("section", "tbc ht-fake",
+        '<figure class="ht-vic"><img alt="' + PIC_ALT.sc_ht_victory.replace(/"/g, "&quot;") + '" src="' + picUrl("sc_ht_victory") + '"></figure>' +
         '<p class="eyebrow" style="margin:0">Part CXXV</p>' +
         '<p class="big">The End</p>' +
         "<p style='margin:0'>The Heart is ash in your hands and the roots are still. You walk up out of the Labyrinth of Roots into the morning, alone, with</p>" +
         "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "<li>the Crown of Roots</li><li>a thousand gold</li></ul>" +
         "<p style='margin:0;color:var(--muted)'>The realm is saved. Nothing grows under it any more. Everyone you ever loved is waiting for you at the top of the stair, and none of them has a mark on them.</p>" +
-        '<div class="actions"><button class="primary" type="button" data-k="roam">Take the roads back</button><button type="button" data-k="again">Walk the pathway again</button><button type="button" data-k="journal">Open your journal</button><button type="button" data-k="listen">Listen</button></div>');
+        '<div class="actions"><button class="primary" type="button" data-k="roam">Take the roads back</button><button type="button" data-k="again">Walk the pathway again</button><button type="button" data-k="journal">Open your journal</button><button type="button" class="ht-ear" data-k="listen"><img alt="" src="' + picUrl("ht_ear") + '"><span>Listen</span></button></div>');
       scrollNext = true;
       add(box);
       box.querySelectorAll("button").forEach(b => b.onclick = () => { box.querySelectorAll("button").forEach(x => x.disabled = true); resolve(b.dataset.k); });
+      // The painted Listen on the card works too.
+      const vi = box.querySelector(".ht-vic img"); if (vi) { vi.style.cursor = "pointer"; vi.onclick = () => { const b = box.querySelector(".ht-ear"); if (b && !b.disabled) b.click(); }; }
     });
   }
   async function htOrchard() {
@@ -45205,6 +45625,7 @@ body.pv-open { overflow: hidden; }
     if (k === "listen") {
       H.fooled = false; grant("htlisten");
       await say("You don't take the roads back. You stand still in the silence, the way the Blind King taught you, and listen.");
+      scenePic("ht_listen", PIC_ALT.sc_ht_listen, "Under the victory, something is still listening back");
       await say("Under the silence, under the ground, something is still beating. Slow. Patient. Exactly in time with " + (htSelf() ? "you." : hx("{N}.")));
     } else {
       H.fooled = true;
@@ -45232,29 +45653,67 @@ body.pv-open { overflow: hidden; }
     await say("Under the orchard the roots run down, every root in the labyrinth, all of them, drawn together the way the threads of a carpet run back to the loom. You follow them down. There's nothing else down there to follow.");
     await say("At the bottom, in a cavern bigger than anything you have a word for, half buried in black earth, there's a seed. It's the size of a cathedral, split down one side, and out of the split run the roots, every root, up into the dark, up through the labyrinth and the Library and the realm; and in the split, a pale green light comes and goes, slow, like breath.");
     await say("Ommeral, the First Seed. It's been asleep since before there was ground. It's nearly awake.");
+    scenePic("ht_heart", PIC_ALT.sc_ht_heart, "What the Seed wants back");
     await voice("“Little root,” it says. It doesn't say it with a mouth. It says it with the ground, with the bark on the walls, with the line under " + (self ? "your skin" : w.name + "'s skin") + ". “You brought my heart home.”");
     if (H.rest.length) await say("Behind you, out of the roots of the stair, the Echoes you laid to rest come down after you, " + H.rest.length + " of them, pale as peeled sticks, with nothing in their hands. They stand at your back. They don't say anything. They don't need to.");
     if (H.took.length) await mech("The Echoes you robbed are in the roots of the Seed now, and they fight for it: +" + H.took.length + " to its attacks.", "hurt");
     tip("htseed");
-    await hkFight({ name: "Ommeral, the First Seed", hp: 96, ac: 17, atk: 7 + H.took.length, n: 2, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Seed", whoShort: "the Seed", reg: "roots",
+    // Phase two, the Crowning: at half, the Seed stops fighting you and starts crowning the one it chose.
+    const crownDraw = (st) => fsScene('<div class="ht-crownrow"><img class="ht-crownpic" alt="' + PIC_ALT.sc_ht_crown.replace(/"/g, "&quot;") + '" src="' + picUrl("sc_ht_crown") + '"><div><div class="fs-lbl">The Crowning · ' + (self ? "over you" : hx("over {N}")) + '</div><div class="ht-crownpips">' + [0, 1, 2].map(i => '<i class="' + (i < st.crown ? "on" : "") + '"></i>').join("") + '</div><div class="ht-mnote">' + (st.crown >= 2 ? "One more step and it lands." : "It comes down a step every round.") + " Tear it away, or put the Seed down first.</div></div></div>");
+    const tearLbl = self ? "Tear the crown off your own head" : hx("Tear the crown off {N}");
+    let seedSt = null;
+    await hkFight({ name: "Ommeral, the First Seed", pic: picUrl("sc_ht_heart"), picAlt: PIC_ALT.sc_ht_heart, hp: 96, ac: 17, atk: 7 + H.took.length, n: 2, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Seed", whoShort: "the Seed", reg: "roots",
       hitWhy: "A root as thick as a tower comes up out of the earth under you.", miss: "The ground heaves and the root goes past, close enough to touch.", hitLine: "Pale sap runs out of the split in the Seed, and the light in it flickers.",
-      setup: async (st) => { for (let k = 0; k < H.rest.length && FOE.hp > 1; k++) await foeBurst(1, 8, 2, "An Echo you laid to rest goes past you with its bare hands"); },
+      setup: async (st) => {
+        seedSt = st;
+        if (H.sentinel === "wound" && FOE.hp > 1) { await say("Behind you, down the root-stair, comes a creak and a tread: the Root-Clock Sentinel, still wound with your blood, a long way behind. It arrives late, the way it does everything, and brings its arm down on the Seed."); await cxLand({}, roll(3, 8) + Math.floor(lv() / 3), "The Root-Clock Sentinel's last blow"); }
+        for (let k = 0; k < H.rest.length && FOE.hp > 1; k++) await foeBurst(1, 8, 2, "An Echo you laid to rest goes past you with its bare hands");
+      },
       before: async (st) => {
+        if (!st.crowning && FOE.hp <= FOE.max / 2) {
+          st.crowning = true; st.crown = 0; st.htPull = false; tip("htcrown");
+          await say(self ? "The roots stop. All of them, all at once, the way a crowd goes quiet. Then they turn, slowly, not toward your blade but toward your face, and up out of the dark overhead, unhurried, a crown of thorn and root begins to come down." : hx("The roots stop reaching for you. All of them, at once. They turn, slowly, toward {N}, and wind round {their} ankles and {their} wrists, gently, the way you'd lift a sleeping child, and up out of the dark overhead a crown of thorn and root begins to come down."));
+          await mech("<b>The Crowning.</b> The Seed has stopped fighting you. It's crowning " + (self ? "you" : hx("{N}")) + ": a step every round, three to land. Tear it away, or put the Seed down first.", "hurt");
+        }
+        if (st.crowning) {
+          if (st.torn) st.torn = false;
+          else { st.crown++; await say(st.crown >= 3 ? "The crown comes down the last step." : "The crown comes down a step. " + (self ? "Your scalp prickles, then your temples." : hx("{N} lifts {their} chin to meet it, and you don't think {they} means to."))); }
+          crownDraw(st);
+          if (st.crown >= 3) {
+            H.crowned = true;
+            await say(self ? "It closes round your brow, light and warm, and the Seed sighs like somebody setting down a heavy load. It stops. It doesn't need to fight any more. It has its heart, and its heart is wearing a crown." : hx("It closes round {N}'s brow, light and warm, and {they} goes still in the roots, eyes open, green all through. The Seed sighs like somebody setting down a heavy load. It stops fighting. It has its heart, and its heart is wearing a crown."));
+            FOE.hp = 0; renderFoe();
+          }
+          return;
+        }
         if (st.round % 3 === 0) { st.htPull = true; await say(self ? "The Seed pulls on the Heart, and the thing in your chest pulls back toward it like a dog on a lead." : hx("The Seed pulls on the Heart, and {N} goes down on {their} knees with a sound you'll hear for the rest of your life.")); await mech(self ? "Hold on to yourself this round, or the Seed drinks from you (it heals 2d6)." : hx("Hold on to {N} this round, or the Seed drinks from {them} (it heals 2d6)."), "hurt"); }
       },
-      extra: (st) => st.htPull ? [{ key: "ht-hold", label: self ? "Hold on to yourself" : hx("Hold on to {N}"), tag: "costs your turn · the Seed gets nothing", plain: true }] : [],
-      onExtra: async (c, st) => { if (c === "ht-hold") { st.htPull = false; st.htHeld = (st.htHeld || 0) + 1; await say(self ? "You put both hands flat on your chest and hold on, and the pull goes past you like a tide past a post." : hx("You get your arms round {N} and hold on, and {they} holds on to you, and the pull goes past you both like a tide past a post.")); } },
+      extra: (st) => st.crowning ? [{ key: "ht-tear", label: tearLbl, tag: "Strength DC 14 · pushes it back a step, and it can't come down this round · costs your turn", plain: true }] : st.htPull ? [{ key: "ht-hold", label: self ? "Hold on to yourself" : hx("Hold on to {N}"), tag: "costs your turn · the Seed gets nothing", plain: true }] : [],
+      onExtra: async (c, st) => {
+        if (c === "ht-hold") { st.htPull = false; st.htHeld = (st.htHeld || 0) + 1; await say(self ? "You put both hands flat on your chest and hold on, and the pull goes past you like a tide past a post." : hx("You get your arms round {N} and hold on, and {they} holds on to you, and the pull goes past you both like a tide past a post.")); }
+        if (c === "ht-tear") {
+          const r = await check({ label: "Strength check (tearing the crown away)", mod: 3 + Math.floor(lv() / 8), dc: 14, cta: "Tear" });
+          if (r.ok) { st.crown = Math.max(0, st.crown - 1); st.torn = true; st.tore = (st.tore || 0) + 1; await say(self ? "You get your fingers under it and wrench, and the thorns come out of your scalp one by one, and it goes back up into the dark a step, sulking." : hx("You get your hands under the crown and wrench it up off {N}'s head, and the thorns come out of {their} scalp one by one, and {they} gasps like somebody pulled out of a river.")); }
+          else await say("You get your fingers on it and it's like trying to lift a tree by its bark.");
+          crownDraw(st);
+        }
+      },
       turn: async (st) => {
+        if (st.crowning) { if (d(2) === 1) await say(self ? "The roots hold you gently, and don't hurt you. They don't need to." : hx("The roots don't come for you. They're busy with {N}.")); return "done"; }
         if (!st.htPull) return;
         st.htPull = false;
         const n = d(6) + d(6); FOE.hp = Math.min(FOE.max, FOE.hp + n); renderFoe(); H.grow++;
         await say("The light in the split swells, and the Seed drinks.");
         await mech("The Seed regains " + n + ".", "hurt");
-      }
+      },
     });
+    if (seedSt && seedSt.crowning && !H.crowned) grant("htnotyet");
     await say("The light in the split goes down to almost nothing. The roots go slack all through the cavern, all through the labyrinth, all at once; you feel it in your feet. Then, slowly, the light comes back.");
-    await voice("“You can't kill me, little root,” it says. Not angry. Patient. “Not while my heart beats. Ask the Prince. He knows how this ends. There are three ways. There have only ever been three.”");
-    if (self) {
+    if (H.crowned) await voice("“You see, little root,” it says, drowsy, content. “There were three ways. Now there are two. Leave it on, or cut it off. I'll sleep either way.”");
+    else await voice("“You can't kill me, little root,” it says. Not angry. Patient. “Not while my heart beats. Ask the Prince. He knows how this ends. There are three ways. There have only ever been three.”");
+    if (H.crowned) {
+      await say(self ? "The crown sits on your brow, warm, and the labyrinth hums all round you like a hive that's found its queen. You could take it off. You'd have to cut. It's rooted in you now." : H.who === "burr" ? "Burr lies in the roots with the crown on his head, and his tail thumps once when he sees you. He doesn't know what's happened. He knows you're there." : hx("{N} looks at you out of eyes gone green all through, and smiles, a little sadly. “Well,” {they} says. “That's done, then. Unless you undo it.”"), self || H.who === "burr" ? "" : "voice");
+    } else if (self) {
       await say("It's in your chest, and it's beating, and you know the three ways the way you know your own hands. You can cut it out of yourself, and the Seed dies, and the labyrinth with it. You can walk away, and it wakes. Or you can stay, and wear it.");
     } else if (H.who === "burr") {
       await say("Burr lies down between you and the Seed, with his chin on his paws, and looks at you. He doesn't know the three ways. He knows you, and he's waiting for you to decide, the way he's always waited, because you're the one who decides things.");
@@ -45263,8 +45722,8 @@ body.pv-open { overflow: hidden; }
     }
     const ch = await choose([
       { key: "exec", label: self ? "Cut it out of yourself" : H.who === "burr" ? "Do it. Burr." : hx("Do it. {N}."), tag: self ? "the Seed dies, the labyrinth falls in, and you'll never be whole again" : hx("the Seed dies, the labyrinth falls in, and so does {N}") },
-      { key: "refuse", label: "Refuse", tag: "nobody dies · Ommeral wakes, and the roots go out across the realm", plain: true },
-      { key: "crown", label: self ? "Take the Crown of Roots" : hx("Let {N} take the Crown of Roots"), tag: self ? "keep the Heart · rule the labyrinth · something under the realm will wear your face" : hx("{N} keeps the Heart and becomes " + w.crown + " · the labyrinth lives, and so does a new power under it"), plain: true }
+      { key: "refuse", label: "Refuse", tag: "nobody dies · Ommeral wakes, and the roots go out across the realm", plain: true, show: !H.crowned },
+      { key: "crown", label: H.crowned ? (self ? "Leave the crown where it is" : hx("Let {N} keep the crown")) : self ? "Take the Crown of Roots" : hx("Let {N} take the Crown of Roots"), tag: self ? "keep the Heart · rule the labyrinth · something under the realm will wear your face" : hx("{N} keeps the Heart and becomes " + w.crown + " · the labyrinth lives, and so does a new power under it"), plain: true }
     ]);
     H.end = ch; save();
     const g = 400 + 20 * lv();
@@ -45383,10 +45842,11 @@ body.pv-open { overflow: hidden; }
       li(H.reading, "The Bark-Readers: " + (H.reading ? "read your hands" : "you went down without a reading")) +
       li(H.asks === 0 && H.part > 1, "The Weeping Paths: " + (H.part > 1 ? "asked " + (w ? N : "the roots") + " the way " + H.asks + " times · walked into " + H.bumps + " roots" + (H.trust ? (H.trust === "map" ? " · followed your map" : " · followed " + (w ? N : "the warmth")) : "") : "not yet")) +
       li(H.rest.length && !H.took.length, "Root Echoes: " + (H.echoes.length ? H.rest.length + " laid to rest, " + H.took.length + " robbed" : "not yet")) +
+      (H.sentinel ? li(H.sentinel === "wound", "The Root-Clock Sentinel: " + (H.sentinel === "wound" ? "wound with your blood, and it fought beside you" : "left wound down by the gallery door")) : "") +
       li(H.king === "still", "The Blind King: " + ({ still: "never heard you", heard: "heard you " + H.heard + " times", fought: "fought you blind" }[H.king] || "not yet")) +
       li(H.prince === "clean", "The Thorn Prince: " + ({ clean: "never read you", beat: "read you " + H.countered + " times" }[H.prince] || "not yet")) +
       li(H.orchard === "listened", "The Orchard of False Ends: " + ({ listened: "you listened, and heard it still beating", fooled: "you walked out into the morning, and the stair went down" }[H.orchard] || "not yet")) +
-      li(!!H.end, "The Heart: " + (w ? N : "you") + ({ exec: (w ? ", and you did it" : ": you cut it out"), refuse: ": you refused, and the Seed woke", crown: (w ? " took the Crown of Roots" : ": you took the Crown of Roots") }[H.end] || (H.part >= 6 ? "" : ": not yet"))) + "</ul></section>";
+      li(!!H.end, "The Heart: " + (w ? N : "you") + ({ exec: (w ? ", and you did it" : ": you cut it out"), refuse: ": you refused, and the Seed woke", crown: (H.crowned ? (w ? " was crowned while you fought" : ": the crown came down on you while you fought") : w ? " took the Crown of Roots" : ": you took the Crown of Roots") }[H.end] || (H.part >= 6 ? "" : ": not yet"))) + "</ul></section>";
   }
 
   // ---------- traces ----------
