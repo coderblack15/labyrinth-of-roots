@@ -3375,6 +3375,7 @@ body.pv-open { overflow: hidden; }
     h += tipSection();
     h += linkSection();
     h += cwSection(rs);
+    h += nmaSection(rs);
     h += seaSection(rs);
     h += bwCase(rs);
     h += duelSection(rs);
@@ -3565,6 +3566,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "118", name: "Two More from the Armoury", date: "16 Nov 2026", items: [
+      "<b>The Nightmare Armoury has five weapons now</b>, from Adrian's lineup painting. The painting itself hangs at the top of the journal's new <b>Nightmare Armoury</b> page and shows the first time a Nightmare leaves you a weapon.",
+      "<b>The Cinderwheel</b> (Gloaming) is a dagger with gears in the hilt and an ember in the crossguard. Searing and Keen, and <b>Wind the Wheel</b>: the gears turn and the ember spins for four quick cuts, 4d6 fire.",
+      "<b>The Watching Thorn</b> (Heartfire) is a thorned spear with an ember eye in the head. Reach and Keen, and <b>The Thorn Watches</b>: 2d10, its next two attacks at disadvantage, and a Nightmare's Cascade thread pinned to the ground and cut.",
+      "The Hollow-Crown Sentinel still comes once you hold three of the five (or after ten Nightmares). Two new feats: <b>Wound Tight</b> and <b>The Thorn Watches</b>, and the <b>Nightmare Armoury</b> feat now asks for all five."
+    ] },
     { ver: "117", name: "The Nightmare Armoury", date: "16 Nov 2026", items: [
       "<b>Three Nightmare weapons, painted by Adrian.</b> Once the Cascades wake, a Nightmare you beat on the road sometimes leaves one behind (one fight in four, and never more than four in a row without): the <b>Flame Strike Nightmare Bow</b>, the <b>Nightmare Haunt Scythe</b> and <b>Frostbite</b>.",
       "<b>The Flame Strike Nightmare Bow</b> is Heartfire, the gold quality: bone and black thorn with a smouldering string, Searing and Reach, Onslaught, and <b>Flame Strike</b>: three burning arrows for 3d8 fire that burn through a Nightmare's Cascade thread and leave fire in the wound for your next three hits.",
@@ -4743,7 +4750,9 @@ body.pv-open { overflow: hidden; }
     { id: "nmflamed", name: "Fire Up the Thread", desc: "Loose a Flame Strike.", test: () => false },
     { id: "nmeye", name: "The Eye in the Blade", desc: "Take the Nightmare Haunt Scythe from a Nightmare.", test: () => false },
     { id: "nmrime", name: "Frostbite", desc: "Take Frostbite from a Nightmare.", test: () => false },
-    { id: "nmarmoury", name: "The Nightmare Armoury", desc: "Find all three Nightmare weapons.", test: () => false, prog: () => [S.nma ? S.nma.got.length : 0, 3] },
+    { id: "nmarmoury", name: "The Nightmare Armoury", desc: "Find all five Nightmare weapons.", test: () => false, prog: () => [S.nma ? S.nma.got.length : 0, 5] },
+    { id: "nmwheel", name: "Wound Tight", desc: "Take the Cinderwheel from a Nightmare.", test: () => false },
+    { id: "nmthorn", name: "The Thorn Watches", desc: "Take the Watching Thorn from a Nightmare.", test: () => false },
     { id: "nmsentinel", name: "Hollow Crown", desc: "Beat the Hollow-Crown Sentinel and take the Root Terror.", test: () => false },
     { id: "shquests", name: "Nothing Left on the Board", desc: "Finish all seven ship quests on the harbour board.", test: () => false, prog: () => [S.sea && S.sea.yard ? Object.keys(S.sea.yard.q).filter(k => SH_QUESTS[k]).length : 0, 7] },
   ];
@@ -4841,8 +4850,8 @@ body.pv-open { overflow: hidden; }
       ids: ["shname", "shrite", "shflag", "shlaunch", "shsweet", "shscrap", "shclass", "shfrigate", "shground", "shhoy", "shconvoy", "shmurder", "shquests"] },
     { id: "eye", name: "Duelist's Eye", ver: "44", desc: "A target profile on every duelist: styles, the tell rose, four zones to wound and maim, weak spots, and a skill that sharpens with use.",
       ids: ["eyefirst", "eyeread", "eyemaim", "eyerank"] },
-    { id: "nightarms", name: "The Nightmare Armoury", ver: "45", desc: "Three weapons the Cascades grow inside their Nightmares, and the thorn knight sent to take them back.",
-      ids: ["nmflame", "nmflamed", "nmeye", "nmrime", "nmarmoury", "nmsentinel"] }
+    { id: "nightarms", name: "The Nightmare Armoury", ver: "45", desc: "Five weapons the Cascades grow inside their Nightmares, and the thorn knight sent to take them back.",
+      ids: ["nmflame", "nmflamed", "nmeye", "nmrime", "nmwheel", "nmthorn", "nmarmoury", "nmsentinel"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5815,6 +5824,9 @@ body.pv-open { overflow: hidden; }
     frostbite: "art/frostbite.webp",
     rterror: "art/rterror.webp",
     hcsentinel: "art/hcsentinel.webp",
+    nmdagger: "art/nmdagger.webp",
+    nmspear: "art/nmspear.webp",
+    nmarmoury: "art/nmarmoury.webp",
     sword: "art/sword.webp",
     dagger: "art/dagger.webp",
     mace: "art/mace.webp"
@@ -5997,6 +6009,8 @@ body.pv-open { overflow: hidden; }
     // The Nightmare Armoury (Adrian's paintings, 2026-11-16).
     nmbow: { looks: ["nmbow"], alt: ["A bow grown out of bone and black thorn, with a smouldering string of fire and three burning arrows beside it."] },
     nmscythe: { looks: ["nmscythe"], alt: ["A scythe of twisted root and thorn, with a red eye open in the crook of the blade."] },
+    nmdagger: { looks: ["nmdagger"], alt: ["A dagger with a long tapering blade and a hilt like a cage of gears and thorns, an ember glowing at its heart."] },
+    nmspear: { looks: ["nmspear"], alt: ["A spear of black twisted thorn, its head a star of spikes with a red ember eye at the crossing."] },
     frostbite: { looks: ["frostbite"], alt: ["A mace with a head of spiked ice crystals on a haft of dark twisted root, cold mist rolling off it."] },
     rterror: { looks: ["rterror"], alt: ["A full suit of armour grown from dark root and thorn, clawed gauntlets and a spiked crown of bark, an ember burning in its chest."] },
     moltglaive: { looks: ["moltglaive"], alt: ["A glaive-blade like a shed insect shell, amber-brown and ridged, on a dark haft."] },
@@ -6358,11 +6372,13 @@ body.pv-open { overflow: hidden; }
     grapple: { name: "Spider's Line", fx: "once a fight, fire the line high and haul yourself up out of reach: the next two blows can't reach you, and your next strike drops from above for +2d6" },
     flame: { name: "Flame Strike", fx: "once a fight, three burning arrows at once: 3d8 fire, a Nightmare's Cascade thread burns through, and the fire stays in the wound (your next 3 hits land +1d6)" },
     eye: { name: "The Eye Opens", fx: "once a fight, the eye in the blade looks into it: 2d10 that no armour stops, and your Dread eases by 2" },
-    rime: { name: "Deep Rime", fx: "once a fight, 2d8 cold, and its next 3 blows come at −2" }
+    rime: { name: "Deep Rime", fx: "once a fight, 2d8 cold, and its next 3 blows come at −2" },
+    wheel: { name: "Wind the Wheel", fx: "once a fight, the gears in the hilt turn and the ember spins: four quick cuts, 4d6 fire" },
+    gaze: { name: "The Thorn Watches", fx: "once a fight, the ember eye in the spearhead finds the gap: 2d10, its next 2 attacks have disadvantage, and a Nightmare's Cascade thread is pinned and cut" }
   };
   // Actives that only come on named weapons, never on a random field drop.
-  const AC_NAMED = ["onslaught", "grapple", "flame", "eye", "rime"];
-  const NM_TAG = { flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2" };
+  const AC_NAMED = ["onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze"];
+  const NM_TAG = { flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage") };
   const ARM_NAMES = {
     ashen: ["Pitted", "Notched", "Rust-flecked", "Bent", "Scorched"],
     tempered: ["Sound", "Well-kept", "Drover's", "Watchman's", "Plain"],
@@ -6627,6 +6643,14 @@ body.pv-open { overflow: hidden; }
       await beltHurt(2, 8, mult, "Deep Rime (cold)", main);
       FOE.chill = Math.max(FOE.chill || 0, t === "fumble" ? 1 : t === "perfect" ? 4 : 3);
       if (FOE.hp > 0) await mech("Frozen stiff: " + (FOE.unit ? "their" : "its") + " next " + FOE.chill + " blows come at −2.", "loot");
+    } else if (a === "wheel") {
+      await say("You thumb the little gears in the hilt and they turn, and the ember in the middle spins up white-hot. The blade moves before you do: four quick cuts, each one hissing.");
+      await beltHurt(4, 6, mult, "Wind the Wheel (fire)", main);
+    } else if (a === "gaze") {
+      await say("The ember eye in the spearhead opens wide and finds the gap in " + (FOE.unit ? "them" : nmaWho()) + " before you do. You only have to follow it in.");
+      await beltHurt(2, 10, mult, "The Thorn Watches", main);
+      if (FOE.hp > 0) { FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : 2); await mech("It can't take its eyes off the eye: " + (FOE.blind > 1 ? "its next 2 attacks have" : "its next attack has") + " disadvantage.", "loot"); }
+      if (FOE.threads > 0 && t !== "fumble") await nmaThreadBurn("pin");
     } else if (a === "hush") {
       FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : t === "perfect" ? 3 : 2);
       await mech("Gloam Veil: dusk pours off the blade. " + (FOE.blind > 1 ? "Its next " + FOE.blind + " attacks have" : "Its next attack has") + " disadvantage.", "loot");
@@ -6745,7 +6769,7 @@ body.pv-open { overflow: hidden; }
     html = LT(html);
     if (typeof html !== "string" || !/axe/i.test(html) || !S.axe || wpnKey() === "axe" || !(FOE.on || force)) return html;
     const k = wpnKey(), n = wNoun(k), N = n === "arrow" ? "Bow" : n[0].toUpperCase() + n.slice(1);
-    const swing = n === "arrow" ? "Loose an arrow from the " + wDef(k).name : "Strike with the " + wDef(k).name;
+    const swing = n === "arrow" ? "Loose an arrow from " + wThe(wDef(k).name) : "Strike with " + wThe(wDef(k).name);
     return html.split(/(?<=[.!?]["”]?\s)/).map(t => AXE_KEEP.test(t) ? t : t
       .replace(/\bSwing the axe\b/g, swing)
       .replace(/\bAxe attack\b/g, N + " attack")
@@ -18226,7 +18250,7 @@ body.pv-open { overflow: hidden; }
       await rmRound(F, st); if (FOE.hp <= 0 || st.fled) break;
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
       if (FOE.ln) await wrnHeal();
-      const opts = (F.noAtk && F.noAtk(st)) || st.rmNoAtk ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with the " + wDef(wpnKey()).name, tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
+      const opts = (F.noAtk && F.noAtk(st)) || st.rmNoAtk ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with " + wThe(wDef(wpnKey()).name), tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
@@ -19181,7 +19205,8 @@ body.pv-open { overflow: hidden; }
   // Terror, is yours. You wear the Root Terror or Empress Adrianna's Champion Set, one at a time.
   // State: S.nma = { won, dry, got: [ids], sent: "" | "later" | "beaten" }; S.rterror (owned), S.rtOn (worn).
   const NMA_ODDS = 4, NMA_PITY = 4, NMA_SENT_AT = 10;
-  const NMA_ORDER = ["nmbow", "nmscythe", "frostbite"];
+  const wThe = (n) => /^the /i.test(n) ? n : "the " + n;
+  const NMA_ORDER = ["nmbow", "nmscythe", "frostbite", "nmdagger", "nmspear"], NMA_SENT_GOT = 3;
   const NMA = {
     nmbow: { ach: "nmflame", L: { b: "bow", t: "heartfire", n: "Flame Strike Nightmare Bow", icon: "bow", pic: "nmbow", die: [1, 10, 4], hit: 2, tr: ["fire", "first"], ac: ["onslaught", "flame"],
       lore: "Grown inside a Nightmare out of bone and black thorn. The string never stops smouldering, and an arrow laid to it catches by itself." },
@@ -19191,16 +19216,24 @@ body.pv-open { overflow: hidden; }
       find: "The Nightmare doesn't fall so much as come undone, and when it's gone there's a scythe lying in the road where it stood: root twisted on root, thorned all the way down the haft. In the crook of the blade there's an eye. It's red, and it's open, and when you pick the scythe up it turns, slowly, to look at you." },
     frostbite: { ach: "nmrime", L: { b: "maul", t: "gloaming", n: "Frostbite", icon: "maul", pic: "frostbite", noun: "mace", frost: true, die: [2, 6, 3], hit: 0, tr: ["frost"], ac: ["rime"],
       lore: "A mace head of ice crystals that never melt, on a haft of black root. Your breath freezes round it." },
-      find: "Frost spreads out from where the Nightmare fell, over the road and up the grass, and at the middle of it something has grown up out of the ground like a winter flower: a mace, its head a cluster of ice crystals sharp as glass, its haft black root. It's so cold it burns your palm. It doesn't melt." }
+      find: "Frost spreads out from where the Nightmare fell, over the road and up the grass, and at the middle of it something has grown up out of the ground like a winter flower: a mace, its head a cluster of ice crystals sharp as glass, its haft black root. It's so cold it burns your palm. It doesn't melt." },
+    nmdagger: { ach: "nmwheel", L: { b: "dagger", t: "gloaming", n: "The Cinderwheel", icon: "dagger", pic: "nmdagger", die: [1, 6, 3], hit: 3, tr: ["fire", "keen"], ac: ["wheel"],
+      lore: "A long thin blade under a hilt like a cage of gears and thorns, with an ember turning slowly at the hub. Wind it, and it cuts faster than you can." },
+      find: "Something ticks in the wreck of the Nightmare. You dig it out of the black water: a dagger, its hilt a little cage of gears and thorns, and at the hub of the gears an ember, turning slowly, like a mill-wheel in a slow stream." },
+    nmspear: { ach: "nmthorn", L: { b: "spear", t: "heartfire", n: "The Watching Thorn", icon: "spear", pic: "nmspear", die: [1, 10, 4], hit: 2, tr: ["first", "keen"], ac: ["gaze"],
+      lore: "A spear of black thorn, every inch of it barbed, with a star of spikes for a head and an ember eye where the spikes cross. The eye is always looking at something. Usually the weak place." },
+      find: "Where the Nightmare stood, a spear has come up out of the road like a thorn out of a finger: black, barbed all the way down, its head a star of spikes. Where the spikes cross there's an ember eye, and it's already looking past you, down the road, for the next one." }
   };
   const nmaWho = () => String(FOE.name || "it").replace(/^The /, "the ");
+  const NMA_LINEUP_ALT = "A painting of the Nightmare Armoury laid out on black: a thorned root scythe with an ember eye, a bone-and-thorn bow with a burning string and three flaming arrows, a mace of ice crystals in cold mist, a dagger with a hilt of gears round an ember, and a black thorn spear with an ember eye in its spearhead.";
   const nma = () => (S.nma = S.nma || { won: 0, dry: 0, got: [], sent: "" });
   function champOn() { return !!S.champ && !(S.rterror && S.rtOn); }
   function rtOn() { return !!(S.rterror && S.rtOn && !S.stripped); }
   const nmaHas = (id) => armLoot().some(x => x.nma === id) || (chestOwned() && chest().items.some(x => x.nma === id));
   // Flame Strike burns through a Cascade thread.
-  async function nmaThreadBurn() {
+  async function nmaThreadBurn(how) {
     FOE.threads--; renderFoe();
+    if (how === "pin") { if (FOE.threads > 0) await mech("The spear pins one of its Cascade threads to the ground, and it parts: " + FOE.threads + " left. Its Nightmare bonus is now +" + nmUp() + " to hit and damage.", "loot"); else { FOE.unbound = true; await mech("The spear pins its last Cascade thread to the ground, and it parts. No more Nightmare bonus, and no more Dread from it.", "loot"); } return; }
     if (FOE.threads > 0) await mech("The fire runs up one of its Cascade threads like a fuse, and it parts: " + FOE.threads + " left. Its Nightmare bonus is now +" + nmUp() + " to hit and damage.", "loot");
     else { FOE.unbound = true; await mech("The fire runs up its last Cascade thread like a fuse. No more Nightmare bonus, and no more Dread from it.", "loot"); }
   }
@@ -19214,7 +19247,7 @@ body.pv-open { overflow: hidden; }
       if (X.dry >= NMA_PITY || d(NMA_ODDS) === 1) { X.dry = 0; await nmaGive(left[0]); }
       else if (X.won === 1) await mech("Where it fell, the black water hasn't soaked away. Something is setting in it, like a seed in a husk, but it isn't ready yet. (<b>The Nightmare Armoury</b>: Nightmares you beat on the road sometimes leave a weapon the Cascade grew in them.)", "loot");
     }
-    if (X.sent !== "beaten" && (X.got.length >= NMA_ORDER.length || X.won >= NMA_SENT_AT)) await sentinelMeet(reg);
+    if (X.sent !== "beaten" && (X.got.length >= NMA_SENT_GOT || X.won >= NMA_SENT_AT)) await sentinelMeet(reg);
   }
   async function nmaGive(id) {
     const P = NMA[id], X = nma();
@@ -19226,6 +19259,7 @@ body.pv-open { overflow: hidden; }
     if (L.t === "heartfire") grant("heartfind");
     grant(P.ach);
     if (X.got.length >= NMA_ORDER.length) grant("nmarmoury");
+    if (X.got.length === 1) add(framedPic(picUrl("nmarmoury"), NMA_LINEUP_ALT, "The Nightmare Armoury: five weapons the Cascades grow"));
     await say(P.find);
     picCard("L" + L.id);
     if (SND.cheers) SND.cheers(0.7);
@@ -19292,10 +19326,21 @@ body.pv-open { overflow: hidden; }
     S.rtOn = c === "y";
     renderSheet(); if (started) save();
   }
+  // The journal: the Armoury painting, and which of the five you've found.
+  function nmaSection(rs) {
+    const X = rs && rs.nma;
+    if (!X || !X.won) return "";
+    const NM = { nmbow: "Flame Strike Nightmare Bow", nmscythe: "Nightmare Haunt Scythe", frostbite: "Frostbite", nmdagger: "The Cinderwheel", nmspear: "The Watching Thorn" };
+    return "<section><h3>The Nightmare Armoury · " + X.got.length + " of " + NMA_ORDER.length + "</h3>" +
+      '<img alt="' + NMA_LINEUP_ALT + '" src="' + picUrl("nmarmoury") + '" style="display:block;width:100%;height:auto;border-radius:6px;border:1px solid rgba(216,181,106,.4);margin:4px 0 10px">' +
+      '<p class="j-sub">Weapons the Cascades grow inside their Nightmares, left behind on the roads back. ' + X.won + " Nightmare" + (X.won > 1 ? "s" : "") + " beaten.</p>" +
+      '<ul class="marks">' + NMA_ORDER.map(id => '<li class="' + (X.got.includes(id) ? "won" : "") + '"><span class="mk"></span><span><b>' + NM[id] + "</b> · " + (X.got.includes(id) ? "found" : "not yet") + "</span></li>").join("") +
+      '<li class="' + (X.sent === "beaten" ? "won" : "") + '"><span class="mk"></span><span><b>The Hollow-Crown Sentinel</b> · ' + (X.sent === "beaten" ? "beaten, and the Root Terror is yours" : X.sent === "later" ? "waiting on the roads back" : "comes when three are yours") + "</span></li></ul></section>";
+  }
   function nmaItems(items) {
     if (S.rterror) items.push(["rterror", "shield", "The Root Terror", "Armour grown by the Cascades out of root and thorn round an ember. +3 AC. Thornhide: a blow that lands on you takes 1d4 back. Ember heart: the first Dread each fight doesn't take, +2 on saves against a Nightmare's dread. Evade −10%. " + (rtOn() ? "You're wearing it" + (S.champ ? " (the Champion Set is in your pack)." : ".") : "In your pack.")]);
     const X = S.nma;
-    if (X && cascadeOn() && X.won && X.sent !== "beaten") items.push(["nma", "writ", "The Nightmare Armoury", X.got.length + " of " + NMA_ORDER.length + " Nightmare weapons found, " + X.won + " Nightmare" + (X.won > 1 ? "s" : "") + " beaten." + (X.sent === "later" ? " The Hollow-Crown Sentinel is waiting on the roads back." : "")]);
+    if (X && cascadeOn() && X.won && (X.sent !== "beaten" || X.got.length < NMA_ORDER.length)) items.push(["nma", "writ", "The Nightmare Armoury", X.got.length + " of " + NMA_ORDER.length + " Nightmare weapons found, " + X.won + " Nightmare" + (X.won > 1 ? "s" : "") + " beaten." + (X.sent === "later" ? " The Hollow-Crown Sentinel is waiting on the roads back." : "")]);
   }
   function nmaBtns(key) {
     if (FOE.on || key !== "rterror" || !S.rterror) return [];
