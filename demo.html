@@ -3186,7 +3186,7 @@ body.pv-open { overflow: hidden; }
     ["The Sounding", "sounding", 62, 68], ["The Black Tithe", "tithe", 69, 75],
     ["Half the East", "hinge", 76, 82], ["The Unmapped", "unmapped", 83, 89],
     ["Rimehold", "rime", 90, 98], ["The Welling", "welling", 99, 103], ["The Root Summons", "summons", 104, 110],
-    ["The Lost Hand", "hand", 111, 117]
+    ["The Lost Hand", "hand", 111, 117], ["The Heart Beneath the Roots", "heart", 118, 124]
   ].map(([name, slug, from, to]) => ({ name, slug, from, to }));
   // After the Deep Melt the same seven parts are Dunvaar.
   Object.defineProperty(CHAPTERS.find(c => c.slug === "summons"), "name", { get: () => (typeof S !== "undefined" && S && S.rm && S.rm.ending === "melt" ? "Dunvaar" : "The Root Summons") });
@@ -3391,6 +3391,7 @@ body.pv-open { overflow: hidden; }
     h += wlSection(rs);
     h += rsSection(rs);
     h += lhSection(rs);
+    h += htSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -3568,6 +3569,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "120", name: "The Heart Beneath the Roots", date: "16 Nov 2026", items: [
+      "<b>A new chapter after the Lost Hand</b>, Parts CXIX to CXXV, from Adrian's mission. Every year one message comes up out of the labyrinth cut into living bark: THE HEART STILL BEATS. This year there's a fifth line, and it isn't finished. Back to where it all began: the Library of Roots, and down.",
+      "<b>The labyrinth was never a maze.</b> It's a cage, drawn round Ommeral, the First Seed, and the Heart that keeps it alive isn't a thing. It's a person: <b>your most loyal companion</b>, or you, if you've kept nobody close. The signs creep in quietly at the camps of earlier chapters, from the Corrach on.",
+      "<b>The Weeping Paths</b>: the map lies, and the roots move while you walk. Your companion sees the true paths. Ask, and they're right every time, and the Heart grows.",
+      "<b>Root Echoes</b>: the heroes who came down before you, grown back out of root with their real gear and their real moves. Some are heroes from your <b>other save slots</b>. If you've ever fallen, one of them is you. Lay them to rest or rob them: it matters at the end.",
+      "<b>The Blind King</b> sees every path and no people: a stealth fight you win by holding still. <b>The Thorn Prince</b> has read every move you'll make: use the same move twice and he's ready for it.",
+      "<b>The Orchard of False Ends</b>, and the Seed. Three endings: the Execution, the Refusal and the Crown of Roots. Each one changes the roads back for good. 10 new feats in a <b>Heart Beneath the Roots</b> pursuit."] },
     { ver: "119", name: "Thorn and Clockwork", date: "16 Nov 2026", items: [
       "<b>Two new callings</b>, from Adrian's designs and paintings. Both start small and grow into the thing in the painting.",
       "<b>The Dreadbloom Warden</b>: a thorn knight with an ember for a heart. Blows that land on you feed your <b>Smoulder</b>, and the cap grows the longer a fight runs. Spend it on Thornrend, then (as the Withered Colossus wakes) Ironwood Grasp and Funeral Grove. At level 40 the Colossus stands up beside you: <i>The roots remember. The machine remembers. Through me, they march again.</i>",
@@ -4038,6 +4046,9 @@ body.pv-open { overflow: hidden; }
   //   art:    [glyph, x, y, scale] from MAP_ART
   //   labels: [text, x, y, size, style] style: "" region, "s" small town, "u" under the ground
   const MAP = {
+    heart: { at: [200, 300], parts: { 118: [664, 290] }, clear: [[200, 300, 40]],
+      road: [[664, 290], [560, 302], [432, 290], [318, 308], [214, 296]],
+      labels: [["the First Seed", 200, 330, 9, "u"]] },
     hand: { at: [700, 236], parts: { 111: [318, 308], 112: [664, 290], 117: [664, 290] }, clear: [[694, 246, 84], [606, 298, 34]],
       road: [[330, 300], [432, 290], [560, 302], [612, 300], [664, 290]],
       art: [["selvaine", 650, 230, 1], ["jungle", 712, 268, .9], ["jungle", 690, 160, .8], ["palisade", 700, 236, .8]],
@@ -4597,6 +4608,19 @@ body.pv-open { overflow: hidden; }
     { id: "lhland", name: "Holding by Holding", desc: "Give every holding in the Wetwood back.", test: () => false },
     { id: "lhghost", name: "Nobody Saw", desc: "Get Grell out with Cutwater's alarm at 1 or less, and never be seen.", test: () => false },
     { id: "lhwhole", name: "The Whole Job", desc: "Name the right one, free the tappers the night you come, refuse Gerrand, and swing the cage in clean.", test: () => false },
+    { id: "htmap", name: "Paper and Ink", desc: "Cross the Weeping Paths without once asking the way.", test: () => false },
+    { id: "htasked", name: "It Knows the Way", desc: "Ask the way three times on the Weeping Paths.", test: () => false },
+    { id: "htslot", name: "Another Road", desc: "Meet the Echo of a hero from another of your journeys.", test: () => false },
+    { id: "htrest", name: "Somebody Should", desc: "Lay every Root Echo to rest.", test: () => false },
+    { id: "htstill", name: "Be a Stone", desc: "Let the Blind King walk straight through you.", test: () => false },
+    { id: "htking", name: "Never Heard", desc: "Cut the Blind King's three knots without him once hearing you.", test: () => false },
+    { id: "htprince", name: "Never Twice", desc: "Beat the Thorn Prince without him once reading your move.", test: () => false },
+    { id: "htlisten", name: "Listen", desc: "Don't walk out of the Orchard of False Ends.", test: () => false },
+    { id: "htdoubt", name: "A Little Before You", desc: "Notice that the Heart in the orchard is beating early.", test: () => false },
+    { id: "htexec", name: "The Execution", desc: "End the First Seed the only way it can end.", test: () => false },
+    { id: "htrefuse", name: "The Refusal", desc: "Walk away from the First Seed, and let it wake.", test: () => false },
+    { id: "htcrown", name: "The Crown of Roots", desc: "Give the First Seed a heart that stays.", test: () => false },
+    { id: "htwhole", name: "The Heart of It", desc: "Lay the Echoes to rest, never be heard by the King, never be read by the Prince, and listen in the orchard.", test: () => false },
     { id: "rscall", name: "When I Call", desc: "Answer Ammeroth's first summons.", test: () => false },
     { id: "rsblind", name: "Without Looking", desc: "Mend a tear without looking through the rings once.", test: () => false },
     { id: "rsbell", name: "One Bell", desc: "Mend the tear under the Belfry at Lastwell.", test: () => false },
@@ -4872,7 +4896,9 @@ body.pv-open { overflow: hidden; }
     { id: "nightarms", name: "The Nightmare Armoury", ver: "45", desc: "Five weapons the Cascades grow inside their Nightmares, and the thorn knight sent to take them back.",
       ids: ["nmflame", "nmflamed", "nmeye", "nmrime", "nmwheel", "nmthorn", "nmarmoury", "nmsentinel"] },
     { id: "thornclock", name: "Thorn and Clockwork", ver: "46", desc: "Two new callings: the Dreadbloom Warden and its Withered Colossus, and the Clockrunner who becomes the Grand Horologian.",
-      ids: ["cl_bloom_all", "cl_bloom_use", "cl_clock_all", "cl_clock_use", "cl_colossus", "cl_midnight", "cl_wake1", "cl_relics", "cl_asc"] }
+      ids: ["cl_bloom_all", "cl_bloom_use", "cl_clock_all", "cl_clock_use", "cl_colossus", "cl_midnight", "cl_wake1", "cl_relics", "cl_asc"] },
+    { id: "heart", name: "The Heart Beneath the Roots", ver: "47", desc: "The cage under the realm, the Echoes, the Blind King, the Thorn Prince, the orchard, and the one the roots chose.",
+      ids: ["htmap", "htasked", "htslot", "htrest", "htstill", "htking", "htprince", "htlisten", "htdoubt", "htexec", "htrefuse", "htcrown", "htwhole"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5307,6 +5333,12 @@ body.pv-open { overflow: hidden; }
     lhdays: ["Four days", "Each day, go to one place. Some places tell you who sold the job; some give you a way in, or a trick for later. You won't get to all of them. When the days are up you name someone, or nobody."],
     lhalarm: ["The alarm", "Cutwater's alarm runs from 0 to 6. A failed check, being seen or springing plates raises it. The higher it is, the more yardmen come, and the harder Gerrand is."],
     lhcords: ["Gerrand's cords", "Every few rounds Gerrand backs to the balustrade and takes hold of a yard-cord. Cut it before his turn, or Evade, or take what comes. Crossing the Counting Floor cleanly makes the cords easier to cut."],
+    htpaths: ["The Weeping Paths", "Your map is wrong in a few places, and every 4 steps the roots move and it gets wronger. Walk into a root that isn't on your map and it costs you. Asking your companion shows the true paths two squares round you, every time, but it feeds the Heart, and the Heart remembers."],
+    htechoes: ["Root Echoes", "Heroes who died down here, grown back out of root: they fight with what they carried and how they fought. Every third round they do their old trick. Lay them to rest or take what they had: the ones you rest stand with you at the end, and the ones you rob stand against you."],
+    htking: ["The Blind King", "He walks his round and hears feet. Walking within 2 squares of him (the lit ones), or cutting a knot within 3, and he hears you. Holding still is always safe: he walks straight through you. Cut his three knots."],
+    htprince: ["The Thorn Prince", "A move is what you do after what you did last turn: Swing after Feint isn't Swing after Swing. Make the same move twice and he's ready: it does nothing, and he answers it. Options he's read are marked. Vary everything."],
+    htorchard: ["The Orchard of False Ends", "It happens once, here, and nowhere else in the game."],
+    htseed: ["The First Seed", "Every third round it pulls on the Heart. Spend that turn holding on, or it drinks and heals."],
     tear: ["Tears", "Touch a thing and it turns (◇ ◈ ◆), and so do the things either side of it. Set each back the way it was. You can only see the way it was by <b>looking</b>, a few times, for a breath each; the count always says how many are right. A rough mend costs you."],
     court: ["The drowned court", "One of the three opened the Queen's stair. You have time to search three places. An alibi clears someone; a thing left on the stair points at someone. Then you stand with one of them, and it matters who."],
     dunvaar: ["Dunvaar", "Dunvaar is a new region. When the chapter's done, its <b>Wandering Board</b>, its beasts, a town and a hidden thing are on the roads back."],
@@ -5459,6 +5491,9 @@ body.pv-open { overflow: hidden; }
     if (!atk) { const cx = clCheck(label); if (cx) { mod += cx; label += " (+" + cx + " " + CALLINGS[S.cl.k].name + ")"; } }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
     if (!atk && hasGear("grellpick") && /Sleight|lock/i.test(label)) { mod += 1; label += " (+1 Grell's lockpick)"; }
+    if (!atk && hasGear("kingsknot") && /^Stealth/.test(label)) { mod += 1; label += " (+1 the King's Knot)"; }
+    if (!atk && hasGear("princethorn") && /^Insight/.test(label)) { mod += 1; label += " (+1 the Prince's Thorn)"; }
+    if (!atk && hasGear("rootcrown") && /^(Nature|Survival)/.test(label)) { mod += 1; label += " (+1 the Crown of Roots)"; }
     if (!atk && hasGear("ysoltmap") && /^(Survival|Perception)/.test(label)) { mod += 1; label += " (+1 Ysolt's map)"; }
     if (!atk && hasGear("quirenib") && /^(Investigation|Survival|Perception)/.test(label)) { mod += 1; label += " (+1 the Quire's nib)"; }
     if (!atk && hasGear("firstsheet") && /^(Investigation|Survival)/.test(label)) { mod += 1; label += " (+1 the First Sheet)"; }
@@ -8392,7 +8427,7 @@ body.pv-open { overflow: hidden; }
   const CAL_WEEK = ["Seedday", "Spadeday", "Hearthday", "Lampday", "Tollday", "Market Day"];
   const CAL_MD = 12, CAL_YEAR = 144;
   // Days on the road from one kingdom to the next, by the chapter you arrive at (index in CHAPTERS).
-  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9, 6, 8];
+  const CAL_TRAVEL = [0, 6, 8, 5, 7, 6, 9, 7, 6, 8, 5, 7, 4, 3, 8, 9, 6, 8, 9];
   // One festival a season, two days long, in every town on the roads back. m = month index, d = first day.
   const CAL_FAIRS = [
     { id: "rootwake", name: "the Root-Waking", m: 0, d: 1, fx: "every traveller gets a gift at the door",
@@ -8866,6 +8901,7 @@ body.pv-open { overflow: hidden; }
     await wlTown(T);
     await rsTown(T);
     await lhTown(T);
+    await htTown(T);
     if (T.reg === "rahdaria" && S.hn && S.hn.done) {
       if (echoDue("hnEast")) { await echoMark("hnEast"); await say({ whole: "In the market they're selling Ostle bread again, and somebody's painted a tower falling over on the inn sign. Children play Hingebreaker in the street, and argue about who has to be Corvane.", scarred: "The bread's dearer since the east was scarred. A woman at a stall tells you her sister lived at Hobble Cross. She doesn't say anything else, and she gives you the loaf for nothing.", half: "There's a queue for bread that goes round two terraces. The Bathyr camp on the salt flats has soldiers round it now, and nobody will say whose." }[S.hn.east]); }
       if (echoDue("hnYsolt")) { await echoMark("hnYsolt"); await say("Ysolt has a little shop on the third terrace now, with maps in the window, and her eyes are grey and short-sighted behind thick spectacles. Everything she draws is exactly what's there. She gives you one for nothing."); S.coins += 10; renderSheet(); await mech("Ysolt's map of the roads round Rahdaria sells for 10 gold to a carter, the same afternoon.", "loot"); }
@@ -9094,6 +9130,11 @@ body.pv-open { overflow: hidden; }
   const DRY = {
     calSeason: CAL_SEASON_LINES, calFair: CAL_FAIR_LINES, calName: CAL_NAME_WHY,
     wayside: {
+      heart: [
+        "Archivist Fallowes has labelled the drawer of four hundred and twelve bark strips: CORRESPONDENCE.",
+        "A root in the gallery has grown round an old boot so slowly that the boot is still laced.",
+        "The Bark-Readers have read every shelf in the Library by touch. Asked what the oldest one says, the eldest says it says not to touch it."
+      ],
       hand: [
         "A notice on a tree in the Wetwood says: THIS TREE IS THE PROPERTY OF K. GERRAND. Somebody has carved under it: THE TREE DISAGREES.",
         "A gum-tapper offers you a cup of red gum, still warm. You ask what you do with it. She says you wait a thousand years.",
@@ -10971,7 +11012,8 @@ body.pv-open { overflow: hidden; }
   const co = () => (S.co = S.co || { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false });
   const coSolo = () => SOLO.has(CHAPTERS[chapterAt(S.part)].slug);
   function tyraHere() {
-    if (!S.tyra) return false;
+    if (!S.tyra || S.tyra.gone) return false;
+    if (S.ht && S.ht.on && !S.ht.done) return !!S.ht.tyra;
     if (S.unm && S.unm.on) return !!S.unm.tyra;
     if (S.hn && S.hn.on) return !!S.hn.tyra;
     if (S.pz && S.pz.on) return !!S.pz.tyra;
@@ -11239,7 +11281,7 @@ body.pv-open { overflow: hidden; }
     const opts = Object.keys(MERCS).map(id => ({
       key: id, label: "Hire " + MERCS[id].name + ", " + MERCS[id].role, plain: true,
       tag: (S.coins >= hireFee(id) ? hireFee(id) + " gold" : "you need " + hireFee(id) + " gold") + " · " + MERCS[id].perk + (c.loyal[id] ? " · loyalty " + c.loyal[id] + " of " + SWEAR_AT : ""),
-      show: S.coins >= hireFee(id)
+      show: S.coins >= hireFee(id) && !(c.gone || []).includes(id)
     }));
     opts.push({ key: "none", label: "Not this time", plain: true });
     if (opts.length === 1) await say("You haven't got the coin for any of them. Odran looks at your purse, and then at you, with something like sympathy.");
@@ -11326,6 +11368,7 @@ body.pv-open { overflow: hidden; }
     const C = CHAPTERS[chapterAt(i)];
     if (i !== C.to) return;
     await coCamp(i);
+    await htSign(i);
     const c = co(), m = c.merc;
     if (!m || sworn(m) || i >= PARTS.length - 1) return;
     c.loyal[m] = (c.loyal[m] || 0) + 1;
@@ -11349,7 +11392,7 @@ body.pv-open { overflow: hidden; }
   }
   function companyItems(items) {
     const c = S.co;
-    if (S.tyra) {
+    if (S.tyra && !S.tyra.gone) {
       const away = !tyraHere();
       items.push(["tyra", "blessing", "Tyra Quillon", "A laid-back rogue who collects debts, keys and cats. Fondness " + hearts(S.tyra.aff) + (S.gl ? (S.tyra.errand && S.tyra.errand !== "with" ? ". Out on an errand." : S.tyra.errand === "with" ? ". At your side today." : ".") : away ? ". Not with you now." : ". With you.") + (S.tyra.key ? " She has the Assize shackle key." : "") + (!away || S.gl ? " " + FRIEND_PERKS.tyra.filter((p, k) => S.tyra.aff >= [2, 4, 5][k]).join(" ") : "")]);
     }
@@ -16513,6 +16556,10 @@ body.pv-open { overflow: hidden; }
     firstsheet: { name: "The First Sheet", icon: "map", desc: "The Quire's map of everything, rolled up, warm, and lighter than it should be. Somewhere inside the roll a nib is still drawing a coast at its edge. +1 to Survival and Investigation checks. Hollin Marrisk will want it back." },
     soullantern: { name: "Corvane's lantern", icon: "lantern", desc: "Black glass, cracked, warm in your hand, full of quiet light: the dead Mardek Corvane took, and you kept. +8 max HP, for good. Dogs won't come near you." },
     grellpick: { name: "Grell's lockpick", icon: "key", desc: "Long and thin and worn bright, from behind Grell's ear, where it lived for twenty years. It tastes faintly of whatever he had for dinner. +1 to Sleight of Hand checks, and to any check on a lock." },
+    kingsknot: { name: "The King's Knot", icon: "grain", desc: "A knot of grey root from the Blind King's hall, cut while he walked through you. Hold it and your feet go quiet. +1 to Stealth checks." },
+    princethorn: { name: "The Prince's Thorn", icon: "blade", desc: "A black thorn from the Thorn Prince's broken rapier. It pricks you, very slightly, just before somebody lies. +1 to Insight checks." },
+    heartwood: { name: "The Heartwood Shard", icon: "ember", desc: "A splinter of dark red wood from the First Seed's split, with a faint pulse of green along the grain. It's warm in the cold and cool in the heat, and it keeps time with nobody's heart now. +2 max HP." },
+    rootcrown: { name: "The Crown of Roots", icon: "ring", desc: "A ring of fine living root that grew round your brow under the realm, and stays. The paths of the labyrinth open for you. +6 max HP (already counted), and +1 to Nature and Survival checks." },
     ysoltmap: { name: "Ysolt's waking map", icon: "map", desc: "The sheet she was drawing when you left her dreaming: the country a little way ahead of you, still changing. +1 to Survival and Perception checks." },
     cloak: { name: "The Weathercloak", icon: "cloak" },
     mirror: { name: "Mirrorwake", icon: "blade", desc: "Corvin Dray's thin blade. Once a fight, two copies of you step out of it: each of the next 3 attacks on you has a 2 in 3 chance to strike a copy instead." },
@@ -18303,13 +18350,15 @@ body.pv-open { overflow: hidden; }
       st.rmNoAtk = false;
       sdFilter(opts, st);
       pzFilter(opts, st);
+      if (F.filter) F.filter(opts, st);
       if (opts.some(o => /^mun-/.test(o.key))) tip("mines");
       if (!F.company) tip("menu");
       FOE.menu = true;
-      const c = st.fd ? await fdChoose(opts, F, st) : await choose(opts);
+      let c = st.fd ? await fdChoose(opts, F, st) : await choose(opts);
       if (c === BELT_WON) break;
       const rmHpB = FOE.hp;
       await rmNote(c, F, st);
+      if (F.onChoice && (await F.onChoice(c, st)) === "countered") c = "ht-countered";
       if (c === "atk" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit())) {
         const cleave = c === "cls", kc = c === "kin" ? kinSwing(F, st) : null;
         if (kc) await say(clPath().say);
@@ -39341,7 +39390,7 @@ body.pv-open { overflow: hidden; }
     "At the crossroads there's a gibbet with nobody in it, and a sign nailed to it with their mark painted on. Under the sign, four of them are waiting, as if they knew you'd come this way."
   ];
   // Half the East is fought in the lands east of Rahdaria, so it borrows Rahdaria's region.
-  const CH_REG = { hinge: "rahdaria", unmapped: "rahdaria" };
+  const CH_REG = { hinge: "rahdaria", unmapped: "rahdaria", heart: "roots" };
   const regAt = (k) => Object.keys(TIER).find(r => TIER[r] === k) || (CHAPTERS[k] && CH_REG[CHAPTERS[k].slug]);
   // Which gang: one from either end of the road, one you haven't broken if there is one, and a gang
   // you let go now and then comes back with a grudge.
@@ -44293,7 +44342,7 @@ body.pv-open { overflow: hidden; }
     S.title = L.sold ? "Gerrand's Tenant" : "Hand of the Hollow Hands";
     L.done = true; xpGain(200); save();
     await mech("<b>Selvaine</b> is on the roads back now: Brindle Landing, Amberlow, the Wetwood's beasts, its board and a hidden thing. Your title is <b>" + S.title + "</b>.", "loot");
-    await endCard();
+    await go("Back to the roads");
   }
   async function partLostHand1() { heading("CXII", "The Empty Hand"); return lhLetter(); }
   async function partLostHand2() { heading("CXIII", "Four Days Before the Rains"); return lhAsk(); }
@@ -44339,6 +44388,742 @@ body.pv-open { overflow: hidden; }
       li(L.offer && L.offer !== "yes", "Gerrand's offer: " + ({ yes: "taken", no: "refused", bluff: "refused, with a lie" }[L.offer] || "not yet")) +
       li(L.cage === "clean" || L.cage === "safe", "The cage: " + ({ clean: "swung in, cleanly", safe: "swung in", fell: "fell, and you went after it" }[L.cage] || "not yet")) +
       li(L.grell && L.grell !== "gone", "Grell: " + ({ pick: "gave you his lockpick", square: "said \"Square\"", gone: "went home without you" }[L.grell] || "not yet")) + "</ul></section>";
+  }
+
+
+  // ---------- The Heart Beneath the Roots (2026-11-16, Adrian's mission) ----------
+  // Every year one message comes up out of the labyrinth, cut into living bark: THE HEART STILL BEATS.
+  // The labyrinth was never a maze. The Quire drew it tight round something asleep under the realm,
+  // Ommeral, the First Seed, and the Heart that keeps it alive isn't a thing you can find: it's a
+  // person. The roots choose whoever you're closest to (your most loyal companion; you, if you have
+  // nobody) and the signs creep in quietly at the camps of earlier chapters (htSign). Seven parts: the
+  // call, the Weeping Paths (the map lies; your companion sees routes you don't), the Root Echoes
+  // (fallen heroes, some from your other save slots), the Blind King (win by holding still), the Thorn
+  // Prince (he counters any move you use twice), the Orchard of False Ends (one fake victory, once),
+  // and the Seed, with three endings: the Execution, the Refusal and the Crown of Roots. State in S.ht.
+  const ht = () => (S.ht = S.ht || { on: false, signs: 0, who: null, grow: 0, asks: 0, bumps: 0, reading: false, trust: null,
+    echoes: [], rest: [], took: [], king: null, heard: 0, prince: null, countered: 0, orchard: null, fakeGold: false, fooled: null, end: null, done: false, seen: [] });
+  const HT_WHO = {
+    ishbel: { name: "Ishbel", they: "she", them: "her", their: "her", crown: "the Root Queen" },
+    tyra: { name: "Tyra", they: "she", them: "her", their: "her", crown: "the Root Queen" },
+    burr: { name: "Burr", they: "he", them: "him", their: "his", crown: "the Root Hound", dog: true },
+    odran: { name: "Odran", they: "he", them: "him", their: "his", crown: "the Root King" },
+    wenna: { name: "Wenna", they: "she", them: "her", their: "her", crown: "the Root Queen" },
+    caddock: { name: "Mother Caddock", they: "she", them: "her", their: "her", crown: "the Root Queen" }
+  };
+  const htCap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  // Who the roots have chosen: whoever you're closest to, of those who walk with you. Nobody: you.
+  function htPick() {
+    const c = co(), cand = [];
+    if (c.isb) cand.push("ishbel");
+    if (S.tyra && !S.tyra.gone) cand.push("tyra");
+    if (c.burr) cand.push("burr");
+    if (c.merc && MERCS[c.merc]) cand.push(c.merc);
+    let best = null, bv = 0;
+    cand.forEach(id => { const v = isMerc(id) ? Math.min(5, c.loyal[id] || 0) : bondOf(id); if (v > bv) { bv = v; best = id; } });
+    return best || "self";
+  }
+  const htWho = () => (S.ht && S.ht.who) || htPick();
+  const htSelf = () => htWho() === "self";
+  const htW = () => HT_WHO[htWho()] || { name: "you", they: "you", them: "you", their: "your", crown: "the Root-Crowned" };
+  const hx = (s) => { const w = htW(); return s.replace(/\{N\}/g, w.name).replace(/\{they\}/g, w.they).replace(/\{them\}/g, w.them).replace(/\{their\}/g, w.their).replace(/\{They\}/g, htCap(w.they)).replace(/\{Their\}/g, htCap(w.their)); };
+  // One line each: [a person, Burr, you].
+  const HT_SIGNS = [
+    ["{N} scratches at {their} forearm by the fire, without noticing, the way you'd scratch a midge bite. There's nothing there. In the morning there's a fine dark line under the skin of {their} wrist, like a hair that's got in somehow.",
+      "Burr worries at his foreleg by the fire, the way he does at a burr, and won't leave it. There's nothing in the fur. In the morning there's a fine dark line on the skin underneath, like a hair that's got in somehow.",
+      "By the fire you catch yourself scratching at your forearm. There's nothing there. In the morning there's a fine dark line under the skin of your wrist, like a hair that's got in somehow."],
+    ["{N} asks if you heard that. You didn't. {They} listens a while longer, head on one side, and then lies down and doesn't say what it was.",
+      "Burr sits up in the night and stares at the ground between his paws for an hour, ear up and ear down. He doesn't growl. He wags, once, slowly, the way he does when somebody he knows is coming.",
+      "You wake in the night sure that somebody said your name from under the ground. Nobody else is awake. The ground is warm."],
+    ["On the road {N} takes a turning you'd have walked past, without looking, without slowing, and it saves you half a day. When you ask how {they} knew, {they} looks at you as if you'd asked how {they} knew to breathe.",
+      "On the road Burr leaves the track and noses off through the scrub, and you follow because it's that or lose him, and it saves you half a day. He doesn't look back once. He knew.",
+      "On the road you take a turning you'd have walked past, without thinking, and it saves you half a day. You don't know how you knew. You knew."],
+    ["Where {N} slept, the grass has come up through {their} blanket in the night: a ring of it, pale, as if it had been growing toward something warm.",
+      "Where Burr slept, the grass has come up in the night in a ring round the hollow he made, pale and fine, as if it had been growing toward something warm.",
+      "Where you slept, the grass has come up through your blanket in the night: a ring of it, pale, as if it had been growing toward something warm."],
+    ["{N} talks in {their} sleep, very quietly, in something that isn't a language: long creaks and settlings, like a house on a cold night. In the morning {they} doesn't remember. You don't tell {them}.",
+      "Burr dreams by the fire, his feet going, and the sound he makes isn't a whimper. It's lower and slower than that, like wood settling. When he wakes he licks your hand as if he's been a long way off.",
+      "You dream of being very large and very slow and very patient, with your feet down in the dark. It isn't a bad dream. That's what bothers you."],
+    ["The dark line has reached {N}'s elbow and forked there, like a river on a map. {They} keeps {their} sleeves down now. When you look at it {they} says, “Leave it,” so gently that you do.",
+      "The dark lines on Burr's foreleg have reached his shoulder under the fur and forked there, like a river on a map. He doesn't mind you looking. He minds you being worried.",
+      "The line has reached your elbow and forked there, like a river on a map. You keep your sleeve down now."],
+    ["{N} stands a long while at the edge of camp with {their} palm flat on the ground, as if feeling for a pulse in a wrist. “It's warm down there,” {they} says, to nobody. “It's been warm a long time.”",
+      "Burr digs at the edge of camp, steady and patient, the way he never digs, and stops a foot down and lies with his nose in the hole, breathing the dark. His tail is going.",
+      "You stand a long while at the edge of camp with your palm flat on the ground. It's warm down there. It's been warm a long time."],
+    ["The line is at {N}'s collarbone. {They} buttons {their} collar now, all the way up, and laughs at nothing a beat too late, and once, when you say {their} name, {they} doesn't answer to it straight away.",
+      "When you call Burr he doesn't come straight away any more. He comes, always. But first he looks at the ground, as if somebody down there has said his name too, and he's deciding.",
+      "The line is at your collarbone. Somebody says your name in a town and you don't answer to it straight away."]
+  ];
+  const htSignTxt = (k) => { const id = htWho(); return hx(HT_SIGNS[k][id === "self" ? 2 : id === "burr" ? 1 : 0]); };
+  // At the camp after a chapter, from the Corrach on: one quiet sign, if the one it's in is with you.
+  async function htSign(i) {
+    const H = S.ht;
+    if (H && H.on) return;
+    if (chapterAt(i) < 6 || i >= 118) return;
+    const n = H ? H.signs : 0;
+    if (n >= HT_SIGNS.length) return;
+    const id = htPick();
+    if (id !== "self" && !coAll().includes(id)) return;
+    ht().signs = n + 1;
+    await say(htSignTxt(n), "aside");
+  }
+
+  // ---------- the pictures ----------
+  function htBarkSvg() {
+    const rows = []; for (let k = 0; k < 15; k++) rows.push('<path d="M' + (k * 44 - 10) + ' 0 q' + (12 + k % 3 * 6) + ' 90 ' + (-4 + k % 2 * 10) + ' 180 t' + (6 - k % 3 * 4) + ' 180" fill="none" stroke="#1d1209" stroke-width="' + (3 + k % 4) + '" opacity=".75"/>');
+    const word = (t, x, y, s) => '<text x="' + x + '" y="' + y + '" font-size="' + s + '" text-anchor="middle" fill="#e9d29a" stroke="#5a2a12" stroke-width="1.2" font-family="Georgia,serif" letter-spacing="6" opacity=".92">' + t + "</text>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360"><defs><linearGradient id="hbB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3220"/><stop offset="1" stop-color="#2a1a10"/></linearGradient>' +
+      '<radialGradient id="hbG" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></radialGradient></defs>' +
+      '<rect width="640" height="360" fill="url(#hbB)"/>' + rows.join("") +
+      word("THE HEART", 320, 150, 46) + word("STILL BEATS", 320, 212, 46) +
+      '<path d="M268 262 l14 -14 M282 248 l3 20 M300 254 q6 -10 12 0" stroke="#e9d29a" stroke-width="3" fill="none" opacity=".7"/>' +
+      '<g fill="#b8401c" opacity=".85"><circle cx="300" cy="160" r="2.4"/><circle cx="304" cy="176" r="2"/><circle cx="410" cy="222" r="2.2"/><circle cx="412" cy="240" r="1.6"/><circle cx="214" cy="224" r="2"/></g>' +
+      '<rect width="640" height="360" fill="url(#hbG)"/></svg>';
+  }
+  const htUri = (svg) => "data:image/svg+xml," + encodeURIComponent(svg);
+
+  // ---------- Part CXIX: The Heart Still Beats ----------
+  async function htCall() {
+    const H = ht(), c = co();
+    H.on = true; H.who = htPick(); save();
+    if (H.who === "tyra" || (S.tyra && !S.tyra.gone)) H.tyra = true;
+    if (isMerc(H.who) && c.merc !== H.who) c.merc = H.who;
+    await say("It comes by the ketch from Brindle Landing, in a packet sealed with the Library of Roots' green wax, in Archivist Fallowes' small hand: a strip of bark the length of your forearm, still damp, and a note.");
+    add(framedPic(htUri(htBarkSvg()), "A strip of dark living bark with deep fresh-cut capital letters across it: THE HEART STILL BEATS. Sap has bled out of the cuts and dried in red beads. Under the words, a fifth line has been started: two short strokes and a curve, not yet a letter.", "The bark from the Library"));
+    await say("“Every year since there has been a Library,” the note says, “one message has come up out of the labyrinth, cut into living bark. We find it on a shelf in the morning. It is always the same four words. We have four hundred and twelve of them in a drawer.”");
+    await say("“This year there is a fifth line. It is not finished. The bark is still growing it. Please come home.”");
+    if (S.ending === "return") await say("You planted the Ember Root where the great tree fell, back at the very start, and the labyrinth began to heal. You'd thought of that as a good thing. You think of it on the whole road back, all the same.");
+    else if (S.ending === "keep") await say("The Ember Root you kept, back at the very start, has grown into you, warm, the way it does. Today it's warmer. All the way back across the Narrow Sea it beats, a little, out of time with your own heart.");
+    if (H.signs < 4 && H.who !== "self") {
+      await say(hx("On the long road home you find yourself watching {N}, and thinking back. It started a while ago, if you're honest. You just didn't put it together."));
+      for (let k = H.signs; k < 4; k++) await say(htSignTxt(k), "aside");
+      H.signs = Math.max(H.signs, 4);
+    } else if (H.signs < 4) {
+      await say("On the long road home you think back, and you're not sure when it started.");
+      for (let k = H.signs; k < 4; k++) await say(htSignTxt(k), "aside");
+      H.signs = Math.max(H.signs, 4);
+    }
+    await say("The Library of Roots is where you left it, at the mouth of the labyrinth where you first came up into the light, its shelves grown out of the living wall. Archivist Fallowes is waiting on the steps with a lamp. Behind her stand three of the Bark-Readers, the old blind archivists who read the shelves by touch, with their hands folded in their sleeves.");
+    await say("“It isn't a maze,” Fallowes says, before you've got your pack off. “It never was. We've been reading the bark wrong for four hundred years. It's a cage. Somebody drew it tight round something that's asleep under the realm, and every year the thing inside it tells us, very politely, that it's still alive.”", "voice");
+    if (S.unm && S.unm.done) await say("You know the hand the roots are drawn in before she shows you. You saw it at the edge of the world, in the Unmapped: the Quire's hand, the seven who drew the realm still. They drew this too. They drew it first.");
+    else await say("She shows you the oldest bark in the drawer. The letters are cut in a hand so sure and so old that it doesn't look written at all; it looks grown.");
+    await say("“The Bark-Readers have a name for it,” she says. “Ommeral. The First Seed. The first thing that ever grew, before there was ground to grow in. The labyrinth is its body, the roots and the paths and everything that walks them. And it needs a heart to wake, the way anything does.”");
+    if (vaelricSpeaks()) await voice("“Forty years I walked these roots,” Vaelric says, low. “Forty years, and I never once asked what they were holding down.”");
+    const r = await check({ label: "Investigation check (read the fifth line)", mod: 2 + Math.floor(lv() / 8), dc: 15 });
+    if (r.ok) {
+      H.read5 = true;
+      await say("You run your thumb down the fifth line. Two strokes and a curve, and under the bark, a slow warmth that comes and goes. It isn't a word. It's the start of a name. You don't know whose.");
+      await say(H.who === "self" ? "Your own wrist itches, where the line is." : hx("Beside you, {N} has gone very still."));
+    } else await say("The fifth line is two strokes and a curve, and the bark is warm under your thumb. That's all you can make of it.");
+    const o = await choose([
+      { key: "go", label: "Go down tonight", tag: "the roots move at night; so will you" },
+      { key: "read", label: "Ask the Bark-Readers for a reading first", tag: "40 gold for the lamp oil · they've read four hundred years of bark", plain: true, show: S.coins >= 40 }
+    ]);
+    if (o === "read") {
+      S.coins -= 40; H.reading = true; renderSheet();
+      await say("The eldest Bark-Reader takes your hands in hers and reads them like a shelf, slowly, every line, and then she reads " + (H.who === "self" ? "your wrist twice." : hx("{N}'s hands too, and stops, and goes back to the beginning, and reads them again.")));
+      await say("“Three things,” she says. “There's a king down there who sees every path and no people: when he's near, be a stone. There's a prince who has already read what you'll do: never do it twice. And there's an orchard. When you think it's over, it isn't. Listen for the beat.”", "voice");
+      await mech("The Bark-Readers' reading: you'll remember it when it matters.", "loot");
+    } else await say("You go down that night. Fallowes stands on the steps with the lamp until you're out of its light, and then, you think, a while after.");
+    await say(H.who === "self" ? "Nobody asks to come. That's the thing about being the one it chose: there's nobody close enough to choose instead." : hx("{N} is waiting at the gate before you, which isn't like {them}. {They} doesn't say anything. {They} just falls in at your side, the way {they} always does, and the labyrinth takes you both."));
+    H.part = 1; save();
+  }
+
+  // ---------- Part CXX: the Weeping Paths (the map lies) ----------
+  // A grid of root-tunnels. You see your map; the map is wrong in places, and every few steps the roots
+  // move and it's wronger. Walk into a root your map didn't show and it costs you. Your companion can
+  // see the true paths, a little way round: ask, and it's right, every time, and the Heart grows.
+  function htMaze() {
+    tip("htpaths");
+    const H = ht(), W = 7, Hh = 7, who = htW().name;
+    return new Promise(resolve => {
+      const at = (x, y) => y * W + x, inb = (x, y) => x >= 0 && y >= 0 && x < W && y < Hh;
+      const start = { x: 3, y: 6 }, goal = { x: 3, y: 0 };
+      let T, M;
+      const reach = (walls) => { const seen = new Set([at(start.x, start.y)]), q = [start]; while (q.length) { const p = q.shift(); if (p.x === goal.x && p.y === goal.y) return true; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const x = p.x + dx, y = p.y + dy; if (inb(x, y) && !walls.has(at(x, y)) && !seen.has(at(x, y))) { seen.add(at(x, y)); q.push({ x, y }); } }); } return false; };
+      for (let tries = 0; tries < 300; tries++) {
+        T = new Set();
+        for (let k = 0; k < 17; k++) { const x = d(W) - 1, y = d(Hh) - 1; if ((x !== start.x || y !== start.y) && (x !== goal.x || y !== goal.y)) T.add(at(x, y)); }
+        if (reach(T)) break;
+      }
+      // The map you carry: right about most of it, wrong about four squares.
+      M = new Set(T); let lies = 0;
+      while (lies < 4) { const k = d(W * Hh) - 1, x = k % W, y = Math.floor(k / W); if ((x === start.x && y === start.y) || (x === goal.x && y === goal.y)) continue; if (M.has(k)) M.delete(k); else M.add(k); lies++; }
+      let you = Object.assign({}, start), steps = 0, bumps = 0, asks = 0, done = false, since = 0;
+      const P = puzzleBox("The Weeping Paths", "Get to the far side (⛩). Tap a square next to you to walk. Your map shows the roots (▦), but the map is wrong in places, and every 4 steps the roots move and it gets wronger. Walk into a root that isn't on your map and it costs you. <b>Ask " + who + "</b> and you'll see the true paths for two squares round you, every time. " + (htSelf() ? "(It's your own eyes that see them. Each look lets a little more of it in.)" : "Each time, the line under " + htW().their + " skin goes a little further."));
+      const grid = el("div", "lh-grid"); grid.style.setProperty("--w", W);
+      const cells = [];
+      for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
+      P.body.appendChild(grid);
+      const askB = pbtn(htSelf() ? "Look the way the roots look" : "Ask " + who + " which way"), cutB = pbtn("Hack straight through");
+      P.ctrl.append(askB, cutB);
+      const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ steps, bumps, asks }, r)), 600); };
+      function shift() {
+        // Two roots let go and two grow somewhere else, never on you or next to you, and the way through stays.
+        for (let tries = 0; tries < 60; tries++) {
+          const N = new Set(T), ws = [...N].filter(w => Math.abs(w % W - you.x) + Math.abs(Math.floor(w / W) - you.y) > 1), free = [];
+          for (let k = 0; k < W * Hh; k++) { const x = k % W, y = Math.floor(k / W); if (!N.has(k) && Math.abs(x - you.x) + Math.abs(y - you.y) > 1 && !(x === goal.x && y === goal.y) && !(x === start.x && y === start.y)) free.push(k); }
+          if (ws.length < 2 || free.length < 2) return;
+          for (let j = 0; j < 2; j++) { N.delete(ws.splice(d(ws.length) - 1, 1)[0]); N.add(free.splice(d(free.length) - 1, 1)[0]); }
+          if (reachFrom(N, you)) { T = N; return; }
+        }
+      }
+      function reachFrom(walls, p0) { const seen = new Set([at(p0.x, p0.y)]), q = [p0]; while (q.length) { const p = q.shift(); if (p.x === goal.x && p.y === goal.y) return true; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const x = p.x + dx, y = p.y + dy; if (inb(x, y) && !walls.has(at(x, y)) && !seen.has(at(x, y))) { seen.add(at(x, y)); q.push({ x, y }); } }); } return false; }
+      function tap(x, y) {
+        if (done || Math.abs(x - you.x) + Math.abs(y - you.y) !== 1) return;
+        if (T.has(at(x, y))) {
+          bumps++; M.add(at(x, y));
+          P.status.textContent = "There's a root there as thick as a door, whatever the map says. You walk into it in the dark, hard. (" + bumps + ")";
+          draw(); return;
+        }
+        M.delete(at(x, y)); you = { x, y }; steps++; since++;
+        if (x === goal.x && y === goal.y) { draw(); P.status.textContent = "You're through. (" + steps + " steps, " + bumps + " roots walked into, " + asks + " asked)"; return finish({ ok: true }); }
+        if (since >= 4) { since = 0; shift(); P.status.textContent = "Somewhere close a root as thick as a tower turns over in its sleep, slow as a tide. Your map hasn't noticed."; }
+        else P.status.textContent = "Step " + steps + " · " + bumps + " roots walked into";
+        if (steps >= 40) { P.status.textContent = "You've been walking in circles for hours, and the map's no use at all now."; return finish({ ok: false, lost: true }); }
+        draw();
+      }
+      askB.onclick = () => {
+        if (done) return;
+        asks++;
+        for (let y = you.y - 2; y <= you.y + 2; y++) for (let x = you.x - 2; x <= you.x + 2; x++) if (inb(x, y)) { if (T.has(at(x, y))) M.add(at(x, y)); else M.delete(at(x, y)); }
+        P.status.textContent = htSelf() ? "You shut your eyes and look the other way, the way the roots do, and the dark lays itself out for you, warm and clear. It's easy. It's too easy." : who + " looks, and points, and is right. “There,” " + htW().they + " says. “And there. Can't you see it?” You can't.";
+        draw();
+      };
+      cutB.onclick = () => { if (!done) { P.status.textContent = "You stop trusting anything and start cutting."; finish({ ok: false, hack: true }); } };
+      function draw() {
+        cells.forEach((b, k) => {
+          const x = k % W, y = Math.floor(k / W), wall = M.has(k), isY = you.x === x && you.y === y, isG = goal.x === x && goal.y === y;
+          b.textContent = isY ? "◆" : isG ? "⛩" : wall ? "▦" : "";
+          b.setAttribute("aria-label", isY ? "you" : isG ? "the far side" : wall ? "a root, on your map" : "open, on your map");
+          b.className = "lh-cell" + (wall ? " wall" : "") + (isY ? " you" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && !wall ? " near" : "");
+        });
+      }
+      draw();
+    });
+  }
+  async function htPaths() {
+    const H = ht();
+    await say("Past the Library, past the Pathway where you first woke with roots in your hair, past the webs and the nest where Ryytaa was, the labyrinth goes on down further than it ever went before. The roots are bigger here. They're the size of streets, then houses, then castles, and the tunnels between them are wet, always, as if the wood is weeping sap.");
+    await say("You brought a map. Fallowes' best: four hundred years of the Bark-Readers' work. Within the first hour, it's wrong.");
+    if (!htSelf()) await say(hx("{N} doesn't look at the map at all."));
+    const r = await htMaze();
+    H.asks += r.asks; H.bumps = r.bumps; H.grow += Math.min(3, r.asks);
+    if (r.bumps) await hurt(Math.min(4, r.bumps), 4, "bludgeoning", "You walked into the roots the map said weren't there.");
+    if (r.hack) { await say("You give up on the map and cut your way through, root after root, for hours, and the sap runs down the axe-haft into your sleeves. It's warm. You come out on the far side soaked to the elbow and shaking."); await hurt(2, 6, "slashing", "The roots fight back, as roots do."); }
+    if (r.lost) { await say(htSelf() ? "In the end you shut your eyes and walk the way the warmth pulls you, and it brings you straight out. You don't like how easy that was." : hx("In the end {N} takes your hand, without a word, and leads you out, quick and sure, never once looking down. {Their} hand is warmer than it should be.")); H.grow++; }
+    if (r.asks >= 3) grant("htasked");
+    if (!r.asks && r.ok) grant("htmap");
+    await say("At the far side the tunnel forks. Your map says left, down a long gallery toward a sound like a crowd a long way off.");
+    const t = await choose([
+      { key: "map", label: "Follow your map: left", tag: "slower · it's a long way round" },
+      { key: "them", label: htSelf() ? "Follow the warmth: right" : hx("Follow {N}: right"), tag: htSelf() ? "you just know" : hx("{they} says it's quicker · {they}'s been right all day"), plain: true }
+    ]);
+    H.trust = t;
+    if (t === "them") {
+      H.grow++;
+      await say(htSelf() ? "You go right, and it's quicker, and the warmth in your wrist is pleased with you, and that's the worst of it." : hx("You go right. It's quicker. {N} walks in front, and the roots lean in toward {them} as {they} passes, the way grass leans after somebody it knows."));
+      await heal(1, 8, "You get there early, and rest.");
+    } else {
+      H.drop = true;
+      await say("You go left, the long way, and come out high on a ledge over the gallery, looking down at what's in it before it sees you.");
+    }
+    save();
+  }
+
+  // ---------- Part CXXI: Root Echoes ----------
+  // The roots keep what they kill. These are the heroes who came down before you: their gear, their
+  // moves and their memories, grown back out of root. Some are from the realm's own past; some are the
+  // heroes of your other journeys (your other save slots); and if you've ever fallen, one is you.
+  const HT_LORE_ECHOES = [
+    { id: "maud", name: "Maud Ashery", what: "a lamplighter from Lastwell who came down after her brother forty years ago", wpn: "a lamp-hook", cl: "tide", mem: "“Tam?” it says, in a girl's voice, looking past you. “Tam, is that you? I've got the lamp. I came all this way with the lamp.”" },
+    { id: "garran", name: "Ser Garran Holt", what: "a knight of the Carrowmere shore who led sixty men into the roots and brought none of them out", wpn: "a longsword with a drowned man's ring on the hilt", cl: "axe", mem: "“Sixty,” it says. “I counted them in. I'll count them out. Stand aside, you're in the count.”" },
+    { id: "pell", name: "Pell the Quiet", what: "a Hollow Hands cutpurse from long before Sable's time, who went in after a rumour of a vault", wpn: "two short knives", cl: "hush", mem: "It doesn't say anything. It never did. It puts one finger to where its lips were." },
+    { id: "ottoline", name: "Ottoline Vire", what: "a copyist from the Library who went down looking for the end of a sentence", wpn: "a penknife and a bound book", cl: "ink", mem: "“The sentence goes on,” it says, turning pages that aren't there. “It goes on and on. I've nearly got to the full stop. Don't make me lose my place.”" }
+  ];
+  const HT_TRICK = {
+    axe: "it swings with everything it has, the old way, low and patient",
+    hush: "it steps out of your sight, and your next swing goes into nothing",
+    tide: "it waits for the turn of your blow, and gives back what it lost",
+    song: "it hums its blade to a note, and the next blow bites deeper",
+    ink: "it writes a line through your last wound on it, and the wound is gone",
+    root: "it lays a sliver of root into its own cut, and the cut closes"
+  };
+  function htSlotEchoes() {
+    const out = [];
+    SAVE_SLOTS.forEach(n => {
+      if (n === SLOT) return;
+      let v = null; try { v = JSON.parse(localStorage.getItem(slotKey(n)) || "null"); } catch (e) {}
+      if (!v || typeof v.part !== "number" || v.part < 2) return;
+      const k = v.wpn && WEAPONS[v.wpn] ? v.wpn : "axe";
+      out.push({ id: "slot" + n, name: v.name || "the hero with no name", what: "the hero of another of your journeys, from save slot " + n + ", who got as far as " + (CHAPTERS[chapterAt(v.part)] || CHAPTERS[0]).name, wpn: k === "axe" ? "an axe with three gems in the haft, just like yours" : "the " + WEAPONS[k].name, cl: v.cl && CALLINGS[v.cl.k] ? v.cl.k : "axe", slot: true,
+        mem: "It knows you. Of course it does. It's walked every road you have, or near enough, and it says your name the way you'd say your own." });
+    });
+    return out;
+  }
+  function htEchoList() {
+    const H = ht();
+    if (H.echoes.length) return H.echoes;
+    const deaths = (J && J.run && J.run.deaths) || 0;
+    const slots = htSlotEchoes().slice(0, 2), lore = HT_LORE_ECHOES.slice();
+    const list = slots.slice();
+    while (list.length < (deaths ? 2 : 3)) list.push(lore.splice(d(lore.length) - 1, 1)[0]);
+    if (deaths) list.push({ id: "you", name: S.name || "you", what: "you: the you that fell, " + deaths + (deaths > 1 ? " times" : " time") + " on this journey, and wasn't held up", wpn: "your own " + (wpnKey() === "axe" ? "axe" : wDef(wpnKey()).name), cl: S.cl && CALLINGS[S.cl.k] ? S.cl.k : "axe", self: true,
+      mem: "It has your face, a little wrong, the way your face is wrong in a spoon. “" + deaths + ",” it says. “I remember every one. You don't. That's the difference between us.”" });
+    H.echoes = list; save();
+    return list;
+  }
+  async function htEchoFight(E, k) {
+    const H = ht();
+    await say("Out of the gallery wall a root unwinds, and stands up, and it's " + (E.self ? "you." : "a person, or the shape of one: " + E.name + ", " + E.what + "."));
+    await say("It's grown out of root, every bit of it, pale as a peeled stick, except what it carries: " + E.wpn + ", real and rusted, and real boots, and on its chest the real buckles of a real coat, gone green. " + E.mem);
+    const L = lv(), trick = HT_TRICK[E.cl] || HT_TRICK.axe;
+    await mech("<b>Root Echo</b>: it fights the way " + (E.self ? "you did" : E.name + " did") + ". Every third round, " + trick + ".", "hurt");
+    const F = { name: "The Echo of " + (E.self ? "Yourself" : E.name), hp: 36 + (E.slot ? 6 : 0) + (E.self ? 10 : 0), ac: 14 + Math.floor(L / 12), atk: 6, n: 1, s: E.cl === "axe" ? 10 : 8, type: E.cl === "hush" || E.cl === "ink" ? "piercing" : "slashing", bloom: 0, hesk: false,
+      who: "the Echo", whoShort: "the Echo", reg: "roots", road: false,
+      hitWhy: "It hits you with " + E.wpn + ", and it's the real thing.", miss: "Its blow goes past, slow as a branch in wind.", hitLine: "Pale splinters fly, and something under them that isn't sap.",
+      setup: async (st) => { if (H.drop && k === 0) { st.adv = true; await say("You drop on it from the ledge before it knows you're there."); } },
+      turn: async (st) => {
+        if (st.round % 3) return;
+        if (E.cl === "axe") { await say("It takes its weapon in both hands and swings with everything, the old way, low and patient."); await foeSwing(F, st, { n: 2, s: 10, why: "It nearly cuts you in half." }); return "done"; }
+        if (E.cl === "hush") { st.dis = true; await say("It steps sideways out of your sight, the way the Hushwalkers do, and is somewhere else."); await mech("Your next swing is at disadvantage.", "hurt"); return; }
+        if (E.cl === "song") { await say("It hums, a long low note, and its blade hums back."); await foeSwing(F, st, { n: 2, s: 8, why: "The humming blade bites to the bone." }); return "done"; }
+        const n = d(8) + Math.floor(L / 5);
+        FOE.hp = Math.min(FOE.max, FOE.hp + n); renderFoe();
+        await say(E.cl === "ink" ? "It runs a finger down its own wound like a line through a word, and the wound is crossed out." : E.cl === "root" ? "It lays a sliver of root into its cut, and the cut closes over it like bark." : "It waits for the turn of the tide in you, and gives back what it lost.");
+        await mech("The Echo regains " + n + ".", "hurt");
+      }
+    };
+    await hkFight(F);
+    await say(E.self ? "It goes down on its knees, your knees, and looks up at you with your face, and the root goes slack in it. “Go on, then,” it says. “One of us has to.”" : "It comes apart, slowly, root by root, and what it carried falls out of it onto the stone: " + E.wpn + ", and a little heap of things from its pockets.");
+    const c = await choose([
+      { key: "rest", label: "Lay it to rest", tag: "bury what it carried · take nothing" },
+      { key: "take", label: "Take what it carried", tag: "gold and keepsakes · the dead won't need them", plain: true }
+    ]);
+    if (c === "rest") {
+      H.rest.push(E.id);
+      await say(E.self ? "You lay it down, yourself, gently, in the hollow it grew out of, and put its hands together on its chest, and the roots close over it. It's the strangest grave you'll ever dig." : "You dig a hollow in the soft dark between the roots and lay " + E.wpn + " in it, and the buckles, and the little heap from the pockets, and say " + E.name + "'s name over it, because somebody should.");
+    } else {
+      H.took.push(E.id);
+      const g = 40 + 4 * lv(); S.coins += g; renderSheet();
+      await say("You go through its pockets. It doesn't mind. It's past minding.");
+      await mech("Taken from the Echo of " + (E.self ? "yourself" : E.name) + ": " + g + " gold.", "loot");
+    }
+    save();
+  }
+  async function htEchoes() {
+    const H = ht(), list = htEchoList();
+    await say("The sound like a crowd a long way off is a crowd. The gallery is full of people standing very still among the roots, hundreds of them, in old armour and older coats, with their faces turned to the walls.");
+    await say("The roots keep what they kill. Everyone who ever came down here to find the Heart is still here, more or less. And when you walk in among them, some of them turn round.");
+    tip("htechoes");
+    for (let k = 0; k < list.length; k++) {
+      if ((H.echoDone || 0) > k) continue;
+      await htEchoFight(list[k], k);
+      H.echoDone = k + 1; save();
+    }
+    if (list.some(e => e.slot)) grant("htslot");
+    if (H.rest.length === list.length) grant("htrest");
+    await say(htSelf() ? "When it's over, the rest of them have turned back to the walls. All but one, by the far door, who isn't looking at the walls. It's looking at you, and it's smiling, and it's nodding, the way you'd nod to someone you'll see again soon." : hx("When it's over, the rest of them have turned back to the walls. All of them, except that every one of them, very slightly, has turned its head toward {N}."));
+  }
+
+  // ---------- Part CXXII: the Blind King (win by holding still) ----------
+  // He sees every path in the labyrinth and not one person. He hears feet. Each turn you walk one
+  // square, or hold still, or cut a knot (loud). Then he takes a step along his round. Moving within
+  // two squares of him, or cutting within three, and he hears you. If he walks into you while you're
+  // holding still, he walks through. Cut his three knots (the eyes he sees the paths by) and he's done.
+  const HT_HALL = ["k..#..k", ".......", "#.#.#.#", "...k...", ".#...#.", "...S..."];
+  function htKingGrid() {
+    tip("htking");
+    const H = ht(), W = 7, Hh = HT_HALL.length;
+    return new Promise(resolve => {
+      const tile = (x, y) => (x < 0 || y < 0 || x >= W || y >= Hh) ? "#" : HT_HALL[y][x];
+      let start = null; const knots = [];
+      HT_HALL.forEach((row, y) => row.split("").forEach((t, x) => { if (t === "S") start = { x, y }; if (t === "k") knots.push({ x, y, cut: false }); }));
+      const beat = lhBeat([[1, 1], [5, 1], [5, 3], [1, 3], [1, 1]]);
+      let ki = 0, you = Object.assign({}, start), heard = 0, turns = 0, done = false, forgive = H.reading ? 1 : 0, pause = 0;
+      const king = () => beat[ki % beat.length];
+      const dist = (a, b) => Math.abs(a[0] - b.x) + Math.abs(a[1] - b.y);
+      const P = puzzleBox("The Blind King", "Cut his three knots (✳). Tap a square next to you to walk, <b>Hold still</b>, or stand on or beside a knot and <b>Cut the knot</b>. Then he takes a step (♛). He hears feet within 2 squares, and a cut within 3 (the lit squares are where he'd hear you walk). If he walks into you while you're holding still, he walks straight through you. Three times heard and he'll fight you blind.");
+      const grid = el("div", "lh-grid"); grid.style.setProperty("--w", W);
+      const cells = [];
+      for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) { const b = pbtn(""); b.className = "lh-cell"; b.onclick = () => tap(x, y); grid.appendChild(b); cells.push(b); }
+      P.body.appendChild(grid);
+      const holdB = pbtn("Hold still", "primary"), cutB = pbtn("Cut the knot"), fightB = pbtn("Fight him");
+      P.ctrl.append(holdB, cutB, fightB);
+      const finish = (r) => { done = true; P.end(); setTimeout(() => resolve(Object.assign({ heard, turns }, r)), 600); };
+      async function kingStep(noise) {
+        turns++;
+        if (pause > 0) pause--;
+        else ki++;
+        if (!htSelf() && H.grow >= 3 && turns % 5 === 0 && dist(king(), you) <= 2 && !pause) { pause = 1; P.status.textContent = hx("He stops, and turns his blank face toward {N}, and stands there a long time, as if listening to an old song. Then he'll move on. Not yet."); }
+        const kp = king();
+        if (kp[0] === you.x && kp[1] === you.y) {
+          if (!noise) { P.status.textContent = "He walks straight through where you are. His robe of roots drags across your face like cobweb. He doesn't stop."; grant("htstill"); draw(); return; }
+          return heardIt();
+        }
+        if (noise && dist(kp, you) <= noise) return heardIt();
+        if (turns >= 80) { P.status.textContent = "You've held still so long your legs have gone. He's still walking."; return finish({ ok: false, tired: true }); }
+        draw();
+      }
+      function heardIt() {
+        if (forgive > 0) { forgive--; P.status.textContent = "His head comes round. You remember the Bark-Reader: be a stone. You're a stone. After a long time he walks on."; draw(); return; }
+        heard++;
+        draw();
+        if (heard >= 3) { P.status.textContent = "He hears you a third time, and his whole round stops, and he comes for you."; return finish({ ok: false }); }
+        P.status.textContent = "He hears you. The roots of the hall come down on you like a falling roof, and throw you back to where you came in. (" + heard + " of 3)";
+        you = Object.assign({}, start);
+      }
+      function tap(x, y) {
+        if (done) return;
+        const kp = king();
+        if (Math.abs(x - you.x) + Math.abs(y - you.y) !== 1 || tile(x, y) === "#" || (kp[0] === x && kp[1] === y)) return;
+        you = { x, y }; P.status.textContent = "";
+        kingStep(2);
+      }
+      holdB.onclick = () => { if (!done) { P.status.textContent = ""; kingStep(0); } };
+      cutB.onclick = () => {
+        if (done) return;
+        const n = knots.find(k => !k.cut && Math.abs(k.x - you.x) + Math.abs(k.y - you.y) <= 1);
+        if (!n) { P.status.textContent = "There's no knot within reach. Stand on one, or next to it."; return; }
+        n.cut = true;
+        const left = knots.filter(k => !k.cut).length;
+        if (!left) { draw(); P.status.textContent = "The last knot parts under the blade, and the Blind King stops dead in the middle of his round, lost in his own hall."; return finish({ ok: true }); }
+        P.status.textContent = "The knot parts with a sound like a long sigh. " + left + " left.";
+        kingStep(3);
+      };
+      fightB.onclick = () => { if (!done) { P.status.textContent = "You stop hiding."; finish({ ok: false, loud: true }); } };
+      function draw() {
+        const kp = king(), ear = new Set();
+        for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (Math.abs(kp[0] - x) + Math.abs(kp[1] - y) <= 2) ear.add(x + "," + y);
+        cells.forEach((b, k) => {
+          const x = k % W, y = Math.floor(k / W), t = tile(x, y), kn = knots.find(q => q.x === x && q.y === y), isK = kp[0] === x && kp[1] === y, isY = you.x === x && you.y === y;
+          b.textContent = isY ? "◆" : isK ? "♛" : kn ? (kn.cut ? "✕" : "✳") : t === "#" ? "▦" : "";
+          b.setAttribute("aria-label", isY ? "you" : isK ? "the Blind King" : kn ? (kn.cut ? "a cut knot" : "a knot") : t === "#" ? "root wall" : "open" + (ear.has(x + "," + y) ? ", in his hearing" : ""));
+          b.className = "lh-cell" + (t === "#" ? " wall" : "") + (ear.has(x + "," + y) && t !== "#" ? " lit" : "") + (isK ? " guard" : "") + (isY ? " you" : "") + (Math.abs(x - you.x) + Math.abs(y - you.y) === 1 && t !== "#" ? " near" : "");
+        });
+        if (!done && !P.status.textContent) P.status.textContent = "Turn " + turns + " · heard " + heard + " of 3 · knots left " + knots.filter(k => !k.cut).length;
+      }
+      draw();
+    });
+  }
+  async function htKing() {
+    const H = ht();
+    await say("Below the gallery the tunnels open into a hall with no roof you can see. Its walls are roots woven tight as basketwork, and in the middle of it, walking, always walking, is the Blind King.");
+    await say("He's twice your height and thin as a winter tree, robed in roots that trail behind him and crowned with them, and where his face should be there's smooth grey wood, tilted, listening. He walks a round of his hall, slow and endless, and as he walks his long fingers trail along the walls, and the walls move under them: he's reading every path in the labyrinth, all at once, and redrawing them.");
+    await say("He sees every path there is. He has never once seen a person.");
+    if (H.reading) await say("Be a stone, the Bark-Reader said.");
+    const r = await htKingGrid();
+    H.heard = r.heard;
+    if (r.heard) await hurt(r.heard, 6, "bludgeoning", "The roots of the hall came down on you.");
+    if (r.ok) {
+      H.king = r.heard ? "heard" : "still";
+      if (!r.heard) grant("htking");
+      await say("He stands in the middle of his hall with his long hands open, turning his blank face this way and that, and the walls around him have stopped moving. For the first time since the Quire drew him, he doesn't know the way.");
+    } else {
+      H.king = "fought";
+      await say("He comes for you across the hall with his long hands out, not fast, never fast, and the walls come with him.");
+      await hkFight({ name: "The Blind King", hp: 58 + (r.tired ? 0 : 6), ac: 15, atk: 7, n: 2, s: 6, type: "bludgeoning", bloom: 0, hesk: false, who: "the Blind King", whoShort: "the King", reg: "roots",
+        hitWhy: "His long fingers close on you and the walls close with them.", miss: "His hand goes past your face, feeling, and finds the wall instead.", hitLine: "He flinches, and turns his blank face the wrong way.",
+        before: async (st) => { if (st.round === 1) await mech("He can't see you: Evade works on him better than on anything you've fought (+15%).", "loot"); },
+        turn: async (st) => { if (st.evade && d(100) <= 15) { await say("You go still in the middle of the fight, and he loses you completely, and stands with his hands out, listening."); st.evade = false; return "done"; } }
+      });
+      await say("He sits down at last in the middle of his hall, all at once, like a tree going over, and doesn't get up.");
+    }
+    await say(htSelf() ? "Before the light goes out of him he puts out one long hand and touches your face, very gently, the way the blind do. “Oh,” he says, in a voice like a door in wind. “It's you. We've been waiting.”" : hx("Before the light goes out of him he puts out one long hand, past you, and touches {N}'s face, very gently, the way the blind do. “Oh,” he says, in a voice like a door in wind. “There you are. We've been waiting.”"));
+    if (!htSelf()) await say(hx("{N} doesn't look at you afterwards. Not for a long while."));
+    S.gear = S.gear || []; if (!hasGear("kingsknot")) { S.gear.push("kingsknot"); renderSheet(); await mech("<b>The King's Knot.</b> " + GEAR.kingsknot.desc, "loot"); }
+    save();
+  }
+
+  // ---------- Part CXXIII: the Thorn Prince (never the same move twice) ----------
+  // He knows every choice you'll make. In the fight, a move is what you do this turn after what you did
+  // last turn (Swing after Feint is not Swing after Swing). Make the same move twice and he's ready
+  // for it: it does nothing, and he answers it. F.filter marks the moves he's read; F.onChoice counters.
+  const HT_MOVE = { atk: "Swing", evade: "Evade", feint: "Feint", low: "Low cut", thorn: "Cut the thorns", ground: "Give ground", breath: "Catch your breath", gems: "the gems", book: "the book", cls: "your calling", kin: "your path", mend: "Bind your wounds", band: "Bandage", start: "the start" };
+  const htMv = (k) => HT_MOVE[k] || (String(k).replace(/^[a-z]+-/, "").replace(/-/g, " ") || "that");
+  async function htPrince() {
+    const H = ht();
+    await say("The way on is through a hedge. Not a hedge: a wall of black thorn as high as a church, grown in rings, with a door in it that's a gap between thorns. Inside, on a lawn of thorn so fine it's nearly grass, a young man is waiting with a rapier of black thorn across his knees.");
+    await say("He's slender and princely and grown entirely out of thorn, and he's smiling the way you smile at someone who's about to say something you've heard before.");
+    await say("“You're going to ask who I am,” he says, before you've opened your mouth. “Then you're going to look at the gap behind you. Then you're going to draw. I know. I know everything you'll do. I've known it since before you were born. It's terribly dull.” He stands, and bows. “Do something I don't expect. Anything. Please.”", "voice");
+    if (H.reading) await say("Never do it twice, the Bark-Reader said.");
+    tip("htprince");
+    const LINE = (a, b) => a + ">" + b;
+    let known = {};
+    const F = { name: "The Thorn Prince", hp: 64, ac: 16, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, who: "the Thorn Prince", whoShort: "the Prince", reg: "roots",
+      hitWhy: "The thorn rapier goes in where he knew you'd be, and out, and he steps back to watch you bleed.", miss: "He lunges, and stops himself, and laughs: he's changed his mind about where you'll be.", hitLine: "He looks at the cut with delight. “Oh, I didn't see that one coming,” he says. He did.",
+      setup: async (st) => { st.prev = "start"; st.htThorn = 0; F.ac0 = F.ac; },
+      before: async (st) => {
+        if (st.round > 1 && st.round % 3 === 1) { st.htThorn = Math.min(3, (st.htThorn || 0) + 1); F.ac = F.ac0 + st.htThorn; await say("The thorns on the lawn grow up round him, a ring of them, and he stands in it like a man in a doorway. (+" + st.htThorn + " to his guard until you cut them)"); }
+        const n = Object.keys(known).length;
+        if (n) await mech("He's read " + n + " of your moves: " + Object.keys(known).slice(-4).map(k => { const [a, b] = k.split(">"); return htMv(b) + " after " + htMv(a); }).join(", ") + (n > 4 ? ", and more" : "") + ". Make any of them again and he's ready.", "hurt");
+      },
+      extra: (st) => [
+        { key: "feint", label: "Feint", tag: "no damage · your next swing is +2", plain: true },
+        { key: "low", label: "Low cut", tag: "Dexterity · 1d6 + " + (2 + Math.floor(lv() / 10)) + " and he loses his footing", plain: true },
+        { key: "thorn", label: "Cut the thorns", tag: st.htThorn ? "takes away his +" + st.htThorn + " guard" : "nothing to cut yet", plain: true },
+        { key: "ground", label: "Give ground", tag: "1d4 + 1 HP · he follows", plain: true }
+      ],
+      filter: (opts, st) => { opts.forEach(o => { if (known[LINE(st.prev, o.key)]) o.tag = (o.tag ? o.tag + " · " : "") + "he's read this after " + htMv(st.prev); }); },
+      onChoice: async (c, st) => {
+        const line = LINE(st.prev, c);
+        st.prev = c;
+        if (!known[line]) { known[line] = true; return; }
+        H.countered = (H.countered || 0) + 1;
+        await say(["“" + htMv(c) + ", after " + htMv(line.split(">")[0]) + ",” he says, already there. “You did that before.”", "He's moving before you are. He's moving before you've decided.", "He sighs, and steps into it, and it isn't there any more, and he is."][d(3) - 1]);
+        st.winded = true; st.htSkip = true;
+        await foeSwing(F, st, { why: "He answers it with the rapier, exactly where you knew he would." });
+        return "countered";
+      },
+      onExtra: async (c, st) => {
+        if (c === "feint") { st.htFeint = true; await say("You show him high and go nowhere at all."); return; }
+        if (c === "ground") { await heal(1, 4, "You give ground across the thorn lawn, and get your breath."); S.hp = Math.min(S.maxHp, S.hp + 1); renderSheet(); return; }
+        if (c === "thorn") { if (!st.htThorn) { await say("You cut at a lawn of thorn as fine as grass. It doesn't notice."); return; } st.htThorn = 0; F.ac = F.ac0; await say("You cut the ring of thorns down round him, and he steps out of it, delighted, as if you'd opened a door for him."); return; }
+        if (c === "low") {
+          const a = await check({ label: "Dexterity (low cut)", mod: 4 + Math.floor(lv() / 8), dc: F.ac });
+          if (a.ok) { await foeStrike(1, 6, 2 + Math.floor(lv() / 10), "Low cut"); if (FOE.hp > 0) { st.stilled = true; await say("He goes down on one knee in the thorn, laughing."); } }
+          else await say("He steps over it like a skipping rope.");
+        }
+      },
+      turn: async (st) => {
+        if (st.htFeint) { st.htFeint = false; st.adv = true; await mech("Your feint has him leaning: your next swing has advantage.", "loot"); }
+        if (st.htSkip) { st.htSkip = false; return "done"; }
+      }
+    };
+    await hkFight(F);
+    H.prince = H.countered ? "beat" : "clean";
+    if (!H.countered) grant("htprince");
+    await say("He lies on his thorn lawn with his rapier broken and looks up at you, and he's still smiling.");
+    await say(htSelf() ? "“You want to know why I knew,” he says. “Everything you'll do. It's easy. You're the one it's growing in. I know you the way the root knows the rain.”" : hx("“You want to know how I knew,” he says. “Everything you'd do. It's easy. Ask {N}. Ask {them} what {they} hears. {They}'s known where you'd step all day.”"), "voice");
+    if (!htSelf()) await say(hx("You look at {N}. {They} looks at the ground."));
+    S.gear = S.gear || []; if (!hasGear("princethorn")) { S.gear.push("princethorn"); renderSheet(); await mech("<b>The Prince's Thorn.</b> " + GEAR.princethorn.desc, "loot"); }
+    save();
+  }
+
+  // ---------- Part CXXIV: the Orchard of False Ends (the one fake victory) ----------
+  async function htFake() {
+    const H = ht();
+    const carried = carriedList().filter(x => !/Burr|Ishbel|Tyra|Odran|Wenna|Caddock/.test(x)).slice(0, 4);
+    return new Promise(resolve => {
+      const box = el("section", "tbc",
+        '<p class="eyebrow" style="margin:0">Part CXXV</p>' +
+        '<p class="big">The End</p>' +
+        "<p style='margin:0'>The Heart is ash in your hands and the roots are still. You walk up out of the Labyrinth of Roots into the morning, alone, with</p>" +
+        "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "<li>the Crown of Roots</li><li>a thousand gold</li></ul>" +
+        "<p style='margin:0;color:var(--muted)'>The realm is saved. Nothing grows under it any more. Everyone you ever loved is waiting for you at the top of the stair, and none of them has a mark on them.</p>" +
+        '<div class="actions"><button class="primary" type="button" data-k="roam">Take the roads back</button><button type="button" data-k="again">Walk the pathway again</button><button type="button" data-k="journal">Open your journal</button><button type="button" data-k="listen">Listen</button></div>');
+      scrollNext = true;
+      add(box);
+      box.querySelectorAll("button").forEach(b => b.onclick = () => { box.querySelectorAll("button").forEach(x => x.disabled = true); resolve(b.dataset.k); });
+    });
+  }
+  async function htOrchard() {
+    const H = ht();
+    await say("Past the thorn lawn the tunnel climbs, and opens, and there's light: not daylight, a pale green glow, and under it an orchard in the dark, a hundred trees in long straight rows, every branch hung with fruit.");
+    await say("Every fruit is a heart. Not a picture of one: a heart, the size of a fist, dark red, hanging on its stalk, beating. A hundred trees, and on every tree a hundred hearts, all beating, all out of time with each other, so the whole orchard sounds like rain.");
+    await say("In the middle of the orchard there's one tree on its own, older than the others, with one fruit on it. It's beating in time with nothing. It's beating in time with you.");
+    if (htSelf()) await say("It's beating in time with the warm place in your wrist.");
+    else await say(hx("{N} stops at the edge of the orchard and won't come further. “Go on,” {they} says. “That's it. That's the Heart. Go on.”"));
+    const c = await choose([
+      { key: "cut", label: "Cut the Heart down", tag: "this is what you came for" },
+      { key: "look", label: "Look closer first", tag: "Insight DC 15", plain: true }
+    ]);
+    if (c === "look") {
+      const r = await check({ label: "Insight check (the lone tree)", mod: 2 + Math.floor(lv() / 8) + (H.reading ? 2 : 0), dc: 15 });
+      if (r.ok) { H.doubt = true; await say("It's beating in time with you, yes. But it's beating a little before you. Like an echo that's arrived early. You file that away and cut it down anyway, because what else is there to do?"); }
+      else await say("It's a heart. It's beating. You cut it down.");
+    }
+    await say("You cut the Heart down. It comes away from its stalk with a sound like a sigh, and stops beating in your hands, and goes grey, and goes to ash.");
+    await say("All round you, the orchard stops. A hundred trees of hearts, and every one of them goes still, all at once, and the silence is enormous.");
+    if (!H.fakeGold) { H.fakeGold = true; S.coins += 1000; renderSheet(); save(); }
+    await mech("<b>The Heart is destroyed.</b> Under the lone tree, the Seed's hoard: 1,000 gold, and the Crown of Roots.", "loot");
+    tip("htorchard");
+    const k = await htFake();
+    if (k === "listen") {
+      H.fooled = false; grant("htlisten");
+      await say("You don't take the roads back. You stand still in the silence, the way the Blind King taught you, and listen.");
+      await say("Under the silence, under the ground, something is still beating. Slow. Patient. Exactly in time with " + (htSelf() ? "you." : hx("{N}.")));
+    } else {
+      H.fooled = true;
+      await say(k === "journal" ? "You open your journal to write it down: the end. The page is bark. The words on it are four hundred years old, and they're the same four words." : k === "again" ? "You turn to walk the pathway again, from the start, and the start is here. It's always been here." : "You take the roads back. You walk up the stair toward the morning for an hour, for a day, and the stair goes down.");
+      await say("You're standing at the edge of the orchard. The trees are beating again, all of them, like rain. In your hands there's a fistful of ash, and in your purse there's nothing but seeds.");
+      await say("The roots keep what they kill. Not all of them by killing. Some of the people in the gallery walked up out of this orchard into the morning, and they're still walking.");
+    }
+    if (H.fakeGold) { H.fakeGold = false; S.coins = Math.max(0, S.coins - 1000); renderSheet(); save(); await mech("The thousand gold was seeds. The Crown of Roots was a ring of twigs. Both are gone.", "hurt"); }
+    // The truth.
+    if (htSelf()) {
+      await say("You look down at your wrist. The dark line isn't at your collarbone any more. It's in your chest, under the bone, and it's warm, and it's beating, and you've known for a while. You just didn't put it together.");
+      await say("The Heart was never in the orchard. The Heart was never a thing at all. It's you. It's been growing in you since the first chapter you came up out of these roots, and every time you dug in and the roots held you, it grew a little more.", "voice");
+    } else {
+      await say(hx("{N} is sitting under the lone tree when you come back, with {their} back to it, and {their} collar open for the first time in weeks. The dark lines go all the way up {their} throat now, under the jaw, like roots under a road, and they're beating, slowly, in time with the orchard."));
+      await say(H.who === "burr" ? "Burr gets up when he sees you, and comes, wagging, slow, and leans against your legs the way he always has, for a long time. He's warm. He's so warm. Under your hand, under his fur, something that isn't his heart is beating." : hx("“I didn't know,” {N} says. “Then I did. Somewhere around the Blind King. Then I didn't want to.” {They} tries to laugh. “It's not a thing, the Heart. It's not in a tree. It's a person. It picks somebody, and it grows in them, and it picks — ” {They} stops. “It picks the one who's closest. That's the joke. That's the whole joke.”"), H.who === "burr" ? "" : "voice");
+    }
+    if (H.doubt || H.fooled === false) grant("htdoubt");
+    H.orchard = H.fooled ? "fooled" : "listened";
+    save();
+  }
+
+  // ---------- Part CXXV: the Heart Beneath the Roots ----------
+  async function htSeed() {
+    const H = ht(), w = htW(), self = htSelf();
+    await say("Under the orchard the roots run down, every root in the labyrinth, all of them, drawn together the way the threads of a carpet run back to the loom. You follow them down. There's nothing else down there to follow.");
+    await say("At the bottom, in a cavern bigger than anything you have a word for, half buried in black earth, there's a seed. It's the size of a cathedral, split down one side, and out of the split run the roots, every root, up into the dark, up through the labyrinth and the Library and the realm; and in the split, a pale green light comes and goes, slow, like breath.");
+    await say("Ommeral, the First Seed. It's been asleep since before there was ground. It's nearly awake.");
+    await voice("“Little root,” it says. It doesn't say it with a mouth. It says it with the ground, with the bark on the walls, with the line under " + (self ? "your skin" : w.name + "'s skin") + ". “You brought my heart home.”");
+    if (H.rest.length) await say("Behind you, out of the roots of the stair, the Echoes you laid to rest come down after you, " + H.rest.length + " of them, pale as peeled sticks, with nothing in their hands. They stand at your back. They don't say anything. They don't need to.");
+    if (H.took.length) await mech("The Echoes you robbed are in the roots of the Seed now, and they fight for it: +" + H.took.length + " to its attacks.", "hurt");
+    tip("htseed");
+    await hkFight({ name: "Ommeral, the First Seed", hp: 96, ac: 17, atk: 7 + H.took.length, n: 2, s: 8, type: "bludgeoning", bloom: 0, hesk: false, who: "the Seed", whoShort: "the Seed", reg: "roots",
+      hitWhy: "A root as thick as a tower comes up out of the earth under you.", miss: "The ground heaves and the root goes past, close enough to touch.", hitLine: "Pale sap runs out of the split in the Seed, and the light in it flickers.",
+      setup: async (st) => { for (let k = 0; k < H.rest.length && FOE.hp > 1; k++) await foeBurst(1, 8, 2, "An Echo you laid to rest goes past you with its bare hands"); },
+      before: async (st) => {
+        if (st.round % 3 === 0) { st.htPull = true; await say(self ? "The Seed pulls on the Heart, and the thing in your chest pulls back toward it like a dog on a lead." : hx("The Seed pulls on the Heart, and {N} goes down on {their} knees with a sound you'll hear for the rest of your life.")); await mech(self ? "Hold on to yourself this round, or the Seed drinks from you (it heals 2d6)." : hx("Hold on to {N} this round, or the Seed drinks from {them} (it heals 2d6)."), "hurt"); }
+      },
+      extra: (st) => st.htPull ? [{ key: "ht-hold", label: self ? "Hold on to yourself" : hx("Hold on to {N}"), tag: "costs your turn · the Seed gets nothing", plain: true }] : [],
+      onExtra: async (c, st) => { if (c === "ht-hold") { st.htPull = false; st.htHeld = (st.htHeld || 0) + 1; await say(self ? "You put both hands flat on your chest and hold on, and the pull goes past you like a tide past a post." : hx("You get your arms round {N} and hold on, and {they} holds on to you, and the pull goes past you both like a tide past a post.")); } },
+      turn: async (st) => {
+        if (!st.htPull) return;
+        st.htPull = false;
+        const n = d(6) + d(6); FOE.hp = Math.min(FOE.max, FOE.hp + n); renderFoe(); H.grow++;
+        await say("The light in the split swells, and the Seed drinks.");
+        await mech("The Seed regains " + n + ".", "hurt");
+      }
+    });
+    await say("The light in the split goes down to almost nothing. The roots go slack all through the cavern, all through the labyrinth, all at once; you feel it in your feet. Then, slowly, the light comes back.");
+    await voice("“You can't kill me, little root,” it says. Not angry. Patient. “Not while my heart beats. Ask the Prince. He knows how this ends. There are three ways. There have only ever been three.”");
+    if (self) {
+      await say("It's in your chest, and it's beating, and you know the three ways the way you know your own hands. You can cut it out of yourself, and the Seed dies, and the labyrinth with it. You can walk away, and it wakes. Or you can stay, and wear it.");
+    } else if (H.who === "burr") {
+      await say("Burr lies down between you and the Seed, with his chin on his paws, and looks at you. He doesn't know the three ways. He knows you, and he's waiting for you to decide, the way he's always waited, because you're the one who decides things.");
+    } else {
+      await say(hx("{N} gets up off {their} knees. “Three ways,” {they} says. “Kill me, and it dies, and the labyrinth falls in. Walk away, and it wakes, and the roots go out over everything. Or I stay.” {They} looks at the Seed. “I stay, and I take it, and I keep it. It wants a heart. It doesn't care what the heart wants.”"), "voice");
+    }
+    const ch = await choose([
+      { key: "exec", label: self ? "Cut it out of yourself" : H.who === "burr" ? "Do it. Burr." : hx("Do it. {N}."), tag: self ? "the Seed dies, the labyrinth falls in, and you'll never be whole again" : hx("the Seed dies, the labyrinth falls in, and so does {N}") },
+      { key: "refuse", label: "Refuse", tag: "nobody dies · Ommeral wakes, and the roots go out across the realm", plain: true },
+      { key: "crown", label: self ? "Take the Crown of Roots" : hx("Let {N} take the Crown of Roots"), tag: self ? "keep the Heart · rule the labyrinth · something under the realm will wear your face" : hx("{N} keeps the Heart and becomes " + w.crown + " · the labyrinth lives, and so does a new power under it"), plain: true }
+    ]);
+    H.end = ch; save();
+    const g = 400 + 20 * lv();
+    if (ch === "exec") {
+      if (self) {
+        await say("You put the axe's edge to your own chest, over the warm place, and you don't let yourself think about it, and you cut.");
+        await say("It doesn't hurt the way it should. It hurts the way pulling up a tree hurts the ground. The roots come out of you, all of them, fine as hair, out of your wrist and your elbow and your collarbone and your chest, and the Heart comes out with them, and it's small. It's so small. It's the size of a seed.");
+        await say("You crush it in your fist. The axe holds you up, the way it always has. It's the only thing that does.");
+        S.maxHp = Math.max(10, S.maxHp - 4); S.hp = Math.min(S.hp, S.maxHp);
+        if (S.grain) { S.grain = false; await mech("The Heartgrain went with it: every ring you earned on your knees, gone. Max HP −4: there's a hollow under your breastbone now, the size of a seed.", "hurt"); }
+        else await mech("Max HP −4: there's a hollow under your breastbone now, the size of a seed.", "hurt");
+      } else if (H.who === "burr") {
+        await say("You kneel down by Burr. He licks your hand. He goes on licking it, all the way through, because you're the one who decides things and he trusts you, and that's the worst thing you've ever had to know.");
+        await say("Afterwards he's just a dog asleep on the ground, a rope-coloured dog with one ear up, and the roots go out of him like a tide going out.");
+      } else {
+        await say(hx("“Don't make a speech,” {N} says. “I'd hate that.” {They} takes your hand and puts the axe in it and holds it there, against {their} own chest, steady, the way {they}'s held a hundred things steady for you on the road. “Go on. You're good at this. It's the one thing you're better at than me.”"), "voice");
+        await say(hx("You do it. You do it quickly, because {they} asked, and the roots go out of {them} like a tide going out, and {they}'s lighter in your arms than {they} ever was."));
+      }
+      await say("The Seed doesn't scream. The light in the split goes out the way a lamp goes out when the oil's done, and it doesn't come back. And then, over your head, all through the dark, the labyrinth begins to fall.");
+      await say("It takes a day and a night. You climb out through it, up through the dead roots coming down like rain, past the orchard gone to dust and the thorn lawn gone to dust and the gallery where every Echo has lain down at last, and you come out at the top of the stair into daylight, real daylight, falling into a hole the size of a kingdom where the Labyrinth of Roots used to be.");
+      if (!self) htLose(H.who);
+      grant("htexec");
+      S.title = self ? "Hollowed" : "Heartcutter";
+    } else if (ch === "refuse") {
+      await say(self ? "You take your hand off the axe. You won't. You turn your back on the Seed and climb, and the warm place in your chest beats harder with every step up, delighted, as if you've given it a present." : hx("You put the axe away. You take {N} by the hand" + (H.who === "burr" ? " (by the scruff, gently)" : "") + " and you turn your back on the Seed, and you climb, and nobody says a word."));
+      await voice("“Thank you, little root,” the Seed says, under everything. “I'll see you soon. I'll see everybody soon.”");
+      await say("Behind you, far down, the light in the split swells, and doesn't go down again. By the time you reach the Library the shelves are growing. By the time you reach the Landing, the roots have come up through the plank walk. The labyrinth isn't under the realm any more. It's waking up into it.");
+      grant("htrefuse");
+      S.title = "the One Who Wouldn't";
+    } else {
+      if (self) {
+        await say("You walk up to the split in the Seed, and put your hand in the pale green light, and say, all right. I'll keep it.");
+        await say("The roots come up round you like a cloak, and settle on your shoulders, and one fine root grows round your brow and closes, a ring, a crown, and is light, and is warm. The Seed sighs, the way you sigh at the end of a long day, and goes back to sleep. It has a heart now. It doesn't need to wake.");
+        await say("When you climb back up through the labyrinth, the paths open in front of you without being asked, and close behind.");
+        S.maxHp += 6; S.hp += 6; S.gear = S.gear || []; if (!hasGear("rootcrown")) S.gear.push("rootcrown"); renderSheet();
+        await mech("<b>The Crown of Roots.</b> " + GEAR.rootcrown.desc, "loot");
+        S.title = "the Root-Crowned";
+      } else {
+        await say(H.who === "burr" ? "Burr gets up. He looks at you a long time, ear up and ear down, the way he did on the day he followed you out of the labyrinth. Then he turns round, and walks into the light in the split, and lies down in it, with his chin on his paws, facing the way you'll go." : hx("“Don't,” {N} says, when you open your mouth. “Don't make it harder.” {They} kisses your forehead, quick, like somebody leaving for an errand, and walks into the light in the split, and doesn't look back. {They} was always better at that than you."), H.who === "burr" ? "" : "voice");
+        await say(hx("The roots come up round {them} like a cloak, and one fine root grows round {their} brow and closes, a ring, a crown. The Seed sighs and goes back to sleep. It has a heart. It doesn't need to wake. And " + w.crown + " opens {their} eyes, under the realm, green all through, and looks up at you, and" + (H.who === "burr" ? " wags, once" : " smiles") + "."));
+        await say("When you climb back up through the labyrinth, alone, the paths open in front of you without being asked, and close behind you, as if somebody down there is looking after you. Somebody is. For now.");
+        htLose(H.who);
+        S.title = "Friend of " + htCap(w.crown);
+      }
+      grant("htcrown");
+    }
+    S.coins += g; renderSheet();
+    await mech("Fallowes pays the Library's bounty for the Heart, four hundred years overdue: " + g + " gold.", "loot");
+    S.gear = S.gear || []; if (!hasGear("heartwood")) S.gear.push("heartwood"); renderSheet();
+    await mech("<b>The Heartwood Shard.</b> " + GEAR.heartwood.desc, "loot");
+    if (H.rest.length && H.king === "still" && H.prince === "clean" && H.orchard === "listened") grant("htwhole");
+    H.done = true; H.part = 7; xpGain(200); save();
+    await mech("Your title is <b>" + S.title + "</b>. " + ({ exec: "The Labyrinth of Roots is fallen in, open to the sky: walk what's left of it on the roads back.", refuse: "The roots are coming up everywhere now. Every town on the roads back has felt it.", crown: "The labyrinth lives, and something under it knows your name." }[ch]), "loot");
+    await endCard();
+  }
+  // Somebody the roots took, gone from your company for good.
+  function htLose(id) {
+    const c = co();
+    if (id === "burr") c.burr = false;
+    else if (id === "ishbel") { c.isb = false; c.isbSeen = true; }
+    else if (id === "tyra") { if (S.tyra) S.tyra.gone = true; }
+    else if (MERCS[id]) { c.sworn = (c.sworn || []).filter(x => x !== id); if (c.merc === id) c.merc = ""; c.gone = (c.gone || []).concat(id); }
+    if (c.party) c.party = c.party.filter(x => x !== id);
+    ht().lost = id;
+    renderSheet();
+  }
+  async function partHeart1() { heading("CXIX", "The Heart Still Beats"); return htCall(); }
+  async function partHeart2() { heading("CXX", "The Weeping Paths"); return htPaths(); }
+  async function partHeart3() { heading("CXXI", "Root Echoes"); return htEchoes(); }
+  async function partHeart4() { heading("CXXII", "The Blind King"); return htKing(); }
+  async function partHeart5() { heading("CXXIII", "The Thorn Prince"); return htPrince(); }
+  async function partHeart6() { heading("CXXIV", "The Orchard of False Ends"); return htOrchard(); }
+  async function partHeart7() { heading("CXXV", "The Heart Beneath the Roots"); return htSeed(); }
+
+  // ---------- traces ----------
+  async function htTown(T) {
+    const H = S.ht;
+    if (!H || !H.done || T.kind !== "town") return;
+    H.seen = H.seen || [];
+    const k = T.reg;
+    if (H.seen.includes(k)) return;
+    const w = HT_WHO[H.who], N = w ? w.name : "";
+    if (H.end === "refuse") {
+      H.seen.push(k);
+      await say(["In " + T.name + " a root as thick as a man has come up through the street overnight and gone straight through a baker's. Nobody was hurt. Everybody's standing round it, waiting to see what it does next. It's warm to the touch.",
+        "In " + T.name + " the well has roots in it. They came up in the night. The water tastes of sap, and the children won't drink it, and the old people say that's how it started, last time, and nobody asks what they mean by last time.",
+        "In " + T.name + " there's bark growing over the doorposts, in rings, and somebody's cut words into it with a knife: THE HEART STILL BEATS. Nobody will say who."][H.seen.length % 3]);
+      return;
+    }
+    if (k === "roots") {
+      H.seen.push(k);
+      if (H.end === "exec") await say("Where the Labyrinth of Roots was, there's a valley open to the sky, a mile deep, full of dead roots like a forest after a fire, and the Library sits on its rim with daylight in every window for the first time. Fallowes has put out a chair on the steps. She says she's never had cause to before.");
+      else await say("In the Library of Roots the shelves rearrange themselves now and then, in the night, very gently, as if somebody's tidying. Fallowes found a strip of bark on her desk last week. It says: " + (w ? "TELL HER I'M WELL." : "TELL THEM I'M WELL.") + " She keeps it in the drawer with the other four hundred and twelve, but on top.");
+      return;
+    }
+    if (!H.seen.includes("any")) {
+      H.seen.push("any");
+      if (H.end === "exec" && w) await say("In " + T.name + ", somebody at the bar asks after " + N + ", because you always used to come in together. You tell them. It's the first time you've said it out loud.");
+      else if (H.end === "crown" && w) await say("In " + T.name + " the travellers have a new story: that the roots under the realm have a crown now, and the one who wears it was somebody's friend once, and still is, maybe, if you go down far enough. They tell it to you as if you'd never heard it.");
+    }
+  }
+  function htCoda() {
+    const H = S.ht;
+    if (!H || !H.done) return "";
+    const w = HT_WHO[H.who];
+    return " " + ({ exec: "The Labyrinth of Roots is a hole full of daylight, and Ommeral is dead" + (w ? ", and so is " + w.name : ", and there's a hollow in you the size of a seed") + ".",
+      refuse: "Ommeral is awake, and the roots are coming up through every street in the realm.",
+      crown: w ? "Under the realm " + w.crown + " keeps the Heart, and the Seed sleeps." : "Under the realm the Seed sleeps, and you wear its crown." }[H.end] || "");
+  }
+  function htSection(rs0) {
+    const H = rs0 && rs0.ht;
+    if (!H || !H.on) return "";
+    const li = (on, t) => "<li" + (on ? ' class="won"' : "") + '><span class="mk"></span><span>' + t + "</span></li>";
+    const w = HT_WHO[H.who], N = w ? w.name : "you";
+    return "<section><h3>The Heart Beneath the Roots</h3><p class=\"j-sub\">The cage under the realm, and the one the roots chose.</p><ul class=\"marks\">" +
+      li(H.reading, "The Bark-Readers: " + (H.reading ? "read your hands" : "you went down without a reading")) +
+      li(H.asks === 0 && H.part > 1, "The Weeping Paths: " + (H.part > 1 ? "asked " + (w ? N : "the roots") + " the way " + H.asks + " times · walked into " + H.bumps + " roots" + (H.trust ? (H.trust === "map" ? " · followed your map" : " · followed " + (w ? N : "the warmth")) : "") : "not yet")) +
+      li(H.rest.length && !H.took.length, "Root Echoes: " + (H.echoes.length ? H.rest.length + " laid to rest, " + H.took.length + " robbed" : "not yet")) +
+      li(H.king === "still", "The Blind King: " + ({ still: "never heard you", heard: "heard you " + H.heard + " times", fought: "fought you blind" }[H.king] || "not yet")) +
+      li(H.prince === "clean", "The Thorn Prince: " + ({ clean: "never read you", beat: "read you " + H.countered + " times" }[H.prince] || "not yet")) +
+      li(H.orchard === "listened", "The Orchard of False Ends: " + ({ listened: "you listened, and heard it still beating", fooled: "you walked out into the morning, and the stair went down" }[H.orchard] || "not yet")) +
+      li(!!H.end, "The Heart: " + (w ? N : "you") + ({ exec: (w ? ", and you did it" : ": you cut it out"), refuse: ": you refused, and the Seed woke", crown: (w ? " took the Crown of Roots" : ": you took the Crown of Roots") }[H.end] || (H.part >= 6 ? "" : ": not yet"))) + "</ul></section>";
   }
 
   // ---------- traces ----------
@@ -44401,7 +45186,7 @@ body.pv-open { overflow: hidden; }
       rise: "There are two moons in the sky now, and the Moored who went up with the second are riding its face."
     };
     const CORWEN = { moored: " Corwen Lisk is waiting for her trial in Kedge, with somebody's stone in her hair.", up: " Corwen Lisk went up into the dark, to see." };
-    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done, RSD = (S.rs && S.rs.done) || (S.dv && S.dv.done), LHD = !!(S.lh && S.lh.done);
+    const U = S.um, done = U && U.ending, RD = S.rh && S.rh.done, SDD = S.sd && S.sd.done, PZD = S.pz && S.pz.done, HND = S.hn && S.hn.done, UND = S.unm && S.unm.done, RMD = S.rm && S.rm.done, WLD = S.wl && S.wl.done, RSD = (S.rs && S.rs.done) || (S.dv && S.dv.done), LHD = !!(S.lh && S.lh.done), HTD = !!(S.ht && S.ht.done);
     const TITHE = {
       rise: "On the Stillwater Reach, the Widow's Tally flies your colours, and takes no tithe of anybody.",
       sell: "On the Gibbet Skerries, the Tithe Fleet hangs in the Saltwrit's cages, and the count-bells are quiet.",
@@ -44413,11 +45198,11 @@ body.pv-open { overflow: hidden; }
       vael: "Under the western sea, the Drowned Light rings with an old man's song, and the axe on your back is quiet."
     };
     const box = el("section", "tbc",
-      '<p class="eyebrow" style="margin:0">Part ' + (LHD ? "CXIX" : RSD ? "CXII" : WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
+      '<p class="eyebrow" style="margin:0">Part ' + (HTD ? "CXXVI" : LHD ? "CXIX" : RSD ? "CXII" : WLD ? "CV" : RMD ? "C" : UND ? "XCI" : HND ? "LXXXIV" : PZD ? "LXXVII" : SDD ? "LXX" : RD ? "LXIII" : done ? "LVI" : "XLIX") + "</p>" +
       '<p class="big">To be continued…</p>' +
-      "<p style='margin:0'>" + (LHD ? "You stand on the plank walk at Brindle Landing, with the rains coming in off the Narrow Sea, with " : RSD ? (S.dv && S.dv.done ? "You stand at the top of the deep stair under Rimehold, with the glacier quiet over your head, with " : "You stand in the heart of Rimehold, by the knot, with ") : WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
+      "<p style='margin:0'>" + (HTD ? ({ exec: "You stand on the rim of the valley where the Labyrinth of Roots used to be, in daylight, with ", refuse: "You stand on the steps of the Library of Roots, with roots coming up between the stones, with ", crown: "You stand at the top of the stair under the Library, with the paths closing quietly behind you, with " }[S.ht.end] || "You stand at the top of the stair, with ") : LHD ? "You stand on the plank walk at Brindle Landing, with the rains coming in off the Narrow Sea, with " : RSD ? (S.dv && S.dv.done ? "You stand at the top of the deep stair under Rimehold, with the glacier quiet over your head, with " : "You stand in the heart of Rimehold, by the knot, with ") : WLD ? "You stand on the Terraces of Rahdaria, above a harbour full of roofs, with " : RMD ? (S.rm.ending === "bind" ? "You stand at the top of the Frozen Pass, in a world that was never broken, with " : "You stand at the top of the Frozen Pass, with the north cracking open behind you, with ") : UND ? "You stand by a whole milestone at the edge of the white with " : HND ? "You stand on the mill step at Ostle Ford with " : PZD ? "You stand on the white shingle at Stillwater with " : SDD ? "You stand on the deck of a Bathyr boat two miles off Rahdaria with " : RD ? "You stand on the top terrace of Rahdaria with " : done ? (U.ending === "rise" ? "You stand on the dunes under two moons with " : "You stand in the Lunary at Kedge with ") : "You stand at the top of the deep stair with ") + S.hp + " of " + S.maxHp + " HP, " + S.coins + " gold in your purse" + (S.bank && S.bank.open ? " and " + S.bank.bal + " in the Coffer-House" : "") + ((S.skills || []).length ? ", " + S.skills.length + " skill" + (S.skills.length > 1 ? "s" : "") + " learned" : "") + (S.song ? ", Hesk song " + S.song + " of 3" : "") + (S.ending === "return" ? ", Warden of the Labyrinth" : "") + ", carrying:</p>" +
       "<ul>" + carried.map(c => "<li>" + c + "</li>").join("") + "</ul>" +
-      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() + rsCoda() + lhCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
+      "<p style='margin:0;color:var(--muted)'>" + (CODA[S.ending2] || "") + " " + (S.nk ? (NOON[S.nk.ending] || "") + (JACKAL[S.nk.jackal] || "") : "") + (done ? " " + MOON[U.ending] + (CORWEN[U.corwen] || "") : "") + (RD ? " In Rahdaria the blockade is broken, the Bathyr are camped on the salt flats, and the Hanging Gardens are " + (S.rh.blight ? "green again" : "still grey, and being dug out by hand") + ". The people call you " + rhTier(S.rh.rep)[1] + "." : "") + (S.deaths ? " You have died " + S.deaths + " time" + (S.deaths > 1 ? "s" : "") + " on the road, and been brought back." : "") + (S.tyra && S.tyra.love ? " Tyra Quillon is still at your side." : "") + (HND ? " " + ({ whole: "The east is whole, and nobody in it knows how close it came.", scarred: "The east is scarred: a grey, silent mile here and there along the Hinge's line.", half: "Half the east is a grey, silent plain, and the Hinge's war is coming anyway." }[S.hn.east] || "") + " " + ({ still: "The Gnomon's bell lies broken at the bottom of its stair.", turn: "Gauntry House is grey and silent, and the Hinge with it.", keep: "The Gnomon's bell still hangs, and the rope's end is yours." }[S.hn.ending] || "") + (S.hn.souls === "free" ? " The dead Corvane took have gone where the dead go." : " Corvane's lantern hangs at your belt, warm.") + (UND ? unCoda() + rmCoda() + wlCoda() + rsCoda() + lhCoda() + htCoda() : " The realm is visceral now, and the roads are harder. Out on the Reach, on the wall at Stillwater, twenty-nine of the Hushed are still waiting, with their backs turned.") : PZD ? " " + (SOUND[S.sd.ending] || "") + " " + (TITHE[S.pz.ending] || "") + seaCoda() + " Your Plunder: " + PL_TIERS[plTier()][1].toLowerCase() + "." + (S.tricks && S.tricks.length ? " You fight like a pirate now." : "") + " Up the cliff-path, past the gate the Hushkeepers came out of, there's a single grave with a lamp burning by it in daylight, and twenty-nine of the Hushed are standing on the wall in grey, watching you come." : SDD ? " " + (SOUND[S.sd.ending] || "") + " Severine Gall says there are twenty-nine more of the Hushed at Stillwater, the island where the Hushkeepers began, where Ilka Moth is buried. Somebody should go and talk to them before they decide to whisper." : RD ? " Two miles out, under the western sea, the Drowned Light is flickering, and the Speaker for the Deep has asked you to come down and look at it." : done ? " Ilo Brack's cords have found a second pull, faint and far off, coming from under the western sea. The Moored remember two lights falling. The wardens only caught one." : " The Magistrate is home in Sulmara with his ledger, and under the labyrinth where you started, something is pushing the roots of the world up toward the light. Vaelric wants to go home.") + "</p>" +
       '<p class="tip-line">Enjoying the descent? <a data-tip href="' + TIP_URL + '" target="_blank" rel="noopener">Support the creator</a> and help the next chapter get written.</p>' +
       '<div class="actions"><button class="primary" type="button" id="roamBtn">Take the roads back</button><button type="button" id="againBtn">Walk the pathway again</button><button type="button" id="endJournalBtn">Open your journal</button></div>' +
       "<p style='margin:0;color:var(--muted)'>The roads back: walk every region again for XP and gold at level " + lv() + ". At level " + LV_GATE + ", hidden things and the Cascades wake, and the levels go on to " + LV_MAX + ".</p>");
@@ -44581,6 +45366,18 @@ body.pv-open { overflow: hidden; }
         M.ending === "bind" ? "In the heart, you signed Ammeroth's contract. The Cascade never happened, and you're the only one who remembers." : M.ending === "melt" ? "In the heart, the ice gave way. Dunvaar rose under the glacier, and Ithra Coldvein woke." : ""
       ];
     },
+    heart: (s) => {
+      const H = s.ht || {}, w = HT_WHO[H.who], N = w ? w.name : "";
+      return [
+        "Every year the labyrinth sends up the same four words, cut in bark: THE HEART STILL BEATS. You went back down to find out why, and learned it was a cage round Ommeral, the First Seed.",
+        w ? "The roots chose " + N + " to be its Heart: the one closest to you." : H.who === "self" ? "The roots chose you to be its Heart. There was nobody closer." : "",
+        H.echoes && H.echoes.length ? "You fought the Echoes of the heroes who came down before you, and " + (H.took.length ? (H.rest.length ? "laid " + H.rest.length + " to rest and robbed " + H.took.length + "." : "robbed them all.") : "laid them all to rest.") : "",
+        H.king ? (H.king === "fought" ? "The Blind King heard you, and you fought him blind." : "You cut the Blind King's knots while he walked his round.") : "",
+        H.prince ? (H.prince === "clean" ? "The Thorn Prince never once read your move." : "You beat the Thorn Prince, though he read you " + H.countered + " times.") : "",
+        H.orchard ? (H.orchard === "fooled" ? "In the Orchard of False Ends you walked out into a morning that wasn't there." : "In the Orchard of False Ends you stood still, and heard the Heart still beating.") : "",
+        { exec: w ? "You did what the Seed said had to be done, and " + N + " died, and the labyrinth fell in." : "You cut the Heart out of yourself, and the labyrinth fell in.", refuse: "You refused. The Seed woke, and the roots are going out across the realm.", crown: w ? N + " took the Crown of Roots, and keeps the Heart under the realm." : "You took the Crown of Roots, and keep the Heart yourself." }[H.end] || ""
+      ];
+    },
     hand: (s) => {
       const L = s.lh || {}, N = { ossel: "Ossel Ashlowe", iddo: "Iddo Mabry", corbel: "Corbel Fettle", tobbin: "Tobbin", pellan: "Pellan Quillfern" };
       return [
@@ -44687,8 +45484,8 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround, partAfter1, partAfter2, partAfter3, partAfter4, partAfter5, partAfter6, partAfter7, partLostHand1, partLostHand2, partLostHand3, partLostHand4, partLostHand5, partLostHand6, partLostHand7];
-  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call", "The Empty Hand", "Four Days Before the Rains", "The Palisade", "The Trapwright's Yard", "The Gum Works", "Cutwater", "What the Land Remembers"];
+  const PARTS = [partPathway, partWebs, partChamber, partNest, partLibrary, partDesert, partSands, partHands, partJob, partEmber, partBounty, partMile, partLair, partVarro, partGlade, partNight, partGnawkin, partCrossing, partCourt, partJack, partKnight, partTreasury, partPuddles, partWell, partSpire, partBelfry, partSmithy, partWringing, partGlassCity, partDayOne, partDayTwo, partTaking, partAssize, partSunMirror, partAshgate, partHkDay1, partHkDay2, partHkDay3, partSecretWay, partThrumhold, partLongDrum, partDeepStair, partAmmaret, partSpan1, partSpan2, partShutters, partJackal, partKeptNoon, partRoadHome, partKedge, partTide1, partTide2, partHeartfall, partTidecaller, partUndermoon, partGardenCity, partRahDays1, partRahDays2, partCouncil, partBlockade, partLastAssault, partRahEnd, partSeaStairs, partBathyrra, partHallOfLead, partInsideAxe, partHushed, partSkyDown, partDrownedLight, partTitheTaken, partBeforeMast, partPrize, partSkimmer, partRaftmark, partBlackTithe, partStillwater, partThread, partOstle, partSleeper, partGauntry, partTowers, partHingeLord, partHalfEast, partEdge, partWrong, partRemember, partLegend, partMargin, partLastLine, partFirstSheet, partNorth, partSaltCaravan, partLongWhite, partPass, partOuterRing, partMiddleRings, partInnerRing, partHeart, partContract, partWaterline, partHarbourEvac, partTideMap, partEye, partHigherGround, partAfter1, partAfter2, partAfter3, partAfter4, partAfter5, partAfter6, partAfter7, partLostHand1, partLostHand2, partLostHand3, partLostHand4, partLostHand5, partLostHand6, partLostHand7, partHeart1, partHeart2, partHeart3, partHeart4, partHeart5, partHeart6, partHeart7];
+  const NAMES = ["The Pathway", "The Webs", "The Hollow Chamber", "The Nest", "The Library of Roots", "The Desert", "The Burning Sands", "The Hollow Hands", "The Heist", "The Ember Root", "The Blackjackal's Bounty", "The Soggy Mile", "The Violet Baron's Lair", "Thirteen Years in the Fen", "The Glade", "Sleep or Walk", "The Gnawkin Fire", "The Crossing", "The Counting House", "The Jack of Spades", "The Lantern Knight", "The Drowned Treasury", "The Puddles", "The Well and the Bell", "The Gibbet Spire", "The Belfry", "The Smithy", "The Wringing", "The Glass City", "The First Day", "The Second Day", "The Taking", "The Glass Assize", "The Sun-Mirror", "Ashgate", "The First Day under Corrach", "The Second Day under Corrach", "The Third Day under Corrach", "The Singing Door", "Thrumhold", "The Long Drum", "The Deep Stair", "Ammaret", "The First Span", "The Second Span", "The House of Shutters", "The Blackjackal", "The Kept Noon", "The Road Home", "Kedge", "The First Tide", "The Second Tide", "The Heartfall", "The Tidecaller", "The Undermoon", "The Garden City", "The First Days", "The Last Days", "The Council of Terraces", "The Blockade", "The Last Assault", "The Gardens of Rahdaria", "The Sea-Stairs", "Bathyrra", "The Hall of Lead", "Inside the Axe", "The Hushed", "The Sky Comes Down", "The Drowned Light", "The Tithe Taken", "Before the Mast", "The Prize", "The Skimmer", "Raftmark", "The Black Tithe", "Stillwater", "The Thread That Wrote", "Ostle Ford", "The Sleeper's Map", "The Hinge", "The Five Towers", "The Hinge-Lord", "Half the East", "The Edge of the Paper", "Wrong Country", "What the Dead Remember", "The Legend", "The Margin", "The Last Line", "The First Sheet", "North", "The Salt Caravan", "The Long White", "The Frozen Pass", "The Outer Ring", "The Middle Rings", "The Inner Ring", "The Heart of Rimehold", "The Contract", "The Waterline", "Six Bells", "The Tide Map", "The Eye", "Higher Ground", "The First Call", "The Glass Twice", "The Bell", "The Empty Chair", "The Rings of the Knot", "Hollow Holm", "The Last Call", "The Empty Hand", "Four Days Before the Rains", "The Palisade", "The Trapwright's Yard", "The Gum Works", "Cutwater", "What the Land Remembers", "The Heart Still Beats", "The Weeping Paths", "Root Echoes", "The Blind King", "The Thorn Prince", "The Orchard of False Ends", "The Heart Beneath the Roots"];
 
   let started = false;
   let gateTimer = 0; // the Gate's painting cycle on the start screen
