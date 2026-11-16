@@ -3622,6 +3622,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "122", name: "Far Holds and Spar", date: "16 Nov 2026", items: [
+      "<b>Far holds</b>, painted by Adrian. Once the house at home is a compound, Bellamy Pennock has three old strongholds on a second ledger: <b>Saltwarden</b> on a dune-ridge in the Burning Sands, <b>Corrie Hold</b> on its own peak above the Corrach passes, and <b>Hoarfast</b> at the edge of the Long White. Buy one as a root-choked ruin, pay his crews to make it whole, and watch the painting change.",
+      "Then choose once what it's for: a <b>garrison</b> (no gang of that region can raise a rival holding against you) or a <b>caravan stop</b> (twice the rent). Rival holdings have their own paintings now too.",
+      "<b>Seams and Spar</b>: mining on the roads back. Buy a pick from <b>Ennet Scrope</b>, the assayer at the milestone, and prospect any region you've cleared: struck nodes, rootspar, lantern seams, the Old Cutting, ember clusters and whole fields of rimeglass, each one painted. <b>Read the grain</b> of every layer before you strike: get it right and the piece comes away whole; get it wrong and you get chips, and in a cave the roof may answer.",
+      "Sell your ore to Ennet, or through your own smithy for a quarter more. A far hold gives a piece more for every clean strike in its region. And, rarely, after the Heart: a <b>Heartspar crown</b>, with something beating in it. Cut it out, or let it beat. It remembers which. 8 new feats in a <b>Far Holds and Spar</b> pursuit."] },
     { ver: "121", name: "The Heart Beneath the Roots", date: "16 Nov 2026", items: [
       "<b>A new chapter after the Lost Hand</b>, Parts CXIX to CXXV, from Adrian's mission. Every year one message comes up out of the labyrinth cut into living bark: THE HEART STILL BEATS. This year there's a fifth line, and it isn't finished. Back to where it all began: the Library of Roots, and down.",
       "<b>The labyrinth was never a maze.</b> It's a cage, drawn round Ommeral, the First Seed, and the Heart that keeps it alive isn't a thing. It's a person: <b>your most loyal companion</b>, or you, if you've kept nobody close. The signs creep in quietly at the camps of earlier chapters, from the Corrach on.",
@@ -4862,6 +4867,14 @@ body.pv-open { overflow: hidden; }
     { id: "nmthorn", name: "The Thorn Watches", desc: "Take the Watching Thorn from a Nightmare.", test: () => false },
     { id: "nmsentinel", name: "Hollow Crown", desc: "Beat the Hollow-Crown Sentinel and take the Root Terror.", test: () => false },
     { id: "shquests", name: "Nothing Left on the Board", desc: "Finish all seven ship quests on the harbour board.", test: () => false, prog: () => [S.sea && S.sea.yard ? Object.keys(S.sea.yard.q).filter(k => SH_QUESTS[k]).length : 0, 7] },
+    { id: "fhbuy", name: "A Long Way Off", desc: "Buy one of Pennock's far holds.", test: () => false },
+    { id: "fhwhole", name: "Made Whole", desc: "Have Pennock's crews restore a far hold.", test: () => false },
+    { id: "fhall", name: "Three Corners", desc: "Own all three far holds.", test: () => !!(S.hm && S.hm.far && Object.keys(S.hm.far).length >= 3) },
+    { id: "mnfirst", name: "Spar", desc: "Mine your first deposit on the roads back.", test: () => false },
+    { id: "mnclean", name: "Read Like Rock", desc: "Read every layer of a deposit right, and take it out entire.", test: () => false },
+    { id: "mnfifty", name: "Ennet's Best Customer", desc: "Sell fifty pieces of ore.", test: () => false, prog: () => [Math.min(50, S.mn ? S.mn.sold : 0), 50] },
+    { id: "mnheart", name: "Heartspar", desc: "Cut the heart out of a Heartspar crown.", test: () => false },
+    { id: "mnspare", name: "Let It Beat", desc: "Leave three Heartspar crowns beating in the rock.", test: () => false },
   ];
   // ---------- pursuits ----------
   // Every release ships a named set of pursuits. PURSUITS lists the sets oldest first; a feat's set is
@@ -4964,7 +4977,9 @@ body.pv-open { overflow: hidden; }
     { id: "plate", name: "Plate and Element", ver: "47", desc: "Armoured foes with a silver bar to break, and fire, frost and poison that show on the foe's face.",
       ids: ["pesund", "pesund25", "peburn", "pethree"] },
     { id: "heart", name: "The Heart Beneath the Roots", ver: "48", desc: "The cage under the realm, the Echoes, the Blind King, the Thorn Prince, the orchard, and the one the roots chose.",
-      ids: ["htmap", "htasked", "htslot", "htrest", "htstill", "htking", "htprince", "htlisten", "htdoubt", "htexec", "htrefuse", "htcrown", "htwhole"] }
+      ids: ["htmap", "htasked", "htslot", "htrest", "htstill", "htking", "htprince", "htlisten", "htdoubt", "htexec", "htrefuse", "htcrown", "htwhole"] },
+    { id: "spar", name: "Far Holds and Spar", ver: "49", desc: "Three old strongholds out on the roads to buy and make whole, and deposits to read and mine.",
+      ids: ["fhbuy", "fhwhole", "fhall", "mnfirst", "mnclean", "mnfifty", "mnheart", "mnspare"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5159,6 +5174,7 @@ body.pv-open { overflow: hidden; }
     lgItems(items);
     lcItems(items);
     hmItems(items);
+    mnItems(items);
     if (S.shield && S.pitted) items.push(["shield", "shield", "Pauldron Shield", "Pitted by slug slime. No AC bonus until someone mends it."]);
     else if (S.shield) items.push(["shield", "shield", "Pauldron Shield", S.slain ? "+1 AC, Shield Slam. Scarred by venom, dented in the shape of a spider's face." : "+1 AC. Unlocks Shield Slam."]);
     if (S.ember) items.push(["ember", "ember", "The Ember Root", "Vaelric's heartwood. Regain 1 HP each sunrise, and cast one spell a day from your books with no roll."]);
@@ -5376,6 +5392,7 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    mine: ["Reading the grain", "Each deposit has <b>three layers</b>, and the line under each one tells you its grain. Long straight lines, threads end to end, smooth one way: <b>along</b>. Bands, rings, steps, parallel cracks: <b>across</b>. One knot at the bottom, a seam at the base, loose up top: <b>at the root</b>. <b>Look closer</b> once a deposit to rule one out."],
     smoulder: ["Smoulder", "The <b>Smoulder</b> meter in the foe box is the Dreadbloom Warden's: it fills by 1 each time a blow <b>lands on you</b>, and each foe that falls in a fight against many. Its cap grows the longer the fight runs. Spend it on the moves marked <b>Smoulder</b> in the menu."],
     momentum: ["Momentum and Ticks", "The <b>Momentum</b> meter in the foe box is the Clockrunner's: it fills when your hits land and when a blow <b>misses you</b>. Spend it on Tick Step and Precision Strike. At level 20 it becomes <b>Ticks</b>, up to 12."],
     foearm: ["Armoured foes", "The <b>silver bar</b> under a foe's health is its armour. Your blows go into it first; only what gets through reaches its HP. <b>Crushing</b> weapons (maces, mauls), a <b>Shield Slam</b> and a <b>Rootbreaker</b> break it twice as fast, and a <b>chilled</b> foe's armour is brittle (twice again). Burning, poison, spells, the gems and mines go round it. Break it and it's <b>Sundered</b>: −2 AC."],
@@ -5922,6 +5939,21 @@ body.pv-open { overflow: hidden; }
     if (t.classList.contains("title-pic") && t.parentElement) t.parentElement.classList.remove("has-title-pic");
   }, true);
   const PIC_SRC = {
+    fh_salt: "art/fh_salt.webp",
+    fh_salt_ruin: "art/fh_salt_ruin.webp",
+    fh_crag: "art/fh_crag.webp",
+    fh_crag_ruin: "art/fh_crag_ruin.webp",
+    fh_hoar: "art/fh_hoar.webp",
+    fh_hoar_ruin: "art/fh_hoar_ruin.webp",
+    rv_scarp: "art/rv_scarp.webp",
+    rv_seam: "art/rv_seam.webp",
+    dp_node: "art/dp_node.webp",
+    dp_rootspar: "art/dp_rootspar.webp",
+    dp_lantern: "art/dp_lantern.webp",
+    dp_cutting: "art/dp_cutting.webp",
+    dp_ember: "art/dp_ember.webp",
+    dp_rimeglass: "art/dp_rimeglass.webp",
+    dp_heart: "art/dp_heart.webp",
     p_pike: "art/p_pike.webp",
     p_golem: "art/p_golem.webp",
     b_shearer: "art/b_shearer.webp",
@@ -7579,6 +7611,7 @@ body.pv-open { overflow: hidden; }
           { key: "board", label: S.wb && S.wb.cur ? "Unfold the Wandering Board again" : "Walk the Wandering Board", tag: S.wb && S.wb.cur ? REGIONS[S.wb.cur.reg] + " · where you left it" : "a board for one region · sounds, wonders, a world that moves when you do", plain: true },
           { key: "summons", label: "Answer the summons", tag: "a small tear somewhere on the roads · Ringsight" + (S.rs && S.rs.road ? " · " + S.rs.road + " mended" : ""), plain: true, show: !!(S.rs && S.rs.done) },
           { key: "home", label: hmOwn() ? "Go home to " + hmName() : "Talk to the land-broker at the milestone", tag: hmOwn() ? HM_HALL[S.hm.hall][0] + (S.hm.raid ? " · a raid in " + Math.max(0, S.hm.raid.eta - calDay()) + " days" : "") + (S.hm.job ? " · building" : "") + " · strongbox " + S.hm.box + " gold" : "Bellamy Pennock · a holding of your own · from " + Math.min(...Object.values(HM_SITES).map(x => x.price)) + " gold", plain: true, show: hmOwn() || roamRegions().length >= 3 },
+          { key: "mine", label: S.mn && S.mn.pick ? "Go prospecting" : "Talk to the assayer at the milestone", tag: S.mn && S.mn.pick ? "deposits to mine" + (mnOre() ? " · " + mnOre() + " pieces of ore, " + mnWorth() + " gold" : "") : "Ennet Scrope · picks, spar and ore", plain: true, show: mnRegs().length > 0 },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
@@ -7600,7 +7633,7 @@ body.pv-open { overflow: hidden; }
           return "north";
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1 }[c] || 0;
+        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1 }[c] || 0;
         if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
@@ -7614,6 +7647,7 @@ body.pv-open { overflow: hidden; }
         else if (c === "roads") await bnRoads();
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
+        else if (c === "mine") await mnHub();
         else if (c === "home") { if (hmOwn()) await hmHome(); else await hmFirst(); }
         else if (c === "board") await wbHub();
         else if (c === "cw") await cwHub();
@@ -37591,6 +37625,7 @@ body.pv-open { overflow: hidden; }
     add2("smithy", 15, "the smithy");
     if (hmHas("colours")) { const n = 5 * Math.min(12, bn().colours || 0); if (n) { inc += n; lines.push(["visitors to the hall of colours", n]); } }
     if (H.site === "mill") { const n = Math.round(inc * 0.5); inc += n; lines.push(["the mill's grinding", n]); }
+    Object.keys(H.far || {}).forEach(id => { const n = fhRent(id); if (n) { inc += n; lines.push([FAR_HOLDS[id].name, n]); } });
     if (hmRoom("hands") === "books" && hmBuilt("hands")) { const n = Math.round(inc * 0.25); inc += n; lines.push(["Sable's bookkeeping", n]); }
     const wages = H.guards * 12, upkeep = H.hall + H.w.n + H.w.e + H.w.s + H.w.w + H.gate + H.tower + H.ditch + Math.floor(Object.keys(H.has).length / 2);
     return { inc: Math.round(inc), out: wages + upkeep, wages, upkeep, lines };
@@ -38209,6 +38244,7 @@ body.pv-open { overflow: hidden; }
     scrollNext = true; add(h);
     light("dusk");
     await hmJobDone();
+    await fhDone();
     add(el("div", "", hmCard()));
     await say(hmGreeting());
     await hmMissionsBack();
@@ -38222,6 +38258,7 @@ body.pv-open { overflow: hidden; }
         { key: "wait", label: "Wait for them on the walls", tag: "the raid comes now", show: !!R, plain: true },
         { key: "broker", label: "See Bellamy Pennock", tag: H.job ? "building: " + H.job.label.replace(/^\w/, x => x.toLowerCase()) + " · done " + calDate(H.job.done) : "build, rebuild, hire guards", plain: !!R },
         { key: "bed", label: "Sleep in your own bed", tag: "free · full HP and footholds", show: !H.burnt.hall && (S.hp < S.maxHp || digsLeft() < DIG_MAX), plain: true },
+        { key: "far", label: "Look at Pennock's far holds", tag: Object.keys(fhAll()).length ? Object.keys(fhAll()).map(id => FAR_HOLDS[id].name).join(", ") : "strongholds out on the old roads · for a householder of standing", show: H.hall >= 2, plain: true },
         { key: "war", label: "Go up to the war room", tag: "rivals, missions, patrols" + (Object.values(H.rival || {}).some(x => !x.razed) ? " · a rival holding" : ""), show: hmHas("war"), plain: true },
         { key: "stable", label: "Go out to your stable", tag: "horses, barding, the cart, breeding", show: hmHas("stable"), plain: true },
         { key: "trophy", label: "Walk round the trophy hall", tag: hmTrophies().length + " things on the walls", show: hmHas("trophy"), plain: true },
@@ -38237,6 +38274,7 @@ body.pv-open { overflow: hidden; }
       else if (c === "wait") { if (!R.plan) await hmSetDefence(); R.eta = calDay(); }
       else if (c === "broker") await hmBroker();
       else if (c === "war") await hmWarRoom();
+      else if (c === "far") await fhHub();
       else if (c === "stable") await stableVisit(null, (n) => n);
       else if (c === "trophy") await hmTrophyHall();
       else if (c === "feast") { hmPay(20 + 5 * hmResidents().length); H.feastDay = calDay(); H.feasts = (H.feasts || 0) + 1; await hmJoyAdd(12, "Tables in the yard, a fiddle, and everybody's stories about you, most of them wrong."); }
@@ -38363,10 +38401,17 @@ body.pv-open { overflow: hidden; }
   async function hmRivalRise(G) {
     const H = S.hm; H.rival = H.rival || {};
     if (H.rival[G.id]) return;
+    if (fhGarrison(G.r)) return;
     const place = ["the Gallow Knoll", "Scarp End", "the old toll-house at Brackwater", "Hagstone Farm", "the burnt priory at Wennet", "Cold Harbour Mill"][d(6) - 1];
-    H.rival[G.id] = { name: place, walls: 1, since: calDay(), scouted: false, razed: false };
+    H.rival[G.id] = { name: place, walls: 1, since: calDay(), scouted: false, razed: false, pic: place === "Scarp End" || d(2) === 1 ? "rv_scarp" : "rv_seam" };
+    add(rvPic(H.rival[G.id]));
     await mech("<b>" + G.n + " are building against you.</b> " + bnName(G, "knife") + " has taken " + place.replace(/^the /, "the ") + " and is putting up walls round it. Every month you leave them, the walls go higher, and the raids from there will come as sieges. You can take it from your war room.", "hurt");
     hmLog(G.n + " started a rival holding at " + place);
+  }
+  // A rival holding's painting: a grey crag-fort, or a snowbound fort they've built over a crystal seam.
+  function rvPic(R) {
+    const k = R.pic || (R.name.length % 2 ? "rv_scarp" : "rv_seam");
+    return framedPic(picUrl(k), k === "rv_scarp" ? "A painting of a dark fortress clinging to a grey mountainside, mist below it and one lit door." : "A painting of a spiked timber-and-stone fort in the snow, crystal spikes and a miner's lantern in the rock below its walls.", esc(R.name) + ", held against you");
   }
   // ----- happiness -----
   const hmJoy = () => (S.hm && typeof S.hm.joy === "number" ? S.hm.joy : 50);
@@ -38617,6 +38662,7 @@ body.pv-open { overflow: hidden; }
   async function hmStorm(id) {
     const H = S.hm, R = H.rival[id], G = gangById(id);
     add(el("div", "part-head sub", '<span class="num">Your war room · an assault</span><h2>' + esc(R.name) + "</h2>"));
+    add(rvPic(R));
     await say("You go out with everybody who can carry a spear and come up on " + esc(R.name) + " at first light. " + G.n + "'s mark is painted on the gate, three feet high, and somebody has painted your holding's name under it and crossed it out.");
     const r = await check({ label: "Athletics check (over " + HM_WALL[R.walls][0] + ")", mod: 2 + Math.floor(lvk() / 8) + (R.scouted ? 3 : 0) + Math.floor(H.guards / 2), dc: 11 + 2 * R.walls, cta: "Go" });
     const frac = Math.max(0.4, 0.9 + 0.1 * R.walls - (r.ok ? 0.25 : 0) - (R.scouted ? 0.1 : 0) - 0.04 * hmResidents().length);
@@ -38633,6 +38679,276 @@ body.pv-open { overflow: hidden; }
     hmLog("took " + R.name + " from " + G.n);
     await hmJoyAdd(10, "The holding cheers you back through the gate.");
     save();
+  }
+  // ---------- far holds: strongholds out on the old roads (Adrian's paintings, 16 Nov 2026) ----------
+  // Once the house at home is a compound, Pennock has three old strongholds on his books, a long way
+  // off: one in the Burning Sands, one on Mount Corrach, one in the Long White. You buy one as a
+  // ruin (its first painting), pay his crews to make it whole (its second), and choose once what it's
+  // for: a garrison (no rival holding can rise among that region's gangs) or a caravan stop (twice the
+  // rent). A held far hold also gives a piece more for every clean strike at a deposit in its region.
+  // State: S.hm.far = { id: { lv: 1 | 2, done: day the crews finish or null, way: "garrison" | "caravan" | null } }.
+  const FAR_HOLDS = {
+    salt: { name: "Saltwarden", reg: "desert", price: 450, fix: 700, days: 8, ruin: "fh_salt_ruin", whole: "fh_salt",
+      what: "a desert stronghold on a dune-ridge",
+      pitch: "\"Saltwarden,\" Pennock says, and turns the ledger round so you can see the sketch. \"Out in the Burning Sands, on the last ridge before the salt pans. The old caravan masters built it to keep their water in and everybody else out. Then the roots came up through the sand and took it, and the caravan masters left by the back gate.\"",
+      found: "Saltwarden stands on its dune with its gate black and open, and the roots have come up out of the sand all round it, dry and grey and thick as a man, and gone in through every window. Something inside still has a lamp lit.",
+      done: "Pennock's crews burn the roots out of Saltwarden and cart the ash away. When you ride up a week later the towers are whole again, and a caravan is already winding up the ridge toward the gate, because water in the desert doesn't stay a secret.",
+      ruinAlt: "A painting of a desert fortress on a dune, its gate glowing, wrapped all round in dead grey roots.",
+      wholeAlt: "A painting of a great desert fortress on a ridge under a storm sky, a camel caravan crossing the dunes toward it." },
+    crag: { name: "Corrie Hold", reg: "corrach", price: 550, fix: 850, days: 10, ruin: "fh_crag_ruin", whole: "fh_crag",
+      what: "a keep on a peak above the Corrach passes",
+      pitch: "\"Corrie Hold,\" Pennock says. \"Up on Mount Corrach, on its own peak, with one path to it and a cloud in the way most mornings. Whoever holds it holds the passes. Nobody's held it for forty years, because whoever holds it also has to live there.\"",
+      found: "Corrie Hold sits on a fist of black rock with the whole range round it, and the one path up is a goat-track with the edge on the left. The roofs are mostly on. The gate is mostly not. There's snow on the stairs inside.",
+      done: "Pennock's crews haul timber up the goat-track for ten days, swearing, and when you climb it after them the gate is hung, the hall is roofed, and there's a light in every window of Corrie Hold for the first time in forty years.",
+      ruinAlt: "A painting of a dark keep with steep roofs on a snowy peak, mist in the valleys and a path winding up to its lit gate.",
+      wholeAlt: "A painting of a long walled stronghold with a great hall and towers under snowy mountains, lamplight in its gate." },
+    hoar: { name: "Hoarfast", reg: "rime", price: 650, fix: 1000, days: 12, ruin: "fh_hoar_ruin", whole: "fh_hoar",
+      what: "a frozen fortress at the edge of the Long White",
+      pitch: "\"Hoarfast,\" Pennock says, and blows on his fingers as if the name was cold. \"Up at the edge of the Long White. The last fort before there's nothing. The ice has had it twenty winters, and the roots have had the ice. I've never been. I have a very good description.\"",
+      found: "Hoarfast is a black fortress on a crag in the snow, and the roots have grown up over its walls and frozen there, so that the whole north side is a hedge of black thorn under ice. The gate is open. The wind goes in and doesn't come out.",
+      done: "It takes Pennock's crews twelve days to cut the frozen roots off Hoarfast, and two of them won't go back. But the towers stand clear, with snow on their caps and smoke from every chimney, and from the top of the keep you can see right across the Long White.",
+      ruinAlt: "A painting of a dark fortress on a snowy mountainside, choked with black thorny roots, one lit doorway in its walls.",
+      wholeAlt: "A painting of a great stone castle on a snowy crag among high mountains, snow falling, its windows lit." }
+  };
+  const fhAll = () => (S.hm && S.hm.far) || {};
+  const fhHeld = (reg) => Object.keys(fhAll()).some(id => FAR_HOLDS[id].reg === reg);
+  const fhGarrison = (reg) => Object.keys(fhAll()).some(id => FAR_HOLDS[id].reg === reg && fhAll()[id].way === "garrison");
+  const fhRent = (id) => { const F = fhAll()[id]; return !F ? 0 : F.lv < 2 ? 10 : F.way === "caravan" ? 80 : 40; };
+  function fhPic(id) {
+    const T = FAR_HOLDS[id], F = fhAll()[id], whole = F && F.lv >= 2;
+    return framedPic(picUrl(whole ? T.whole : T.ruin), whole ? T.wholeAlt : T.ruinAlt, T.name + (whole ? "" : ", as you found it"));
+  }
+  async function fhDone() {
+    const H = S.hm; if (!H || !H.far) return;
+    for (const id of Object.keys(H.far)) {
+      const F = H.far[id];
+      if (F.done != null && calDay() >= F.done) {
+        F.done = null; F.lv = 2; grant("fhwhole");
+        const T = FAR_HOLDS[id];
+        add(fhPic(id));
+        await say(T.done);
+        const w = await choose([
+          { key: "garrison", label: "Garrison it", tag: "rent 40 a month · no gang of " + REGIONS[T.reg] + " can raise a rival holding while it stands" },
+          { key: "caravan", label: "Open the gate to caravans", tag: "rent 80 a month · and the roads hear about it", plain: true }
+        ]);
+        F.way = w;
+        hmLog((w === "garrison" ? "garrisoned " : "opened ") + T.name + (w === "garrison" ? "" : " to caravans"));
+        await mech(w === "garrison" ? "<b>" + T.name + " is garrisoned.</b> The gangs of " + REGIONS[T.reg] + " won't build walls against you while it stands." : "<b>" + T.name + " is a caravan stop.</b> Its rent goes into your strongbox every month.", "loot");
+      }
+    }
+  }
+  async function fhHub() {
+    const H = hm(); H.far = H.far || {};
+    add(el("div", "part-head sub", '<span class="num">' + esc(hmName()) + ' · Pennock\'s far ledger</span><h2>Far Holds</h2>'));
+    if (!H.seen.far) {
+      H.seen.far = 1;
+      await say("Pennock takes a second ledger out of his coat, thinner than the first and tied with string. \"For a householder of standing,\" he says. \"These are a long way off and a long way gone. Nobody local will buy them, because the locals know.\"");
+      await mech("<b>Far holds.</b> Three old strongholds out on the roads back. Buy one as a ruin, pay Pennock's crews to make it whole, then choose once: a <b>garrison</b> (no rival holding rises among that region's gangs) or a <b>caravan stop</b> (twice the rent). Every far hold you own gives a piece more for each clean strike at a deposit in its region.");
+    }
+    for (;;) {
+      const c = await choose(Object.keys(FAR_HOLDS).map(id => {
+        const T = FAR_HOLDS[id], F = H.far[id];
+        return { key: id, label: F ? "Ride out to " + T.name : "Ask about " + T.name,
+          tag: F ? (F.done != null ? "Pennock's crews · done " + calDate(F.done) : F.lv < 2 ? "a ruin · rent 10 · " + T.fix + " gold to make it whole" : (F.way === "garrison" ? "garrisoned" : "a caravan stop") + " · rent " + fhRent(id)) : REGIONS[T.reg] + " · " + T.what + " · " + T.price + " gold",
+          show: roamRegions().includes(T.reg), plain: !!F };
+      }).concat([{ key: "back", label: "Back to " + esc(hmName()), plain: true }]));
+      if (c === "back") return;
+      const T = FAR_HOLDS[c], F = H.far[c];
+      if (!F) {
+        add(fhPic(c));
+        await say(T.pitch);
+        const k = await choose([{ key: "buy", label: "Buy " + T.name, tag: T.price + " gold, from your purse and strongbox · it comes as you see it", show: S.coins + H.box >= T.price }, { key: "no", label: "Not this one", plain: true }]);
+        if (k !== "buy") continue;
+        hmPay(T.price);
+        H.far[c] = { lv: 1, done: null, way: null };
+        grant("fhbuy");
+        hmLog("bought " + T.name + " from Bellamy Pennock");
+        await say(T.found);
+        await mech("<b>" + T.name + " is yours</b>, as it stands. It pays 10 gold a month as a ruin. Pennock's crews can make it whole for " + T.fix + " gold.", "loot");
+        save(); continue;
+      }
+      add(fhPic(c));
+      if (F.done != null) { await say("Pennock's crews are still at it. They'll be done " + calDate(F.done) + "."); continue; }
+      if (F.lv < 2) {
+        await say(T.found);
+        const k = await choose([{ key: "fix", label: "Send Pennock's crews", tag: T.fix + " gold · " + T.days + " days", show: S.coins + H.box >= T.fix }, { key: "no", label: "Leave it as it is for now", plain: true }]);
+        if (k === "fix") { hmPay(T.fix); F.done = calDay() + T.days; hmLog("sent Pennock's crews to " + T.name); await mech("Pennock's crews set out for " + T.name + ". They'll be done " + calDate(F.done) + "."); save(); }
+        continue;
+      }
+      await say(F.way === "garrison" ? "The garrison at " + T.name + " turns out for you on the wall, and their sergeant tells you nothing has happened, at length." : "The yard at " + T.name + " is full of carts and camels and people arguing about water. The gate-ward hands you the month's take before you're off your horse.");
+    }
+  }
+
+  // ---------- seams and spar: deposits to mine on the roads back (Adrian's paintings) ----------
+  // Ennet Scrope the assayer sells a pick at the milestone. Prospect a cleared region (a watch) and you
+  // find one of its deposits. Every deposit has three layers, and each layer has a grain: along, across,
+  // or at the root. The rock tells you which, if you read it. Strike with the grain and the piece comes
+  // away whole (two pieces); strike against it and you get chips (one), and two bad strikes shatter the
+  // rest. In a cave, a bad strike can bring the roof down. A worked region is worked out for six days.
+  // Heartspar crowns (after the Heart chapter or level 40) are the rare one: cut it out, or let it beat.
+  // State: S.mn = { pick, ore: { kind: n }, dry: { reg: day }, cut, spared, struck, sold }.
+  const MN_KINDS = {
+    node: { name: "A Struck Node", ore: "clearstone", price: 10, pic: "dp_node", tall: true, cave: false,
+      find: "In a cleft off the road there's a knuckle of clear crystal grown out of the rock, and somebody's pick still standing in it where they left off. Inside the biggest point there's a little light, like an ember in glass.",
+      alt: "A painting of a cluster of clear crystals on a dark rock, an ember glowing inside one, and a miner's pick resting against it." },
+    rootspar: { name: "Rootspar", ore: "rootspar", price: 14, pic: "dp_rootspar", tall: true, cave: false,
+      find: "A root as thick as your waist has broken up out of the ground beside the road, and crystal has grown all down it, white and spiked, the way frost grows on a twig. Where the bark has split, there's red light underneath.",
+      alt: "A painting of a great dark root crusted all along its length with white crystal spikes, a red glow in a split in the bark." },
+    lantern: { name: "A Lantern Seam", ore: "seamglass", price: 14, pic: "dp_lantern", tall: false, cave: true,
+      find: "A cave mouth off the road, and twenty yards in, a fan of white crystal grown out of the wall like a bonfire made of ice. Somebody left a lantern burning in front of it, and a pick and a shovel. The lantern's still lit. Nobody's here.",
+      alt: "A painting of a cave with a great fan of white crystals growing from the floor, a lit lantern, a pick and a shovel beside it." },
+    cutting: { name: "The Old Cutting", ore: "veinglass", price: 18, pic: "dp_cutting", tall: false, cave: true,
+      find: "An old mine adit, timbered at the mouth. Inside, the crystal runs through the walls and the roof in veins as thick as your arm, crossing and recrossing, and there's an old miner in a hat going on ahead of you with a lantern, who doesn't look round.",
+      alt: "A painting of a miner with a lantern walking into a tunnel whose walls and roof are laced with crossing veins of white crystal." },
+    ember: { name: "An Ember Cluster", ore: "emberspar", price: 22, pic: "dp_ember", tall: true, cave: false,
+      find: "A clump of tall crystal blades has come up through a nest of dead roots, and the biggest of them has a fire in it, a real fire, burning slow inside the glass without anything to burn.",
+      alt: "A painting of tall clear crystal blades rising from a tangle of dead roots, a small fire burning inside the largest." },
+    rimeglass: { name: "A Rimeglass Field", ore: "rimeglass", price: 26, pic: "dp_rimeglass", tall: false, cave: false,
+      find: "Over a ridge, the whole slope has come up in crystal, spikes taller than a house, clear as ice and sharper. Down among their feet there's a hole in the rock with a lamp burning in it, as if somebody lives there.",
+      alt: "A painting of a mountain slope bristling with huge clear crystal spikes under a grey sky, a small lamp glowing in a hole among them." }
+  };
+  const MN_REG = { roots: ["rootspar", "lantern"], desert: ["ember", "node"], fen: ["rootspar"], mere: ["node"], lastwell: ["lantern", "node"], glass: ["node", "ember"], corrach: ["rimeglass", "cutting"],
+    noon: ["ember"], undermoon: ["lantern", "cutting"], rahdaria: ["node"], bathyrra: ["node", "lantern"], reach: ["node"], rime: ["rimeglass"], dunvaar: ["rimeglass", "cutting"], wetwood: ["rootspar"] };
+  const MN_GRAIN = {
+    along: { label: "Strike along the grain", tag: "down the length of the crystals",
+      cues: ["The faces run in long straight lines, end to end, like split kindling.", "Frost has got into this part in long threads that run the whole length of it.", "When you run your thumb up it, it's smooth; across it, it catches."] },
+    across: { label: "Strike across the grain", tag: "through them, the short way",
+      cues: ["Fine bands cross this part, one above the other, like the rings in a cut log.", "Tap it and it rings in short notes, each one a step lower, like a stair.", "There are hairline cracks across it, all parallel, like ice on a puddle that's been stepped on."] },
+    root: { label: "Strike at the root", tag: "where it grew from",
+      cues: ["Everything here leans out from one dark knot at the bottom, like a sheaf of corn.", "There's a dark seam at the base of this part where it grew from, and the rest just hangs off it.", "It's loose up top and stuck fast at the bottom, like a tooth."] }
+  };
+  const mn = () => {
+    const M = S.mn = S.mn || {};
+    for (const [k, v] of [["pick", false], ["ore", {}], ["dry", {}], ["cut", 0], ["spared", 0], ["struck", 0], ["sold", 0], ["seen", 0]]) if (M[k] === undefined) M[k] = typeof v === "object" ? {} : v;
+    return M;
+  };
+  const MN_ASSAYER = "Ennet Scrope";
+  const mnOre = () => Object.values((S.mn && S.mn.ore) || {}).reduce((a, b) => a + b, 0);
+  const mnPrice = (kind) => (kind === "heartspar" ? 300 : (Object.values(MN_KINDS).find(K => K.ore === kind) || { price: 10 }).price);
+  const mnSmith = () => hmOwn() && hmHas("smithy");
+  const mnWorth = () => Object.entries((S.mn && S.mn.ore) || {}).reduce((a, [k, n]) => a + n * Math.round(mnPrice(k) * (mnSmith() ? 1.25 : 1)), 0);
+  const mnOreName = (kind) => kind === "heartspar" ? "Heartspar" : kind.charAt(0).toUpperCase() + kind.slice(1);
+  const mnRegs = () => roamRegions().filter(r => MN_REG[r]);
+  const mnHeartOpen = () => !!(S.ht && S.ht.done) || lv() >= LV_GATE;
+  function mnItems(items) {
+    if (!S.mn) return; const M = mn();
+    if (M.pick) items.push(["mn-pick", "dig", "A miner's pick", "Bought from " + MN_ASSAYER + " at the milestone. It has struck " + M.struck + " time" + (M.struck === 1 ? "" : "s") + " for you."]);
+    const ore = Object.entries(M.ore).filter(([, n]) => n > 0);
+    if (ore.length) items.push(["mn-ore", "stone", "Ore: " + mnOre() + " piece" + (mnOre() === 1 ? "" : "s"), ore.map(([k, n]) => n + " " + mnOreName(k).toLowerCase()).join(", ") + ". Worth " + mnWorth() + " gold to " + MN_ASSAYER + (mnSmith() ? ", sold through your own smithy" : "") + "."]);
+  }
+  async function mnHub() {
+    const M = mn();
+    add(el("div", "part-head sub", '<span class="num">The roads back</span><h2>Seams and Spar</h2>'));
+    scrollNext = true;
+    if (!M.seen) {
+      M.seen = 1;
+      await say("A woman in a leather apron sits on a cart at the milestone with a set of brass scales, a jeweller's glass screwed into one eye and a row of picks hung off the tailboard. \"Ennet Scrope,\" she says, without looking up. \"Assayer. The roots have been pushing the old rock up all over the realm since you went through, and there's spar in it. I buy it. I sell picks to people who'll fetch it.\"");
+      await mech("<b>Mining.</b> Buy a pick, then prospect any region you've cleared (a watch) to find one of its deposits. Each deposit has three layers, and each layer has a <b>grain</b>: along, across, or at the root. Read the rock: strike with the grain and the piece comes away whole. Strike against it and you get chips, and two bad strikes shatter the rest. In a cave, a bad strike can bring the roof down. Sell what you dig to Ennet" + (hmOwn() ? ", or through your own smithy for a quarter more once you've built one" : "") + ".");
+      tip("mine");
+    } else await say(["Ennet Scrope is weighing a stone on her scales, and doesn't look up.", "Ennet Scrope's cart is at the milestone, picks swinging off the tailboard.", "\"Spar?\" Ennet Scrope says, before you've said anything."][d(3) - 1]);
+    for (;;) {
+      const regs = mnRegs(), open = regs.filter(r => !(M.dry[r] > calDay()));
+      const c = await choose([
+        { key: "pick", label: "Buy a pick", tag: "30 gold", show: !M.pick && S.coins >= 30 },
+        { key: "go", label: "Go prospecting", tag: open.length + " of " + regs.length + " regions not worked out" + (fhAll() && Object.keys(fhAll()).length ? " · a piece more near your far holds" : ""), show: M.pick && open.length > 0 },
+        { key: "sell", label: "Sell your ore to Ennet", tag: mnOre() + " piece" + (mnOre() === 1 ? "" : "s") + " · " + mnWorth() + " gold" + (mnSmith() ? " (through your smithy)" : ""), show: mnOre() > 0, plain: true },
+        { key: "back", label: "Back to the road", plain: true }
+      ]);
+      if (c === "back") return;
+      if (c === "pick") { S.coins -= 30; M.pick = true; renderSheet(); await say("She picks you one off the tailboard, tests the edge on her thumbnail, and hangs it on your belt herself. \"Read it before you hit it,\" she says. \"Everybody hits it first.\""); save(); continue; }
+      if (c === "sell") {
+        const g = mnWorth(); S.coins += g; M.sold += mnOre(); M.ore = {}; renderSheet();
+        await say(mnSmith() ? "You have it carted home, and your own smith cuts it and sells it on, and Ennet Scrope, who was going to buy it, says nothing at all, very loudly." : "Ennet weighs every piece twice and squints at each one through her glass, and then pays you without arguing, which is somehow worse.");
+        await mech("You sell your ore for " + g + " gold.", "loot");
+        if (M.sold >= 50) grant("mnfifty");
+        save(); continue;
+      }
+      if (c === "go") {
+        const r = await choose(regs.map(x => ({ key: x, label: REGIONS[x], tag: M.dry[x] > calDay() ? "worked out till " + calDate(M.dry[x]) : MN_REG[x].map(k => MN_KINDS[k].name.replace(/^An? /, "").toLowerCase()).join(" · ") + (fhHeld(x) ? " · near your far hold" : ""), show: !(M.dry[x] > calDay()), plain: true }))
+          .concat([{ key: "no", label: "Not today", plain: true }]));
+        if (r === "no") continue;
+        await mnDig(r);
+        save();
+      }
+    }
+  }
+  async function mnDig(reg) {
+    const M = mn();
+    M.dry[reg] = calDay() + 6;
+    if (mnHeartOpen() && ["roots", "wetwood", "corrach", "undermoon"].includes(reg) && d(8) === 1) return mnHeart(reg);
+    const kind = MN_REG[reg][d(MN_REG[reg].length) - 1], K = MN_KINDS[kind];
+    add(framedPic(picUrl(K.pic), K.alt, K.name + ", " + REGIONS[reg], K.tall ? "portrait" : ""));
+    await say(K.find);
+    const keys = Object.keys(MN_GRAIN), layers = [0, 1, 2].map(() => keys[d(3) - 1]);
+    let got = 0, bad = 0, looked = false;
+    const far = fhHeld(reg) ? 1 : 0;
+    for (let i = 0; i < 3 && bad < 2; i++) {
+      const g = layers[i], cue = MN_GRAIN[g].cues[d(3) - 1];
+      await say(["The outer layer first.", "Under that, the second layer.", "And the heart of it, the last layer."][i] + " " + cue);
+      let gone = null;
+      for (;;) {
+        const opts = keys.filter(k => k !== gone).map(k => ({ key: k, label: MN_GRAIN[k].label, tag: MN_GRAIN[k].tag }));
+        const c = await choose(opts.concat([{ key: "look", label: "Look closer", tag: "Perception · once a deposit", show: !looked, plain: true }]));
+        if (c === "look") {
+          looked = true;
+          const p = await check({ label: "Perception check (read the rock)", mod: 2 + Math.floor(lv() / 10), dc: 12, cta: "Look" });
+          if (p.ok) { gone = keys.filter(k => k !== g)[d(2) - 1]; await say("You get your eye right down to it. Whatever this is, it isn't " + MN_GRAIN[gone].label.replace(/^Strike /, "").toLowerCase() + "."); }
+          else await say("You stare at it until it stops looking like anything. Rock is rock.");
+          continue;
+        }
+        M.struck++;
+        if (c === g) {
+          const n = 2 + far; got += n;
+          await say(["The pick goes in clean and the piece comes away whole in your hand, ringing like a glass.", "One blow, and it splits sweet along the line you read, and lifts away.", "It comes away in one long piece, and the light in it flares and settles."][d(3) - 1]);
+          await mech("+" + n + " " + K.ore + (far ? " (one more, near your far hold)" : "") + ".", "loot");
+        } else {
+          bad++; got += 1;
+          await say(bad >= 2 ? "It goes the wrong way again, and this time the crack runs right through the rest of it, and the whole thing comes down in glittering gravel." : "It shatters under the pick, the wrong way, and you get a handful of chips and a long new crack going down into the next layer.");
+          await mech("+1 " + K.ore + ", in chips." + (bad >= 2 ? " The rest of the deposit is ruined." : " One more bad strike and the rest is ruined."), "hurt");
+          if (K.cave && d(3) === 1) {
+            const h = d(6) + Math.floor(lv() / 5);
+            S.hp = Math.max(1, S.hp - h); renderSheet();
+            await say("The bang goes up into the roof, and the roof answers. You get your arms over your head before the stones come down.");
+            await mech("A fall of rock: " + h + " damage.", "hurt");
+          }
+        }
+        break;
+      }
+    }
+    M.ore[K.ore] = (M.ore[K.ore] || 0) + got;
+    renderSheet();
+    if (!bad) { grant("mnclean"); await say("You've read every layer right, and the deposit comes out of the rock entire. Ennet will want to see this one."); }
+    await mech("You carry away " + got + " " + K.ore + ". Ore in your pack: " + mnOre() + " pieces, worth " + mnWorth() + " gold.", "loot");
+    grant("mnfirst");
+  }
+  // The Heartspar crown: a root-crystal with something beating in it. What you do with the first one
+  // decides how the next one meets you (S.mn.cut vs S.mn.spared).
+  async function mnHeart(reg) {
+    const M = mn();
+    add(framedPic(picUrl("dp_heart"), "A painting of a crown of black crystal spikes rising out of twisted roots, a red heart glowing deep inside it.", "A Heartspar crown, " + REGIONS[reg], "portrait"));
+    await say("Under an overhang, where the roots come down out of the rock and go into the ground again, a crown of black crystal has grown up round something red. You can see it through the spikes. It's beating.");
+    if (M.cut > M.spared) await say("It's beating faster as you come closer, the way a bird's heart goes when you pick it up. It knows what you did to the last one.");
+    else if (M.spared) await say("It slows as you come close, and steadies, and you'd swear it was glad to see you. The roots round it ease, like a fist opening.");
+    const c = await choose([
+      { key: "cut", label: "Cut it out", tag: "Heartspar · Ennet pays 300 gold, or hold it to your axe for +3 max HP" },
+      { key: "spare", label: "Leave it beating", tag: "the roots remember who walks past", plain: true }
+    ]);
+    if (c === "spare") {
+      M.spared++;
+      await say("You put the pick away. After a while the beating goes quiet, and the black crystal clouds over, and you can't see the red at all any more, which is how it hides.");
+      await mech("You leave the Heartspar crown in the rock. (" + M.spared + " left beating.)");
+      if (M.spared >= 3) grant("mnspare");
+      return;
+    }
+    M.cut++;
+    await say("It takes a long time. The crystal is harder than anything you've ever cut, and the beating gets louder until you can feel it in your teeth, and then the heart comes away in your hand, warm, and stops.");
+    const k = await choose([
+      { key: "sell", label: "Keep it for Ennet", tag: "300 gold when you sell your ore" },
+      { key: "axe", label: "Hold it to the axe", tag: "+3 max HP · the axe drinks it", show: M.cut <= 3 }
+    ]);
+    if (k === "axe") { S.maxHp += 3; S.hp += 3; renderSheet(); await say("The axe drinks it the way it drinks everything, and you feel it go in under your ribs, a second beat a little behind your own."); await mech("+3 max HP.", "loot"); }
+    else { M.ore.heartspar = (M.ore.heartspar || 0) + 1; await mech("You carry away a piece of Heartspar.", "loot"); }
+    grant("mnheart");
   }
   // How the company's levels, friendships and spirits change a raid.
   function hmFrac2(R) {
