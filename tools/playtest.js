@@ -32,7 +32,9 @@ const out = path.resolve(arg("out", "playtest-" + seed));
 fs.mkdirSync(out, { recursive: true });
 
 // Expose the game's state to the bot (the game keeps it inside a closure).
-const html = fs.readFileSync(SRC, "utf8").replace("let S = fresh();", "let S = fresh(); window.__g = { get S() { return S; }, get FOE() { return FOE; }, get J() { return J; } };");
+// The copy lives in --out, so point relative paths (art/*.webp, title-film.mp4) back at the game's own folder.
+const baseTag = '<base href="' + require("url").pathToFileURL(path.dirname(SRC) + path.sep).href + '">';
+const html = fs.readFileSync(SRC, "utf8").replace("let S = fresh();", "let S = fresh(); window.__g = { get S() { return S; }, get FOE() { return FOE; }, get J() { return J; } };").replace(/<head>/i, (h) => h + baseTag);
 if (!html.includes("window.__g")) { console.error("Couldn't find `let S = fresh();` in " + SRC); process.exit(1); }
 const gamePath = path.join(out, "game.html");
 fs.writeFileSync(gamePath, html);
