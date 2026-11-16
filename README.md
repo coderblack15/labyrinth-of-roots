@@ -28,6 +28,16 @@ To play it online, turn on GitHub Pages: **Settings → Pages → Deploy from a 
 python3 tools/build-demo.py --parts 10 --full-url https://coderblack15.itch.io/labyrinth-of-roots
 ```
 
+## Paintings and the itch.io zips
+
+The paintings live as WebP files in `art/` and the title film is `title-film.mp4`; `index.html` points at them by relative path (`"art/sc_glade.webp"`), so the game file stays small (about 6.7 MB, well under the 16 MB limit of the private Claude link). Keep `art/` and `title-film.mp4` next to `index.html` wherever the game goes: GitHub Pages serves them from the repo, the private link is published with them as side files, and both itch.io zips carry them. If a painting can't load, it quietly drops out of the page (and the start screen falls back to its painted roots) rather than showing a broken image.
+
+To add a painting, save it as `art/<key>.webp` and put `<key>: "art/<key>.webp"` in `PIC_SRC`. If one gets pasted in as a `data:` URL (or a merge brings some back), `python3 tools/split-art.py` moves every embedded painting of 4 KB or more out to `art/` again; the small item icons stay inline. Rebuild the zips after the demo:
+
+```
+python3 tools/build-zips.py
+```
+
 `TIP_URL` (the Support the creator link) and `FULL_URL` (where the demo's "Play the full game" button goes) are set near the top of the script in `index.html`.
 
 ## Languages
@@ -167,6 +177,9 @@ Besides page views, the dashboard shows these events: `journey-start`, `journey-
 | File | What it is |
 | --- | --- |
 | `index.html` | The playable game |
+| `art/`, `title-film.mp4` | The paintings and the title film, loaded by `index.html` (keep them beside it) |
+| `demo.html` | The free demo, built from `index.html` by `tools/build-demo.py` |
+| `itch/` | The itch.io zips (full game and demo), built by `tools/build-zips.py` |
 | `STORY.md` | The full game master script for all sixty-two parts |
 | `languages.js` | The translations for the Language switch (copied into `index.html` by `tools/build-languages.py`) |
 
