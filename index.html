@@ -1340,7 +1340,7 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 @media (max-width: 560px) { .hm-card { grid-template-columns: 1fr; } .hm-plan { max-width: 260px; } }
 .hm-gangs { display: grid; gap: 8px; margin: 8px 0; }
 .rc-card ul.rc-walls { margin: 4px 0 6px 1.2em; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 2px 12px; font-size: .9rem; }
-.rc-war { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(44px, 1fr)); max-width: 420px; }
+.hm-war.rc-war { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(44px, 1fr)); max-width: 420px; }
 .rc-board .rc-meters { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--label); font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
 .rc-pips { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px; }
 .rc-pips i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--line); background: var(--panel-2); }
@@ -8562,6 +8562,7 @@ body.pv-open { overflow: hidden; }
     add(el("div", "part-head sub", '<span class="num">' + REGIONS[C.reg] + " · " + esc(K.name) + "</span><h2>" + esc(C.name) + "</h2>"));
     light("dusk");
     if (!C.seen) { C.seen = 1; await say(K.intro(C)); }
+    if (C.guard != null && calDay() < C.guard) { add(el("div", "", rcCard(C))); await say("They're still up on the walls from last time, with every lamp lit and the gate barred, and they'll stay there till the sun's been up and down again. Come back another day."); return; }
     if (C.noticed && C.last != null && calDay() - C.last >= 4) { const n = Math.floor((calDay() - C.last) / 4); C.noticed = Math.max(C.grudge ? 1 : 0, C.noticed - n); C.last = calDay(); if (C.noticed < 3) await say("It's been quiet for a few days. The walls at " + esc(C.place) + " have gone back to their usual watch."); }
     add(el("div", "", rcCard(C)));
     // the job
@@ -8880,7 +8881,7 @@ body.pv-open { overflow: hidden; }
         hitWhy: "A blade comes out of the press and into you.", miss: "The blow cracks on the stakes behind you.", hitLine: "One of them goes down in the mud and stays there." } });
     if (!F || F.fled) {
       await say("You go back over the wall the way you came, or another way, and they let you go, because there's no need to chase you. They know your face now.");
-      C.noticed = Math.min(3, C.noticed + 1); C.size = Math.min(C.k === "raven" ? 4 : 3, C.size + (C.lost ? 1 : 0)); C.lost = (C.lost || 0) + 1; C.last = calDay();
+      C.noticed = Math.min(3, C.noticed + 1); C.size = Math.min(C.k === "raven" ? 4 : 3, C.size + (C.lost ? 1 : 0)); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
       rcLog("was driven off from " + C.name);
       SND.musPlace("roads"); save(); return;
     }
@@ -9033,7 +9034,7 @@ body.pv-open { overflow: hidden; }
     light(back);
     if (F.fled || F.overtaken) {
       await say(raven ? "You go down in the mud, and Vaelric's axe holds you at one breath, and you crawl backward into the dark while his men laugh. He doesn't follow. He wants you to come back." : n + " lets you go, because " + n + " can.");
-      C.noticed = Math.min(3, C.noticed + 1); C.lost = (C.lost || 0) + 1; C.last = calDay();
+      C.noticed = Math.min(3, C.noticed + 1); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
       rcLog("lost to " + n + " at " + C.place);
       SND.musPlace("roads"); save(); B.lostChief = true; return "lost";
     }
