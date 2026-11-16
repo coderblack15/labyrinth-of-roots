@@ -51,6 +51,16 @@
 
   // Text that has numbers or names in it. $1, $2 are the parts that carry over.
   const PATTERNS = [
+    // ---- the bank's amount picker ----
+    [/^Deposit (\d+) gold$/, "Deposit $1 gold", "Depositar $1 de oro", "Déposer $1 pièces d'or", "$1 Gold einzahlen", "Depositar $1 de ouro", "金貨$1枚を預ける"],
+    [/^Withdraw (\d+) gold$/, "Withdraw $1 gold", "Retirar $1 de oro", "Retirer $1 pièces d'or", "$1 Gold abheben", "Sacar $1 de ouro", "金貨$1枚を引き出す"],
+    [/^All \((\d+)\)$/, "All ($1)", "Todo ($1)", "Tout ($1)", "Alles ($1)", "Tudo ($1)", "全部（$1）"],
+    [/^of (\d+)$/, "of $1", "de $1", "sur $1", "von $1", "de $1", "／$1"],
+    [/^choose how much · you carry (\d+)$/, "choose how much · you carry $1", "elige cuánto · llevas $1", "choisissez combien · vous portez $1", "wähle wie viel · du trägst $1", "escolha quanto · você carrega $1", "額を選ぶ · 所持金$1"],
+    [/^choose how much · (\d+) on deposit$/, "choose how much · $1 on deposit", "elige cuánto · $1 depositado", "choisissez combien · $1 en dépôt", "wähle wie viel · $1 eingezahlt", "escolha quanto · $1 depositado", "額を選ぶ · 預金$1"],
+    [/^(Merrow uncaps his pen\. )?How much do you put in\? You carry (\d+) gold, and (\d+) is on deposit\.$/, "$1How much do you put in? You carry $2 gold, and $3 is on deposit.", "¿Cuánto metes? Llevas $2 de oro, y hay $3 depositado.", "Combien déposez-vous ? Vous portez $2 pièces d'or, et $3 sont en dépôt.", "Wie viel zahlst du ein? Du trägst $2 Gold, und $3 liegen auf dem Konto.", "Quanto você deposita? Você carrega $2 de ouro, e há $3 depositado.", "いくら預ける？　所持金は$2枚、預金は$3枚。"],
+    [/^(Merrow sorts through his keys\. )?How much do you take out\? (\d+) gold is on deposit, and you carry (\d+)\.$/, "$1How much do you take out? $2 gold is on deposit, and you carry $3.", "¿Cuánto sacas? Hay $2 de oro depositado, y llevas $3.", "Combien retirez-vous ? $2 pièces d'or sont en dépôt, et vous portez $3.", "Wie viel hebst du ab? $2 Gold liegen auf dem Konto, und du trägst $3.", "Quanto você saca? Há $2 de ouro depositado, e você carrega $3.", "いくら引き出す？　預金は$2枚、所持金は$3枚。"],
+    [/^You (deposit|withdraw) (\d+) gold\. On deposit: (\d+) gold\. In your purse: (\d+)\.$/, "You $1 $2 gold. On deposit: $3 gold. In your purse: $4.", "Mueves $2 de oro. Depositado: $3. En tu bolsa: $4.", "Vous déplacez $2 pièces d'or. En dépôt : $3. Dans votre bourse : $4.", "Du bewegst $2 Gold. Auf dem Konto: $3. Im Beutel: $4.", "Você move $2 de ouro. Depositado: $3. Na bolsa: $4.", "金貨$2枚を動かした。預金：$3枚。財布：$4枚。"],
     [/^· on the theme of (.+)$/, "· on the theme of $1", "· sobre el tema de $1", "· sur le thème de $1", "· über das Thema von $1", "· sobre o tema de $1", "· $1のテーマで"],
     [/^You've heard (\d+) of (\d+) \((\d+) pieces, and (\d+) of them warped\)\.$/, "You've heard $1 of $2 ($3 pieces, and $4 of them warped).", "Has oído $1 de $2 ($3 piezas, y $4 de ellas deformadas).", "Vous en avez entendu $1 sur $2 ($3 morceaux, dont $4 déformés).", "Du hast $1 von $2 gehört ($3 Stücke, davon $4 verzerrt).", "Você ouviu $1 de $2 ($3 peças, e $4 delas distorcidas).", "$2曲中$1曲を聴きました（$3曲と、その歪んだ版$4曲）。"],
     [/^Battle style · Slot (\d+)$/, "Battle style · Slot $1", "Estilo de combate · Ranura $1", "Style de combat · Emplacement $1", "Kampfstil · Platz $1", "Estilo de batalha · Espaço $1", "戦闘スタイル · スロット$1"],
@@ -64,6 +74,13 @@
 
   // English | Español | Français | Deutsch | Português | 日本語
   const TABLE = [
+    // ---- the bank's amount picker ----
+    ["Deposit gold", "Depositar oro", "Déposer de l'or", "Gold einzahlen", "Depositar ouro", "金を預ける"],
+    ["Withdraw gold", "Retirar oro", "Retirer de l'or", "Gold abheben", "Sacar ouro", "金を引き出す"],
+    ["Half", "La mitad", "La moitié", "Die Hälfte", "Metade", "半分"],
+    ["One less", "Uno menos", "Un de moins", "Eins weniger", "Um a menos", "一枚減らす"],
+    ["One more", "Uno más", "Un de plus", "Eins mehr", "Um a mais", "一枚増やす"],
+    ["Amount of gold", "Cantidad de oro", "Quantité d'or", "Goldmenge", "Quantidade de ouro", "金額"],
     // ---- the warning at the gate ----
     ["WARNING", "ADVERTENCIA", "AVERTISSEMENT", "WARNUNG", "AVISO", "警告"],
     ["The stories say the labyrinth was sealed.", "Las historias dicen que el laberinto fue sellado.", "Les récits disent que le labyrinthe a été scellé.", "Die Geschichten sagen, das Labyrinth sei versiegelt worden.", "As histórias dizem que o labirinto foi selado.", "言い伝えでは、迷宮は封じられたという。"],

@@ -1183,6 +1183,18 @@ button.belt-btn:not(:disabled) { border-color: var(--gold); }
 .inv-toggle.belt-ready::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px rgba(255, 210, 122, .8); vertical-align: middle; }
 .inv .use { margin-top: 6px; font-size: .8rem; padding: 4px 10px; }
 .choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 22px; scroll-margin-top: 24px; }
+.gold-pick { display: grid; gap: 10px; max-width: 460px; }
+.gold-pick .gp-note { margin: 0; color: var(--muted); font-size: .95rem; }
+.gp-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.gp-quick button { min-width: 56px; min-height: 44px; text-align: center; padding: 8px 12px; }
+.gp-quick button.on { border-color: var(--gold); color: var(--gold); }
+.gp-step { display: flex; align-items: center; gap: 8px; }
+.gp-step .gp-pm { width: 48px; height: 48px; padding: 0; text-align: center; font-size: 1.4rem; line-height: 1; }
+.gp-step input { font: inherit; font-size: 1.2rem; text-align: center; width: 110px; height: 48px; box-sizing: border-box; padding: 6px 8px; border-radius: 4px; border: 1px solid #5c4d27; background: var(--bg); color: var(--ink); }
+.gp-step input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.gp-step input:disabled { opacity: .5; }
+.gp-of { color: var(--muted); font-size: .9rem; }
+.gp-go { display: flex; flex-wrap: wrap; gap: 10px; }
 button {
   font: inherit; cursor: pointer; color: var(--ink);
   background: var(--panel-2); border: 1px solid #3c4a40; border-radius: 4px;
@@ -3875,6 +3887,9 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "126", name: "Choose How Much", date: "16 Nov 2026", items: [
+      "At the bank on the roads back and at the Coffer-House in Ashgate, <b>Deposit gold</b> and <b>Withdraw gold</b> now ask how much. Tap a quick amount (10, 25, 50, 100, half or all), nudge it with − and +, or type any number, then confirm.",
+      "The bank remembers the last amount you moved each way, so a regular deposit is two taps. Everything-at-once is still there as <b>All</b>."] },
     { ver: "125", name: "Fight Songs", date: "16 Nov 2026", items: [
       "Two composed fight songs, from samples Adrian sent. <b>Rootbreaker</b> plays when a boss stands in front of you: war drums on a three-three-two beat, low strings sawing underneath, a horn tune, a choir, a smith's anvil when it's at its worst, and a climb up a step before the end.",
       "<b>Thorn and Cudgel</b> plays in every other fight: lighter and quicker, with hand drums, a bouzouki, a low whistle and fiddles, so a boss still sounds like one when it comes.",
@@ -5878,6 +5893,42 @@ body.pv-open { overflow: hidden; }
     return "more";
   }
   const go = (label) => choose([{ key: 1, label }]);
+  // Choose how much gold to move, at a bank (Adrian's ask): quick amounts, a − / + stepper and a box to type in.
+  // Resolves to the amount (1..max), or 0 for "Never mind". key remembers the last amount per kind.
+  function goldPick(verb, max, note, key) {
+    return new Promise(resolve => {
+      S.bank = S.bank || { open: false, bal: 0 };
+      const last = (S.bank.last || {})[key];
+      let n = Math.max(1, Math.min(max, last || max));
+      const quick = [10, 25, 50, 100, 250, 500, 1000, 5000].filter(q => q < max).slice(-4);
+      const box = el("form", "choices gold-pick",
+        '<p class="gp-note">' + note + "</p>" +
+        '<div class="gp-quick">' + quick.map(q => '<button type="button" data-q="' + q + '">' + q + "</button>").join("") +
+        (max >= 4 ? '<button type="button" data-q="half">Half</button>' : "") + '<button type="button" data-q="' + max + '">All (' + max + ")</button></div>" +
+        '<div class="gp-step"><button type="button" class="gp-pm" data-d="-1" aria-label="One less">−</button>' +
+        '<input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Amount of gold"><button type="button" class="gp-pm" data-d="1" aria-label="One more">+</button><span class="gp-of">of ' + max + "</span></div>" +
+        '<div class="gp-go"><button type="submit" class="primary"></button><button type="button" class="ghost gp-no">Never mind</button></div>');
+      const input = box.querySelector("input"), ok = box.querySelector(".primary");
+      const show = typing => {
+        if (!typing) input.value = n;
+        ok.textContent = verb + " " + n + " gold";
+        box.querySelectorAll("[data-q]").forEach(b => b.classList.toggle("on", (b.dataset.q === "half" ? Math.floor(max / 2) : +b.dataset.q) === n));
+      };
+      const set = v => { n = Math.max(1, Math.min(max, Math.floor(v) || 1)); show(); };
+      box.querySelectorAll("[data-q]").forEach(b => b.onclick = () => set(b.dataset.q === "half" ? Math.floor(max / 2) : +b.dataset.q));
+      box.querySelectorAll(".gp-pm").forEach(b => b.onclick = () => set(n + (+b.dataset.d)));
+      input.oninput = () => { const v = parseInt(input.value.replace(/\D/g, ""), 10); if (v > 0) { n = Math.min(max, v); show(true); } };
+      input.onblur = () => set(parseInt(input.value.replace(/\D/g, ""), 10) || n);
+      const done = v => {
+        box.querySelectorAll("button, input").forEach(x => x.disabled = true);
+        if (v) { (S.bank.last = S.bank.last || {})[key] = v; ok.classList.add("chosen"); } else box.querySelector(".gp-no").classList.add("chosen");
+        scrollNext = true; resolve(v);
+      };
+      box.onsubmit = e => { e.preventDefault(); set(parseInt(input.value.replace(/\D/g, ""), 10) || n); done(n); };
+      box.querySelector(".gp-no").onclick = () => done(0);
+      show(); scrollNext = true; add(box);
+    });
+  }
 
   const D20 = '<svg viewBox="0 0 60 60" aria-hidden="true"><polygon class="face" points="30,3 54,16 54,44 30,57 6,44 6,16"/><polygon points="30,14 46,40 14,40"/><path d="M30 3 L30 14 M54 16 L46 40 M6 16 L14 40 M30 57 L46 40 M30 57 L14 40 M54 44 L46 40 M6 44 L14 40 M30 3 L46 40 M30 3 L14 40"/></svg>';
   function dieEl(enemy) { const w = el("div", "die" + (enemy ? " enemy" : ""), D20 + "<span>20</span>"); return w; }
@@ -9977,12 +10028,12 @@ body.pv-open { overflow: hidden; }
         S.bank = S.bank || { open: false, bal: 0 };
         const k = await choose([
           { key: "open", label: "Open an account", tag: "15 gold", show: !S.bank.open && S.coins >= 15 },
-          { key: "dall", label: "Deposit everything", tag: S.coins + " gold", show: S.bank.open && S.coins > 0 },
-          { key: "wall", label: "Withdraw everything", tag: S.bank.bal + " gold", show: S.bank.open && S.bank.bal > 0, plain: true },
+          { key: "dep", label: "Deposit gold", tag: "choose how much · you carry " + S.coins, show: S.bank.open && S.coins > 0 },
+          { key: "wdr", label: "Withdraw gold", tag: "choose how much · " + S.bank.bal + " on deposit", show: S.bank.open && S.bank.bal > 0, plain: true },
           { key: "no", label: "Leave the bank", plain: true }]);
         if (k === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await mech("Account opened (15 gold). Gold on deposit is safe whatever happens to you.", "loot"); await dryLine("bank", { chance: 60 }); }
-        if (k === "dall") { const n = S.coins; S.coins = 0; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold.", "loot"); await dryLine("bank", { chance: 30 }); }
-        if (k === "wall") { const n = S.bank.bal; S.bank.bal = 0; S.coins += n; renderSheet(); await mech("You withdraw " + n + " gold. In your purse: " + S.coins + " gold.", "loot"); }
+        if (k === "dep") { const n = await goldPick("Deposit", S.coins, "How much do you put in? You carry " + S.coins + " gold, and " + S.bank.bal + " is on deposit.", "dep"); if (n) { S.coins -= n; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + ".", "loot"); await dryLine("bank", { chance: 30 }); } }
+        if (k === "wdr") { const n = await goldPick("Withdraw", S.bank.bal, "How much do you take out? " + S.bank.bal + " gold is on deposit, and you carry " + S.coins + ".", "wdr"); if (n) { S.bank.bal -= n; S.coins += n; renderSheet(); await mech("You withdraw " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + ".", "loot"); } }
       } else if (c === "library") {
         const k = await choose(skillsLeft.map((x, i) => ({ key: x, label: SKILLS[x].name, tag: SKILLS[x].desc, plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
         if (k !== "no") { const p = P(30); S.coins -= p; if (!S.skills) S.skills = []; await learnSkill(k, "You buy the book (" + p + " gold) and read it through twice in a corner of the reading room."); }
@@ -21287,10 +21338,8 @@ body.pv-open { overflow: hidden; }
       const opts = [];
       if (!S.bank.open) opts.push({ key: "open", label: "Open an account", tag: "15 gold", show: S.coins >= 15 });
       else {
-        opts.push({ key: "d10", label: "Deposit 10 gold", plain: true, show: S.coins >= 10 });
-        opts.push({ key: "dall", label: "Deposit everything", tag: S.coins + " gold", plain: true, show: S.coins > 0 });
-        opts.push({ key: "w10", label: "Withdraw 10 gold", plain: true, show: S.bank.bal >= 10 });
-        opts.push({ key: "wall", label: "Withdraw everything", tag: S.bank.bal + " gold", plain: true, show: S.bank.bal > 0 });
+        opts.push({ key: "dep", label: "Deposit gold", tag: "choose how much · you carry " + S.coins, plain: true, show: S.coins > 0 });
+        opts.push({ key: "wdr", label: "Withdraw gold", tag: "choose how much · " + S.bank.bal + " on deposit", plain: true, show: S.bank.bal > 0 });
       }
       opts.push({ key: "box", label: "Bid on a dead man's deposit box", tag: "8 gold · contents unknown", plain: true, show: !S.hv.box && (S.coins >= 8 || S.bank.bal >= 8) });
       opts.push({ key: "quiet", label: "Ask about the sealed letter on his desk", plain: true, show: S.bank.open && !S.bounty.quiet });
@@ -21298,8 +21347,8 @@ body.pv-open { overflow: hidden; }
       const c = await choose(opts);
       if (c === "done") return;
       if (c === "open") { S.coins -= 15; S.bank.open = true; renderSheet(); await say("Merrow writes " + nm("<b>{N}</b>", "your name") + " in a ledger bound in grey leather, blots it, and hands you a brass tally with a number punched in it."); await mech("You have a Coffer-House account. Gold on deposit is safe if you fall, and big bounties can be paid straight into it.", "loot"); }
-      if (c === "d10" || c === "dall") { const n = c === "d10" ? 10 : S.coins; S.coins -= n; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); }
-      if (c === "w10" || c === "wall") { const n = c === "w10" ? 10 : S.bank.bal; S.coins += n; S.bank.bal -= n; renderSheet(); await mech("You withdraw " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); }
+      if (c === "dep") { const n = await goldPick("Deposit", S.coins, "Merrow uncaps his pen. How much do you put in? You carry " + S.coins + " gold, and " + S.bank.bal + " is on deposit.", "dep"); if (n) { S.coins -= n; S.bank.bal += n; renderSheet(); await mech("You deposit " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); } }
+      if (c === "wdr") { const n = await goldPick("Withdraw", S.bank.bal, "Merrow sorts through his keys. How much do you take out? " + S.bank.bal + " gold is on deposit, and you carry " + S.coins + ".", "wdr"); if (n) { S.coins += n; S.bank.bal -= n; renderSheet(); await mech("You withdraw " + n + " gold. On deposit: " + S.bank.bal + " gold. In your purse: " + S.coins + "."); } }
       if (c === "box") {
         S.hv.box = true;
         if (S.coins >= 8) S.coins -= 8; else S.bank.bal -= 8;
@@ -47362,6 +47411,16 @@ body.pv-open { overflow: hidden; }
 
   // Text that has numbers or names in it. $1, $2 are the parts that carry over.
   const PATTERNS = [
+    // ---- the bank's amount picker ----
+    [/^Deposit (\d+) gold$/, "Deposit $1 gold", "Depositar $1 de oro", "Déposer $1 pièces d'or", "$1 Gold einzahlen", "Depositar $1 de ouro", "金貨$1枚を預ける"],
+    [/^Withdraw (\d+) gold$/, "Withdraw $1 gold", "Retirar $1 de oro", "Retirer $1 pièces d'or", "$1 Gold abheben", "Sacar $1 de ouro", "金貨$1枚を引き出す"],
+    [/^All \((\d+)\)$/, "All ($1)", "Todo ($1)", "Tout ($1)", "Alles ($1)", "Tudo ($1)", "全部（$1）"],
+    [/^of (\d+)$/, "of $1", "de $1", "sur $1", "von $1", "de $1", "／$1"],
+    [/^choose how much · you carry (\d+)$/, "choose how much · you carry $1", "elige cuánto · llevas $1", "choisissez combien · vous portez $1", "wähle wie viel · du trägst $1", "escolha quanto · você carrega $1", "額を選ぶ · 所持金$1"],
+    [/^choose how much · (\d+) on deposit$/, "choose how much · $1 on deposit", "elige cuánto · $1 depositado", "choisissez combien · $1 en dépôt", "wähle wie viel · $1 eingezahlt", "escolha quanto · $1 depositado", "額を選ぶ · 預金$1"],
+    [/^(Merrow uncaps his pen\. )?How much do you put in\? You carry (\d+) gold, and (\d+) is on deposit\.$/, "$1How much do you put in? You carry $2 gold, and $3 is on deposit.", "¿Cuánto metes? Llevas $2 de oro, y hay $3 depositado.", "Combien déposez-vous ? Vous portez $2 pièces d'or, et $3 sont en dépôt.", "Wie viel zahlst du ein? Du trägst $2 Gold, und $3 liegen auf dem Konto.", "Quanto você deposita? Você carrega $2 de ouro, e há $3 depositado.", "いくら預ける？　所持金は$2枚、預金は$3枚。"],
+    [/^(Merrow sorts through his keys\. )?How much do you take out\? (\d+) gold is on deposit, and you carry (\d+)\.$/, "$1How much do you take out? $2 gold is on deposit, and you carry $3.", "¿Cuánto sacas? Hay $2 de oro depositado, y llevas $3.", "Combien retirez-vous ? $2 pièces d'or sont en dépôt, et vous portez $3.", "Wie viel hebst du ab? $2 Gold liegen auf dem Konto, und du trägst $3.", "Quanto você saca? Há $2 de ouro depositado, e você carrega $3.", "いくら引き出す？　預金は$2枚、所持金は$3枚。"],
+    [/^You (deposit|withdraw) (\d+) gold\. On deposit: (\d+) gold\. In your purse: (\d+)\.$/, "You $1 $2 gold. On deposit: $3 gold. In your purse: $4.", "Mueves $2 de oro. Depositado: $3. En tu bolsa: $4.", "Vous déplacez $2 pièces d'or. En dépôt : $3. Dans votre bourse : $4.", "Du bewegst $2 Gold. Auf dem Konto: $3. Im Beutel: $4.", "Você move $2 de ouro. Depositado: $3. Na bolsa: $4.", "金貨$2枚を動かした。預金：$3枚。財布：$4枚。"],
     [/^· on the theme of (.+)$/, "· on the theme of $1", "· sobre el tema de $1", "· sur le thème de $1", "· über das Thema von $1", "· sobre o tema de $1", "· $1のテーマで"],
     [/^You've heard (\d+) of (\d+) \((\d+) pieces, and (\d+) of them warped\)\.$/, "You've heard $1 of $2 ($3 pieces, and $4 of them warped).", "Has oído $1 de $2 ($3 piezas, y $4 de ellas deformadas).", "Vous en avez entendu $1 sur $2 ($3 morceaux, dont $4 déformés).", "Du hast $1 von $2 gehört ($3 Stücke, davon $4 verzerrt).", "Você ouviu $1 de $2 ($3 peças, e $4 delas distorcidas).", "$2曲中$1曲を聴きました（$3曲と、その歪んだ版$4曲）。"],
     [/^Battle style · Slot (\d+)$/, "Battle style · Slot $1", "Estilo de combate · Ranura $1", "Style de combat · Emplacement $1", "Kampfstil · Platz $1", "Estilo de batalha · Espaço $1", "戦闘スタイル · スロット$1"],
@@ -47375,6 +47434,13 @@ body.pv-open { overflow: hidden; }
 
   // English | Español | Français | Deutsch | Português | 日本語
   const TABLE = [
+    // ---- the bank's amount picker ----
+    ["Deposit gold", "Depositar oro", "Déposer de l'or", "Gold einzahlen", "Depositar ouro", "金を預ける"],
+    ["Withdraw gold", "Retirar oro", "Retirer de l'or", "Gold abheben", "Sacar ouro", "金を引き出す"],
+    ["Half", "La mitad", "La moitié", "Die Hälfte", "Metade", "半分"],
+    ["One less", "Uno menos", "Un de moins", "Eins weniger", "Um a menos", "一枚減らす"],
+    ["One more", "Uno más", "Un de plus", "Eins mehr", "Um a mais", "一枚増やす"],
+    ["Amount of gold", "Cantidad de oro", "Quantité d'or", "Goldmenge", "Quantidade de ouro", "金額"],
     // ---- the warning at the gate ----
     ["WARNING", "ADVERTENCIA", "AVERTISSEMENT", "WARNUNG", "AVISO", "警告"],
     ["The stories say the labyrinth was sealed.", "Las historias dicen que el laberinto fue sellado.", "Les récits disent que le labyrinthe a été scellé.", "Die Geschichten sagen, das Labyrinth sei versiegelt worden.", "As histórias dizem que o labirinto foi selado.", "言い伝えでは、迷宮は封じられたという。"],
