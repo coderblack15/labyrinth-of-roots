@@ -2194,6 +2194,7 @@ body.pv-open { overflow: hidden; }
       <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
       <div class="belt kin" id="kinBox" hidden><span class="stat-label" id="kinLbl">Path</span><span class="belt-note" id="kinNote"></span></div>
+      <div class="belt kin" id="cxBox" hidden><span class="stat-label" id="cxLbl">Smoulder</span><span class="belt-note" id="cxNote"></span></div>
     </div>
     <div class="abilities">
       <div><b>+3</b><small>STR</small></div>
@@ -3567,6 +3568,14 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "119", name: "Thorn and Clockwork", date: "16 Nov 2026", items: [
+      "<b>Two new callings</b>, from Adrian's designs and paintings. Both start small and grow into the thing in the painting.",
+      "<b>The Dreadbloom Warden</b>: a thorn knight with an ember for a heart. Blows that land on you feed your <b>Smoulder</b>, and the cap grows the longer a fight runs. Spend it on Thornrend, then (as the Withered Colossus wakes) Ironwood Grasp and Funeral Grove. At level 40 the Colossus stands up beside you: <i>The roots remember. The machine remembers. Through me, they march again.</i>",
+      "<b>The Clockrunner</b>: master fate and become an inevitable executioner. You start as a street killer with a chronometer and a lens. Momentum, Tick Step, Precision Strike and Mark Flaw at first; at level 20 you become the <b>Hourblade</b> (Ticks, Echo Cut, Second Hand: wounds that land all at once), then the <b>Fatewalker</b> (Pendulum Step, Gear Lock) and the <b>Grand Horologian</b> (Stopped Midnight). At level 50, the Fate Engine.",
+      "Each comes with two paths, five scenes on the road in that come back on the roads back, a keepsake at the half milestone, things your company says at camp, and seven new feats in the pursuit <b>Thorn and Clockwork</b>.",
+      "<b>First Awakening.</b> Somewhere past level 22, in the middle of a hard fight, the thing you're growing into shows itself for one breath, uninvited: the whole Colossus, or the Fate Engine's clock-shadow. Then it's gone, and you know what's waiting at the end of the road.",
+      "<b>Relics of the calling.</b> Four Warden's relics and four Guild relics turn up after won fights as you rank up, and each one changes how a move works: the Rot-Censer feeds Smoulder from your thorns, the Escapement Pin turns a Tick Step into a counter, the Fate-Glass unmakes the first blow of every fight, and more. They sit with your other relics in the bag.",
+      "Ten of Adrian's paintings come in as the callings grow."] },
     { ver: "118", name: "Two More from the Armoury", date: "16 Nov 2026", items: [
       "<b>The Nightmare Armoury has five weapons now</b>, from Adrian's lineup painting. The painting itself hangs at the top of the journal's new <b>Nightmare Armoury</b> page and shows the first time a Nightmare leaves you a weapon.",
       "<b>The Cinderwheel</b> (Gloaming) is a dagger with gears in the hilt and an ember in the crossguard. Searing and Keen, and <b>Wind the Wheel</b>: the gears turn and the ember spins for four quick cuts, 4d6 fire.",
@@ -4411,7 +4420,7 @@ body.pv-open { overflow: hidden; }
     { id: "read", name: "Read Like a Book", desc: "Read one kind of foe all the way (5 reads) with Adaptive Reasoning.", test: () => Object.values(S.reads || {}).some(n => n >= 5) },
     { id: "print", name: "Copycat", desc: "Copy a foe's blow with Mockwax.", test: () => false },
     { id: "prints", name: "Full Print Book", desc: "Keep three prints in your print book at once.", test: () => (S.prints || []).length >= 3 },
-    { id: "hidden", name: "Everything Hidden", desc: "Find every hidden thing the Cascades washed loose.", test: () => (S.relics || []).length >= Object.keys(RELICS).length,
+    { id: "hidden", name: "Everything Hidden", desc: "Find every hidden thing the Cascades washed loose.", test: () => Object.values(RELICS).every(R => relic(R.key)),
       prog: () => [(S.relics || []).length, Object.keys(RELICS).length] },
     { id: "underdream", name: "The Underdream", desc: "Face the thing the Cascades fall from.", test: () => false },
     { id: "rslantern", name: "Light from the Deep", desc: "Bring the Lantern of Rahdaria over from Relicsong.", test: () => lantern() },
@@ -4687,6 +4696,15 @@ body.pv-open { overflow: hidden; }
     { id: "mtwagon", name: "Rolling Fort", desc: "Armour your cart.", test: () => false },
     { id: "mtfoal", name: "Bloodline", desc: "Breed a foal at a livery stable.", test: () => false },
     { id: "mtmend", name: "Back in One Piece", desc: "Have broken armour or barding mended.", test: () => false },
+    { id: "cl_bloom_all", name: "Rootfast", desc: "As a Dreadbloom Warden, meet all six of your calling's scenes on one journey.", test: () => clIs("bloom") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("bloom") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_bloom_use", name: "Briar-Clad", desc: "Raise the Black Briar Mantle thirty times on one journey.", test: () => clIs("bloom") && (S.cl.uses || 0) >= 30, prog: () => [clIs("bloom") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_clock_all", name: "Every Second Counted", desc: "As a Clockrunner, meet all six of your calling's scenes on one journey.", test: () => clIs("clock") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("clock") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_clock_use", name: "Flaw Found", desc: "Use Mark Flaw thirty times on one journey.", test: () => clIs("clock") && (S.cl.uses || 0) >= 30, prog: () => [clIs("clock") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_colossus", name: "It Stands Up", desc: "As a Dreadbloom Warden, wake the Withered Colossus in a fight.", test: () => false },
+    { id: "cl_midnight", name: "Zero Time", desc: "As the Grand Horologian, call Stopped Midnight in a fight.", test: () => false },
+    { id: "cl_wake1", name: "First Awakening", desc: "As a Dreadbloom Warden or a Clockrunner, see what you're becoming, years too early.", test: () => false },
+    { id: "cl_relics", name: "Relics of the Calling", desc: "Find all four relics of the Wardens or of the Escapement Guild on one journey.", test: () => false },
+    { id: "cl_asc", name: "The Form Behind You", desc: "Reach level 50 as a Dreadbloom Warden or a Clockrunner, and see what you were growing into.", test: () => false },
     { id: "cl_kin25", name: "Kindled", desc: "Use your path's kindled move twenty-five times on one journey.", test: () => !!cl() && (S.cl.kin || 0) >= 25, prog: () => [cl() ? Math.min(25, S.cl.kin || 0) : 0, 25] },
     { id: "clrank5", name: "Fifth Rank", desc: "Reach Rank V in your calling (level 40).", test: () => !!cl() && clRank() >= 5, prog: () => [cl() ? clRank() : 0, 5] },
     { id: "lgarmour", name: "Meant to Stand Still", desc: "Put on Warden's Plate.", test: () => false },
@@ -4852,7 +4870,9 @@ body.pv-open { overflow: hidden; }
     { id: "eye", name: "Duelist's Eye", ver: "44", desc: "A target profile on every duelist: styles, the tell rose, four zones to wound and maim, weak spots, and a skill that sharpens with use.",
       ids: ["eyefirst", "eyeread", "eyemaim", "eyerank"] },
     { id: "nightarms", name: "The Nightmare Armoury", ver: "45", desc: "Five weapons the Cascades grow inside their Nightmares, and the thorn knight sent to take them back.",
-      ids: ["nmflame", "nmflamed", "nmeye", "nmrime", "nmwheel", "nmthorn", "nmarmoury", "nmsentinel"] }
+      ids: ["nmflame", "nmflamed", "nmeye", "nmrime", "nmwheel", "nmthorn", "nmarmoury", "nmsentinel"] },
+    { id: "thornclock", name: "Thorn and Clockwork", ver: "46", desc: "Two new callings: the Dreadbloom Warden and its Withered Colossus, and the Clockrunner who becomes the Grand Horologian.",
+      ids: ["cl_bloom_all", "cl_bloom_use", "cl_clock_all", "cl_clock_use", "cl_colossus", "cl_midnight", "cl_wake1", "cl_relics", "cl_asc"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5264,6 +5284,8 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    smoulder: ["Smoulder", "The <b>Smoulder</b> meter in the foe box is the Dreadbloom Warden's: it fills by 1 each time a blow <b>lands on you</b>, and each foe that falls in a fight against many. Its cap grows the longer the fight runs. Spend it on the moves marked <b>Smoulder</b> in the menu."],
+    momentum: ["Momentum and Ticks", "The <b>Momentum</b> meter in the foe box is the Clockrunner's: it fills when your hits land and when a blow <b>misses you</b>. Spend it on Tick Step and Precision Strike. At level 20 it becomes <b>Ticks</b>, up to 12."],
     armour: ["Armour wear", "The <b>silver bar</b> under your HP is your armour. Blows that land wear it down: at half it's <b>dented</b> (−1 AC), and at nothing it's <b>broken</b> (half the AC your gear gives you is gone). It mends a little at the start of every part, all the way at a chapter's end, by half at an inn, and fully at a smith or Hobb Tallis's cart. A piece of scrap iron at a bench patches 5."],
     barding: ["Horse armour", "With your horse on a battle map, <b>1 blow in 4 lands on her</b>. Her barding (the silver bar over her brown health bar) takes it first. With no barding, or once it breaks, a blow on her can <b>throw you</b> (its next attack has advantage), and with broken barding or half her health she loses her extra step. At 0 she's lame until she rests. Barding mends with your armour."],
     horse: ["Your horse", "Where a horse can go, it goes with you: <b>+1 step</b> on the battle maps, and a mounted charge hits <b>+2</b> harder. Breaking away from a road fight is at advantage, the long roads back take one watch, and on the Wandering Board you can <b>gallop</b> twice a board, a step the world doesn't get. She waits outside the Labyrinth, the Hushfen, the cities under the ground and the sea."],
@@ -5943,6 +5965,8 @@ body.pv-open { overflow: hidden; }
     hero_elderwarden: "art/hero_elderwarden.webp",
     hero_duelist: "art/hero_duelist.webp",
     cl_axe: "art/cl_axe.webp",
+    cl_bloom: "art/cl_bloom.webp", cl_bloom_colossus: "art/cl_bloom_colossus.webp", cl_bloom_wake: "art/cl_bloom_wake.webp", cl_bloom_ascend: "art/cl_bloom_ascend.webp", cl_bloom_siege: "art/cl_bloom_siege.webp",
+    cl_clock: "art/cl_clock.webp", cl_clock_3: "art/cl_clock_3.webp", cl_clock_4: "art/cl_clock_4.webp", cl_clock_5: "art/cl_clock_5.webp", cl_clock_engine: "art/cl_clock_engine.webp",
     cl_hush: "art/cl_hush.webp",
     cl_song: "art/cl_song.webp",
     cl_tide: "art/cl_tide.webp",
@@ -6994,6 +7018,7 @@ body.pv-open { overflow: hidden; }
     if (S.mimic) items.push(["mimic", "mask", "Mimic", "Copy a foe's blow with Mockwax mid-fight and your next hit deals it too. Print book: " + ((S.prints || []).length ? S.prints.map(P => P.from + " (" + printTag(P) + ")").join("; ") : "empty") + "."]);
     if (S.mimic || S.wax) items.push(["wax", "vial", "Mockwax ×" + (S.wax || 0), "Tallow-moth wax with a memory. Press it into a fresh wound to take the print of the blow."]);
     Object.keys(RELICS).forEach(r => { const R = RELICS[r]; if (relic(R.key)) items.push(["relic-" + R.key, R.icon, R.name, R.fx]); });
+    Object.values(CX_RELICS).flat().forEach(R => { if (relic(R.key)) items.push(["relic-" + R.key, R.icon, R.name, R.fx]); });
     if (cascadeOn()) items.push(["cascade", "sick", "The Cascades", (S.wl && S.wl.on ? "Since the Welling, the Nightmares come up out of the water. " : "") + "Every creature is a Nightmare: tougher, +2 to hit and +2 damage while its Cascade threads hold. Its hits and its stare build Dread; at 6 Dread you're Overtaken and lose the fight. At half health it turns into the creature it fears." + (S.underdream ? " You can still them, or open them again, from the roads back." : " Somewhere they all fall from one place.")]);
   }
 
@@ -17996,7 +18021,7 @@ body.pv-open { overflow: hidden; }
       if (dist > 6) return "It's too far for the bow, " + dist + " squares off. Get within 6 on the map.";
       return dist === 1 || fdLos(fd, fd.you, fd.foe) ? null : "There's rock in the way. Move to where you can see it.";
     }
-    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit())) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
+    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit()) || String(c).startsWith("cx-s-")) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
     if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
     if (String(c).startsWith("fd-act-")) { const q = fdSpot(fd, c.slice(7)); if (!q) return "There's nothing left there to do."; return cheb(fd.you, q) <= 1 || (await closeIn(q)) ? null : "It's too far off, " + cheb(fd.you, q) + " squares. Move next to it on the map first."; }
     if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
@@ -18219,7 +18244,7 @@ body.pv-open { overflow: hidden; }
     S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
-    kinStart(st);
+    kinStart(st); cxStart(st);
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
     if (hasGear("bow")) {
@@ -18242,6 +18267,7 @@ body.pv-open { overflow: hidden; }
       st.round++; fightTurn();
       await bleedTick();
       await kinRound(st); if (FOE.hp <= 0) break;
+      await cxRound(F, st); if (FOE.hp <= 0) break;
       await lgRound(F, st); if (FOE.hp <= 0) break;
       await wxRound(F, st); if (FOE.hp <= 0) break;
       await hzRound(F, st); if (FOE.hp <= 0 || st.fled) break;
@@ -18264,6 +18290,7 @@ body.pv-open { overflow: hidden; }
       if (S.shawl && S.shawl.charge > 0 && !(st.quick > 0)) opts.push({ key: "quick", label: "Draw the Quickening Shawl round you", tag: (F.company || (!F.heads && FOE.max >= 45) ? "2 turns (it fights the slowing)" : "3 turns") + " where nothing answers you · then you're winded: its next swing has advantage · 1 charge, back at an inn or sanctuary", plain: true });
       clFightOpts(F, st).forEach(o => opts.push(o));
       kinOpts(F, st).forEach(o => opts.push(o));
+      cxOpts(F, st).forEach(o => opts.push(o));
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn", plain: true });
       if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
@@ -18289,9 +18316,9 @@ body.pv-open { overflow: hidden; }
         if (cleave) clUsed(st);
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
-        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st) + (kc ? " (" + clPath().mv + ")" : ""), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (kc ? kc.hit : 0), dc: kc && kc.sure ? 2 : F.ac - lgAcCut(), target: "AC", adv: st.adv || !!(kc && kc.adv), dis: dim || adrift || !!st.dis, cta: "Strike" });
+        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st) + (kc ? " (" + clPath().mv + ")" : ""), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (kc ? kc.hit : 0) + cxAtk(st), dc: kc && kc.sure ? 2 : F.ac - lgAcCut(), target: "AC", adv: st.adv || !!(kc && kc.adv), dis: dim || adrift || !!st.dis, cta: "Strike" });
         st.adv = false; st.dis = false;
-        const clx = a.ok ? clOnHit(cleave) : 0;
+        const clx = a.ok ? clOnHit(cleave) : 0, cxc = a.ok && cxCritNow(st);
         if (!kc && a.ok) kinSpark(st);
         if (a.ok && st.clQuiet) { st.clQuietDmg = st.clQuiet; st.clQuiet = 0; } else if (!a.ok) st.clQuiet = 0;
         if (a.ok) {
@@ -18302,10 +18329,11 @@ body.pv-open { overflow: hidden; }
             if (!F.company) await coMob();
           } else {
             if (glaive) { await foeStrike(kc ? 2 : 1, 10, 3 + fdDmg(st), "Glaive damage" + (kc ? " (critical)" : "") + (st.fd && st.fd.charged ? " (charge)" : "")); if (FOE.hp > 0) await foeBurst(1, 6, 0, "The glaive's song bites the shell"); }
-            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + clx + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (cleave ? " (Heartcleave)" : "") + (kc ? " (critical)" : "") + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
+            else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + clx + (S.bg === "hunter" && a.kept >= 19 ? d(8) : 0), "Axe damage" + (cleave ? " (Heartcleave)" : "") + (kc || cxc ? " (critical)" : "") + (st.fd && st.fd.charged ? " (charge)" : "") + (S.dull ? " (dulled)" : "") + (S.whet ? " (honed)" : "") + (S.bg === "hunter" && a.kept >= 19 ? " (Hunter's critical, +1d8)" : ""));
             if (FOE.hp > 0 && F.hitLine) await say(F.hitLine);
           }
           await clAfterHit(st);
+          await cxHit(F, st, rmHpB - FOE.hp);
           if (kc) await kinAfterCrit(F, st);
         } else if (F.missLine) await say(F.missLine);
       } else if (c === "gems") {
@@ -18388,6 +18416,7 @@ body.pv-open { overflow: hidden; }
       else if (String(c).startsWith("lg-")) await lgFightDo(c, F, st);
       else if (String(c).startsWith("fd-")) await fdDo(c, F, st);
       else if (String(c).startsWith("rm-")) await rmFightDo(c, F, st);
+      else if (String(c).startsWith("cx-")) await cxDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       if (c === "atk" && !F.heads) await rmEchoStrike(st, rmHpB - FOE.hp);
       if (st.fd) await fdAfterBlow(st);
@@ -18395,7 +18424,8 @@ body.pv-open { overflow: hidden; }
       if (st.quick > 0) {
         if (st.quickJust) { st.quickJust = false; continue; }
         st.quick--;
-        if (st.quick > 0) { await mech("Quickening: " + st.quick + " turn" + (st.quick > 1 ? "s" : "") + " left.", "loot"); continue; }
+        if (st.quick > 0) { await mech((st.cxZero ? "Zero Time: " : "Quickening: ") + st.quick + " turn" + (st.quick > 1 ? "s" : "") + " left.", "loot"); continue; }
+        if (st.cxZero) { await cxMidnight(F, st); if (FOE.hp <= 0) break; continue; }
         st.winded = true;
         await say("The world comes back all at once, loud, and you're gasping like you've run a mile.");
         await mech("Winded: its next swing has advantage.", "hurt");
@@ -18417,6 +18447,7 @@ body.pv-open { overflow: hidden; }
     foeEnd(!!st.fled);
     await lgEnd(F, st);
     light(back);
+    await cxAfterFight(F, st);
     if (F.sgWon === 3 && !hasGear("porctower")) await porcGive();
     if (hasSkill("mend") && S.hp < S.maxHp) {
       const n = d(6), before = S.hp;
@@ -18427,14 +18458,14 @@ body.pv-open { overflow: hidden; }
   // Evade: a better-than-even chance to slip each attack, for the price of your own swing.
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
-  const evadeChance = () => Math.max(0, (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (champOn() ? 10 : 0) - (rtOn() ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0) - lgEvadeCut());
+  const evadeChance = () => Math.max(0, (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + (hasGear("chronometer") ? 5 : 0) + (hasGear("cl_keep_clock") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (champOn() ? 10 : 0) - (rtOn() ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0) - lgEvadeCut());
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
     let bonus = (o.atk ?? F.atk) - (F.hesk && hasGear("lamp") ? 2 : 0) - (F.hesk && S.song >= 1 ? 1 : 0) - (F.road && hasMark("tally") ? 1 : 0);
     if (st.evade) {
       const ev = evadeChance();
-      if (d(100) <= ev) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + ev + "%).", "loot"); return false; }
+      if (d(100) <= ev) { await say(["You sway back and the blow goes past your chin.", "You turn side-on, and it slides off nothing.", "You drop low and roll, and it bites the ground where you were."][d(3) - 1]); await mech("Evaded (" + ev + "%).", "loot"); await cxDodged(F, st); return false; }
       await mech("You read it wrong. (Evade failed: " + ev + "%" + (ev < EVADE ? ", weighed down" : "") + ".)", "hurt");
     }
     if (st.split > 0) {
@@ -18457,9 +18488,11 @@ body.pv-open { overflow: hidden; }
       if (bloom) await bloomSave(bloom, "The cut goes pale at the edges, like frost on a window.");
       await clAfterBlow(F, st, clHp0);
       await kinAfterBlow(st, clHp0);
+      await cxAfterBlow(F, st, clHp0);
       await lgAfterHit(F, st, type);
       if (FOE.dreadOn && FOE.threads > 0) await dreadAdd(1, "Its blow lands, and the Cascade-water in it gets under your skin");
     } else if (F.miss && !hit0) await say(F.miss);
+    if (!hit) await cxDodged(F, st);
     return hit;
   }
 
@@ -25818,7 +25851,7 @@ body.pv-open { overflow: hidden; }
   }
 
   // ---------- callings: what you do with the axe ----------
-  // Adrian's ask (14 Nov 2026): classes. Six Callings, all native to this realm. You pick one after
+  // Adrian's ask (14 Nov 2026): classes. Six Callings, all native to this realm (eight since 16 Nov: the Dreadbloom Warden and the Clockrunner, further down). You pick one after
   // your background (an old save picks on Continue). Each Calling has a lean (+2 on some checks, +3
   // from Rank IV), a signature move in menu fights (once a fight, twice from Rank III), a starting
   // kit, and a rank every ten levels (I at 3, II at 10, III at 20, IV at 30, V at 40). On the road
@@ -25851,7 +25884,15 @@ body.pv-open { overflow: hidden; }
     root: { name: "Rootgrafter", who: "the healers who bind living root into wounds", lean: "Medicine, Nature and Constitution", re: /Medicine|Nature|Constitution/,
       sig: "Graft", kit: "the Graft-Knife and 2 Draughts of Mending", gear: "graftknife",
       blurb: "You set bones with your hands and close cuts with a sliver of live root. The labyrinth's roots know your touch, a little. They lean toward you.",
-      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", bind a sliver of root into your worst wound: regain " + (r >= 4 ? "2d8" : "1d8") + " + your level ÷ 5 HP" + (r >= 2 ? ", stop any bleeding" : "") + ", and the next blow on you is −" + (r >= 5 ? "3, and the one after too" : "2") + ". Costs your turn." }
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", bind a sliver of root into your worst wound: regain " + (r >= 4 ? "2d8" : "1d8") + " + your level ÷ 5 HP" + (r >= 2 ? ", stop any bleeding" : "") + ", and the next blow on you is −" + (r >= 5 ? "3, and the one after too" : "2") + ". Costs your turn." },
+    bloom: { name: "Dreadbloom Warden", who: "the old Wardens, who went down into the roots of the realm after the first siege", lean: "Constitution, Nature and Intimidation", re: /Constitution|Nature|Intimidation/,
+      sig: "Black Briar Mantle", kit: "4 more max HP, the Ember-Heart and a bandage", gear: "emberheart",
+      blurb: "A thorn knight with an ember for a heart. Something huge sleeps in your armour, roots and old iron and a dead clock: the Withered Colossus. It wakes as you grow, and at the end it stands up beside you. Blows that land on you feed the ember.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", let the thorns out of your armour: the next " + (r >= 4 ? "three" : "two") + " blows that land on you are −" + (r >= 3 ? 3 : 2) + ", and each one leaves 1d" + (r >= 2 ? 8 : 6) + " Rot in whatever struck you" + (r >= 5 ? ", and feeds you a Smoulder" : "") + ". Costs your turn." },
+    clock: { get name() { return clockForm(); }, who: "the Escapement Guild, the clockmakers who train killers on the side", lean: "Acrobatics, Perception and Investigation", re: /Acrobatics|Perception|Investigation/,
+      sig: "Mark Flaw", kit: "the Pocket Chronometer (+5% Evade) and 10 gold", gear: "chronometer",
+      blurb: "A street killer of the Escapement Guild: twin blades, a pocket chronometer, a lens in one eye. Every machine has a rhythm, and so does everything that fights. Start as a Clockrunner; become the Hourblade, the Fatewalker, the Grand Horologian.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", find the flaw: your next " + (r >= 4 ? "three" : "two") + " hits on it are at +2" + (r >= 3 ? " and certain criticals" : " and +1d6") + (r >= 2 ? ", and your next swing has advantage" : "") + ", and each one gives you an extra " + (r >= 3 ? "2 Ticks" : "Momentum") + ". Costs your turn." }
   };
   const CL_PICS = {
     axe: "A painting of the calling: a broad, weathered Black fighter in battered half-plate, holding the axe low and patient in both hands.",
@@ -25860,6 +25901,16 @@ body.pv-open { overflow: hidden; }
     tide: "A painting of the calling: a salt-weathered Black woman with beaded locs in an oilskin coat, a knotted sounding-line coiled over one shoulder and a brass moon-dial at her belt.",
     ink: "A painting of the calling: a scholar in a long coat with ink-black fingertips, the axe on one shoulder like a quill, lines of handwriting drifting in the dark behind.",
     root: "A painting of the calling: a calm figure in a brown work-robe, living roots wound round one forearm, a sprig of green growing from the axe's haft.",
+    bloom: "A painting of the calling: a knight in armour of black thorn and twisted branches, a crown of spikes for a helm, a glowing ember-heart in the chest, a long blade held low.",
+    clock: "A painting of the calling: a hooded killer in a ragged dark cloak, a bronze lens over one eye, a curved blade in a mechanical gauntlet, rune-cards circling in the dark.",
+    bloom_colossus: "A painting of the Withered Colossus: a towering figure of grey rotted wood and black root, its chest full of brass gears round a dead clock-face, one ember eye.",
+    bloom_wake: "A painting of a Warden's colossus of root and thorn with a burning heart, standing before a fortress under a waterfall as an army fills the field.",
+    bloom_ascend: "A painting of a thorn knight with an ember heart walking a muddy battlefield, a giant of root and gear with one ember eye striding behind him toward the enemy.",
+    bloom_siege: "A painting of three giants of root and thorn with burning hearts, standing before a fortress gate under a waterfall while an army surges round them.",
+    clock_3: "A painting of a hooded killer in a torn cloak, a curved blade in one hand, two great clockwork rings of gears turning round him in the dark.",
+    clock_4: "A painting of a cloaked figure with an hourglass on the chest and a long dagger, a column of clocks rising beside them toward a falling star.",
+    clock_5: "A painting of a dark-cloaked assassin cutting through armoured soldiers on a ruined field, a huge clock-face and spinning gears hanging in the storm above.",
+    clock_engine: "A painting of a hooded figure with a glowing bronze clockwork eye, a giant ghostly clock-face behind them, its hands like blades."
   };
   const CL_RANKS = ["", "I", "II", "III", "IV", "V"];
   const cl = () => S.cl && CALLINGS[S.cl.k] ? S.cl : null;
@@ -25880,6 +25931,11 @@ body.pv-open { overflow: hidden; }
     cl_keep_song: { name: "The Ninth Note", icon: "drum", desc: "A note you found in the white, where there should be nothing to hear. It lives in the axe now. Tempering Note does one more die." },
     cl_keep_tide: { name: "The Moon-Knot", icon: "map", desc: "The last knot on your Sounding-Line, tied at the edge of the white, where the tide of the world goes out. Read the Ebb comes back once more each fight." },
     cl_keep_ink: { name: "The Bound Margin", icon: "scroll", desc: "A strip of the Quire's own margin, sewn into your sleeve. Strike Through comes back once more each fight." },
+    emberheart: { name: "The Ember-Heart", icon: "herb", desc: "A coal that lives in your chest, behind the thorn-plate. It doesn't burn you. It burns for you. When you're hit, it gets brighter." },
+    chronometer: { name: "The Pocket Chronometer", icon: "ring", desc: "An Escapement Guild chronometer, brass and wound tight. You hear the gaps between its ticks better than the ticks. +5% Evade." },
+    protoeye: { name: "The Prototype Eye", icon: "ring", desc: "A crude mechanical monocle of brass and ground glass. It shows you where things are weak, and now and then where they're going to be. You start each fight with 1 Momentum." },
+    cl_keep_bloom: { name: "The Ash-Seed", icon: "herb", desc: "A seed from the last root before the white, warm as a coal. It grew into your ember. +5 max HP, and the Black Briar Mantle comes back once more each fight." },
+    cl_keep_clock: { name: "The Stopped Second", icon: "ring", desc: "A chronometer hand from the half milestone, stopped between two ticks. +5% Evade, and Mark Flaw comes back once more each fight." },
     cl_keep_root: { name: "The Living Graft", icon: "herb", desc: "A sliver of root you laid in your own arm at the half milestone. It took. +6 max HP, and Graft comes back once more each fight." }
   });
   const clKeep = () => S.cl && hasGear("cl_keep_" + S.cl.k);
@@ -25909,6 +25965,8 @@ body.pv-open { overflow: hidden; }
         if (pick === "song") S.potions = (S.potions || 0) + 1;
         if (pick === "tide") S.dress = (S.dress || 0) + 2;
         if (pick === "root") S.potions = (S.potions || 0) + 2;
+        if (pick === "bloom") { S.maxHp += 4; S.hp += 4; S.dress = (S.dress || 0) + 1; }
+        if (pick === "clock") S.coins += 10;
         box.querySelectorAll("button").forEach(x => x.disabled = true);
         box.remove();
         save(); renderSheet();
@@ -25925,15 +25983,18 @@ body.pv-open { overflow: hidden; }
     const C = CALLINGS[c.k], r = clRank();
     items.push(["calling", "token", "Calling: " + C.name + ", Rank " + CL_RANKS[r], "+" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + (r < 5 ? " Next rank at level " + [0, 10, 20, 30, 40][r] + "." : "")]);
     if (clPath()) items.push(["calling-path", "token", "Path: " + clPath().name, kinTxt(c.k, c.path, r)]);
+    if (cxOn()) items.push(["calling-power", "token", clIs("bloom") ? "The Withered Colossus: " + bloomState(r) : "The " + cxName() + " of the " + clockForm(r), cxTxt()]);
   }
   // A rank comes every ten levels; the story says so at the start of the next part.
   async function clRankNews() {
     const c = cl(); if (!c) return;
     const r = clRank();
     if (r <= (c.rk || 1)) { c.rk = Math.max(c.rk || 1, r); return; }
+    const was = c.rk || 1;
     c.rk = r;
     const C = CALLINGS[c.k];
     await mech("<b>" + C.name + ", Rank " + CL_RANKS[r] + ".</b> " + C.sig + ": " + C.sigTxt(r) + (r === 4 ? " Your lean is +3 now." : ""), "loot");
+    if (cxOn()) for (let k = was + 1; k <= r; k++) await cxForm(k);
     if (r >= 5) grant("clrank5");
   }
 
@@ -25949,6 +26010,8 @@ body.pv-open { overflow: hidden; }
     if (c.k === "song") return [{ key: "cls", label: "Hum the Tempering Note", tag: "next " + (r >= 4 ? 3 : 2) + " hits +" + (r >= 5 ? "2d6" : r >= 2 ? "1d8" : "1d6") + (F.hesk ? " · breaks the Hesk song" : "") + " · costs your turn" + n, plain: true }];
     if (c.k === "tide") return [{ key: "cls", label: "Read the Ebb", tag: "its next blow " + (r >= 4 ? "quartered" : "halved") + " · then +2 AC · costs your turn" + n, plain: true }];
     if (c.k === "ink") return [{ key: "cls", label: "Strike Through", tag: (r >= 4 ? "the next 2 blows that land miss" : "the next blow that lands misses") + " · costs your turn" + n, plain: true }];
+    if (c.k === "bloom") return [{ key: "cls", label: "Black Briar Mantle", tag: "the next " + (r >= 4 ? 3 : 2) + " blows on you −" + (r >= 3 ? 3 : 2) + " · each leaves 1d" + (r >= 2 ? 8 : 6) + " Rot in it · costs your turn" + n, plain: true }];
+    if (c.k === "clock") return [{ key: "cls", label: "Mark Flaw", tag: "your next " + (r >= 4 ? 3 : 2) + " hits +2" + (r >= 3 ? ", criticals" : ", +1d6") + (r >= 2 ? " · advantage on the next swing" : "") + " · costs your turn" + n, plain: true }];
     if (c.k === "root") return (S.hp < S.maxHp || bleeds().length) ? [{ key: "cls", label: "Graft", tag: (r >= 4 ? "2d8" : "1d8") + " + " + Math.floor(lv() / 5) + " HP · next blow −" + (r >= 5 ? 3 : 2) + " · costs your turn" + n, plain: true }] : [];
     return [];
   }
@@ -25957,7 +26020,15 @@ body.pv-open { overflow: hidden; }
   async function clFightDo(F, st) {
     const c = cl(), r = clRank();
     clUsed(st);
-    if (c.k === "hush") {
+    if (c.k === "bloom") {
+      st.cxBriar = r >= 4 ? 3 : 2;
+      await say("You stop, and let it out: thorns come up through every seam of your armour, black and long, until you look less like a knight than a walking thorn-tree.");
+      await mech("Black Briar Mantle: the next " + st.cxBriar + " blows that land on you are −" + (r >= 3 ? 3 : 2) + ", and each one leaves Rot in it.", "loot");
+    } else if (c.k === "clock") {
+      st.cxMark = r >= 4 ? 3 : 2; if (r >= 2) st.adv = true;
+      await say("You stop moving and look. Little bronze gears turn over " + (F.heads ? "the nearest of them" : F.who) + " where only you can see them, and catch, there: the flaw.");
+      await mech("Mark Flaw: your next " + st.cxMark + " hits are at +2" + (r >= 3 ? " and land as criticals" : " and do +1d6") + ".", "loot");
+    } else if (c.k === "hush") {
       st.clDis = r >= 5 ? 2 : 1; st.adv = true; st.clQuiet = r >= 4 ? 2 : r >= 2 ? 1 : 0;
       await say("You stop moving, and then you aren't where you were. " + (F.heads ? "They" : F.who[0].toUpperCase() + F.who.slice(1)) + " " + (F.heads ? "look" : "looks") + " round, once, for the place the noise went.");
       await mech("Go Quiet: " + (st.clDis > 1 ? "its next two blows are" : "its next blow is") + " at disadvantage, and your next swing has advantage.", "loot");
@@ -26003,6 +26074,7 @@ body.pv-open { overflow: hidden; }
     if (st.clDis > 0) { st.clDis--; dis = true; }
     if (st.clEbbAc > 0) { st.clEbbAc--; bonus -= 2; }
     if (st.clInkAtk) bonus -= 1;
+    if (st.cxGrove) bonus -= 1;
     return { bonus, dis };
   }
   // A blow that landed: true if it's struck through; otherwise softens it after the fact.
@@ -26060,7 +26132,17 @@ body.pv-open { overflow: hidden; }
       edge: { name: "The Thorn-Graft", style: "for those who grow teeth", mv: "Thornheart", kind: "crit", hit: 2, thorn: true,
         say: "You lay a sliver of blackthorn root along the axe-head, and it takes, the way your grafts always take. The edge comes up barbed." },
       mend: { name: "The Heartwood", style: "for those who will not fall", mv: "Heartwood", kind: "heal", big: true,
-        say: "You press your palm flat to the nearest root and ask. It answers, slow and green, and pushes its heartwood into you until the worst of it closes." } }
+        say: "You press your palm flat to the nearest root and ask. It answers, slow and green, and pushes its heartwood into you until the worst of it closes." } },
+    bloom: {
+      edge: { name: "The Thorn Crown", style: "for those who cut their way through", mv: "Crown of Thorns", kind: "crit", hit: 2, thorn: true,
+        say: "The spikes of your helm burn red, and the blade burns with them. You bring it round in one long stroke, and the thorns go in after it." },
+      mend: { name: "The Rootbound Wall", style: "for those who will not be moved", mv: "Rootbound", kind: "heal", guard: 3,
+        say: "You let your roots go down into the ground and drink. Whatever is down there, under the fight, it's old and patient, and it gives." } },
+    clock: {
+      edge: { name: "The Hourglass", style: "for those who end it in one stroke", mv: "Six Seconds Ago", kind: "crit", hit: 1, adv: true,
+        say: "You're not there. You were never there. It died six seconds ago, and you're only now showing it where." },
+      mend: { name: "The Pendulum", style: "for those who are never quite where the blow lands", mv: "Swing Back", kind: "heal", copy: true,
+        say: "You let the fight swing back, like a pendulum, to a moment when you were less hurt, and step out of it there." } }
   };
   const clPath = () => { const c = cl(); return c && c.path && CL_PATHS[c.k] ? CL_PATHS[c.k][c.path] : null; };
   const kinNeed = () => clRank() >= 4 ? 3 : 4;
@@ -26106,6 +26188,7 @@ body.pv-open { overflow: hidden; }
   }
   // The meter in the foe box.
   function renderKin() {
+    renderCx();
     const b = $("kinBox"); if (!b) return;
     const p = clPath(), st = FOE.on && FOE.F ? FOE.F.st : null;
     b.hidden = !p || !st;
@@ -26163,6 +26246,356 @@ body.pv-open { overflow: hidden; }
     if (lost <= 0) return;
     if (p.kind === "heal") kinSpark(st);
     if (st.kGuard > 0) { const back = Math.min(st.kGuard, lost); st.kGuard = 0; S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech("You hold the line: " + back + " less.", "loot"); }
+  }
+
+  // ---- the seventh and eighth callings: the Dreadbloom Warden and the Clockrunner ----
+  // Adrian's designs (16 Nov 2026). Both grow into themselves: the big thing in each painting comes
+  // late. The Warden's Withered Colossus sleeps in the armour (Dormant, Ranks I–II), half-wakes
+  // (Awakened, Ranks III–IV) and stands up beside you (Ascendant, Rank V). The Clockrunner is a street
+  // killer who becomes the Hourblade (III), the Fatewalker (IV) and the Grand Horologian (V); the Fate
+  // Engine itself only shows at level 50. Each has a meter in the foe box (st.cx): the Warden's
+  // Smoulder fills when blows land on it and its cap grows the longer a fight runs; the Clockrunner's
+  // Momentum (max 5) fills on hits and dodges and turns into Ticks (max 12) at the Hourblade.
+  // Moves that spend it are "cx-" options; "cx-s-" ones are swings (they need reach on a map).
+  const cxOn = () => clIs("bloom") || clIs("clock");
+  const cxAsc = () => lv() >= 50;
+  const clockForm = (r) => { r = r || clRank(); return r >= 5 ? "Grand Horologian" : r >= 4 ? "Fatewalker" : r >= 3 ? "Hourblade" : "Clockrunner"; };
+  const bloomState = (r) => { r = r || clRank(); return r >= 5 ? "Ascendant" : r >= 3 ? "Awakened" : "Dormant"; };
+  const cxName = () => clIs("bloom") ? "Smoulder" : clRank() >= 3 ? "Ticks" : "Momentum";
+  const cxT = (n) => clIs("clock") && clRank() >= 3 ? n * 2 : n; // Ticks run at twice Momentum
+  function cxMax(st) {
+    if (clIs("bloom")) return Math.min(10, 4 + Math.floor((st.round || 0) / 2) + (clRank() >= 3 ? 1 : 0));
+    return clRank() >= 3 ? 12 : 5;
+  }
+  function renderCx() {
+    const b = $("cxBox"); if (!b) return;
+    const st = FOE.on && FOE.F ? FOE.F.st : null;
+    b.hidden = !cxOn() || !st || st.cx == null;
+    if (b.hidden) return;
+    const m = cxMax(st), n = Math.min(m, st.cx);
+    $("cxLbl").textContent = cxName();
+    $("cxNote").textContent = m > 6 ? n + " / " + m : "●".repeat(n) + "○".repeat(m - n);
+  }
+  function cxGain(st, n) {
+    if (!cxOn() || st.cx == null || n <= 0) return;
+    st.cx = Math.min(cxMax(st), st.cx + n); renderCx();
+    tip(clIs("bloom") ? "smoulder" : "momentum");
+  }
+  function cxPay(st, n) { st.cx = Math.max(0, st.cx - n); renderCx(); }
+  function cxStart(st) {
+    if (!cxOn()) return;
+    st.cx = clIs("bloom") ? (clB("desert") === "coal" ? 1 : 0) + (cxAsc() ? 3 : 0) : (hasGear("protoeye") ? 1 : 0);
+    st.cxOnce = {}; st.cxEcho = []; st.cxHeads = FOE.hp; st.cxDeath = 0;
+    renderCx();
+  }
+  // Land a fixed amount on it (stored wounds, the Colossus). Head-count fights lose one per 10.
+  async function cxLand(F, n, label) {
+    if (FOE.hp <= 0 || n <= 0) return 0;
+    if (F.heads) { const k = Math.min(FOE.hp, Math.max(1, Math.floor(n / 10))); foeHit(k); comboKeep(); await mech(label + ": " + (k > 1 ? k + " of them go down." : "one of them goes down."), "loot"); return k; }
+    n += Math.floor(dmgUp() / 2);
+    FOE.hp = Math.max(0, FOE.hp - n); comboKeep(); renderFoe(); foePop("−" + n);
+    await mech(label + ": " + n + " damage. " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+    return n;
+  }
+  const roll = (c, s) => { let t = 0; for (let i = 0; i < c; i++) t += d(s); return t; };
+  // Every round: the meters grow, late wounds land, the Colossus moves.
+  async function cxRound(F, st) {
+    if (!cxOn() || st.cx == null) return;
+    const r = clRank();
+    if (clIs("bloom")) {
+      if (F.heads && FOE.hp < st.cxHeads) { cxGain(st, st.cxHeads - FOE.hp); st.cxFell = (st.cxFell || 0) + st.cxHeads - FOE.hp; } // Ashen Seed: the fallen feed the ember
+      if (r >= 3) cxGain(st, 1);
+      if (st.cxGrove && relic("br_seed") && FOE.hp > 0) await foeBurst(1, 6, st.cxFell || 0, "The First Oak's roots come up under it");
+      if (st.cxGrove && S.hp > 0 && S.hp < hpCap()) { S.hp = Math.min(hpCap(), S.hp + 2); renderSheet(); await mech("The grave-wood gives back: regain 2 HP.", "loot"); }
+    } else {
+      if (r >= 3) cxGain(st, 1);
+      if (r >= 3 && st.round % 3 === 0 && !(st.cxMark > 0)) { st.cxMark = 1; await mech("Clockwork Sight: bronze gears flicker over " + (F.heads ? "one of them" : F.who) + " for a breath. A weak point: your next hit on it is a critical.", "loot"); }
+    }
+    st.cxHeads = FOE.hp;
+    // Late wounds: the echo of a cut, or of a thorn-stroke.
+    const ec = st.cxEcho || []; st.cxEcho = [];
+    for (const e of ec) { if (FOE.hp <= 0) break; if (F.heads) await cxLand(F, 10, e[2]); else await foeBurst(e[0], e[1], e[3] || 0, e[2]); }
+    // The second hand reaches twelve.
+    if (st.cxClack > 0 && --st.cxClack === 0 && FOE.hp > 0) {
+      SND.discord && SND.discord();
+      await say("<b>Clack.</b> The silver clock over " + (F.heads ? "them" : F.who) + " reaches twelve, and every wound you wrote on " + (F.heads ? "them" : "it") + " arrives at once.");
+      await cxLand(F, st.cxStore, "Second Hand");
+      st.cxStore = 0;
+      if (FOE.hp <= 0) { cxGain(st, cxT(3)); await mech("It died on the hour: your Ticks come back.", "loot"); }
+    }
+    // The First Awakening (level 22+): once, the whole thing you're growing into shows itself for a breath, uninvited.
+    if (lv() >= 22 && !S.cl.wake1 && FOE.hp > 0 && st.round >= 2 && (S.hp <= hpCap() * 0.6 || st.round >= 4)) await cxWake1(F, st);
+    // The verdict runs out.
+    if (st.cxVerdict > 0 && --st.cxVerdict === 0 && FOE.hp > 0) {
+      if (PIC_SRC.cl_clock_engine && !(S.cl.seen || []).includes("verdict")) { (S.cl.seen = S.cl.seen || []).push("verdict"); add(framedPic(picUrl("cl_clock_engine"), CL_PICS.clock_engine, "The Fate Engine", "portrait")); }
+      await say("A clock the height of a house stands up behind " + (F.heads ? "them" : F.who) + ", made of nothing, all brass light and ticking. Its hands are a hair from midnight. They meet.");
+      await cxLand(F, st.cxVStore + roll(2, 10), "The Verdict at Midnight");
+      st.cxVStore = 0;
+      if (FOE.hp > 0) { st.stilled = true; await mech("It survives, and stands there, stunned by the weight of the time it just lost: it loses its next turn.", "loot"); }
+    }
+    // The Colossus stands.
+    if (st.cxGuard > 0 && FOE.hp > 0) {
+      const step = st.cxGPlan[st.cxGPlan.length - st.cxGuard];
+      st.cxGuard--;
+      if (step === "step") { await say("The Colossus lifts one root-bound foot the size of a cart and brings it down. The ground jumps, and " + (F.heads ? "they go up with it" : F.who + " goes up with it") + ", and comes down among cratered roots."); await cxLand(F, roll(3, 8) + Math.floor(lv() / 4), "Rootquake Step"); }
+      else if (step === "maw") { await say("Its chest opens like a door in a tree. Inside, leaves and ash and turning gears and the faces of the long dead go round and round, and the wind of it drags at " + (F.heads ? "them" : F.who) + "."); await cxLand(F, roll(3, 8) + Math.floor(lv() / 4), "Maw of Seasons"); st.clDis = (st.clDis || 0) + 1; if (FOE.hp > 0) await mech("Dragged off its feet: its next blow is at disadvantage.", "loot"); }
+      else { await say("The ember in its chest, which is the ember in yours, goes white. Then it goes out, all at once, outward."); await cxLand(F, roll(5, 8) + Math.floor(lv() / 3), "Extinction Pulse"); }
+      if (!st.cxGuard) await say("The Colossus folds down, root by root, gear by gear, back into your armour, until there's only the ember left, and it's warm.");
+    }
+  }
+  // A hit of yours landed (dealt = what it took off). Momentum, marks, echoes, stored futures.
+  async function cxHit(F, st, dealt) {
+    if (!cxOn() || st.cx == null || FOE.hp < 0) return;
+    const r = clRank();
+    if (clIs("clock")) {
+      cxGain(st, cxT(1));
+      if (st.cxMark > 0) {
+        if (relic("cr_spring") && dealt > 0 && FOE.hp > 0 && !F.heads) st.cxEcho.push([1, 8, "The Mirror Mainspring: the marked cut comes round again"]);
+        st.cxMark--; cxGain(st, cxT(1));
+        if (r < 3 && FOE.hp > 0) await foeBurst(1, 6, 0, "Into the flaw");
+      }
+      if (st.cxZero && FOE.hp > 0) { const m = d(10); st.cxDeath = (st.cxDeath || 0) + m; await mech("A Death Mark hangs where you struck: " + m + " more, when time comes back.", "loot"); }
+      if (st.cxVerdict > 0 && dealt > 0) { st.cxVStore = (st.cxVStore || 0) + dealt; await mech("The future keeps a copy of that wound (" + st.cxVStore + " stored).", "loot"); }
+      if (st.cxClack > 0) { const m = d(6) + (relic("cr_hair") ? d(6) : 0); st.cxStore += m; await mech("The silver clock writes it down: +" + m + " when it strikes twelve (" + st.cxStore + ").", "loot"); }
+      if (r >= 2 && dealt > 0 && FOE.hp > 0 && !F.heads) st.cxEcho.push([1, r >= 3 ? 8 : 6, "Echo Cut: the same cut lands again, a breath late"]);
+    }
+  }
+  // A blow landed on you: Smoulder, the briar's thorns, the Colossus' cover, the pendulum's memory.
+  async function cxAfterBlow(F, st, hp0) {
+    if (!cxOn() || st.cx == null || S.hp <= 0) return;
+    const lost = hp0 - S.hp; if (lost <= 0) return;
+    st.cxLast = lost;
+    if (clIs("clock") && relic("cr_glass") && !st.cxGlass) { st.cxGlass = true; S.hp = Math.min(hpCap(), S.hp + lost); renderSheet(); st.cxLast = 0; await mech("The Fate-Glass: you saw that one coming a week ago. It never happened. (" + lost + " HP back.)", "loot"); return; }
+    if (!clIs("bloom")) return;
+    const r = clRank();
+    cxGain(st, 1);
+    let back = 0; const why = [], briar = st.cxBriar > 0;
+    if (st.cxGuard > 0) { back += Math.floor(lost / 2); why.push("the Colossus takes half of it on its arm"); }
+    if (briar) {
+      st.cxBriar--;
+      back += Math.max(0, Math.min(r >= 3 ? 3 : 2, lost - back)); why.push("the briar takes some of it");
+      if (r >= 5) cxGain(st, 1);
+    }
+    if (back > 0) { S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech(why.join(", and ").replace(/^./, x => x.toUpperCase()) + ": " + back + " less.", "loot"); }
+    if (briar) {
+      if (F.heads) { if (d(2) === 1) { foeHit(1); await mech("Rot: the thorns stay in one of them, and it goes down.", "loot"); } }
+      else if (FOE.hp > 0) await foeBurst(1, r >= 2 ? 8 : 6, 0, "Rot: the thorns stay in it");
+      if (relic("br_censer")) cxGain(st, 1);
+    }
+  }
+  async function cxDodged(F, st) {
+    if (!clIs("clock") || st.cx == null) return;
+    cxGain(st, cxT(1));
+    if (st.cxCounter && relic("cr_pin") && FOE.hp > 0) { st.cxCounter = false; if (F.heads) { foeHit(1); await mech("The Escapement Pin: it swings into the gap you left, and you're already in it. One of them goes down.", "loot"); } else await foeBurst(1, 6, Math.floor(lv() / 5), "The Escapement Pin: you counter into the gap it left"); }
+  }
+  const cxAtk = (st) => clIs("clock") && st.cxMark > 0 ? 2 : 0;
+  const cxCritNow = (st) => clIs("clock") && st.cxMark > 0 && clRank() >= 3;
+  // A swing of the calling's own: the axe (or what's in your hand), with a twist.
+  async function cxSwing(F, st, o) {
+    const a = await check({ label: o.name + " (" + (wpnKey() === "axe" ? "axe" : wDef(wpnKey()).name) + ")" + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (o.hit || 0) + cxAtk(st), dc: F.ac - lgAcCut(), target: "AC", adv: st.adv || !!o.adv, dis: !!st.dis, cta: "Strike" });
+    const crit = !!o.crit || (o.critAdv && st.adv) || cxCritNow(st);
+    st.adv = false; st.dis = false;
+    if (!a.ok) { if (F.missLine) await say(F.missLine); return -1; }
+    kinSpark(st);
+    const h0 = FOE.hp;
+    if (F.heads) { const n = Math.min(FOE.hp, (await comboHeads(FOE.hp - 1)) + (crit ? 1 : 0)); foeHit(n); await say(n > 1 ? "You go through the first and into the second." : (F.hitLine || "One of them goes down and stays down.")); }
+    else await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st) + (o.dmg || 0), "Axe damage" + (crit ? " (critical)" : "") + " (" + o.name + ")");
+    await clAfterHit(st);
+    const dealt = h0 - FOE.hp;
+    await cxHit(F, st, dealt);
+    return dealt;
+  }
+  // What each one can do right now, as menu options.
+  function cxOpts(F, st) {
+    if (!cxOn() || st.cx == null) return [];
+    const r = clRank(), n = st.cx, o = [], noAtk = (F.noAtk && F.noAtk(st)) || st.rmNoAtk, U = " " + cxName();
+    const add = (key, cost, label, tag, show = true) => { if (show && n >= cost) o.push({ key, label, tag: cost + U + " · " + tag, plain: true }); };
+    if (clIs("bloom")) {
+      add("cx-s-rend", 3, "Thornrend", "a swing at +1 · " + (r >= 3 ? "roots erupt where it lands next round, 2d8" : "the roots in your armour repeat the stroke next round, 1d8"), !noAtk);
+      if (r >= 3) add("cx-grasp", 4, "Ironwood Grasp", "a hand of gear and root out of the ground · 2d8 + " + Math.floor(lv() / 4) + ", no roll · its next blow at disadvantage · costs your turn");
+      if (r >= 4) add("cx-grove", 5, "Funeral Grove", "once a fight · the rest of the fight its blows are −1 and you regain 2 HP a round · costs your turn", !st.cxOnce.grove);
+      if (r >= 5) add("cx-guard", 6, "The Colossus Stands", "once a fight · the Withered Colossus stands up beside you for " + (cxAsc() ? 4 : 3) + " rounds and halves the blows on you · costs your turn", !st.cxOnce.guard);
+    } else {
+      add("cx-step", cxT(1), r >= 4 ? "Pendulum Step" : "Tick Step", (r >= 4 && st.cxLast ? "back to where you stood: regain the " + st.cxLast + " HP its last blow took · " : "") + "its next blow at disadvantage · your next swing from behind, with advantage · costs your turn");
+      add("cx-s-prec", cxT(3) - (r >= 3 ? 1 : 0), "Precision Strike", "a swing at +2, +1d6 · a critical if you're behind it", !noAtk);
+      if (r >= 3) add("cx-hand", 6, "Second Hand", "no roll · a silver clock over it stores 2d8 + " + Math.floor(lv() / 3) + ", and every hit you land adds 1d6 · it all lands at once, the round after next · costs your turn", !(st.cxClack > 0));
+      if (r >= 4) add("cx-lock", 8, "Gear Lock", "once a fight · it's caught in its own machinery and loses its next turn · costs your turn", !st.cxOnce.lock);
+      if (r >= 5) add("cx-mid", 12, "Stopped Midnight", "once a fight · 3 turns of Zero Time where nothing answers you · each hit leaves a Death Mark · they all go off when time comes back", !st.cxOnce.mid && !(st.quick > 0));
+      if (cxAsc()) add("cx-verd", 10, "The Verdict at Midnight", "once a fight · for 3 rounds the future keeps a copy of every wound · then they all land at once, and a survivor is stunned · costs your turn", !st.cxOnce.verd);
+    }
+    return o;
+  }
+  async function cxDo(c, F, st) {
+    const r = clRank();
+    if (c === "cx-s-rend") {
+      cxPay(st, 3);
+      await say("You sweep the blade across, low and wide, and " + (r >= 3 ? "behind you something huge moves the same way." : "the thorns along your arm move with it."));
+      const dealt = await cxSwing(F, st, { name: "Thornrend", hit: 1 });
+      if (dealt >= 0 && FOE.hp > 0 && relic("br_bell")) { st.clDis = (st.clDis || 0) + 1; await mech("The Grave-Bell Gear tolls in the stroke: its next blow is at disadvantage.", "loot"); }
+      if (dealt >= 0 && FOE.hp > 0) st.cxEcho.push(r >= 3 ? [2, 8, "The ground opens where you struck, and roots come up through it"] : [1, 8, "The roots in your armour lash out and repeat the stroke"]);
+      return;
+    }
+    if (c === "cx-grasp") {
+      cxPay(st, 4);
+      await say("The ground breaks. A hand comes up out of it, the size of a door, wood and gear and black root, and closes on " + (F.heads ? "the nearest of them" : F.who) + ", and squeezes.");
+      await cxLand(F, roll(2, 8) + Math.floor(lv() / 4), "Ironwood Grasp");
+      if (FOE.hp > 0 && relic("br_heart")) { st.stilled = true; await mech("The Ironwood Heart: the hand doesn't let go. It loses its next turn.", "loot"); }
+      else if (FOE.hp > 0) { st.clDis = (st.clDis || 0) + 1; await mech("Rooted: its next blow is at disadvantage.", "loot"); }
+      return;
+    }
+    if (c === "cx-grove") {
+      cxPay(st, 5); st.cxOnce.grove = true; st.cxGrove = true;
+      await say("Where you stand, the ground goes grey and soft and starts to grow: black saplings, root-crosses, little grave-mounds with gears in them. In a breath you're standing in a woodland cemetery, and it's on your side.");
+      await mech("Funeral Grove: for the rest of the fight its blows are −1, and you regain 2 HP each round.", "loot");
+      return;
+    }
+    if (c === "cx-guard") {
+      cxPay(st, 6); st.cxOnce.guard = true; st.cxGPlan = cxAsc() ? ["step", "maw", "step", "pulse"] : ["step", "maw", "pulse"]; st.cxGuard = st.cxGPlan.length;
+      S.cl.guard = (S.cl.guard || 0) + 1; grant("cl_colossus");
+      if (S.cl.guard === 1 && PIC_SRC.cl_bloom_colossus) add(framedPic(picUrl("cl_bloom_colossus"), CL_PICS.bloom_colossus, "The Withered Colossus", "portrait"));
+      await say("The ember in your chest flares, and the roots go out of your armour into the ground, all of them, and the ground stands up. It's three times your height: rotted wood and black root and old iron gears, a dead clock in its chest, one ember eye. It has been with you the whole way. It was waiting to be big enough.");
+      await sayV("\"The roots remember. The machine remembers. Through me, they march again.\"");
+      await mech("The Colossus Stands: the Withered Colossus fights beside you for " + st.cxGuard + " rounds, and every blow on you is halved while it stands.", "loot");
+      return;
+    }
+    if (c === "cx-step") {
+      cxPay(st, cxT(1));
+      if (r >= 4 && st.cxLast && S.hp < hpCap()) {
+        const b = S.hp; S.hp = Math.min(hpCap(), S.hp + st.cxLast); renderSheet(); st.cxLast = 0;
+        await say("You go back. Not a step back: back, to where you stood before its last blow, a breath ago, and the wound isn't there yet, because it hasn't happened.");
+        await mech("Pendulum Step: regain " + (S.hp - b) + " HP.", "loot");
+      } else await say("You step through the gap between its tick and its tock, and you're behind it.");
+      st.clDis = (st.clDis || 0) + 1; st.adv = true; st.cxCounter = true;
+      await mech("Its next blow is at disadvantage, and your next swing has advantage." + (relic("cr_pin") ? " If it misses, you counter." : ""), "loot");
+      return;
+    }
+    if (c === "cx-s-prec") {
+      cxPay(st, cxT(3) - (r >= 3 ? 1 : 0));
+      await say(st.adv ? "You're already behind it. You put the point exactly where the flaw is." : "You wait for the half-beat where its guard is late, and go in on it.");
+      await cxSwing(F, st, { name: "Precision Strike", hit: 2, dmg: d(6), critAdv: true });
+      return;
+    }
+    if (c === "cx-hand") {
+      cxPay(st, 6); st.cxStore = roll(2, 8) + Math.floor(lv() / 3); st.cxClack = relic("cr_hair") ? 1 : 2;
+      await say("You go through " + (F.heads ? "the nearest of them" : F.who) + " like a draught through a door, and out the other side. Nothing happens. Above " + (F.heads ? "them" : "it") + ", a little silver clock you can only half see begins to tick toward twelve.");
+      await mech("Second Hand: " + st.cxStore + " stored. Every hit you land adds 1d6. It all lands the round after next.", "loot");
+      return;
+    }
+    if (c === "cx-lock") {
+      cxPay(st, 8); st.cxOnce.lock = true; st.stilled = true;
+      await say("You turn a key nobody else can see. Round " + (F.heads ? "them" : F.who) + " the air fills with the grinding of huge machinery, wheels inside wheels, and " + (F.heads ? "they" : "it") + " can't move inside it.");
+      await mech("Gear Lock: it loses its next turn.", "loot");
+      return;
+    }
+    if (c === "cx-mid") {
+      cxPay(st, 12); st.cxOnce.mid = true; st.cxZero = true; st.cxDeath = 0; st.quick = 3; st.quickJust = true;
+      grant("cl_midnight");
+      if (PIC_SRC.cl_clock_5 && !(S.cl.seen || []).includes("mid")) { (S.cl.seen = S.cl.seen || []).push("mid"); add(framedPic(picUrl("cl_clock_5"), CL_PICS.clock_5, "Stopped Midnight")); }
+      await say("The eye in your head goes round once, all the way, and stops. So does everything else. Blades hang in the air. Dust hangs. Somewhere a clock the size of the sky reads midnight, and holds it.");
+      await mech("Stopped Midnight: 3 turns of Zero Time. Every hit you land leaves a Death Mark, and they all go off when time comes back.", "loot");
+      return;
+    }
+    if (c === "cx-verd") {
+      cxPay(st, 10); st.cxOnce.verd = true; st.cxVerdict = 4; st.cxVStore = 0;
+      await say("You look at " + (F.heads ? "them" : F.who) + ", and see the end of " + (F.heads ? "them" : "it") + ", clear as a face on a clock, a little way ahead. You decide when.");
+      await mech("The Verdict at Midnight: for 3 rounds the future keeps a copy of every wound you land. Then they all arrive at once.", "loot");
+    }
+  }
+  // When Zero Time runs out: every Death Mark at once.
+  async function cxMidnight(F, st) {
+    st.cxZero = false;
+    await say("Time comes back. It comes back all at once, and it brings everything you did in it.");
+    if (FOE.hp > 0 && st.cxDeath > 0) await cxLand(F, st.cxDeath, "Every Death Mark goes off");
+    st.cxDeath = 0;
+  }
+  // Rank changes and the ascension at 50: the paintings come in as the calling grows.
+  async function cxForm(r) {
+    if (clIs("bloom")) {
+      if (r === 3) { if (PIC_SRC.cl_bloom_wake) add(framedPic(picUrl("cl_bloom_wake"), CL_PICS.bloom_wake, "Awakened")); await say("You wake one night with root-ends through your bedroll and an ember-ache in your chest, and in the dark behind you something the size of a house is breathing, slowly, half there. The Colossus is awake. Not all of it. Enough to reach."); await mech("<b>Awakened.</b> Smoulder grows by one every round, its cap is higher, Thornrend erupts roots, and <b>Ironwood Grasp</b> is yours (4 Smoulder).", "loot"); }
+      if (r === 4) await mech("<b>Funeral Grove</b> is yours (5 Smoulder, once a fight): the ground where you fight turns to a woodland cemetery that's on your side.", "loot");
+      if (r === 5) { if (PIC_SRC.cl_bloom_ascend) add(framedPic(picUrl("cl_bloom_ascend"), CL_PICS.bloom_ascend, "Ascendant")); await say("It stands up. Not in a fight: on an ordinary morning, on the road, while you're tying your boots. It stands up behind you, the whole of it, and looks at the world with its one ember eye, and then folds down again. It wanted you to see it once, before you need it."); await mech("<b>Ascendant.</b> <b>The Colossus Stands</b> is yours (6 Smoulder, once a fight).", "loot"); }
+    } else {
+      if (r === 2) { S.gear = S.gear || []; if (!S.gear.includes("protoeye")) S.gear.push("protoeye"); await mech("<b>Echo Cut.</b> Every hit you land now lands again a breath later, for 1d6. Wait: did you hit it twice? You did. And you've built yourself a lens: <b>" + GEAR.protoeye.name + ".</b> " + GEAR.protoeye.desc, "loot"); }
+      if (r === 3) { if (PIC_SRC.cl_clock_3) add(framedPic(picUrl("cl_clock_3"), CL_PICS.clock_3, "The Hourblade", "portrait")); await say("Somewhere between one fight and the next, the ticking you've always heard stops being a sound and starts being a map. You know where they're going before they move. You aren't a Clockrunner any more."); await mech("<b>The Hourblade.</b> Momentum becomes <b>Ticks</b> (up to 12, gaining twice as fast). Clockwork Sight marks a weak point every third round, marked hits are criticals, and <b>Second Hand</b> is yours (6 Ticks).", "loot"); }
+      if (r === 4) { if (PIC_SRC.cl_clock_4) add(framedPic(picUrl("cl_clock_4"), CL_PICS.clock_4, "The Fatewalker", "portrait")); await say("The brass has started to grow into you: a ring of it round one wrist, a hairline round your eye. In the dark, a dozen clocks you can't see are all keeping your time."); await mech("<b>The Fatewalker.</b> Tick Step becomes <b>Pendulum Step</b>, which takes back the last blow, and <b>Gear Lock</b> is yours (8 Ticks, once a fight).", "loot"); }
+      if (r === 5) { if (PIC_SRC.cl_clock_5) { (S.cl.seen = S.cl.seen || []).push("mid"); add(framedPic(picUrl("cl_clock_5"), CL_PICS.clock_5, "The Grand Horologian")); } await say("They tell a story on the roads about a killer called the Grand Horologian, whose enemies died before the blade arrived. You've heard it all your life. One night you hear somebody tell it, and realise they mean you."); await mech("<b>The Grand Horologian.</b> <b>Stopped Midnight</b> is yours (12 Ticks, once a fight).", "loot"); }
+    }
+  }
+  // The First Awakening: an unearned glimpse, years early, of the form at the end of the road.
+  async function cxWake1(F, st) {
+    S.cl.wake1 = true; grant("cl_wake1");
+    if (clIs("bloom")) {
+      if (PIC_SRC.cl_bloom_colossus) add(framedPic(picUrl("cl_bloom_colossus"), CL_PICS.bloom_colossus, "Something stands up behind you", "portrait"));
+      await say("You don't call it. You couldn't if you tried. The ember in your chest goes white, and every root in your armour goes into the ground at once, and behind you the ground stands up: all of it, three times your height, rot and root and iron gears and a dead clock in its chest, one ember eye. It looks at " + (F.heads ? "them" : F.who) + ".");
+      await cxLand(F, roll(3, 8) + Math.floor(lv() / 4), "It puts one foot down");
+      await say("And then it's gone, back into your plates, all at once, and you're on your knees with your ears ringing and the ember aching. You didn't do that. Not yet. But that's what's in there. That's what you're becoming.");
+      await mech("<b>First Awakening.</b> The Withered Colossus showed itself for a breath. It will stand up for you, when you're big enough to hold it: level 40.", "loot");
+    } else {
+      if (PIC_SRC.cl_clock_engine) add(framedPic(picUrl("cl_clock_engine"), CL_PICS.clock_engine, "Something behind you, ticking", "portrait"));
+      await say("For one breath everything stops, and you didn't stop it. Behind you, where there's only air, a shadow stands up the height of a bell-tower: a clock-face, brass and black, its hands like blades, and in the middle of it an eye, your eye, looking at " + (F.heads ? "them" : F.who) + " as if " + (F.heads ? "they've" : "it's") + " already finished.");
+      await cxLand(F, roll(3, 8) + Math.floor(lv() / 4), "The hands twitch, once");
+      await say("Then it's gone, and the world starts again, loud, and you're gasping. You didn't do that. Not yet. But you saw where the road goes, and what's waiting at the end of it, wearing your face.");
+      await mech("<b>First Awakening.</b> The Fate Engine showed itself for a breath. It will stand behind you for good at level 50.", "loot");
+    }
+  }
+  // Calling relics: things of the old Wardens and the Escapement Guild, turned up after won fights
+  // once you're ready for them. Each one changes how a move works, rather than adding numbers.
+  // They live in S.relics with the Cascade relics, and show in the bag beside them.
+  const CX_RELICS = {
+    bloom: [
+      { key: "br_censer", r: 1, icon: "ember", name: "The Rot-Censer", fx: "The Black Briar's Rot feeds you: each Rot that lands gives 1 Smoulder.", find: "In the wreck of the fight there's something smouldering that isn't any of the dead: a little iron censer, a Warden's, its chain grown through with thorn. The smoke that comes off it smells of autumn and doesn't rise. It goes into your armour and stays." },
+      { key: "br_bell", r: 2, icon: "caltrop", name: "The Grave-Bell Gear", fx: "Thornrend tolls: when it lands, the foe's next blow is at disadvantage.", find: "Half-buried where it fell is a toothed iron wheel off some old grave-bell, with a root grown through the hub. When you lift it, it tolls, once, though there's no bell. The Colossus in you knows the sound. It wants it." },
+      { key: "br_heart", r: 3, icon: "grain", name: "The Ironwood Heart", fx: "Ironwood Grasp holds: the foe loses its next turn instead of only swinging at disadvantage.", find: "Where your hand of root came up out of the ground, it's left something behind: a knot of ironwood the size of a heart, still warm, still beating, slowly. You put it inside your plates beside the ember. The two of them beat together." },
+      { key: "br_seed", r: 4, icon: "herb", name: "The Seed of the First Oak", fx: "Funeral Grove bites: every round it does 1d6 to the foe, +1 for each one that fell in it.", find: "In the grave-wood after the fight, among the black saplings, one is green. At its foot is an acorn the size of a fist, and the old song is true: it's off one of the first oaks, the ones that grew where the first Wardens went down." }
+    ],
+    clock: [
+      { key: "cr_pin", r: 1, icon: "blade", name: "The Escapement Pin", fx: "Tick Step counters: if its next blow misses you, you strike into the gap for 1d6.", find: "On the ground where you were standing a breath ago there's a little brass pin, the kind that holds an escapement's pallets, stamped with the Guild's mark. It's warm, as if it's been in somebody's pocket for a hundred years. Every Clockrunner knows the story: the first one carried it." },
+      { key: "cr_spring", r: 2, icon: "ring", name: "The Mirror Mainspring", fx: "Marked hits echo: a hit into a Marked Flaw lands again a breath later, for 1d8.", find: "Something glints in the dirt: a coiled mainspring of silvered steel, so finely wound it reflects you a hundred times over, each one a hair behind the last. Wear it and you strike twice in the same place, the second time from a hundred reflections away." },
+      { key: "cr_hair", r: 3, icon: "ring", name: "The Silver Hairspring", fx: "Second Hand runs fast: its clock strikes twelve a round sooner, and each hit you write on it adds 2d6.", find: "Among the dead, ticking faintly, is a hairspring of pure silver, the heart of some master's watch. Hold it to your ear and it runs at twice the speed of anything. Somebody in the Guild made it to kill something very fast." },
+      { key: "cr_glass", r: 4, icon: "clue", name: "The Fate-Glass", fx: "The first blow that lands on you each fight never happened: you get the HP straight back.", find: "Where it fell, there's a lens of grey glass no bigger than a coin. Look through it and you see this place a minute from now: yourself, walking away. Look again and you see the blow that would have killed you last week, coming, slowly, and you step aside from it, a week late." }
+    ]
+  };
+  async function cxRelicFind(F, st) {
+    const list = CX_RELICS[S.cl.k] || [];
+    const R = list.find(x => !relic(x.key));
+    if (!R || clRank() < R.r) return;
+    S.cl.rTry = (S.cl.rTry || 0) + 1;
+    if (S.cl.rTry < 6 && d(4) > 1) return;
+    S.cl.rTry = 0;
+    const h = el("div", "part-head sub", '<span class="num">' + (clIs("bloom") ? "A Warden's relic" : "A Guild relic") + "</span><h2>" + R.name + "</h2>");
+    scrollNext = true; add(h);
+    await say(R.find);
+    S.relics = (S.relics || []).concat([R.key]);
+    save(); renderSheet();
+    await mech("Found <b>" + R.name + "</b>. " + R.fx + " (" + list.filter(x => relic(x.key)).length + " of " + list.length + " " + (clIs("bloom") ? "Warden's" : "Guild") + " relics.)", "loot");
+    if (list.every(x => relic(x.key))) grant("cl_relics");
+  }
+  async function cxAfterFight(F, st) {
+    if (!cxOn()) return;
+    await clRankNews();
+    if (F && st && FOE.hp <= 0 && !st.fled) await cxRelicFind(F, st);
+    if (cxAsc() && !S.cl.asc) {
+      S.cl.asc = true; save(); grant("cl_asc");
+      if (clIs("bloom")) {
+        if (PIC_SRC.cl_bloom_colossus) add(framedPic(picUrl("cl_bloom_colossus"), CL_PICS.bloom_colossus, "The Withered Colossus", "portrait"));
+        await say("At the fiftieth ring the ember in your chest stops being a wound. The Colossus doesn't fold all the way down any more. Its roots stay in the ground wherever you stand, and its eye stays open.");
+        await mech("<b>Ascension.</b> You start every fight with 3 Smoulder, and the Colossus stands for 4 rounds.", "loot");
+      } else {
+        if (PIC_SRC.cl_clock_engine) { (S.cl.seen = S.cl.seen || []).push("verdict"); add(framedPic(picUrl("cl_clock_engine"), CL_PICS.clock_engine, "The Fate Engine", "portrait")); }
+        await say("At the fiftieth ring you stop fighting inside time. The Fate Engine stands behind you now, all the time, a clock-face as big as a gate, ticking very quietly. Only you can hear it. Everyone else can feel it.");
+        await mech("<b>Ascension.</b> <b>The Verdict at Midnight</b> is yours (10 Ticks, once a fight).", "loot");
+      }
+    }
+  }
+  // For the journal and the bag: what the calling can do now.
+  function cxTxt() {
+    const rel = (CX_RELICS[S.cl.k] || []).map(R => relic(R.key) ? R.name : "<i>not yet found</i>").join(", ");
+    return cxTxt0() + " Relics of the calling (they turn up after won fights as you rank up): " + rel + ".";
+  }
+  function cxTxt0() {
+    const r = clRank();
+    if (clIs("bloom")) return "<b>Smoulder</b>: +1 when a blow lands on you, +1 for each foe that falls in a fight against many" + (r >= 3 ? ", +1 every round" : "") + "; the cap grows the longer a fight runs. Spend it on <b>Thornrend</b> (3)" + (r >= 3 ? ", <b>Ironwood Grasp</b> (4)" : "") + (r >= 4 ? ", <b>Funeral Grove</b> (5)" : "") + (r >= 5 ? ", <b>The Colossus Stands</b> (6)" : "") + ". The Colossus is " + bloomState(r) + (r < 5 ? "; it wakes further at level " + (r < 3 ? 20 : 40) : "") + ".";
+    return "<b>" + cxName() + "</b>: +" + cxT(1) + " for each hit and each blow that misses you" + (r >= 3 ? ", +1 a round" : "") + ". Spend it on <b>" + (r >= 4 ? "Pendulum" : "Tick") + " Step</b> (" + cxT(1) + "), <b>Precision Strike</b> (" + (cxT(3) - (r >= 3 ? 1 : 0)) + ")" + (r >= 3 ? ", <b>Second Hand</b> (6)" : "") + (r >= 4 ? ", <b>Gear Lock</b> (8)" : "") + (r >= 5 ? ", <b>Stopped Midnight</b> (12)" : "") + (cxAsc() ? ", <b>The Verdict at Midnight</b> (10)" : "") + "." + (r >= 2 ? " Echo Cut: your hits land again a breath later." : "");
   }
 
   // ---- the road into six chapters ----
@@ -26383,6 +26816,85 @@ body.pv-open { overflow: hidden; }
         else { xpGain(30); await say("Its blood is grey and cold and its wound is the same as anyone's. When you've closed it, it taps something on the chain with one finger. A guard says it means <i>debt</i>."); }
         return c; } },
       unmapped: { t: "Roots in the White", run: async () => clLast("root") }
+    },
+    bloom: {
+      desert: { t: "The Ember in the Dead Tree", run: async () => {
+        await say("In a fold of the dunes stands a thorn-tree that died a hundred years ago, black and split, half sand. In the split there's a coal, still glowing. Nobody feeds it. It's been burning on its own since before the caravans.");
+        await say("The ember in your chest knows it. It goes warm, the way a dog's tail goes when it hears its name.");
+        const c = await choose([{ key: "feed", label: "Give it some of your fire", tag: "it'll cost you · something may grow" }, { key: "coal", label: "Take the coal into your armour", tag: "you start every fight with 1 Smoulder", plain: true }, { key: "bury", label: "Bury it, so nothing else finds it", plain: true }]);
+        if (c === "feed") { S.hp = Math.max(1, S.hp - 3); xpGain(40); renderSheet(); await say("You put your palm on the split and let the ember out of you, a little. It hurts like a burn. The coal takes it, and brightens, and a green shoot pushes out of the dead wood beside your hand."); }
+        if (c === "coal") { await say("It's hot as a forge when you lift it and cool by the time it's inside the plates, and it settles there beside the other one. Two embers. They seem to like each other."); await mech("The tree's coal: you start every fight with 1 Smoulder.", "loot"); }
+        if (c === "bury") await say("You heap sand over the split until the glow is gone. Somewhere under it, it goes on burning.");
+        return c; } },
+      carrowmere: { t: "The Drowned Mill", run: async () => {
+        await say("Where a stream runs into the lake there's a drowned watermill. Its great wheel is under the water, and it's still turning, slowly, though the stream can't push it any more. Roots have grown through the paddles and into the gears, and the roots are what's turning it now. Root and machine, grown into one thing.");
+        await say("A woman on the bank says it was her father's mill. \"It goes all night,\" she says. \"Grinding nothing. I can't sleep for it.\"");
+        const c = await choose([{ key: "free", label: "Cut the roots out of the wheel", tag: "an afternoon in cold water · her mill back" }, { key: "bind", label: "Let it finish growing", tag: "you know what it's becoming", plain: true }]);
+        if (c === "free") { xpGain(35); await say("It takes until dark, up to your chest in the lake, with the thorns of your own arms helping. The last root comes out and the wheel stops dead. In the silence the woman on the bank starts to cry, and then to laugh."); }
+        if (c === "bind") { await say("You lay your hand on the turning wheel and let your roots talk to its roots. It shudders, and climbs, root over gear, out of the water, and stands up on the bank as tall as the mill, and walks off along the shore to stand guard over the lake. The woman watches it go with her mouth open."); await mech("The mill-thing will remember who woke it.", "loot"); }
+        return c; } },
+      assize: { t: "The Thorn in the Dock", run: async () => {
+        await say("In a side court of the Glass Assize a girl of sixteen is on trial for growing. Her name is Wenlow Pike, and thorns come out of the backs of her hands when she's frightened, and she's frightened now. The charge is 'unlicensed wildness'. The sentence, if it goes against her, is glassing.");
+        await say("She sees your armour and the thorns in it, and stares, and you see her think: <i>there's two of us.</i>");
+        const c = await choose([{ key: "speak", label: "Stand up and speak for her", tag: "Intimidation · the court will notice you" }, { key: "fine", label: "Pay her fine before it comes to a verdict", tag: S.coins >= 15 ? "15 gold" : "you don't have it", show: S.coins >= 15, plain: true }, { key: "leave", label: "It's not your court", plain: true }]);
+        if (c === "speak") { const r = await check({ label: "Intimidation check (the Glass court)", mod: 3, dc: 13, cta: "Stand" }); if (r.ok) { await say("You stand up, and the thorns stand up with you, all over you, and you say that she's yours, a Warden's apprentice, and anybody who wants to glass her can start with you. Nobody does. She walks out free."); return "speak"; } await say("They hear you out, and glass her anyway, a little: a band of glass round each wrist, to keep the thorns in. She looks at you on the way out. She doesn't blame you. That's worse."); return "lost"; }
+        if (c === "fine") { S.coins -= 15; renderSheet(); await say("Fifteen gold, and a clerk's stamp, and she's out on the steps blinking in the glare. She doesn't know what to say. She takes a thorn off the back of her hand and gives it to you."); }
+        if (c === "leave") await say("You go out. Behind you the court is very quiet, and then the kiln-bell rings.");
+        return c; } },
+      corrach: { t: "The Rusted Sentry", run: async () => {
+        await say("High on the Corrach scree stands an old mine-engine that nobody remembers building: an iron frame the height of three men, a boiler for a chest, and root grown all through it, so it looks half tree. The miners say it walks at night. They leave it alone.");
+        await say("As you pass, the ember in your chest flares, and in the engine's chest a coal you didn't see flares back, and one rusted eye-lamp opens.");
+        const c = await choose([{ key: "wake", label: "Give it a spark, and see what it does", tag: "it'll go where it wants" }, { key: "rest", label: "Lay it to rest, and take its heart-gear", tag: "+4 max HP", plain: true }]);
+        if (c === "wake") { xpGain(35); await say("You touch your ember to its boiler. It groans all through, like a ship in a storm, and stands, and shakes off a century of scree, and walks down the mountain to Ashgate, and stops in front of the gate, and turns round, and doesn't move again. It's guarding something now."); }
+        if (c === "rest") { S.maxHp += 4; S.hp += 4; renderSheet(); await say("You put your hand on its chest and tell it, quietly, that it can stop. The lamp goes out. The roots let go. In the boiler there's a gear the size of your fist, warm, with a thorn grown through the axle. It fits inside your plates."); await mech("The Sentry's heart-gear: +4 max HP.", "loot"); }
+        return c; } },
+      rahdaria: { t: "Where the Wardens Stood", run: async () => {
+        if (PIC_SRC.cl_bloom_siege) add(framedPic(picUrl("cl_bloom_siege"), CL_PICS.bloom_siege, "The old song of the Land Gate"));
+        await say("The old gate-keeper at the Land Gate has a song nobody else bothers with any more: in the first siege, before the city had a name, three giants of root and thorn came up out of the ground and stood in front of the gate, and the army broke on them like water. Their hearts burned. When it was done they went back into the ground, and the first oaks grew where they went down.");
+        await say("He sees the ember through the gaps in your plates and stops singing. \"Oh,\" he says. \"Oh, it's one of you.\"");
+        const c = await choose([{ key: "hold", label: "Plant your blade in the gate's root and swear to it", tag: "the blockade starts better" }, { key: "ask", label: "Ask him for the rest of the song", tag: "what happened to the Wardens", plain: true }]);
+        if (c === "hold") { await say("There's an old root under the Land Gate's threshold, older than the stone. You kneel and set your blade's point to it and swear, and the root, very slowly, closes round the point and holds it a moment before it lets go."); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else { xpGain(45); await say("The rest of the song is short. The Wardens went down into the ground, it says, and grew into the roots of the realm, and they're still there. They're the roots you've been walking on since the labyrinth. Some of them, the old man says, walk again, in people. He looks at you. \"That's the last verse,\" he says."); }
+        return c; } },
+      unmapped: { t: "Ash at the Half Milestone", run: async () => clLast("bloom") }
+    },
+    clock: {
+      desert: { t: "The Stopped Water-Clock", run: async () => {
+        await say("The caravanserai's water-clock stopped the night a caravan was robbed in the yard, and nobody's had the heart or the skill to start it. The caravan master still wants to know who did it. He's offering a purse.");
+        await say("You look at the clock. The float stuck at the second hour. The wear on the gate-bar says someone forced it, from inside, to stop the bell that would have woken the yard. Someone who knew clocks. You look at the caravanserai's clock-keeper, and he looks at the floor.");
+        const c = await choose([{ key: "fix", label: "Start the clock again, and say nothing", tag: "the yard will sleep easier" }, { key: "tell", label: "Tell the caravan master who stopped it", tag: "2d6 + 10 gold", plain: true }]);
+        if (c === "fix") { xpGain(35); await say("You free the gate-bar and set the float, and the water starts to drip again, and on the hour the little bell rings for the first time in a year. The clock-keeper won't meet your eye. In the morning he's gone, and the caravan master never knows."); }
+        if (c === "tell") await gold(2, 6 + 10, "The caravan master's men take the clock-keeper out to the edge of the sands. You don't watch. The purse is heavy.");
+        return c; } },
+      carrowmere: { t: "The Runaway Engineer", run: async () => {
+        await say("In a fisher's loft by the lake you find a man you know by his hands: an engineer of the Escapement Guild, the clockmakers who trained you, with a stolen satchel of their tools and a mechanical eye he built himself and shouldn't have. Pell Tansey. The Guild wants him back. He'd rather drown.");
+        const c = await choose([{ key: "take", label: "Take the eye off him", tag: "Acrobatics · DC 13 · he's quick" }, { key: "let", label: "Let him go, tools and all", tag: "the Guild won't thank you", plain: true }]);
+        if (c === "take") {
+          const r = await check({ label: "Acrobatics check (a fight in a loft)", mod: 3, dc: 13, cta: "Go" });
+          if (r.ok) { S.gear = S.gear || []; if (!S.gear.includes("protoeye")) S.gear.push("protoeye"); await say("He's quick, but you've seen this fight before, a breath before it happens. You're behind him, and then the eye's in your hand, and he's on the floor with his hands up, laughing, because what else is there."); await mech("<b>" + GEAR.protoeye.name + ".</b> " + GEAR.protoeye.desc, "loot"); return "take"; }
+          await say("He's quicker. He's out of the window and into the lake with the satchel on his back before you've finished moving. The eye goes with him. You hear him laughing, a long way off, in the reeds."); return "lost";
+        }
+        await say("You sit on the loft stairs and tell him which road the Guild's catchers watch, and which they don't. He goes by the one they don't.");
+        return c; } },
+      assize: { t: "The Glass Hour", run: async () => {
+        await say("The Glass Assize times its witnesses with hourglasses: when the sand runs out, you stop talking, whatever you were saying. In the third court a widow is giving evidence against a glass-lord's son, and her glass is running fast. You can hear it. Somebody has ground the neck wider.");
+        const c = await choose([{ key: "expose", label: "Stand up and say the glass is wrong", tag: "a scene · she'll get her full hour" }, { key: "sell", label: "Tell the defence you know, and sell your silence", tag: "25 gold", plain: true }]);
+        if (c === "expose") { xpGain(40); await say("You say it, loud. The court stops. A clerk times the glass against the court's own water-clock and goes white. The widow gets a new glass, and her whole hour, and uses all of it."); }
+        if (c === "sell") { S.coins += 25; renderSheet(); await say("The glass-lord's man pays you in the corridor without looking at you. Behind the door the sand runs out halfway through a sentence."); await mech("Gain 25 gold.", "loot"); }
+        return c; } },
+      corrach: { t: "Hesk Time", run: async () => {
+        await say("The Hesk don't have clocks. They keep time by song: one long note the whole colony holds, changing so slowly that it takes a year to go from top to bottom. An elder hears your chronometer ticking and stops, and leans over you, and taps a question on its own chest: <i>what is that small fast thing you're counting?</i>");
+        const c = await choose([{ key: "teach", label: "Tap it the seconds, one by one", tag: "show it the fast time" }, { key: "learn", label: "Ask it to teach you the slow time", tag: "a day sitting still", plain: true }]);
+        if (c === "teach") { xpGain(30); await say("You tap it the seconds. It listens for a long time. Then it taps back, faster, faster, until it's ahead of you, and stops, delighted, and goes off to frighten the others with it."); }
+        if (c === "learn") { await heal(2, 8, "You sit in the gallery all day while the elder hums the year-note into your bones. When you stand up, the fights you've had seem a long way off, and smaller."); }
+        return c; } },
+      rahdaria: { t: "The Hour of the Watch", run: async () => {
+        await say("Outside Rahdaria the Bathyr lines change their watch by a drum, and every drum has a rhythm, and every rhythm has a gap. You lie in the reeds all night with your chronometer against your ear, counting.");
+        const c = await choose([{ key: "hour", label: "Give the city the hour their watch is thinnest", tag: "the blockade starts better" }, { key: "sell", label: "Sell the hour to a smuggler instead", tag: "30 gold", plain: true }]);
+        if (c === "hour") { await say("You give it to the watch-captain at the Lion Gate, written to the second. She looks at it, and at you, and puts it inside her coat like a letter from home."); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else { S.coins += 30; renderSheet(); await say("The smuggler pays in good silver and runs three boats of brandy through the gap before the city knows there is one."); await mech("Gain 30 gold.", "loot"); }
+        return c; } },
+      unmapped: { t: "The Last Tick", run: async () => clLast("clock") }
     }
   };
   // What each choice was, as the world remembers it, and what you find there on the roads back.
@@ -26416,7 +26928,17 @@ body.pv-open { overflow: hidden; }
       carrowmere: { orchard: "You grafted the drowned orchard.", cut: "You took cuttings from the drowned orchard." },
       assize: { treat: "You treated the debtors' fever for nothing.", sell: "You sold the fever remedy to a glazier's wife." },
       corrach: { cut: "You cut the Pale Bloom out of a miner's arm.", study: "You studied the Pale Bloom." },
-      rahdaria: { ward: "You worked Rahdaria's field hospital.", bathyr: "You treated a Bathyr prisoner." } }
+      rahdaria: { ward: "You worked Rahdaria's field hospital.", bathyr: "You treated a Bathyr prisoner." } },
+    bloom: { desert: { feed: "You gave the dead thorn-tree some of your fire.", coal: "You took the dead thorn-tree's coal.", bury: "You buried the dead thorn-tree's coal." },
+      carrowmere: { free: "You cut the roots out of the drowned mill.", bind: "You let the drowned mill finish growing." },
+      assize: { speak: "You spoke for Wenlow Pike and won.", lost: "You spoke for Wenlow Pike, and she was glassed anyway.", fine: "You paid Wenlow Pike's fine.", leave: "You left Wenlow Pike to the Glass court." },
+      corrach: { wake: "You woke the Rusted Sentry.", rest: "You laid the Rusted Sentry to rest." },
+      rahdaria: { hold: "You swore to the root under the Land Gate.", ask: "You heard the last verse of the Wardens' song." } },
+    clock: { desert: { fix: "You started the caravanserai's water-clock again.", tell: "You gave up the caravanserai's clock-keeper." },
+      carrowmere: { take: "You took Pell Tansey's eye.", lost: "Pell Tansey got away from you with his eye.", let: "You let Pell Tansey go." },
+      assize: { expose: "You exposed the fast hourglass in the Glass Assize.", sell: "You sold your silence about the fast hourglass." },
+      corrach: { teach: "You taught a Hesk elder the seconds.", learn: "You learned the Hesk slow time." },
+      rahdaria: { hour: "You gave Rahdaria the hour of the Bathyr watch.", sell: "You sold the hour of the Bathyr watch to a smuggler." } }
   };
   const CL_REG = { desert: "desert", carrowmere: "mere", assize: "glass", corrach: "corrach", rahdaria: "rahdaria" };
   const CL_WHERE = { desert: "The Burning Sands, on the roads back", carrowmere: "Carrowmere, on the roads back", assize: "Sulmara, on the roads back", corrach: "Ashgate, on the roads back", rahdaria: "Rahdaria, on the roads back" };
@@ -26454,11 +26976,32 @@ body.pv-open { overflow: hidden; }
       carrowmere: { orchard: "Along the Carrowmere shore the black stumps have leaves on them, a few, and on one there's a single small green apple. The fisherfolk's children are guarding it.", cut: "The drowned orchard on the Carrowmere shore is just black stumps, still." },
       assize: { treat: "In the debtors' shanties outside Sulmara people know your face. An old woman presses a loaf on you. A child follows you to the gate.", sell: "The glazier's wife you sold the remedy to is the richest woman in her street now. Half of the street is new graves." },
       corrach: { cut: "The miner whose Bloom you cut out has a red graft-scar on his arm and shows it to everyone, and buys your supper.", study: "You hear in Ashgate that the Bloom has a new remedy, from a stranger's notes. They're yours. Somebody copied them." },
-      rahdaria: { ward: "The surgeons of Rahdaria have named a ward after you, which is embarrassing.", bathyr: "On Rahdaria's quay, a Bathyr with a grey scar taps <i>debt</i> on your arm, and then <i>paid</i>, and gives you a black pearl." } }
+      rahdaria: { ward: "The surgeons of Rahdaria have named a ward after you, which is embarrassing.", bathyr: "On Rahdaria's quay, a Bathyr with a grey scar taps <i>debt</i> on your arm, and then <i>paid</i>, and gives you a black pearl." } },
+    bloom: { desert: { feed: "Where the dead thorn-tree stood in the dunes there's a living one now, green, with shade under it, and the caravans stop there. Somebody has hung a little iron ember on a branch.",
+        coal: "The dead thorn-tree in the dunes has fallen over at last. A driver says it went the night a stranger passed. The coal in your chest is warm when you go by.", bury: "The dunes have moved, and the dead thorn-tree is gone under them. The sand there is warm to stand on, even at night." },
+      carrowmere: { free: "The drowned mill is grinding again, above water now, on a new wheel. The miller's daughter sends you off with a sack of flour and a loaf the size of a shield.",
+        bind: "On the Carrowmere shore stands a thing of root and old gears, tall as a mill, facing the lake. The fishers call it the Miller and leave it bread. When you pass it turns its head, slowly, all the way, to watch you go." },
+      assize: { speak: "Wenlow Pike is outside Sulmara's gate with a thorn hedge she's grown round a debtors' camp, to keep the wardens out. \"Apprentice,\" she says, grinning. \"You said it in court. It's on the record.\"",
+        lost: "In the kilnyards a girl with glass bands round her wrists is blowing bottles, very well. She sees you, and nods, and goes back to it.", fine: "Wenlow Pike has left a thorn on the gatepost for you, wrapped in a note: <i>Still growing.</i>", leave: "The court's records say Wenlow Pike was glassed. They don't say where she is now." },
+      corrach: { wake: "In front of Ashgate's gate the Rusted Sentry stands where it stopped, with flowers grown up its legs. The miners tell you the night the slide came down it held the scree off the gate with both arms. They give you supper.",
+        rest: "The Rusted Sentry's frame lies in the scree where you laid it down, and roots have covered it, and the children of Ashgate climb on it." },
+      rahdaria: { hold: "On Rahdaria's Land Gate the threshold root has pushed up a single green shoot through the stone. The gate-wardens water it. They say it hasn't stopped growing since the siege.",
+        ask: "The old gate-keeper at the Land Gate has added a verse to his song, about a Warden who came back up out of the roots to hear the end of it. He sings it at you, badly, on purpose." } },
+    clock: { desert: { fix: "The caravanserai's water-clock rings every hour, and the yard sleeps easy, and somebody has hung a brass key on its frame with a tag that just says <i>thank you</i>.",
+        tell: "There's a new clock-keeper at the caravanserai, and the clock is a cheap one, and it runs slow. The caravan master still thinks you're the best thing that ever happened to him." },
+      carrowmere: { take: "At the Carrowmere landing there's a letter waiting for you from Pell Tansey, mostly rude, with the plans for a better lens folded inside it. He's not angry. He's working on another one.",
+        lost: "On the Carrowmere landing a fisher hands you a parcel. Inside is a mechanical eye, very fine, and a note: <i>You'd have broken the other one.</i>", let: "A fisher at the Carrowmere landing gives you a package from a man with clever hands: a little brass escapement, perfectly made, with your mark cut on it." },
+      assize: { expose: "The widow you spoke for in the Glass Assize has a stall by the gate now, selling honest hourglasses. Hers run true to the grain. She won't take your money.",
+        sell: "In Sulmara the glass-lord's son is a judge now. He sees you in the street and touches his hat, like you're friends. You suppose you are." },
+      corrach: { teach: "The Hesk on the Corrach road have started to tap the seconds at each other, fast, for fun. It's spread through the whole colony. The elders pretend to disapprove.",
+        learn: "Passing the Corrach galleries you hear the year-note, very low, and your heart slows to it without asking you, and for a mile the road seems very short." },
+      rahdaria: { hour: "The watch-captain at the Lion Gate keeps your paper with the Bathyr hour on it in a frame in the gatehouse. She salutes you, which she doesn't do for anybody.",
+        sell: "The smuggler who bought the Bathyr hour has a tavern on Rahdaria's quay now. He pours you a brandy and won't take payment. He never asks what else you know." } }
   };
   // Some echoes pay: a ✓ gives gold, an ✗ costs it.
   const CL_PAY = { "axe.desert.names": 15, "axe.carrowmere.home": 10, "axe.corrach.drill": 12, "hush.desert.mark": 20, "hush.assize.roofs": 30, "song.assize.glaze": 15, "song.corrach.trade": 15,
-    "tide.assize.sell": 20, "tide.corrach.cart": 12, "ink.desert.copy": 20, "ink.carrowmere.keep": -2, "root.rahdaria.bathyr": 40, "root.corrach.cut": 10, "root.assize.treat": 6 };
+    "tide.assize.sell": 20, "tide.corrach.cart": 12, "ink.desert.copy": 20, "ink.carrowmere.keep": -2, "root.rahdaria.bathyr": 40, "root.corrach.cut": 10, "root.assize.treat": 6,
+    "bloom.carrowmere.free": 12, "bloom.corrach.wake": 15, "clock.desert.fix": 10, "clock.desert.tell": 8, "clock.carrowmere.let": 10, "clock.assize.expose": -5 };
   Object.keys(CL_WHY).forEach(k => Object.keys(CL_REG).forEach(slug => {
     ECHOES["cl_" + k + "_" + slug] = { ch: CL_CH[slug], get why() { return (CL_WHY[k][slug] || {})[clB(slug)] || ""; }, where: CL_WHERE[slug], on: () => clIs(k) && !!clB(slug) && !!(CL_WHY[k][slug] || {})[clB(slug)] };
   }));
@@ -26484,6 +27027,8 @@ body.pv-open { overflow: hidden; }
     song: { open: "There should be nothing to hear in the white. There is: a single note, very faint, at the edge of hearing, that isn't any note you know. The ninth note, the Hesk would call it, if they had nine. The axe has heard it too.", keep: "Teach the axe the note", leave: "Sing it back into the white, so the lost places have something to hear" },
     tide: { open: "Out in the white there's no tide. Nothing comes in or goes out. Everything you know says that's impossible. You take out the Sounding-Line, and at the half milestone you let it down into the white, and it goes, and goes, and finds no bottom.", keep: "Tie the last knot where the line went slack", leave: "Cut the line and leave it hanging, a mark for the next reader" },
     ink: { open: "The white is a page with nothing on it. You've spent your life adding to the margins of things. Here there isn't anything to add a margin to. At the half milestone there's a strip of old vellum in the grass, a ruled margin with nothing beside it, in the Quire's hand.", keep: "Sew the margin into your sleeve", leave: "Write your own name in it, and leave it at the milestone" },
+    bloom: { open: "Nothing grows in the white, and the Colossus in your armour hates it: you feel it pull away from the edge like a dog from a cliff. At the half milestone the last root before the white has burned down to a seed, warm as a coal. Your ember wants it.", keep: "Let the ember take the seed", leave: "Plant it at the milestone, facing the white" },
+    clock: { open: "There's no time in the white. Your chronometer goes on ticking at the half milestone, and then, a step further on, it doesn't. At the milestone itself, in the grass, there's a chronometer hand, stopped exactly between one tick and the next.", keep: "Keep the stopped second", leave: "Set it on the milestone, pointing into the white" },
     root: { open: "Nothing grows in the white. At the half milestone, the last root before it pushes out of the ground and stops in mid-air, as if it hit a wall nobody can see. It's alive. It's straining. It wants to go on.", keep: "Graft a sliver of it into your own arm", leave: "Graft it to the milestone, so it can go on without you" }
   };
   async function clLast(k) {
@@ -26497,6 +27042,7 @@ body.pv-open { overflow: hidden; }
       S.gear = S.gear || []; S.gear.push("cl_keep_" + k);
       if (k === "axe") { S.maxHp += 4; S.hp += 4; }
       if (k === "root") { S.maxHp += 6; S.hp += 6; }
+      if (k === "bloom") { S.maxHp += 5; S.hp += 5; }
       renderSheet();
       await mech("<b>" + GEAR["cl_keep_" + k].name + ".</b> " + GEAR["cl_keep_" + k].desc, "loot");
     } else { xpGain(40 + met.length * 15); await say("You leave it. Somebody else will come this way, with a calling of their own, and find that somebody was here first."); }
@@ -26522,6 +27068,8 @@ body.pv-open { overflow: hidden; }
     song: { tyra: "Tyra hums along with you, off-key on purpose, until you stop. Then she laughs. Then she hums it right.", burr: "Burr howls along whenever you hum the axe. You've stopped asking him not to.", ishbel: "\"Sing something,\" Ishbel says, at camp, and you do, and she sits with her eyes shut until it's done.", odran: "Odran hums a note at you that he says his father taught him for steadying a shield. It isn't bad.", wenna: "\"You sing to your weapon,\" Wenna says. \"I name mine. We're all mad here.\"", caddock: "Mother Caddock teaches you the counting song for setting bones in harmony. It's ruder in harmony." },
     tide: { tyra: "\"You're doing it again,\" Tyra says. \"Watching the sky like it owes you money.\"", burr: "Burr watches the weather when you do, nose up, and is right about rain about as often as you are.", ishbel: "\"How long till dawn?\" Ishbel asks, testing you. You tell her. She checks, later. You were right.", odran: "Odran asks you, very seriously, whether it'll rain on Thursday. It does.", wenna: "\"Tell me when the wind drops,\" Wenna says, and you do, and she puts a bolt through a crow at a hundred yards.", caddock: "\"Sailor's eyes,\" Mother Caddock says. \"My husband had them. Always looking at where we weren't yet.\"" },
     ink: { tyra: "Tyra reads your notes over your shoulder and corrects your spelling of her own name.", burr: "Burr has eaten a page of your notes. It was an important page. He's not sorry.", ishbel: "\"Write my name down somewhere,\" Ishbel says. \"Somewhere it'll stay.\" You do.", odran: "Odran can't read. You teach him his name, and the word <i>shield</i>, and he practises them in the dirt for an hour.", wenna: "\"Keep a ledger of what I'm owed,\" Wenna says. \"No. Better. Keep a ledger of what you owe me.\"", caddock: "Mother Caddock dictates a recipe for a poultice and you write it down. It takes a long time because she keeps stopping to argue with it." },
+    bloom: { tyra: "\"You crackle,\" Tyra says, at camp. \"When you sleep. Like a fire. It's nice, actually. Don't tell anyone I said that.\"", burr: "Burr sleeps against your back every night, for the warmth of the ember, and growls at the thorns when they move in your sleep.", ishbel: "\"There's something behind you,\" Ishbel says, very quietly, at dusk. You know. It's been there a long time. She doesn't turn her back on you all evening.", odran: "Odran knocks on your breastplate like a door, and listens. \"Something knocked back,\" he says, and won't say any more about it.", wenna: "\"If that big thing ever comes out,\" Wenna says, \"I want to be told first. In writing.\"", caddock: "Mother Caddock looks at the thorns grown into your shoulder and doesn't try to cut them. \"Don't let it take more than it gives,\" she says. \"That's all. Roots are greedy.\"" },
+    clock: { tyra: "\"You count,\" Tyra says. \"Under your breath, all the time. It's like sleeping next to a clock that thinks it's funny.\"", burr: "Burr has learned that when you go very still and your eye goes round, somebody's about to fall over. He sits down to watch.", ishbel: "\"Guild-trained,\" Ishbel says, watching you strip the chronometer. \"The Escapement lot. Sable tried to hire one of you once. She said it finished the job before she'd finished the sentence.\"", odran: "Odran asks you what time it is, every hour, for a whole day, to see if you're ever wrong. You never are. He's furious.", wenna: "\"How long till the next one comes over that ridge?\" Wenna asks. \"Forty breaths,\" you say. It's thirty-nine. She brings it up for a week.", caddock: "Mother Caddock takes your pulse and frowns. \"It's perfectly regular,\" she says. \"Nobody's is perfectly regular. Stop it.\"" },
     root: { tyra: "Tyra holds out a cut finger, sheepishly, and you graft it, and she watches the root go in with her mouth open.", burr: "Burr brings you a root he's dug up, and lays it at your feet, and waits to see what you'll mend with it.", ishbel: "Ishbel lets you look at her scarred hands. \"Could you,\" she starts, and stops. \"No. Leave them. They're mine.\"", odran: "Odran shows you a knee that hasn't bent right in ten years. In the morning it bends.", wenna: "\"Can you graft a thumb?\" Wenna asks. \"Asking for a friend. The friend is me, in the future.\"", caddock: "Mother Caddock watches you graft a cut with her pipe going out in her hand. \"Well,\" she says. \"I'll be damned. Show me that again.\"" }
   };
   async function clCamp(k) {
@@ -26546,7 +27094,7 @@ body.pv-open { overflow: hidden; }
   // The blockade: what your calling did on the road in.
   function clMom() {
     const k = S.cl && S.cl.k, b = clB("rahdaria");
-    return (k === "axe" && b === "oath") || (k === "hush" && b === "chart") || (k === "song" && b === "wall") || (k === "tide" && b === "tell") || (k === "root" && b === "ward") ? 5 : 0;
+    return (k === "axe" && b === "oath") || (k === "hush" && b === "chart") || (k === "song" && b === "wall") || (k === "tide" && b === "tell") || (k === "root" && b === "ward") || (k === "bloom" && b === "hold") || (k === "clock" && b === "hour") ? 5 : 0;
   }
   // The Assize: jurors who start out leaning your way, and what you know.
   function clAssize() {
@@ -44716,7 +45264,7 @@ body.pv-open { overflow: hidden; }
       const ks = Object.keys(CALLINGS).filter(k => PIC_SRC["cl_" + k]);
       if (!ks.length) { fig.hidden = true; return; }
       let i = 0, front = a, back = b;
-      const say = (k) => { cap.innerHTML = "<b>" + CALLINGS[k].name + "</b><small>One of six callings</small>"; };
+      const say = (k) => { cap.innerHTML = "<b>" + CALLINGS[k].name + "</b><small>One of eight callings</small>"; };
       show(a, picUrl("cl_" + ks[0]), CL_PICS[ks[0]] || ""); a.classList.remove("off"); b.classList.add("off"); say(ks[0]);
       if (ks.length > 1 && !reduced) gateTimer = setInterval(() => {
         if (started) return clearInterval(gateTimer);
