@@ -15,7 +15,7 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 def build(out, page):
-    extras = sorted((ROOT / "art").glob("*.webp")) + sorted((ROOT / "music").glob("*.ogg")) + sorted((ROOT / "music").glob("*.m4a")) + [ROOT / "title-film.mp4"]
+    extras = sorted((ROOT / "art").glob("*.webp")) + sorted((ROOT / "music").glob("*.ogg")) + sorted((ROOT / "music").glob("*.mp4")) + [ROOT / "title-film.mp4"]
     with zipfile.ZipFile(ROOT / "itch" / out, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(ROOT / page, "index.html")
         for f in extras:
