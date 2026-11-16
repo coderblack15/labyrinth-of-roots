@@ -34,6 +34,9 @@ function fight(F, L, maxHp, opt = {}) {
   const heads = !!F.heads;
   let fhp = heads ? F.heads + SCALE.heads(fk) : Math.round(F.hp * SCALE.mult(fk));
   const fatk = F.atk + SCALE.atk(fk), fdmg = SCALE.dmg(fk) + (opt.hard && V !== "old" ? 1 + Math.floor(fk / 12) : 0); // hard: a lone road beast from Part XVIII on (2026-11-14)
+  // Plate and Element (2026-11-16): an armoured foe's silver bar (F.arm, a share of its HP, + 0.4% a foe
+  // level) takes your blows first; a Rootbreaker breaks it twice as fast; broken, the foe is −2 AC.
+  let arm = F.arm && !heads ? Math.max(3, Math.round(fhp * Math.min(.8, F.arm + fk * .004))) : 0, fac = F.ac;
   let hp = maxHp, rounds = 0, chain = 0, adapt = 0, grained = false, gems = true, lowest = hp, saves = 0, bleed = [], bands = 2;
   const pHit = 5 + Math.floor(k / 9), pDmg = 3 + SCALE.pdmg(k);
   const acBase = 13 + Math.floor(k / 12) + (opt.gear || 0);
@@ -43,11 +46,13 @@ function fight(F, L, maxHp, opt = {}) {
     else if (gems && heads) { gems = false; fhp -= 1; chain = Math.min(2, chain + 1); }
     else {
       const r = d(20), cb = Math.min(2, chain);
-      if (r === 20 || (r !== 1 && r + pHit + cb >= F.ac)) {
+      if (r === 20 || (r !== 1 && r + pHit + cb >= fac)) {
         chain = Math.min(3, chain + 1);
         if (heads) { fhp -= (chain >= 3 && fhp > 1) ? 2 : 1; if (chain >= 3) chain = 0; }
         else {
-          const rb = chain >= 3; let t = roll(rb ? 2 : 1, 8) + pDmg + (chain === 2 ? 2 : rb ? 4 : 0); if (rb) chain = 0; fhp -= t;
+          const rb = chain >= 3; let t = roll(rb ? 2 : 1, 8) + pDmg + (chain === 2 ? 2 : rb ? 4 : 0); if (rb) chain = 0;
+          if (arm > 0) { const m = rb ? 2 : 1, need = Math.ceil(arm / m); if (t < need) { arm -= t * m; t = 0; } else { t -= need; arm = 0; fac -= 2; } }
+          fhp -= t;
         }
       } else chain = 0;
     }
@@ -99,6 +104,10 @@ if (require.main === module) {
     ["Bathyr x3 (p57)", 57, { heads: 3, ac: 14, atk: 5, s: 8 }],
     ["Silent General (p60)", 60, { hp: 42, ac: 16, atk: 7, s: 10 }],
     ["Curator (p61)", 61, { hp: 52, ac: 15, atk: 7, s: 10 }],
+    ["Rustcoat armoured (p17)", 17, { hp: 20, ac: 13, atk: 4, s: 8, arm: .5 }],
+    ["Ditch-reeve armoured (p23)", 23, { hp: 16, ac: 13, atk: 4, s: 8, arm: .3 }],
+    ["Skarrit armoured (p37)", 37, { hp: 26, ac: 14, atk: 5, s: 10, arm: .3 }],
+    ["Hoarback armoured L40", 76, { hp: 30, ac: 14, atk: 6, s: 10, arm: .5 }, 40],
     ["Road beast L40", 76, { hp: 20, ac: 13, atk: 4, s: 8 }, 40],
     ["Road mob L40", 76, { heads: 3, ac: 12, atk: 4, s: 6 }, 40],
     // An outgrown road beast: back in the Labyrinth (left at part 6) at level 30 and 39, before the Cascades.
