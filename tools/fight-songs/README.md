@@ -12,4 +12,4 @@ Each script renders `full` (the whole song with an ending, for previews), `intro
 
 `PK` fixes the master level so every render of a song matches (Thorn and Cudgel sits a little under Rootbreaker on purpose).
 
-The game file for each song is the intro, then the loop, then the first 2 seconds of the loop again (so a browser's decoder padding can't land on a gap), encoded as `.ogg` (Vorbis q5) and `.m4a` (AAC 160k, for Safari). The intro and loop lengths in samples go in `REC` in index.html (`loopAt`, `loopLen`).
+The game file for each song is the intro, then the loop, then the first 2 seconds of the loop again (so a browser's decoder padding can't land on a gap), encoded as `.ogg` (Vorbis q5) and `.mp4` (AAC 160k, for Safari). The intro and loop lengths in samples go in `REC` in index.html (`loopAt`, `loopLen`).
