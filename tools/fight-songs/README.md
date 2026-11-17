@@ -6,6 +6,7 @@ The composed songs in `music/`, written as code (numpy only, no samples):
 - `thorn-and-cudgel.py`: **Thorn and Cudgel**, every other fight. D minor, 132 bpm. Borrows the instruments from `rootbreaker.py`.
 - `walls-worth-taking.py`: **Walls Worth Taking**, the compound raids, in two halves on one theme (B minor). *Over the Wall* (84 bpm) plays while you scout and sneak; *The Bell in the Yard* (138 bpm) takes over when the alarm goes up. Modes are `sneak-intro`, `sneak-loop`, `raid-intro`, `raid-loop`. Tharen Ravendare's fight uses Rootbreaker.
 - `the-minds-eye.py`: **The Nice Song**, the Mind's Eye's hymn (F minor, 96 bpm: drone, chanting voices, a heartbeat, a small bell) for its fights, and **The Blink**, the same hymn for Haggith (120 bpm, the whole congregation, a half-step lift at the end). Modes `song-intro`, `song-loop`, `blink-intro`, `blink-loop`.
+- `tunnel-collapse.py`: **The Roof Comes Down**, a sound, not a song: a tunnel falling in (creaking props, the crack, earth and stones, then grit and silence), for the cave-ins in The Long Dig. About 9 seconds. Game files `music/tunnel-collapse.ogg` (Vorbis q3) and `.mp4` (AAC 112k), played once through SND.collapse().
 
 Each script renders `full` (the whole song with an ending, for previews), `intro`, or `loop` (seamless) to a wav:
 
