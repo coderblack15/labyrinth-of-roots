@@ -1377,6 +1377,41 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .rc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .rc-acts button small, .rc-lock + .rc-lockcur { display: block; color: var(--muted); font-size: .78rem; }
 .rc-lock { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+/* The Long Dig: the clock, a painting beside a cross-section of the tunnel, what's happening, and a short log. */
+.dig-top { display: grid; gap: 4px; }
+.dig-clock { font-family: var(--label); letter-spacing: .04em; color: var(--muted); }
+.dig-clock b { font-size: 1.6rem; color: var(--gold); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.dig-bar { height: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+.dig-bar i { display: block; height: 100%; background: linear-gradient(90deg, #6b4a24, var(--gold)); transition: width .25s linear; }
+.dig-top .rc-meters { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--label); font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
+.dig-warn { color: var(--ember); }
+.dig-view { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 10px; align-items: center; margin: 6px 0; }
+.dig-paint { margin: 0; }
+.dig-paint[hidden] + .dig-sec { grid-column: 1 / -1; }
+.dig-paint img { display: block; width: 100%; aspect-ratio: 480 / 715; object-fit: cover; border: 2px solid #5a4422; border-radius: 4px; }
+.dig-sec svg { display: block; width: 100%; height: auto; }
+.dig-sky { fill: #151a22; } .dig-earth { fill: #3a2a1a; }
+.dig-wall { fill: #6b5333; } .dig-hut { fill: #4b3b25; stroke: #8a6c3e; }
+.dig-lbl { fill: var(--ink); font: 8px var(--label); text-anchor: middle; }
+.dig-plan { fill: none; stroke: #4c3824; stroke-width: 9; stroke-dasharray: 2 5; stroke-linejoin: round; }
+.dig-dug { fill: none; stroke: #120d08; stroke-width: 10; stroke-linejoin: round; stroke-linecap: round; }
+.dig-post { stroke: #a77f45; stroke-width: 2; }
+.dig-crack { fill: none; stroke: var(--ember); stroke-width: 1.5; }
+.dig-candle { fill: #ffd27a; } .dig-you { fill: var(--gold); stroke: #3a2508; stroke-width: 2; }
+.dig-ev { border-left: 3px solid var(--gold); padding: 4px 0 4px 10px; margin: 6px 0; }
+.dig-ev p { margin: 0 0 6px; }
+.dig-ev .dig-puz svg { display: block; width: 100%; max-width: 300px; height: auto; margin: 4px 0; }
+.dig-stone ellipse { fill: #5d5348; stroke: #2b241c; stroke-width: 2; }
+.dig-stone path { fill: none; stroke: #1a140e; stroke-width: 2.5; stroke-linejoin: round; }
+.dig-stone .dig-mark { fill: rgba(240, 200, 110, .25); stroke: var(--gold); }
+.dig-stone text { fill: var(--ink); font: 700 12px var(--label); text-anchor: middle; }
+.dig-head ellipse { fill: #120d08; stroke: #4c3824; stroke-width: 3; } .dig-head line { stroke: #4c3824; stroke-dasharray: 3 4; } .dig-head circle { fill: #ffd27a; }
+.dig-log { list-style: none; margin: 4px 0; padding: 0; font-size: .9rem; color: var(--muted); display: grid; gap: 3px; }
+.dig-log li.new { color: var(--ink); }
+.dig-shake { animation: dig-shake .5s ease-out; }
+@keyframes dig-shake { 0%, 100% { transform: none; } 20% { transform: translate(-4px, 2px); } 40% { transform: translate(4px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
+@media (max-width: 560px) { .dig-view { grid-template-columns: minmax(0, 96px) minmax(0, 1fr); gap: 8px; } .dig-clock b { font-size: 1.35rem; } }
+@media (prefers-reduced-motion: reduce) { .dig-shake { animation: none; } .dig-bar i { transition: none; } }
 /* The Mind's Eye: its sigil, the talking-out meters, the Watching ring and the four figures in the Blink. */
 .me-sigrow { display: flex; justify-content: center; margin: 4px 0; }
 .me-head { display: flex; gap: 10px; align-items: center; }
@@ -3275,6 +3310,7 @@ body.pv-open { overflow: hidden; }
       eye: { id: "the-nice-song", name: "The Nice Song", file: "music/the-nice-song", loopAt: 220500 / 44100, loopLen: 2646000 / 44100, v: 0.34, buf: null, busy: false },
       eyeboss: { id: "the-blink", name: "The Blink", file: "music/the-blink", loopAt: 176400 / 44100, loopLen: 2822400 / 44100, v: 0.38, buf: null, busy: false }
     };
+    let colBuf = null, colBusy = false;
     const REC_EXT = (() => { try { return document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"') ? ".ogg" : ".mp4"; } catch (e) { return ".mp4"; } })();
     function mRecLoad() {
       if (!ctx || !window.fetch) return;
@@ -3635,6 +3671,20 @@ body.pv-open { overflow: hidden; }
         else blip(sfx, 70, { type: "sine", a: 0.004, dec: 0.28, vol: 0.12, bend: 0.55 });
       },
       // A tremor or a fall: a low rumble with grit in it.
+      // The Long Dig: a tunnel falling in (tools/fight-songs/tunnel-collapse.py); the quake if the file can't load.
+      collapseLoad() {
+        if (!ctx || colBuf || colBusy || !window.fetch) return;
+        colBusy = true;
+        fetch("music/tunnel-collapse" + REC_EXT).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+          .then(a => new Promise((ok, no) => { const p = ctx.decodeAudioData(a, ok, no); if (p && p.then) p.then(ok, no); }))
+          .then(b => { colBuf = b; }).catch(() => {}).finally(() => { colBusy = false; });
+      },
+      collapse() {
+        if (!live()) return;
+        if (!colBuf) { this.quake(); return; }
+        const src = ctx.createBufferSource(), g = gain(0.85, sfx);
+        src.buffer = colBuf; src.connect(g); src.start();
+      },
       quake() {
         if (!live()) return;
         blip(sfx, 48, { type: "sawtooth", a: 0.05, dec: 1.4, vol: 0.14, bend: 0.6 });
@@ -4065,6 +4115,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "134", name: "The Long Dig", date: "17 Nov 2026", items: [
+      "<b>A tunnel</b>, Adrian's idea: every compound on the roads back, the Pupil included, has a new way in. <b>Dig under the wall</b> and come up through the floor of the room you aimed at, unseen. It takes <b>thirty-four minutes. Real ones.</b> A clock and a cross-section of the tunnel show how far you've got; the clock only runs while you're down there with it on screen, and you can climb out whenever you like and come back to the same foot of clay.",
+      "It isn't a wait. Dirt trickles from the roof (shore it with a timber, or dig on and hope: an unshored stretch can come down on you, and with three left the whole tunnel falls in behind you once you're up). Things turn up in the spoil. You hear the compound through the soil. Your company take turns on the spade when your arms give out. And there are small puzzles: a stone that splits where two cracks meet, three roots and only one you should cut, water that goes where the pebble goes, and a candle at the mouth that should stay dead behind you, or you come up in the wrong room.",
+      "About thirteen minutes in, you break into somebody else's tunnel, and find the last person who tried it. What you do with them is remembered, by their family in town, and by the blade you come out with. At half way you can stop and listen at the wall.",
+      "<b>Patience</b>: thirty-four minutes of stone wear your spade down to a blade, and a root comes down out of the roof and winds round the grip. A Rootbound spade-blade, 1d6 + 3, +1 to hit, with <b>Undercut</b> (once a fight: 2d6 under the guard that no armour stops). Adrian's painting, along with five of the tunnel itself.",
+      "A tunnel they never found stays: next time you go straight up it. Set off the alarm and they'll find it and fill it. A new sound, <b>The Roof Comes Down</b>, for the cave-ins. Four new feats in a new set, The Long Dig."
+    ] },
     { ver: "133", name: "The Mind's Eye", date: "17 Nov 2026", items: [
       "<b>A cult</b>, built from Adrian's blueprint and named by Adrian: <b>the Mind's Eye</b>, and its leader <b>Haggith</b>, who wears a blindfold sewn shut with red thread and says the world is about to <b>blink</b>, and that only what her followers hold in the Mind's Eye will still be there when it opens. They call themselves the Seen. Its sigil is Adrian's: a crimson oval, a square, light from the middle and a step going down.",
       "It grows on the calendar while you do everything else on the roads back: chalk eyes on milestones, then <b>Sighthouses</b> (white doors in the towns, with soup and a nice song), then brands on the brow, then one night every Sighthouse empties and the Seen walk to <b>the Pupil</b>, a hidden compound in a sinkhole, and a date is set for the Blink.",
@@ -5464,6 +5521,10 @@ body.pv-open { overflow: hidden; }
     { id: "mefleet", name: "Nothing on the Sea", desc: "Sink all three ships of the Blind Fleet.", test: () => false },
     { id: "meroots", name: "Root and Branch", desc: "After the Mind's Eye falls, dig its last roots out of every town.", test: () => false },
     { id: "medevour", name: "Not All of Me", desc: "Break, fizzle or dodge Haggith's Soul Devour.", test: () => false },
+    { id: "dig34", name: "Thirty-Four Minutes", desc: "Dig a tunnel under a compound's wall, all thirty-four minutes of it.", test: () => false },
+    { id: "digshore", name: "Not One Stone", desc: "Finish a tunnel with every stretch shored and nothing fallen in.", test: () => false },
+    { id: "digbury", name: "Nearly", desc: "Bury the digger who didn't make it.", test: () => false },
+    { id: "digblade", name: "Patience", desc: "Come up out of the long dig with the spade worn to a blade.", test: () => false },
     { id: "rcraven", name: "Ravenbane", desc: "Kill Tharen Ravendare in the mud of his own yard.", test: () => false },
     { id: "mnspare", name: "Let It Beat", desc: "Leave three Heartspar crowns beating in the rock.", test: () => false },
     { id: "dcmill", name: "Not a Witch", desc: "Prove the sickness at Haverly came from the mill, not from Mother Elswith.", test: () => false },
@@ -5607,7 +5668,9 @@ body.pv-open { overflow: hidden; }
     { id: "raids", name: "Walls Worth Taking", ver: "52", desc: "Enemy compounds on the map to scout and raid, six kinds of job, leaders with signature moves, and Tharen Ravendare in Ravenhold.",
       ids: ["rcfirst", "rcquiet", "rctwo", "rcread", "rcpens", "rcsix", "rcten", "rcraven"] },
     { id: "eye", name: "The Mind's Eye", ver: "53", desc: "A cult that grows while you travel: Haggith, the Seen, the Ladder, Clauneck and the Lenses, and the Pupil.",
-      ids: ["mesaved", "mefive", "meladder", "mering", "melens", "megold", "meknife", "mefound", "meblink", "meproof", "meshut", "mevigil", "mefleet", "meroots", "medevour"] }
+      ids: ["mesaved", "mefive", "meladder", "mering", "melens", "megold", "meknife", "mefound", "meblink", "meproof", "meshut", "mevigil", "mefleet", "meroots", "medevour"] },
+    { id: "dig", name: "The Long Dig", ver: "54", desc: "A tunnel under a compound's wall, thirty-four real minutes of it, and the blade you come up with.",
+      ids: ["dig34", "digshore", "digbury", "digblade"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -6022,6 +6085,7 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    rcdig: ["The Long Dig", "Thirty-four real minutes of digging. The clock only runs while the dig is on screen, and stops whenever something needs you, so you can't miss anything by looking away; you can also climb out whenever you like and the tunnel keeps. Shore the roof when it trickles (three stretches left unshored and the tunnel falls in behind you), hand the spade to your company when your arms go, and keep the candle at the mouth dead behind you, or you'll come up in the wrong room."],
     rcraid: ["Compounds", "New compounds go up on the roads back as the days pass, and they're on your map. Pick a job first: it decides what you're looking for inside. You can come back to a compound as often as you like; what you learned scouting it stays learned."],
     rcscout: ["Scouting a compound", "Every look costs a watch. A failed look near the walls can get you noticed, and at three marks they move what they're guarding and double the watch (it wears off after a few days). On the raid table, a side and a watch that the clues haven't ruled out is a guess; the right side and the slack watch make going over a lot easier, and on the slack watch the patrols only move every other breath."],
     meeye: ["The Mind's Eye", "A cult grows on the roads back as the days pass: Sighthouses in the towns, recruits on their benches, and a date for the end of the world. Everything about it is under The Mind's Eye on the roads back. Nothing waits for you: people you don't reach in time are lost to it."],
@@ -6652,6 +6716,9 @@ body.pv-open { overflow: hidden; }
     if (t.classList.contains("title-pic") && t.parentElement) t.parentElement.classList.remove("has-title-pic");
   }, true);
   const PIC_SRC = {
+    // The Long Dig (Adrian's paintings, 17 Nov 2026)
+    sc_dig_mouth: "art/sc_dig_mouth.webp", sc_dig_face: "art/sc_dig_face.webp", sc_dig_shift: "art/sc_dig_shift.webp", sc_dig_kneel: "art/sc_dig_kneel.webp", sc_dig_spade: "art/sc_dig_spade.webp",
+    spadeblade: "art/spadeblade.webp",
     // the Mind's Eye (Adrian's paintings, 17 Nov 2026)
     sc_me_sigil: "art/sc_me_sigil.webp", sc_me_aulden: "art/sc_me_aulden.webp", sc_me_corse: "art/sc_me_corse.webp", sc_me_clauneck: "art/sc_me_clauneck.webp",
     sc_me_ottery: "art/sc_me_ottery.webp", sc_me_circle: "art/sc_me_circle.webp", sc_me_shields: "art/sc_me_shields.webp", sc_me_fleet: "art/sc_me_fleet.webp",
@@ -6905,6 +6972,7 @@ body.pv-open { overflow: hidden; }
     nmbow: { looks: ["nmbow"], alt: ["A bow grown out of bone and black thorn, with a smouldering string of fire and three burning arrows beside it."] },
     nmscythe: { looks: ["nmscythe"], alt: ["A scythe of twisted root and thorn, with a red eye open in the crook of the blade."] },
     nmdagger: { looks: ["nmdagger"], alt: ["A dagger with a long tapering blade and a hilt like a cage of gears and thorns, an ember glowing at its heart."] },
+    spadeblade: { looks: ["spadeblade"], alt: ["Patience: a spade blade worn down to a dagger's point, its grip bound in cord, with a thin root wound round and round the haft."] },
     nmspear: { looks: ["nmspear"], alt: ["A spear of black twisted thorn, its head a star of spikes with a red ember eye at the crossing."] },
     frostbite: { looks: ["frostbite"], alt: ["A mace with a head of spiked ice crystals on a haft of dark twisted root, cold mist rolling off it."] },
     rterror: { looks: ["rterror"], alt: ["A full suit of armour grown from dark root and thorn, clawed gauntlets and a spiked crown of bark, an ember burning in its chest."] },
@@ -7269,11 +7337,12 @@ body.pv-open { overflow: hidden; }
     eye: { name: "The Eye Opens", fx: "once a fight, the eye in the blade looks into it: 2d10 that no armour stops, and your Dread eases by 2" },
     rime: { name: "Deep Rime", fx: "once a fight, 2d8 cold, and its next 3 blows come at −2" },
     wheel: { name: "Wind the Wheel", fx: "once a fight, the gears in the hilt turn and the ember spins: four quick cuts, 4d6 fire" },
+    undercut: { name: "Undercut", fx: "once a fight, a low stab in under the guard, the way you'd go in under a wall: 2d6 that no armour stops, and its next blow comes at −2" },
     gaze: { name: "The Thorn Watches", fx: "once a fight, the ember eye in the spearhead finds the gap: 2d10, its next 2 attacks have disadvantage, and a Nightmare's Cascade thread is pinned and cut" }
   };
   // Actives that only come on named weapons, never on a random field drop.
-  const AC_NAMED = ["onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze"];
-  const NM_TAG = { flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage") };
+  const AC_NAMED = ["onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze", "undercut"];
+  const NM_TAG = { flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage"), undercut: () => (FOE.unit ? "drops one" : "2d6, no armour, its next blow −2") };
   const ARM_NAMES = {
     ashen: ["Pitted", "Notched", "Rust-flecked", "Bent", "Scorched"],
     tempered: ["Sound", "Well-kept", "Drover's", "Watchman's", "Plain"],
@@ -7546,6 +7615,10 @@ body.pv-open { overflow: hidden; }
       await beltHurt(2, 10, mult, "The Thorn Watches", main);
       if (FOE.hp > 0) { FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : 2); await mech("It can't take its eyes off the eye: " + (FOE.blind > 1 ? "its next 2 attacks have" : "its next attack has") + " disadvantage.", "loot"); }
       if (FOE.threads > 0 && t !== "fumble") await nmaThreadBurn("pin");
+    } else if (a === "undercut") {
+      await say("You drop low, the way you went in under the wall, and Patience goes in under " + (FOE.unit ? "a guard" : nmaWho() + "'s guard") + " before anybody has thought about the floor.");
+      await beltHurt(2, 6, mult, "Undercut", main);
+      if (FOE.hp > 0 && t !== "fumble") { FOE.chill = Math.max(FOE.chill || 0, 1); await mech("It's still looking for you somewhere higher up: its next blow comes at −2.", "loot"); }
     } else if (a === "hush") {
       FOE.blind = Math.max(FOE.blind, t === "fumble" ? 1 : t === "perfect" ? 3 : 2);
       await mech("Gloam Veil: dusk pours off the blade. " + (FOE.blind > 1 ? "Its next " + FOE.blind + " attacks have" : "Its next attack has") + " disadvantage.", "loot");
@@ -8800,10 +8873,13 @@ body.pv-open { overflow: hidden; }
       { key: "ruse", label: C.k === "eye" ? "Walk down the Lightless Stair among the Seen" : "Under the carter's flour sacks", tag: "Deception · DC " + (C.k === "eye" && S.me && S.me.brand ? Math.max(8, ruseDc - 4) : ruseDc) + " · " + (C.k === "eye" ? (S.me && S.me.brand ? "your brand will carry you" : "blindfolded, with them") : "in through the gate") + ", into the yard", show: !!C.know.ruse && C.noticed < 3 },
       { key: "storm", label: "Storm the gate", tag: "a battle on their ground · then the yard is yours for a little while", plain: true },
       { key: "garrison", label: "Bring the garrison from " + esc(hmName()), tag: garr + " fewer of them · a day's march · a battle at the gate", show: garr > 0, plain: true },
+      { key: "tunnel", label: C.dig && C.dig.done ? "Up your tunnel" : C.dig ? "Back down your tunnel" : "Dig under the wall", tag: C.dig && C.dig.done ? "it's dug, and they never found it · up through the floor of " + rcRoomS(C, digRoom(C, C.dig)) : C.dig ? digClock(Math.max(0, DIG_MS - C.dig.ms)) + " of digging left · real minutes" : "34 minutes of digging, real ones · come up through a floor, unseen · stop and come back whenever you like", plain: !C.dig },
       { key: "fire", label: "Fire the walls and wait at the gate", tag: "no way in · " + (job === "sabotage" ? "the stores burn" : job === "rescue" || job === "free" ? "the people inside are inside" : "they come out to you") + " · they'll call you a burner", show: fireOk && job !== "plunder" && job !== "ledger", plain: true },
       { key: "back", label: "Not yet", plain: true }
     ]);
     if (c === "back") return;
+    let dug = null;
+    if (c === "tunnel") { dug = await rcDig(C); if (!dug) return; watch = dug.watch; }
     SND.musPlace("sneak"); light("moon");
     const B = { C, job, side, watch, slack: watch === T.watch, you: null, tick: 0, noise: 0, hid: false, cut: C.size < 2, barred: false, key: false, bucket: false, carry: null, done: {}, freed: false, gateUp: false, foundAt: 0, alarm: false, quiet: true, chiefMet: false, whistle: hasGear("ravenwhistle") };
     B.dawn = 18 - 2 * C.size - (C.k === "raven" ? 1 : 0);
@@ -8812,7 +8888,10 @@ body.pv-open { overflow: hidden; }
     B.pats = RC_ROUTES.slice(0, C.size >= 3 || C.k === "raven" ? 2 : 1).map((r, i) => ({ r, i: i * 2 + d(2) - 1, down: false }));
     if (C.k === "raven" && C.size >= 4) B.pats.push({ r: RC_ROUTES[2], i: 3, down: false });
     if (B.vigil) { B.pats = B.pats.slice(0, 1); B.dawn += 2; await say("It's the night of the Blink. Everyone in the Pupil is in the Hall of Seeing, singing, with their eyes bound, waiting for the world to close its eye: only one Shepherd walks the round floor tonight, and Haggith won't leave her chair till dawn."); }
-    if (c === "wall") {
+    if (c === "tunnel") {
+      B.you = dug.room; B.tunnel = dug.stands ? dug.room : null; B.noise = dug.noise;
+      await say("You come up through the floor of " + rcRoomS(C, dug.room) + " at " + RC_WATCH[watch].toLowerCase() + ", a board at a time, with your heart going." + (dug.wrong ? " It isn't the room you aimed for: somewhere in the dark you drifted. " : " ") + (dug.noise ? "They heard something, earlier, when your spade rang on stone: there's a lamp lit that shouldn't be." : "Nobody has the least idea you're here.") + (B.tunnel ? " Your tunnel's under your feet, if you need to leave the way you came." : ""));
+    } else if (c === "wall") {
       await say("You go in on your belly at " + RC_WATCH[watch].toLowerCase() + ", with the lamps on the walls moving. " + (side === T.side ? "The wall here is rotten at the foot, as you thought." : "The wall here is sound, and you'll have to climb it.") + " " + (watch === T.watch ? "On the walls somebody laughs too loud, and somebody tells him to shut up, and he doesn't." : "On the walls the men are awake and quiet, which is worse."));
       const r = await check({ label: "Stealth check (over the wall)", mod: lrMod() + 1 + (hasGear("rcribbon") ? 1 : 0) + (hasGear("rccloak") ? 1 : 0), dc: sneakDc, cta: "Go over" });
       B.you = RC_ENTRY[side];
@@ -8832,6 +8911,7 @@ body.pv-open { overflow: hidden; }
       return rcAlarm(C, B, "at the gate");
     }
     B.chiefAt = B.vigil ? "hall" : T.chiefAt[B.watch][0];
+    if (c === "tunnel") { await rcYard(C, B); return digAfterRaid(C, B); }
     return rcYard(C, B);
   }
   // Inside: the yard board. Returns when you're out, seen, or at the leader.
@@ -8869,7 +8949,7 @@ body.pv-open { overflow: hidden; }
       const fin = (r) => { if (over) return; over = true; P.end(); acts.innerHTML = ""; resolve(r); };
       const say2 = (t) => { P.status.innerHTML = t; };
       const noise = (n, t) => { B.noise = Math.min(5, B.noise + n); B.quiet = false; say2(t); };
-      const exitAt = () => (B.side && RC_ENTRY[B.side] === B.you && !B.freed && !B.carry) || B.you === "gate";
+      const exitAt = () => (B.side && RC_ENTRY[B.side] === B.you && !B.freed && !B.carry) || B.you === "gate" || (B.tunnel && B.you === B.tunnel);
       function draw() {
         top.innerHTML = "<span>Breath " + B.tick + " of " + B.dawn + "</span><span>Noise " + '<span class="rc-pips">' + [0, 1, 2, 3, 4].map(i => "<i" + (i < B.noise ? ' class="on"' : "") + "></i>").join("") + "</span></span>" + (B.carry ? "<span>" + esc(B.carry) + " with you</span>" : "") + (B.freed ? "<span>the pens are open</span>" : "") + (B.barred ? "<span>" + rcRoomS(C, "huts") + " barred</span>" : "");
         const A = rcAdj(B.you);
@@ -8914,7 +8994,7 @@ body.pv-open { overflow: hidden; }
           if (B.bucket) btn("Spoil it quietly", "2 breaths · the bucket · nobody knows till they need it", () => { B.done.sabotage = true; B.tick++; say2("Water in the powder, sand in the meal, and every bowstring cut half through where it won't show."); step(false); });
         }
         if (B.freed && B.you === "gate" && !B.gateUp) btn("Lift the gate bar", "a breath · noise +1 · everybody out", () => { B.gateUp = true; noise(1, "The bar comes up, groaning."); step(false); });
-        if (exitAt() && !(B.freed && !B.gateUp)) btn(Object.keys(B.done).length || C.chiefDead || B.chiefBound || B.carry ? "Get out and away" : "Get out with nothing", B.carry ? esc(B.carry) + " with you" : "", () => fin({ k: "out" }));
+        if (exitAt() && !(B.freed && !B.gateUp && B.you !== B.tunnel)) btn((B.tunnel && B.you === B.tunnel ? "Down your tunnel and away" : Object.keys(B.done).length || C.chiefDead || B.chiefBound || B.carry ? "Get out and away" : "Get out with nothing"), B.carry ? esc(B.carry) + " with you" : B.freed && B.you === B.tunnel ? "everybody out on their bellies" : "", () => { if (B.tunnel && B.you === B.tunnel) B.viaTunnel = true; fin({ k: "out" }); });
       }
       function seen(why) { draw(); fin({ k: "seen", why }); }
       function step(hide) {
@@ -8970,6 +9050,389 @@ body.pv-open { overflow: hidden; }
       smash.onclick = () => { P.end(); B.noise = Math.min(5, B.noise + 3); B.quiet = false; B.tick++; resolve(true); };
       draw();
     });
+  }
+  // ---------- The Long Dig: a tunnel under a compound's wall, 34 real minutes ----------
+  // Adrian (17 Nov 2026): "a tunnel scene where the player has to spend 34 minutes digging. Lol".
+  // A raid approach at every compound (Walls Worth Taking), the Pupil included: dig in from cover
+  // and come up through the floor of the room you aimed at, unseen. It's 34 minutes of real time
+  // with the spade moving. The clock only runs while the dig is on screen and the tab is in front,
+  // and it stops whenever something needs you, so walking away just pauses it. You can climb out
+  // whenever you like: the tunnel is kept on the compound (C.dig) and saved every few seconds, so a
+  // closed tab costs a few seconds at most. Leave it five days or more at a compound that has
+  // noticed you (2 marks) and they find the mouth and fill some of it in.
+  // While you dig: dirt trickles (shore it with a timber, or dig on: an unshored stretch can fall in,
+  // and with three or more left the tunnel comes down behind you once you're up, so there's no way
+  // out through it), finds, sounds through the wall, your company taking shifts (stamina: at zero
+  // you dig at 60%), Dry company, and small puzzles: a stone (strike where two cracks meet), roots
+  // (cut the dead one; cut the living one and the ground stops listening to you), the heading (steer
+  // back toward the candle, or come up in the wrong room) and water (drain it the way the pebble
+  // rolls). About 13 minutes in you find the last person who tried it, and what you do with them
+  // decides the blade you come out with. At half way you can stop and listen at the wall (it shows
+  // where the leader is and the patrols' rounds). Finishing grants the feat dig34 and, once a run,
+  // Patience: your spade worn to a blade, with a root grown round the grip (Adrian's painting).
+  // A finished tunnel they never found stays: next time you go straight up it. If the alarm goes up
+  // on a tunnel raid, they find it and fill it.
+  // Paintings (Adrian's, 17 Nov 2026): sc_dig_mouth (start), sc_dig_face (digging), sc_dig_shift
+  // (a companion's shift), sc_dig_kneel (worn out / resting), sc_dig_spade (when you climb out), and
+  // spadeblade (the weapon). Sound: music/tunnel-collapse (tools/fight-songs/tunnel-collapse.py).
+  // State: C.dig = { ms, real, aim, timbers, posts: [frac], weak: [frac], fallen, stam, drift, noise,
+  //   root, bones, heard, done, stands, at, used: {kind: n}, left, who, wet }
+  //   S.rc.dig = { done, real, buried: [{n, place, town, met}], robbed: [{n, place, town}], fallen, blade, tunnels: [{place, town, reg}] }
+  // ?digfast in the address runs the dig 60 times faster (for testing).
+  const DIG_MS = 34 * 60000, DIG_FT = 68;
+  const DIG_FAST = (() => { try { return /[?&]digfast\b/.test(location.search) ? 60 : 1; } catch (e) { return 1; } })();
+  const DIG_WHO = ["Aldous Penhallow", "Mab Thistlecombe", "Edda Marrable", "Hob Fenning", "Lettice Crane", "Gideon Sallis", "Old Nan Brockley", "Peregrine Usk"];
+  const DIG_AIMS = ["hall", "store", "huts", "pens", "tower", "yard"];
+  const DIG_DRY = [
+    "Twenty strokes in, you find a worm. It looks at you the way a landlord looks at a tenant who's late.",
+    "The thing about a tunnel is that it's a hole you have to keep agreeing to.",
+    "You've moved more earth tonight than the last three kings of anywhere put together. Nobody is going to write a song about it.",
+    "A spade is a very simple tool. That's the trouble with it.",
+    "Somewhere above you, people are asleep in beds. You think about this more than is healthy.",
+    "You count the strokes for a while. Then you stop counting, because the number was getting personal.",
+    "It occurs to you that the wall you're digging under is about eleven feet high, and that ladders exist.",
+    "There's a stone in your boot. There has been a stone in your boot for nine minutes. It lives there now.",
+    "You find a second worm. Or the same worm. It's hard to tell, and harder to ask.",
+    "Your candle is the only thing down here enjoying itself.",
+    "In a hundred years somebody will find this tunnel and think it was dug by someone with a plan.",
+    "The soil changes from brown to a darker brown. You make a note of it, because it's the most exciting thing that's happened.",
+    "You hum, and the tunnel hums back a little late, which is worse than silence.",
+    "If anybody asks, you'll say it took about half an hour. It took thirty-four minutes. You'll know.",
+    "Dirt in your ears, dirt in your teeth, dirt in a pocket you didn't know you had.",
+    "You wipe your brow, and wipe more dirt onto it. That's the arrangement now.",
+    "An earwig walks past, going the other way, faster than you.",
+    "You think of every ditch-digger you ever walked past without nodding. You'd like to apologise to all of them."
+  ];
+  const DIG_SOUND = {
+    stockade: ["Through the soil, faint: somebody above you is losing at dice, and taking it badly.", "A song comes down through the earth, the same verse four times. Nobody up there knows the second verse.", "Boots go over your head. Then back. Then over again. Somebody's walking a round and hating it."],
+    pressyard: ["A chain drags across the ground over you, slowly, the whole length of the tunnel.", "Somebody up there is talking quietly to somebody else, the way people talk who've been somewhere a long time.", "A door, a lock, and a laugh that isn't funny."],
+    tollfort: ["Brass weights clink on a scale, one, two, three, and a man's voice says \"and the rest.\"", "A cart goes over your head and the roof shivers. It goes on for some time. It's a heavy cart.", "Somebody up there is counting coins, loses count, starts again, and swears."],
+    warren: ["Picks. Somewhere close, somebody else is digging. They stop when you stop.", "The smell of lamp oil comes through a crack in the face. Their tunnels are nearer than you thought.", "A barrel rolls along a passage that isn't yours, a foot from your elbow."],
+    cutters: ["A long saw goes back and forth, back and forth, and the root you're digging round shivers every time.", "The ground under you is warm and listening, and somewhere above, they're sawing it.", "A man laughs about the root. The root goes very still."],
+    raven: ["Ravens over your head, walking on the roof of the earth. You can hear their claws.", "Rain on the mud, far up. In the Wetwood it rains whether you're underground or not.", "Somebody whistles two falling notes, and every raven goes quiet."],
+    eye: ["Through the rock: a hundred people singing the nice song, very slowly, each a beat behind the next.", "A woman's voice, kind, saying the same thing over and over: \"when it opens, when it opens.\"", "Bare feet on stone, a long line of them, going round and round the floor above you."]
+  };
+  const DIG_FINDS = [
+    { t: "a coin so old the king on it has worn away to a smudge", g: 3 },
+    { t: "a clay pipe with a little face on the bowl, smiling as if it knows where it is" },
+    { t: "a brass thimble, green, with a dent in it from somebody's bad day" },
+    { t: "a tooth. Not human, and not small. You put it back" },
+    { t: "a bottle with a note in it: \"If you are reading this you are digging in the wrong place.\" You aren't. Probably" },
+    { t: "a length of old oak, as sound as the day it was cut", tim: 1 },
+    { t: "somebody's gatepost, buried upright, still waiting for a gate", tim: 1 },
+    { t: "a purse that rotted away around its coins", g: 6 },
+    { t: "a stoppered flask, still sealed, that smells exactly like a Draught of Mending", pot: 1 },
+    { t: "a roll of linen in a tin, bone dry", band: 1 },
+    { t: "a stone snail, curled up a very long time ago and never uncurled" },
+    { t: "a spoon. Just a spoon. You keep it: a tunnel this long, you've earned a spoon" }
+  ];
+  const DIG_CO = {
+    burr: { rate: 1, shift: "Burr takes over with enormous enthusiasm and no sense of direction at all.", chat: ["Burr has found a smell, and is following it into the wall.", "Burr lies across the mouth of the tunnel so nothing can get in. Or out. Mostly out.", "Burr digs a hole of his own beside the tunnel. It's going nowhere, fast."] },
+    tyra: { rate: 1, shift: "Tyra takes the spade and digs like somebody settling an argument.", chat: ["Tyra holds the candle and tells you you're doing it wrong, in detail, with love.", "Tyra says this is the most romantic thing anyone's ever made her do. She doesn't say it nicely."] },
+    ishbel: { rate: 1.15, shift: "Ishbel takes the spade without a word. She's done this before, under worse walls, and doesn't say which.", chat: ["Ishbel listens at the roof and holds up two fingers: two of them, walking. Then none.", "Ishbel says the Hollow Hands once dug for a fortnight to come up in the wrong cellar. She says it was a very good cellar."] }
+  };
+  const digCo = (id) => DIG_CO[id] || { rate: 0.9, shift: coName(id) + " takes the spade, spits on both hands, and asks what this pays.", chat: [coName(id) + " asks whether digging counts as fighting, for the purposes of pay.", coName(id) + " says the last job was a tunnel too, and it was shorter."] };
+  const digStats = () => { const R = rc(); return (R.dig = R.dig || { done: 0, real: 0, buried: [], robbed: [], fallen: 0, blade: false, tunnels: [] }); };
+  const digClock = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  // Where you come up: the room you aimed at, or one next to it if you drifted two or more off.
+  function digRoom(C, D) {
+    if (Math.abs(D.drift) < 2) return D.aim;
+    const near = rcAdj(D.aim).filter(k => k !== "gate");
+    return near.length ? near[(C.id + D.drift + 9) % near.length] : D.aim;
+  }
+  // A painting inside the dig panel, swapped with what you're doing.
+  const digPic = (k) => PIC_SRC["sc_dig_" + k] ? '<img alt="' + esc(PIC_ALT["sc_dig_" + k] || "") + '" src="' + picUrl("sc_dig_" + k) + '">' : "";
+
+  // The live panel. Resolves "through" when the 34 minutes are dug, or "leave".
+  function digPanel(C, D) {
+    return new Promise(resolve => {
+      const P = puzzleBox("Under the wall at " + esc(C.place), "Thirty-four minutes of digging, real ones. The clock only runs while you're down here with this on screen, and stops whenever something needs you. Climb out whenever you like: the tunnel keeps, and so does every foot of it.");
+      P.box.classList.add("dig-box");
+      const top = el("div", "dig-top"), view = el("div", "dig-view"), card = el("div", "dig-ev"), log = el("ul", "dig-log"), acts = el("div", "rc-acts");
+      const pic = el("figure", "dig-paint"), sec = el("div", "dig-sec");
+      view.append(pic, sec);
+      P.body.append(top, view, card, log, acts);
+      let over = false, pend = null, busy = null, shift = null, last = performance.now(), saveAt = 0, picK = "", lines = [];
+      const vis = () => !document.hidden;
+      const onVis = () => { if (document.hidden) save(); last = performance.now(); };
+      document.addEventListener("visibilitychange", onVis);
+      SND.collapseLoad && SND.collapseLoad();
+      const note = (t) => { lines.unshift(t); lines = lines.slice(0, 4); log.innerHTML = lines.map((x, i) => "<li" + (i ? "" : ' class="new"') + ">" + x + "</li>").join(""); };
+      const ft = () => Math.min(DIG_FT, Math.floor(D.ms / DIG_MS * DIG_FT));
+      const rate = () => shift ? digCo(shift.id).rate : (D.stam <= 0 ? 0.6 : 1) * (D.wet > 0 ? 0.6 : 1);
+      function fin(r) {
+        if (over) return; over = true; clearInterval(tk); document.removeEventListener("visibilitychange", onVis);
+        P.end(); P.box.classList.add("dig-done"); acts.innerHTML = ""; card.innerHTML = ""; card.hidden = true; save(); resolve(r);
+      }
+      // the cross-section: the mouth on the left, the wall and the room on the right
+      const PATH = [[22, 34], [62, 104], [338, 112]], L1 = Math.hypot(40, 70), L2 = 276, LT = L1 + L2;
+      const at = (f) => { const x = f * LT; if (x <= L1) { const u = x / L1; return [22 + 40 * u, 34 + 70 * u]; } const u = (x - L1) / L2; return [62 + 276 * u, 104 + 8 * u]; };
+      function drawSec() {
+        const f = Math.min(1, D.ms / DIG_MS), [hx, hy] = at(f), room = rcRoom(C, D.aim);
+        let s = '<svg viewBox="0 0 360 150" role="img" aria-label="Your tunnel, ' + ft() + " of " + DIG_FT + ' feet dug toward ' + esc(room) + '">';
+        s += '<rect x="0" y="0" width="360" height="34" class="dig-sky"/><rect x="0" y="34" width="360" height="116" class="dig-earth"/>';
+        s += '<rect x="300" y="4" width="10" height="34" class="dig-wall"/><rect x="312" y="10" width="44" height="24" class="dig-hut"/><text x="334" y="26" class="dig-lbl">' + esc(room.replace(/^The /, "")).slice(0, 14) + "</text>";
+        s += '<path d="M' + PATH.map(p => p.join(",")).join(" L") + '" class="dig-plan"/>';
+        s += '<path d="M' + PATH.map(p => p.join(",")).join(" L") + '" class="dig-dug" pathLength="1000" stroke-dasharray="' + Math.round(f * 1000) + ' 1000"/>';
+        D.posts.forEach(p => { const [x, y] = at(p); s += '<line x1="' + (x - 5) + '" y1="' + (y - 7) + '" x2="' + (x - 5) + '" y2="' + (y + 7) + '" class="dig-post"/><line x1="' + (x + 5) + '" y1="' + (y - 7) + '" x2="' + (x + 5) + '" y2="' + (y + 7) + '" class="dig-post"/><line x1="' + (x - 7) + '" y1="' + (y - 7) + '" x2="' + (x + 7) + '" y2="' + (y - 7) + '" class="dig-post"/>'; });
+        D.weak.forEach(p => { const [x, y] = at(p); s += '<path d="M' + (x - 4) + "," + (y - 9) + " l3,4 l-2,2 l4,3" + '" class="dig-crack"/>'; });
+        s += '<circle cx="22" cy="34" r="3" class="dig-candle"/><circle cx="' + hx.toFixed(1) + '" cy="' + hy.toFixed(1) + '" r="5" class="dig-you"/>';
+        sec.innerHTML = s + "</svg>";
+      }
+      function drawTop() {
+        const pips = Math.ceil(D.stam / 20);
+        top.innerHTML = '<div class="dig-clock"><b>' + digClock(Math.min(D.ms, DIG_MS)) + "</b> of 34:00 dug</div>" +
+          '<div class="dig-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + DIG_FT + '" aria-valuenow="' + ft() + '"><i style="width:' + (Math.min(1, D.ms / DIG_MS) * 100).toFixed(1) + '%"></i></div>' +
+          '<div class="rc-meters"><span>' + ft() + " of " + DIG_FT + " feet</span><span>Down here " + digClock(D.real) + "</span><span>" + (shift ? esc(coName(shift.id)) + " digging " + digClock(Math.max(0, shift.end - D.real)) : "Your arms " + '<span class="rc-pips">' + [0, 1, 2, 3, 4].map(i => "<i" + (i < pips ? ' class="on"' : "") + "></i>").join("") + "</span>") + "</span><span>Timbers " + D.timbers + "</span>" + (D.weak.length ? '<span class="dig-warn">Unshored ' + D.weak.length + "</span>" : "") + "</div>";
+        const state = pend ? "Stopped: something needs you." : busy ? esc(busy.label) + " (" + digClock(Math.max(0, busy.end - D.real)) + ")" : !vis() ? "Paused." : shift ? esc(coName(shift.id)) + " has the spade." : D.stam <= 0 ? "Your arms have stopped asking you about it. Slower now." : D.wet > 0 ? "Digging in mud. Slower." : "Digging.";
+        P.status.innerHTML = state;
+        const k = busy && busy.pic ? busy.pic : shift ? "shift" : D.stam <= 0 ? "kneel" : D.ms < 60000 ? "mouth" : "face";
+        if (k !== picK) { picK = k; pic.innerHTML = digPic(k); pic.hidden = !pic.innerHTML; }
+      }
+      function drawActs() {
+        acts.innerHTML = "";
+        const btn = (label, tag, fn, cls) => { const b = pbtn(label + (tag ? "<small>" + tag + "</small>" : ""), cls || ""); b.onclick = () => { if (!over) fn(); }; acts.append(b); };
+        if (!pend && !busy && !shift) {
+          company().forEach(id => { if (D.stam < 70) btn("Hand the spade to " + esc(coName(id)), "a spell of about two and a half minutes · your arms come back", () => { shift = { id, end: D.real + 150000 / DIG_FAST }; note(digCo(id).shift); drawAll(); }); });
+          if (D.stam < 90) btn("Sit down a minute", "the spade stops · your arms come back", () => { busy = { end: D.real + 45000 / DIG_FAST, label: "Sitting with your back to the wall", pic: "kneel", then: () => { D.stam = 100; note("You get up. Your back makes a noise like a gate."); } }; drawAll(); });
+        }
+        btn("Climb out for now", "the tunnel keeps · come back to it from " + esc(C.place), () => fin("leave"), "ghost");
+      }
+      function drawCard() {
+        card.innerHTML = "";
+        if (!pend) { card.hidden = true; return; }
+        card.hidden = false;
+        card.append(el("p", "", pend.html));
+        if (pend.svg) card.append(el("div", "dig-puz", pend.svg));
+        const row = el("div", "rc-acts");
+        pend.opts.forEach(o => { if (o.show === false) return; const b = pbtn(o.label + (o.tag ? "<small>" + o.tag + "</small>" : ""), o.cls || ""); b.onclick = () => { if (over || !pend) return; const p = pend; pend = null; const r = o.fn ? o.fn() : null; if (r) note(r); drawAll(); }; row.append(b); });
+        card.append(row);
+      }
+      function drawAll() { drawTop(); drawSec(); drawCard(); drawActs(); }
+      // a stretch falls in: back a bit, a bruise, the collapse
+      function fall(where) {
+        SND.collapse ? SND.collapse() : SND.quake && SND.quake();
+        const back = Math.min(D.ms, 50000 + d(40) * 1000);
+        D.ms -= back; D.fallen++; digStats().fallen++;
+        const n = d(4); S.hp = Math.max(1, S.hp - n); renderSheet();
+        P.box.classList.remove("dig-shake"); void P.box.offsetWidth; P.box.classList.add("dig-shake");
+        return "The roof comes down " + where + ", timbers and all, and you dig yourself out spitting, " + n + " HP the worse and " + digClock(back) + " of digging gone back to dirt.";
+      }
+      // ---- the events ----
+      const used = (k) => (D.used[k] || 0);
+      const use = (k) => { D.used[k] = used(k) + 1; };
+      function evTrickle() {
+        const f = Math.min(0.98, D.ms / DIG_MS);
+        pend = { html: "Dirt trickles out of the roof at foot " + Math.max(1, ft()) + ", a thin dry stream, the way sand runs in a glass.", opts: [
+          { label: "Shore it up", tag: "a timber · " + D.timbers + " left", show: D.timbers > 0, fn: () => { D.timbers--; D.posts.push(f); SND.thud && SND.thud(1); return "You set two props and a cap-piece, and knock them tight. The trickle stops."; } },
+          { label: "Dig on", tag: "it'll probably hold", cls: "ghost", fn: () => { D.weak.push(f); return "It stops. Probably."; } }
+        ] };
+      }
+      function evSettle() {
+        if (d(5) <= D.weak.length) { const p = D.weak.shift(); pend = { html: fall("at foot " + Math.max(1, Math.round(p * DIG_FT))), opts: [{ label: "Dig on", tag: "again" }] }; return; }
+        note("The tunnel creaks behind you, and settles, and holds. This time.");
+      }
+      function evFind() {
+        const open = DIG_FINDS.map((x, i) => i).filter(i => !(D.used["f" + i]));
+        if (!open.length) return evDry();
+        const i = open[d(open.length) - 1], F = DIG_FINDS[i]; use("f" + i);
+        const got = [];
+        if (F.g) { S.coins += F.g; got.push("+" + F.g + " gold"); }
+        if (F.tim) { D.timbers += F.tim; got.push("+1 timber"); }
+        if (F.pot) { S.potions = (S.potions || 0) + 1; got.push("+1 Draught of Mending"); }
+        if (F.band) { S.dress = (S.dress || 0) + 1; got.push("+1 bandage"); }
+        if (got.length) renderSheet();
+        pend = { html: "Your spade turns up " + F.t + "." + (got.length ? " <b>" + got.join(", ") + ".</b>" : ""), opts: [{ label: F.tim ? "Keep it for the roof" : "Pocket it", tag: "and dig on" }] };
+      }
+      function evSound() { const L = DIG_SOUND[C.k] || DIG_SOUND.stockade; note(L[used("snd") % L.length]); use("snd"); }
+      function evDry() { const t = quip("dig"); if (t) note(t); }
+      function evChat() { const co = company(); if (!co.length) return evDry(); const id = co[d(co.length) - 1], L = digCo(id).chat; note(L[used("c" + id) % L.length]); use("c" + id); }
+      function evStone() {
+        use("stone");
+        const good = d(3) - 1, xs = [70, 150, 230], ys = [52, 34, 58];
+        let s = '<svg viewBox="0 0 300 100" class="dig-stone" aria-hidden="true"><ellipse cx="150" cy="50" rx="138" ry="46"/>';
+        const [gx, gy] = [xs[good], ys[good]];
+        s += '<path d="M' + (gx - 40) + ',8 L' + (gx - 12) + "," + (gy - 10) + " L" + gx + "," + gy + '"/><path d="M' + (gx + 30) + ',96 L' + (gx + 8) + "," + (gy + 14) + " L" + gx + "," + gy + '"/>';
+        const lone = (good + 1 + d(2) - 1) % 3; s += '<path d="M' + (xs[lone] + 34) + ',6 L' + (xs[lone] + 14) + "," + (ys[lone] - 4) + " L" + (xs[lone] + 8) + "," + (ys[lone] + 8) + '"/>';
+        xs.forEach((x, i) => { s += '<circle cx="' + x + '" cy="' + ys[i] + '" r="11" class="dig-mark"/><text x="' + x + '" y="' + (ys[i] + 4) + '">' + "ABC"[i] + "</text>"; });
+        let tries = 0;
+        const hit = (i) => () => {
+          if (i === good) { SND.thud && SND.thud(3); return "You put the spade in where the cracks meet, and lean, and the stone opens like a loaf."; }
+          tries++; D.noise++; SND.clang && SND.clang();
+          if (tries >= 2) { busy = { end: D.real + 50000 / DIG_FAST, label: "Digging round the stone", then: () => note("You go round it. It takes a while, and the stone watches.") }; return "The spade rings off it like a bell. Somewhere above, a dog starts barking."; }
+          pend = { html: "The spade rings off it like a bell, and somewhere above you a dog starts barking. Try again: strike where two cracks meet.", svg: s + "</svg>", opts: [0, 1, 2].map(k => ({ label: "Strike at " + "ABC"[k], fn: hit(k) })) };
+          return "";
+        };
+        pend = { html: "A stone the size of a sleeping cow, right across the face. Stone like this splits where two cracks meet; anywhere else, it rings.", svg: s + "</svg>", opts: [0, 1, 2].map(k => ({ label: "Strike at " + "ABC"[k], fn: hit(k) })) };
+      }
+      function evRoots() {
+        use("roots");
+        const R = [["taut", "pulled tight as a bowstring, and the roof sags toward it"], ["dead", "grey and dry, and it creaks when you touch it"], ["live", "warm, and when you lay your palm on it, you'd swear it's listening"]].sort(() => Math.random() - 0.5);
+        pend = { html: "Three roots across the tunnel, too close to squeeze between. The first is " + R[0][1] + ". The second is " + R[1][1] + ". The third is " + R[2][1] + ". One has to go.", opts: R.map((r, i) => ({ label: "Cut the " + ["first", "second", "third"][i], fn: () => {
+          if (r[0] === "dead") return "It snaps clean, and the way's open, and nothing minds.";
+          if (r[0] === "live") { D.root--; return "It parts under the spade with a sound like a held breath let go, and the tunnel goes very quiet. Something in the ground has stopped listening to you."; }
+          pend = { html: fall("where the root was holding it"), opts: [{ label: "Dig on", tag: "the root you should have cut is lying in the rubble, dead" }] }; return "";
+        } })) };
+      }
+      function evHeading() {
+        use("head");
+        const k = D.drift;
+        const desc = k === 0 ? "dead behind you, right where it should be" : Math.abs(k) === 1 ? "a hand's breadth to the " + (k < 0 ? "right" : "left") + " of where it should be" : "two hands to the " + (k < 0 ? "right" : "left") + " of where it should be";
+        const off = -k * 26;
+        const svg = '<svg viewBox="0 0 200 90" class="dig-head" aria-hidden="true"><ellipse cx="100" cy="48" rx="70" ry="38"/><line x1="100" y1="12" x2="100" y2="84"/><circle cx="' + (100 + off) + '" cy="52" r="5"/></svg>';
+        const steer = (n) => () => { D.drift += n; return D.drift === 0 ? "You put your shoulder into the turn, and when you look back the candle is dead behind you." : Math.abs(D.drift) >= 2 ? "You look back. The candle's further off than before. That was the wrong way." : "Better. Not perfect."; };
+        pend = { html: "Are you still going the right way? You look back down the tunnel at the candle you left burning at the mouth. It should sit dead behind you; if it's off to one side, you've been turning the other way, so steer toward it. It's " + desc + ".", svg, opts: [
+          { label: "Steer left", tag: "a little", fn: steer(-1) }, { label: "Keep straight", fn: steer(0) }, { label: "Steer right", tag: "a little", fn: steer(1) }
+        ] };
+      }
+      function evWater() {
+        use("water");
+        const way = ["left", "right", "back"][d(3) - 1];
+        const where = { left: "rolls to the left wall and stops", right: "rolls to the right wall and stops", back: "rolls back past your boots, the way you came" }[way];
+        const drain = (w) => () => { if (w === way) return "The water finds the drain and goes, gurgling, and the face is dry by the time you've wrung out your socks."; D.wet = 120000; return "The water fills the drain, looks at it, and comes back. You'll be digging in mud for a while."; };
+        pend = { html: "Water. It's coming in at the face, a cold seep that's already round your ankles. You set a pebble on the floor and it " + where + ". Water goes where the pebble goes.", opts: [
+          { label: "Cut a drain on the left", fn: drain("left") }, { label: "Cut a drain on the right", fn: drain("right") }, { label: "Cut a drain back toward the mouth", fn: drain("back") }
+        ] };
+      }
+      function evBones() {
+        D.bones = "met";
+        pend = { html: "Your spade goes through into a hollow, and the hollow is somebody else's tunnel, very old, going the same way as yours. At the end of it is somebody: bones in a coat gone to lace, a spade still in the hands, and scratched in the clay beside them with the corner of it: <b>" + esc(D.who).toUpperCase() + ". THIRTY-THREE MINUTES. NEARLY.</b>", opts: [
+          { label: "Bury " + esc(D.who) + " properly", tag: "a minute, and some words", fn: () => { D.bones = "buried"; D.root++; busy = { end: D.real + 60000 / DIG_FAST, label: "Burying " + D.who, then: () => note("You say what you can remember of the words. It isn't much. It'll do.") }; const X = digStats(); X.buried.push({ n: D.who, place: C.place, town: C.giver, met: false }); grant("digbury"); return "You make a grave in the side of their tunnel and lay them in it, spade and all."; } },
+          { label: "Take the purse at their belt", tag: "they won't need it", fn: () => { D.bones = "robbed"; D.root--; const g = 10 + lv(); S.coins += g; renderSheet(); digStats().robbed.push({ n: D.who, place: C.place, town: C.giver }); return "You take the purse. " + g + " gold, old coin. The tunnel is very quiet afterwards."; } },
+          { label: "Leave them be, and dig round", cls: "ghost", fn: () => { D.bones = "left"; return "You dig round them, carefully, and say sorry about the elbow."; } }
+        ] };
+      }
+      function evListen() {
+        D.heard = "near";
+        const said = C.k === "eye" ? "Haggith's voice, kind and tired, saying who's to sit where tonight" : esc(C.chief.n) + "'s voice, telling somebody where they'll be tonight, and the boots of the rounds going over";
+        pend = { html: "You're close. Close enough, with your ear flat to the clay, to hear words.", opts: [
+          { label: "Stop and listen a while", tag: "about forty seconds · where the leader is, and the rounds", fn: () => { busy = { end: D.real + 40000 / DIG_FAST, label: "Listening at the wall", pic: "kneel", then: () => { D.heard = "yes"; C.know.chief = true; C.know.route = true; note("You heard " + said + ", twice. <b>You know where the leader is, and the patrols' rounds.</b>"); } }; return ""; } },
+          { label: "Dig on", cls: "ghost", fn: () => "You let the voices go. Digging is louder than listening." }
+        ] };
+      }
+      function event() {
+        const f = D.ms / DIG_MS;
+        if (!D.bones && f >= 0.38) return evBones();
+        if (!D.heard && f >= 0.55) return evListen();
+        if (!used("water") && f >= 0.72) return evWater();
+        if (!used("half") && f >= 0.5) { use("half"); return note("Seventeen minutes. Half way. You've been underground longer than most funerals, and with about as much conversation."); }
+        if (!used("end") && f >= 0.95) { use("end"); return note("You can hear their floor creak, right over your head."); }
+        // Burr's shifts wander
+        if (d(4) === 1 && shift && shift.id === "burr") D.drift += d(2) === 1 ? 1 : -1;
+        else if (d(5) === 1) D.drift += d(2) === 1 ? 1 : -1;
+        D.drift = Math.max(-2, Math.min(2, D.drift));
+        const r = d(100);
+        if (D.weak.length && r <= 14) return evSettle();
+        if (r <= 36) return evTrickle();
+        if (r <= 50) return evFind();
+        if (r <= 58 && used("stone") < 2 && f > 0.1) return evStone();
+        if (r <= 64 && !used("roots") && f > 0.2) return evRoots();
+        if (r <= 72 && used("head") < 3 && (D.drift !== 0 || d(3) === 1)) return evHeading();
+        if (r <= 82) return evSound();
+        if (r <= 91) return evChat();
+        return evDry();
+      }
+      // ---- the clock ----
+      function tick() {
+        if (over) return;
+        const now = performance.now(), dt = Math.min(1500, now - last); last = now;
+        if (!vis()) { drawTop(); return; }
+        D.real += dt;
+        if (busy && D.real >= busy.end) { const b = busy; busy = null; b.then && b.then(); drawAll(); }
+        if (shift && D.real >= shift.end) { note(esc(coName(shift.id)) + " hands the spade back." + (shift.id === "burr" ? " He looks pleased with whatever he's done." : "")); shift = null; drawAll(); }
+        if (!pend && !busy) {
+          const g = dt * rate() * DIG_FAST;
+          D.ms += g;
+          if (D.wet > 0) D.wet -= g;
+          if (shift || busy) D.stam = Math.min(100, D.stam + dt * DIG_FAST / 900);
+          else D.stam = Math.max(0, D.stam - g / 4200);
+          if (Math.floor((D.ms - g) / 9000) !== Math.floor(D.ms / 9000)) SND.thud && SND.thud(0);
+          if (D.ms >= DIG_MS) { D.ms = DIG_MS; drawAll(); return fin("through"); }
+          if (D.ms >= D.at) { event(); D.at = D.ms + (55 + d(45)) * 1000; drawAll(); }
+        } else if (busy || shift) D.stam = Math.min(100, D.stam + dt * DIG_FAST / 900);
+        if (now - saveAt > 10000) { saveAt = now; save(); }
+        drawTop(); if (Math.floor(now / 1000) !== Math.floor((now - dt) / 1000)) drawSec();
+      }
+      const tk = setInterval(tick, 250);
+      drawAll();
+      note(D.ms ? "Back at the face. It's where you left it." : "You put the spade in.");
+    });
+  }
+
+  // The approach: start a tunnel, carry on with one, or go up a finished one. Returns where and when you come up, or null.
+  async function rcDig(C) {
+    const T = C.t, X = digStats();
+    let D = C.dig;
+    if (D && D.done && !D.stands) D = C.dig = null;
+    if (!D) {
+      await say(C.k === "eye" ? "You start in a dry gully a quarter of a mile from the rim, where the black cloth can't see you, and aim for the side of the sinkhole: down through the topsoil, into the soft rock under it, and through the wall of the Pupil from the side." : C.k === "warren" ? "You start in the bracken on the far side of the hill. Their tunnels run all through it; yours will have to run between them, and come up where they don't expect a floor to open." : "You start in the trees, out of sight of the walls, under a hurdle and some bracken. It's a long way to " + esc(C.place) + " underground, longer than it looks from the top.");
+      const opts = DIG_AIMS.map((k, i) => ({ key: k, label: "Aim for " + rcRoomS(C, k), tag: (C.job && C.know.at[C.job] && T.at[C.job] === k ? "what you came for is in there · " : "") + (k === "yard" ? "out in the open" : k === "tower" && C.size >= 2 ? "under the lantern" : "a room with walls"), plain: i > 0 }));
+      const aim = await choose(opts.concat([{ key: "back", label: "Not yet", plain: true }]));
+      if (aim === "back") return null;
+      D = C.dig = { ms: 0, real: 0, aim, timbers: 6, posts: [], weak: [], fallen: 0, stam: 100, drift: 0, noise: 0, root: 0, bones: null, heard: null, done: false, stands: false, at: 45000, used: {}, left: null, who: DIG_WHO[(C.id * 3 + calDay()) % DIG_WHO.length], wet: 0 };
+      tip("rcdig");
+    } else if (!D.done) {
+      if (D.left != null && C.noticed >= 2 && calDay() - D.left >= 5 && D.ms > 0) {
+        const lost = Math.round(D.ms * 0.2); D.ms -= lost; D.weak = D.weak.filter(p => p < D.ms / DIG_MS); D.posts = D.posts.filter(p => p < D.ms / DIG_MS);
+        await say("Somebody's found the mouth of your tunnel. They've filled the first stretch with stones and, from the smell, the contents of a privy, and somebody has written a word on the hurdle that you'd rather not read. You dig it out again. " + digClock(lost) + " of it gone.");
+      } else await say("You pull the hurdle and the bracken off the mouth of your tunnel. It's where you left it, " + Math.floor(D.ms / DIG_MS * DIG_FT) + " feet of it, smelling of you.");
+      D.left = null;
+    }
+    if (!D.done) {
+      const r = await digPanel(C, D);
+      if (r === "leave") {
+        D.left = calDay(); calPass(1); save();
+        add(framedPic(picUrl("sc_dig_spade"), PIC_ALT.sc_dig_spade, "Where you left it"));
+        await say("You leave the spade leaning against the face, and crawl back out into the air, and put the hurdle over the hole. " + digClock(DIG_MS - D.ms) + " of digging still to go. Come back to it from " + esc(C.place) + ".");
+        return null;
+      }
+      D.done = true; D.stands = D.weak.length < 3; D.left = null;
+      X.done++; X.real += D.real; X.tunnels.push({ place: C.place, town: C.giver, reg: C.reg });
+      calPass(1);
+      grant("dig34"); if (!D.fallen && !D.weak.length) grant("digshore");
+      add(el("div", "part-head sub", '<span class="num">The Long Dig</span><h2>Thirty-Four Minutes</h2>'));
+      await say("The spade goes in, and comes up, and goes in, and then it goes in and doesn't come up, because there's nothing in front of it but air and a board. You're under " + rcRoomS(C, digRoom(C, D)) + ". You can hear somebody breathing on the other side of the floor, slow, asleep." + (D.real > DIG_MS + 6 * 60000 ? " It took you " + Math.round(D.real / 60000) + " minutes, all told, to dig thirty-four minutes of tunnel. That's tunnels for you." : ""));
+      if (!D.stands) await say("Behind you, the tunnel sighs. Then it comes down, all of it, from the mouth to your heels, in one long rolling thump you feel in your teeth. There's no going back that way. Up, then.");
+      if (!D.stands) { SND.collapse ? SND.collapse() : SND.quake && SND.quake(); }
+      await digBlade(D);
+      save();
+    } else await say("Your tunnel's still there under the hurdle and the bracken, propped and dry, all " + DIG_FT + " feet of it. You go up it on your elbows in a few minutes, which is a very strange feeling after the first time.");
+    const w = await choose([0, 1, 2].map(i => ({ key: "" + i, label: "Break through at " + RC_WATCH[i].toLowerCase(), tag: i === 1 ? "most of them asleep" : i === 0 ? "the yard still busy" : "the night nearly over: less time inside", plain: i !== 1 })).concat([{ key: "back", label: "Not tonight", tag: "the tunnel's dug, and it'll keep", plain: true }]));
+    if (w === "back") { save(); return null; }
+    return { room: digRoom(C, D), watch: +w, stands: D.stands, noise: Math.min(2, D.noise), wrong: digRoom(C, D) !== D.aim };
+  }
+  // After a tunnel raid: if the alarm went up, they find it and fill it.
+  async function digAfterRaid(C, B) {
+    if (!C.dig || C.gone) return;
+    if (B.alarm && C.dig.stands) { C.dig = null; await say("In the morning, from the treeline, you watch them find your tunnel. It takes six of them all day to fill it, and they don't do it cheerfully."); save(); }
+  }
+  // Patience: once a run, from the first tunnel you finish. What you did with the last digger decides the root.
+  async function digBlade(D) {
+    const X = digStats();
+    if (X.blade || !S.axe) return;
+    X.blade = true;
+    const rooted = D.root >= 0, buried = D.bones === "buried" && D.root >= 1;
+    S.lootN = (S.lootN || 0) + 1;
+    const L = { id: S.lootN, uid: newUid(), b: "dagger", t: "rootbound", n: rooted ? "Patience" : "Patience, Unrooted", icon: "dagger", pic: "spadeblade", die: [1, 6, 3], hit: 1, tr: buried ? ["drink"] : rooted ? ["keen"] : [], ac: ["undercut"], keep: true, dig: true,
+      lore: buried ? "The root grew round the grip the night you buried " + esc(D.who) + ", and it hasn't let go." : rooted ? "Thirty-four minutes of stone wore the spade to an edge, and a root found the grip and stayed." : "Thirty-four minutes of stone wore the spade to an edge. The root round the grip is dead, and stays dead." };
+    const sold = gainLoot(L);
+    grant("digblade");
+    await say("When you look at your spade, at the top of the tunnel, by the light coming through the boards, it isn't a spade any more. Thirty-four minutes of stone and root and clay have worn the blade down to a point and both edges keen as a knife. " + (rooted ? "And a root has come down out of the roof of the tunnel and wound itself round and round the haft, tight as cord, as if it wanted to hold it too. You snap the haft off short above the root. It fits your hand like it was made for it, which, in a way, it was." : "A root has come down out of the roof and wound round the haft, like the others did, but this one's grey and dry and dead, and it crumbles when you close your hand. The roots down here don't care for you now. You snap the haft off short and bind the grip with cord.") + " You call it Patience.");
+    picCard("L" + L.id);
+    await mech("<span>" + wTier("L" + L.id) + "Gain <b>" + armName("L" + L.id) + "</b>. " + wDef("L" + L.id).fx + (sold.length ? " (You sell off " + sold.join(", ") + " to make room.)" : "") + "</span>", "loot find q-rootbound");
+    const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep what you're holding", plain: true }]);
+    if (c === "y") wield("L" + L.id);
+  }
+  // A line in a town that remembers your tunnels.
+  function digTownLine(T) {
+    const X = S.rc && S.rc.dig; if (!X) return null;
+    const b = X.buried.find(x => x.town === T.name && !x.met);
+    if (b) return () => { b.met = true; const g = 12; S.coins += g; renderSheet(); return say("A woman stops you in the street. Her grandmother, she says, was " + esc(b.n) + ", who went under the wall at " + esc(b.place) + " a long time ago and never came up, and somebody's told her you buried what was left, properly. She puts " + g + " gold in your hand and won't take it back, and goes off before you can say anything, which is just as well."); };
+    const r = X.robbed.find(x => x.town === T.name);
+    if (r && d(2) === 1) return () => say("In the bar a man is telling a story about a ghost under the wall at " + esc(r.place) + " that walks about looking for its purse. He looks at you for a long time while he tells it.");
+    const t = X.tunnels.find(x => x.town === T.name);
+    if (t && d(3) === 1) return () => say("A boy runs up and asks if it's true you dug under " + esc(t.place) + " with a spade, the whole way, for thirty-four minutes. You say it's true. He looks disappointed. He'd heard it was an hour.");
+    return null;
   }
   // The alarm: the garrison turns out, and you fight them on the compound's own battle map.
   async function rcAlarm(C, B, where) {
@@ -9170,7 +9633,7 @@ body.pv-open { overflow: hidden; }
     if (B.lostChief) return;
     const done = Object.keys(B.done).filter(j => B.done[j]);
     if (B.carry === C.hostage.n && C.jobs.includes("rescue")) done.push("rescue");
-    if (B.freed && C.jobs.includes("free") && (B.gateUp || B.broken)) done.push("free");
+    if (B.freed && C.jobs.includes("free") && (B.gateUp || B.broken || B.viaTunnel)) done.push("free");
     const jobs = [...new Set(done)].filter(j => C.jobs.includes(j) && !C.done.includes(j));
     add(el("div", "part-head sub", '<span class="num">After the raid</span><h2>' + esc(C.name) + "</h2>"));
     if (!jobs.length && !C.chiefDead && !B.broken) {
@@ -9288,6 +9751,7 @@ body.pv-open { overflow: hidden; }
   const rcInnFree = (T) => rc().marks.rescued.some(x => x.town === T.name);
   async function rcTownLine(T) {
     if (!S.rc) return;
+    const dl = digTownLine(T); if (dl) { await dl(); return; }
     const M = S.rc.marks, L = [];
     const res = M.rescued.find(x => x.town === T.name);
     if (res) L.push(res.n + " is in the street when you come in, and stops, and doesn't say anything, and takes your hand for a moment, and lets it go.");
@@ -9315,6 +9779,7 @@ body.pv-open { overflow: hidden; }
       (gone.length ? "<p><b>Done with</b>: " + gone.map(C => esc(C.place) + " (" + { burn: "burned", give: "given to " + C.giver, hold: "held", left: "left" }[C.gone] + ")").join("; ") + ".</p>" : "") +
       (M.rescued.length ? "<p>Brought home: " + M.rescued.map(x => x.n + " to " + x.town).join(", ") + ".</p>" : "") +
       (M.freed ? "<p>" + M.freed + " people out of the pens.</p>" : "") +
+      (X.dig && X.dig.done ? "<p>Tunnels dug: " + X.dig.done + " (thirty-four minutes each, " + Math.round(X.dig.real / 60000) + " minutes underground all told" + (X.dig.fallen ? ", " + X.dig.fallen + " roof" + (X.dig.fallen === 1 ? "" : "s") + " fallen in" : "") + ")." + (X.dig.buried.length ? " Buried: " + X.dig.buried.map(b => esc(b.n)).join(", ") + "." : "") + "</p>" : "") +
       (X.raven ? "<p>Tharen Ravendare: " + (X.raven === "dead" ? "dead, in the mud of his own yard." : "alive, and building higher.") + "</p>" : "") +
       (X.log.length ? '<ul class="hm-log">' + X.log.slice(0, 8).map(t => "<li>" + esc(t) + "</li>").join("") + "</ul>" : "") + "</section>";
   }
@@ -12112,6 +12577,7 @@ body.pv-open { overflow: hidden; }
   // quip(pool, key) picks a line you haven't heard yet (S.dry.seen) and counts it (S.dry.n, S.dry.burr).
   // New chapters add a DRY.wayside entry (by chapter slug) and a DRY.town entry (by region).
   const DRY = {
+    dig: DIG_DRY,
     calSeason: CAL_SEASON_LINES, calFair: CAL_FAIR_LINES, calName: CAL_NAME_WHY,
     wayside: {
       cases: [
@@ -20283,6 +20749,11 @@ body.pv-open { overflow: hidden; }
     sc_rslib: ["sc_rslib_b", "sc_rslib_c"], sc_dvithra: ["sc_dvithra_b"], sc_wleye: ["sc_wleye_b"]
   };
   const PIC_ALT = {
+    sc_dig_mouth: "A painting of a tunnel shored with rough timbers and hung with roots, running away into the dark, a lantern on the floor and a basket of earth beside it.",
+    sc_dig_face: "A painting of a digger seen from behind, kneeling at a face of earth and roots in a timbered tunnel, a lantern on the prop and a basket of soil at their knee.",
+    sc_dig_shift: "A painting of two figures crawling along a low tunnel of roots by the light of a small lamp.",
+    sc_dig_kneel: "A painting of a tired digger kneeling in a narrow root tunnel, both hands on a spade, under a hanging lantern.",
+    sc_dig_spade: "A painting of a spade leaning against a wall of roots and earth in a timbered tunnel, a lantern glowing on the floor behind it.",
     p_speaker: "A painting of the Speaker for the Deep: a tall, grey-skinned old Bathyr in ragged lead-weighted robes, writing on a lead tablet with a stone stylus, a pale sea-light behind him.",
     p_orla: "A painting of Orla Tennick: a hard-faced Skerran captain in a salt-stiff black coat, a knotted count-rope round her neck and a boarding axe at her belt.",
     p_mardek: "A painting of Mardek Corvane: a thin, smiling man in a long grey coat, a surveyor's chain over his shoulder, holding up a lantern where pale souls drift like moths.",
