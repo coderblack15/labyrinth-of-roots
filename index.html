@@ -1164,6 +1164,19 @@ button.un-mode.on { border-color: var(--gold); color: var(--gold); }
 .pips i.on:nth-child(3), .combo.ready .pips i:nth-child(3) { box-shadow: 0 0 8px rgba(255, 210, 122, .7); }
 .combo.ready .pips i:nth-child(3) { border-color: #ffd27a; }
 .combo-note { font-family: var(--label); font-size: .78rem; letter-spacing: .05em; color: var(--muted); }
+/* The Turning Gauge: your gauge and the foe's, and who moves next. */
+.pace { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; }
+.pace-gs { display: inline-grid; gap: 3px; }
+.pace-g { position: relative; width: 58px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, .4); border: 1px solid rgba(255, 210, 122, .25); overflow: hidden; }
+.pace-g i { position: absolute; inset: 0 auto 0 0; background: var(--gold); transition: width .35s; }
+.pace-g.foe { border-color: rgba(214, 120, 96, .35); }
+.pace-g.foe i { background: #d67860; }
+.pace-g.wind { box-shadow: 0 0 6px rgba(214, 90, 70, .8); }
+.pace-next { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+.pace-next b { font: 500 .7rem var(--label); letter-spacing: .04em; padding: 1px 5px; border-radius: 3px; border: 1px solid rgba(255, 210, 122, .35); color: var(--gold); }
+.pace-next b.it { border-color: rgba(214, 120, 96, .4); color: #e59a85; }
+.pace-next b.wind { background: rgba(160, 50, 35, .45); color: #ffd7c9; }
+@media (prefers-reduced-motion: reduce) { .pace-g i { transition: none; } }
 .combo.ready .combo-note { color: var(--gold); }
 .roll .meta .combo-tag { color: var(--gold); }
 .story .mech.combo { color: #ffd27a; }
@@ -2551,6 +2564,7 @@ body.pv-open { overflow: hidden; }
       </div></div>
       <div class="foe-meters">
       <div class="combo" id="comboBox"><span class="stat-label">Combo</span><span class="pips" id="comboPips"><i></i><i></i><i></i></span><span class="combo-note" id="comboNote"></span></div>
+      <div class="pace" id="paceBox" hidden><span class="stat-label">Pace</span><span class="pace-gs" title="Your gauge (top) and its gauge"><span class="pace-g"><i id="paceYou"></i></span><span class="pace-g foe" id="paceFoeG"><i id="paceFoe"></i></span></span><span class="pace-next" id="paceNext"></span></div>
       <div class="dread" id="dreadBox" hidden><span class="stat-label">Dread</span><span class="dpips" id="dreadPips"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="threads" id="threadPips" title="Cascade threads"></span><span class="combo-note" id="dreadNote"></span></div>
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
       <div class="belt kin" id="kinBox" hidden><span class="stat-label" id="kinLbl">Path</span><span class="belt-note" id="kinNote"></span></div>
@@ -3981,6 +3995,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "132", name: "The Turning Gauge", date: "17 Nov 2026", items: [
+      "Fights no longer go strictly you, then it. Every fighter has a <b>gauge</b> that fills at its own speed, and moves when it's full. Hounds, crows, ticks and other quick things fill theirs fast; hulks, crabs, golems and armoured brutes fill theirs slowly. Rapiers and knives make you a little quicker, maces and mauls a little slower, and everyone's footing on the day adds a little either way, so no two fights run at the same pace.",
+      "<b>Pace</b>, under the combo by the foe's health, shows both gauges and the next few turns in order.",
+      "Two new ways to swing: a <b>quick jab</b> (+2 to hit, half damage, and your gauge stays half full) and a <b>heavy blow</b> (−2 to hit, half again as much damage, and a longer wait after). Catching your breath, binding a wound, bandaging, wiping your eyes or planting the pavise now keeps a quarter of your gauge.",
+      "Bosses <b>wind up</b> every fourth move: it shows in red in the turn order, and the blow lands with an extra damage die (then it needs longer to recover). Land a heavy blow or a Rootbreaker before it falls and you stagger it: the blow is lost and its gauge empties. Any Rootbreaker knocks a foe's gauge back.",
+      "Kept fair: nobody gets more than two turns in a row, speeds stay within a quarter of each other, a quick foe swings wilder (−1 or −2 to hit) and a slow one truer (+1 or +2), and you always move first. Company battles and the battle maps keep their own turns." ] },
     { ver: "130", name: "Sharper Blades", date: "16 Nov 2026", items: [
       "Fencing duels are harder now. A duel is fought <b>to the yield</b>: once it has cost you 40% of your max HP, their point is at your throat and you lose (you keep the rest of your HP). The pad shows how much you can still take.",
       "Duelists are tougher and quicker: more HP, harder blows as you level, a shorter answer bar and less time to read the tell, and a riposte has to come a little faster.",
@@ -5954,6 +5974,7 @@ body.pv-open { overflow: hidden; }
     ice: ["Black ice", "Some of this floor is <b>black ice</b>. Step onto it and you slide the same way until something stops you: a wall, a block, a <b>warm stone</b> or another body. The squares you can reach already show where you'll stop, so plan by where you'll end up. Foes slide too, and they don't plan for it: stand off their straight line and they go sailing past, and lose their swing."],
     graft: ["The graft", "Two warm roots, two sides of the tear: turn the tiles so each reaches its own side without crossing. The fewer times you fell and forced your way, the more turns you have."],
     echo: ["The world remembers", "What you did in earlier chapters comes back. People you spared or sold turn up later, towns stay how you left them, and debts get collected on the roads back. Each time, a line marked <b>The world remembers</b> says which choice it was. Your journal keeps a list."],
+    gauge: ["The Turning Gauge", "Every fighter has a gauge that fills at its own speed, and moves when it's full, so a quick foe can sometimes swing twice before you, and a slow one gives you two turns. <b>Pace</b> by the foe's health shows both gauges and who moves next. A <b>quick jab</b> leaves your gauge half full, a <b>heavy blow</b> empties it and then some, and catching your breath or binding a wound keeps a quarter. Nobody ever gets more than two turns in a row, and quick foes swing wilder (−1 or −2 to hit) while slow ones swing truer."],
     fight: ["Fights", "The bar by your sheet is the foe's health. Hits in a row build a combo: +1 to hit for each (up to +2), +2 damage on the second, and the third is a <b>Rootbreaker</b> (double dice, +4). A miss breaks the chain."],
     blind: ["Blinded", "A blow can blind you (grit, blood or a flash). While you're Blinded the screen goes dark (on a phone, just the edges and the foe meter), your next 2 swings have disadvantage, you can't read the foe's wounds, and Evade is halved. <b>Wipe your eyes</b> costs a turn and ends it."],
     bleed: ["Bleeding", "Cuts and stabs can open a wound that bleeds at the start of every round (it shows under your HP). A <b>bandage</b> stops it: free from the Bag with quick hands, or as your move. Still bleeding after the fight? Bandage it then, or tie it off and lose one more round. Spare cloth scraps get rolled into bandages between parts."],
@@ -11063,6 +11084,7 @@ body.pv-open { overflow: hidden; }
     Object.assign(FOE, { soft: 0, hard: false, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, chill: 0, burn: 0, rtWard: false });
     Object.assign(FOE, { on: true, boss: foeIsBoss(name, base, unit), name, max, hp, unit, felt: false, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     FOE.lg = null; FOE.ar = 0; FOE.arMax = 0; FOE.sund = false; FOE.fx = null; FOE.face = null; FOE.armF = null;
+    FOE.g = null; FOE.gRb = false; FOE.gMul = 0;
     if (relic("bell")) FOE.blind = 1;
     if (relic("verdict")) FOE.chain = 1;
     FOE.menace = menaceFor(FOE.lk); FOE.pblind = 0; document.body.classList.remove("blinded");
@@ -11103,6 +11125,7 @@ body.pv-open { overflow: hidden; }
     renderFoeFace();
     $("comboNote").textContent = c === 0 ? "Land hits in a row to build power" : c === 1 ? (FOE.unit ? "+1 to hit" : "+1 to hit · next hit +2 damage") : (FOE.dread >= DREAD_CAP ? "+1 to hit (dread) · next hit is a Rootbreaker" : "+2 to hit · next hit is a Rootbreaker");
     renderDread();
+    paceRender();
     fsYou();
   }
   // On phones the sheet is a sticky top bar, so scroll targets need to clear its real height.
@@ -11143,6 +11166,7 @@ body.pv-open { overflow: hidden; }
     for (let i = 0; i < n; i++) { const r = d(sides); rolls.push(r); total += r; }
     const extra = k === 2 ? 2 : rb ? 4 : 0;
     total += extra;
+    if (rb) FOE.gRb = true;
     if (rb) { await mech("Rootbreaker! Three hits in a row. Your damage dice are doubled, and the combo is spent.", "combo"); grant("rootbreaker"); await dreadEase(2, "The Rootbreaker lands, and the dread loosens its grip"); }
     if (FOE.on && FOE.mimic) total += await mimicLands();
     const mim = total - bonus - extra - rolls.reduce((a, b) => a + b, 0);
@@ -11182,6 +11206,8 @@ body.pv-open { overflow: hidden; }
       if (add.length) txt += " (Fittings: " + add.join(", ") + ": " + total + " in all.)";
     }
     if (w || blow0 || slam0) { const lb = lgBlow(total, rb, slam0 || (w && (w.tr || []).includes("crush")) || lgCrushing()); if (lb[1]) { total = lb[0]; txt += lb[1].replace(/\.\)$/, ": " + total + " in all.)"); } }
+    // The Turning Gauge: a quick jab lands half, a heavy blow half again.
+    if (FOE.gMul && (w || blow0)) { total = FOE.gMul < 1 ? Math.max(1, Math.floor(total / 2)) : Math.round(total * 1.5); txt += " (" + (FOE.gMul < 1 ? "Quick jab, half" : "Heavy blow, half again") + ": " + total + " in all.)"; }
     // Plate and Element: an armoured foe's silver bar takes the blow first.
     let broke = false, armTook = 0;
     if (FOE.ar > 0) { const a = armSoak(total, rb, slam0 || (w && (w.tr || []).includes("crush")) || lgCrushing() || /maul|mace|hammer|club|cudgel|flail/i.test(label)); if (a[1]) { total = a[0]; txt += a[1]; broke = !!a[2]; armTook = a[3] || 0; } }
@@ -19322,6 +19348,7 @@ body.pv-open { overflow: hidden; }
     if (F.setup) await F.setup(st);
     if (F.reg) await hzStart(F, st);
     if ((F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
+    gStart(F, st);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
       if (st.round > 1) add(el("div", "fs-rd", "Round " + st.round));
@@ -19339,6 +19366,10 @@ body.pv-open { overflow: hidden; }
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
       if (FOE.ln) await wrnHeal();
       const opts = (F.noAtk && F.noAtk(st)) || st.rmNoAtk ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with " + wThe(wDef(wpnKey()).name), tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
+      if (st.g && !F.heads && opts.some(o => o.key === "atk")) {
+        opts.push({ key: "g-jab", label: "Quick jab", tag: "+2 to hit · half damage · your gauge stays half full", plain: true });
+        opts.push({ key: "g-heavy", label: "Heavy blow", tag: "−2 to hit · half again as much damage · a longer wait after" + (gWindNext(st.g) ? " · breaks its wind-up" : ""), plain: true });
+      }
       if (S.axe && !S.gemsSpent) opts.push({ key: "gems", label: "Wake the gems", tag: "2d6 radiant, no roll", plain: true });
       if (book && !st.used.book) opts.push({ key: "book", label: "Read from the " + book.replace(/^The /, ""), tag: "2d8, no roll", plain: true });
       if (hasGear("shard") && !st.used.shard) opts.push({ key: "shard", label: "Raise the Sun-Shard", tag: (F.shade ? "6d8" : "3d8") + " radiant, no roll", plain: true });
@@ -19370,6 +19401,8 @@ body.pv-open { overflow: hidden; }
       FOE.menu = true;
       let c = st.fd ? await fdChoose(opts, F, st) : await choose(opts);
       if (c === BELT_WON) break;
+      const gMove = c === "g-jab" || c === "g-heavy" ? c : null;
+      if (gMove) { c = "atk"; FOE.gMul = gMove === "g-jab" ? 0.5 : 1.5; }
       const rmHpB = FOE.hp;
       await rmNote(c, F, st);
       if (F.onChoice && (await F.onChoice(c, st)) === "countered") c = "ht-countered";
@@ -19379,9 +19412,10 @@ body.pv-open { overflow: hidden; }
         if (cleave) clUsed(st);
         const dim = F.shade && nkOn() && nk().noon <= 4 && !hasLight();
         const adrift = umAdrift() && !hasGear("tether");
-        const a = await check({ label: (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st) + (kc ? " (" + clPath().mv + ")" : ""), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (kc ? kc.hit : 0) + cxAtk(st), dc: kc && kc.sure ? 2 : F.ac - lgAcCut(), target: "AC", adv: st.adv || !!(kc && kc.adv), dis: dim || adrift || !!st.dis, cta: "Strike" });
+        const a = await check({ label: (gMove === "g-jab" ? "Quick jab: " : gMove === "g-heavy" ? "Heavy blow: " : "") + (glaive ? "Glaive attack" : "Axe attack") + (dim ? " (in the dim, without a light)" : "") + (adrift ? " (adrift, with no footing)" : "") + (rxHit() ? " (Reaver)" : "") + fdHitTxt(st) + (kc ? " (" + clPath().mv + ")" : ""), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + (kc ? kc.hit : 0) + cxAtk(st) + (gMove === "g-jab" ? 2 : gMove === "g-heavy" ? -2 : 0), dc: kc && kc.sure ? 2 : F.ac - lgAcCut(), target: "AC", adv: st.adv || !!(kc && kc.adv), dis: dim || adrift || !!st.dis, cta: "Strike" });
         st.adv = false; st.dis = false;
         const clx = a.ok ? clOnHit(cleave) : 0, cxc = a.ok && cxCritNow(st);
+        if (gMove === "g-heavy" && a.ok) FOE.gHit = true;
         if (!kc && a.ok) kinSpark(st);
         if (a.ok && st.clQuiet) { st.clQuietDmg = st.clQuiet; st.clQuiet = 0; } else if (!a.ok) st.clQuiet = 0;
         if (a.ok) {
@@ -19481,6 +19515,7 @@ body.pv-open { overflow: hidden; }
       else if (String(c).startsWith("rm-")) await rmFightDo(c, F, st);
       else if (String(c).startsWith("cx-")) await cxDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
+      FOE.gMul = 0;
       if (c === "atk" && !F.heads) await rmEchoStrike(st, rmHpB - FOE.hp);
       if (st.fd) await fdAfterBlow(st);
       if (FOE.hp <= 0 || st.fled) break;
@@ -19498,9 +19533,16 @@ body.pv-open { overflow: hidden; }
       if (st.rmPre) { st.rmPre = false; st.evade = false; continue; }
       // On a map it has to get to you first, even when it has a trick of its own.
       if (st.fd && !(await fdFoeTurn(F, st))) { st.evade = false; continue; }
-      if (FOE.lg && FOE.lg.sil > 0) { FOE.lg.sil--; lgRenderFoe(); } else if (F.turn && (await F.turn(st)) === "done") continue;
-      const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
-      for (let i = 0; i < swings; i++) await foeSwing(F, st);
+      // The Turning Gauge: the foe gets 0, 1 or 2 moves before your next one.
+      const acts = st.g ? await gAfterYou(F, st, gMove || c) : [{}];
+      for (let k = 0; k < acts.length && FOE.hp > 0 && !st.fled; k++) {
+        const wind = acts[k].wind;
+        if (k) await mech("It's quicker: it moves again before you can.", "hurt");
+        if (FOE.lg && FOE.lg.sil > 0) { FOE.lg.sil--; lgRenderFoe(); } else if (F.turn && (await F.turn(st)) === "done") continue;
+        if (wind) await mech("It winds up and brings down a heavy blow (+1 damage die).", "hurt");
+        const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
+        for (let i = 0; i < swings; i++) await foeSwing(F, st, wind ? { n: (F.n || 1) + 1 } : {});
+      }
       st.evade = false;
     }
     F.overtaken = !!st.overtaken;
@@ -19523,6 +19565,91 @@ body.pv-open { overflow: hidden; }
   // Weighed down under the Undermoon, you can't get out of the way as well.
   const EVADE = 65;
   const evadeChance = () => Math.max(0, (umHeavy() ? 40 : EVADE) + (hasGear("soundline") ? 5 : 0) + (hasGear("cl_keep_hush") ? 5 : 0) + (hasGear("chronometer") ? 5 : 0) + (hasGear("cl_keep_clock") ? 5 : 0) + wxEvade() + (relic("shell") ? 10 : 0) + rxEvade() + sdEvade() + (champOn() ? 10 : 0) - (rtOn() ? 10 : 0) - (FOE.on && FOE.hzYou ? 40 : 0) - (blindNow() ? Math.floor(EVADE / 2) : 0) - lgEvadeCut());
+  // ---------- The Turning Gauge (2026-11-17) ----------
+  // Adrian's ask: turns triggered by gauges, for pacing that changes from fight to fight, while the fight
+  // stays fair overall. In hkFight (not company battles, not the battle maps) you and the foe each have a
+  // gauge (0-100) that fills at a speed; whoever fills first moves. You always move first. After your move
+  // gRun() runs the clock until your gauge is full again and returns how many moves the foe gets before
+  // that: 0 (you outpaced it), 1, or 2.
+  //  Speeds: foes 1.0, quick kinds (G_FAST) 1.2, slow kinds (G_SLOW) 0.85, mobs held to 0.9-1.1. You 1.0,
+  //   +0.1 with a rapier or knife, -0.1 with a maul or mace. Everyone's footing rolls ±10% each fight.
+  //  Fairness: the foe/you speed ratio is held to 0.8-1.25; nobody gets more than 2 moves in a row; a
+  //   quicker foe swings wilder and a slower one truer (comp: ±1 to hit per 10% of ratio, max 2), which
+  //   keeps damage per second of fight about where it was (tools/fight-sim.js gauge).
+  //  Your move sets your wait: a quick jab leaves 45, a heavy blow -30, a move that "costs your turn"
+  //   (breath, mend, bandage, wipe, pavise) 25, anything else 0.
+  //  Bosses wind up every 4th move (+1 damage die, then a -30 wait after, like your heavy blow), shown in red. A heavy blow or Rootbreaker that lands
+  //   before it falls staggers it (the blow is lost, its gauge empties). Any Rootbreaker knocks it back 30.
+  // State: st.g = FOE.g = { you, foe, sy, sf, comp, n (foe moves so far), run (your moves in a row), boss }. FOE.gMul: 0.5 jab, 1.5 heavy, 0 none.
+  const G_FAST = /hound|crow|gull|shrike|wing|rat\b|rats\b|tick|mite|cat\b|eel|skimmer|picker|lamprey|jackal|wasp|kite|needle|cutshade|shearer|knife|duellist|duelist|courier|thief|cutpurse|wolf|wolves|hare|ray\b/i;
+  const G_SLOW = /hulk|golem|crab|hoarback|grind|maw\b|plumbmaw|sentinel|giant|colossus|tower|thawling|ice-?pike|wallgar|warden|ogre|statue|bull|boar|brute|knight|armou?red|plate/i;
+  const G_KEEP = { "g-jab": 45, "g-heavy": -30, breath: 25, mend: 25, band: 25, wipe: 25, pavise: 25 };
+  const G_WIND = 4;
+  function gStart(F, st) {
+    if (F.company || st.fd) { FOE.g = st.g = null; return; }
+    const nm = (F.name || "") + " " + (F.who || "");
+    let sf = G_FAST.test(nm) ? 1.2 : G_SLOW.test(nm) ? 0.85 : 1;
+    if (F.heads) sf = Math.min(1.1, Math.max(0.9, sf));
+    const wk = wpnKey(), wd = wDef(wk), wn = (wd.icon || "") + " " + (wd.name || "") + " " + wk;
+    const sy = (/rapier|knife|knives|dagger|stiletto|needle/i.test(wn) ? 1.1 : /maul|mace|hammer|club|cudgel|flail/i.test(wn) ? 0.9 : 1) * (0.9 + Math.random() * 0.2);
+    sf *= 0.9 + Math.random() * 0.2;
+    const ratio = Math.min(1.25, Math.max(0.8, sf / sy));
+    sf = sy * ratio;
+    const comp = Math.max(-2, Math.min(2, Math.round((ratio - 1) * 10)));
+    FOE.g = st.g = { you: 100, foe: 30 + d(40), sy, sf, comp, n: 0, run: 0, boss: !!FOE.boss && !F.heads };
+    paceRender();
+    tip("gauge");
+  }
+  // Run the clock after your move. Returns the foe's moves before your next one (none, 1 or 2), each
+  // { wind } (a boss's wind-up, which costs it a longer wait after, as your heavy blow does).
+  function gRun(g, keep) {
+    g.you = keep; const acts = [];
+    for (;;) {
+      const tY = (100 - g.you) / g.sy, tF = (100 - g.foe) / g.sf;
+      if (acts.length < 2 && (tF <= tY || (!acts.length && g.run >= 2))) {
+        const t = Math.max(0, Math.min(tF, tY)), wind = gWindNext(g);
+        g.you = Math.min(100, g.you + g.sy * t); g.foe = wind ? -30 : 0; g.n++; acts.push({ wind });
+        continue;
+      }
+      g.foe = Math.min(95, g.foe + g.sf * Math.max(0, tY)); g.you = 100;
+      break;
+    }
+    g.run = acts.length ? 1 : g.run + 1;
+    return acts;
+  }
+  const gWindNext = (g) => !!(g && g.boss && g.n % G_WIND === G_WIND - 1);
+  // The next few moves in order, if nothing changes (you strike each time).
+  function gOrder(g, n = 5) {
+    const c = { ...g }; const out = [{ who: "you" }];
+    while (out.length < n) {
+      gRun(c, 0).forEach(m => out.length < n && out.push({ who: "it", wind: m.wind }));
+      if (out.length < n) out.push({ who: "you" });
+    }
+    return out;
+  }
+  function paceRender() {
+    const box = $("paceBox"); if (!box) return;
+    const g = FOE.on ? FOE.g : null;
+    box.hidden = !g;
+    if (!g) return;
+    $("paceYou").style.width = Math.max(0, Math.min(100, g.you)) + "%";
+    $("paceFoe").style.width = Math.max(0, Math.min(100, g.foe)) + "%";
+    $("paceFoeG").classList.toggle("wind", gWindNext(g));
+    $("paceNext").innerHTML = gOrder(g).map((o, i) => '<b class="' + (o.who === "it" ? "it" : "") + (o.wind ? " wind" : "") + '"' + (o.wind ? ' title="Winding up a heavy blow"' : "") + ">" + (o.who === "it" ? (o.wind ? "It ⚠" : "It") : i ? "You" : "You now") + "</b>").join("");
+  }
+  // After your move: knockbacks and staggers, then the clock. Returns the foe's moves to play out.
+  async function gAfterYou(F, st, c) {
+    const g = st.g;
+    if (FOE.gRb || c === "g-heavy") {
+      if (gWindNext(g) && (FOE.gRb || FOE.gHit)) { g.n++; g.foe = 0; await mech("Staggered! You catch it mid wind-up. The heavy blow is lost and its gauge empties.", "combo"); }
+      else if (FOE.gRb) { g.foe = Math.max(0, g.foe - 30); await mech("The Rootbreaker rocks it back: its gauge drops.", "combo"); }
+    }
+    FOE.gRb = false; FOE.gHit = false;
+    const acts = gRun(g, G_KEEP[c] ?? 0);
+    paceRender();
+    if (!acts.length) await mech("You're quicker. You move again before it can answer.", "loot");
+    return acts;
+  }
   async function foeSwing(F, st, o = {}) {
     if (st.fled) return false;
     const n = o.n || F.n, s = o.s || F.s, type = o.type || F.type, bloom = st.clean ? 0 : (o.bloom ?? F.bloom);
@@ -19538,6 +19665,7 @@ body.pv-open { overflow: hidden; }
     }
     if (st.pzSalt > 0) { st.pzSalt--; await say("It swings blind, eyes streaming with salt, and the blow goes nowhere near you."); return false; }
     if (st.pzShaken) bonus -= 2;
+    if (st.g) bonus -= st.g.comp; // a quicker foe swings wilder, a slower one truer
     const pzDis = !!st.pzDis; st.pzDis = false;
     const clm = clSwingMod(st); bonus += clm.bonus;
     const lgm = lgSwingMod(F, st); bonus += lgm.bonus;
