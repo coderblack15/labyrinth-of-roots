@@ -149,11 +149,17 @@ if (require.main === module) {
     ["Knot-hound back home L30", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 30, "roots"],
     ["Knot-hound back home L39", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 39, "roots"],
     ["Brine-hound back L39", 76, { hp: 20, ac: 13, atk: 5, s: 6 }, 39, 62],
+    // The Mind's Eye (2026-11-17, Adrian: "make this a tough fight"): Haggith above Tharen Ravendare, Clauneck
+    // close to him, a Lens a step down. Plain trading only: their signature moves hurt more if you miss the tell.
+    ["Tharen Ravendare L30", 76, { hp: 64, ac: 16, atk: 7, n: 2, s: 8 }, 30],
+    ["Haggith L30", 76, { hp: 72, ac: 16, atk: 7, n: 2, s: 8 }, 30],
+    ["Clauneck L30", 76, { hp: 70, ac: 15, atk: 7, n: 2, s: 8 }, 30],
+    ["A Lens L30", 76, { hp: 58, ac: 15, atk: 6, n: 2, s: 6 }, 30],
   ];
   // The game's foeLvkFor: a road beast fights at the level you'd have on leaving its region, closing half the gap if you've outgrown it.
   const regK = (left) => lvAt(left) - 3;
   const fkFor = (k, left) => { if (V === "old" || left == null) return k; const r = regK(left === "roots" ? 6 : left); return k <= r ? k : Math.round(r + (k - r) / 2); };
   console.log("curve: " + ARG);
-  const BOSS = /Coyle|Korr-Vesh|General|Curator/;
+  const BOSS = /Coyle|Korr-Vesh|General|Curator|Ravendare|Haggith|Clauneck|Lens/;
   for (const [n, p, F, lvl, left] of FIGHTS) { const L = lvl || lvAt(p), H = hpAt(p, L), fk = fkFor(L - 3, left), hard = p >= 17 && !F.heads && !BOSS.test(n); console.log(n.padEnd(26), "Lv" + L + (fk !== L - 3 ? " (foe Lv" + (fk + 3) + ")" : ""), "HP" + H, JSON.stringify(stats(F, L, H, { grain: p > 5, gear: p > 20 ? 1 : 0, fk, hard, name: n, boss: BOSS.test(n) || (!F.heads && F.hp >= 40) }))); }
 }
