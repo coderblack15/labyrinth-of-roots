@@ -1377,6 +1377,26 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .rc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .rc-acts button small, .rc-lock + .rc-lockcur { display: block; color: var(--muted); font-size: .78rem; }
 .rc-lock { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+/* The Mind's Eye: its sigil, the talking-out meters, the Watching ring and the four figures in the Blink. */
+.me-sigrow { display: flex; justify-content: center; margin: 4px 0; }
+.me-head { display: flex; gap: 10px; align-items: center; }
+.me-head svg { flex: none; }
+.me-card p { margin: 4px 0; }
+.rc-pips.me-grip i.on { background: #c8336d; border-color: #c8336d; }
+.rc-pips.me-trust i.on { background: #6fa86f; border-color: #6fa86f; }
+.puzzle .status.me-bad { color: var(--ruby); }
+svg.me-ring { display: block; width: 100%; max-width: 340px; height: auto; margin: 4px auto; color: var(--ink); }
+svg.me-ring .me-seat { cursor: pointer; }
+svg.me-ring .me-seat circle { fill: var(--panel-2); stroke: var(--line); stroke-width: 2; }
+svg.me-ring .me-seat.sel circle { fill: #3a1328; stroke: #e07aa0; stroke-width: 3; }
+svg.me-ring .me-seat:focus-visible circle { stroke: var(--gold); stroke-width: 3; }
+svg.me-ring text { fill: var(--ink); font: 13px var(--body); text-anchor: middle; pointer-events: none; }
+.me-holes { display: grid; gap: 6px; }
+.me-holes button { text-align: left; }
+.me-holes button small { display: block; color: var(--muted); font-size: .78rem; }
+.me-holes button.rot { opacity: .45; text-decoration: line-through; }
+.me-holes button.on { border-color: var(--gold); }
+ul.me-figs { margin: 4px 0 8px 1.1em; padding: 0; display: grid; gap: 4px; }
 .hm-clues { margin: 6px 0 10px 1.2em; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
 .hm-war { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(40px, 1fr)); gap: 5px; align-items: center; max-width: 460px; }
 .hm-war .hm-wh { font-family: var(--label); font-size: .74rem; letter-spacing: .06em; text-align: center; color: var(--muted); }
@@ -3232,7 +3252,7 @@ body.pv-open { overflow: hidden; }
     ];
     const MPOOLS = new Set(MUSIC.map(x => x.pool));
     const M_SHARED = new Set(["title", "town", "fight", "nightmare", "underdream"]);
-    let mFightRoll = null;
+    let mFightRoll = null, mEye = null;
 
     // Two composed fight songs (2026-11-16, Adrian sent reference samples and asked for fight songs):
     // Rootbreaker for boss fights, Thorn and Cudgel for every other fight. Unlike the night music they
@@ -3248,7 +3268,12 @@ body.pv-open { overflow: hidden; }
       // through a compound's yard; when the alarm goes up it breaks into the raid, which also plays for the
       // garrison and the leader (Tharen Ravendare gets Rootbreaker). Sources: tools/fight-songs/walls-worth-taking.py.
       sneak: { id: "over-the-wall", name: "Over the Wall", file: "music/over-the-wall", loopAt: 252000 / 44100, loopLen: 2016000 / 44100, v: 0.36, buf: null, busy: false },
-      raid: { id: "bell-in-the-yard", name: "The Bell in the Yard", file: "music/bell-in-the-yard", loopAt: 153391 / 44100, loopLen: 1840696 / 44100, v: 0.34, buf: null, busy: false }
+      raid: { id: "bell-in-the-yard", name: "The Bell in the Yard", file: "music/bell-in-the-yard", loopAt: 153391 / 44100, loopLen: 1840696 / 44100, v: 0.34, buf: null, busy: false },
+      // The Nice Song (17 Nov 2026, Adrian: "battles need a ME music boost"): the Mind's Eye's own hymn, for its
+      // fights (the Lenses, Clauneck, the Quiet Knives, the Blind Fleet, the Pupil); The Blink is the same hymn
+      // for Haggith, the whole congregation. Sources: tools/fight-songs/the-minds-eye.py.
+      eye: { id: "the-nice-song", name: "The Nice Song", file: "music/the-nice-song", loopAt: 220500 / 44100, loopLen: 2646000 / 44100, v: 0.34, buf: null, busy: false },
+      eyeboss: { id: "the-blink", name: "The Blink", file: "music/the-blink", loopAt: 176400 / 44100, loopLen: 2822400 / 44100, v: 0.38, buf: null, busy: false }
     };
     const REC_EXT = (() => { try { return document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"') ? ".ogg" : ".mp4"; } catch (e) { return ".mp4"; } })();
     function mRecLoad() {
@@ -3264,7 +3289,7 @@ body.pv-open { overflow: hidden; }
     // which recording a fight should play, if any: { k } for a recording, { own: true } for the chapter's own war music
     function mRecFor(mood) {
       if (mood === "boss") return REC.boss.buf ? { k: "boss" } : null;
-      if (mood === "sneak" || mood === "raid") return REC[mood].buf ? { k: mood } : null;
+      if (mood === "sneak" || mood === "raid" || mood === "eye" || mood === "eyeboss") return REC[mood].buf ? { k: mood } : null;
       if (mood !== "fight") return null;
       if (MUSIC.some(x => x.pool === "fight" && x.region && x.region === want) && Math.random() < 0.5) return { own: true };
       return REC.fight.buf ? { k: "fight" } : null;
@@ -3393,6 +3418,9 @@ body.pv-open { overflow: hidden; }
       let pr = {};
       try { pr = (mProbe && mProbe()) || {}; } catch (e) {}
       if (!pr.fight) mFightRoll = null;
+      // the Mind's Eye: its hymn in its fights (and at sea against the Blind Fleet, which isn't a melee)
+      const eye = mEye ? mEye() : null;
+      if (eye && !pr.nm && (pr.fight || eye === "sea")) { const k = eye === "boss" ? "eyeboss" : "eye"; if (REC[k].buf) return [k, false]; }
       // a compound raid: the sneak, then the raid (and Rootbreaker for Tharen Ravendare)
       if (/^(sneak|raid|raidboss)$/.test(mPlace || "") && !pr.nm) {
         if (pr.fight && mPlace === "raidboss" && REC.boss.buf) return ["boss", false];
@@ -3408,7 +3436,7 @@ body.pv-open { overflow: hidden; }
       if (mPlace) return [mPlace, mPlace !== "underdream" && !!pr.warp];
       return [MPOOLS.has(want) ? want : "labyrinth", !!pr.warp];
     }
-    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem", "boss", "sneak", "raid"]);
+    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem", "boss", "sneak", "raid", "eye", "eyeboss"]);
     function mPick(mood, ownOnly) {
       let list = MUSIC.filter(x => mood === "roads" ? !M_NOT_ROADS.has(x.pool) : (x.pool === mood || (x.also || []).includes(mood)) && (!x.region || x.region === want));
       // a fight in a chapter with its own war music plays it half the time
@@ -3424,7 +3452,7 @@ body.pv-open { overflow: hidden; }
     function mLoop() {
       if (!mbus || !live() || document.hidden || mLevel === "0") return;
       const [mood, warp] = mWant(), t = ctx.currentTime;
-      const quick = /^(fight|nightmare|anthem|boss|raid)$/.test(mood) || /^(fight|nightmare|anthem|boss|raid)$/.test(mMood || "");
+      const quick = /^(fight|nightmare|anthem|boss|raid|eye|eyeboss)$/.test(mood) || /^(fight|nightmare|anthem|boss|raid|eye|eyeboss)$/.test(mMood || "");
       if (mood !== mMood || (mPiece && mPiece.warp !== warp)) {
         if (mPiece) mStop(mPiece, quick);
         mPiece = null; mGap = t + (quick ? 1 : 4); mMood = mood;
@@ -3547,6 +3575,7 @@ body.pv-open { overflow: hidden; }
       // chapter), and what the game is doing (a function returning { title, fight, nm, warp }).
       musPlace(p) { const was = mPlace; if (p !== undefined) mPlace = p; return was; },
       musProbe(fn) { mProbe = fn; },
+      musEye(fn) { mEye = fn; },
       musRender: mRender,
       MUSIC,
       tone(i, dur = 0.42) { if (live()) heskTone(i, sfx, { dur }); },
@@ -3850,6 +3879,7 @@ body.pv-open { overflow: hidden; }
     h += lcSection(rs);
     h += hmSection(rs);
     h += rcSection(rs || S);
+    h += meSection(rs || S);
     h += hnSection(rs);
     h += unSection(rs);
     h += rmSection(rs);
@@ -4035,6 +4065,18 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "133", name: "The Mind's Eye", date: "17 Nov 2026", items: [
+      "<b>A cult</b>, built from Adrian's blueprint and named by Adrian: <b>the Mind's Eye</b>, and its leader <b>Haggith</b>, who wears a blindfold sewn shut with red thread and says the world is about to <b>blink</b>, and that only what her followers hold in the Mind's Eye will still be there when it opens. They call themselves the Seen. Its sigil is Adrian's: a crimson oval, a square, light from the middle and a step going down.",
+      "It grows on the calendar while you do everything else on the roads back: chalk eyes on milestones, then <b>Sighthouses</b> (white doors in the towns, with soup and a nice song), then brands on the brow, then one night every Sighthouse empties and the Seen walk to <b>the Pupil</b>, a hidden compound in a sinkhole, and a date is set for the Blink.",
+      "Every Sighthouse takes people. <b>Talk them out</b> before the brand: a puzzle of trust, of working out what the Mind's Eye found in them (debt, grief, loneliness, pride or dread) and what Haggith promised, and of not calling her a liar too soon. Anyone you don't reach is branded and gone to the Pupil, where you'll meet them again.",
+      "<b>Climb the Ladder</b> under a false name: seven Openings, from the welcome (they wash your feet) to the tithe, the confession in the dark (they write it down, and it comes back), <b>the Watching</b> (a ring of five, one of them lying: name the wrong one and they go to the Quiet Rooms), the letter home, the brand (take it or fake it) and the Sight, where you see what she is.",
+      "<b>Shut the Sighthouses</b>, each kept by one of Haggith's own, each with a signature move and a tell: Aulden Crake the Gentle Lens (the Embrace), Mabry Voss the Counting Lens (the Tally), Corse Wendle the Quiet Lens (the Hush), and <b>Clauneck</b>, the Purse of the Eye (Adrian's), in a coat of coins, who throws money and gold blades: <b>the Gilded Edge</b> and <b>the Scattered Purse</b>. Keep your eyes off the gold and it's yours. Push too hard and the <b>Quiet Knives</b> come for you, or a letter with your own confession in it.",
+      "Gather four <b>proofs</b> (the date was made up, the Listening Book, her hoard, and that she can see), <b>work out where the Pupil is</b> from what people tell you, and raid it as a compound: the Lightless Stair, the Round Floor, the Tithe Vault and the Hall of Seeing. <b>Haggith</b> has three moves: <b>the Mind's Eye</b> (she says something true about you, out of your own journey, then Sees you), <b>the Congregation</b> (the Seen stand between you) and <b>the Blink</b> (four of her in the dark: find the one who isn't a believer). With two proofs you can tell the Seen what she is, mid-fight.",
+      "It breaks the way the blueprint says cults break: expose her, and the Seen go home; kill her without proof and she's a martyr; let her go and she digs another Pupil. And if the night of the Blink passes with nobody there to break it, she names another night, and they believe her more. Raid on the night itself for the best chance of all.",
+      "<b>Entrenched.</b> It's years old before you hear of it, with roots in the towns already. Where it's rooted it takes people faster, its doors open again after you shut them, and somebody always tells it you've been. Talk people out and dig the roots out a town at a time, by speaking against it in the square: the roots outlast Haggith, and a martyr's spread on their own.",
+      "<b>The Blind Fleet</b>: three ships with the old sign on their sails, an eye in a wheel, carrying the tithe and the newly Seen to the Pupil. Sink them with your own ship, and take the people in their holds home.",
+      "<b>Tough fights.</b> Haggith now fights harder than Tharen Ravendare, and Clauneck nearly as hard (checked with the fight sim). Haggith has a fourth move, <b>the Soul Devour</b>: four moves of wind-up, a red stitch snapping on each, and then it goes straight into your head (Devoured: disadvantage and her voice hurting, then three days of the Gnawing). Break it with two heavy blows, throw a proof in her face, or get behind a companion who loves you enough (they're out of it till tomorrow). She taunts you all the way through, out of your own journey. The Homecoming Thread (bring three people home) halves it, and a humble <b>Kerchief</b> wipes it away.",
+      "<b>Music</b>: the Seen's own hymn, <b>The Nice Song</b>, for every Mind's Eye fight, and <b>The Blink</b>, the whole congregation, for Haggith. Adrian's twelve paintings of the Mind's Eye, its lieutenants and its fleet are in the story. 15 new feats, the Eye-stone, and towns that remember who you brought home."] },
     { ver: "132", name: "The Turning Gauge", date: "17 Nov 2026", items: [
       "Fights no longer go strictly you, then it. Every fighter has a <b>gauge</b> that fills at its own speed, and moves when it's full. Hounds, crows, ticks and other quick things fill theirs fast; hulks, crabs, golems and armoured brutes fill theirs slowly. Rapiers and knives make you a little quicker, maces and mauls a little slower, and everyone's footing on the day adds a little either way, so no two fights run at the same pace.",
       "<b>Pace</b>, under the combo by the foe's health, shows both gauges and the next few turns in order.",
@@ -4873,7 +4915,7 @@ body.pv-open { overflow: hidden; }
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
       '<g mask="url(#mpFog)"><rect width="' + MW + '" height="420" fill="#a7a597"/><rect width="' + MW + '" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
       (st.reached.includes("tithe") ? '<text x="22" y="70" class="mp-label mp-unk" transform="rotate(-90 22 70)">Uncharted</text>' : st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
-      labels + mapStones(st) + cwMapLayer(st) + rcMapLayer(st) + you +
+      labels + mapStones(st) + cwMapLayer(st) + rcMapLayer(st) + meMapLayer(st) + you +
       '<g transform="translate(' + (MW - 44) + ' 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
       '<path d="M0 -22l4 16-4 4z" fill="' + INK + '"/><text y="-26" class="mp-label" font-size="11">N</text></g>' +
@@ -5407,6 +5449,21 @@ body.pv-open { overflow: hidden; }
     { id: "rcpens", name: "Open the Pens", desc: "Free twenty people from the press-yards.", test: () => false },
     { id: "rcsix", name: "Every Kind of Work", desc: "Do all six kinds of compound job.", test: () => false },
     { id: "rcten", name: "Night Visitor", desc: "Take ten compounds.", test: () => false },
+    { id: "mesaved", name: "Not Tonight", desc: "Talk somebody out of the Mind's Eye before the brand.", test: () => false },
+    { id: "mefive", name: "Five Came Home", desc: "Talk five people out of the Mind's Eye.", test: () => false },
+    { id: "meladder", name: "The Seventh Sight", desc: "Climb all seven Openings of the Ladder without being found out.", test: () => false },
+    { id: "mering", name: "Corse's Own", desc: "Name the plant at the Watching, and only the plant.", test: () => false },
+    { id: "melens", name: "Haggith's Own", desc: "Beat all four of Haggith's lieutenants: three Lenses and Clauneck.", test: () => false },
+    { id: "megold", name: "Not for Sale", desc: "Beat Clauneck, the Purse of the Eye.", test: () => false },
+    { id: "meknife", name: "Heard You Coming", desc: "Beat the Quiet Knives sent for you.", test: () => false },
+    { id: "mefound", name: "A Hole in the Ground", desc: "Work out where the Pupil is.", test: () => false },
+    { id: "meblink", name: "The Real One", desc: "Find the real Haggith in the Blink.", test: () => false },
+    { id: "meproof", name: "Four Proofs", desc: "Hold all four proofs against Haggith.", test: () => false },
+    { id: "meshut", name: "The Eye Shuts", desc: "Break the Mind's Eye by showing the Seen what Haggith is.", test: () => false },
+    { id: "mevigil", name: "On the Night Itself", desc: "Break the Mind's Eye on the night of the Blink.", test: () => false },
+    { id: "mefleet", name: "Nothing on the Sea", desc: "Sink all three ships of the Blind Fleet.", test: () => false },
+    { id: "meroots", name: "Root and Branch", desc: "After the Mind's Eye falls, dig its last roots out of every town.", test: () => false },
+    { id: "medevour", name: "Not All of Me", desc: "Break, fizzle or dodge Haggith's Soul Devour.", test: () => false },
     { id: "rcraven", name: "Ravenbane", desc: "Kill Tharen Ravendare in the mud of his own yard.", test: () => false },
     { id: "mnspare", name: "Let It Beat", desc: "Leave three Heartspar crowns beating in the rock.", test: () => false },
     { id: "dcmill", name: "Not a Witch", desc: "Prove the sickness at Haverly came from the mill, not from Mother Elswith.", test: () => false },
@@ -5548,7 +5605,9 @@ body.pv-open { overflow: hidden; }
     { id: "rider", name: "The Rider in the Glass Waste", ver: "51", desc: "A bonus case at the last well before the desert, and a chase on horseback across it.",
       ids: ["dcrider", "dcdust", "dcmirage"] },
     { id: "raids", name: "Walls Worth Taking", ver: "52", desc: "Enemy compounds on the map to scout and raid, six kinds of job, leaders with signature moves, and Tharen Ravendare in Ravenhold.",
-      ids: ["rcfirst", "rcquiet", "rctwo", "rcread", "rcpens", "rcsix", "rcten", "rcraven"] }
+      ids: ["rcfirst", "rcquiet", "rctwo", "rcread", "rcpens", "rcsix", "rcten", "rcraven"] },
+    { id: "eye", name: "The Mind's Eye", ver: "53", desc: "A cult that grows while you travel: Haggith, the Seen, the Ladder, Clauneck and the Lenses, and the Pupil.",
+      ids: ["mesaved", "mefive", "meladder", "mering", "melens", "megold", "meknife", "mefound", "meblink", "meproof", "meshut", "mevigil", "mefleet", "meroots", "medevour"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5965,6 +6024,13 @@ body.pv-open { overflow: hidden; }
   const TIPS = {
     rcraid: ["Compounds", "New compounds go up on the roads back as the days pass, and they're on your map. Pick a job first: it decides what you're looking for inside. You can come back to a compound as often as you like; what you learned scouting it stays learned."],
     rcscout: ["Scouting a compound", "Every look costs a watch. A failed look near the walls can get you noticed, and at three marks they move what they're guarding and double the watch (it wears off after a few days). On the raid table, a side and a watch that the clues haven't ruled out is a guess; the right side and the slack watch make going over a lot easier, and on the slack watch the patrols only move every other breath."],
+    meeye: ["The Mind's Eye", "A cult grows on the roads back as the days pass: Sighthouses in the towns, recruits on their benches, and a date for the end of the world. Everything about it is under The Mind's Eye on the roads back. Nothing waits for you: people you don't reach in time are lost to it."],
+    medoubt: ["Talking somebody out", "Trust first. Ask about home to learn what the Mind's Eye found in them, listen, then speak to what they need and answer what Haggith promised them. Proof works on people who trust you, and backfires on people who don't. So does calling her a liar."],
+    meladder: ["The Ladder", "One Opening every few days, at any Sighthouse, under your false name. What you say and do on the Ladder is written down, and Haggith will use it. Fail too badly and your cover's blown for good. The Seventh Opening shows you where the Pupil is, but only before the Seen withdraw."],
+    mehaggith: ["Haggith", "The Mind's Eye: when she says something true about you, shut your eyes next turn. The Congregation: call them by name (the people you've lost, and the people from your Watching circle, count). The Blink: four of her; one isn't a believer, and it shows. Two proofs let you try to tell the Seen what she is."],
+    meroots: ["Roots", "The Mind's Eye was in the towns for years before you heard of it. Where it's rooted, its Sighthouse takes people faster and opens again after you shut it, and somebody tells it you've been. Talking people out and shutting doors loosens the roots; to dig them out, speak against it in the town's square. They outlast Haggith."],
+    medevour: ["The Soul Devour", "Four of Haggith's moves to wind up, a red stitch snapping on each. Break it with two heavy blows that land (or hit her hard enough), throw a proof in her face, or get behind a companion who'll take it for you. Guarding does nothing. The Homecoming Thread halves it; a kerchief wipes away what it leaves."],
+    mevigil: ["The night of the Blink", "Tonight the whole of the Pupil is in the Hall of Seeing: one Shepherd on the floor, Haggith in her chair all night, and everyone she's lied to watching. Telling them what she is is easier tonight."],
     rcleader: ["Signature moves", "Every compound leader has a move of their own, and tells you it's coming a turn before it lands. When you see the tell, pick the counter (it's under Guard) on your next turn. Pick it when nothing's coming and you've wasted your turn."],
     dcchase: ["The chase", "Two counters at the top: <b>Gap</b>, how far ahead she is (0 and you've caught her, 10 and she's gone), and <b>Water</b>, your skins (0 and the horse drops). Every stage has a choice. Reading the ground costs time now and can save more later."],
     dcquick: ["Quick decisions", "A bar runs across. <b>Tap</b> while it's in the gold. For a <b>hold</b>, press and keep holding until the bar fills. For <b>swerves</b>, tap each time a glint shows."],
@@ -6586,6 +6652,10 @@ body.pv-open { overflow: hidden; }
     if (t.classList.contains("title-pic") && t.parentElement) t.parentElement.classList.remove("has-title-pic");
   }, true);
   const PIC_SRC = {
+    // the Mind's Eye (Adrian's paintings, 17 Nov 2026)
+    sc_me_sigil: "art/sc_me_sigil.webp", sc_me_aulden: "art/sc_me_aulden.webp", sc_me_corse: "art/sc_me_corse.webp", sc_me_clauneck: "art/sc_me_clauneck.webp",
+    sc_me_ottery: "art/sc_me_ottery.webp", sc_me_circle: "art/sc_me_circle.webp", sc_me_shields: "art/sc_me_shields.webp", sc_me_fleet: "art/sc_me_fleet.webp",
+    sc_me_dock: "art/sc_me_dock.webp", sc_me_ship: "art/sc_me_ship.webp", sc_me_storm: "art/sc_me_storm.webp", sc_me_broadside: "art/sc_me_broadside.webp",
     fh_salt: "art/fh_salt.webp",
     fh_salt_ruin: "art/fh_salt_ruin.webp",
     fh_crag: "art/fh_crag.webp",
@@ -8269,6 +8339,7 @@ body.pv-open { overflow: hidden; }
         await lrNews(); await lgNews();
         await hmNews();
         await rcTick(); await rcMonth();
+        await meTick();
         await bwTick();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
@@ -8282,6 +8353,7 @@ body.pv-open { overflow: hidden; }
           { key: "summons", label: "Answer the summons", tag: "a small tear somewhere on the roads · Ringsight" + (S.rs && S.rs.road ? " · " + S.rs.road + " mended" : ""), plain: true, show: !!(S.rs && S.rs.done) },
           { key: "home", label: hmOwn() ? "Go home to " + hmName() : "Talk to the land-broker at the milestone", tag: hmOwn() ? HM_HALL[S.hm.hall][0] + (S.hm.raid ? " · a raid in " + Math.max(0, S.hm.raid.eta - calDay()) + " days" : "") + (S.hm.job ? " · building" : "") + " · strongbox " + S.hm.box + " gold" : "Bellamy Pennock · a holding of your own · from " + Math.min(...Object.values(HM_SITES).map(x => x.price)) + " gold", plain: true, show: hmOwn() || roamRegions().length >= 3 },
           { key: "mine", label: S.mn && S.mn.pick ? "Go prospecting" : "Talk to the assayer at the milestone", tag: S.mn && S.mn.pick ? "deposits to mine" + (mnOre() ? " · " + mnOre() + " pieces of ore, " + mnWorth() + " gold" : "") : "Ennet Scrope · picks, spar and ore", plain: true, show: mnRegs().length > 0 },
+          { key: "me", label: "The Mind's Eye", tag: S.me ? (S.me.end ? "how it ended" : ME_STAGE[S.me.st] + (meOpen().length ? " · " + meOpen().length + " Sighthouse" + (meOpen().length === 1 ? "" : "s") : "") + (meWaiting().length ? " · " + meWaiting().length + " on the benches" : "") + (S.me.blink != null ? " · the Blink: " + calDate(S.me.blink) : "")) : "", plain: true, show: !!S.me && S.me.st >= 1 },
           { key: "rc", label: "Raid a compound", tag: rcStanding().length + " on your map · " + rcStanding().map(C => C.place).slice(0, 2).join(", ") + (rc().n ? " · " + rc().n + " taken" : ""), plain: true, show: rcStanding().length > 0 },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
@@ -8304,7 +8376,7 @@ body.pv-open { overflow: hidden; }
           return "north";
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1, rc: 1 }[c] || 0;
+        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1, rc: 1, me: 1 }[c] || 0;
         if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
@@ -8320,6 +8392,7 @@ body.pv-open { overflow: hidden; }
         else if (c === "town") await townPick();
         else if (c === "mine") await mnHub();
         else if (c === "rc") { await rcHub(); SND.musPlace("roads"); }
+        else if (c === "me") { await meHub(); SND.musPlace("roads"); }
         else if (c === "home") { if (hmOwn()) await hmHome(); else await hmFirst(); }
         else if (c === "board") await wbHub();
         else if (c === "cw") await cwHub();
@@ -8379,7 +8452,8 @@ body.pv-open { overflow: hidden; }
   // What each wall is, and what it does to going over it (DC), and whether it can be crossed at all.
   const RC_WALLS = {
     stake: ["a stake palisade", 0], ditch: ["a staked ditch and a bank", 2], thorn: ["a thorn hedge", 1], tower: ["a manned tower", 3],
-    water: ["the river", null], cliff: ["a sheer drop", null], gate: ["the gate", 1]
+    water: ["the river", null], cliff: ["a sheer drop", null], gate: ["the gate", 1],
+    rim: ["a rope down the rim", 2], stair: ["the Lightless Stair", 1]
   };
   const RC_KINDS = {
     stockade: { name: "Gang stockade", what: "a bandit gang's stockade", field: "rc_stockade", troph: "A stockade's gate-pin, iron, as long as your arm",
@@ -8405,7 +8479,12 @@ body.pv-open { overflow: hidden; }
     raven: { name: "Ravenhold", what: "Tharen Ravendare's jungle compound", field: "rc_raven", troph: "A feather from Tharen Ravendare's coat, black and longer than your hand",
       rooms: { gate: "The Stake Gate", yard: "The Mud Yard", tower: "The Canopy Walk", huts: "The Long Huts", hall: "Tharen's Lodge", store: "The Smoke-House", pens: "The Cages" },
       jobs: ["kill", "rescue", "plunder"], heads: [9, 9, 9, 12], chief: ["Raven of the Fords", "Tharen Ravendare"], special: "raven",
-      intro: () => "Three days up the river from Brindle Landing, past where the ferrymen will go, the weeping-boles grow so close the light comes down green. Ravenhold is a stockade of their trunks, roped together and sharpened, with a walkway in the canopy above it and ravens on every stake. Nobody who has gone in to argue with Tharen Ravendare has come out to say how it went." }
+      intro: () => "Three days up the river from Brindle Landing, past where the ferrymen will go, the weeping-boles grow so close the light comes down green. Ravenhold is a stockade of their trunks, roped together and sharpened, with a walkway in the canopy above it and ravens on every stake. Nobody who has gone in to argue with Tharen Ravendare has come out to say how it went." },
+    // The Mind's Eye's hidden compound (meRcMake fills in the rest).
+    eye: { name: "The Pupil", what: "the Mind's Eye's hidden compound", field: "rc_eye", troph: "A blindfold sewn with red thread, with two pinholes where the eyes go",
+      rooms: { gate: "The Lightless Stair", yard: "The Round Floor", tower: "The Rim-Lamp", huts: "The Dormitory of the Seen", hall: "The Hall of Seeing", store: "The Tithe Vault", pens: "The Quiet Rooms" },
+      jobs: ["kill", "ledger", "plunder", "free", "rescue"], heads: [10, 10, 10, 12], chief: ["Haggith", "Haggith"], special: "eye",
+      intro: (C) => "From the ridge " + esc(C.place) + " looks like a round black pond at night, in the middle of the day. It's black cloth, stretched on ropes over a sinkhole three hundred feet across. Under it a stair is cut into the rock, going down without a lamp on it, and at the bottom is a round floor and a round hall, and very faintly, a hundred people singing the nice song." }
   };
   const RC_KIND_REG = {
     stockade: null, pressyard: null, tollfort: ["desert", "fen", "mere", "lastwell", "glass", "rahdaria", "vell", "wetwood", "roots", "corrach"],
@@ -8473,6 +8552,7 @@ body.pv-open { overflow: hidden; }
     // A chief whose predecessor you killed knows your face.
     const kin = R.marks.killed.length && R.list.some(X => X.gone && X.reg === reg && X.chiefDead);
     if (kin) { C.grudge = 1; C.noticed = 1; }
+    if (kind === "eye") meRcMake(C);
     return C;
   }
   function rcSpawnPick() {
@@ -8497,7 +8577,7 @@ body.pv-open { overflow: hidden; }
     }
     if (now < R.next) return;
     R.next = now + 10 + d(5);
-    if (rcStanding().filter(C => C.k !== "raven").length >= RC_MAX) return;
+    if (rcStanding().filter(C => C.k !== "raven" && C.k !== "eye").length >= RC_MAX) return;
     const C = rcSpawnPick(); if (!C) return;
     R.list.push(C);
     const first = !R.seen; R.seen = 1;
@@ -8598,12 +8678,13 @@ body.pv-open { overflow: hidden; }
     for (;;) {
       const go = await rcScout(C);
       if (go === "leave") { save(); return; }
-      if (go === "raid") { await rcRaid(C); return; }
+      if (go === "raid") { const was = meMusV; if (C.k === "eye") meMusV = "fight"; try { await rcRaid(C); } finally { meMusV = was; } return; }
     }
   }
   function rcJobLine(C, j) {
     const m = rcSz(C);
-    const g = Math.round(RC_JOBS[j].pay() * m * (C.k === "raven" ? 1.5 : 1));
+    const g = Math.round(RC_JOBS[j].pay() * m * (C.k === "raven" || C.k === "eye" ? 1.5 : 1));
+    if (C.k === "eye") return { plunder: "the Tithe Vault · about " + g + " gold, and what she bought with it", kill: "Haggith · " + g + " gold from the families, and her staff", rescue: C.hostage.n + ", " + C.hostage.who + ", branded · " + g + " gold and a keepsake", free: "the Quiet Rooms, where they keep the ones who doubted · " + g + " gold", ledger: "the Listening Book · " + g + " gold, and every confession in it" }[j];
     return { plunder: "the strongbox · about " + g + " gold", kill: "the writ on " + C.chief.n + " · " + g + " gold and " + (C.k === "raven" ? "his" : "the leader's") + " weapon", rescue: C.hostage.n + ", " + C.hostage.who + " · " + g + " gold and a keepsake", free: "the pens · " + g + " gold, and the people in them", ledger: C.ledger + " · " + g + " gold from " + esc(C.giver), sabotage: "before they march on " + C.village + " · " + g + " gold and supplies" }[j];
   }
   // Scouting: each look costs a watch near the walls.
@@ -8716,7 +8797,7 @@ body.pv-open { overflow: hidden; }
     const fireOk = calNight() && !calWinter() && C.k !== "warren";
     const c = await choose([
       { key: "wall", label: side ? "Over " + RC_WALLS[T.wall[side]][0] + " on the " + RC_SIDE[side] + " side at " + RC_WATCH[watch].toLowerCase() : "", tag: "Stealth · DC " + sneakDc + " · inside unseen, if it goes well", show: !!side },
-      { key: "ruse", label: "Under the carter's flour sacks", tag: "Deception · DC " + ruseDc + " · in through the gate, into the yard", show: !!C.know.ruse && C.noticed < 3 },
+      { key: "ruse", label: C.k === "eye" ? "Walk down the Lightless Stair among the Seen" : "Under the carter's flour sacks", tag: "Deception · DC " + (C.k === "eye" && S.me && S.me.brand ? Math.max(8, ruseDc - 4) : ruseDc) + " · " + (C.k === "eye" ? (S.me && S.me.brand ? "your brand will carry you" : "blindfolded, with them") : "in through the gate") + ", into the yard", show: !!C.know.ruse && C.noticed < 3 },
       { key: "storm", label: "Storm the gate", tag: "a battle on their ground · then the yard is yours for a little while", plain: true },
       { key: "garrison", label: "Bring the garrison from " + esc(hmName()), tag: garr + " fewer of them · a day's march · a battle at the gate", show: garr > 0, plain: true },
       { key: "fire", label: "Fire the walls and wait at the gate", tag: "no way in · " + (job === "sabotage" ? "the stores burn" : job === "rescue" || job === "free" ? "the people inside are inside" : "they come out to you") + " · they'll call you a burner", show: fireOk && job !== "plunder" && job !== "ledger", plain: true },
@@ -8726,9 +8807,11 @@ body.pv-open { overflow: hidden; }
     SND.musPlace("sneak"); light("moon");
     const B = { C, job, side, watch, slack: watch === T.watch, you: null, tick: 0, noise: 0, hid: false, cut: C.size < 2, barred: false, key: false, bucket: false, carry: null, done: {}, freed: false, gateUp: false, foundAt: 0, alarm: false, quiet: true, chiefMet: false, whistle: hasGear("ravenwhistle") };
     B.dawn = 18 - 2 * C.size - (C.k === "raven" ? 1 : 0);
+    if (C.k === "eye" && S.me && S.me.blink === calDay()) { B.vigil = true; tip("mevigil"); }
     B.chiefAt = T.chiefAt[watch === null ? T.watch : watch][0];
     B.pats = RC_ROUTES.slice(0, C.size >= 3 || C.k === "raven" ? 2 : 1).map((r, i) => ({ r, i: i * 2 + d(2) - 1, down: false }));
     if (C.k === "raven" && C.size >= 4) B.pats.push({ r: RC_ROUTES[2], i: 3, down: false });
+    if (B.vigil) { B.pats = B.pats.slice(0, 1); B.dawn += 2; await say("It's the night of the Blink. Everyone in the Pupil is in the Hall of Seeing, singing, with their eyes bound, waiting for the world to close its eye: only one Shepherd walks the round floor tonight, and Haggith won't leave her chair till dawn."); }
     if (c === "wall") {
       await say("You go in on your belly at " + RC_WATCH[watch].toLowerCase() + ", with the lamps on the walls moving. " + (side === T.side ? "The wall here is rotten at the foot, as you thought." : "The wall here is sound, and you'll have to climb it.") + " " + (watch === T.watch ? "On the walls somebody laughs too loud, and somebody tells him to shut up, and he doesn't." : "On the walls the men are awake and quiet, which is worse."));
       const r = await check({ label: "Stealth check (over the wall)", mod: lrMod() + 1 + (hasGear("rcribbon") ? 1 : 0) + (hasGear("rccloak") ? 1 : 0), dc: sneakDc, cta: "Go over" });
@@ -8737,10 +8820,10 @@ body.pv-open { overflow: hidden; }
       else if ((r.total || 0) >= sneakDc - 5) { B.noise = 2; await say("You're in, but a stake cracks under you as you drop, and somewhere a hound starts barking and won't stop."); }
       else { await say("A shout from the wall, and every lamp swings round onto you."); B.you = "gate"; return rcAlarm(C, B, "on the wall"); }
     } else if (c === "ruse") {
-      const r = await check({ label: "Deception check (under the sacks)", mod: lrMod() + 1, dc: ruseDc, cta: "Keep still" });
+      const r = await check({ label: C.k === "eye" ? "Deception check (among the Seen)" : "Deception check (under the sacks)", mod: lrMod() + 1, dc: C.k === "eye" && S.me && S.me.brand ? Math.max(8, ruseDc - 4) : ruseDc, cta: "Keep still" });
       B.you = "yard"; B.side = "s"; B.watch = (T.watch + 1) % 3; B.slack = false;
-      if (!r.ok) { await say("A guard puts his spear into the sacks, idly, to see. It goes past your ear. The second one doesn't."); await hurt(1, 6, "piercing", "The spear-point goes into your shoulder."); return rcAlarm(C, B, "in the cart"); }
-      await say("The cart creaks in through the gate and stops in the yard. The carter gets down, and coughs twice, and goes to find someone to pay him. That's your cue.");
+      if (!r.ok) { if (C.k === "eye") { await say("Halfway down the stair the woman whose sleeve you're holding stops, and turns her bound face to you, and says, very kindly, \"You're not one of us.\" Then she starts to scream."); return rcAlarm(C, B, "on the stair"); } await say("A guard puts his spear into the sacks, idly, to see. It goes past your ear. The second one doesn't."); await hurt(1, 6, "piercing", "The spear-point goes into your shoulder."); return rcAlarm(C, B, "in the cart"); }
+      await say(C.k === "eye" ? "You go down the Lightless Stair in a line of the Seen, barefoot, blindfolded, holding a stranger's sleeve, singing, and nobody stops you, and at the bottom the line breaks up on the round floor and you step out of it into the dark." : "The cart creaks in through the gate and stops in the yard. The carter gets down, and coughs twice, and goes to find someone to pay him. That's your cue.");
     } else {
       // storm, garrison or fire: there's no sneaking.
       B.you = "gate";
@@ -8748,7 +8831,7 @@ body.pv-open { overflow: hidden; }
       if (c === "fire") return rcFire(C, B);
       return rcAlarm(C, B, "at the gate");
     }
-    B.chiefAt = T.chiefAt[B.watch][0];
+    B.chiefAt = B.vigil ? "hall" : T.chiefAt[B.watch][0];
     return rcYard(C, B);
   }
   // Inside: the yard board. Returns when you're out, seen, or at the leader.
@@ -8766,6 +8849,7 @@ body.pv-open { overflow: hidden; }
         await say(B.quietKill ? "Nobody heard a thing." : "It was loud. The yard is listening.");
       }
       if (ev.k === "lock") {
+        if (C.k === "eye" && !(await meVault(C, B))) return rcAlarm(C, B, "in the Tithe Vault");
         const ok = await rcLock(C, B);
         if (ok) { B.done.plunder = true; await say("The strongbox opens. Coin, a heavy purse of it, and papers you'll sell to someone who wants them."); }
         if (B.noise >= 5) return rcAlarm(C, B, "at the strongbox");
@@ -8808,6 +8892,8 @@ body.pv-open { overflow: hidden; }
         const here = B.pats.find(Q => !Q.down && patAt(Q) === B.you);
         if (here && B.hid) btn("Take the guard down from behind", "a breath · they'll find him in 4", () => { here.down = true; B.foundAt = B.tick + 4; B.quiet = false; say2("He goes down without a sound, and you drag him into the dark."); step(false); });
         if (B.whistle && !B.whistled) btn("Blow Ravendare's whistle", "once · every patrol stops a breath to look up", () => { B.whistled = true; B.freeze = 2; say2("Two falling notes, and every guard in the place stops and looks up at the trees."); draw(); });
+        if (C.k === "eye" && B.you === "hall" && S.me && !S.me.proofs.sight && B.chiefAt !== "hall" && !B.chair) btn("Look under Haggith's chair", "a breath", () => { B.chair = true; S.me.proofs.sight = true; say2("Under the cushion of her chair, folded small, is a spare blindfold. The red thread through it is real, but somebody has pricked two neat holes in the linen with a needle, right where the eyes go. <b>Proof: Haggith can see.</b>"); step(false); });
+        if (hasGear("eyestone") && !B.stoned) btn("Look into the Eye-stone", "once · where the leader is, and every patrol's round", () => { B.stoned = true; C.know.chief = true; C.know.route = true; say2("Nothing in the glass, and then, if you don't look straight at it, the whole place laid out in it small: every round, and where the leader sleeps."); draw(); });
         if (B.you === "tower" && !B.cut) btn("Cut the lantern rope", "a breath · noise +1 · the yard goes dark", () => { B.cut = true; noise(1, "The lantern drops and goes out with a hiss."); step(false); });
         if (B.you === "huts" && !B.barred) btn("Bar the door of " + rcRoomS(C, "huts"), "a breath · noise +1 · half of them stay shut in", () => { B.barred = true; noise(1, "You drop a spar across the door. Inside, somebody snores on."); step(false); });
         if (B.you === "huts" && !B.key && (B.job === "free" || B.job === "rescue" || C.jobs.includes("free"))) btn("Lift the key off its nail", "a breath · the pens", () => { B.key = true; say2("The key to " + rcRoomS(C, "pens") + ", on a nail by the door, under a sleeping hand."); step(false); });
@@ -8890,19 +8976,20 @@ body.pv-open { overflow: hidden; }
     B.alarm = true; B.quiet = false;
     SND.musPlace("raid"); light("moon");
     const K = RC_KINDS[C.k];
-    await say(C.k === "raven" ? "A bell on the canopy walk, and then the ravens, three hundred of them, all screaming, and men coming out of the Long Huts with machetes and boar-spears." : "A bell, or a horn, or just a man shouting, and then all of them, and doors banging open all round the yard.");
+    if (C.k === "eye") scenePic("me_shields", "Shield-bearers of the Seen under a banner with an eye in a wheel", "The Shepherds of the Pupil");
+    await say(C.k === "eye" ? "The singing stops. That's the alarm: a hundred people stopping singing at once, and then the Shepherds coming out across the round floor with staves, and behind them the Seen, with their eyes bound, walking toward the sound of you." : C.k === "raven" ? "A bell on the canopy walk, and then the ravens, three hundred of them, all screaming, and men coming out of the Long Huts with machetes and boar-spears." : "A bell, or a horn, or just a man shouting, and then all of them, and doors banging open all round the yard.");
     let n = C.heads + (C.noticed >= 3 ? 2 : 0) - (B.barred ? Math.floor(C.heads / 2) : 0) - B.pats.filter(Q => Q.down).length - (B.garr || 0);
     n = Math.max(2, n);
     if (B.barred) await say("The door of " + rcRoomS(C, "huts") + " holds. Half of them are shut in, hammering on it.");
     if (B.garr) await say("Your own people from " + esc(hmName()) + " are at your back, " + B.garr * 2 + " of them, and they've been waiting for this.");
-    const capT = C.k === "raven" ? "The Raven's Sergeant" : (C.k === "stockade" && C.gang ? bnName(gangById(C.gang), "wall") : "The " + K.chief[0] + "'s second");
+    const capT = C.k === "eye" ? (S.me && (S.me.lens.corse === null || S.me.lens.corse === "spared") ? "Corse Wendle, the Quiet Lens" : "The Shepherd of the Stair") : C.k === "raven" ? "The Raven's Sergeant" : (C.k === "stockade" && C.gang ? bnName(gangById(C.gang), "wall") : "The " + K.chief[0] + "'s second");
     tacReg = K.field; nextReg = C.reg;
-    const F = await companyOr("road", { soldiers: n, captains: [capT], capHp: 18 + 4 * C.size, capThem: "them", cover: { stockade: "the woodpile", pressyard: "the hurdles", tollfort: "a toll-wagon", warren: "the powder kegs", cutters: "a stack of heartwood", raven: "the eel-baskets" }[C.k],
+    const F = await companyOr("road", { soldiers: n, captains: [capT], capHp: 18 + 4 * C.size, capThem: "them", cover: { stockade: "the woodpile", pressyard: "the hurdles", tollfort: "a toll-wagon", warren: "the powder kegs", cutters: "a stack of heartwood", raven: "the eel-baskets", eye: "the well of cups" }[C.k],
       F: { name: esc(C.place) + "'s garrison", ac: 12 + C.size, atk: 4 + C.size, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, bathyr: false, fdEmb: null, who: "the garrison", whoShort: "men", road: true, reg: C.reg,
         hitWhy: "A blade comes out of the press and into you.", miss: "The blow cracks on the stakes behind you.", hitLine: "One of them goes down in the mud and stays there." } });
     if (!F || F.fled) {
       await say("You go back over the wall the way you came, or another way, and they let you go, because there's no need to chase you. They know your face now.");
-      C.noticed = Math.min(3, C.noticed + 1); C.size = Math.min(C.k === "raven" ? 4 : 3, C.size + (C.lost ? 1 : 0)); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
+      C.noticed = Math.min(3, C.noticed + 1); C.size = Math.min(C.k === "raven" || C.k === "eye" ? 4 : 3, C.size + (C.lost ? 1 : 0)); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
       rcLog("was driven off from " + C.name);
       SND.musPlace("roads"); save(); return;
     }
@@ -8977,11 +9064,14 @@ body.pv-open { overflow: hidden; }
   function rcLeaderF(C) {
     const K = RC_KINDS[C.k], n = C.chief.n, raven = C.k === "raven";
     const lvl = Math.floor(flk() / 4);
+    if (C.k === "eye") return { name: n, hp: 72 + 8 * (C.size - 3), ac: 16, atk: 7, n: 2, s: 8, type: "bludgeoning", bloom: 0, hesk: false, road: true, lvl, C,
+      who: n, whoShort: n, hitWhy: "Her iron-shod staff comes round, and she doesn't need to look.", miss: "The staff cracks on the boards where you were.", hitLine: "The red thread in her blindfold darkens." };
     return { name: n, hp: raven ? 64 + 8 * (C.size - 3) : 34 + 6 * C.size, ac: raven ? 16 : 13 + Math.floor(C.size / 2), atk: raven ? 7 : 4 + C.size, n: raven ? 2 : 1, s: raven ? 8 : 10, type: "slashing", bloom: 0, hesk: false, road: true,
       who: n, whoShort: n.split(" ")[0], hitWhy: raven ? "The long curved blade comes round low and fast." : "A blow you see too late.", miss: raven ? "The blade bites the bole behind you." : "You get your own blade in the way.", hitLine: raven ? "Feathers come off his coat in a black spray." : n + " staggers.",
       lvl, C };
   }
   async function rcLeader(C, B, inside) {
+    if (C.k === "eye") return meHaggith(C, B, inside);
     const K = RC_KINDS[C.k], n = C.chief.n, raven = C.k === "raven";
     const back = document.body.dataset.light;
     add(el("div", "part-head sub", '<span class="num">' + esc(C.place) + " · the leader</span><h2>" + esc(n) + "</h2>"));
@@ -9076,7 +9166,7 @@ body.pv-open { overflow: hidden; }
   // ----- the aftermath: what it pays, and what the world keeps -----
   async function rcAfter(C, B) {
     SND.musPlace("roads"); light("dusk");
-    const R = rc(), M = R.marks, m = rcSz(C) * (C.k === "raven" ? 1.5 : 1);
+    const R = rc(), M = R.marks, m = rcSz(C) * (C.k === "raven" || C.k === "eye" ? 1.5 : 1);
     if (B.lostChief) return;
     const done = Object.keys(B.done).filter(j => B.done[j]);
     if (B.carry === C.hostage.n && C.jobs.includes("rescue")) done.push("rescue");
@@ -9108,7 +9198,7 @@ body.pv-open { overflow: hidden; }
         if (S.title !== "Ravenbane") { const t = await choose([{ key: "take", label: "Take the title Ravenbane", tag: "it goes after your name" }, { key: "no", label: "Keep the name you have", plain: true }]); if (t === "take") { S.title = "Ravenbane"; renderSheet(); } }
       }
     }
-    if (jobs.includes("rescue")) {
+    if (jobs.includes("rescue") && C.k !== "eye") {
       M.rescued.push({ n: C.hostage.n, town: C.giver, reg: C.reg });
       await say(esc(C.hostage.n) + " goes home to " + esc(C.giver) + ". The family has nothing much to give, and gives it anyway, and a ribbon off a sleeve to remember them by. The inn there won't take your money any more.");
       if (!hasGear("rcribbon")) { S.gear = S.gear || []; S.gear.push("rcribbon"); renderSheet(); await mech("<b>" + GEAR.rcribbon.name + ".</b> " + GEAR.rcribbon.desc, "loot"); }
@@ -9124,8 +9214,9 @@ body.pv-open { overflow: hidden; }
       else { R.hands = (R.hands || 0) + 1; await say(n + " people walk into " + esc(C.giver) + " behind you, and the ones who can hold a spear go straight to the sellswords' hall. Hiring blades on the road costs less from now on."); }
       await echoMarkSafe("rcFreed");
     }
-    if (jobs.includes("ledger")) { M.ledger.push({ town: C.giver, reg: C.reg, what: C.ledger }); await say("You hand " + C.ledger + " to the reeve of " + esc(C.giver) + ", who reads it in silence and then burns half of it and locks the other half up. Prices in " + esc(C.giver) + " come down, and they stay down."); await echoMarkSafe("rcLedger"); }
+    if (jobs.includes("ledger") && C.k !== "eye") { M.ledger.push({ town: C.giver, reg: C.reg, what: C.ledger }); await say("You hand " + C.ledger + " to the reeve of " + esc(C.giver) + ", who reads it in silence and then burns half of it and locks the other half up. Prices in " + esc(C.giver) + " come down, and they stay down."); await echoMarkSafe("rcLedger"); }
     if (jobs.includes("sabotage")) { M.saved.push({ v: C.village, reg: C.reg }); S.potions = (S.potions || 0) + 2; S.dress = (S.dress || 0) + 2; renderSheet(); await say("The march on " + C.village + " never happens. " + C.village + " sends you what they can spare: two Draughts of Mending, bandages, and a cheese the size of a cartwheel."); await echoMarkSafe("rcSaved"); }
+    if (C.k === "eye") await meAfterRaid(C, B, jobs);
     if (jobs.includes("kill") && C.chiefDead && C.k === "stockade" && C.gang) { const B2 = bn(); B2.beat[C.gang] = (B2.beat[C.gang] || 0) + 1; if (hmOwn()) hmFacAdd(C.gang, "fear", 3); }
     if (B.chiefBound) { const b = 20 + 2 * lv(); S.coins += b; renderSheet(); await mech("The watch pays " + b + " gold for " + esc(C.chief.n) + ", alive.", "loot"); }
     if (B.burned) M.burner = (M.burner || 0) + 1;
@@ -9145,7 +9236,8 @@ body.pv-open { overflow: hidden; }
       if (t === "take") { S.title = RC_RANKS[rk]; renderSheet(); }
     }
     // the compound itself
-    if (B.broken || B.burned) {
+    if (C.k === "eye") { if (!C.gone && S.me && S.me.end) { C.gone = "left"; C.goneAt = calDay(); } }
+    else if (B.broken || B.burned) {
       const k = await choose([
         { key: "burn", label: B.burned ? "Let it burn out" : "Burn it", tag: "nothing left for anyone · the next one goes up later", plain: false },
         { key: "give", label: "Hand it to " + esc(C.giver), tag: "their militia holds it · the roads round here get safer", plain: true, show: !B.burned },
@@ -9172,10 +9264,11 @@ body.pv-open { overflow: hidden; }
     if (!S.axe) return "";
     const raven = C.k === "raven";
     let r = Math.random() * 100, t = "tempered";
-    if (raven && own) t = "heartfire";
+    if ((raven || C.k === "eye") && own) t = "heartfire";
     else { for (const [k, p] of BN_ARM_ODDS) { if (r < p * (k !== "ashen" ? 1.6 : 1)) { t = k; break; } r -= p; } const ord = ["ashen", "tempered", "rootbound", "gloaming", "heartfire"]; t = ord[Math.min(4, ord.indexOf(t) + 1)]; }
     const L = makeLoot(t);
     if (raven && own) { L.b = "sword"; L.n = "The Long Wing, Tharen Ravendare's blade"; }
+    else if (C.k === "eye" && own) { L.b = "maul"; L.n = "The Red Thread, Haggith's iron-shod staff"; }
     else if (own) L.n = armPick(ARM_NAMES[t]) + " " + ARM_BASES[L.b].name + " of " + C.chief.n;
     gainLoot(L);
     const k = "L" + L.id;
@@ -9233,6 +9326,7 @@ body.pv-open { overflow: hidden; }
     let h = "";
     X.list.forEach(C => {
       const [x, y] = C.xy;
+      if (C.k === "eye") return;
       if (!C.gone) h += '<g transform="translate(' + x + " " + y + ')" class="mp-rc"><title>' + esc(C.name) + "</title>" +
         '<path d="M-7 5V-3l2-3 2 3V-3l2-3 2 3V-3l2-3 2 3V5z" fill="' + (C.k === "raven" ? "#1a1a22" : PAPER) + '" stroke="' + (C.k === "raven" ? "#1a1a22" : "#7a2a1c") + '" stroke-width="1.2"/>' +
         '<path d="M1 -6V-14l6 2-6 2" fill="#a3281c" stroke="#7a2a1c" stroke-width=".8"/>' + (C.k === "raven" ? '<text y="16" font-size="8" text-anchor="middle" class="mp-label">Ravenhold</text>' : "") + "</g>";
@@ -9240,6 +9334,1207 @@ body.pv-open { overflow: hidden; }
       else if (C.gone === "give" || C.gone === "hold") h += '<g transform="translate(' + x + " " + y + ')"><title>' + esc(C.place) + (C.gone === "give" ? ", the town's now" : ", yours") + '</title><path d="M-5 4V-2l5-3 5 3V4z" fill="' + PAPER + '" stroke="#2f5a3a" stroke-width="1.2"/></g>';
     });
     return "<g>" + h + "</g>";
+  }
+  // ---------- The Mind's Eye: a cult that grows while you travel (Adrian, 17 Nov 2026) ----------
+  // Adrian pasted a guild-vs-cult blueprint and asked for "a menacing cult", named it the Mind's Eye (and
+  // "followers of Haggith"), and sent its emblem (a crimson oval, a square frame, light from the centre and a
+  // stepped glyph: meSigil). Haggith wears a blindfold sewn shut with red thread and says the world will soon
+  // blink: whatever isn't held in the Mind's Eye won't be there when it opens again. Her followers call
+  // themselves the Seen. It follows the blueprint's descent: an esoteric truth (the Eye-stone), an inner circle
+  // (three Lenses), a magnetic leader, recruiting the vulnerable (debt, grief, loneliness, pride, dread),
+  // love-bombing, the esoteric ladder (the Seven Openings), us against them, surveillance (the Watching and the
+  // Listening Book), branding, a hidden compound (the Pupil) and retaliation (the Quiet Knives, blackmail).
+  // It breaks the blueprint's two ways: the leader's hypocrisy exposed (four proofs), or a failed prophecy.
+  // Stages (S.me.st): 0 whispers → 1 Sighthouses in the towns → 2 the Ladder (brands, the Knives) → 3 the
+  // Withdrawal to the Pupil, with a Blink date → over (S.me.end: broken | split | martyr | fled | faded).
+  // The Pupil is a Walls Worth Taking compound of kind "eye" (rcMake, rcRaid, rcLeader and rcAfter branch on it).
+  // State: S.me = { st, day0, next, houses: [H], rec: [R], rung, ladderAt, alias, cover, conf, confTrue, strain,
+  //   proofs: {date, book, sight, hoard}, lens: {aulden, mabry, corse}, wrath, knives, knivesAt, pupil, blink,
+  //   blinks, bump, end, harmed, freed, tithed, brand, shamed, log }.
+  // H = { id, town, reg, lens, day, recAt, shut, carts }; R = { id, n, pr, who, v, town, reg, day, grip, trust,
+  //   clues, soft, last, tries, state: doubt | saved | lost | home }.
+  // pupil = { reg, place, cand: [{place, reg, land, water, road}], clues: [attr], crossed: [i], found, tried }.
+  // Everything is read later by the towns, the journal, the map, the Pupil raid and Haggith herself
+  // (choices-must-matter): who you talked out, who you named, what you confessed, whether you took the brand.
+  const ME_LENS = {
+    aulden: { n: "Aulden Crake", t: "the Gentle Lens", pr: "he", proof: null, what: "who buys people supper and remembers their children's names" },
+    mabry: { n: "Mabry Voss", t: "the Counting Lens", pr: "she", proof: "book", what: "who keeps the tithe and copies every report of the Watching into a book bound in white calf" },
+    corse: { n: "Corse Wendle", t: "the Quiet Lens", pr: "he", proof: null, what: "who stands behind people in the dark and decides who goes to the Quiet Rooms" },
+    // Clauneck (Adrian, 17 Nov 2026: "he throws money and gold blades at the hero"): not a Lens but the Purse
+    // of the Eye, who turns the tithe into gold. Two moves: the Gilded Edge and the Scattered Purse.
+    clauneck: { n: "Clauneck", t: "the Purse of the Eye", pr: "he", proof: "hoard", what: "a tall man in a coat stitched all over with coins, who rings when he walks and has never once been seen to count" }
+  };
+  const ME_PROOF = { date: "the Blink's date was made up", book: "the Listening Book", sight: "Haggith can see", hoard: "Haggith's hoard" };
+  const ME_STAGE = ["Whispers", "Sighthouses", "The Ladder", "The Withdrawal", "Over"];
+  const ME_FOLK = [["Hanne Lisle", "she", "a dyer"], ["Tobin Ash", "he", "a cartwright"], ["Merrit Vey", "she", "a seamstress new to town"], ["Dunstan Coyle", "he", "an old watchman"], ["Ilse Marrow", "she", "a bell-ringer's widow"], ["Abel Freer", "he", "a ferryman's boy"], ["Joss Pardew", "they", "a hedge-teacher"], ["Nan Galloway", "she", "a midwife"], ["Rook Stannard", "he", "a tanner"], ["Elspet Crewe", "she", "a laundress"], ["Wyn Tallis", "he", "a shepherd"], ["Gilly Sorrell", "she", "a candle-maker"], ["Bram Oakes", "he", "a miller's son"], ["Petra Lowe", "she", "a weaver"], ["Hob Kettering", "he", "a drover"], ["Sela Wick", "she", "a fishwife"], ["Quill Amberley", "they", "a scrivener"], ["Martha Dunn", "she", "a brewer"]];
+  const ME_OTTERY = ["Ottery Pim", "he", "an almanac-maker"];
+  // What the Mind's Eye found in them, how you'd know, what Haggith promised, and what answers it.
+  const ME_VULN = {
+    debt: { need: "Pay off what they owe", hook: "Haggith told them every debt is unmade at the Blink, and the Eye keeps the only ledger that matters",
+      answer: "\"The Blink won't pay the moneylender,\" you say. \"I just did.\"", clues: ["A man from the moneylender's was asking for them at the inn, and left a paper.", "They flinch every time somebody says the word \"owe\"."] },
+    grief: { need: "Sit with them and let them grieve", hook: "Haggith says she speaks with the one they lost, who is Kept in the Eye and asks after them",
+      answer: "\"If Haggith can talk to her,\" you say, \"ask Haggith what she called the dog.\"", clues: ["They wear a child's shoe on a string round their neck.", "They talk about their daughter as if she's in the next room."] },
+    alone: { need: "Give them somewhere to belong", hook: "At the Sighthouse they're hugged at the door, and somebody always knows their name",
+      answer: "\"They know your name at the door,\" you say, \"because it's written on a slate inside it, with what you like to eat. Go and look.\"", clues: ["Nobody in the street says their name when they pass.", "They came here in the spring with nothing, and nobody has asked them to supper since."] },
+    pride: { need: "Give them work worth doing", hook: "Haggith told them they'll be a Lens one day, and the town that laughed at them will kneel",
+      answer: "\"There are three Lenses,\" you say, \"and there have been three since the start. Who did she promise the fourth to before you?\"", clues: ["They tell you, twice, that they were a sergeant of the watch once.", "They wear the white band higher on the arm than the others, and keep touching it."] },
+    dread: { need: "Show them the Blink is a lie", hook: "Haggith named the night, and nobody who isn't Held will be there in the morning",
+      answer: "\"She named a night,\" you say. \"So did the last three prophets on this road. You can still buy their pamphlets for a copper.\"", clues: ["They can't sleep. They count the days to the Blink on their fingers.", "They jump at every bell, and ask you what day it is."] }
+  };
+  const ME_SOFT = [["debt", "dread", "They count something on their fingers, over and over, under their breath."], ["grief", "alone", "Nobody ever comes to fetch them home from the Sighthouse door at night."], ["pride", "alone", "\"Nobody in this town ever listened to me,\" they say."], ["grief", "dread", "They ask you, very quietly, whether the dead can see us."], ["debt", "pride", "\"I used to be somebody here,\" they say, \"before.\""]];
+  const ME_RING = ["Wenna", "Pell", "Ardis", "Corin", "Sabe", "Tamsin", "Hollis", "Brede", "Juno", "Marl", "Osk", "Linnet"];
+  const ME_HOLES = ["Orrin's Cut", "the Swallow Hole at Bleak Edge", "Cauldron Pit", "the Old Delve under Harl Moor", "Gannet's Sink", "the Round Mere", "the Bell Hollow", "Thurl's Drop", "the Blind Well", "Kestle Crater", "the Sow's Ear", "Morrow Sink"];
+  const ME_ATTR = {
+    land: { hills: ["high and bare, in the hills", "They talked about walking uphill for two days, and the cold at the top."], woods: ["deep in the woods", "There are pine needles in the hems of the cloaks they bring back."], marsh: ["low, in wet ground", "There's mud the colour of tea dried on the cart-wheels."] },
+    water: { river: ["over running water", "One of them said you can hear water under the floor all night, if you listen."], dry: ["with no water near", "They carry their water down in barrels. There's none there."] },
+    road: { road: ["by an old paved road", "The carts go out by an old paved road and come back by it."], far: ["far from any road", "No road goes there. The carts are unloaded at a milestone and the rest is carried."] }
+  };
+  const ME_ALIAS = [["Harl", "a drover with a bad back"], ["Vell", "a widow from the coast"], ["Tamsy", "a cooper out of work"]];
+  const meSt = () => S.me;
+  const meLog = (t) => { const M = S.me; M.log.unshift(calDate() + ": " + t); M.log = M.log.slice(0, 30); };
+  const meProofs = () => S.me ? Object.keys(ME_PROOF).filter(k => S.me.proofs[k]) : [];
+  const meOpen = () => S.me ? S.me.houses.filter(H => !H.shut) : [];
+  const meWaiting = () => S.me ? S.me.rec.filter(R => R.state === "doubt") : [];
+  const meLostL = () => S.me ? S.me.rec.filter(R => R.state === "lost") : [];
+  const meLimit = () => S.me.st >= 2 ? 7 : 10;
+  const mePupil = () => S.rc ? S.rc.list.find(C => C.k === "eye" && !C.gone) : null;
+  const meLive = () => !!S.me && !S.me.end;
+  const mePr = (R, a, b, c) => R.pr === "he" ? a : R.pr === "she" ? b : c;
+  // Adrian's emblem, as a small flat SVG (no gradients, so any number of them can sit on one page).
+  function meSigil(w, cls) {
+    let rays = "";
+    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; rays += "M60 48L" + (60 + Math.cos(a) * 30).toFixed(1) + " " + (48 + Math.sin(a) * 30).toFixed(1); }
+    return '<svg class="' + (cls || "me-sig") + '" viewBox="0 0 120 100" width="' + w + '" height="' + Math.round(w * 0.84) + '" aria-hidden="true">' +
+      '<ellipse cx="60" cy="50" rx="56" ry="46" fill="#8e1f4c" stroke="#3a0a1e" stroke-width="2"/><ellipse cx="60" cy="50" rx="44" ry="34" fill="#c4507e"/>' +
+      '<rect x="34" y="20" width="52" height="56" fill="#e88aae"/><path d="' + rays + '" stroke="#fff3f7" stroke-width="1.4" opacity=".6"/><circle cx="60" cy="48" r="7" fill="#fff3f7" opacity=".8"/>' +
+      '<rect x="30" y="16" width="60" height="64" fill="none" stroke="#7a1640" stroke-width="5"/>' +
+      '<path d="M42 48v20h10v6h16v-6h10V48h-5v15h-9v6h-8v-6h-9V48zM57 74v8h6v-8z" fill="#7a1640" stroke="#f3b2cb" stroke-width="1.1"/></svg>';
+  }
+  function meNew() {
+    const regs = roamRegions().filter(r => r !== "dunvaar");
+    return { st: 0, day0: calDay(), next: calDay() + 5, houses: [], rec: [], seq: 0, rung: 0, ladderAt: 0, alias: null, cover: "ok", conf: null, confTrue: false, strain: 0,
+      proofs: { date: false, book: false, sight: false, hoard: false }, lens: { aulden: null, mabry: null, corse: null, clauneck: null }, wrath: 0, knives: 0, knivesAt: 0,
+      pupil: mePupilMake(regs), blink: null, blinks: 0, bump: 0, end: null, harmed: 0, freed: 0, tithed: 0, brand: false, shamed: null, named: [], log: [],
+      // Entrenched (Adrian: "make them feel entrenched"): years old before you hear of it, with roots in the towns
+      hold: meHoldSeed(), age: 9 + d(5), turned: {}, fleet: null, roots: false };
+  }
+  // Where the Mind's Eye has roots: town -> 1 (a few of the faithful), 2 (rooted) or 3 (deep-rooted). Roots
+  // make a town's Sighthouse take people faster and come back after you shut it, and tell on you; they
+  // outlast Haggith, and only come out a town at a time.
+  function meHoldSeed() {
+    const T = townsOpen().filter(t => t.kind === "town").map(t => t.name).sort(() => Math.random() - 0.5).slice(0, 3), h = {};
+    T.forEach((n, i) => { h[n] = i ? 1 : 2; });
+    return h;
+  }
+  const ME_HOLD = ["", "a few of the faithful", "rooted", "deep-rooted"];
+  const meHoldOf = (town) => (S.me && S.me.hold && S.me.hold[town]) || 0;
+  const meHoldSum = () => S.me && S.me.hold ? Object.values(S.me.hold).reduce((a, b) => a + b, 0) : 0;
+  const meHoldList = () => S.me && S.me.hold ? Object.keys(S.me.hold).filter(t => S.me.hold[t] > 0).sort((a, b) => S.me.hold[b] - S.me.hold[a]) : [];
+  function meHold(town, k) {
+    const M = S.me; if (!M || !town || !k) return;
+    M.hold = M.hold || {};
+    const v = Math.max(0, Math.min(3, (M.hold[town] || 0) + k));
+    if (v) M.hold[town] = v; else delete M.hold[town];
+    meRootsCheck();
+  }
+  function meRootsCheck() {
+    const M = S.me;
+    if (M && M.end && M.end !== "fled" && !M.roots && !meHoldSum()) { M.roots = true; grant("meroots"); meLog("dug the last roots of the Mind's Eye out of the towns"); }
+  }
+  // The music for its fights: "fight" (The Nice Song), "boss" (The Blink, for Haggith) or "sea" (the Blind Fleet).
+  let meMusV = null;
+  SND.musEye(() => meMusV);
+  // Where the Pupil is: six round holes in the realm, three facts about each, one that's true of all three.
+  function mePupilMake(regs) {
+    const R = regs.length ? regs : ["roots"], pk = (a) => a[d(a.length) - 1];
+    for (let n = 0; n < 200; n++) {
+      const names = ME_HOLES.slice().sort(() => Math.random() - 0.5).slice(0, 6);
+      const cand = names.map(place => ({ place, reg: pk(R), land: pk(Object.keys(ME_ATTR.land)), water: pk(Object.keys(ME_ATTR.water)), road: pk(Object.keys(ME_ATTR.road)) }));
+      const t = d(6) - 1, T = cand[t];
+      const same = cand.filter(c => c.land === T.land && c.water === T.water && c.road === T.road).length;
+      // every single fact must leave more than one, so it takes at least two clues
+      const one = ["land", "water", "road"].every(k => cand.filter(c => c[k] === T[k]).length > 1);
+      if (same === 1 && one) return { reg: T.reg, place: T.place, t, cand, clues: [], crossed: [], found: false, tried: [] };
+    }
+    return { reg: R[0], place: ME_HOLES[0], t: 0, cand: [{ place: ME_HOLES[0], reg: R[0], land: "hills", water: "dry", road: "far" }], clues: [], crossed: [], found: false, tried: [] };
+  }
+  // A clue about where the Pupil is, from anyone who's been near it. Returns the line, or "".
+  function mePupilClue(src) {
+    const P = S.me.pupil, T = P.cand[P.t];
+    const left = ["land", "water", "road"].filter(k => !P.clues.includes(k));
+    if (!left.length || P.found) return "";
+    const k = left[d(left.length) - 1]; P.clues.push(k);
+    return (src ? src + " " : "") + ME_ATTR[k][T[k]][1];
+  }
+  // Something true about you, out of your own save: what the Watching would have told her.
+  function meTruths() {
+    const L = [], M = S.me;
+    if (M && M.confTrue && M.conf) L.push(M.conf);
+    if (S.rc && S.rc.raven === "dead") L.push("You killed Tharen Ravendare in the mud of his own yard, and you slept well that night.");
+    if (S.rc && S.rc.raven === "spared") L.push("You let Tharen Ravendare walk away, and you still don't know why.");
+    if (S.rc && S.rc.marks.burnedIn) L.push("You set fire to a compound with people inside it who'd done nothing.");
+    if (S.rc && S.rc.marks.killed.length) L.push("You've killed " + S.rc.marks.killed.length + " leader" + (S.rc.marks.killed.length === 1 ? "" : "s") + " in their own yards. You remember " + S.rc.marks.killed[0] + "'s face best.");
+    const saved = M ? M.rec.filter(R => R.state === "saved") : [];
+    if (saved.length) L.push("You sat on a bench and talked " + saved[0].n + " out of my house.");
+    if (M && M.named.length) L.push("You sat in my circle and gave " + M.named[0] + " to the Quiet Rooms.");
+    if (company().includes("burr")) L.push("Your dog is afraid of thunder. So are you.");
+    if (S.coins > 0) L.push("You're carrying " + S.coins + " gold, and you've counted it twice today.");
+    L.push("You dream about the axe. In the dream it's hungry.");
+    return L;
+  }
+  // What Haggith says to you while she fights you (Adrian: "have her taunt and demean"): cold, personal, out of your save.
+  function meTaunts() {
+    const M = S.me, nm = S.name || "Wanderer", L = [], lost = meLostL(), co = company();
+    L.push("\"" + esc(nm) + ". You came all this way to be looked at. Here. I'm looking.\"");
+    L.push("\"You think you're the hero of something. Everybody does, at the bottom of my stair.\"");
+    if (lost.length) L.push("\"" + esc(lost[0].n) + " is here tonight. " + mePr(lost[0], "He", "She", "They") + " asked me not to tell you how long " + mePr(lost[0], "he", "she", "they") + " waited for you on that bench.\"");
+    if (lost.length > 1) L.push("\"" + lost.length + " of them you didn't reach. I counted. I'm good at counting what other people lose.\"");
+    if (M.cover === "blown") L.push("\"I knew the day you lied your way in. I let you climb. I like to watch people climb.\"");
+    if (M.alias && M.cover === "ok") L.push("\"" + esc(M.alias[0]) + ". Did you think I didn't know what you were, " + esc(M.alias[0]) + "?\"");
+    if (M.brand) L.push("\"You took my mark on your face to fool me. It's still there. It'll always be there.\"");
+    if (M.named.length) L.push("\"You gave " + esc(M.named[0]) + " to my Quiet Rooms, and you've never once asked what we did there.\"");
+    if (M.shamed) L.push("\"They read your confession on every inn door in " + REGIONS[M.shamed] + ". They weren't surprised.\"");
+    if (co.includes("burr")) L.push("\"Your dog follows you because you feed him. Don't mistake it.\"");
+    if (co.includes("tyra")) L.push("\"Tyra's been counting the days until she can stop pretending she likes you.\"");
+    const m = co.find(id => isMerc(id)); if (m) L.push("\"" + esc(coName(m)) + " is paid by the day. Ask what " + coName(m) + " would take to walk away. I already have.\"");
+    if (S.rc && S.rc.marks && S.rc.marks.killed.length) L.push("\"You've killed " + S.rc.marks.killed.length + " people in their own yards. You call it work. So do I.\"");
+    if (S.coins > 100) L.push("\"You're carrying " + S.coins + " gold into a holy place. You never once put any in the box.\"");
+    if (M.harmed) L.push("\"That one you just cut down was a weaver from the coast. She sang well. Keep going.\"");
+    L.push("\"When the world blinks, nobody will remember your name. I've seen it. It's very quiet.\"");
+    return L;
+  }
+  // ----- the spread, called from the roads back -----
+  async function meTick() {
+    if (!S.axe || lv() < 12) return;
+    if (!S.me) {
+      if (!((S.rc && S.rc.n >= 1) || lv() >= 16) || townsOpen().length < 2) return;
+      S.me = meNew(); await meWhispers(); save(); return;
+    }
+    const M = S.me, now = calDay();
+    if (M.end === "fled" && M.again != null && now >= M.again && !mePupil()) { await meReturn(); save(); return; }
+    // the Mourning Eye: a martyr's roots spread on their own
+    if (M.end === "martyr" && now >= (M.mournAt || M.endAt + 12)) {
+      M.mournAt = now + 14 + d(4);
+      const T = meHoldList().filter(t => meHoldOf(t) < 3);
+      if (T.length) { const t = T[d(T.length) - 1]; meHold(t, 1); await say("Word from " + esc(t) + ": the Mourning Eye meets in a cellar there now, and lights a lamp for Haggith every night, and more of them come down the steps each week."); meLog("the Mourning Eye spread in " + t); save(); }
+    }
+    if (M.end) return;
+    if (M.st === 0 && now >= M.next) {
+      M.st = 1; M.next = now;
+      add(el("div", "part-head sub", '<span class="num">Word on the roads</span><h2>The white doors</h2>'));
+      scenePic("me_aulden", "A high priest in a white mitre and robes", "Aulden Crake, the Gentle Lens");
+      await say("All along the roads back somebody has been painting the same eye on the milestones: an oval, a square inside it, and lines coming out of the middle like light. Now it's on doors. Aulden Crake has gone on ahead of the paint, buying suppers and remembering names, and where he's been a door is painted white and there's singing behind it in the evenings. They call them Sighthouses.");
+      await mech("<b>The Mind's Eye</b> is spreading. Sighthouses open in the towns of the roads back, and every one takes people. Reach them before the brand, and they come home. Look for it on the roads back, under <b>The Mind's Eye</b>.", "hurt");
+    }
+    if (M.st >= 1 && M.st <= 2) {
+      if (now >= M.next && meOpen().length < 4) {
+        const H = meHouse();
+        if (H) {
+          M.houses.push(H); meHold(H.town, 1);
+          add(el("div", "part-head sub", '<span class="num">Word on the roads · ' + REGIONS[H.reg] + '</span><h2>A white door in ' + esc(H.town) + "</h2>"));
+          await say("A carter coming the other way tells you there's a new Sighthouse in " + esc(H.town) + ", in what used to be the " + ["cooper's", "chandler's", "old tithe-barn", "dyer's yard", "corn exchange"][H.id % 5] + ". " + (H.lens ? ME_LENS[H.lens].n + ", " + ME_LENS[H.lens].t + ", " + ME_LENS[H.lens].what + ", keeps it." : "A Shepherd in white keeps it, and nobody knows his name.") + " \"They give away soup,\" the carter says. \"Good soup. My sister goes.\"");
+          meLog("a Sighthouse opened in " + H.town);
+        }
+        M.next = now + 7 + d(3);
+      }
+      for (const H of meOpen()) if (now >= H.recAt) {
+        H.recAt = now + Math.max(3, 5 + d(2) - meHoldOf(H.town));
+        const R = meRecruit(H);
+        if (R) await mech("Word from " + esc(H.town) + ": <b>" + esc(R.n) + "</b>, " + R.who + ", has started going in at the white door. Reach " + mePr(R, "him", "her", "them") + " in the next " + meLimit() + " days, before the brand.", "hurt");
+      }
+      for (const R of meWaiting()) if (now - R.day >= meLimit()) {
+        R.state = "lost"; meLog(R.n + " was branded in " + R.town); meHold(R.town, 1);
+        await say("In " + esc(R.town) + " they say " + esc(R.n) + " has a mark on " + mePr(R, "his", "her", "their") + " brow now, an eye burned in a ring, and doesn't come home at night any more, and doesn't answer to " + mePr(R, "his", "her", "their") + " name, and has been seen walking out of town at dusk with others in white, all with their eyes bound.");
+      }
+      // a shut door where the faithful still live doesn't stay shut
+      for (const H of M.houses) if (H.shut === "shut" && H.reopenAt && now >= H.reopenAt && meHoldOf(H.town) > 0 && meOpen().length < 5) {
+        H.shut = null; H.lens = null; H.reopenAt = null; H.reopened = (H.reopened || 0) + 1; H.recAt = now + 2;
+        add(el("div", "part-head sub", '<span class="num">Word on the roads · ' + REGIONS[H.reg] + '</span><h2>The white door, again</h2>'));
+        await say("In " + esc(H.town) + " the faithful have hung a new white door where you pulled the old one down, and painted the eye on it fresh, and the soup is back on the bench. \"They never left,\" a carter tells you, surprised that you'd think so. \"Where would they go? They live there.\"");
+        meLog("the faithful opened the Sighthouse in " + H.town + " again");
+      }
+      if (M.st === 1 && M.houses.length >= 2 && now >= M.day0 + 16) {
+        M.st = 2;
+        add(el("div", "part-head sub", '<span class="num">The Mind\'s Eye</span><h2>The brand</h2>'));
+        await say("The Seen have started wearing their blindfolds in the street now, and walking arm in arm so the ones in front can lead, and the ones who've been longest have a mark on the brow, an eye in a ring, burned. They don't talk to people who aren't Seen. If you speak to one, the one beside them answers for them, very kindly, and walks them on.");
+        await mech("The Ladder: the Mind's Eye brands its own now, and people are lost to it faster (7 days, not 10). Whoever pushes against it may be visited by the Quiet Knives.", "hurt");
+      }
+      if (M.st === 2 && (now >= M.day0 + 40 || (meOpen().length >= 3 && now >= M.day0 + 32))) await meWithdraw();
+    }
+    if (!M.fleet && M.st >= 2 && S.sea && S.sea.ship) await meFleetNew();
+    if (M.st === 3 && M.blink != null && now > M.blink) await meFailed();
+    if (!M.end && M.st >= 2 && M.wrath >= 3 + 3 * M.knives && now >= M.knivesAt) await meKnives();
+    save();
+  }
+  function meHouse() {
+    const M = S.me, used = M.houses.map(H => H.town);
+    let T = townsOpen().filter(t => t.kind === "town" && !used.includes(t.name) && !M.houses.some(H => H.reg === t.reg && !H.shut));
+    // it opens where it already has roots, first
+    const rooted = T.filter(t => meHoldOf(t.name) > 0); if (rooted.length && d(3) > 1) T = rooted;
+    if (!T.length) T = townsOpen().filter(t => t.kind === "town" && !used.includes(t.name));
+    if (!T.length) return null;
+    const t = T[d(T.length) - 1];
+    const lens = Object.keys(ME_LENS).find(k => M.lens[k] === null && !M.houses.some(H => H.lens === k && !H.shut)) || null;
+    return { id: ++M.seq, town: t.name, reg: t.reg, lens, day: calDay(), recAt: calDay() + 2, shut: null, carts: false };
+  }
+  function meRecruit(H) {
+    const M = S.me, used = M.rec.map(R => R.n);
+    let f, v;
+    if (!used.includes(ME_OTTERY[0]) && M.rec.length >= 2) { f = ME_OTTERY; v = "dread"; }
+    else { const pool = ME_FOLK.filter(x => !used.includes(x[0])); if (!pool.length) return null; f = pool[d(pool.length) - 1]; v = Object.keys(ME_VULN)[d(5) - 1]; }
+    const soft = ME_SOFT.filter(s => s.includes(v));
+    const R = { id: ++M.seq, n: f[0], pr: f[1], who: f[2], v, town: H.town, reg: H.reg, day: calDay(), grip: 5 + (M.st >= 2 ? 1 : 0), trust: 0, clues: [], soft: soft[d(soft.length) - 1][2], last: -1, tries: 0, state: "doubt" };
+    M.rec.push(R); meLog(R.n + " started going to the Sighthouse in " + H.town);
+    return R;
+  }
+  async function meWhispers() {
+    add(el("div", "part-head sub", '<span class="num">Word on the roads</span><h2>An eye on a milestone</h2>'));
+    scenePic("me_sigil", "The sign of the Mind's Eye: a crimson oval, a square, light from the middle and a step going down", "The Mind's Eye");
+    await say("Somebody has chalked an eye on a milestone: an oval, a square inside it, lines coming out of the middle like light, and a mark under it like a step going down. At the inn that night a kind man in white called Aulden Crake buys supper for everyone who looks as if they need it, and asks the names of their children, and remembers them.");
+    await say("He talks about a woman called <b>Haggith</b>, who wears a band of linen over her eyes, sewn shut with red thread, and sees anyway. She found the Eye-stone under the roots at Orrin's Cut, he says, a ball of old glass with a dark iris in it, and it showed her the end of things. The world is tired, and soon it will <b>blink</b>, and for the length of that blink nothing will be watched, and what isn't watched won't be there when the eye opens. Only what's held in the Mind's Eye will be kept.");
+    await say("\"The song is nice,\" says the landlord, afterward, wiping the tables. \"That's what everybody says. The song is nice.\"");
+    const M = S.me, roots = meHoldList();
+    await say("\"She's been Seeing for " + M.age + " years,\" Aulden Crake says, when you ask, \"up in the hill villages, quietly, before she ever came down to the roads.\" The landlord's mother, it turns out, was Seen for a winter when she was a girl. So was the smith's. Nobody here talks about that winter, and nobody here has quite stopped humming the song.");
+    if (roots.length) await mech("<b>It has roots already.</b> The Mind's Eye has been in " + roots.map(esc).join(", ") + " for years. Where it's rooted, its Sighthouse takes people faster, opens again after you shut it, and somebody always tells it you've been. Roots come out a town at a time: speak against it in the town itself.", "hurt");
+    tip("meeye");
+    meLog("heard about Haggith and the Mind's Eye");
+  }
+  // The day the Sighthouses empty: everyone to the Pupil, and a date for the Blink.
+  async function meWithdraw() {
+    const M = S.me, now = calDay();
+    M.st = 3; M.blink = now + 24;
+    meOpen().forEach(H => { H.shut = "gone"; });
+    const gone = meWaiting(); gone.forEach(R => { R.state = "lost"; });
+    add(el("div", "part-head sub", '<span class="num">The Mind\'s Eye</span><h2>The Withdrawal</h2>'));
+    add(el("div", "me-sigrow", meSigil(56)));
+    await say("One morning every white door on the roads back is standing open, and every Sighthouse is empty: the benches, the soup-pots, the slates by the doors with the names on them. In the night the Seen walked out of every town at once, with their eyes bound, holding each other's sleeves, singing the nice song, and nobody who tried to stop them could make them hear." + (gone.length ? " " + gone.map(R => esc(R.n)).join(", ") + (gone.length === 1 ? " went" : " went") + " with them." : ""));
+    await say("Nailed to every milestone where the eye was painted is a paper in a neat hand: <b>THE BLINK WILL COME ON " + calDate(M.blink).toUpperCase() + ". BE HELD.</b>");
+    if (M.pupil.found || (M.rung >= 7 && M.cover === "ok")) {
+      M.pupil.found = true;
+      await say(M.rung >= 7 ? "You know where they've gone. Haggith told you herself, at the Seventh Opening, with her hand on your brow: down the Lightless Stair, at " + esc(M.pupil.place) + "." : "You know where they've gone: " + esc(M.pupil.place) + ".");
+      mePupilRaise();
+      await mech("<b>The Pupil</b> is on your map, at " + esc(M.pupil.place) + " in " + REGIONS[M.pupil.reg] + ". Raid it from the roads back, before the Blink, or on the night itself.", "hurt");
+    } else await mech("<b>The Pupil</b>: they've gone to a hidden compound, a round hole in the ground somewhere in the realm. Work out where from what you've heard, under The Mind's Eye on the roads back. The Blink is set for " + calDate(M.blink) + ".", "hurt");
+    meLog("the Seen withdrew to the Pupil; the Blink set for " + calDate(M.blink));
+  }
+  function mePupilRaise() {
+    const R = rc(), M = S.me;
+    if (R.list.some(C => C.k === "eye" && !C.gone)) return;
+    const C = rcMake("eye", M.pupil.reg); R.list.push(C);
+    C.heads += Math.floor(meHoldSum() / 3) + meFleetLive();
+    if (M.rung >= 6 && M.cover === "ok") C.know.ruse = true;
+    rcLog("found the Pupil at " + M.pupil.place);
+  }
+  // The night passes and the world doesn't blink.
+  async function meFailed() {
+    const M = S.me, C = mePupil(), now = calDay();
+    M.blinks++;
+    add(el("div", "part-head sub", '<span class="num">The Mind\'s Eye</span><h2>The night the world didn\'t blink</h2>'));
+    if (M.blinks === 1) {
+      M.blink = now + 20; M.bump = 1; M.wrath += 2;
+      if (C) { C.size = Math.min(4, C.size + 1); C.heads += 2; }
+      const n = 2 + d(2);
+      for (let i = 0; i < n; i++) { const H = { id: 0, town: (townsOpen().filter(t => t.kind === "town")[d(Math.max(1, townsOpen().filter(t => t.kind === "town").length)) - 1] || { name: "the roads" }).name, reg: M.pupil.reg }; const R = meRecruit(H); if (R) R.state = "lost"; }
+      await say("Morning comes. Nothing has blinked. And the Seen come up out of wherever they are and walk the roads in twos and threes, unbound now, with their eyes shining, telling everyone who'll listen that the Blink was held back, that it was their vigil that held it, that Haggith wept all night with the weight of the world on her and saved it, and that she has seen the true night now. They are happier than you have ever seen anybody. " + n + " more people go back down the road with them.");
+      await mech("The prophecy failed, and they believe her more. The Pupil is harder, the Seen are angrier, and a new date is set: " + calDate(M.blink) + ".", "hurt");
+      meLog("the Blink failed to come; Haggith set a new date");
+    } else if (M.blinks === 2) {
+      M.blink = now + 20;
+      const L = meLostL(), back = L.slice(0, Math.ceil(L.length / 2)); back.forEach(R => { R.state = "home"; });
+      if (C) C.heads = Math.max(6, C.heads - 3);
+      await say("The second morning comes, and nothing has blinked again, and this time it's quieter. Some of the Seen come up the road alone, with their blindfolds in their hands, and walk home, and don't talk about it." + (back.length ? " " + back.map(R => esc(R.n)).join(", ") + " among them." : "") + " The rest stay. They've given too much to be wrong. Haggith names a third night: " + calDate(M.blink) + ".");
+      meLog("the Blink failed again; some came home");
+    } else {
+      if (C) { C.gone = "left"; C.goneAt = now; }
+      M.end = "faded";
+      await say("The third night passes. In the morning the Pupil is empty, the black cloth cut down from its ropes and lying in the bottom like a dead thing, and Haggith and the last of the Seen have gone, nobody knows where, down some other stair. The ones who are left behind sit on the round floor in the daylight and look up at the sky as if it had lied to them, which it hadn't.");
+      await mech("The Mind's Eye has faded, without you. Whoever went with Haggith at the end is gone with her.", "hurt");
+      meLog("the Mind's Eye faded after three failed Blinks");
+    }
+  }
+  // After Haggith walked away: a second Pupil, deeper.
+  async function meReturn() {
+    const M = S.me;
+    M.end = null; M.st = 3; M.blink = calDay() + 22; M.blinks = 0; M.bump = 1;
+    M.pupil = mePupilMake(roamRegions().filter(r => r !== "dunvaar")); M.pupil.found = true;
+    mePupilRaise();
+    const C = mePupil(); if (C) { C.size = 4; C.heads += 3; C.grudge = 1; C.name = "The Second Pupil"; }
+    add(el("div", "part-head sub", '<span class="num">Word on the roads</span><h2>The Second Pupil</h2>'));
+    await say("A girl you've never seen before stops you on the road and says, in somebody else's voice, \"She says she let you see her once. She says you won't again.\" Then she walks away, and on her brow there's an eye in a ring, new and still weeping. The eye is back on the milestones, and there's a new date under it: " + calDate(M.blink) + ".");
+    await mech("Haggith has built a second Pupil, at " + esc(M.pupil.place) + " in " + REGIONS[M.pupil.reg] + ". It's on your map.", "hurt");
+    meLog("Haggith built a second Pupil");
+  }
+  // ----- the Quiet Knives, and blackmail -----
+  async function meKnives() {
+    const M = S.me;
+    M.knives++; M.knivesAt = calDay() + 6;
+    add(el("div", "part-head sub", '<span class="num">The Mind\'s Eye</span><h2>The Quiet Knives</h2>'));
+    if (M.confTrue && M.conf && !M.shamed && d(2) === 1) {
+      const town = (townsOpen().filter(t => t.kind === "town")[0] || { reg: S.me.pupil.reg, name: "the town" }), cost = 40 + 3 * lv();
+      await say("At the inn there's a letter under your door, folded small, sealed with an eye in red wax. Inside, in a neat hand, is the thing you told them in the dark at the Third Opening, word for word: <i>\"" + esc(M.conf) + "\"</i> Underneath: <i>" + cost + " gold under the milestone outside " + esc(town.name) + " by morning, or it goes up on every inn door in " + REGIONS[town.reg] + ".</i>");
+      const c = await choose([
+        { key: "pay", label: "Pay it", tag: cost + " gold · they'll know you pay", show: S.coins >= cost },
+        { key: "wait", label: "Put a stone under the milestone, and wait in the ditch", tag: "a fight with whoever comes for it" },
+        { key: "no", label: "Let them nail it up", tag: "prices in " + REGIONS[town.reg] + " go up for you", plain: true }
+      ]);
+      if (c === "pay") { S.coins -= cost; renderSheet(); M.wrath = Math.max(0, M.wrath - 1); await say("You leave it under the milestone. In the morning it's gone, and nothing goes up on any door. Yet."); meLog("paid the Mind's Eye " + cost + " gold for silence"); return; }
+      if (c === "no") { M.shamed = town.reg; await say("In the morning it's on the door of the inn, and the next inn, and the one after. People read it, and look at you, and the price of things goes up, a little, the way it does for people who've done that."); meLog("let the Mind's Eye nail your confession up in " + REGIONS[town.reg]); return; }
+      await say("In the hour before dawn a figure in white comes down the road with its eyes bound, walking straight, not feeling its way, and bends to the milestone. Two more are behind it in the hedge.");
+    } else await say(["On a lonely stretch of the road back, three figures in white are standing in the middle of it, with their eyes bound, facing you. Not one of them is feeling for the way. They've been waiting a long time, by the dew on them.", "You wake at your camp with the fire out and a cold hand over your mouth, and three people in white round you with their eyes bound and knives held point-down, the way you'd hold a candle."][d(2) - 1]);
+    const F = meFoe("knives");
+    const ok = await meSigFight(F, ME_SIG.knife, "the Quiet Knives");
+    if (ok) {
+      const g = 30 + 3 * lv(); S.coins += g; renderSheet(); xpGain(40 + 4 * lv());
+      await say("The last of them goes down without a sound, because they taught it not to make one. Under the blindfolds their eyes are open, and look nowhere in particular. One of them has a purse with " + g + " gold in it, and a slip of paper with your face drawn on it, quite well.");
+      M.wrath = Math.max(0, M.wrath - 2); meLog("killed the Quiet Knives sent for you"); grant("meknife");
+    } else { await say("You come to with your purse lighter and a cut on your brow in the shape of a ring, not deep, a promise. They could have finished it. They want you to know that."); const lose = Math.floor(S.coins / 5); S.coins -= lose; renderSheet(); meLog("the Quiet Knives left a mark on you"); }
+  }
+  // ----- signature moves, for the Lenses and the Knives (Haggith's are her own) -----
+  const ME_SIG = {
+    embrace: { name: "the Embrace", tell: (n) => n + " lowers his blade and opens his arms, and smiles at you as if you'd come home.", counter: "Keep your distance", ok: (n) => "You step back out of his reach, and his arms close on air, and he looks hurt, and his guard is wide open. Your next swing has advantage.",
+      hit: async (n, F, st) => { await hurt(2, 6, "bludgeoning", "<b>The Embrace.</b> He holds you, kindly, and his knife is in your side, and he's crying."); st.dis = true; await mech("Held: your next swing has disadvantage.", "hurt"); } },
+    tally: { name: "the Tally", tell: (n) => n + " starts counting your wounds out loud, one, two, three, as if she were adding up a bill.", counter: "Shout over her count", ok: (n) => "You shout over her, any number, every number, and she loses her place and has to start again, and hates you for it. Your next swing has advantage.",
+      hit: async (n, F, st) => { const k = Math.min(4, 1 + Math.floor((S.maxHp - S.hp) / 8)); await hurt(k, 6, "slashing", "<b>The Tally.</b> She finishes the count, and cuts you once for every number in it."); } },
+    hush: { name: "the Hush", tell: (n) => n + " puts a finger to his lips, and every one of the Seen in the room goes silent at once, and you lose track of where they are.", counter: "Watch his hands", ok: (n) => "You don't watch the room. You watch his hands, and when they move, the knife in the dark behind you is where they pointed, and you're already turning. Your next swing has advantage.",
+      hit: async (n, F, st) => { await foeSwing(F, st, { atk: F.atk + 3, n: 2, s: 8, label: "a knife from behind", why: "<b>The Hush.</b> One of the Seen comes out of the silence behind you." }); } },
+    gilded: { name: "the Gilded Edge", tell: (n) => n + " fans a hand of gold blades out between his fingers like a hand of cards, each one thin as a coin, and looks at your throat.", counter: "Turn your shoulder to him", ok: (n) => "You turn side-on and put your shoulder and the flat of your axe between his hand and your throat, and the gold blades ring off the steel one after another, ting, ting, ting, and drop at your feet. You keep one. Your next swing has advantage.",
+      okFx: (F, st) => { st.adv = true; const g = 5 + d(10); S.coins += g; renderSheet(); },
+      hit: async (n, F, st) => { for (let i = 0; i < 3; i++) await foeSwing(F, st, { atk: F.atk + 1, n: 1, s: 6, label: "a gold blade", why: "<b>The Gilded Edge.</b> A gold blade, spinning." }); } },
+    purse: { name: "the Scattered Purse", tell: (n) => n + " tears open a fat purse with his teeth and flings a fistful of gold into the air over your head, and shouts, \"A hundred to whoever brings me an ear!\" Every coin catches the lamplight.", counter: "Keep your eyes on him, not the gold", ok: (n) => "The gold comes down all round you like hail, and you don't look at it, not once. You look at him, and he's already coming in behind it with a blade low, and you're there first. Your next swing has advantage, and the gold on the floor is yours.",
+      okFx: (F, st) => { st.adv = true; const g = 10 + 2 * lv(); S.coins += g; renderSheet(); },
+      hit: async (n, F, st) => { await hurt(2, 6, "bludgeoning", "<b>The Scattered Purse.</b> Your eyes go to the gold, everybody's do, and it comes down hard on your face like thrown stones, and he comes in behind it."); await foeSwing(F, st, { atk: F.atk + 4, label: "under the falling gold" }); } },
+    knife: { name: "Out of the Blind", tell: () => "One of them stops dead in the road, and tilts its bound head, listening for your breathing.", counter: "Hold your breath", ok: () => "You hold your breath, and the one listening for it turns its head the wrong way, and you're on it. Your next swing has advantage.",
+      hit: async (n, F, st) => { await foeSwing(F, st, { atk: F.atk + 3, label: "out of the blind" }); await foeSwing(F, st, { atk: F.atk + 3, label: "and again" }); } }
+  };
+  function meFoe(k) {
+    const lvl = Math.floor(flk() / 4), L = ME_LENS[k];
+    if (k === "knives") return { name: "The Quiet Knives", hp: 48, ac: 14, atk: 7, n: 1, s: 10, type: "piercing", bloom: 0, hesk: false, road: true, lvl,
+      who: "the Quiet Knives", whoShort: "Knives", hitWhy: "A knife comes out of the white and into you.", miss: "A blade goes past your ear without a sound.", hitLine: "One of them drops without a sound." };
+    if (k === "shepherd") return { name: "The Shepherds", hp: 30, ac: 12, atk: 4, n: 1, s: 8, type: "bludgeoning", bloom: 0, hesk: false, road: true, lvl,
+      who: "the Shepherds", whoShort: "Shepherds", hitWhy: "A staff comes round, and they're sorry.", miss: "You get your haft in the way.", hitLine: "A Shepherd goes down, still apologising." };
+    if (k === "clauneck") return { name: "Clauneck", hp: 62 + 4 * (Object.values(S.me.lens).filter(Boolean).length), ac: 15, atk: 7, n: 2, s: 8, fast: true, type: "slashing", bloom: 0, hesk: false, road: true, lvl,
+      who: "Clauneck", whoShort: "Clauneck", hitWhy: "A gold blade, thin as a coin, comes spinning out of his hand and opens you.", miss: "A gold blade rings off your axe-head and goes skittering away across the floor.", hitLine: "Coins burst off his coat and roll everywhere." };
+    return { name: L.n, hp: 54 + 4 * (Object.values(S.me.lens).filter(Boolean).length), ac: 15, atk: 6, n: 2, s: 6, type: "slashing", bloom: 0, hesk: false, road: true, lvl,
+      who: L.n, whoShort: L.n.split(" ")[0], hitWhy: { aulden: "His knife comes in under your arm, almost gently.", mabry: "Her hook-knife opens you, neat as a ledger line.", corse: "You never see the blow." }[k],
+      miss: "You get your blade in the way.", hitLine: L.n + " staggers, and the Seen in the doorway make a small noise all together." };
+  }
+  // A fight with one signature move or more (they take turns): a tell a turn ahead, then a counter.
+  async function meSigFight(F, SPs, n) {
+    SPs = [].concat(SPs);
+    const st0 = { tell: null, pick: null, k: 0 };
+    F.extra = () => SPs.map((SP, i) => ({ key: "brace-me" + i, label: SP.counter, tag: "counter: " + SP.name }));
+    F.onExtra = async (c) => { st0.pick = c; };
+    F.turn = async (st) => {
+      const pick = st0.pick; st0.pick = null;
+      if (st0.tell) {
+        const SP = st0.tell; st0.tell = null;
+        if (pick === "brace-me" + SPs.indexOf(SP)) { rc().counters++; await say(SP.ok(n)); if (SP.okFx) SP.okFx(F, st); else st.adv = true; await mech("Countered.", "loot"); }
+        else await SP.hit(n, F, st);
+        return "done";
+      }
+      if (pick) await say("Nothing comes. You've wasted a breath, and " + n + " uses it.");
+      const every = F.fast && FOE.hp <= FOE.max / 2 ? 2 : 3;
+      if (st.round % every === every - 1) { st0.tell = SPs[st0.k++ % SPs.length]; await say(st0.tell.tell(n)); return "done"; }
+    };
+    tip("rcleader");
+    await mech(SPs.map(SP => "<b>" + SP.name.charAt(0).toUpperCase() + SP.name.slice(1) + "</b>").join(" and ") + ". " + esc(n) + (SPs.length > 1 ? " has " + SPs.length + " signature moves, taking turns" : " has a signature move") + ", with a tell a turn before it lands: read it, and pick the counter (under Guard) on your next turn.", "hurt");
+    if (F.fast) await mech("Below half, " + esc(n) + " stops holding back: his moves come every other turn.", "hurt");
+    const was = meMusV; if (meMusV !== "boss") meMusV = "fight";
+    try { await hkFight(F); } finally { meMusV = was; }
+    return !(F.fled || F.overtaken);
+  }
+  // ----- the hub on the roads back -----
+  async function meHub() {
+    const M = S.me;
+    add(el("div", "part-head sub", '<span class="num">The roads back · ' + ME_STAGE[M.end ? 4 : M.st] + "</span><h2>The Mind's Eye</h2>"));
+    for (;;) {
+      add(el("div", "me-card", meCard()));
+      if (M.end) { await say(meEndLine()); return; }
+      const C = mePupil(), P = M.pupil;
+      if (meHoldSum() && !M.rootTip) { M.rootTip = 1; tip("meroots"); }
+      const c = await choose(meOpen().map((H, i) => ({ key: "h" + H.id, label: "Go to the Sighthouse in " + esc(H.town), tag: REGIONS[H.reg] + " · " + (H.lens ? ME_LENS[H.lens].n : "a Shepherd") + (meWaiting().filter(R => R.town === H.town).length ? " · " + meWaiting().filter(R => R.town === H.town).map(R => R.n).join(", ") + " on the bench" : ""), plain: i > 0 }))
+        .concat([
+          { key: "find", label: "Work out where the Pupil is", tag: P.clues.length + " of 3 things known · " + (6 - P.crossed.length) + " places left", show: M.st >= 3 && !P.found },
+          { key: "carts", label: "Follow the cart-tracks out of an empty Sighthouse", tag: "Survival · DC 14 · a day · where they went", show: M.st >= 3 && !P.found && M.houses.some(H => H.shut === "gone" && !H.carts) },
+          { key: "fleet", label: "Hunt the Blind Fleet", tag: meFleetLive() + " of 3 ships still sailing · your ship", show: !!(M.fleet && meFleetLive() && S.sea && S.sea.ship) },
+          { key: "pupil", label: "Go to the Pupil", tag: esc(P.place) + " · " + REGIONS[P.reg] + (M.blink != null ? " · the Blink is " + (calDay() === M.blink ? "tonight" : "on " + calDate(M.blink)) : ""), show: !!C },
+          { key: "map", label: "Look at it on your map", plain: true },
+          { key: "back", label: "Back to the road", plain: true }
+        ]));
+      if (c === "back") return;
+      if (c === "map") { mapOpen(); continue; }
+      if (c === "find") { await mePupilFind(); continue; }
+      if (c === "fleet") { await meFleetHunt(); if (S.hp <= 0) return; continue; }
+      if (c === "carts") {
+        const H = M.houses.find(X => X.shut === "gone" && !X.carts); H.carts = true; calPass(4);
+        const r = await check({ label: "Survival check (the cart-tracks)", mod: lrMod() + (company().includes("burr") ? 2 : 0), dc: 14, cta: "Follow" });
+        await say(r.ok ? "You follow the ruts out of " + esc(H.town) + " for a day, until they stop at a milestone. " + (mePupilClue("") || "There's nothing more here that you don't know.") : "The tracks go out onto a drove road and are lost among a thousand others.");
+        save(); continue;
+      }
+      if (c === "pupil") { await rcVisit(C); return; }
+      const H = M.houses.find(X => "h" + X.id === c);
+      await meHouseVisit(H);
+      if (S.hp <= 0) return;
+    }
+  }
+  function meCard() {
+    const M = S.me, now = calDay(), W = meWaiting(), L = meLostL(), sv = M.rec.filter(R => R.state === "saved" || R.state === "home");
+    return '<div class="me-head">' + meSigil(44) + '<p class="j-sub">' + ME_STAGE[M.end ? 4 : M.st] + (M.blink != null && !M.end ? " · the Blink: " + calDate(M.blink) : "") + " · " + meOpen().length + " Sighthouse" + (meOpen().length === 1 ? "" : "s") + " open</p></div>" +
+      (W.length ? "<p><b>On the bench</b>: " + W.map(R => esc(R.n) + " in " + esc(R.town) + " (" + Math.max(0, meLimit() - (now - R.day)) + " days)").join("; ") + ".</p>" : "") +
+      (L.length ? "<p><b>Seen</b>: " + L.map(R => esc(R.n)).join(", ") + ".</p>" : "") +
+      (sv.length ? "<p><b>Came home</b>: " + sv.map(R => esc(R.n)).join(", ") + ".</p>" : "") +
+      (meHoldSum() ? "<p><b>Rooted in</b>: " + meHoldList().map(t => esc(t) + " (" + ME_HOLD[meHoldOf(t)] + ")").join("; ") + ".</p>" : "") +
+      (M.fleet ? "<p><b>The Blind Fleet</b>: " + Object.keys(ME_FLEET).map(k => shCap(ME_FLEET[k].ship) + (M.fleet[k] ? " (sunk)" : "")).join(", ") + ".</p>" : "") +
+      '<p class="j-sub">Proof against Haggith: ' + (meProofs().length ? meProofs().map(k => ME_PROOF[k]).join(" · ") : "none yet") + ". Haggith's own: " + Object.keys(ME_LENS).map(k => ME_LENS[k].n.split(" ")[0] + " " + ({ dead: "dead", taken: "with the watch", spared: "let go" }[M.lens[k]] || "at large")).join(", ") + "." +
+      (M.rung ? " The Ladder: " + M.rung + " of 7 as " + M.alias[0] + (M.cover === "blown" ? " (they know)" : "") + "." : "") + "</p>";
+  }
+  function meEndLine() {
+    const M = S.me;
+    return { broken: "The white doors are all down. Somewhere in every town there's somebody who doesn't talk about the year they were Seen, and somebody who doesn't ask.", split: "Most of the Seen have come home. A hard few are still out there, in the hills, waiting for a date.", martyr: "Haggith is dead, and the Mourning Eye keeps her: a few of the Seen still sing the nice song in a cellar somewhere, and say she's watching still.", faded: "The Mind's Eye faded without you. Nobody knows where Haggith went, or who went with her.", fled: "Haggith walked away up the Lightless Stair. Nobody thinks she's finished." }[M.end] + (meHoldSum() ? " It still has roots in " + meHoldList().map(esc).join(", ") + "." : M.roots ? " Its last roots are out of the towns." : "") || "";
+  }
+  // ----- a Sighthouse: the bench, the gathering and the door -----
+  async function meHouseVisit(H) {
+    const M = S.me, L = H.lens ? ME_LENS[H.lens] : null;
+    add(el("div", "part-head sub", '<span class="num">' + esc(H.town) + " · " + REGIONS[H.reg] + '</span><h2>The Sighthouse</h2>'));
+    if (!H.seen) { H.seen = 1; await say("A white door with the eye on it, in red, and a bench outside where they give away soup in the evenings. Inside, the singing. It is a nice song: it goes up where you think it'll go down. On the slate by the door is a list of names in chalk, with what each person likes to eat beside it." + (L ? " " + L.n + ", " + L.t + ", stands in the doorway and smiles at you as if he's been expecting you." .replace(" he's", " " + (L.pr === "she" ? "she's" : "he's")) : "")); }
+    await dryLine("eye", { chance: 35 });
+    for (;;) {
+      const W = meWaiting().filter(R => R.town === H.town);
+      const c = await choose(W.map((R, i) => ({ key: "r" + R.id, label: "Sit down on the bench by " + esc(R.n), tag: R.who + " · " + Math.max(0, meLimit() - (calDay() - R.day)) + " days before the brand" + (R.last === calDay() ? " · not again today" : ""), show: R.last !== calDay(), plain: i > 0 }))
+        .concat([
+          { key: "rung", label: M.rung ? "Go in to the gathering, as " + M.alias[0] : "Go in at the white door", tag: M.rung ? "the " + ["First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh"][M.rung] + " Opening" + (calDay() < M.ladderAt ? " · not for " + (M.ladderAt - calDay()) + " days" : "") : "climb the Ladder under a false name", show: M.cover === "ok" && M.rung < 7 && M.st <= 2 && calDay() >= M.ladderAt, plain: !!W.length },
+          { key: "shut", label: "Shut the Sighthouse", tag: L ? "face " + L.n + ", " + L.t : "the Shepherds", plain: true },
+          { key: "back", label: "Leave it", plain: true }
+        ]));
+      if (c === "back") return;
+      if (c === "shut") { await meShut(H); return; }
+      if (c === "rung") { await meRung(H); return; }
+      const R = W.find(X => "r" + X.id === c);
+      await meDoubt(R);
+      if (H.shut) return;
+    }
+  }
+  // ----- the Doubt: talking somebody out -----
+  async function meDoubt(R) {
+    const M = S.me;
+    R.last = calDay(); R.tries++;
+    tip("medoubt");
+    await say(esc(R.n) + " is on the bench with a bowl of the soup, and smiles at you the way they all smile, as if you're already friends. A young " + (d(2) === 1 ? "man" : "woman") + " in white sits at the far end of the bench, not looking at you: the Shepherd, who walks them home at dark.");
+    const res = await meDoubtBox(R);
+    if (res.ok) {
+      R.state = "saved"; M.wrath++; meLog("talked " + R.n + " out of the Mind's Eye"); meHold(R.town, -1);
+      if (!hasGear("kerchief")) { S.gear = S.gear || []; S.gear.push("kerchief"); renderSheet(); await say(esc(R.n) + " presses something into your hand before " + mePr(R, "he goes", "she goes", "they go") + ": a plain linen kerchief. \"They make you cry a lot, in there,\" " + mePr(R, "he", "she", "they") + " says. \"I won't need it now.\""); await mech("<b>" + GEAR.kerchief.name + ".</b> " + GEAR.kerchief.desc, "loot"); }
+      await meWard();
+      await say(esc(R.n) + " puts the bowl down on the bench, and stands up, and walks away up the street, not toward the white door. The Shepherd watches " + mePr(R, "him", "her", "them") + " go, and then looks at you for a long time, and you know your face is going in a book.");
+      if (res.need === "pride") { if (hmOwn()) { S.hm.guards = (S.hm.guards || 0) + 1; await mech("+1 guard at " + esc(hmName()) + ": " + esc(R.n) + " keeps your gate now, and keeps it well.", "loot"); } else { rc().hands = (rc().hands || 0) + 1; await mech(esc(R.n) + " goes to the sellswords' hall. Hiring blades costs a little less.", "loot"); } }
+      if (res.need === "grief") calPass(1);
+      if (R.n === ME_OTTERY[0] && !M.proofs.date) { M.proofs.date = true; scenePic("me_ottery", "A white-bearded old man holding a stone tablet carved with sums", "Ottery Pim, the almanac-maker"); await say("Before he goes, Ottery Pim tells you what he's ashamed of. He worked out the date of the Blink for Haggith, from the stars and the tides, and she sent it back twice, until he got the answer she wanted. He still has her letters. <b>Proof: the Blink's date was made up.</b>"); }
+      else if (M.st >= 2) { const t = mePupilClue("\"They talk about the Pupil,\" " + mePr(R, "he", "she", "they") + " tells you, \"where we'll all go at the end.\""); if (t) await say(t); }
+      xpGain(30 + 3 * lv());
+      grant("mesaved"); if (M.rec.filter(X => X.state === "saved").length >= 5) grant("mefive");
+      await echoMarkSafe("meSaved");
+    } else {
+      R.grip = Math.min(7, R.grip + 1); R.trust = Math.max(0, res.trust - 1);
+      await say("The Shepherd stands up and says, gently, that it's time. " + esc(R.n) + " goes with " + (d(2) === 1 ? "them" : "the Shepherd") + ", and looks back at you once from the white door. You can try again tomorrow, and they'll be a little further in.");
+    }
+    save();
+  }
+  function meDoubtBox(R) {
+    return new Promise(resolve => {
+      const M = S.me, V = ME_VULN[R.v], keys = Object.keys(ME_VULN), hooks = keys.slice().sort(() => Math.random() - 0.5);
+      const P = puzzleBox("Talking " + esc(R.n) + " out", "Their <b>Grip</b> is how hard the Mind's Eye holds them: get it to nothing. <b>Trust</b> is how far they'll hear you. Every thing you say is a turn, and when the time runs out the Shepherd takes them inside. Work out what the Mind's Eye found in them, and what Haggith promised. Calling her a liar to someone who doesn't trust you yet only pushes them further in: that's what she told them you'd do.");
+      P.box.classList.add("me-doubt");
+      const D = { grip: R.grip, trust: R.trust || 0, time: 7, asks: 0, need: null, hook: false, distract: false, proofs: [], menu: null };
+      const top = el("div", "rc-meters"), cl = el("ol", "hm-clues"), acts = el("div", "rc-acts");
+      P.body.append(top, cl, acts);
+      let over = false;
+      const pips = (n, m, cls) => '<span class="rc-pips ' + cls + '">' + Array.from({ length: m }, (_, i) => "<i" + (i < n ? ' class="on"' : "") + "></i>").join("") + "</span>";
+      const say2 = (t, bad) => { P.status.innerHTML = t; P.status.classList.toggle("me-bad", !!bad); };
+      const fin = (ok) => { if (over) return; over = true; P.end(); acts.innerHTML = ""; setTimeout(() => resolve({ ok, need: D.need, trust: D.trust }), 500); };
+      const btn = (label, tag, fn, cls, off) => { const b = pbtn(label + (tag ? "<small>" + tag + "</small>" : ""), cls || ""); if (off) b.disabled = true; b.onclick = () => { if (!over) fn(); }; acts.append(b); };
+      const debtCost = 20 + 2 * lv();
+      function draw() {
+        top.innerHTML = "<span>Grip " + pips(D.grip, 7, "me-grip") + "</span><span>Trust " + pips(D.trust, 5, "me-trust") + "</span><span>Before the Shepherd stands " + pips(D.time, 10, "") + "</span>";
+        cl.innerHTML = R.clues.length ? R.clues.map(t => "<li>" + t + "</li>").join("") : "<li>You know nothing about " + mePr(R, "him", "her", "them") + " yet.</li>";
+        acts.innerHTML = "";
+        if (D.menu === "need") {
+          keys.forEach(k => btn(ME_VULN[k].need, k === "debt" ? debtCost + " gold" + (S.coins < debtCost ? " · you haven't got it" : "") : k === "grief" ? "a watch, no talking" : k === "alone" ? "the innkeeper owes you" : k === "pride" ? (hmOwn() ? "a place at " + esc(hmName()) : "a word at the sellswords' hall") : M.proofs.date ? "Ottery Pim's sums" : "you can only tell them", () => act("need", k), "", k === "debt" && S.coins < debtCost));
+          btn("Back", "", () => { D.menu = null; draw(); }, "plain");
+          return;
+        }
+        if (D.menu === "hook") {
+          hooks.forEach(k => btn("\"" + ME_VULN[k].hook + "?\"", "is that what she promised them?", () => act("hook", k)));
+          btn("Back", "", () => { D.menu = null; draw(); }, "plain");
+          return;
+        }
+        btn("Ask about home", "+1 Trust · learn something", () => act("ask"), "", D.asks >= 3);
+        btn("Just listen", D.trust < 3 ? "+1 Trust" : "they've said all they'll say to a stranger", () => act("listen"));
+        if (!D.need) btn("Speak to what they need", "pick one · right: the Grip loosens · wrong: they close up", () => { D.menu = "need"; draw(); }, "primary");
+        if (!D.hook) btn("Answer what Haggith promised them", "only if you know what it was", () => { D.menu = "hook"; draw(); }, "primary");
+        meProofs().filter(k => !D.proofs.includes(k)).slice(0, 2).forEach(k => btn("Tell them: " + ME_PROOF[k], "proof · it needs trust behind it", () => act("proof", k)));
+        btn("Tell them she's a liar", "risky with a stranger", () => act("liar"));
+        if (!D.distract) btn("Keep the Shepherd busy", "Deception · DC 13 · once · more time", () => act("distract"));
+      }
+      function act(k, x) {
+        D.menu = null; D.time--;
+        if (k === "ask") { D.asks++; D.trust = Math.min(5, D.trust + 1); const t = !R.clues.includes(R.soft) ? R.soft : V.clues.find(c => !R.clues.includes(c)) || "They tell you about the river, and their mother's bread, and nothing new."; if (!R.clues.includes(t) && V.clues.concat([R.soft]).includes(t)) R.clues.push(t); say2("You ask about home. " + t); }
+        else if (k === "listen") { if (D.trust < 3) { D.trust++; say2(["You sit and let them talk about the singing, and say nothing, and they talk more.", "You eat the soup. It's good soup. They like that you think so."][d(2) - 1]); } else say2("They've told you everything they'd tell a stranger. The Shepherd shifts on the bench.", true); }
+        else if (k === "need") {
+          if (x === R.v) {
+            D.need = x; const g = D.trust >= 2 ? (x === "dread" && !M.proofs.date ? 1 : 3) : 1; D.grip = Math.max(0, D.grip - g); D.trust = Math.min(5, D.trust + 1);
+            if (x === "debt") { S.coins -= debtCost; renderSheet(); }
+            say2(g === 3 ? "That's the thing. You can see it land: their shoulders come down, and for a moment they look at you instead of the door." : x === "dread" && D.trust >= 2 ? "They want to believe you. They'd need to see the sums." : "It's the right thing, but you said it to a stranger. They hear it, a little.");
+          } else { D.trust = Math.max(0, D.trust - 1); D.grip = Math.min(7, D.grip + 1); say2("\"You don't know me at all,\" they say. \"She does.\"", true); }
+        } else if (k === "hook") {
+          if (x === R.v) { D.hook = true; if (D.trust >= 3) { D.grip = Math.max(0, D.grip - 2); say2("They nod. You answer it. " + V.answer); } else { D.grip = Math.min(7, D.grip + 1); say2("They nod, warily, and ask how you know that, and you can see them deciding you've been watching them. That's what the unseen do, she told them.", true); } }
+          else { D.trust = Math.max(0, D.trust - 1); say2("They look at you blankly. That isn't what she promised them at all.", true); }
+        } else if (k === "proof") {
+          D.proofs.push(x);
+          if (D.trust >= 3) { D.grip = Math.max(0, D.grip - 2); say2("They listen to all of it, and don't argue, and their hand goes to the band on their arm and stays there."); }
+          else { D.grip = Math.min(7, D.grip + 1); say2("\"Forged,\" they say, quite calmly. \"She said the unseen would bring papers.\"", true); }
+        } else if (k === "liar") {
+          if (D.trust < 4) { D.grip = Math.min(7, D.grip + 2); D.trust = Math.max(0, D.trust - 1); say2("\"She said you'd say that,\" they say, and smile, and it's worse than if they'd shouted. \"She said the unseen would come with hard words.\"", true); }
+          else { D.grip = Math.max(0, D.grip - 1); say2("They don't argue. They look at their soup for a long time."); }
+        } else if (k === "distract") {
+          D.distract = true; const r = d(20) + lrMod();
+          if (r >= 13) { D.time += 3; say2("(Deception " + r + ") You ask the Shepherd the way to the well, and then the way back, and then about their mother. They're very patient."); }
+          else say2("(Deception " + r + ") The Shepherd smiles at you and doesn't move.", true);
+        }
+        draw();
+        if (D.grip <= 0) return fin(true);
+        if (D.time <= 0) return fin(false);
+      }
+      draw();
+      say2("The Shepherd hums the nice song under their breath.");
+    });
+  }
+  // ----- the Ladder: Seven Openings, under a false name -----
+  async function meRung(H) {
+    const M = S.me, n = M.rung + 1, ord = ["", "First", "Second", "Third", "Fourth", "Fifth", "Sixth", "Seventh"][n];
+    add(el("div", "part-head sub", '<span class="num">' + esc(H.town) + " · the Ladder of Sights</span><h2>The " + ord + " Opening</h2>"));
+    tip("meladder");
+    const blown = async (why) => { M.cover = "blown"; M.wrath += 2; meLog("your cover in the Mind's Eye was blown"); await say(why + " " + "Corse Wendle puts a hand on your shoulder, lightly, from behind. \"" + (M.alias ? M.alias[0] : "Friend") + ",\" he says, \"is not your name.\" Nobody stops you leaving. Everybody watches you go."); await mech("Your cover's blown: the Ladder is closed to you now, and they know your face.", "hurt"); save(); };
+    const pass = async (t) => { M.rung = n; M.ladderAt = calDay() + 3; meLog("climbed to the " + ord + " Opening"); if (t) await mech(t, "loot"); if (n === 7) grant("meladder"); save(); };
+    const lie = (dc) => check({ label: "Deception check", mod: lrMod() + 1, dc: dc + 2 * M.strain, cta: "Keep your face" });
+    if (n === 1) {
+      const a = await choose(ME_ALIAS.map((A, i) => ({ key: i, label: "Go in as " + A[0] + ", " + A[1], plain: i > 0 })).concat([{ key: "no", label: "Not today", plain: true }]));
+      if (a === "no") return;
+      M.alias = ME_ALIAS[a];
+      await say("They take your boots off at the door and wash your feet in warm water with herbs in it. Twenty people hug you, one after another, and every one of them says, \"You came,\" as if they'd been waiting. They know your false name before you've said it twice. Somebody has saved you the good end of the bench. The soup is good. The song is nice. You have to keep reminding yourself, and by the end of the evening it's harder than it should be." + (company().includes("burr") ? " Burr waits outside the white door all evening and won't come in." : ""));
+      return pass("The First Opening: the Welcome. Come back in a few days for the next.");
+    }
+    if (n === 2) {
+      const amt = Math.max(20, Math.floor(S.coins / 10));
+      await say("Mabry Voss sits at a table at the foot of the stairs with a book and a box. \"The Second Opening is the giving,\" she says. \"A tenth. Nothing is lost that the Eye holds.\" She doesn't look up from the book. She writes down everything everybody gives, and how they looked when they gave it.");
+      const c = await choose([{ key: "give", label: "Give a tenth", tag: amt + " gold · into the box", show: S.coins >= amt }, { key: "no", label: "Not today", plain: true }]);
+      if (c === "no") return;
+      S.coins -= amt; M.tithed += amt; renderSheet();
+      return pass("The Second Opening: the Tithe. " + amt + " gold into the box. (It goes somewhere. You'd like to know where.)");
+    }
+    if (n === 3) {
+      await say("At the Third Opening they put out the lamps, and in the dark everybody tells one true thing about themselves that they've never told anyone. A woman beside you tells how she let her brother drown. Somebody writes it down. You can hear the pen. It's your turn.");
+      const T = meTruths().filter(t => !/carrying|counted/.test(t)).slice(0, 2);
+      const c = await choose(T.map((t, i) => ({ key: "t" + i, label: "Tell them: \"" + t + "\"", tag: "true · they'll keep it", plain: i > 0 })).concat([{ key: "lie", label: "Make something up", tag: "Deception · DC 14 · they'll keep that too" }]));
+      if (c === "lie") {
+        const r = await lie(14);
+        if (!r.ok) { if ((r.total || 0) < 10) return blown("Your story has a hole in it, and in the dark somebody finds it."); M.strain++; await say("There's a pause in the dark, too long, and then the pen again. They'll be watching you closer now."); }
+        M.conf = ["I stole from a dead man on the road once.", "I left my mother to die alone, and I tell people she died in her sleep.", "I've never once been afraid. I think there's something wrong with me."][d(3) - 1]; M.confTrue = false;
+      } else { M.conf = T[+c.slice(1)]; M.confTrue = true; await say("You say it. The pen scratches. Afterward everyone hugs you again, harder, because now they know something, and so does somebody else."); }
+      return pass("The Third Opening: the Confession. They have it written down now.");
+    }
+    if (n === 4) {
+      scenePic("me_circle", "Hooded figures in a ring around a glowing sign on the floor", "The Watching");
+      await say("They sit you in a ring of five in the cellar, by one candle, and <b>Corse Wendle</b>, the Quiet Lens, stands behind you where you can't see him. \"Every one of the Seen watches two others,\" he says, \"and tells what they saw. One of this circle isn't what they seem. Tell me which.\"");
+      const r = await meRingBox();
+      if (r.k === "none") {
+        const q = await lie(15);
+        if (!q.ok) return blown("\"Nothing,\" you say. \"I was praying.\"");
+        M.strain++; await say("\"Nothing,\" you say. \"I was praying.\" A long silence behind you. Then he moves on. You pass, barely, and he'll watch you closer.");
+        return pass("The Fourth Opening: the Watching. Passed, barely.");
+      }
+      if (r.ok) {
+        grant("mering");
+        await say(esc(r.name) + " stops pretending to be frightened, all at once, and stands up and goes to stand by Corse. \"" + M.alias[0] + " sees,\" Corse says, and the others breathe out. Afterward one of them finds you in the yard and whispers where the reports go: up the stairs to Mabry Voss, who copies them into a book bound in white calf.");
+        M.ringNames = r.honest;
+        const t = mePupilClue("And they talk, in whispers, about the Pupil."); if (t) await say(t);
+        return pass("The Fourth Opening: the Watching. You know the names of four of the Seen who trust you now.");
+      }
+      M.named.push(r.name);
+      const H2 = { town: H.town, reg: H.reg }, R = { id: ++M.seq, n: r.name, pr: "they", who: "one of the Seen from your circle", v: "dread", town: H2.town, reg: H2.reg, day: calDay(), grip: 7, trust: 0, clues: [], soft: "", last: -1, tries: 0, state: "lost" };
+      M.rec.push(R); M.ringNames = r.honest.filter(x => x !== r.name);
+      await say("Corse lets the silence go on. Then he says, \"Thank you,\" and two of the Seen take " + esc(r.name) + " by the elbows, gently, and walk them up the stairs to the Quiet Rooms. " + esc(r.plant) + " watches them go and doesn't look at you. That was Corse's one, and " + esc(r.name) + " had done nothing at all.");
+      meLog("named " + r.name + " at the Watching; they went to the Quiet Rooms");
+      return pass("The Fourth Opening: the Watching. Passed. " + esc(r.name) + " will be at the Pupil, with a brand.");
+    }
+    if (n === 5) {
+      await say("At the Fifth Opening they give you paper and a pen and sit you at a table, and you write to whoever would come looking for you, and tell them not to. Everybody writes one. They read them aloud before they're sealed, and cry, and hug the writer." + (company().length ? " Yours is supposed to be to " + company().map(coName).join(" and ") + "." : ""));
+      const c = await choose([{ key: "nobody", label: "Write it to a name that isn't anyone's", tag: "Deception · DC 13 · and keep your face while they read it" }, { key: "no", label: "Not today", plain: true }]);
+      if (c === "no") return;
+      const r = await lie(13);
+      if (!r.ok && (r.total || 0) < 9) return blown("They read it aloud, and halfway through somebody laughs, because the town you've written to doesn't exist.");
+      if (!r.ok) { M.strain++; await say("They read it aloud, and nobody quite cries."); }
+      else await say("They read it aloud, and everybody cries, and so, a little, do you, which is the worst part.");
+      const t = mePupilClue("Afterward the Seen who've done the Fifth Opening talk about the walk to the Pupil."); if (t) await say(t);
+      return pass("The Fifth Opening: the Severing.");
+    }
+    if (n === 6) {
+      await say("At the Sixth Opening a brazier is lit in the cellar, and an iron ring with a dot in the middle of it is put into the coals until it's white. One by one the Seen kneel, and it's put to their brows, and they don't make a sound, because they've been taught not to. Then they sew their blindfolds shut with red thread. It's your turn next.");
+      const c = await choose([
+        { key: "take", label: "Kneel and take the brand", tag: "it's on your brow for good · the Pupil's stair is open to you" },
+        { key: "fake", label: "Fake it with lamp-black and a hot needle", tag: "Sleight of hand · DC 15" + (hasSkill("lock") ? " · Lockcraft helps" : "") },
+        { key: "no", label: "Get up and leave", tag: "the Ladder ends here", plain: true }
+      ]);
+      if (c === "no") return blown("You stand up when they call you.");
+      if (c === "take") { M.brand = true; await hurt(1, 4, "fire", "The iron on your brow."); await say("It's a ring with a dot in it, over your eyes, and it'll be there when you're old. People in the towns will see it for the rest of your life and look away. Afterward they sew a blindfold shut over your eyes with red thread, and you sit in the dark and are hugged."); return pass("The Sixth Opening: the Brand. You carry the Mind's Eye on your brow now."); }
+      const r = await check({ label: "Sleight of hand check (the false brand)", mod: lrMod() + (hasSkill("lock") ? 2 : 0), dc: 15 + 2 * M.strain, cta: "Steady" });
+      if (!r.ok) { await hurt(1, 6, "fire", "The needle slips into the coals and then into you."); return blown("Somebody leans in close to look at your brow, and licks a thumb, and rubs."); }
+      await say("Lamp-black and soot and a hot needle, by touch, in the dark, while somebody beside you screams with their mouth shut. It looks right, if nobody rubs it.");
+      return pass("The Sixth Opening: the Brand. (It's lamp-black. Don't let it rain.)");
+    }
+    if (n === 7) {
+      await say("You're woken in the night and led down into the cellar with your eyes bound, and the blindfold is taken off, and Haggith is there. She's smaller than you thought. She has the Eye-stone in her hands, a ball of old glass with a dark iris in it, and the red thread through her own blindfold is fresh. She puts her hand on your brow and tells you things about yourself. Some of them are things you said at the Third Opening. She says, \"When they all come down the Lightless Stair, you'll come with them. You'll be held.\" And she tells you where the Pupil is.");
+      await say("And then a door bangs, upstairs, in the wind. And Haggith, who sees nothing but by the Mind's Eye, looks up at it. Just for a moment. Nobody else is watching her. You are. <b>Proof: Haggith can see.</b>");
+      M.proofs.sight = true; M.pupil.found = true; M.pupil.clues = ["land", "water", "road"];
+      return pass("The Seventh Opening: the Sight. You know where the Pupil is, and you know what she is.");
+    }
+  }
+  // The Watching: five in a ring, one of them Corse's plant, who lies. The rest are too frightened to.
+  function meRingMake() {
+    for (let tries = 0; tries < 500; tries++) {
+      const N = 5, names = ME_RING.slice().sort(() => Math.random() - 0.5).slice(0, N), P = d(N) - 1;
+      const nx = (i, k) => (i + k + N) % N, beside = (a, b) => nx(a, 1) === b || nx(a, -1) === b;
+      const st = names.map((_, s) => {
+        for (let t = 0; t < 40; t++) {
+          const x = d(N) - 1, ty = d(5);
+          if (x === s && ty !== 3 && ty !== 4) continue;
+          const f = { 1: (h) => h === x, 2: (h) => h !== x, 3: (h) => beside(s, h), 4: (h) => !beside(s, h) && h !== s, 5: (h) => beside(x, h) }[ty];
+          if (f(P) === (s !== P)) return { f, text: { 1: names[x] + " is the one Corse sent.", 2: names[x] + " is one of us, truly.", 3: "The one Corse sent is sitting right beside me.", 4: "Whoever Corse sent, it isn't either of the two beside me.", 5: "Corse's one is sitting next to " + names[x] + "." }[ty] };
+        }
+        return null;
+      });
+      if (st.some(x => !x)) continue;
+      const ok = [...Array(N).keys()].filter(h => st.every((x, s) => x.f(h) === (s !== h)));
+      if (ok.length === 1 && ok[0] === P) return { names, P, st };
+    }
+    return null;
+  }
+  function meRingBox() {
+    return new Promise(resolve => {
+      const R = meRingMake();
+      const P = puzzleBox("The Watching", "Each of the five says one thing. Exactly one of them is lying, and that one is Corse's plant. Name the plant, and only the plant: name an honest one and they go to the Quiet Rooms. They sit in this order round the candle. Tap a seat to choose.");
+      const wrap = el("div", "rc-wrap"), says = el("ol", "hm-clues me-says");
+      says.innerHTML = R.st.map((x, i) => "<li><b>" + R.names[i] + ":</b> \"" + x.text + "\"</li>").join("");
+      P.body.append(wrap, says);
+      let sel = null;
+      const go = pbtn("Tap a seat first", "primary"), none = pbtn("Say you saw nothing<small>Deception · DC 15</small>");
+      P.ctrl.append(go, none);
+      function draw() {
+        let s = '<svg class="me-ring" viewBox="0 0 300 250" role="group" aria-label="Five of the Seen in a ring round a candle">' +
+          '<circle cx="150" cy="125" r="70" fill="none" stroke="currentColor" opacity=".3" stroke-dasharray="3 5"/><circle cx="150" cy="125" r="6" fill="#e0a64a"/>';
+        R.names.forEach((n, i) => {
+          const a = -Math.PI / 2 + i / 5 * Math.PI * 2, x = 150 + Math.cos(a) * 92, y = 125 + Math.sin(a) * 92;
+          s += '<g class="me-seat' + (sel === i ? " sel" : "") + '" data-i="' + i + '" tabindex="0" role="button" aria-label="' + n + (sel === i ? ", chosen" : "") + '"><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="27"/><text x="' + x.toFixed(1) + '" y="' + (y + 5).toFixed(1) + '">' + n + "</text></g>";
+        });
+        wrap.innerHTML = s + "</svg>";
+        wrap.querySelectorAll(".me-seat").forEach(g => { const f = () => { if (go.disabled && sel !== null && P.box.querySelector("button[disabled]") === go) return; sel = +g.dataset.i; draw(); }; g.addEventListener("click", f); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } }); });
+        go.textContent = sel === null ? "Tap a seat first" : "Name " + R.names[sel];
+        go.disabled = sel === null;
+        P.status.textContent = sel === null ? "Nobody chosen yet." : "You'll name " + R.names[sel] + " to Corse.";
+      }
+      draw();
+      const honest = R.names.filter((_, i) => i !== R.P);
+      go.onclick = () => { if (sel === null) return; P.end(); resolve({ k: "name", ok: sel === R.P, name: R.names[sel], plant: R.names[R.P], honest }); };
+      none.onclick = () => { P.end(); resolve({ k: "none", honest }); };
+    });
+  }
+  // ----- shutting a Sighthouse: its Lens, or its Shepherds -----
+  async function meShut(H) {
+    const M = S.me, k = H.lens && M.lens[H.lens] === null ? H.lens : null, L = k ? ME_LENS[k] : null;
+    if (M.cover === "ok" && M.rung) { M.cover = "blown"; meLog("dropped your cover to shut the Sighthouse in " + H.town); }
+    if (L) await say(L.n + " stands in the white doorway with the Seen behind " + (L.pr === "she" ? "her" : "him") + " in the dark of the hall, all with their eyes bound. \"" + { clauneck: "What will it cost,\" he says, ringing softly as he steps out, \"for you to go away? Name it. Everybody has a number. I've never met anybody who didn't.", aulden: "Oh, friend,\" he says, with real sorrow. \"You were so nearly one of us.", mabry: "You're in the book,\" she says. \"Page forty. You're overdrawn.", corse: "Hush,\" he says, and every one of the Seen goes silent at once." }[k] + "\"");
+    else await say("Two Shepherds in white bar the door with their staves across it, and say they're sorry, and mean it.");
+    if (k) scenePic({ aulden: "me_aulden", corse: "me_corse", clauneck: "me_clauneck", mabry: "me_shields" }[k], { aulden: "A high priest in a white mitre and robes", corse: "A hooded figure with a mace, face in shadow", clauneck: "A hooded figure holding a fistful of gold", mabry: "Shield-bearers of the Seen under a banner with an eye in a wheel" }[k], L.n + ", " + L.t);
+    const sig = k === "clauneck" ? [ME_SIG.gilded, ME_SIG.purse] : ME_SIG[k ? { aulden: "embrace", mabry: "tally", corse: "hush" }[k] : "knife"];
+    const ok = await meSigFight(meFoe(k || "shepherd"), sig, L ? L.n : "the Shepherds");
+    if (!ok) { await say("You end up in the street on your back, and the white door shuts, and the singing starts again inside, a little louder, for you."); M.wrath++; save(); return; }
+    if (L) {
+      const f = await choose([
+        { key: "dead", label: "Finish it", tag: "the Seen will call it a martyrdom" },
+        { key: "taken", label: "Hand " + (L.pr === "she" ? "her" : "him") + " to the watch", tag: "a bounty · a trial" },
+        { key: "spared", label: "Let " + (L.pr === "she" ? "her" : "him") + " go", tag: "back to Haggith, beaten", plain: true }
+      ]);
+      M.lens[k] = f;
+      await say({ dead: "You finish it, in the white doorway, and the Seen in the hall begin to sing, very softly.", taken: "The watch come with a cart and a lot of rope, and are very nervous about the blindfolded people who follow the cart to the edge of town, singing.", spared: L.n + " gets up and walks away down the road toward wherever the Pupil is, without looking back." }[f]);
+      if (f === "taken") { const b = 25 + 2 * lv(); S.coins += b; renderSheet(); await mech("The watch pays " + b + " gold.", "loot"); }
+      if (k === "clauneck") { const g = 40 + 4 * lv(); S.coins += g; renderSheet(); grant("megold"); await mech("Gold off his coat, cut away coin by coin: " + g + ".", "loot"); }
+      if (k === "aulden") { M.rec.filter(R => R.state === "doubt").forEach(R => { R.grip = Math.max(1, R.grip - 1); }); const t = mePupilClue("In his pocket-book, among the names of children, is a note about the Pupil."); await say("Without Aulden Crake to remember their names, the people on the benches in every town are a little less sure." + (t ? " " + t : "")); }
+      if (L.proof && !M.proofs[L.proof]) { M.proofs[L.proof] = true; await say(k === "clauneck" ? "Inside his coat, sewn in among the coins, is a deed to a fine house in Castellane, with a walled garden, bought last month with tithe money in a name that isn't Haggith's but is in her hand. <b>Proof: Haggith's hoard.</b>" : "In her satchel is the Listening Book: every report of the Watching, every confession, in her neat hand, with notes in another hand in the margins, things to say to people to make them weep. <b>Proof: the Listening Book.</b>"); }
+      if (k === "corse") { for (let i = 0; i < 2; i++) { const t = mePupilClue(i ? "And:" : "He's carrying a list of what's to go down to the Pupil."); if (t) await say(t); } }
+      meLog((f === "dead" ? "killed " : f === "taken" ? "handed the watch " : "let go ") + L.n + " and shut the Sighthouse in " + H.town);
+      if (Object.values(M.lens).every(Boolean)) grant("melens");
+    } else meLog("shut the Sighthouse in " + H.town);
+    H.shut = "shut"; M.wrath += 2; M.next = Math.max(M.next, calDay() + 5); H.reopenAt = calDay() + 12 + d(4); meHold(H.town, -2);
+    meWaiting().filter(R => R.town === H.town).forEach(R => { R.grip = Math.max(1, R.grip - 2); R.day = calDay(); });
+    xpGain(60 + 5 * lv());
+    await say("You pull down the white door and break the slate with the names on it. " + (meWaiting().some(R => R.town === H.town) ? "The people on the bench stand in the street, not knowing where to go. That's a start." : "Nobody comes to stop you.") + (meHoldOf(H.town) ? " But all along the street the faithful of " + esc(H.town) + " watch you do it from their own doorways, and don't come out, and don't look away. They live here." : ""));
+    if (meHoldOf(H.town)) await mech("The Mind's Eye is still " + ME_HOLD[meHoldOf(H.town)] + " in " + esc(H.town) + ". The door will be back in a couple of weeks, unless you dig out the roots: speak against it in the town.", "hurt");
+    save();
+  }
+  // ----- finding the Pupil: six round holes, three facts -----
+  function mePupilFind() {
+    const M = S.me, P = M.pupil;
+    return new Promise(resolve => {
+      const B = puzzleBox("Where the Pupil is", "Round holes in the ground where a hundred people could hide. What you've heard is written down the side. Tap a place to cross it off (tap again to bring it back), then go to the one that's left. Going to the wrong one costs you two days, and they'll hear you were looking.");
+      B.body.append(el("ol", "hm-clues", P.clues.length ? P.clues.map(k => "<li>" + ME_ATTR[k][P.cand[P.t][k]][1] + "</li>").join("") : "<li>Nothing yet. Talk people out (once the brands start), shut Sighthouses, climb the Ladder or follow the carts.</li>"));
+      const list = el("div", "me-holes"); B.body.append(list);
+      let sel = null;
+      const go = pbtn("Go there", "primary"), back = pbtn("Not yet");
+      B.ctrl.append(go, back);
+      function draw() {
+        list.innerHTML = "";
+        P.cand.forEach((c, i) => {
+          const x = P.crossed.includes(i), b = pbtn("<b>" + esc(c.place) + "</b><small>" + REGIONS[c.reg] + " · " + ME_ATTR.land[c.land][0] + " · " + ME_ATTR.water[c.water][0] + " · " + ME_ATTR.road[c.road][0] + (P.tried.includes(i) ? " · you looked: nothing" : "") + "</small>", (x ? "rot" : "") + (sel === i ? " on" : ""));
+          if (P.tried.includes(i)) b.disabled = true;
+          b.onclick = () => { if (sel === i) { sel = null; if (!P.crossed.includes(i)) P.crossed.push(i); } else if (P.crossed.includes(i)) P.crossed.splice(P.crossed.indexOf(i), 1); else sel = i; draw(); };
+          list.append(b);
+        });
+        go.disabled = sel === null; go.textContent = sel === null ? "Pick a place to go" : "Go to " + P.cand[sel].place;
+        B.status.textContent = (6 - P.crossed.length - P.tried.length) + " places not crossed off.";
+      }
+      draw();
+      back.onclick = () => { B.end(); resolve(); };
+      go.onclick = async () => {
+        B.end(); const i = sel; calPass(8);
+        if (i === P.t) {
+          P.found = true; mePupilRaise(); grant("mefound");
+          await say("Two days out, at " + esc(P.cand[i].place) + ", you lie on the ridge and look down at what looks like a round black pond at night, in the middle of the day. It isn't water. It's black cloth, stretched over a hole in the ground on ropes. Under it, very faintly, a hundred people are singing the nice song.");
+          await mech("<b>The Pupil</b> is on your map. Raid it from the roads back" + (M.blink != null ? ", before " + calDate(M.blink) + ", or on that night itself." : "."), "hurt");
+          meLog("found the Pupil at " + P.place);
+        } else {
+          P.tried.push(i); if (!P.crossed.includes(i)) P.crossed.push(i); M.wrath++;
+          await say("Two days to " + esc(P.cand[i].place) + ", and it's a hole in the ground with nothing in it but nettles and a dead sheep. Somebody in the next village asks why you were looking, and remembers your face.");
+        }
+        save(); resolve();
+      };
+    });
+  }
+  // ----- Haggith, in the Hall of Seeing (called from rcLeader for the Pupil) -----
+  // Three moves, each with a tell: the Mind's Eye (she says something true about you, then Sees you; shut your
+  // eyes), the Congregation at half (the Seen stand between you, and half your blows go into them; call them by
+  // name, or tell them what she is), and the Blink under a third (the lamps go out, and there are four of her:
+  // find the one who isn't one of the Seen). With two proofs or more you can try to expose her mid-fight.
+  const ME_FIG = ["by the stair", "by the well of cups", "under the Eye-stone", "at the door of the Quiet Rooms"];
+  const ME_FIGK = [
+    { odd: "her blindfold is dry", norm: "the linen is dark and wet with tears", why: "Three of them had been weeping under the linen. They believe. She doesn't." },
+    { odd: "she's wearing soft slippers", norm: "her feet are bare and bloody from the Lightless Stair", why: "The Seen go down the stair barefoot. All of them. Not her." },
+    { odd: "her face turns to follow your axe as it moves", norm: "her face doesn't move when your axe does", why: "Blind people don't follow a blade with their face." },
+    { odd: "her blindfold is just knotted at the back", norm: "the blindfold is sewn shut with red thread", why: "The Seen sew their bands shut at the Sixth Opening. She only ties hers." }
+  ];
+  const meNames = () => { const M = S.me; return M.rec.filter(R => R.state === "lost").map(R => R.n).concat(M.ringNames || []).concat(M.rec.filter(R => R.state === "saved").map(R => R.n)); };
+  async function meHaggith(C, B, inside) {
+    const M = S.me, n = "Haggith";
+    add(el("div", "part-head sub", '<span class="num">' + esc(C.place) + " · the Hall of Seeing</span><h2>Haggith</h2>"));
+    add(el("div", "me-sigrow", meSigil(56)));
+    await say(B.vigil ? "It's the night of the Blink, and the whole of the Seen are in the Hall of Seeing, a hundred people in white on the round floor with their eyes bound, all facing her chair, singing. Haggith stands up out of the chair when you come in. The singing doesn't stop. \"You came to be held,\" she says, to you exactly. \"Tonight of all nights.\"" : inside ? "Haggith is awake, sitting very straight in the dark with the Eye-stone in her lap, as if she'd known all night which door you'd come through. \"I know you,\" she says. \"I've always known you.\"" : "Haggith comes out onto the round floor through her own people, who part for her without being able to see her coming, and stop, and face you. The red thread through her blindfold is fresh. \"I know you,\" she says. \"I've always known you.\"");
+    const F = rcLeaderF(C);
+    let pre = 0;
+    if (inside && B.job === "kill" && !B.vigil) {
+      const r = await check({ label: "Stealth check (the first blow)", mod: lrMod() + 2 + (B.slack ? 2 : 0), dc: 17, cta: "Strike" });
+      if (r.ok) { pre = 0.25; B.quietKill = true; await say("Your first blow lands before she turns, and she makes a sound at last."); }
+      else await say("She turns before your blow arrives. Of course she does: she heard you. That's what she'll say.");
+    }
+    SND.musPlace("raidboss"); meMusV = "boss";
+    tip("mehaggith");
+    await mech("<b>The Mind's Eye, the Congregation and the Blink.</b> Haggith has three signature moves. Every one has a tell a turn before it lands: read it, and pick the counter (under Guard) on your next turn." + (meProofs().length >= 2 ? " You hold " + meProofs().length + " proofs: you can try to tell the Seen what she is." : ""), "hurt");
+    const T = meTruths();
+    const st0 = { tell: null, pick: null, ring: false, ringDone: false, blinkDone: false, exposed: false, tried: false, snap: null, dev: null, devN: 0, devoured: 0, kerch: false, heavy: false };
+    const TT = meTaunts(); let tLast = -1; const taunt = () => { let i = d(TT.length) - 1; if (i === tLast && TT.length > 1) i = (i + 1) % TT.length; tLast = i; return TT[i]; };
+    // The Soul Devour (Adrian, 17 Nov 2026): four of her moves to wind up, a red stitch snapping on each; it goes
+    // straight at you. Break it (two heavy blows that land, or a fifth of her life in the wind-up), throw a proof
+    // at her, or get behind a companion who'll take it. The Homecoming Thread halves it. Guarding does nothing.
+    const devCover = () => company().filter(id => bondOf(id) >= 3 || isMerc(id) && (co().loyal[id] || 0) >= 2);
+    const dc = () => Math.max(10, 18 - 2 * (meProofs().length - 2) - (B.vigil ? 3 : 0));
+    F.extra = (st) => {
+      const o = [{ key: "brace-eyes", label: "Shut your eyes", tag: "counter: the Mind's Eye" }];
+      if (st0.ring) o.push({ key: "me-names", label: meNames().length ? "Call them by name" : "Call out to them", tag: "counter: the Congregation" + (meNames().length ? " · you know " + meNames().slice(0, 2).join(", ") : " · you know no names · Persuasion · DC 16") });
+      if (st0.dev) {
+        if (st0.dev.pk) o.push({ key: "me-dev-proof", label: "Throw a proof in her face", tag: "counter: the Soul Devour · " + ME_PROOF[st0.dev.pk] });
+        devCover().forEach(id => o.push({ key: "me-dev-cover:" + id, label: "Get behind " + coName(id), tag: "counter: the Soul Devour · " + coName(id) + " takes it, and is out of the fight", plain: true }));
+      }
+      if (st0.devoured && hasGear("kerchief") && !st0.kerch) o.push({ key: "me-kerchief", label: "Mop your face with the kerchief", tag: "once a fight · ends Devoured", plain: true });
+      if (!st0.exposed && !st0.tried && meProofs().length >= 2) o.push({ key: "me-expose", label: "Tell the Seen what she is", tag: "Persuasion · DC " + dc() + " · " + meProofs().length + " proofs · once" });
+      return o;
+    };
+    F.onChoice = async (c) => { st0.heavy = c === "g-heavy"; };
+    F.onExtra = async (c, st) => {
+      if (c === "me-dev-proof") {
+        const pk = st0.dev.pk; st0.dev = null; rc().counters++;
+        await say("You don't argue with her. You just say it, flat, the way you'd read out a bill: " + ({ date: "\"Ottery Pim worked out your date, and you sent it back twice.\"", book: "\"Mabry Voss writes it all down for you. Every word you've ever said to me came out of her book.\"", sight: "\"You can see. You looked at the door.\"", hoard: "\"A house in Castellane. With a walled garden.\"" })[pk] + " The last stitches stop snapping. For one breath she doesn't know what to say, and the whole Hall hears her not know.");
+        await mech("Countered: the Soul Devour fizzles.", "loot"); grant("medevour");
+        return;
+      }
+      if (c.startsWith("me-dev-cover:")) { st0.dev.cover = c.split(":")[1]; await say(coName(st0.dev.cover) + " sees what's coming before you do, and steps in front of you, square, between you and the place where her eyes should be."); return; }
+      if (c === "me-kerchief") {
+        st0.kerch = true; st0.devoured = 0;
+        await say("You take out the kerchief and mop your face with it, slowly, in the middle of the Hall of Seeing, while she watches. It's a very ordinary piece of linen. Her voice goes out of your head like water out of a boot.");
+        await mech("Devoured: wiped away.", "loot");
+        return;
+      }
+      if (c === "me-names") {
+        let ok = !!meNames().length;
+        if (!ok) ok = (await check({ label: "Persuasion check (the ring)", mod: lrMod(), dc: 16, cta: "Call" })).ok;
+        if (ok) { st0.ring = false; rc().counters++; await say(meNames().length ? "You say " + esc(meNames()[0]) + "'s name, out loud, and then the other names you know" + (M.ringNames ? ", " + M.ringNames.slice(0, 3).map(esc).join(", ") : "") + ", and people in white turn their heads toward you one by one, as if they'd forgotten they had them. The ring comes apart." : "You call out to them, not to her: about bread, and rain, and their mothers. The ring wavers, and comes apart."); await mech("Countered: the Seen step back.", "loot"); }
+        else await say("They don't hear you. They hear her.");
+        return;
+      }
+      if (c === "me-expose") {
+        st0.tried = true;
+        const r = await check({ label: "Persuasion check (the truth, out loud)", mod: lrMod() + 1, dc: dc(), cta: "Speak" });
+        if (r.ok) {
+          st0.exposed = true; B.exposed = true; st0.ring = false; F.ac -= 2;
+          await say("You tell them. " + meProofs().map(k => ({ date: "The date was worked out by an almanac-maker called Ottery Pim, and she sent it back twice till he got the answer she wanted.", book: "Everything she's ever known about them came out of a book that Mabry Voss keeps, filled in by them, about each other.", sight: "And she can see: watch.", hoard: "The tithe bought her a house in Castellane with a walled garden." }[k])).join(" ") + (M.proofs.sight ? " You throw your knife at the lamp by her chair, and she flinches from the flying glass. A hundred bound faces turn toward the sound of her flinching." : "") + " Somebody near the front starts unpicking the red thread from their own blindfold.");
+          await mech("Exposed: the Congregation won't stand for her now, and her guard is down (AC −2).", "loot");
+        } else await say("\"The unseen lie,\" Haggith says, gently, and a hundred people nod, and nobody unpicks anything.");
+        return;
+      }
+      st0.pick = c;
+    };
+    F.setup = async () => { if (pre) { FOE.hp = Math.max(1, Math.round(FOE.max * (1 - pre))); renderFoe(); } };
+    F.before = async () => { st0.snap = FOE.hp; };
+    F.turn = async (st) => {
+      const pick = st0.pick; st0.pick = null;
+      // Devoured: her voice in your head, every move of hers, until it's wiped or wears off
+      if (st0.devoured > 0) {
+        st0.devoured--; st.dis = true;
+        await hurt(1, 4, "psychic", "<b>Devoured.</b> " + taunt() + " It's inside your head, in her voice.");
+        if (!st0.devoured) await mech("Devoured wears off.", "loot");
+      }
+      // the Soul Devour's wind-up: a stitch on each of her moves, four of them
+      if (st0.dev) {
+        const D = st0.dev, done = D.hp0 - FOE.hp;
+        if (st0.heavy && FOE.hp < (st0.snap ?? FOE.hp + 1)) D.heavy++;
+        st0.heavy = false;
+        if (D.cover) {
+          const id = D.cover; st0.dev = null; co().out = co().out || {}; co().out[id] = calDay() + 1;
+          await say("The Soul Devour goes into " + coName(id) + " instead of you. " + (id === "burr" ? "Burr yelps once and lies down flat with his paws over his nose and won't get up." : coName(id) + " goes white and sits down hard on the round floor and stares at nothing, and is somewhere else for a while.") + " Haggith tilts her head. \"That one loves you,\" she says. \"How embarrassing for it.\"");
+          await mech(coName(id) + " took it, and is shaken: out of this fight, and no use to you till tomorrow.", "hurt"); grant("medevour");
+          return "done";
+        }
+        if (D.heavy >= 2 || done >= Math.ceil(FOE.max / 5)) {
+          st0.dev = null; rc().counters++; st.adv = true;
+          await say("You hit her hard enough, often enough, that she loses the thread: the snapping stops, and she staggers, and the hunger goes out of the air.");
+          await mech("Broken: the Soul Devour is lost, and your next swing has advantage.", "combo"); grant("medevour");
+          return "done";
+        }
+        D.left--;
+        if (D.left > 0) {
+          await say("Another red stitch in her blindfold snaps. <b>" + D.left + " left.</b> " + taunt());
+          return "done";
+        }
+        st0.dev = null;
+        const ward = hasGear("meward"), k = ward ? 3 : 6;
+        await say("The last stitch goes. The linen falls from her eyes, and what's behind it isn't eyes, and it comes for you through the air like a hand into a bag.");
+        await hurt(k, 8, "psychic", "<b>The Soul Devour.</b> She takes something. You won't know what till later." + (ward ? " The red thread on your wrist burns, and holds, and half of it doesn't get through." : ""));
+        st0.devoured = ward ? 2 : 4; M.gnaw = calDay() + 3; st.dis = true;
+        await mech("<b>Devoured</b>: for her next " + st0.devoured + " moves your swings have disadvantage, and her voice hurts" + (hasGear("kerchief") ? " (your kerchief can wipe it away)" : "") + ". And for three days she'll be in the back of your head: the Gnawing.", "hurt");
+        meLog("Haggith's Soul Devour got into your head");
+        return "done";
+      }
+      // the ring takes half of what you landed
+      if (st0.ring && st0.snap != null && FOE.hp < st0.snap && d(2) === 1) { FOE.hp = st0.snap; renderFoe(); M.harmed++; B.harmed = (B.harmed || 0) + 1; await say("Somebody in white steps into your blow, and you feel it land in the wrong body, and they fall without a sound, because she taught them not to make one."); }
+      if (st0.tell === "eye") {
+        st0.tell = null;
+        if (pick === "brace-eyes" || (!M.confTrue && M.conf && st0.lieNamed)) { rc().counters++; st.adv = true; await say(pick === "brace-eyes" ? "You shut your eyes, and the gaze slides off you like water, and you hear her breath catch: she was sure. You strike at the sound." : "She's Seeing a lie you told her at the Third Opening, and it isn't there. You're not where she's looking."); await mech("Countered: your next swing has advantage.", "loot"); }
+        else {
+          await hurt(2 + (M.confTrue ? 1 : 0) + (M.brand ? 1 : 0) + (FOE.hp <= FOE.max / 2 ? 1 : 0), 8, "psychic", "<b>The Mind's Eye.</b> You meet the place where her eyes should be, and something comes through the linen and holds you still and opens every door in your head." + (M.brand ? " The brand on your brow burns." : ""));
+          st.dis = true; await foeSwing(F, st, { label: "while you stand held", why: "Her staff, while you can't move." });
+          await mech("Held: your next swing has disadvantage.", "hurt");
+        }
+        return "done";
+      }
+      if (st0.tell === "blink") { st0.tell = null; await meBlink(F, st, B); return "done"; }
+      if (pick && pick.startsWith("brace")) await say("Nothing comes. You've stood there with your eyes shut while she walked round you.");
+      const half = FOE.hp <= FOE.max / 2, third = FOE.hp <= FOE.max / 3;
+      if (half && !st0.ringDone && !st0.exposed) { st0.ringDone = true; st0.ring = true; await say("She lifts one hand, and the Seen stand up off the floor all at once and come and stand round her, three deep, facing you, with their bound eyes."); await mech("<b>The Congregation</b>: half your blows go into them until you break the ring.", "hurt"); return "done"; }
+      if (!st0.tell && ((st0.devN === 0 && FOE.hp <= FOE.max * 0.75) || (st0.devN === 1 && st0.blinkDone && FOE.hp <= FOE.max / 5))) {
+        st0.devN++; st0.dev = { left: 4, hp0: FOE.hp, heavy: 0, cover: null, pk: meProofs().length ? meProofs()[d(meProofs().length) - 1] : null };
+        tip("medevour");
+        await say("She sets the end of her staff on the floor and goes very still, and a single red stitch in the thread over her eyes snaps with a sound like a lute string. <b>4 left.</b> \"Let me have a look at you,\" she says. \"All of you.\"");
+        await mech("<b>The Soul Devour</b>: four of her moves to wind up, a stitch on each, and then it goes straight into your head. Break it (two heavy blows, or hit her hard enough), throw a proof in her face, or get behind a companion. Guarding won't help.", "hurt");
+        return "done";
+      }
+      if (third && !st0.blinkDone) { st0.blinkDone = true; st0.tell = "blink"; await say("She lifts the Eye-stone off its stand in both hands, and every lamp in the Hall of Seeing gutters at once."); return "done"; }
+      if (st.round % (half ? 2 : 3) === (half ? 0 : 2)) {
+        st0.tell = "eye";
+        const t = !M.confTrue && M.conf && !st0.lieDone ? (st0.lieDone = st0.lieNamed = true, M.conf) : T[d(T.length) - 1];
+        await say("\"" + esc(t) + "\" She turns her bound face toward you, and the Hall goes so quiet you can hear the lamps.");
+        return "done";
+      }
+      if (d(2) === 1) await say(taunt());
+      else if (d(3) === 1) await say(["The Seen sing the nice song, very softly, all round you.", "Somewhere in the dark a child asks if it's the Blink yet, and is hushed.", "The Eye-stone on its stand catches the lamplight and holds it."][d(3) - 1]);
+    };
+    nextReg = C.reg;
+    await mech("She's the hardest thing in the Mind's Eye: below half, the Mind's Eye comes every other turn, and cuts deeper.", "hurt");
+    try { await hkFight(F); } finally { meMusV = "fight"; }
+    if (F.fled || F.overtaken) {
+      await say("You go down on the round floor. Vaelric's axe holds you at one breath, and the Seen carry you up the Lightless Stair and leave you on the ridge, very gently, which is the worst thing anybody has ever done to you.");
+      C.noticed = Math.min(3, C.noticed + 1); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
+      rcLog("lost to Haggith at the Pupil"); meLog("lost to Haggith in the Hall of Seeing");
+      SND.musPlace("roads"); save(); B.lostChief = true; return "lost";
+    }
+    B.chiefMet = true;
+    await say("Haggith goes down on one knee on the round floor of her own hall, with the Eye-stone rolling away from her across the boards, and a hundred bound faces turned toward the sound.");
+    const can = st0.exposed || meProofs().length >= 3 || (B.vigil && meProofs().length >= 2);
+    const f = await choose([
+      { key: "show", label: "Cut the red thread, in front of them", tag: st0.exposed ? "they've already started to look" : can ? "your proof will carry it" : "you've too little proof to tell them what they're seeing" },
+      { key: "kill", label: "Finish it", tag: "a martyr · the Mourning Eye goes on without her", plain: true },
+      { key: "spare", label: "Let her go", tag: "she'll dig another Pupil somewhere", plain: true }
+    ]);
+    if (f === "show") {
+      B.chiefGone = true; B.shown = true;
+      await say("You cut the red thread. Under the linen her eyes are ordinary and grey, and they look straight at you, and then, because she can't stop herself, at the door. " + (can ? "Nobody in the hall makes a sound. Then, all round the round floor, people begin unpicking their own thread, and looking, and blinking in the lamplight, and Haggith walks out through them and up the Lightless Stair alone, and nobody follows her." : "\"She has been given her sight back,\" somebody shouts from the stair, \"on the night of the Blink!\" and half of them cry out with joy. It isn't over for those ones. It is for the rest."));
+      await meEnd(can ? "broken" : "split", C, B);
+      if (B.job === "kill") B.done.kill = "half";
+    } else if (f === "kill") {
+      C.chiefDead = true; rc().marks.killed.push(n);
+      await say("You finish it, and the Seen begin to sing, very softly, the nice song, and you understand that you've given them a martyr." + (st0.exposed ? " Some of them don't sing. Some of them are unpicking their thread." : ""));
+      await meEnd(st0.exposed ? "broken" : "martyr", C, B);
+      if (B.job === "kill") B.done.kill = true;
+    } else {
+      B.chiefGone = true; rc().marks.spared.push(n);
+      await say("You step back. She gets up, and finds her staff without looking for it, and walks out through her people" + (st0.exposed ? ", and only a few of them follow her, the hardest few" : ", and they follow her up the Lightless Stair, singing") + ". \"There's always another hole in the ground,\" she says.");
+      await meEnd(st0.exposed ? "split" : "fled", C, B);
+      if (B.job === "kill") B.done.kill = "half";
+    }
+    save();
+    return f;
+  }
+  async function meBlink(F, st, B) {
+    const M = S.me, K = ME_FIGK[d(4) - 1], other = ME_FIGK.filter(k => k !== K)[d(3) - 1], real = d(4) - 1;
+    await say("<b>The Blink.</b> Dark, complete, for three breaths. When the lamps come up there are four women in white standing round you, all the same height, all with bound eyes, all holding a staff. One of them is Haggith.");
+    add(el("ul", "me-figs", ME_FIG.map((p, i) => "<li><b>" + p.charAt(0).toUpperCase() + p.slice(1) + ":</b> " + (i === real ? K.odd : K.norm) + ", and " + other.norm + ".</li>").join("")));
+    const k = await choose(ME_FIG.map((p, i) => ({ key: "f" + i, label: "Strike the one " + p, plain: i > 0 })));
+    if (+k.slice(1) === real) {
+      rc().counters++; st.stilled = true; grant("meblink");
+      await say(K.why + " You go for her, and she knows it a moment before your axe does, and that's all the proof anyone in the hall needed.");
+      await foeStrike(2, 10, 4, "A blow she saw coming");
+      await mech("Countered: she loses her next turn.", "loot");
+    } else {
+      M.harmed++; B.harmed = (B.harmed || 0) + 1;
+      await say("The woman you strike is one of the Seen. She goes down without a sound. (" + K.why + ")");
+      await hurt(3, 8, "bludgeoning", "Haggith's staff comes out of the dark behind you.");
+    }
+  }
+  // How it ends, for the Mind's Eye and everyone in it.
+  async function meEnd(k, C, B) {
+    const M = S.me, L = meLostL();
+    M.end = k; M.endAt = calDay();
+    if (k === "broken" || k === "split") Object.keys(M.hold || {}).forEach(t => { M.hold[t] = k === "broken" ? Math.floor(M.hold[t] / 2) : M.hold[t] - 1; if (M.hold[t] <= 0) delete M.hold[t]; });
+    if (k === "broken") {
+      L.forEach(R => { R.state = "home"; }); M.freed += L.length;
+      grant("meshut"); if (B.vigil) grant("mevigil");
+      await mech("<b>The Eye shuts.</b> The Seen go home, to every town that lost someone: " + (L.length ? L.map(R => esc(R.n)).join(", ") + ", and a hundred more." : "a hundred of them.") + " The white doors come down.", "loot");
+      meLog("broke the Mind's Eye in the Hall of Seeing");
+      await echoMarkSafe("meBroken");
+    } else if (k === "split") {
+      const back = L.slice(0, Math.ceil(L.length / 2)); back.forEach(R => { R.state = "home"; }); M.freed += back.length;
+      await mech("<b>The Mind's Eye breaks in two.</b> Most of the Seen go home" + (back.length ? ", " + back.map(R => esc(R.n)).join(", ") + " among them" : "") + ". A hard few go up into the hills to wait for a date.", "loot");
+      meLog("split the Mind's Eye");
+    } else if (k === "martyr") {
+      await mech("<b>The Mourning Eye.</b> Haggith is dead, and the Seen who are left keep her: smaller, quieter, and with your name in the book. Whoever was lost stays lost, unless you brought them out tonight.", "hurt");
+      meLog("killed Haggith; the Mourning Eye keeps her");
+    } else if (k === "fled") {
+      M.again = calDay() + 20;
+      await mech("Haggith has walked away with her people. She'll dig another Pupil, deeper, and name a new night.", "hurt");
+      meLog("let Haggith walk away");
+    }
+    if (k !== "fled" && meHoldSum()) await mech("It has roots still, in " + meHoldList().map(t => esc(t) + " (" + ME_HOLD[meHoldOf(t)] + ")").join(", ") + ". Cults like this don't end in one night: dig them out, a town at a time.", "hurt");
+    meRootsCheck();
+    if (!hasGear("eyestone") && k !== "fled") { S.gear = S.gear || []; S.gear.push("eyestone"); renderSheet(); await mech("<b>" + GEAR.eyestone.name + ".</b> " + GEAR.eyestone.desc, "loot"); }
+    C.gone = "left"; C.goneAt = calDay();
+  }
+  // What the Pupil raid leaves, on top of what any compound pays (called from rcAfter).
+  async function meAfterRaid(C, B, jobs) {
+    const M = S.me;
+    if (jobs.includes("plunder") && !M.proofs.hoard) { M.proofs.hoard = true; await say("In the Tithe Vault, under the coin, is a deed to a fine house in Castellane with a walled garden, bought with tithe money in a name that isn't Haggith's but is in her hand. <b>Proof: Haggith's hoard.</b>"); }
+    if (jobs.includes("plunder") && M.tithed) { S.coins += M.tithed; renderSheet(); await mech("Your own tithe is in there too: " + M.tithed + " gold, in a bag with your false name on it.", "loot"); M.tithed = 0; }
+    if (jobs.includes("ledger")) {
+      if (!M.proofs.book) { M.proofs.book = true; await say("The Listening Book: every report of the Watching, every confession, with notes in the margins in Haggith's own hand, things to say to people to make them weep. <b>Proof: the Listening Book.</b>"); }
+      if (!M.proofs.date) { M.proofs.date = true; await say("Folded into the back are three letters to an almanac-maker called Ottery Pim, sending his sums back until he got the date she wanted. <b>Proof: the Blink's date was made up.</b>"); }
+    }
+    if (jobs.includes("rescue")) { const R = M.rec.find(X => X.n === C.hostage.n); if (R) { R.state = "home"; M.freed++; await say(esc(R.n) + " comes home to " + esc(R.town) + " with the brand on " + mePr(R, "his", "her", "their") + " brow and a blindfold in " + mePr(R, "his", "her", "their") + " pocket, and won't throw it away, and won't wear it."); } }
+    if (jobs.includes("free")) { const back = meLostL().filter(R => M.named.includes(R.n)).concat(meLostL().filter(R => !M.named.includes(R.n)).slice(0, 2)); back.forEach(R => { R.state = "home"; }); M.freed += back.length + 6; if (back.length) await say("Out of the Quiet Rooms, where they put the ones who doubted: " + back.map(R => esc(R.n)).join(", ") + ", and others, blinking."); }
+    if (meProofs().length >= 4) grant("meproof");
+    await meWard();
+    if (B.vigil) { await say("And the night of the Blink passes, and nothing blinks."); }
+  }
+  // Towns remember the Mind's Eye: its doors, who you talked out, who's gone, and how it ended.
+  async function meTownLine(T) {
+    const M = S.me; if (!M) return;
+    const H = M.houses.find(X => X.town === T.name), L = [];
+    if (H && !H.shut) L.push("The white door with the eye on it is at the end of the street, and there's singing behind it. People walk round the long way so as not to pass it, and some don't.");
+    if (H && H.shut === "gone") L.push("The white door of the Sighthouse is standing open, and there's nothing inside but the benches, and a slate by the door with the names rubbed off.");
+    const sv = M.rec.find(R => R.town === T.name && R.state === "saved");
+    if (sv) L.push(esc(sv.n) + " is in the street, and nods to you, and goes on with " + mePr(sv, "his", "her", "their") + " day.");
+    const lo = M.rec.find(R => R.town === T.name && R.state === "lost");
+    if (lo) L.push("Somebody has chalked " + esc(lo.n) + "'s name on the wall by the well, with a question mark after it.");
+    const hm = M.rec.find(R => R.town === T.name && R.state === "home");
+    if (hm) L.push(esc(hm.n) + " is home, with a mark on " + mePr(hm, "his", "her", "their") + " brow, and the whole street pretends not to see it, kindly.");
+    if (M.end === "broken") L.push("Nobody says the word \"blink\" in this town any more. They say \"shut your eyes a moment\".");
+    if (M.end === "martyr") L.push("There's an eye chalked on the inn door, fresh. The landlord scrubs it off while you watch. It'll be back tomorrow.");
+    if (M.brand) L.push("People see the ring on your brow, and look away, and then look again, to be sure.");
+    const h = meHoldOf(T.name);
+    if (meLive() && h >= 2 && M.wrath >= 1 && d(3) === 1) { M.wrath++; await say("The potboy at the inn takes one look at you and goes out of the back door at a run. By tonight the Mind's Eye will know you were here."); return; }
+    if (h >= 3) L.push("Half the street wears a white thread tied round the wrist. The children play a game where one of them is blindfolded and the others say what they'd keep.");
+    else if (h === 2) L.push("Somebody has chalked a small eye on the inside of the well-cover, where you'd only see it drawing water.");
+    else if (h === 1) L.push("An old woman at the pump hums the nice song under her breath, and stops when she sees you listening.");
+    if (M.shamed === T.reg) L.push("Your confession is still nailed to the inn door, weathered now. Somebody has written \"and?\" under it.");
+    if (!L.length) return;
+    if (d(3) > 2 && !(H && !H.shut)) return;
+    await say(L[d(L.length) - 1]);
+  }
+  const meMul = (T) => (S.me && S.me.shamed === T.reg ? 1.1 : 1) * (meLive() && meHoldOf(T.name) >= 2 && S.me.wrath >= 2 ? 1.05 : 1);
+  function meTownOpts(T) {
+    const M = S.me; if (!M) return [];
+    const H = meLive() ? M.houses.find(X => X.town === T.name && !X.shut) : null, h = meHoldOf(T.name);
+    return [{ key: "me:house", label: "Go to the Sighthouse", tag: "the white door · " + (H && H.lens ? ME_LENS[H.lens].n : "a Shepherd") + (H && meWaiting().some(R => R.town === T.name) ? " · " + meWaiting().filter(R => R.town === T.name).map(R => R.n).join(", ") + " on the bench" : ""), show: !!H, plain: true },
+      { key: "me:turn", label: "Speak against the Mind's Eye in the square", tag: "Persuasion · DC " + meTurnDc(h) + " · it's " + ME_HOLD[h] + " here", show: h > 0 && M.end !== "fled" && (M.turned || {})[T.name] !== calDay(), plain: true }];
+  }
+  const meTurnDc = (h) => 8 + 3 * h + (S.me && S.me.end === "martyr" ? 2 : 0);
+  async function meTownDo(c, T) {
+    if (c === "me:turn") { await meTurn(T); return; }
+    const H = S.me.houses.find(X => X.town === T.name && !X.shut); if (H) await meHouseVisit(H);
+  }
+  // Digging out the roots: once a day in a town, stand up in the square and say it.
+  async function meTurn(T) {
+    const M = S.me, h = meHoldOf(T.name);
+    M.turned = M.turned || {}; M.turned[T.name] = calDay();
+    const friend = M.rec.find(R => R.town === T.name && (R.state === "saved" || R.state === "home"));
+    if (M.gnaw > calDay() && hasGear("kerchief") && !M.gnawWiped) { M.gnawWiped = true; M.gnaw = 0; await say("Before you start, you mop your face with the kerchief, and her voice goes out of the back of your head. It's a very good kerchief."); }
+    const mod = 2 + Math.floor(lv() / 8) + meProofs().length + (friend ? 2 : 0) + (M.end === "broken" ? 2 : 0) - (M.shamed === T.reg ? 2 : 0) - (M.gnaw > calDay() ? 2 : 0);
+    await say(["You get up on the horse-trough in the square and say it, loud: who Haggith is, where the tithe goes, what the brand is. People stop. Some of them have white thread on their wrists.", "You stand outside the inn and tell anybody who'll listen what goes on at the Pupil, and a crowd gathers, the way crowds do, half of them to hear and half of them to remember your face.", "You talk to them at the well, a few at a time, with the bucket going up and down: plainly, about the Watching and the book, and what was written in it."][d(3) - 1] + (h >= 3 ? " A man at the back starts singing the nice song, very softly, and others join in under you." : ""));
+    if (friend) await say(esc(friend.n) + " comes and stands beside you, and says nothing, and doesn't need to: everybody here knows where " + mePr(friend, "he", "she", "they") + " was, and that " + mePr(friend, "he's", "she's", "they're") + " home.");
+    const r = await check({ label: "Persuasion check (the town)", mod, dc: meTurnDc(h), cta: "Speak" });
+    if (r.ok) {
+      meHold(T.name, -1); xpGain(20 + 2 * lv());
+      await say(["Afterward a woman unties the white thread from her wrist and drops it in the trough, and looks at you as if you'd taken something from her, and then as if you'd given it back.", "That night somebody scrubs the eye off the well-cover. In the morning it isn't back.", "An old man stops you on your way out of town and tells you about the winter he was Seen, forty years ago, in a whisper, and then, the second time, in his ordinary voice."][d(3) - 1]);
+      await mech(meHoldOf(T.name) ? "The Mind's Eye is only " + ME_HOLD[meHoldOf(T.name)] + " in " + esc(T.name) + " now." : "The Mind's Eye has no roots left in " + esc(T.name) + ".", "loot");
+      meLog(meHoldOf(T.name) ? "loosened the Mind's Eye in " + T.name : "dug the Mind's Eye out of " + T.name);
+    } else {
+      if (meLive()) M.wrath++;
+      await say(["They hear you out, politely, and go home, and nothing changes. \"She was good to my mother,\" somebody says, as if that settled it.", "Halfway through, somebody throws a cabbage. Then a stone. You finish anyway, to the backs of people going home.", "A Shepherd in white comes and stands at the edge of the crowd, not doing anything, and one by one the crowd remembers it has somewhere else to be."][d(3) - 1]);
+    }
+    save();
+  }
+  // The journal page.
+  function meSection(rs) {
+    const M = rs && rs.me; if (!M) return "";
+    const sv = M.rec.filter(R => R.state === "saved" || R.state === "home"), lo = M.rec.filter(R => R.state === "lost");
+    return "<section><h3>The Mind's Eye · " + ME_STAGE[M.end ? 4 : M.st] + "</h3>" +
+      '<p class="j-sub">Sighthouses: ' + (M.houses.length ? M.houses.map(H => esc(H.town) + (H.shut ? " (" + (H.shut === "gone" ? "empty" : "shut") + ")" : "")).join(", ") : "none yet") + ". Proof against Haggith: " + (Object.keys(ME_PROOF).filter(k => M.proofs[k]).map(k => ME_PROOF[k]).join(", ") || "none") + ".</p>" +
+      (M.hold && Object.keys(M.hold).length ? "<p>Rooted in: " + Object.keys(M.hold).map(t => esc(t) + " (" + ME_HOLD[M.hold[t]] + ")").join(", ") + ".</p>" : M.roots ? "<p>You dug its last roots out of the towns.</p>" : "") +
+      (M.fleet ? "<p>The Blind Fleet: " + Object.keys(ME_FLEET).filter(k => M.fleet[k]).length + " of 3 sunk.</p>" : "") +
+      (sv.length ? "<p>Came home: " + sv.map(R => esc(R.n)).join(", ") + ".</p>" : "") + (lo.length ? "<p>Still Seen: " + lo.map(R => esc(R.n)).join(", ") + ".</p>" : "") +
+      (M.rung ? "<p>The Ladder: " + M.rung + " of 7 Openings, as " + esc(M.alias[0]) + (M.cover === "blown" ? ", until they found you out" : "") + (M.brand ? ". You took the brand." : ".") + "</p>" : "") +
+      (M.end ? "<p>" + { broken: "You broke the Mind's Eye in the Hall of Seeing.", split: "You split the Mind's Eye: most came home.", martyr: "You killed Haggith, and made her a martyr.", faded: "The Mind's Eye faded without you.", fled: "You let Haggith walk away." }[M.end] + "</p>" : M.blink != null ? "<p>The Blink is set for " + calDate(M.blink) + ".</p>" : "") +
+      (M.log.length ? '<ul class="hm-log">' + M.log.slice(0, 8).map(t => "<li>" + esc(t) + "</li>").join("") + "</ul>" : "") + "</section>";
+  }
+  // On the world map: the eye on each open Sighthouse, and on the Pupil once you've found it.
+  function meMapLayer(st) {
+    const M = st.rs && st.rs.me; if (!M) return "";
+    let h = "";
+    const eye = (x, y, s, t) => '<g transform="translate(' + x + " " + y + ") scale(" + s + ')"><title>' + esc(t) + '</title><ellipse rx="9" ry="7.5" fill="#8e1f4c" stroke="#3a0a1e" stroke-width="1.2"/><rect x="-4.5" y="-4.5" width="9" height="9" fill="#e88aae" stroke="#7a1640" stroke-width="1.4"/><circle r="1.6" fill="#fff3f7"/></g>';
+    M.houses.filter(H => !H.shut).forEach(H => { const [x, y] = rcMapAt(H.reg); h += eye(x + 10 + (H.id % 3) * 6, y - 12, 0.8, "The Sighthouse in " + H.town); });
+    const P = st.rs.rc && st.rs.rc.list.find(C => C.k === "eye" && !C.gone);
+    if (P) h += eye(P.xy[0], P.xy[1], 1.2, P.name) + '<text x="' + P.xy[0] + '" y="' + (P.xy[1] + 18) + '" font-size="8" text-anchor="middle" class="mp-label">the Pupil</text>';
+    return "<g>" + h + "</g>";
+  }
+  // The Blind Fleet (Adrian's paintings, 17 Nov 2026): the Mind's Eye at sea, older than the Sighthouses. It
+  // carries the tithe and the newly Seen from the coast to the Pupil; sails with the old sign, an eye in a wheel.
+  const ME_FLEET = {
+    held: { ship: "the Held", name: "the Held", cls: "cutter", guns: 5, hull: 8, crew: 8, way: "rake", pic: "me_ship", alt: "A ship with an eye in a wheel on her sail", who: "the Blind Fleet's scout",
+      meet: "She comes out of a rain-squall with a purple eye in a wheel on her mainsail and her crew all along the rail, blindfolded, singing, and not one of them missing a rope." },
+    mercy: { ship: "the Mercy of the Eye", name: "the Mercy of the Eye", cls: "carrack", guns: 7, hull: 11, crew: 10, way: "run", pic: "me_storm", alt: "A ship in a storm under a wheel-and-eye sail", who: "the tithe-ship",
+      meet: "You find her in a storm, wallowing deep with the weight of the tithe, and her people chained below sing loud enough to hear over the wind." },
+    unblinking: { ship: "the Unblinking", name: "the Unblinking, under Brother Cadoc Hale", cls: "frigate", guns: 10, hull: 13, crew: 12, way: "heavy", pic: "me_broadside", alt: "A warship firing a broadside", who: "the flagship",
+      meet: "The Unblinking, the flagship, with Brother Cadoc Hale on her quarterdeck in white with his eyes bound, and her gunports already open. He's been waiting for you. They've had your name for a while." }
+  };
+  async function meWard() {
+    const M = S.me; if (!M || hasGear("meward")) return;
+    if (M.rec.filter(R => R.state === "saved" || R.state === "home").length < 3) return;
+    S.gear = S.gear || []; S.gear.push("meward"); renderSheet();
+    await say("The people you brought home have been talking to each other. One evening they come to find you, three or four of them, and one ties a red thread round your wrist, unpicked from a blindfold, and knots it twice. \"So she can't get all of you,\" she says. Nobody laughs.");
+    await mech("<b>" + GEAR.meward.name + ".</b> " + GEAR.meward.desc, "loot");
+  }
+  const meFleetLive = () => S.me && S.me.fleet ? Object.keys(ME_FLEET).filter(k => !S.me.fleet[k]).length : 0;
+  async function meFleetNew() {
+    const M = S.me;
+    M.fleet = { held: null, mercy: null, unblinking: null };
+    add(el("div", "part-head sub", '<span class="num">Word from the harbours</span><h2>The Blind Fleet</h2>'));
+    scenePic("me_fleet", "A fleet under sails marked with an eye in a wheel", "The Blind Fleet");
+    await say("In every harbour on the coast they've known for years what an eye in a wheel on a sail means, and they don't say it out loud: it's the old sign, from before Haggith came down to the roads, when the Mind's Eye was a thing that happened on ships. There are three of them now. They carry the tithe out of the coast towns, and the newly Seen with it, and nobody has ever stopped one.");
+    scenePic("me_dock", "Armoured figures boarding a ship at a dock in the rain", "Boarding at night");
+    await say("You watch one load at the quay in the rain: the Seen in mail and white, shields on their backs, going up the gangplank in a line with their hands on each other's shoulders, and nobody on the quay looking.");
+    await mech("<b>The Blind Fleet</b>: three ships (" + Object.values(ME_FLEET).map(F => shCap(F.ship)).join(", ") + "). Every one still sailing when the Seen withdraw puts more of them in the Pupil. Hunt them with your own ship, from The Mind's Eye on the roads back.", "hurt");
+    meLog("heard of the Blind Fleet");
+  }
+  async function meFleetHunt() {
+    const M = S.me, X = sea();
+    const live = Object.keys(ME_FLEET).filter(k => !M.fleet[k]);
+    const c = await choose(live.map((k, i) => ({ key: k, label: "Hunt " + ME_FLEET[k].ship, tag: ME_FLEET[k].who + " · " + (SH_CLS[ME_FLEET[k].cls] || {}).name + " · " + ME_FLEET[k].guns + " guns" + (k === "unblinking" && live.length > 1 ? " · the hardest" : ""), plain: i > 0 }))
+      .concat([{ key: "back", label: "Not today", plain: true }]));
+    if (c === "back") return;
+    const F = ME_FLEET[c]; calPass(4);
+    add(el("div", "part-head sub", '<span class="num">The Blind Fleet</span><h2>' + shCap(F.ship) + "</h2>"));
+    scenePic(F.pic, F.alt, shCap(F.ship));
+    await say(F.meet);
+    const R = { name: F.name, ship: F.ship, cls: F.cls, guns: F.guns + (M.blinks ? 1 : 0), hull: F.hull, crew: F.crew, way: F.way, skerra: false, kind: "eye", pirate: false };
+    const was = meMusV; meMusV = "sea";
+    let res; try { res = await seaDuel(R, "me_" + c, false, { cond: shCond(X.at || "reach", R) }); } finally { meMusV = was; }
+    if (res !== "won") { M.wrath++; await say(res === "fled" ? shCap(F.ship) + " is gone into the murk, singing. She'll be back on the tithe-run by the next moon." : "You haul off, holed, and she doesn't chase you: she has somewhere to be."); save(); return; }
+    M.fleet[c] = "sunk"; M.wrath += 2;
+    const back = meLostL().slice(0, 1 + d(2)); back.forEach(Q => { Q.state = "home"; }); M.freed += back.length;
+    const g = 30 + 3 * lv() + (c === "mercy" ? 40 + 4 * lv() : 0); S.coins += g; renderSheet();
+    await say("Below, in the dark, there are people chained by the ankle in rows, with their eyes bound, still singing when you open the hatch." + (back.length ? " " + back.map(Q => esc(Q.n)).join(", ") + (back.length === 1 ? " is" : " are") + " among them, and you take them home." : " You take them home."));
+    await mech(g + " gold from her hold.", "loot");
+    if (c === "mercy" && !M.proofs.hoard) { M.proofs.hoard = true; await say("In the tithe-ship's strongroom, with the coin, are the deeds she was carrying to Castellane: a fine house with a walled garden, bought with the tithe in a name that isn't Haggith's but is in her hand. <b>Proof: Haggith's hoard.</b>"); }
+    if (c !== "mercy") { const t = mePupilClue(c === "unblinking" ? "On Brother Cadoc's chart-table is a course pricked out from the coast to an inland landing, and a note:" : "Her master's log has the landings in it:"); if (t) await say(t); }
+    xpGain(50 + 5 * lv()); meLog("took " + F.ship + " of the Blind Fleet");
+    if (!meFleetLive()) { grant("mefleet"); const C = mePupil(); if (C) C.heads = Math.max(6, C.heads - 2); await mech("<b>The Blind Fleet is gone.</b> For the first time in years, nothing with an eye on its sail is on the sea.", "loot"); }
+    save();
+  }
+  // At the Pupil, Clauneck sleeps on the tithe: if he's still at large, the vault is his to defend.
+  async function meVault(C, B) {
+    const M = S.me;
+    if (!M || M.lens.clauneck !== null) return true;
+    add(el("div", "part-head sub", '<span class="num">' + esc(C.place) + ' · the Tithe Vault</span><h2>Clauneck</h2>'));
+    scenePic("me_clauneck", "A hooded figure holding a fistful of gold", "Clauneck, the Purse of the Eye");
+    await say("He's asleep on the tithe, on a bed of sacks of it, in his coat of coins, and he wakes up ringing. \"Ah,\" says Clauneck, and smiles, and reaches under his pillow for a hand of gold blades. \"A customer.\"");
+    const ok = await meSigFight(meFoe("clauneck"), [ME_SIG.gilded, ME_SIG.purse], "Clauneck");
+    if (!ok) { await say("You crawl out of the vault with gold in your hair and nothing in your hands, and he doesn't follow: he's counting what you didn't take, which is all of it."); B.noise = 5; return false; }
+    M.lens.clauneck = "dead"; grant("megold"); meLog("killed Clauneck in the Tithe Vault");
+    await say("Clauneck goes down on his sacks of gold with a sound like a purse dropped from a height, and doesn't get up. It was loud." + (Object.values(M.lens).every(Boolean) ? "" : ""));
+    if (Object.values(M.lens).every(Boolean)) grant("melens");
+    B.noise = Math.min(5, B.noise + 2);
+    return true;
+  }
+  // The Pupil as a compound: a round sinkhole, roped down on three sides, the Lightless Stair on the fourth.
+  function meRcMake(C) {
+    const M = S.me, pk = (a) => a[d(a.length) - 1];
+    C.size = Math.min(4, 3 + (M && M.bump ? 1 : 0));
+    C.place = M ? M.pupil.place : "Orrin's Cut"; C.name = "The Pupil";
+    const block = pk(["n", "e", "w"]);
+    RC_SIDES.forEach(s => { C.t.wall[s] = s === "s" ? "stair" : s === block ? "cliff" : "rim"; });
+    C.t.side = pk(RC_SIDES.filter(s => RC_WALLS[C.t.wall[s]][1] !== null));
+    C.t.dogs = false;
+    C.t.chiefAt = [0, 1, 2].map(() => [pk(["hall", "hall", "huts"]), pk(["hall", "store"])]);
+    C.t.at = { plunder: "store", ledger: pk(["hall", "tower"]), rescue: pk(["pens", "huts"]), free: "pens" };
+    const L = meLostL();
+    C.jobs = ["kill", "ledger", "plunder"].concat(L.length ? ["free", "rescue"] : ["free"]);
+    if (L.length) { const R = L[d(L.length) - 1]; C.hostage = { n: R.n, who: R.who }; C.giver = R.town; }
+    C.chief = { n: "Haggith", pr: "she" };
+    C.ledger = "the Listening Book, with every confession in it";
+    C.heads = 10 + (C.size - 3) * 2 + Math.min(4, Math.floor(L.length / 2));
   }
   // ---------- the Wandering Board ----------
   // A board for one region on the roads back: squares in seven rows from a crossroads up to the region's
@@ -10502,6 +11797,8 @@ body.pv-open { overflow: hidden; }
     rcFreed: { ch: "Walls Worth Taking", why: "You opened a crimp's pens and walked the pressed out through the gate.", where: "your holding, or the sellswords' hall", on: () => !!(S.rc && S.rc.marks.freed) },
     rcLedger: { ch: "Walls Worth Taking", why: "You stole a book of debts back for a town.", where: "that town's market", on: () => !!(S.rc && S.rc.marks.ledger.length) },
     rcSaved: { ch: "Walls Worth Taking", why: "You spoiled a compound's stores before it marched on a village.", where: "the inns of that country", on: () => !!(S.rc && S.rc.marks.saved.length) },
+    meSaved: { ch: "The Mind's Eye", why: "You sat on a bench outside a Sighthouse and talked somebody out of the Mind's Eye.", where: "the town they came from", on: () => !!(S.me && S.me.rec.some(R => R.state === "saved")) },
+    meBroken: { ch: "The Mind's Eye", why: "You cut Haggith's red thread in front of the Seen, and they went home.", where: "every town that lost someone", on: () => !!(S.me && S.me.end === "broken") },
     // people who come back
     varroAlly: { ch: "The Hushfen", why: "You warned Varro Duskwane of the Gnawkin and held the tunnel beside him.", where: "Rahdaria, at the blockade", on: () => !!S.varroAlly },
     sable: { ch: "The Burning Sands", why: "You stood by Sable and the Hollow Hands in the vault.", where: "Raftmark", on: () => S.side === "crew" || (S.crew === "join" && S.side !== "magistrate") },
@@ -11066,6 +12363,19 @@ body.pv-open { overflow: hidden; }
       "Burr steals a sausage from a stall. The stallholder looks at you. You pay for the sausage. Burr doesn't thank you.",
       "Burr lies across the doorway, so that everybody coming in has to step over him. Several of them apologise to him.",
       "Burr sniffs the place where the fight was, looks up at you, and sneezes. It might be a review."
+    ],
+    // The Mind's Eye: what the towns make of it, in their own way.
+    eye: [
+      "The Sighthouse gives away soup every evening. The baker next door has started giving away bread, out of spite, and says business has never been better.",
+      "A child has chalked an eye on your boot while you were in the inn. It's quite good. You leave it.",
+      "Somebody has scratched out the eye on the milestone and written underneath it: SEEN ENOUGH.",
+      "A tinker is selling blindfolds \"as worn by the Seen\". He says they're very popular with people who like a nap in the afternoon.",
+      "The landlady says the Mind's Eye took her cook. The new cook is worse. That part she says she'll never forgive.",
+      "In the bar a man explains the Blink to you for half an hour. You ask what happens to his debts. He says that's the beauty of it.",
+      () => burrHere() ? "Burr will not walk past a white door. You've decided to trust him on this." : "",
+      "A notice by the white door says ALL ARE WELCOME. A smaller notice under it says PLEASE WIPE YOUR FEET, THE EYE SEES.",
+      () => hasGear("kerchief") ? "You fold the kerchief and put it back in the Bag. It has seen the inside of your head now. It's taking it well." : "",
+      "The white door has been painted over twice and the eye has come through both times. The innkeeper says it's the damp. Nobody believes him, including him."
     ]
   };
   const dry = () => (S.dry = S.dry || { seen: {}, n: 0, burr: 0, part: -1 });
@@ -11132,6 +12442,7 @@ body.pv-open { overflow: hidden; }
     await echoTown(T);
     await hmTownLine(T);
     await rcTownLine(T);
+    await meTownLine(T);
     await f50Town(T);
     await hzTownIntro(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
@@ -11139,7 +12450,7 @@ body.pv-open { overflow: hidden; }
     if (!(await lrTownIn(T))) { light(back); return; }
     const has = (k) => T.has.includes(k) && !hzShut(T, k);
     let rested = false, drank = false, roofed = false;
-    const tm = townMul(T) * rcMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
+    const tm = townMul(T) * rcMul(T) * meMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
     // The calendar: market day and the festivals change the stalls, the inn and the bar.
     const town = T.kind !== "sanctuary", fair = town ? calFair() : null;
     const MP = (n) => Math.max(1, Math.round(mp(n) * tm)), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
@@ -11171,6 +12482,7 @@ body.pv-open { overflow: hidden; }
         { key: "roof", label: "Put Threadfang's line on the rooftops", tag: "once a town, until you've won another fight · what people hide up high", show: !!S.grapple && T.kind !== "sanctuary" && !roofed && (bn().roof?.[T.reg + ":" + T.name] ?? -1) < bn().cw, plain: true },
         ...hzTownOpts(T),
         ...lrTownOpts(T),
+        ...meTownOpts(T),
         { key: "salle", label: "Climb the stairs to the salle", tag: (S.duel && S.duel.salle[T.reg + ":" + T.name] >= 3 ? "you've beaten the master here" : "duels with blunted blades · Forms and a school"), show: T.kind === "town", plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: T.leave || "Back to the road", plain: true }
@@ -11181,6 +12493,7 @@ body.pv-open { overflow: hidden; }
       if (c === "stable") await stableVisit(T, P);
       if (c.startsWith("hz:")) await hzTownDo(c, T);
       if (c.startsWith("lr:")) await lrTownDo(c, T);
+      if (c.startsWith("me:")) await meTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
       if (c === "almanac") {
         const p = mp(3); S.coins -= p; cal().almanac = true; calBuy(); renderSheet(); grant("calalmanac");
@@ -13000,7 +14313,8 @@ body.pv-open { overflow: hidden; }
   }
   function company() {
     if (rmIn()) return [];
-    const all = coAll();
+    // a companion who took Haggith's Soul Devour for you is no use to anybody till tomorrow
+    const all = coAll().filter(id => !((co().out || {})[id] > calDay()));
     if (all.length <= 2) return all;
     const p = (co().party || []).filter(id => all.includes(id));
     return p.concat(all.filter(id => !p.includes(id))).slice(0, 2);
@@ -18813,11 +20127,16 @@ body.pv-open { overflow: hidden; }
     rc_cutters: { name: "The Saw-Pit", style: "fen", pal: "roots", rc: true, blurb: "The root-cutters' camp: the great root rising out of the ground, the saw-pit at its foot, stacked slabs of heartwood, and sawdust ankle-deep.",
       grid: ["c.#r#.c", ".rr.rr.", "c..~..c", ".#...#.", "..c.c..", "r.....r"], you: [3, 5], foe: [3, 0] },
     rc_raven: { name: "The Mud Yard of Ravenhold", style: "fen", pal: "wetwood", rc: true, blurb: "Ravenhold's yard under the canopy walk: black mud, eel-baskets for cover, two leaning boles, pits under the leaf litter, and ravens on every stake.",
-      grid: ["#.h.h.#", ".c.~.c.", "r.#.#.r", "..c~c..", "#.....#", "c.r.r.c"], you: [3, 5], foe: [3, 0] }
+      grid: ["#.h.h.#", ".c.~.c.", "r.#.#.r", "..c~c..", "#.....#", "c.r.r.c"], you: [3, 5], foe: [3, 0] },
+    rc_eye: { name: "The Round Floor of the Pupil", style: "stone", pal: "undermoon", rc: true, blurb: "The bottom of the Pupil: a round floor of boards under black cloth, the well of cups, the pillars of the Hall of Seeing, and the Seen standing where they were told to, with their eyes bound.",
+      grid: ["#.c.c.#", "c..h..c", ".#.~.#.", "..c.c..", "#.....#", "c..r..c"], you: [3, 5], foe: [3, 0], deco: [[3, 4, "gate"]] }
   };
   Object.assign(GEAR, {
     rccloak: { name: "The Scout's Grey", icon: "cloak", desc: "A long grey cloak the colour of nothing, for somebody who's done every kind of work there is over a wall. The first time you scout any compound you get a clue for nothing, and +1 to going over its wall." },
     rcribbon: { name: "A ribbon from a sleeve", icon: "tether", desc: "Given you by a family whose own you brought home over a compound's wall. +1 to Stealth at a compound's wall, going up to it and going over it." },
+    meward: { name: "The Homecoming Thread", icon: "token", desc: "A red thread unpicked from a blindfold, knotted round your wrist by the people you brought home from the Mind's Eye. If Haggith's Soul Devour lands, it takes half." },
+    kerchief: { name: "A Kerchief", icon: "token", desc: "A square of plain linen, much washed. Once a fight, it wipes away one thing in your head that shouldn't be there: Haggith's Devoured, or the Gnawing. It has been through worse, and doesn't want to talk about it." },
+    eyestone: { name: "The Eye-stone", icon: "token", desc: "A ball of old glass as big as a fist, with a dark iris in it, that Haggith said showed her the end of the world. It doesn't show you anything, if you look straight at it. Once a raid, look into it in a compound's yard, not quite straight, and you see every patrol's round and where the leader sleeps." },
     ravenwhistle: { name: "Ravendare's whistle", icon: "token", desc: "A bone whistle on a cord, taken off Tharen Ravendare's neck. Once a raid, blow it in a compound's yard and every patrol stops for a breath to look up at the trees. +1 to watching a compound from high ground." }
   });
   // Wanderers: one per region, on nobody's side.
