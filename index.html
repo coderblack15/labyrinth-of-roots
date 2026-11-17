@@ -1352,6 +1352,31 @@ button .tag { font-family: var(--label); font-size: .78rem; letter-spacing: .08e
 .hm-facts .hm-burnt { color: var(--ember); }
 @media (max-width: 560px) { .hm-card { grid-template-columns: 1fr; } .hm-plan { max-width: 260px; } }
 .hm-gangs { display: grid; gap: 8px; margin: 8px 0; }
+.rc-card ul.rc-walls { margin: 4px 0 6px 1.2em; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 2px 12px; font-size: .9rem; }
+.hm-war.rc-war { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(44px, 1fr)); max-width: 420px; }
+.rc-board .rc-meters { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--label); font-size: .8rem; letter-spacing: .04em; color: var(--muted); }
+.rc-pips { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px; }
+.rc-pips i { width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--line); background: var(--panel-2); }
+.rc-pips i.on { background: var(--gold); border-color: var(--gold); }
+.rc-wrap { overflow-x: auto; }
+.rc-map { display: block; width: 100%; max-width: 540px; height: auto; margin: 6px auto; touch-action: manipulation; }
+.rc-map .rc-node { cursor: pointer; }
+.rc-map .rc-node rect { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; }
+.rc-map .rc-node.adj rect { stroke: var(--gold); stroke-dasharray: 4 3; }
+.rc-map .rc-node.here rect { fill: #3a2f18; stroke: var(--gold); stroke-width: 2.5; }
+.rc-map .rc-node.sweep rect { fill: #3b3016; }
+.rc-map .rc-node:focus-visible rect { stroke: var(--ink); stroke-width: 3; }
+.rc-map .rc-node text { fill: var(--ink); font: 12.5px var(--body); text-anchor: middle; pointer-events: none; }
+.rc-map .rc-node text.sub { fill: var(--gold); font-size: 10px; }
+.rc-map .rc-edge { stroke: var(--line); stroke-width: 2; }
+.rc-map .rc-water { fill: #142a35; }
+.rc-map .rc-route { fill: none; stroke: var(--ember); stroke-width: 1.3; stroke-dasharray: 2 5; opacity: .8; }
+.rc-map .rc-pat circle { fill: var(--ruby); stroke: #2a0c06; stroke-width: 2; }
+.rc-map .rc-pat text { fill: #fff; font: 700 10px var(--label); text-anchor: middle; pointer-events: none; }
+.rc-map .rc-you circle { fill: var(--gold); stroke: #3a2508; stroke-width: 2; }
+.rc-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.rc-acts button small, .rc-lock + .rc-lockcur { display: block; color: var(--muted); font-size: .78rem; }
+.rc-lock { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
 .hm-clues { margin: 6px 0 10px 1.2em; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
 .hm-war { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(40px, 1fr)); gap: 5px; align-items: center; max-width: 460px; }
 .hm-war .hm-wh { font-family: var(--label); font-size: .74rem; letter-spacing: .06em; text-align: center; color: var(--muted); }
@@ -3218,7 +3243,12 @@ body.pv-open { overflow: hidden; }
     // war music (Rahdaria), an ordinary fight plays that half the time. Sources: tools/fight-songs/.
     const REC = {
       boss: { id: "rootbreaker", name: "Rootbreaker", file: "music/rootbreaker", loopAt: 588000 / 44100, loopLen: 4116000 / 44100, v: 0.4, buf: null, busy: false },
-      fight: { id: "thorn-and-cudgel", name: "Thorn and Cudgel", file: "music/thorn-and-cudgel", loopAt: 320727 / 44100, loopLen: 3207273 / 44100, v: 0.33, buf: null, busy: false }
+      fight: { id: "thorn-and-cudgel", name: "Thorn and Cudgel", file: "music/thorn-and-cudgel", loopAt: 320727 / 44100, loopLen: 3207273 / 44100, v: 0.33, buf: null, busy: false },
+      // Walls Worth Taking (16 Nov 2026): one piece in two halves. The sneak plays while you scout and creep
+      // through a compound's yard; when the alarm goes up it breaks into the raid, which also plays for the
+      // garrison and the leader (Tharen Ravendare gets Rootbreaker). Sources: tools/fight-songs/walls-worth-taking.py.
+      sneak: { id: "over-the-wall", name: "Over the Wall", file: "music/over-the-wall", loopAt: 252000 / 44100, loopLen: 2016000 / 44100, v: 0.36, buf: null, busy: false },
+      raid: { id: "bell-in-the-yard", name: "The Bell in the Yard", file: "music/bell-in-the-yard", loopAt: 153391 / 44100, loopLen: 1840696 / 44100, v: 0.34, buf: null, busy: false }
     };
     const REC_EXT = (() => { try { return document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"') ? ".ogg" : ".mp4"; } catch (e) { return ".mp4"; } })();
     function mRecLoad() {
@@ -3234,6 +3264,7 @@ body.pv-open { overflow: hidden; }
     // which recording a fight should play, if any: { k } for a recording, { own: true } for the chapter's own war music
     function mRecFor(mood) {
       if (mood === "boss") return REC.boss.buf ? { k: "boss" } : null;
+      if (mood === "sneak" || mood === "raid") return REC[mood].buf ? { k: mood } : null;
       if (mood !== "fight") return null;
       if (MUSIC.some(x => x.pool === "fight" && x.region && x.region === want) && Math.random() < 0.5) return { own: true };
       return REC.fight.buf ? { k: "fight" } : null;
@@ -3362,6 +3393,14 @@ body.pv-open { overflow: hidden; }
       let pr = {};
       try { pr = (mProbe && mProbe()) || {}; } catch (e) {}
       if (!pr.fight) mFightRoll = null;
+      // a compound raid: the sneak, then the raid (and Rootbreaker for Tharen Ravendare)
+      if (/^(sneak|raid|raidboss)$/.test(mPlace || "") && !pr.nm) {
+        if (pr.fight && mPlace === "raidboss" && REC.boss.buf) return ["boss", false];
+        const k = pr.fight || mPlace !== "sneak" ? "raid" : "sneak";
+        if (REC[k].buf) return [k, false];
+        if (!pr.fight) return ["roads", false];
+      }
+      if (!pr.fight) {}
       else if (!pr.nm && pr.boss && REC.boss.buf) return ["boss", false];
       else if (!pr.nm && pr.champ) { if (mFightRoll === null) mFightRoll = Math.random() < 0.5; if (mFightRoll) return ["anthem", false]; }
       if (pr.fight) return [pr.nm ? "nightmare" : "fight", false];
@@ -3369,7 +3408,7 @@ body.pv-open { overflow: hidden; }
       if (mPlace) return [mPlace, mPlace !== "underdream" && !!pr.warp];
       return [MPOOLS.has(want) ? want : "labyrinth", !!pr.warp];
     }
-    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem", "boss"]);
+    const M_NOT_ROADS = new Set(["fight", "nightmare", "title", "underdream", "anthem", "boss", "sneak", "raid"]);
     function mPick(mood, ownOnly) {
       let list = MUSIC.filter(x => mood === "roads" ? !M_NOT_ROADS.has(x.pool) : (x.pool === mood || (x.also || []).includes(mood)) && (!x.region || x.region === want));
       // a fight in a chapter with its own war music plays it half the time
@@ -3385,7 +3424,7 @@ body.pv-open { overflow: hidden; }
     function mLoop() {
       if (!mbus || !live() || document.hidden || mLevel === "0") return;
       const [mood, warp] = mWant(), t = ctx.currentTime;
-      const quick = /^(fight|nightmare|anthem|boss)$/.test(mood) || /^(fight|nightmare|anthem|boss)$/.test(mMood || "");
+      const quick = /^(fight|nightmare|anthem|boss|raid)$/.test(mood) || /^(fight|nightmare|anthem|boss|raid)$/.test(mMood || "");
       if (mood !== mMood || (mPiece && mPiece.warp !== warp)) {
         if (mPiece) mStop(mPiece, quick);
         mPiece = null; mGap = t + (quick ? 1 : 4); mMood = mood;
@@ -3810,6 +3849,7 @@ body.pv-open { overflow: hidden; }
     h += lgSection(rs);
     h += lcSection(rs);
     h += hmSection(rs);
+    h += rcSection(rs || S);
     h += hnSection(rs);
     h += unSection(rs);
     h += rmSection(rs);
@@ -4001,6 +4041,13 @@ body.pv-open { overflow: hidden; }
       "Two new ways to swing: a <b>quick jab</b> (+2 to hit, half damage, and your gauge stays half full) and a <b>heavy blow</b> (−2 to hit, half again as much damage, and a longer wait after). Catching your breath, binding a wound, bandaging, wiping your eyes or planting the pavise now keeps a quarter of your gauge.",
       "Bosses <b>wind up</b> every fourth move: it shows in red in the turn order, and the blow lands with an extra damage die (then it needs longer to recover). Land a heavy blow or a Rootbreaker before it falls and you stagger it: the blow is lost and its gauge empties. Any Rootbreaker knocks a foe's gauge back.",
       "Kept fair: nobody gets more than two turns in a row, speeds stay within a quarter of each other, a quick foe swings wilder (−1 or −2 to hit) and a slow one truer (+1 or +2), and you always move first. Company battles and the battle maps keep their own turns." ] },
+    { ver: "131", name: "Walls Worth Taking", date: "16 Nov 2026", items: [
+      "<b>Compounds to raid</b>, scattered across the realm (Adrian's idea). On the roads back a new one goes up somewhere you've cleared every ten to fifteen days, four at most, and it's on your map with a little red flag: <b>gang stockades</b>, <b>press-yards</b> where a crimp keeps the people he's taken off the road, <b>toll-forts</b>, <b>smugglers' warrens</b> and <b>root-cutters' camps</b>.",
+      "Every compound has a job board: <b>Plunder</b> the strongbox, <b>Assassinate</b> the leader, <b>Rescue</b> a hostage, <b>Free the pressed</b>, <b>Steal the ledger</b> a town needs, or <b>Sabotage</b> the stores before they march on a village. Take a second job on the same night for half its pay, if you dare.",
+      "<b>Scout</b> it first: watch from the hills, count their lamps, put a hand on the wall, pay the carter who feeds them, send Burr, Ishbel or Tyra. Fail and they notice; three marks and they're waiting. Then the <b>raid table</b>: cross off the sides and watches the clues rule out, and go over where the wall is weak, when they're slack.",
+      "Inside, <b>the yard by night</b>: seven rooms, patrols on their rounds, a lantern that sweeps the yard, hounds, noise and dawn. Hide in a room and they walk past you; take a guard down from behind and they'll find him later; bar the bunkhouse door, cut the lantern rope, pick the strongbox's tumblers. If the alarm goes up, the garrison turns out on the compound's own <b>battle map</b>.",
+      "Every leader has a <b>signature move</b> with a tell a turn ahead and a counter: the Blood-Oath Rush, the Press-Hook, Weighing the Toll, Lamp-Out and the Long Saw. And once you've taken three, a ferryman from Brindle Landing brings you a writ for <b>Tharen Ravendare</b>, the Raven of the Fords, in <b>Ravenhold</b>, the jungle compound in the Wetwood: two patrols, a canopy walk, the shortest night, and three moves of his own (Ravenfall, Black Wing and the Quiet). Name from Adrian.",
+      "What you do stays done. Freed people stand at your holding's gate or make sellswords cheaper, a stolen ledger brings a town's prices down for good, a rescued hostage's town won't charge you for a bed, a killed leader leaves a successor with your description on the gate, and you can burn a compound, give it to the town or hold it for rent. Raider titles at 3, 10 and 25 compounds, a trophy from every kind, the Scout's Grey for doing all six jobs, 8 new feats, and its own music: a sneak that breaks into a raid when the bell goes."] },
     { ver: "130", name: "Sharper Blades", date: "16 Nov 2026", items: [
       "Fencing duels are harder now. A duel is fought <b>to the yield</b>: once it has cost you 40% of your max HP, their point is at your throat and you lose (you keep the rest of your HP). The pad shows how much you can still take.",
       "Duelists are tougher and quicker: more HP, harder blows as you level, a shorter answer bar and less time to read the tell, and a riposte has to come a little faster.",
@@ -4826,7 +4873,7 @@ body.pv-open { overflow: hidden; }
       '<g filter="url(#mpWob)">' + roads + art + "</g>" +
       '<g mask="url(#mpFog)"><rect width="' + MW + '" height="420" fill="#a7a597"/><rect width="' + MW + '" height="420" fill="#fff" filter="url(#mpCloud)"/></g>' +
       (st.reached.includes("tithe") ? '<text x="22" y="70" class="mp-label mp-unk" transform="rotate(-90 22 70)">Uncharted</text>' : st.reached.includes("sounding") ? '<text x="30" y="120" class="mp-label mp-unk" transform="rotate(-90 30 120)">Uncharted</text>' : '<text x="34" y="300" class="mp-label mp-unk" transform="rotate(-90 34 300)">Uncharted</text>') +
-      labels + mapStones(st) + cwMapLayer(st) + you +
+      labels + mapStones(st) + cwMapLayer(st) + rcMapLayer(st) + you +
       '<g transform="translate(' + (MW - 44) + ' 372)" class="mp-rose"><circle r="18" fill="none" stroke="' + INK2 + '" stroke-width=".8"/>' +
       '<path d="M0 -22l4 16 -4 4 -4-4zM0 22l4-16-4-4-4 4zM-22 0l16 4 4-4-4-4zM22 0l-16 4-4-4 4-4z" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1"/>' +
       '<path d="M0 -22l4 16-4 4z" fill="' + INK + '"/><text y="-26" class="mp-label" font-size="11">N</text></g>' +
@@ -5353,6 +5400,14 @@ body.pv-open { overflow: hidden; }
     { id: "mnclean", name: "Read Like Rock", desc: "Read every layer of a deposit right, and take it out entire.", test: () => false },
     { id: "mnfifty", name: "Ennet's Best Customer", desc: "Sell fifty pieces of ore.", test: () => false, prog: () => [Math.min(50, S.mn ? S.mn.sold : 0), 50] },
     { id: "mnheart", name: "Heartspar", desc: "Cut the heart out of a Heartspar crown.", test: () => false },
+    { id: "rcfirst", name: "Walls Worth Taking", desc: "Take a job at an enemy compound and see it done.", test: () => false },
+    { id: "rcquiet", name: "Never Heard a Thing", desc: "Finish a compound raid without the alarm going up.", test: () => false },
+    { id: "rctwo", name: "Two Birds", desc: "Do two jobs at one compound on the same night.", test: () => false },
+    { id: "rcread", name: "Read Like a Book", desc: "Counter five leaders' signature moves.", test: () => false },
+    { id: "rcpens", name: "Open the Pens", desc: "Free twenty people from the press-yards.", test: () => false },
+    { id: "rcsix", name: "Every Kind of Work", desc: "Do all six kinds of compound job.", test: () => false },
+    { id: "rcten", name: "Night Visitor", desc: "Take ten compounds.", test: () => false },
+    { id: "rcraven", name: "Ravenbane", desc: "Kill Tharen Ravendare in the mud of his own yard.", test: () => false },
     { id: "mnspare", name: "Let It Beat", desc: "Leave three Heartspar crowns beating in the rock.", test: () => false },
     { id: "dcmill", name: "Not a Witch", desc: "Prove the sickness at Haverly came from the mill, not from Mother Elswith.", test: () => false },
     { id: "dcframe", name: "The Frame Tree", desc: "Clear the miller's grain-chute before the steward can burn it.", test: () => false },
@@ -5491,7 +5546,9 @@ body.pv-open { overflow: hidden; }
     { id: "cases", name: "Seven Cities, Seven Crimes", ver: "50", desc: "Seven crimes up the Vell, solved with medieval tools, and the Saint of Debts behind them all.",
       ids: ["dcmill", "dcframe", "dcflat", "dcclean", "dchand", "dchearing", "dcchampion", "dcbells", "dcsigns", "dcbooks", "dctally", "dcvarga", "dccove", "dcsent", "dcknock", "dcash", "dccalls", "dcjennet", "dcfeast", "dcbarge", "dchalves", "dcjury", "dcledgers", "dccollector", "dcsaint", "dctruth"] },
     { id: "rider", name: "The Rider in the Glass Waste", ver: "51", desc: "A bonus case at the last well before the desert, and a chase on horseback across it.",
-      ids: ["dcrider", "dcdust", "dcmirage"] }
+      ids: ["dcrider", "dcdust", "dcmirage"] },
+    { id: "raids", name: "Walls Worth Taking", ver: "52", desc: "Enemy compounds on the map to scout and raid, six kinds of job, leaders with signature moves, and Tharen Ravendare in Ravenhold.",
+      ids: ["rcfirst", "rcquiet", "rctwo", "rcread", "rcpens", "rcsix", "rcten", "rcraven"] }
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5906,6 +5963,9 @@ body.pv-open { overflow: hidden; }
   // New systems: add a TIPS entry and call tip("key") where the system first appears.
   const TIP_KEY = "labyrinth-of-roots-tips";
   const TIPS = {
+    rcraid: ["Compounds", "New compounds go up on the roads back as the days pass, and they're on your map. Pick a job first: it decides what you're looking for inside. You can come back to a compound as often as you like; what you learned scouting it stays learned."],
+    rcscout: ["Scouting a compound", "Every look costs a watch. A failed look near the walls can get you noticed, and at three marks they move what they're guarding and double the watch (it wears off after a few days). On the raid table, a side and a watch that the clues haven't ruled out is a guess; the right side and the slack watch make going over a lot easier, and on the slack watch the patrols only move every other breath."],
+    rcleader: ["Signature moves", "Every compound leader has a move of their own, and tells you it's coming a turn before it lands. When you see the tell, pick the counter (it's under Guard) on your next turn. Pick it when nothing's coming and you've wasted your turn."],
     dcchase: ["The chase", "Two counters at the top: <b>Gap</b>, how far ahead she is (0 and you've caught her, 10 and she's gone), and <b>Water</b>, your skins (0 and the horse drops). Every stage has a choice. Reading the ground costs time now and can save more later."],
     dcquick: ["Quick decisions", "A bar runs across. <b>Tap</b> while it's in the gold. For a <b>hold</b>, press and keep holding until the bar fills. For <b>swerves</b>, tap each time a glint shows."],
     dccases: ["Seven Cities, Seven Crimes", "Every town already has a wrong answer when you get there. <b>Search</b> (each place costs time), <b>clear the red herring</b>, then <b>name a culprit</b> and <b>lay out your evidence</b> before the court. A wrong name punishes somebody innocent, costs you <b>standing</b> in that city, and the real culprit's men come for you."],
@@ -8208,6 +8268,7 @@ body.pv-open { overflow: hidden; }
         await hzNews();
         await lrNews(); await lgNews();
         await hmNews();
+        await rcTick(); await rcMonth();
         await bwTick();
         const left = relicsLeft().length, cap = lv() >= LV_GATE, top = lv() >= LV_MAX;
         const c = await choose([
@@ -8221,6 +8282,7 @@ body.pv-open { overflow: hidden; }
           { key: "summons", label: "Answer the summons", tag: "a small tear somewhere on the roads · Ringsight" + (S.rs && S.rs.road ? " · " + S.rs.road + " mended" : ""), plain: true, show: !!(S.rs && S.rs.done) },
           { key: "home", label: hmOwn() ? "Go home to " + hmName() : "Talk to the land-broker at the milestone", tag: hmOwn() ? HM_HALL[S.hm.hall][0] + (S.hm.raid ? " · a raid in " + Math.max(0, S.hm.raid.eta - calDay()) + " days" : "") + (S.hm.job ? " · building" : "") + " · strongbox " + S.hm.box + " gold" : "Bellamy Pennock · a holding of your own · from " + Math.min(...Object.values(HM_SITES).map(x => x.price)) + " gold", plain: true, show: hmOwn() || roamRegions().length >= 3 },
           { key: "mine", label: S.mn && S.mn.pick ? "Go prospecting" : "Talk to the assayer at the milestone", tag: S.mn && S.mn.pick ? "deposits to mine" + (mnOre() ? " · " + mnOre() + " pieces of ore, " + mnWorth() + " gold" : "") : "Ennet Scrope · picks, spar and ore", plain: true, show: mnRegs().length > 0 },
+          { key: "rc", label: "Raid a compound", tag: rcStanding().length + " on your map · " + rcStanding().map(C => C.place).slice(0, 2).join(", ") + (rc().n ? " · " + rc().n + " taken" : ""), plain: true, show: rcStanding().length > 0 },
           { key: "town", label: "Visit a town or sanctuary", tag: townsOpen().length + " places · inns, markets, smiths, healers", plain: true, show: townsOpen().length > 0 },
           { key: "stones", label: "Look for Deafstones", tag: stonesLeft().length + " tablet" + (stonesLeft().length === 1 ? "" : "s") + " still to find", plain: true, show: stonesLeft().length > 0 },
           { key: "cw", label: S.cw && S.cw.met ? "Follow the Cairnwright's milestones" : "Listen to the old woman with the list", tag: !(S.cw && S.cw.met) ? "a treasure hunt · seven milestones and a cache" : S.cw.n < 7 ? S.cw.n + " of 7 milestones read" : "the Toll-House cache", plain: true, show: cwOpen() },
@@ -8242,7 +8304,7 @@ body.pv-open { overflow: hidden; }
           return "north";
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
-        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1 }[c] || 0;
+        let took = { home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1, rc: 1 }[c] || 0;
         if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
@@ -8257,6 +8319,7 @@ body.pv-open { overflow: hidden; }
         else if (c === "weave") await weaveClimb();
         else if (c === "town") await townPick();
         else if (c === "mine") await mnHub();
+        else if (c === "rc") { await rcHub(); SND.musPlace("roads"); }
         else if (c === "home") { if (hmOwn()) await hmHome(); else await hmFirst(); }
         else if (c === "board") await wbHub();
         else if (c === "cw") await cwHub();
@@ -8283,6 +8346,900 @@ body.pv-open { overflow: hidden; }
         save();
       } catch (e) { if (e !== FALLEN) throw e; await roamFall(); calTo(0); }
     }
+  }
+  // ---------- Walls Worth Taking: enemy compounds to raid (Adrian, 16 Nov 2026) ----------
+  // "Random compounds scattered throughout the map that you can raid", with jobs (plunder, assassination
+  // and other pursuits), leaders with a special attack, their own music, and Tharen Ravendare, the most
+  // menacing of them, in a jungle compound. On the roads back a new compound goes up somewhere you've
+  // cleared every 10–15 days (4 at most), and shows on your map. Each has a job board (two or three of
+  // RC_JOBS), a leader with a signature move (a tell one turn ahead, and a counter), and hidden facts
+  // the scouting turns up: the weak side, the slack watch, and where each job's target is.
+  // Raid: scout (each look a watch; fail and they notice, 3 marks and they're waiting) → the raid table
+  // (sides × watches, cross off what the clues rule out) → the approach (over a wall at a watch, the
+  // ruse with the supplier's cart, storm the gate, or bring your holding's garrison) → inside, the yard
+  // board (7 rooms, patrols on their rounds, a lantern on the tower, noise, dawn) → the alarm (a company
+  // battle on the compound's own battle map) → the leader → the aftermath (burn it, give it to the town,
+  // hold it, or leave it and whoever takes over). Everything you do is kept in S.rc.marks and read by
+  // towns, the holding, the inns and later compounds (choices-must-matter).
+  // State: S.rc = { list: [compound], next: day, n: compounds taken, jobs: {job: times}, marks: {...},
+  //   troph: {kind: 1}, raven: null | "dead" | "spared", ravenN, counters, log: [lines] }.
+  // Compound C = { id, k, reg, place, name, size 1–3 (4 for a rebuilt Ravenhold), xy, chief {n, ep, pr}, jobs: [keys],
+  //   giver: town name, t: {side, watch, wall: {n,e,s,w}, chiefAt: [[a, b] per watch], at: {job: room}, dogs},
+  //   heads, clues, txt, used, noticed, know: {route, heads, at: {job}}, born, grudge, last }.
+  // New regions add a RC_PLACE list line (or use the shared names) and nothing else.
+  const RC_MAX = 4, RC_SIDES = ["n", "e", "s", "w"], RC_SIDE = { n: "north", e: "east", s: "south", w: "west" };
+  const RC_WATCH = ["Dusk", "Deep night", "Before dawn"];
+  const RC_ROOMS = ["gate", "yard", "tower", "huts", "hall", "store", "pens"];
+  const RC_EDGES = [["gate", "yard"], ["gate", "tower"], ["gate", "pens"], ["yard", "tower"], ["yard", "huts"], ["yard", "hall"], ["yard", "store"], ["yard", "pens"], ["tower", "huts"], ["huts", "hall"], ["hall", "store"], ["store", "pens"]];
+  const RC_XY = { gate: [180, 236], yard: [180, 146], tower: [58, 206], huts: [62, 96], hall: [180, 44], store: [300, 96], pens: [302, 206] };
+  const RC_ENTRY = { n: "hall", e: "store", s: "gate", w: "huts" };
+  const RC_ROUTES = [["gate", "yard", "store", "pens", "gate", "tower"], ["yard", "hall", "huts", "tower", "yard", "pens", "store"], ["gate", "yard", "huts", "hall", "store", "pens"], ["yard", "tower", "huts", "yard", "store", "hall", "yard", "pens"]];
+  const RC_HIDE = new Set(["tower", "huts", "hall", "store", "pens"]);
+  const rcAdj = (a) => RC_EDGES.filter(e => e.includes(a)).map(e => e[0] === a ? e[1] : e[0]);
+  // What each wall is, and what it does to going over it (DC), and whether it can be crossed at all.
+  const RC_WALLS = {
+    stake: ["a stake palisade", 0], ditch: ["a staked ditch and a bank", 2], thorn: ["a thorn hedge", 1], tower: ["a manned tower", 3],
+    water: ["the river", null], cliff: ["a sheer drop", null], gate: ["the gate", 1]
+  };
+  const RC_KINDS = {
+    stockade: { name: "Gang stockade", what: "a bandit gang's stockade", field: "rc_stockade", troph: "A stockade's gate-pin, iron, as long as your arm",
+      rooms: { gate: "The Gate", yard: "The Yard", tower: "The Watch Platform", huts: "The Bunkhouse", hall: "The Chief's Longhouse", store: "The Loot-Store", pens: "The Pen" },
+      jobs: ["plunder", "kill", "rescue", "sabotage"], heads: [5, 7, 9], chief: ["Knife", "the chief of the stockade"], special: "rush",
+      intro: (C) => "A ring of sharpened logs on a rise, with " + C.gangN + "'s mark painted on the gate three feet high, and smoke from a cookfire, and somebody singing badly." },
+    pressyard: { name: "Press-yard", what: "a crimp's press-yard", field: "rc_pressyard", troph: "A crimp's chain, cut through with your own blade",
+      rooms: { gate: "The Gate", yard: "The Muster Yard", tower: "The Lookout", huts: "The Guards' Hut", hall: "The Crimp's House", store: "The Tally-Room", pens: "The Pens" },
+      jobs: ["free", "kill", "rescue", "plunder", "ledger"], heads: [4, 6, 8], chief: ["Crimp-Master", "the crimp-master"], special: "hook",
+      intro: () => "A yard of hurdles and chain, where a crimp keeps the people he's taken off the road until he can sell them to the mines and the galleys. You can hear them from the treeline: not crying, just talking quietly, the way people talk who've been somewhere a long time." },
+    tollfort: { name: "Toll-fort", what: "a toll-baron's palisade", field: "rc_tollfort", troph: "A toll-baron's brass scale, and its weights",
+      rooms: { gate: "The Toll-Gate", yard: "The Wagon Yard", tower: "The Bell-Tower", huts: "The Barracks", hall: "The Toll-House", store: "The Counting Cellar", pens: "The Stocks" },
+      jobs: ["plunder", "kill", "ledger", "rescue"], heads: [5, 7, 9], chief: ["Toll-Baron", "the toll-baron"], special: "toll",
+      intro: () => "A palisade across the road with a bar for a gate and a brass scale on a post, where a man who calls himself a lord weighs every cart that comes through, and takes what the scale says he's owed." },
+    warren: { name: "Smugglers' warren", what: "a smugglers' warren dug into a hill", field: "rc_warren", troph: "A smuggler's dark-lantern, the shutter still sooty",
+      rooms: { gate: "The Adit Mouth", yard: "The Long Cave", tower: "The Spy-Hole", huts: "The Bunks", hall: "The Boss's Cave", store: "The Powder Cave", pens: "The Lock-Up" },
+      jobs: ["plunder", "ledger", "sabotage", "kill"], heads: [4, 6, 8], chief: ["Smuggler-Boss", "the smugglers' boss"], special: "lamp",
+      intro: () => "A hill with a door in it. Below the door, a cart-track that somebody sweeps every morning so it doesn't look used, and the smell of lamp oil and black powder coming out of the ground." },
+    cutters: { name: "Root-cutters' camp", what: "a root-cutters' camp", field: "rc_cutters", troph: "A tooth from a root-cutter's long saw",
+      rooms: { gate: "The Gate", yard: "The Saw-Pit", tower: "The Look-Out Tree", huts: "The Sawyers' Shed", hall: "The Master's Tent", store: "The Heartwood Stacks", pens: "The Hesk Cages" },
+      jobs: ["sabotage", "free", "kill", "plunder"], heads: [5, 7, 9], chief: ["Sawyer-Master", "the sawyer-master"], special: "saw",
+      intro: () => "A stockade round an old root that came up out of the ground before anybody now living was born, thick as a tower, and the root-cutters have been sawing heartwood out of it for a year, one slab at a time. The root is still alive. You can feel it listening when you put your hand on the ground." },
+    raven: { name: "Ravenhold", what: "Tharen Ravendare's jungle compound", field: "rc_raven", troph: "A feather from Tharen Ravendare's coat, black and longer than your hand",
+      rooms: { gate: "The Stake Gate", yard: "The Mud Yard", tower: "The Canopy Walk", huts: "The Long Huts", hall: "Tharen's Lodge", store: "The Smoke-House", pens: "The Cages" },
+      jobs: ["kill", "rescue", "plunder"], heads: [9, 9, 9, 12], chief: ["Raven of the Fords", "Tharen Ravendare"], special: "raven",
+      intro: () => "Three days up the river from Brindle Landing, past where the ferrymen will go, the weeping-boles grow so close the light comes down green. Ravenhold is a stockade of their trunks, roped together and sharpened, with a walkway in the canopy above it and ravens on every stake. Nobody who has gone in to argue with Tharen Ravendare has come out to say how it went." }
+  };
+  const RC_KIND_REG = {
+    stockade: null, pressyard: null, tollfort: ["desert", "fen", "mere", "lastwell", "glass", "rahdaria", "vell", "wetwood", "roots", "corrach"],
+    warren: ["desert", "noon", "undermoon", "bathyrra", "reach", "corrach", "rime", "vell", "rahdaria"], cutters: ["roots", "fen", "mere", "lastwell", "corrach", "wetwood", "undermoon", "rime"]
+  };
+  // The six jobs. pay(C) is the gold for doing it, before the size multiplier; the rest is said in rcAfter.
+  const RC_JOBS = {
+    plunder: { name: "Plunder", line: "Find the strongbox and crack it.", room: ["hall", "store", "huts", "pens"], pay: () => 60 + 6 * lv(), xp: 1 },
+    kill: { name: "Assassination", line: "There's a writ on the leader, posted in town, with a price under the name.", pay: () => 50 + 5 * lv(), xp: 2 },
+    rescue: { name: "Rescue", line: "They're holding someone for a ransom the family can't pay.", room: ["pens", "huts", "hall"], pay: () => 30 + 2 * lv(), xp: 1 },
+    free: { name: "Free the pressed", line: "Open the pens and get everybody out through the gate.", room: ["pens"], pay: () => 20 + 1.5 * lv(), xp: 1 },
+    ledger: { name: "Steal the ledger", line: "A book of debts and names that a town needs out of their hands.", room: ["hall", "store", "tower"], pay: () => 40 + 4 * lv(), xp: 1 },
+    sabotage: { name: "Sabotage", line: "They mean to march on a village. Burn their stores or spoil their powder first.", room: ["store"], pay: () => 30 + 2.2 * lv(), xp: 1 }
+  };
+  const RC_SIZE = [null, ["A camp", 1], ["A walled compound", 1.4], ["A fortified compound", 1.8], ["Ravenhold, rebuilt higher", 2.2]];
+  const RC_PLACES = ["Harrow Knap", "Coldbrook Bottom", "the Witch-Elm", "Brackenfold", "Dunmore Edge", "Owlgate", "Sallow Bank", "the Gibbet Oak", "Cinder Knoll", "Marl Pit", "Gorse End", "Hobb's Ford", "the Long Barrow", "Wether Scar", "Pennyroyal Hill", "Lamb's Rest", "the Drowned Barn", "Rook Hollow", "Tallow Cross", "Blackthorn Rise", "Mother Ashe's Field", "the Weeping Bank", "Scold's Bridge", "Fennick's End"];
+  const RC_CHIEF = ["Brannick Holt", "Sefa Rawle", "Old Mother Gall", "Jory Cutler", "Halloran Skeat", "Wenna Dask", "Morrow Pike", "Ivo Strake", "Cassel Thorne-Hand", "Dace Mallory", "Ottilie Grue", "Bastian Keel", "Reeve Calloway", "Hester Vane-Bitten", "Lark Mosby", "Garrow Fitch", "Una Sallowby", "Pell Crake"];
+  const RC_HOSTAGE = [["Oriel Fenwick", "a ferryman's daughter"], ["Tamsin Brook", "a miller's wife"], ["Corin Ashby", "a carter's son"], ["Old Wat Huxley", "a toll-clerk who wouldn't pay"], ["Bettany Shore", "a fisherman's widow"], ["Roan Feld", "a smith's apprentice"], ["Ysa Merrow", "a drover's sister"], ["Kit Danner", "a boy from the inn"]];
+  const RC_VILLAGE = ["Upper Thatch", "Wennock", "Little Sorrow", "Cobb's Green", "Ashby Parva", "Fallowmere", "Hensley", "Nettle End"];
+  const RC_LEDGER = ["a debt-book with half the town in it", "the forged deeds to the common fields", "a list of the names of everyone who ever informed for the watch", "the toll-rolls, with what was taken and from whom", "the crimp's bill of sale for thirty people"];
+  const rcRand = (seed) => { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; };
+  const rc = () => (S.rc = S.rc || { list: [], next: null, n: 0, jobs: {}, marks: { ledger: [], rescued: [], freed: 0, saved: [], burnt: 0, given: [], held: [], killed: [], spared: [] }, troph: {}, raven: null, ravenN: 0, counters: 0, log: [], hands: 0, seq: 0 });
+  const rcStanding = () => rc().list.filter(C => !C.gone);
+  const rcLog = (t) => { const R = rc(); R.log.unshift(calDate() + ": " + t); R.log = R.log.slice(0, 30); };
+  const rcSz = (C) => RC_SIZE[Math.min(4, C.size)][1];
+  const rcRoom = (C, k) => RC_KINDS[C.k].rooms[k];
+  const rcRoomS = (C, k) => rcRoom(C, k).replace(/^The /, "the ");
+  const rcJobsDone = () => Object.keys(RC_JOBS).filter(k => rc().jobs[k]).length;
+  const rcRank = () => { const n = rc().n; return n >= 25 ? 3 : n >= 10 ? 2 : n >= 3 ? 1 : 0; };
+  const RC_RANKS = ["", "Wall-Breaker", "Night Visitor", "Terror of the Stockades"];
+  // Which region's map spot a compound sits near: the chapter with that region's tier.
+  function rcMapAt(reg) {
+    const k = TIER[reg], slug = CHAPTERS[k] && CHAPTERS[k].slug, m = slug && MAP[slug];
+    return m ? m.at : MAP.labyrinth.at;
+  }
+  // A new compound, somewhere you've cleared.
+  function rcMake(kind, reg) {
+    const R = rc(), id = ++R.seq, rnd = rcRand(id * 7919 + calDay() * 31 + (S.lootN || 0));
+    const pk = (a) => a[Math.floor(rnd() * a.length)];
+    const K = RC_KINDS[kind];
+    const size = kind === "raven" ? (R.raven === "spared" ? 4 : 3) : Math.max(1, Math.min(3, 1 + (lv() >= 18 ? 1 : 0) + (lv() >= 32 && rnd() < 0.6 ? 1 : 0) - (rnd() < 0.2 ? 1 : 0)));
+    let G = null;
+    if (kind === "stockade") { const pool = ROAD_GANGS.filter(X => X.r === reg && !(S.hm && S.hm.gone && S.hm.gone[X.id]) && !R.list.some(C => !C.gone && C.gang === X.id)); G = pool.length ? pk(pool) : null; }
+    const used = R.list.filter(C => !C.gone).map(C => C.place);
+    const place = kind === "raven" ? (size === 4 ? "Ravenhold Above" : "Ravenhold") : pk(RC_PLACES.filter(p => !used.includes(p)).concat(["Gallow Lane"]));
+    const name = kind === "raven" ? place : kind === "stockade" && G ? G.n + "'s stockade at " + place : (kind === "pressyard" ? "The press-yard at " : kind === "tollfort" ? "The toll-fort at " : kind === "warren" ? "The warren under " : "The cutters' camp at ") + place;
+    // Walls: one side can't be crossed (river or a drop), the south is the gate, the others are by size.
+    const block = pk(["n", "e", "w"]);
+    const wall = {};
+    RC_SIDES.forEach(s => { wall[s] = s === block ? (kind === "raven" ? "water" : pk(["water", "cliff"])) : s === "s" ? "gate" : pk(size >= 2 ? ["stake", "ditch", "tower", "thorn"] : ["stake", "thorn", "stake"]); });
+    const open = RC_SIDES.filter(s => RC_WALLS[wall[s]][1] !== null);
+    const t = { side: pk(open), watch: Math.floor(rnd() * 3), wall, dogs: rnd() < 0.6 || kind === "raven", at: {}, chiefAt: [0, 1, 2].map(() => [pk(["hall", "huts", "store"]), pk(["hall", "huts", "store"])]) };
+    if (kind !== "raven") t.chiefAt = t.chiefAt.map(([a]) => [a, rnd() < 0.5 ? a : "hall"]);
+    const jobs = kind === "raven" ? ["kill", "rescue", "plunder"] : K.jobs.slice().sort(() => rnd() - 0.5).slice(0, 2 + (rnd() < 0.5 ? 1 : 0));
+    if (kind === "pressyard" && !jobs.includes("free")) jobs[0] = "free";
+    Object.keys(RC_JOBS).forEach(j => { const rm = RC_JOBS[j].room; if (rm) t.at[j] = pk(rm.filter(r => !(j === "plunder" && r === "pens" && kind === "pressyard"))); });
+    const town = (TOWNS[reg] || []).filter(T => T.kind === "town")[0] || (TOWNS[reg] || [])[0];
+    const chief = kind === "raven" ? { n: "Tharen Ravendare", pr: "he" } : kind === "stockade" && G ? { n: bnName(G, "knife"), pr: d(2) === 1 ? "he" : "she" } : { n: pk(RC_CHIEF.filter(n => !R.marks.killed.includes(n))), pr: pk(["he", "she"]) };
+    const [x0, y0] = rcMapAt(reg), a = rnd() * Math.PI * 2, r = 18 + rnd() * 26;
+    const hostage = pk(RC_HOSTAGE.filter(([n]) => !R.marks.rescued.some(x => x.n === n)).concat([["Nell Ashdown", "a weaver's girl"]]));
+    const C = { id, k: kind, reg, place, name, size, gang: G ? G.id : null, gangN: G ? G.n : "", xy: [Math.round(x0 + Math.cos(a) * r), Math.round(y0 + Math.sin(a) * r * 0.7)],
+      chief, jobs, done: [], giver: town ? town.name : REGIONS[reg], t, heads: K.heads[Math.min(K.heads.length, size) - 1],
+      hostage: { n: hostage[0], who: hostage[1] }, village: pk(RC_VILLAGE), ledger: pk(RC_LEDGER),
+      clues: [], txt: [], used: {}, noticed: 0, know: { at: {} }, born: calDay(), grudge: 0, last: null };
+    // A chief whose predecessor you killed knows your face.
+    const kin = R.marks.killed.length && R.list.some(X => X.gone && X.reg === reg && X.chiefDead);
+    if (kin) { C.grudge = 1; C.noticed = 1; }
+    return C;
+  }
+  function rcSpawnPick() {
+    const R = rc(), regs = roamRegions().filter(r => r !== "dunvaar" && !rcStanding().some(C => C.reg === r));
+    if (!regs.length) return null;
+    const reg = regs[d(regs.length) - 1];
+    const kinds = Object.keys(RC_KIND_REG).filter(k => (!RC_KIND_REG[k] || RC_KIND_REG[k].includes(reg)) && !(k === "tollfort" && reg === "wetwood" && R.raven === "dead") && !(k === "stockade" && !ROAD_GANGS.some(X => X.r === reg && !(S.hm && S.hm.gone && S.hm.gone[X.id]))));
+    return rcMake(kinds[d(kinds.length) - 1], reg);
+  }
+  // Called from the roads back: new compounds go up as the days pass, and Ravenhold once you've taken three.
+  async function rcTick() {
+    if (!S.axe || lv() < 8) return;
+    const R = rc(), now = calDay();
+    if (R.next === null) R.next = now;
+    if (!R.list.some(C => C.k === "raven" && !C.gone) && R.raven !== "dead" && R.n >= 3 && roamRegions().includes("wetwood") && (R.raven !== "spared" || now >= (R.ravenAt || 0))) {
+      const C = rcMake("raven", "wetwood"); R.list.push(C);
+      add(el("div", "part-head sub", '<span class="num">Word on the roads</span><h2>' + esc(C.name) + "</h2>"));
+      await say(R.raven === "spared" ? "A ferryman from Brindle Landing finds you at an inn and sits down without asking. \"He's back,\" he says. \"Further up the river. Higher. He's put your name on his gate, and a raven on it.\"" : "A ferryman from Brindle Landing finds you at an inn and sits down without asking. He has a writ in his hand, with a name on it and a price, and a ribbon tied round it that isn't his. \"Tharen Ravendare,\" he says. \"He took my girl off my own boat. Everybody says you're the one who goes over walls.\"");
+      await mech("<b>Ravenhold</b> is on your map, in the Wetwood: the hardest compound there is. Raid it from the roads back.", "hurt");
+      rcLog("heard about " + C.name);
+      save(); return;
+    }
+    if (now < R.next) return;
+    R.next = now + 10 + d(5);
+    if (rcStanding().filter(C => C.k !== "raven").length >= RC_MAX) return;
+    const C = rcSpawnPick(); if (!C) return;
+    R.list.push(C);
+    const first = !R.seen; R.seen = 1;
+    add(el("div", "part-head sub", '<span class="num">Word on the roads · ' + REGIONS[C.reg] + "</span><h2>" + esc(C.name) + "</h2>"));
+    await say("At a milestone in " + REGIONS[C.reg] + " somebody has nailed up a notice, and somebody else has nailed a second one over it. " + RC_KINDS[C.k].what.charAt(0).toUpperCase() + RC_KINDS[C.k].what.slice(1) + " has gone up at " + C.place + ", and " + esc(C.giver) + " has work for anybody who'll go over the wall: " + C.jobs.map(j => RC_JOBS[j].name.toLowerCase()).join(", ") + ".");
+    if (first) { tip("rcraid"); await mech("<b>Walls Worth Taking.</b> Compounds go up across the realm as the days pass, and they're on your map. Pick a job, scout the place, work out where and when to go over, and get in and out before the alarm. Every leader has a signature move: read the tell, and counter it.", "loot"); }
+    rcLog(C.name + " went up in " + REGIONS[C.reg]);
+    save();
+  }
+  // ----- clues: true of the compound, and ruling out at least one side × watch still open -----
+  const rcCombos = (C) => RC_SIDES.filter(s => RC_WALLS[C.t.wall[s]][1] !== null).flatMap(s => [0, 1, 2].map(w => s + ":" + w));
+  function rcTest(c, k) {
+    const [s, w] = k.split(":"), W = +w;
+    if (c.startsWith("s!")) return s !== c.slice(2);
+    if (c.startsWith("s=")) return s === c.slice(2);
+    if (c.startsWith("w!")) return W !== +c.slice(2);
+    if (c.startsWith("w=")) return W === +c.slice(2);
+    if (c.startsWith("x!")) return k !== c.slice(2);
+    return true;
+  }
+  const rcOpen = (C) => rcCombos(C).filter(k => C.clues.every(c => rcTest(c, k)));
+  function rcClue(C, src) {
+    const T = C.t, truth = T.side + ":" + T.watch, cand = [], add2 = (id, text, t) => cand.push({ id, text, t });
+    const sides = RC_SIDES.filter(s => RC_WALLS[T.wall[s]][1] !== null), W = (w) => RC_WATCH[w].toLowerCase();
+    const wn = (s) => RC_WALLS[T.wall[s]][0];
+    if (src === "high") {
+      sides.forEach(x => add2("s!" + x, ["The " + RC_SIDE[x] + " side is cleared ground: a long field of stumps, and two of them on " + wn(x) + " with bows. Nobody crosses that unseen.", "There are fresh stakes in " + wn(x) + " on the " + RC_SIDE[x] + " side, still white where they were cut. That side was mended this week."][d(2) - 1], "s!" + x));
+      [0, 1, 2].forEach(w => add2("w!" + w, "At " + W(w) + " they change the watch on the walls, with lanterns and a lot of shouting. Nobody sleeps through that.", "w!" + w));
+    }
+    if (src === "night") {
+      [0, 1, 2].forEach(w => add2("w!" + w, "At " + W(w) + " every lamp in the place is lit, and there are men on every wall.", "w!" + w));
+      add2("w=" + T.watch, "At " + W(T.watch) + " half the lamps go out and a jar goes round on the walls. That's when they're drinking.", "w=" + T.watch);
+    }
+    if (src === "wall") {
+      add2("s=" + T.side, "You get your hand on " + wn(T.side) + " on the " + RC_SIDE[T.side] + " side, and it moves: the foot of it is rotten through.", "s=" + T.side);
+      sides.forEach(x => add2("s!" + x, "There are pits under the leaves on the " + RC_SIDE[x] + " side. You find one with your boot, with stakes at the bottom.", "s!" + x));
+    }
+    if (src === "burr") {
+      sides.filter(x => x !== T.side).forEach(x => [0, 1, 2].forEach(w => add2("x!" + x + ":" + w, "Burr won't go near the " + RC_SIDE[x] + " side. They kennel their hounds under it, and loose them there at " + W(w) + ".", "x!" + x + ":" + w)));
+    }
+    if (src === "trade") {
+      [0, 1, 2].filter(w => w !== T.watch).forEach(w => add2("w!" + w, "\"Don't go at " + W(w) + ",\" says the carter who sells them flour. \"That's the sergeant's own watch, and the sergeant doesn't drink.\"", "w!" + w));
+      sides.filter(x => x !== T.side).forEach(x => add2("s!" + x, "\"The " + RC_SIDE[x] + " wall?\" says the carter. \"They rebuilt that after the last lot tried it. I helped.\"", "s!" + x));
+    }
+    const useful = cand.filter(c => rcTest(c.t, truth) && rcOpen(C).some(k => !rcTest(c.t, k)) && !C.used[c.id]);
+    if (!useful.length) return null;
+    const c = useful[d(useful.length) - 1]; C.used[c.id] = 1; C.clues.push(c.t); C.txt.push(c.text); return c.text;
+  }
+  // Inside knowledge: the patrol, where the leader sleeps, where a job's target is.
+  function rcInside(C, who) {
+    const K = C.know, T = C.t, out = [];
+    if (!K.route) { K.route = true; out.push(who + " walks you through the patrols: who goes where, and in what order."); }
+    if (!K.chief) { K.chief = true; const [a, b] = T.chiefAt[T.watch]; out.push(C.chief.n + " sleeps in a different room every watch. At " + RC_WATCH[T.watch].toLowerCase() + " it's " + rcRoomS(C, a) + (b !== a ? ", and then " + rcRoomS(C, b) : "") + "."); }
+    const j = C.jobs.find(j => T.at[j] && !K.at[j]);
+    if (j) { K.at[j] = true; out.push({ plunder: "The strongbox is in " + rcRoomS(C, T.at.plunder) + ".", rescue: C.hostage.n + " is in " + rcRoomS(C, T.at.rescue) + ".", ledger: "The book is kept in " + rcRoomS(C, T.at.ledger) + ".", free: "The pens' key hangs in " + rcRoomS(C, "huts") + ".", sabotage: "The stores are all in " + rcRoomS(C, "store") + ", and the well's in the yard." }[j]); }
+    return out.join(" ");
+  }
+  // ----- the hub on the roads back -----
+  async function rcHub() {
+    const R = rc();
+    SND.musPlace("sneak");
+    add(el("div", "part-head sub", '<span class="num">The roads back · ' + (RC_RANKS[rcRank()] || "compounds") + '</span><h2>Walls Worth Taking</h2>'));
+    for (;;) {
+      const L = rcStanding();
+      const c = await choose(L.map((C, i) => ({ key: "c" + C.id, label: esc(C.name), tag: REGIONS[C.reg] + " · " + RC_SIZE[Math.min(4, C.size)][0].toLowerCase() + " · " + C.jobs.filter(j => !C.done.includes(j)).map(j => RC_JOBS[j].name.toLowerCase()).join(", ") + (C.noticed ? " · noticed " + C.noticed : ""), plain: i > 0 }))
+        .concat([{ key: "map", label: "Look at them on your map", plain: true }, { key: "back", label: "Back to the road", plain: true }]));
+      if (c === "back") return;
+      if (c === "map") { mapOpen(); continue; }
+      const C = L.find(X => "c" + X.id === c);
+      await rcVisit(C);
+      if (C.gone || S.hp <= 0) return;
+    }
+  }
+  function rcCard(C) {
+    const K = RC_KINDS[C.k], T = C.t;
+    const walls = RC_SIDES.map(s => "<li><b>" + RC_SIDE[s].charAt(0).toUpperCase() + RC_SIDE[s].slice(1) + "</b>: " + RC_WALLS[T.wall[s]][0] + "</li>").join("");
+    return '<div class="rc-card"><p class="j-sub">' + esc(K.name) + " · " + RC_SIZE[Math.min(4, C.size)][0] + " · " + REGIONS[C.reg] + " · " + (C.know.heads ? C.heads + " of them" : "how many, you don't know") + (C.t.dogs && C.know.dogs ? " · hounds" : "") + "</p>" +
+      '<ul class="rc-walls">' + walls + "</ul>" +
+      '<p class="j-sub">Leader: <b>' + esc(C.chief.n) + "</b>" + (C.grudge ? ", who has your description pinned to the gate" : "") + ". Jobs: " + C.jobs.map(j => (C.done.includes(j) ? "<s>" : "") + RC_JOBS[j].name + (C.done.includes(j) ? "</s>" : "")).join(" · ") + "</p></div>";
+  }
+  async function rcVisit(C) {
+    const K = RC_KINDS[C.k];
+    add(el("div", "part-head sub", '<span class="num">' + REGIONS[C.reg] + " · " + esc(K.name) + "</span><h2>" + esc(C.name) + "</h2>"));
+    light("dusk");
+    if (!C.seen) { C.seen = 1; await say(K.intro(C)); }
+    if (C.guard != null && calDay() < C.guard) { add(el("div", "", rcCard(C))); await say("They're still up on the walls from last time, with every lamp lit and the gate barred, and they'll stay there till the sun's been up and down again. Come back another day."); return; }
+    if (C.noticed && C.last != null && calDay() - C.last >= 4) { const n = Math.floor((calDay() - C.last) / 4); C.noticed = Math.max(C.grudge ? 1 : 0, C.noticed - n); C.last = calDay(); if (C.noticed < 3) await say("It's been quiet for a few days. The walls at " + esc(C.place) + " have gone back to their usual watch."); }
+    add(el("div", "", rcCard(C)));
+    // the job
+    const left = C.jobs.filter(j => !C.done.includes(j));
+    if (!left.length) { await say("There's no more work posted for " + esc(C.place) + ". Whoever's in there is keeping very quiet."); return; }
+    if (!C.job || !left.includes(C.job)) {
+      const j = await choose(left.map((j, i) => ({ key: j, label: RC_JOBS[j].name, tag: rcJobLine(C, j), plain: i > 0 })).concat([{ key: "no", label: "Not tonight", plain: true }]));
+      if (j === "no") return;
+      C.job = j;
+    }
+    tip("rcscout");
+    for (;;) {
+      const go = await rcScout(C);
+      if (go === "leave") { save(); return; }
+      if (go === "raid") { await rcRaid(C); return; }
+    }
+  }
+  function rcJobLine(C, j) {
+    const m = rcSz(C);
+    const g = Math.round(RC_JOBS[j].pay() * m * (C.k === "raven" ? 1.5 : 1));
+    return { plunder: "the strongbox · about " + g + " gold", kill: "the writ on " + C.chief.n + " · " + g + " gold and " + (C.k === "raven" ? "his" : "the leader's") + " weapon", rescue: C.hostage.n + ", " + C.hostage.who + " · " + g + " gold and a keepsake", free: "the pens · " + g + " gold, and the people in them", ledger: C.ledger + " · " + g + " gold from " + esc(C.giver), sabotage: "before they march on " + C.village + " · " + g + " gold and supplies" }[j];
+  }
+  // Scouting: each look costs a watch near the walls.
+  async function rcScout(C) {
+    const T = C.t, comp = company();
+    if (hasGear("rccloak") && !C.used.cloak) { C.used.cloak = 1; const t = rcClue(C, "high"); if (t) { await say("You sit on the hill in the Scout's Grey and nobody sees you at all. " + t); await mech("The Scout's Grey: a free clue.", "loot"); } }
+    const scDc = 12 + C.size + (C.k === "raven" ? 1 : 0);
+    const c = await choose([
+      { key: "high", label: "Watch the walls from high ground", tag: "Perception · DC " + scDc + " · a watch · where they're weak", show: C.noticed < 3 },
+      { key: "night", label: calNight() ? "Count their lamps tonight" : "Wait for dark and count their lamps", tag: "no roll · " + (calNight() ? "a watch" : "till night") + " · when they're slack", show: C.noticed < 3 && !C.used.night2 },
+      { key: "wall", label: "Creep up and put a hand on the wall", tag: "Stealth · DC " + (scDc + 1) + " · a watch · fail and they notice", show: C.noticed < 3 },
+      { key: "trade", label: "Talk to the carter who supplies them", tag: (S.coins >= 10 + lv() ? 10 + lv() + " gold, no roll" : "Insight · DC " + scDc) + " · a watch · who's inside, and what", show: !C.used.trade },
+      { key: "burr", label: "Let Burr circle downwind", tag: "no roll · his nose", show: comp.includes("burr") && !C.used.burr && C.noticed < 3 },
+      { key: "spy", label: comp.includes("ishbel") ? "Send Ishbel over the wall tonight" : "Send Tyra in as a laundress", tag: "no roll · the inside of the place", show: (comp.includes("ishbel") || comp.includes("tyra")) && !C.used.spy },
+      { key: "rider", label: "Send a rider out from " + esc(hmName()), tag: "no roll · no time · one of your own", show: hmOwn() && (S.hm.guards || 0) >= 1 && !C.used.rider },
+      { key: "table", label: C.txt.length ? "Work it out at the raid table" : "Go in blind", tag: "decide where and when, and how", plain: false },
+      { key: "leave", label: "Leave it for another day", tag: C.noticed ? "they'll calm down in a few days" : "", plain: true }
+    ]);
+    if (c === "leave") { C.last = calDay(); return "leave"; }
+    if (c === "table") return "raid";
+    const two = c === "night" && !calNight();
+    if (c === "night") { C.used.night2 = C.used.night ? 1 : 0; C.used.night = 1; }
+    if (["burr", "spy", "trade"].includes(c)) C.used[c] = 1;
+    if (c === "rider") C.used.rider = 1;
+    if (two) calTo(3); else if (c !== "rider" && c !== "burr") calPass(1);
+    if (c === "high" || c === "wall" || (c === "trade" && S.coins < 10 + lv())) {
+      const r = await check({ label: c === "high" ? "Perception check (from the hill)" : c === "wall" ? "Stealth check (to the wall)" : "Insight check (the carter)", mod: lrMod() + (c === "wall" && hasGear("rcribbon") ? 1 : 0) + (c === "high" && hasGear("ravenwhistle") ? 1 : 0), dc: c === "wall" ? scDc + 1 : scDc, cta: "Look" });
+      if (!r.ok) {
+        const add1 = c === "wall" ? 1 + (r.total !== undefined && r.total <= scDc - 4 ? 1 : 0) : c === "high" && d(2) === 1 ? 1 : 0;
+        C.noticed = Math.min(3, C.noticed + add1);
+        await say(c === "wall" ? "Somebody on the wall stops talking in the middle of a word. You go flat and stay flat until they start again." : c === "high" ? "Trees, smoke and walls. Somebody on the walls looks up at your hill for a long time." : "The carter looks at you, and at your axe, and says he's never heard of the place.");
+        if (add1) await mech("Noticed " + C.noticed + " of 3.", "hurt");
+        if (C.noticed >= 3) await rcWary(C);
+        save(); return;
+      }
+    }
+    if (c === "trade") {
+      if (S.coins >= 10 + lv()) { S.coins -= 10 + lv(); renderSheet(); }
+      C.know.heads = true;
+      const t = rcClue(C, "trade");
+      await say("\"There's " + C.heads + " of them,\" the carter says" + (t ? ". " + t : ", \"and they eat like twice that.\""));
+      if (d(2) === 1 || C.k !== "warren") { C.know.ruse = true; await say("\"And I go in with the flour every " + RC_WATCH[(T.watch + 1) % 3].toLowerCase() + ". There's room under the sacks for somebody who doesn't mind flour.\""); await mech("The ruse is open: you can go in under the carter's sacks.", "loot"); }
+    } else if (c === "burr") {
+      C.know.dogs = true; C.meat = T.dogs;
+      const t = rcClue(C, "burr");
+      await say((t || "Burr goes all the way round and comes back with burrs in his coat and nothing to tell you.") + (T.dogs ? " He also finds where they keep the hounds' meat. You take a hock. Hounds are less interested in you with their mouths full." : " There are no hounds in there at all."));
+    } else if (c === "spy") {
+      const who = comp.includes("ishbel") ? "Ishbel" : "Tyra";
+      await say(who === "Ishbel" ? "Ishbel comes back over the wall before dawn with mud to the knee and the whole place in her head." : "Tyra comes back at dusk with her sleeves rolled up and a basket of somebody else's washing, and sits down beside you, and talks for a long time.");
+      await say(rcInside(C, who));
+    } else if (c === "rider") {
+      await say("A rider from " + esc(hmName()) + " comes back the next morning with a sketch of the place on the back of a feed-bill.");
+      const t = rcClue(C, "high") || rcInside(C, "Your rider");
+      await say(t);
+    } else {
+      const t = rcClue(C, c);
+      if (c === "night") C.know.heads = true;
+      await say(t || "Nothing you didn't already know.");
+      if (c === "night") await mech("You count " + C.heads + " of them.", "loot");
+    }
+    save();
+    return "again";
+  }
+  async function rcWary(C) {
+    await say("<b>They know.</b> The lamps all come on, and the gate is shut and barred in the middle of the day, and there are twice as many on the walls. Whatever you do now, they'll be waiting.");
+    C.t.at = Object.fromEntries(Object.keys(C.t.at).map(j => [j, RC_JOBS[j].room[d(RC_JOBS[j].room.length) - 1]]));
+    C.know.at = {};
+    await mech("Noticed 3 of 3. They've moved what they're guarding (what you knew about where things are is no good now), and going over the wall is much harder. Leave it a few days, or go in anyway.", "hurt");
+  }
+  // The raid table: sides × watches.
+  function rcTable(C) {
+    return new Promise(resolve => {
+      const P = puzzleBox("The raid table", "What you know is written down the side. Tap a square to cross it off (✕), tap again to mark it (★) as the side and the watch you'll go over, and once more to clear it. Squares with — can't be crossed at all.");
+      P.body.append(el("ol", "hm-clues", C.txt.length ? C.txt.map(t => "<li>" + t + "</li>").join("") : "<li>Nothing. You're guessing.</li>"));
+      const grid = el("div", "hm-war rc-war"); grid.append(el("span", "", ""));
+      RC_WATCH.forEach(w => grid.append(el("span", "hm-wh", w)));
+      const mark = {};
+      RC_SIDES.forEach(s => {
+        grid.append(el("span", "hm-ws", "<b>" + RC_SIDE[s].charAt(0).toUpperCase() + RC_SIDE[s].slice(1) + "</b><small>" + RC_WALLS[C.t.wall[s]][0] + "</small>"));
+        [0, 1, 2].forEach(w => {
+          const ok = RC_WALLS[C.t.wall[s]][1] !== null, b = pbtn(ok ? "" : "—"); b.dataset.k = s + ":" + w;
+          b.setAttribute("aria-label", RC_SIDE[s] + " side at " + RC_WATCH[w]);
+          if (!ok) b.disabled = true; else b.onclick = () => { mark[b.dataset.k] = ((mark[b.dataset.k] || 0) + 1) % 3; draw(); };
+          grid.append(b);
+        });
+      });
+      P.body.append(grid);
+      const go = pbtn("Plan the raid on the ★", "primary"), guess = pbtn("Don't bother: storm the gate, or try the cart");
+      P.ctrl.append(go, guess);
+      function draw() {
+        grid.querySelectorAll("button[data-k]").forEach(b => { const v = mark[b.dataset.k] || 0; if (!b.disabled) { b.textContent = ["", "✕", "★"][v]; b.classList.toggle("on", v === 2); b.classList.toggle("rot", v === 1); } });
+        const st = Object.keys(mark).filter(k => mark[k] === 2); go.disabled = st.length !== 1;
+        P.status.textContent = st.length === 1 ? "Marked: the " + RC_SIDE[st[0][0]] + " side at " + RC_WATCH[+st[0].split(":")[1]].toLowerCase() + "." : st.length ? "Mark only one." : "Nothing marked yet.";
+      }
+      draw();
+      go.onclick = () => { const k = Object.keys(mark).find(x => mark[x] === 2); P.end(); resolve(k); };
+      guess.onclick = () => { P.end(); resolve(null); };
+    });
+  }
+  // ----- the raid -----
+  async function rcRaid(C) {
+    const K = RC_KINDS[C.k], T = C.t, H = S.hm;
+    const k = await rcTable(C);
+    let side = null, watch = null;
+    if (k) [side, watch] = [k.split(":")[0], +k.split(":")[1]];
+    const sneakDc = side ? 11 + 2 * C.size + RC_WALLS[T.wall[side]][1] - (side === T.side ? 5 : 0) - (watch === T.watch ? 3 : 0) + 3 * C.noticed + (C.k === "raven" ? 2 : 0) : 0;
+    const ruseDc = 12 + C.size + 2 * C.noticed;
+    const garr = hmOwn() ? Math.min(4, Math.floor((H.guards || 0) / 2)) : 0;
+    const job = C.job;
+    const fireOk = calNight() && !calWinter() && C.k !== "warren";
+    const c = await choose([
+      { key: "wall", label: side ? "Over " + RC_WALLS[T.wall[side]][0] + " on the " + RC_SIDE[side] + " side at " + RC_WATCH[watch].toLowerCase() : "", tag: "Stealth · DC " + sneakDc + " · inside unseen, if it goes well", show: !!side },
+      { key: "ruse", label: "Under the carter's flour sacks", tag: "Deception · DC " + ruseDc + " · in through the gate, into the yard", show: !!C.know.ruse && C.noticed < 3 },
+      { key: "storm", label: "Storm the gate", tag: "a battle on their ground · then the yard is yours for a little while", plain: true },
+      { key: "garrison", label: "Bring the garrison from " + esc(hmName()), tag: garr + " fewer of them · a day's march · a battle at the gate", show: garr > 0, plain: true },
+      { key: "fire", label: "Fire the walls and wait at the gate", tag: "no way in · " + (job === "sabotage" ? "the stores burn" : job === "rescue" || job === "free" ? "the people inside are inside" : "they come out to you") + " · they'll call you a burner", show: fireOk && job !== "plunder" && job !== "ledger", plain: true },
+      { key: "back", label: "Not yet", plain: true }
+    ]);
+    if (c === "back") return;
+    SND.musPlace("sneak"); light("moon");
+    const B = { C, job, side, watch, slack: watch === T.watch, you: null, tick: 0, noise: 0, hid: false, cut: C.size < 2, barred: false, key: false, bucket: false, carry: null, done: {}, freed: false, gateUp: false, foundAt: 0, alarm: false, quiet: true, chiefMet: false, whistle: hasGear("ravenwhistle") };
+    B.dawn = 18 - 2 * C.size - (C.k === "raven" ? 1 : 0);
+    B.chiefAt = T.chiefAt[watch === null ? T.watch : watch][0];
+    B.pats = RC_ROUTES.slice(0, C.size >= 3 || C.k === "raven" ? 2 : 1).map((r, i) => ({ r, i: i * 2 + d(2) - 1, down: false }));
+    if (C.k === "raven" && C.size >= 4) B.pats.push({ r: RC_ROUTES[2], i: 3, down: false });
+    if (c === "wall") {
+      await say("You go in on your belly at " + RC_WATCH[watch].toLowerCase() + ", with the lamps on the walls moving. " + (side === T.side ? "The wall here is rotten at the foot, as you thought." : "The wall here is sound, and you'll have to climb it.") + " " + (watch === T.watch ? "On the walls somebody laughs too loud, and somebody tells him to shut up, and he doesn't." : "On the walls the men are awake and quiet, which is worse."));
+      const r = await check({ label: "Stealth check (over the wall)", mod: lrMod() + 1 + (hasGear("rcribbon") ? 1 : 0) + (hasGear("rccloak") ? 1 : 0), dc: sneakDc, cta: "Go over" });
+      B.you = RC_ENTRY[side];
+      if (r.ok) await say("You're over and down and in the dark at the foot of the wall, and nobody has seen you." + (B.slack ? " The patrols are slow tonight: they only move every other breath." : ""));
+      else if ((r.total || 0) >= sneakDc - 5) { B.noise = 2; await say("You're in, but a stake cracks under you as you drop, and somewhere a hound starts barking and won't stop."); }
+      else { await say("A shout from the wall, and every lamp swings round onto you."); B.you = "gate"; return rcAlarm(C, B, "on the wall"); }
+    } else if (c === "ruse") {
+      const r = await check({ label: "Deception check (under the sacks)", mod: lrMod() + 1, dc: ruseDc, cta: "Keep still" });
+      B.you = "yard"; B.side = "s"; B.watch = (T.watch + 1) % 3; B.slack = false;
+      if (!r.ok) { await say("A guard puts his spear into the sacks, idly, to see. It goes past your ear. The second one doesn't."); await hurt(1, 6, "piercing", "The spear-point goes into your shoulder."); return rcAlarm(C, B, "in the cart"); }
+      await say("The cart creaks in through the gate and stops in the yard. The carter gets down, and coughs twice, and goes to find someone to pay him. That's your cue.");
+    } else {
+      // storm, garrison or fire: there's no sneaking.
+      B.you = "gate";
+      if (c === "garrison") { calPass(4); B.garr = garr; await say("You march from " + esc(hmName()) + " with everybody who can carry a spear, and come up on " + esc(C.place) + " at first light with your own colours out."); }
+      if (c === "fire") return rcFire(C, B);
+      return rcAlarm(C, B, "at the gate");
+    }
+    B.chiefAt = T.chiefAt[B.watch][0];
+    return rcYard(C, B);
+  }
+  // Inside: the yard board. Returns when you're out, seen, or at the leader.
+  async function rcYard(C, B) {
+    for (;;) {
+      const ev = await rcBoard(C, B);
+      if (ev.k === "out") return rcAfter(C, B);
+      if (ev.k === "seen") { await say(ev.why); return rcAlarm(C, B, "inside"); }
+      if (ev.k === "chief") {
+        const r = await rcLeader(C, B, true);
+        if (r === "lost") return rcAfter(C, B);
+        if (!C.chiefDead && !B.chiefBound && !B.chiefGone) continue;
+        B.noise = Math.min(5, B.noise + (B.quietKill ? 0 : 2));
+        if (B.noise >= 5) { await say("The fight was loud. Somewhere a bell starts going."); return rcAlarm(C, B, "after the fight"); }
+        await say(B.quietKill ? "Nobody heard a thing." : "It was loud. The yard is listening.");
+      }
+      if (ev.k === "lock") {
+        const ok = await rcLock(C, B);
+        if (ok) { B.done.plunder = true; await say("The strongbox opens. Coin, a heavy purse of it, and papers you'll sell to someone who wants them."); }
+        if (B.noise >= 5) return rcAlarm(C, B, "at the strongbox");
+      }
+    }
+  }
+  function rcBoard(C, B) {
+    const T = C.t;
+    return new Promise(resolve => {
+      const P = puzzleBox(esc(C.name) + " by night", "Tap a room next to you to go there, or wait. Every move is a breath, and the patrols (red) take a step every breath" + (B.slack ? " (every other breath tonight: they're slack)" : "") + ". If one ends in your room or meets you on a path, you're seen, unless you waited in a room with walls (not the yard or the gate): then they walk past you." + (B.cut ? "" : " The lantern on " + rcRoomS(C, "tower") + " sweeps the yard every other breath (gold).") + " Five marks of noise and the alarm goes up. At dawn it goes up anyway.");
+      P.box.classList.add("rc-board");
+      const top = el("div", "rc-meters"), wrap = el("div", "rc-wrap"), acts = el("div", "rc-acts");
+      P.body.append(top, wrap, acts);
+      let over = false;
+      const patAt = (Q) => Q.r[Q.i % Q.r.length];
+      const sweep = (t) => !B.cut && t % 2 === 0;
+      const fin = (r) => { if (over) return; over = true; P.end(); acts.innerHTML = ""; resolve(r); };
+      const say2 = (t) => { P.status.innerHTML = t; };
+      const noise = (n, t) => { B.noise = Math.min(5, B.noise + n); B.quiet = false; say2(t); };
+      const exitAt = () => (B.side && RC_ENTRY[B.side] === B.you && !B.freed && !B.carry) || B.you === "gate";
+      function draw() {
+        top.innerHTML = "<span>Breath " + B.tick + " of " + B.dawn + "</span><span>Noise " + '<span class="rc-pips">' + [0, 1, 2, 3, 4].map(i => "<i" + (i < B.noise ? ' class="on"' : "") + "></i>").join("") + "</span></span>" + (B.carry ? "<span>" + esc(B.carry) + " with you</span>" : "") + (B.freed ? "<span>the pens are open</span>" : "") + (B.barred ? "<span>" + rcRoomS(C, "huts") + " barred</span>" : "");
+        const A = rcAdj(B.you);
+        let s = '<svg class="rc-map" viewBox="0 0 360 270" role="img" aria-label="' + esc(C.name) + ': seven rooms joined by paths">';
+        RC_SIDES.forEach(x => { if (RC_WALLS[T.wall[x]][1] === null) s += x === "n" ? '<rect class="rc-water" x="0" y="0" width="360" height="14"/>' : x === "e" ? '<rect class="rc-water" x="346" y="0" width="14" height="270"/>' : '<rect class="rc-water" x="0" y="0" width="14" height="270"/>'; });
+        RC_EDGES.forEach(([a, b]) => { s += '<line class="rc-edge" x1="' + RC_XY[a][0] + '" y1="' + RC_XY[a][1] + '" x2="' + RC_XY[b][0] + '" y2="' + RC_XY[b][1] + '"/>'; });
+        if (C.know.route) B.pats.forEach((Q, k) => { if (Q.down) return; s += '<polyline class="rc-route" points="' + Q.r.concat([Q.r[0]]).map(n => (RC_XY[n][0] + (k - 0.5) * 10) + "," + (RC_XY[n][1] + (k - 0.5) * 10)).join(" ") + '"/>'; });
+        RC_ROOMS.forEach(k => {
+          const [x, y] = RC_XY[k], cls = "rc-node" + (k === B.you ? " here" : A.includes(k) ? " adj" : "") + (k === "yard" && sweep(B.tick + 1) ? " sweep" : "");
+          const sub = k === B.chiefAt && C.know.chief && !C.chiefDead && !B.chiefBound ? esc(C.chief.n) : k === "tower" && !B.cut ? "the lantern" : k === "pens" && B.freed ? "open" : "";
+          s += '<g class="' + cls + '" data-n="' + k + '" tabindex="' + (A.includes(k) ? 0 : -1) + '" role="button" aria-label="' + esc(rcRoom(C, k)) + '"><rect x="' + (x - 58) + '" y="' + (y - 20) + '" width="116" height="40" rx="4"/><text x="' + x + '" y="' + (y + (sub ? -2 : 4)) + '">' + esc(rcRoom(C, k)) + "</text>" + (sub ? '<text class="sub" x="' + x + '" y="' + (y + 12) + '">' + sub + "</text>" : "") + "</g>";
+        });
+        B.pats.forEach((Q, k) => { if (Q.down) return; const [x, y] = RC_XY[patAt(Q)]; s += '<g class="rc-pat"><circle cx="' + (x + 46) + '" cy="' + (y - 18 + k * 12) + '" r="8"/><text x="' + (x + 46) + '" y="' + (y - 14 + k * 12) + '">' + (k + 1) + "</text></g>"; });
+        const [yx, yy] = RC_XY[B.you]; s += '<g class="rc-you"><circle cx="' + (yx - 46) + '" cy="' + (yy - 18) + '" r="8"/></g>';
+        wrap.innerHTML = s + "</svg>";
+        wrap.querySelectorAll(".rc-node").forEach(g => { const go = () => move(g.dataset.n); g.addEventListener("click", go); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+        acts.innerHTML = "";
+        const btn = (label, tag, fn, cls) => { const b = pbtn(label + (tag ? "<small>" + tag + "</small>" : ""), cls || ""); b.onclick = () => { if (!over) fn(); }; acts.append(b); };
+        btn("Wait in the dark", RC_HIDE.has(B.you) ? "a breath · a patrol walks past you" : "a breath · out in the open", () => step(true));
+        const here = B.pats.find(Q => !Q.down && patAt(Q) === B.you);
+        if (here && B.hid) btn("Take the guard down from behind", "a breath · they'll find him in 4", () => { here.down = true; B.foundAt = B.tick + 4; B.quiet = false; say2("He goes down without a sound, and you drag him into the dark."); step(false); });
+        if (B.whistle && !B.whistled) btn("Blow Ravendare's whistle", "once · every patrol stops a breath to look up", () => { B.whistled = true; B.freeze = 2; say2("Two falling notes, and every guard in the place stops and looks up at the trees."); draw(); });
+        if (B.you === "tower" && !B.cut) btn("Cut the lantern rope", "a breath · noise +1 · the yard goes dark", () => { B.cut = true; noise(1, "The lantern drops and goes out with a hiss."); step(false); });
+        if (B.you === "huts" && !B.barred) btn("Bar the door of " + rcRoomS(C, "huts"), "a breath · noise +1 · half of them stay shut in", () => { B.barred = true; noise(1, "You drop a spar across the door. Inside, somebody snores on."); step(false); });
+        if (B.you === "huts" && !B.key && (B.job === "free" || B.job === "rescue" || C.jobs.includes("free"))) btn("Lift the key off its nail", "a breath · the pens", () => { B.key = true; say2("The key to " + rcRoomS(C, "pens") + ", on a nail by the door, under a sleeping hand."); step(false); });
+        if (B.you === "yard" && !B.bucket && C.jobs.includes("sabotage") && !B.done.sabotage) btn("Draw a bucket at the well", "a breath · for the stores", () => { B.bucket = true; say2("You draw a bucket, slowly, so the windlass doesn't squeal."); step(false); });
+        if (B.you === "yard" && C.meat && !B.fed) btn("Throw the hock to the hounds", "a breath · no more growling in the yard", () => { B.fed = true; say2("The hounds come out of the dark and take the meat without a sound between them."); step(false); });
+        // the jobs
+        const job2 = (j) => C.jobs.includes(j) && !C.done.includes(j) && !B.done[j];
+        if (job2("plunder") && RC_JOBS.plunder.room.includes(B.you) && !(B.searched || {})[B.you]) btn("Look for the strongbox", "a breath" + (C.know.at.plunder ? T.at.plunder === B.you ? " · it's here" : " · it isn't here" : ""), () => { (B.searched = B.searched || {})[B.you] = 1; if (T.at.plunder === B.you) fin({ k: "lock" }); else { say2("Not here. You find a purse under a mattress, and take it."); B.loose = (B.loose || 0) + 4 + d(6); step(false); } });
+        if (job2("kill") && B.you === B.chiefAt && !C.chiefDead && !B.chiefBound) btn("Go for " + esc(C.chief.n), "the leader's in here", () => fin({ k: "chief" }), "primary");
+        if (job2("rescue") && B.you === T.at.rescue && !B.carry) {
+          if (B.you === "pens" && !B.key) btn("Break the bar of " + rcRoomS(C, "pens"), "a breath · noise +3", () => { B.carry = C.hostage.n; noise(3, "The bar gives with a crack like a tree going down. " + esc(C.hostage.n) + " comes out on hands and knees."); step(false); });
+          else btn("Cut " + esc(C.hostage.n) + " loose", "a breath · they come with you", () => { B.carry = C.hostage.n; say2(esc(C.hostage.n) + " looks at you, and nods once, and says nothing, which is the right thing to say."); step(false); });
+        }
+        if (job2("free") && B.you === "pens" && !B.freed) btn(B.key ? "Unlock the pens" : "Break the bar of the pens", "a breath" + (B.key ? "" : " · noise +3") + " · they follow you, loudly", () => { B.freed = true; if (!B.key) noise(3, "The bar goes with a crack, and everybody inside stands up at once."); else say2("The lock turns. Inside, somebody says your name like a question, though they can't know it."); step(false); });
+        if (job2("ledger") && RC_JOBS.ledger.room.includes(B.you) && !(B.read || {})[B.you]) btn("Go through the papers", "a breath", () => { (B.read = B.read || {})[B.you] = 1; if (T.at.ledger === B.you) { B.done.ledger = true; say2("There it is: " + C.ledger + ". It goes inside your shirt."); } else say2("Bills, a love letter, a list of the hounds' names. Not this."); step(false); });
+        if (job2("sabotage") && B.you === "store") {
+          btn("Fire the stores", "the job's done · the alarm goes up in 2 breaths", () => { B.done.sabotage = true; B.fireAt = B.tick + 2; B.quiet = false; say2("You put a candle to the oil-jars and back out fast."); step(false); });
+          if (B.bucket) btn("Spoil it quietly", "2 breaths · the bucket · nobody knows till they need it", () => { B.done.sabotage = true; B.tick++; say2("Water in the powder, sand in the meal, and every bowstring cut half through where it won't show."); step(false); });
+        }
+        if (B.freed && B.you === "gate" && !B.gateUp) btn("Lift the gate bar", "a breath · noise +1 · everybody out", () => { B.gateUp = true; noise(1, "The bar comes up, groaning."); step(false); });
+        if (exitAt() && !(B.freed && !B.gateUp)) btn(Object.keys(B.done).length || C.chiefDead || B.chiefBound || B.carry ? "Get out and away" : "Get out with nothing", B.carry ? esc(B.carry) + " with you" : "", () => fin({ k: "out" }));
+      }
+      function seen(why) { draw(); fin({ k: "seen", why }); }
+      function step(hide) {
+        B.hid = !!hide; B.tick++;
+        if (B.freeze > 0) B.freeze--;
+        else if (!B.slack || B.tick % 2 === 0) B.pats.forEach(Q => { if (!Q.down) Q.i++; });
+        if (B.tick === Math.floor(B.dawn / 2) && !C.chiefDead) { const nx = T.chiefAt[B.watch === null ? T.watch : B.watch][1]; if (nx !== B.chiefAt) { B.chiefAt = nx; say2("Somewhere a door opens and shuts. " + esc(C.chief.n) + " has gone to another room."); } }
+        if (B.foundAt && B.tick >= B.foundAt) { B.foundAt = 0; B.noise = Math.min(5, B.noise + 2); say2("A shout on the far side of the yard: they've found the man you put down."); }
+        if (B.fireAt && B.tick >= B.fireAt) return seen("Smoke comes out of " + rcRoomS(C, "store") + " in a black rope, and somebody screams fire.");
+        if ((B.carry || B.freed) && !hide && d(3) === 1) B.noise = Math.min(5, B.noise + 1);
+        for (let k = 0; k < B.pats.length; k++) {
+          const Q = B.pats[k]; if (Q.down) continue;
+          if (patAt(Q) === B.you && !(B.hid && RC_HIDE.has(B.you))) return seen("Patrol " + (k + 1) + " walks right into you, and opens his mouth to shout.");
+          if (patAt(Q) === B.you) say2("Patrol " + (k + 1) + " walks through the room, inches from you in the dark, and out again.");
+        }
+        if (B.you === "yard" && sweep(B.tick)) return seen("The lantern on " + rcRoomS(C, "tower") + " swings across the yard, and stops on you.");
+        if (B.noise >= 5) return seen("Too much noise. Somebody shouts, and then everybody.");
+        if (B.tick >= B.dawn) return seen("Grey light. The night is over, and so is hiding.");
+        draw();
+      }
+      function move(n) {
+        if (over || !rcAdj(B.you).includes(n)) return;
+        const from = B.you; B.you = n;
+        if (n === "yard" && T.dogs && !B.fed) { B.noise = Math.min(5, B.noise + 1); say2("A hound growls in the dark of the yard."); } else say2("");
+        const moving = !B.freeze && (!B.slack || (B.tick + 1) % 2 === 0);
+        if (moving && B.pats.some(Q => !Q.down && Q.r[Q.i % Q.r.length] === n && Q.r[(Q.i + 1) % Q.r.length] === from)) { B.tick++; return seen("You meet a patrol coming the other way on the path."); }
+        step(false);
+      }
+      draw();
+      say2(B.noise ? "Somewhere a hound is still barking." : B.tick ? "Back in the dark." : "You're in.");
+    });
+  }
+  // The strongbox lock: three tumblers in some order. Each try is a breath; Lockcraft sets one for you.
+  function rcLock(C, B) {
+    return new Promise(resolve => {
+      const order = [0, 1, 2].sort(() => Math.random() - 0.5), names = ["Raven", "Key", "Wheel"];
+      const P = puzzleBox("The strongbox lock", "Three tumblers, and they have to go in the right order. Pick an order and try it: the lock tells you how many sit right (a click for each). Every try is a breath, and the patrols keep walking. Or smash it." + (hasSkill("lock") ? " Lockcraft: you can feel the first one." : ""));
+      let tries = 0, cur = [];
+      const row = el("div", "rc-lock"), st = el("div", "rc-lockcur", "");
+      const bs = names.map((n, i) => { const b = pbtn(n); b.onclick = () => { if (cur.includes(i)) return; cur.push(i); b.disabled = true; draw(); if (cur.length === 3) tryIt(); }; row.append(b); return b; });
+      const smash = pbtn("Smash it open (noise +3)");
+      P.body.append(row, st); P.ctrl.append(smash);
+      const draw = () => { st.textContent = cur.length ? "Order: " + cur.map(i => names[i]).join(" → ") : hasSkill("lock") ? "The first is the " + names[order[0]] + "." : "Pick the first tumbler."; };
+      function tryIt() {
+        tries++; B.tick++; B.pats.forEach(Q => { if (!Q.down && (!B.slack || B.tick % 2 === 0)) Q.i++; });
+        const n = cur.filter((x, i) => x === order[i]).length;
+        if (n === 3) { P.end(); P.status.textContent = "Three clicks, and the lid lifts. (" + tries + " tr" + (tries === 1 ? "y" : "ies") + ")"; setTimeout(() => resolve(true), 600); return; }
+        if (B.pats.some(Q => !Q.down && Q.r[Q.i % Q.r.length] === B.you)) { B.noise = 5; P.end(); P.status.textContent = "A lantern in the doorway. Somebody shouts."; setTimeout(() => resolve(false), 600); return; }
+        if (B.tick >= B.dawn) { B.noise = 5; P.end(); P.status.textContent = "Grey light at the shutters."; setTimeout(() => resolve(false), 600); return; }
+        P.status.textContent = n + " click" + (n === 1 ? "" : "s") + ". Try again. (Breath " + B.tick + " of " + B.dawn + ")";
+        cur = []; bs.forEach(b => b.disabled = false); draw();
+      }
+      smash.onclick = () => { P.end(); B.noise = Math.min(5, B.noise + 3); B.quiet = false; B.tick++; resolve(true); };
+      draw();
+    });
+  }
+  // The alarm: the garrison turns out, and you fight them on the compound's own battle map.
+  async function rcAlarm(C, B, where) {
+    B.alarm = true; B.quiet = false;
+    SND.musPlace("raid"); light("moon");
+    const K = RC_KINDS[C.k];
+    await say(C.k === "raven" ? "A bell on the canopy walk, and then the ravens, three hundred of them, all screaming, and men coming out of the Long Huts with machetes and boar-spears." : "A bell, or a horn, or just a man shouting, and then all of them, and doors banging open all round the yard.");
+    let n = C.heads + (C.noticed >= 3 ? 2 : 0) - (B.barred ? Math.floor(C.heads / 2) : 0) - B.pats.filter(Q => Q.down).length - (B.garr || 0);
+    n = Math.max(2, n);
+    if (B.barred) await say("The door of " + rcRoomS(C, "huts") + " holds. Half of them are shut in, hammering on it.");
+    if (B.garr) await say("Your own people from " + esc(hmName()) + " are at your back, " + B.garr * 2 + " of them, and they've been waiting for this.");
+    const capT = C.k === "raven" ? "The Raven's Sergeant" : (C.k === "stockade" && C.gang ? bnName(gangById(C.gang), "wall") : "The " + K.chief[0] + "'s second");
+    tacReg = K.field; nextReg = C.reg;
+    const F = await companyOr("road", { soldiers: n, captains: [capT], capHp: 18 + 4 * C.size, capThem: "them", cover: { stockade: "the woodpile", pressyard: "the hurdles", tollfort: "a toll-wagon", warren: "the powder kegs", cutters: "a stack of heartwood", raven: "the eel-baskets" }[C.k],
+      F: { name: esc(C.place) + "'s garrison", ac: 12 + C.size, atk: 4 + C.size, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, bathyr: false, fdEmb: null, who: "the garrison", whoShort: "men", road: true, reg: C.reg,
+        hitWhy: "A blade comes out of the press and into you.", miss: "The blow cracks on the stakes behind you.", hitLine: "One of them goes down in the mud and stays there." } });
+    if (!F || F.fled) {
+      await say("You go back over the wall the way you came, or another way, and they let you go, because there's no need to chase you. They know your face now.");
+      C.noticed = Math.min(3, C.noticed + 1); C.size = Math.min(C.k === "raven" ? 4 : 3, C.size + (C.lost ? 1 : 0)); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
+      rcLog("was driven off from " + C.name);
+      SND.musPlace("roads"); save(); return;
+    }
+    B.broken = true;
+    await say("The last of them drop their weapons or go over the walls. For a little while, the yard is yours.");
+    // with the yard taken, the leader comes out, if there's a leader to come.
+    if (!C.chiefDead && !B.chiefBound) {
+      const r = await rcLeader(C, B, false);
+      if (r === "lost") return rcAfter(C, B);
+    }
+    // a few moments to finish the job: search what you didn't know.
+    let moments = 3;
+    const jobs = C.jobs.filter(j => !C.done.includes(j) && !B.done[j] && j !== "kill");
+    for (const j of jobs) {
+      if (moments <= 0) break;
+      if (j === "rescue" && B.carry) continue;
+      if (j === "sabotage") { B.done.sabotage = true; await say("You put the stores to the torch while there's nobody left to stop you."); moments--; continue; }
+      if (j === "free") { B.freed = true; B.gateUp = true; await say("You open the pens, and the gate, and everybody walks out past the bodies without looking at them."); moments--; continue; }
+      const rooms = RC_JOBS[j].room.filter(r => !((j === "plunder" ? B.searched : B.read) || {})[r]);
+      for (;;) {
+        if (moments <= 0) break;
+        const known = C.know.at[j];
+        const rm = known ? C.t.at[j] : await choose(rooms.map((r, i) => ({ key: r, label: "Search " + rcRoomS(C, r), tag: RC_JOBS[j].name + " · " + moments + " moment" + (moments === 1 ? "" : "s") + " before they come back with friends", plain: i > 0 })).concat([{ key: "no", label: "Leave it", plain: true }]));
+        if (rm === "no") { moments = 0; break; }
+        moments--;
+        if (rm === C.t.at[j]) {
+          if (j === "plunder") { B.done.plunder = true; await say("The strongbox is in " + rcRoomS(C, rm) + ". You don't bother with the lock."); }
+          if (j === "rescue") { B.carry = C.hostage.n; await say(esc(C.hostage.n) + " is in " + rcRoomS(C, rm) + ", tied to a post, and has watched the whole fight through a crack in the wall."); }
+          if (j === "ledger") { B.done.ledger = true; await say("The book is in " + rcRoomS(C, rm) + ": " + C.ledger + "."); }
+          break;
+        }
+        await say("Not in " + rcRoomS(C, rm) + ".");
+        rooms.splice(rooms.indexOf(rm), 1);
+        if (!rooms.length) break;
+      }
+    }
+    return rcAfter(C, B);
+  }
+  // Fire: no way in. Sabotage is done; the leader comes out to you; anyone inside is inside.
+  async function rcFire(C, B) {
+    SND.musPlace("raid");
+    await say("You go round the walls in the dark with a pot of pitch and a torch, and the dry stakes take it fast. In a few minutes the whole of " + esc(C.place) + " is a ring of fire, and the screaming starts.");
+    B.burned = true; B.alarm = true; B.quiet = false;
+    if (C.jobs.includes("sabotage")) B.done.sabotage = true;
+    if (C.jobs.includes("rescue") || C.jobs.includes("free")) { rc().marks.burnedIn = (rc().marks.burnedIn || 0) + 1; await say("Somewhere inside, people who were there against their will are learning what you decided for them."); }
+    const r = await rcLeader(C, B, false);
+    if (r !== "lost") B.broken = true;
+    return rcAfter(C, B);
+  }
+  // ----- the leaders, and their signature moves -----
+  // Every leader telegraphs the special a turn ahead (the tell), and you have one turn to pick the counter.
+  // Tharen Ravendare has three: Ravenfall, Black Wing (at half HP) and the Quiet (under a third).
+  const RC_SPECIAL = {
+    rush: { name: "Blood-Oath Rush", tell: (n) => n + " beats a blade on a shield three times, slowly, and the whole yard goes quiet for it.", key: "brace-rc", counter: "Set your feet", ctag: "counter: the Blood-Oath Rush",
+      ok: (n) => "You set your feet and take the charge on your blade, and " + n + " breaks on you like water on a post, and staggers. Your next swing has advantage.",
+      hit: async (n, F, st) => { await hurt(2, 8, "bludgeoning", "<b>The Blood-Oath Rush.</b> " + n + " comes across the yard like a falling tree and goes through you."); st.dis = true; await mech("Knocked flat: your next swing has disadvantage.", "hurt"); } },
+    hook: { name: "the Press-Hook", tell: (n) => n + " lets a length of chain run out through one hand, with a hook on the end of it, and starts it swinging.", key: "brace-rc", counter: "Step inside the chain", ctag: "counter: the Press-Hook",
+      ok: (n) => "You step in close, inside the swing, and the hook goes over your shoulder and the chain wraps round " + n + "'s own arm. The hook's gone: -2 to their AC for the rest of the fight.",
+      okFx: (F) => { F.ac -= 2; },
+      hit: async (n, F, st) => { await hurt(1, 10, "piercing", "<b>The Press-Hook.</b> The hook goes into you, and " + n + " hauls on the chain."); await hurt(1, 4, "bludgeoning", "You go face-first into the mud at their feet."); st.dis = true; } },
+    toll: { name: "Weighing the Toll", tell: (n) => n + " takes the brass scale off a belt hook and sets a weight in the pan, and looks at you, and says, \"Heavy.\" Behind, crossbows come up.", key: "brace-rc", counter: "Get behind the toll-chest", ctag: "counter: Weighing the Toll",
+      ok: () => "You get behind the iron toll-chest as the crossbows go, and four bolts thud into it, one after the other.",
+      hit: async (n, F, st) => { for (let i = 0; i < 3; i++) await foeSwing(F, st, { atk: F.atk, n: 1, s: 6, label: "a crossbow bolt", why: "<b>Weighing the Toll.</b> A bolt from the walls." }); } },
+    lamp: { name: "Lamp-Out", tell: (n) => n + " reaches up and pinches the wick of the nearest lamp between finger and thumb, and smiles.", key: "brace-rc", counter: "Stand still and listen", ctag: "counter: Lamp-Out",
+      ok: (n) => "The lamps go out, every one, and you stand very still and listen, and you hear " + n + "'s breath come round to your left. Your blade is there when they arrive. Your next swing has advantage.",
+      hit: async (n, F, st) => { await say("<b>Lamp-Out.</b> Every lamp goes at once, and the dark is full of knives."); await foeSwing(F, st, { atk: F.atk + 4, label: "out of the dark" }); await foeSwing(F, st, { atk: F.atk + 4, label: "out of the dark again" }); } },
+    saw: { name: "the Long Saw", tell: (n) => "Two sawyers take the far end of the long saw, and " + n + " takes the near one, and they lift it off the trestles between them like a door.", key: "brace-rc", counter: "Drop flat", ctag: "counter: the Long Saw",
+      ok: (n) => "You drop flat in the sawdust and the long saw goes over you and bites into a post and sticks there, with " + n + " hanging on the end of it. They lose their next turn.",
+      okFx: (F, st) => { st.stilled = true; },
+      hit: async (n, F, st) => { await hurt(2, 10, "slashing", "<b>The Long Saw.</b> Six feet of teeth go across you at the height of your belt."); } }
+  };
+  function rcLeaderF(C) {
+    const K = RC_KINDS[C.k], n = C.chief.n, raven = C.k === "raven";
+    const lvl = Math.floor(flk() / 4);
+    return { name: n, hp: raven ? 64 + 8 * (C.size - 3) : 34 + 6 * C.size, ac: raven ? 16 : 13 + Math.floor(C.size / 2), atk: raven ? 7 : 4 + C.size, n: raven ? 2 : 1, s: raven ? 8 : 10, type: "slashing", bloom: 0, hesk: false, road: true,
+      who: n, whoShort: n.split(" ")[0], hitWhy: raven ? "The long curved blade comes round low and fast." : "A blow you see too late.", miss: raven ? "The blade bites the bole behind you." : "You get your own blade in the way.", hitLine: raven ? "Feathers come off his coat in a black spray." : n + " staggers.",
+      lvl, C };
+  }
+  async function rcLeader(C, B, inside) {
+    const K = RC_KINDS[C.k], n = C.chief.n, raven = C.k === "raven";
+    const back = document.body.dataset.light;
+    add(el("div", "part-head sub", '<span class="num">' + esc(C.place) + " · the leader</span><h2>" + esc(n) + "</h2>"));
+    if (raven) await say("He comes out of the dark between the boles without hurrying: a tall man in a coat of black feathers sewn on leather, one at a time, with a long curved blade in one hand and a bone whistle on a cord at his throat. The ravens on the walls go quiet for him. \"You came a long way,\" he says, \"to die somewhere this green.\"");
+    else await say(inside ? n + " is awake, sitting on the edge of a cot with a blade across the knees, as if they'd been waiting all night for somebody to come through that door." : n + " comes out across the yard with a blade in each hand and nobody left behind them.");
+    if (C.grudge) await say("\"I know you,\" " + n + " says. \"You killed the one before me.\"");
+    const F = rcLeaderF(C);
+    const SP = raven ? null : RC_SPECIAL[K.special];
+    let pre = 0;
+    if (inside && B.job === "kill") {
+      const r = await check({ label: "Stealth check (the first blow)", mod: lrMod() + 2 + (B.slack ? 2 : 0), dc: 13 + C.size + (raven ? 2 : 0), cta: "Strike" });
+      if (r.ok) { pre = 0.3; B.quietKill = true; await say(raven ? "Your first cut opens his feathered coat from shoulder to hip before he knows you're there. He doesn't cry out. He turns, and smiles." : "Your first cut goes in before they're on their feet."); }
+      else await say(raven ? "He was never asleep. He turns as you come in, with the blade already out." : "They were never asleep.");
+    }
+    if (raven) SND.musPlace("raidboss");
+    tip("rcleader");
+    await mech("<b>" + (raven ? "Ravenfall, Black Wing and the Quiet" : SP.name) + ".</b> " + (raven ? "Tharen Ravendare has three signature moves" : esc(n) + " has a signature move") + ". Every one has a tell a turn before it lands: read it, and pick the counter (under Guard) on your next turn.", "hurt");
+    const st0 = { tell: null, done: {} };
+    F.extra = (st) => {
+      const o = [];
+      if (raven) {
+        o.push({ key: "brace-cloak", label: "Throw your cloak up", tag: "counter: Ravenfall" });
+        o.push({ key: "brace-bole", label: "Put your back to a bole", tag: "counter: the Quiet" });
+        if (st0.wing) o.push({ key: "rc-whistle", label: "Cut the whistle off his neck", tag: "counter: Black Wing · Athletics · DC 15" });
+      } else o.push({ key: SP.key, label: SP.counter, tag: SP.ctag });
+      return o;
+    };
+    F.onExtra = async (c, st) => {
+      if (c === "rc-whistle") {
+        const r = await check({ label: "Athletics check (the whistle cord)", mod: 2 + Math.floor(lvk() / 6), dc: 15, cta: "Cut" });
+        if (r.ok) { st0.wing = false; st0.whistle = true; F.ac -= 2; await say("Your point takes the cord, and the bone whistle goes spinning into the mud. The flock breaks apart into three hundred birds who don't know what they're doing here. He looks at the whistle, and back at you, and stops smiling."); rc().counters++; }
+        else await say("He turns his shoulder and the cut goes into feathers.");
+        return;
+      }
+      st0.pick = c;
+    };
+    F.setup = async (st) => { if (pre) { FOE.hp = Math.max(1, Math.round(FOE.max * (1 - pre))); renderFoe(); } };
+    F.turn = async (st) => {
+      const pick = st0.pick; st0.pick = null;
+      // the tell from last turn lands now
+      if (st0.tell) {
+        const t = st0.tell; st0.tell = null;
+        if (raven) {
+          if (t === "fall") {
+            if (pick === "brace-cloak") { rc().counters++; st.adv = true; await say("You throw your cloak up over your head as they come, and the ravens hit it like hail, and tangle, and tear free screaming. He's right behind them with his blade low, and open."); await mech("Countered: your next swing has advantage.", "loot"); }
+            else { await hurt(2, 6, "piercing", "<b>Ravenfall.</b> The ravens come down on your face, all claws and beaks."); blindSet(2); await mech("Blinded: your next two swings are at disadvantage.", "hurt"); }
+          } else if (t === "quiet") {
+            if (pick === "brace-bole") { rc().counters++; st.stilled = true; st.adv = true; await say("You put your back to the nearest bole, and he comes round it from behind exactly where your back would have been, and walks onto your blade."); await mech("Countered: he loses his next turn, and your next swing has advantage.", "loot"); }
+            else { await hurt(3, 10, "slashing", "<b>The Quiet.</b> Everything had stopped making a sound, and you didn't notice. He was behind you the whole time."); }
+          }
+          return "done";
+        }
+        if (pick === SP.key) { rc().counters++; await say(SP.ok(n)); if (SP.okFx) SP.okFx(F, st); else st.adv = true; await mech("Countered.", "loot"); }
+        else await SP.hit(n, F, st);
+        return "done";
+      }
+      if (pick && pick.startsWith("brace")) await say("Nothing comes. You've wasted a breath, and " + n + " uses it.");
+      if (raven) {
+        const half = FOE.hp <= FOE.max / 2, third = FOE.hp <= FOE.max / 3;
+        if (half && !st0.done.wing) { st0.done.wing = true; st0.wing = true; await say("He tucks the blade under his arm and puts the bone whistle to his lips, and every raven in Ravenhold goes up at once."); await mech("<b>Black Wing</b>: the flock circles him. Your swings are at disadvantage until the whistle comes off his neck.", "hurt"); return "done"; }
+        if (third && !st0.done.quiet) { st0.done.quiet = true; st0.tell = "quiet"; await say("He takes a step back into the leaves."); return "done"; }
+        if (!st0.whistle && st.round % 3 === 2) { st0.tell = "fall"; await say("He whistles two notes, falling. On every stake the ravens go still and turn their heads toward you."); return "done"; }
+        if (!st0.done.quiet) await say(["The ravens shift on the stakes.", "A raven drops to a lower branch to see better.", "Somewhere above, a raven laughs like a man."][d(3) - 1]);
+        return;
+      }
+      if (st.round % 3 === 2) { st0.tell = "x"; await say(SP.tell(n)); }
+    };
+    nextReg = C.reg;
+    F.before = async (st) => { if (st0.wing) st.dis = true; };
+    await hkFight(F);
+    light(back);
+    if (F.fled || F.overtaken) {
+      await say(raven ? "You go down in the mud, and Vaelric's axe holds you at one breath, and you crawl backward into the dark while his men laugh. He doesn't follow. He wants you to come back." : n + " lets you go, because " + n + " can.");
+      C.noticed = Math.min(3, C.noticed + 1); C.lost = (C.lost || 0) + 1; C.last = calDay(); C.guard = calDay() + 1;
+      rcLog("lost to " + n + " at " + C.place);
+      SND.musPlace("roads"); save(); B.lostChief = true; return "lost";
+    }
+    B.chiefMet = true;
+    await say(raven ? "Tharen Ravendare goes down on one knee in the mud of his own yard, with his feathered coat open and the ravens silent all round, and looks up at you, and laughs, quietly, because he can't do it loudly any more." : n + " goes down on one knee in the mud, and drops the blade, and waits to see what you'll do.");
+    const f = await choose([
+      { key: "kill", label: "Finish it", tag: B.job === "kill" ? "the writ is paid in full" : "whoever takes over will know who did it" },
+      { key: "bind", label: "Tie them up for the watch", tag: (raven ? "a long way to carry him" : "a bounty") + " · you carry them out · slower and louder", show: !raven, plain: true },
+      { key: "spare", label: raven ? "Let him go" : "Let them go", tag: raven ? "he'll rebuild, stronger, and come looking" : "they'll owe you, or hate you", plain: true }
+    ]);
+    if (f === "kill") { C.chiefDead = true; rc().marks.killed.push(n); if (raven) rc().raven = "dead"; await say(raven ? "You finish it. The ravens lift off the stakes all at once and go away over the canopy and don't come back, and the yard is suddenly very quiet, and only a yard." : "You finish it."); if (B.job === "kill") B.done.kill = true; }
+    else if (f === "bind") { B.chiefBound = true; B.carry = B.carry || n; rc().marks.spared.push(n); await say("You tie " + n + "'s hands behind and put a gag in for good measure."); if (B.job === "kill") B.done.kill = "half"; }
+    else { B.chiefGone = true; rc().marks.spared.push(n); if (raven) { rc().raven = "spared"; rc().ravenAt = calDay() + 20; } await say(raven ? "You step back. He gets up, slowly, and goes away between the boles with the ravens following him in a long black rope. \"Next time,\" he says, from the dark, \"I'll build it higher.\"" : n + " goes over the back wall without looking back."); if (B.job === "kill") B.done.kill = "half"; }
+    if (raven && f === "kill") grant("rcraven");
+    save();
+    return f;
+  }
+  // ----- the aftermath: what it pays, and what the world keeps -----
+  async function rcAfter(C, B) {
+    SND.musPlace("roads"); light("dusk");
+    const R = rc(), M = R.marks, m = rcSz(C) * (C.k === "raven" ? 1.5 : 1);
+    if (B.lostChief) return;
+    const done = Object.keys(B.done).filter(j => B.done[j]);
+    if (B.carry === C.hostage.n && C.jobs.includes("rescue")) done.push("rescue");
+    if (B.freed && C.jobs.includes("free") && (B.gateUp || B.broken)) done.push("free");
+    const jobs = [...new Set(done)].filter(j => C.jobs.includes(j) && !C.done.includes(j));
+    add(el("div", "part-head sub", '<span class="num">After the raid</span><h2>' + esc(C.name) + "</h2>"));
+    if (!jobs.length && !C.chiefDead && !B.broken) {
+      await say("You get away clean, with nothing to show for it but what you saw. " + esc(C.place) + " is still there, and so are they.");
+      if (B.loose) { S.coins += B.loose; renderSheet(); await mech("+" + B.loose + " gold, from under somebody's mattress.", "loot"); }
+      C.last = calDay(); save(); return;
+    }
+    let gold = B.loose || 0, xp = 0, lines = [];
+    const primary = jobs.includes(C.job) ? C.job : jobs[0];
+    jobs.forEach(j => {
+      const half = j !== primary, g = Math.round(RC_JOBS[j].pay() * m * (B.done[j] === "half" ? 0.5 : 1) * (half ? 0.5 : 1));
+      gold += g; C.done.push(j); R.jobs[j] = (R.jobs[j] || 0) + 1;
+      xp += (40 + 4 * lv()) * RC_JOBS[j].xp * (half ? 0.5 : 1);
+      lines.push(RC_JOBS[j].name + (half ? " (a second job)" : "") + ": " + g + " gold");
+    });
+    if (B.quiet && !B.alarm) xp *= 1.5;
+    S.coins += gold; renderSheet(); xpGain(xp);
+    await mech(lines.join(" · ") + (B.loose ? " · and " + B.loose + " from under mattresses" : "") + (B.quiet && !B.alarm ? ". Nobody heard a thing: half again the XP." : "."), "loot");
+    // what each job leaves
+    if (jobs.includes("plunder")) { const w = rcWeapon(C, false); if (w) await mech("<span>In the strongbox: " + w + "</span>", "loot find"); }
+    if (jobs.includes("kill") || C.chiefDead) {
+      const w = rcWeapon(C, true); if (w) await mech("<span>" + esc(C.chief.n) + "'s own: " + w + "</span>", "loot find");
+      if (C.k === "raven" && C.chiefDead) {
+        if (!hasGear("ravenwhistle")) { S.gear = S.gear || []; S.gear.push("ravenwhistle"); renderSheet(); await mech("<b>" + GEAR.ravenwhistle.name + ".</b> " + GEAR.ravenwhistle.desc, "loot"); }
+        if (S.title !== "Ravenbane") { const t = await choose([{ key: "take", label: "Take the title Ravenbane", tag: "it goes after your name" }, { key: "no", label: "Keep the name you have", plain: true }]); if (t === "take") { S.title = "Ravenbane"; renderSheet(); } }
+      }
+    }
+    if (jobs.includes("rescue")) {
+      M.rescued.push({ n: C.hostage.n, town: C.giver, reg: C.reg });
+      await say(esc(C.hostage.n) + " goes home to " + esc(C.giver) + ". The family has nothing much to give, and gives it anyway, and a ribbon off a sleeve to remember them by. The inn there won't take your money any more.");
+      if (!hasGear("rcribbon")) { S.gear = S.gear || []; S.gear.push("rcribbon"); renderSheet(); await mech("<b>" + GEAR.rcribbon.name + ".</b> " + GEAR.rcribbon.desc, "loot"); }
+      await echoMarkSafe("rcRescue");
+    }
+    if (jobs.includes("free")) {
+      const n = 6 + d(10); M.freed += n;
+      const k = await choose([
+        { key: "home", label: "Send them to " + esc(hmName()), tag: "two of them stay on as guards · the rest go home from there", show: hmOwn() },
+        { key: "town", label: "Walk them to " + esc(C.giver), tag: "they'll go into the sellswords' hall there · hiring gets cheaper", plain: hmOwn() }
+      ]);
+      if (k === "home") { S.hm.guards = (S.hm.guards || 0) + 2; hmLog("took in " + n + " freed from " + C.name); await say(n + " people walk to " + esc(hmName()) + " behind you, and two of them, a big quiet man and a woman with a broken nose, ask if they can stay and keep the gate."); await mech("+2 guards at " + esc(hmName()) + ".", "loot"); }
+      else { R.hands = (R.hands || 0) + 1; await say(n + " people walk into " + esc(C.giver) + " behind you, and the ones who can hold a spear go straight to the sellswords' hall. Hiring blades on the road costs less from now on."); }
+      await echoMarkSafe("rcFreed");
+    }
+    if (jobs.includes("ledger")) { M.ledger.push({ town: C.giver, reg: C.reg, what: C.ledger }); await say("You hand " + C.ledger + " to the reeve of " + esc(C.giver) + ", who reads it in silence and then burns half of it and locks the other half up. Prices in " + esc(C.giver) + " come down, and they stay down."); await echoMarkSafe("rcLedger"); }
+    if (jobs.includes("sabotage")) { M.saved.push({ v: C.village, reg: C.reg }); S.potions = (S.potions || 0) + 2; S.dress = (S.dress || 0) + 2; renderSheet(); await say("The march on " + C.village + " never happens. " + C.village + " sends you what they can spare: two Draughts of Mending, bandages, and a cheese the size of a cartwheel."); await echoMarkSafe("rcSaved"); }
+    if (jobs.includes("kill") && C.chiefDead && C.k === "stockade" && C.gang) { const B2 = bn(); B2.beat[C.gang] = (B2.beat[C.gang] || 0) + 1; if (hmOwn()) hmFacAdd(C.gang, "fear", 3); }
+    if (B.chiefBound) { const b = 20 + 2 * lv(); S.coins += b; renderSheet(); await mech("The watch pays " + b + " gold for " + esc(C.chief.n) + ", alive.", "loot"); }
+    if (B.burned) M.burner = (M.burner || 0) + 1;
+    // feats
+    grant("rcfirst");
+    if (B.quiet && !B.alarm) grant("rcquiet");
+    if (jobs.length >= 2) grant("rctwo");
+    if (R.counters >= 5) grant("rcread");
+    if (M.freed >= 20) grant("rcpens");
+    R.n++;
+    if (!R.troph[C.k] && (C.chiefDead || B.broken)) { R.troph[C.k] = 1; await mech("For your trophy hall: " + RC_KINDS[C.k].troph + ".", "loot"); }
+    if (rcJobsDone() >= 6 && !hasGear("rccloak")) { S.gear = S.gear || []; S.gear.push("rccloak"); renderSheet(); grant("rcsix"); await mech("<b>" + GEAR.rccloak.name + ".</b> " + GEAR.rccloak.desc, "loot"); }
+    const rk = rcRank();
+    if (rk > (R.rank || 0)) {
+      R.rank = rk; if (rk >= 2) grant("rcten");
+      const t = await choose([{ key: "take", label: "Take the title " + RC_RANKS[rk], tag: R.n + " compounds taken · it goes after your name" }, { key: "no", label: "Keep the name you have", plain: true }]);
+      if (t === "take") { S.title = RC_RANKS[rk]; renderSheet(); }
+    }
+    // the compound itself
+    if (B.broken || B.burned) {
+      const k = await choose([
+        { key: "burn", label: B.burned ? "Let it burn out" : "Burn it", tag: "nothing left for anyone · the next one goes up later", plain: false },
+        { key: "give", label: "Hand it to " + esc(C.giver), tag: "their militia holds it · the roads round here get safer", plain: true, show: !B.burned },
+        { key: "hold", label: "Hold it from " + esc(hmName()), tag: "25 gold a month into your strongbox · someone may come to take it back", plain: true, show: !B.burned && hmOwn() }
+      ]);
+      C.gone = k; C.goneAt = calDay();
+      if (k === "burn") { M.burnt++; R.next = Math.max(R.next || 0, calDay() + 18); await say(B.burned ? "By morning there's a ring of black stumps and nothing in it." : "You burn it, and the smoke goes up over " + REGIONS[C.reg] + " all day. People see it for miles, and know what it means."); }
+      if (k === "give") { M.given.push({ town: C.giver, place: C.place, reg: C.reg }); await say("The reeve of " + esc(C.giver) + " sends twelve men with a cart and a flag, and they nail the flag over the gate, and somebody's grandmother cries."); }
+      if (k === "hold") { M.held.push({ place: C.place, reg: C.reg, since: calDay() }); hmLog("took " + C.place + " as an outpost"); await say("You leave four of the people you came with in " + esc(C.place) + " with orders to keep the gate shut and send the money home."); }
+      rcLog((k === "burn" ? "burned " : k === "give" ? "gave " + C.giver + " " : "took ") + C.place);
+    } else if (C.chiefDead && C.k !== "raven") {
+      // a successor, who knows your face
+      const nn = RC_CHIEF.filter(x => !M.killed.includes(x) && x !== C.chief.n)[d(8) - 1] || "Hask Morrow";
+      await say("By the next morning there's somebody new in " + esc(C.place) + ": " + nn + ", who was " + C.chief.n + "'s second, and who has nailed your description to the gate.");
+      C.chief = { n: nn, pr: d(2) === 1 ? "he" : "she" }; C.chiefDead = false; C.grudge = 1; C.noticed = Math.max(C.noticed, 1);
+      rcLog(nn + " took over " + C.place + " and swore to find you");
+    } else if (C.k === "raven" && C.chiefDead) { C.gone = "burn"; C.goneAt = calDay(); rcLog("killed Tharen Ravendare at Ravenhold"); }
+    else if (C.k === "raven" && B.chiefGone) { C.gone = "left"; C.goneAt = calDay(); rcLog("let Tharen Ravendare go"); }
+    if (!C.gone && C.jobs.every(j => C.done.includes(j))) { C.gone = "left"; C.goneAt = calDay(); }
+    C.job = null; C.last = calDay();
+    achCheck(); save();
+  }
+  function rcWeapon(C, own) {
+    if (!S.axe) return "";
+    const raven = C.k === "raven";
+    let r = Math.random() * 100, t = "tempered";
+    if (raven && own) t = "heartfire";
+    else { for (const [k, p] of BN_ARM_ODDS) { if (r < p * (k !== "ashen" ? 1.6 : 1)) { t = k; break; } r -= p; } const ord = ["ashen", "tempered", "rootbound", "gloaming", "heartfire"]; t = ord[Math.min(4, ord.indexOf(t) + 1)]; }
+    const L = makeLoot(t);
+    if (raven && own) { L.b = "sword"; L.n = "The Long Wing, Tharen Ravendare's blade"; }
+    else if (own) L.n = armPick(ARM_NAMES[t]) + " " + ARM_BASES[L.b].name + " of " + C.chief.n;
+    gainLoot(L);
+    const k = "L" + L.id;
+    return wTier(k) + "<b>" + armName(k) + "</b> (" + wDef(k).fx + " Wield it from the Bag.)";
+  }
+  // Every month: rent from outposts you hold, and, now and then, somebody comes to take one back.
+  async function rcMonth() {
+    const R = rc(); if (!R.marks.held.length || !hmOwn()) return;
+    const m = Math.floor(calDay() / 30);
+    if (R.month === m) return; R.month = m;
+    const rent = 25 * R.marks.held.length; S.hm.box += rent;
+    await mech("Your outposts send " + rent + " gold home to " + esc(hmName()) + ".", "loot");
+    if (d(6) === 1) { const H = R.marks.held.splice(d(R.marks.held.length) - 1, 1)[0]; await say("Word comes from " + H.place + ": somebody came over the wall in the night, and your people had to run for it. It isn't yours any more."); rcLog("lost " + H.place); }
+  }
+  // Towns remember: who you brought home, what you stole for them, who you fed.
+  const rcMul = (T) => rc().marks.ledger.some(x => x.town === T.name) ? 0.88 : 1;
+  const rcInnFree = (T) => rc().marks.rescued.some(x => x.town === T.name);
+  async function rcTownLine(T) {
+    if (!S.rc) return;
+    const M = S.rc.marks, L = [];
+    const res = M.rescued.find(x => x.town === T.name);
+    if (res) L.push(res.n + " is in the street when you come in, and stops, and doesn't say anything, and takes your hand for a moment, and lets it go.");
+    const led = M.ledger.find(x => x.town === T.name);
+    if (led) L.push("The reeve nods to you across the market. Since " + led.what + " went into the fire, the prices here are what they ought to be.");
+    const g = M.given.find(x => x.town === T.name);
+    if (g) L.push("There's a flag over the gate at " + g.place + " now, the militia's. A man at the inn tells you he stood guard there last week, and nothing came.");
+    const sv = M.saved.find(x => x.reg === T.reg);
+    if (sv) L.push("A carter from " + sv.v + " is in the bar, and buys you a drink, and won't say why to anybody else.");
+    if (T.reg === "wetwood" && S.rc.raven === "dead") L.push("The ferrymen here don't pay the raven-toll any more. One of them shows you where Tharen's mark used to be painted on his boat, and the paint over it.");
+    if (T.reg === "wetwood" && S.rc.raven === "spared") L.push("Somebody has painted a raven on the inn door. The landlord says it means Tharen Ravendare has been asking about you.");
+    if (M.burnedIn && d(3) === 1) L.push("Somebody in the bar calls you the burner, not quite loud enough for you to hear.");
+    if (!L.length || d(3) > 2) return;
+    await say(L[d(L.length) - 1]);
+  }
+  // The journal page.
+  function rcSection(rs) {
+    const X = rs && rs.rc;
+    if (!X || !X.list.length) return "";
+    const M = X.marks;
+    const st = X.list.filter(C => !C.gone), gone = X.list.filter(C => C.gone);
+    return "<section><h3>Walls Worth Taking · " + X.n + " compound" + (X.n === 1 ? "" : "s") + " taken" + (rcRankOf(X) ? " · " + RC_RANKS[rcRankOf(X)] : "") + "</h3>" +
+      '<p class="j-sub">Jobs done: ' + Object.keys(RC_JOBS).map(j => RC_JOBS[j].name + " " + (X.jobs[j] || 0)).join(" · ") + ". Signature moves countered: " + (X.counters || 0) + ".</p>" +
+      (st.length ? "<p><b>Standing</b>: " + st.map(C => esc(C.name) + " (" + REGIONS[C.reg] + ", " + C.chief.n + ")").join("; ") + ".</p>" : "") +
+      (gone.length ? "<p><b>Done with</b>: " + gone.map(C => esc(C.place) + " (" + { burn: "burned", give: "given to " + C.giver, hold: "held", left: "left" }[C.gone] + ")").join("; ") + ".</p>" : "") +
+      (M.rescued.length ? "<p>Brought home: " + M.rescued.map(x => x.n + " to " + x.town).join(", ") + ".</p>" : "") +
+      (M.freed ? "<p>" + M.freed + " people out of the pens.</p>" : "") +
+      (X.raven ? "<p>Tharen Ravendare: " + (X.raven === "dead" ? "dead, in the mud of his own yard." : "alive, and building higher.") + "</p>" : "") +
+      (X.log.length ? '<ul class="hm-log">' + X.log.slice(0, 8).map(t => "<li>" + esc(t) + "</li>").join("") + "</ul>" : "") + "</section>";
+  }
+  const rcRankOf = (X) => X.n >= 25 ? 3 : X.n >= 10 ? 2 : X.n >= 3 ? 1 : 0;
+  // On the world map: a little stockade for each compound standing, a black ring for each burned.
+  function rcMapLayer(st) {
+    const X = st.rs && st.rs.rc;
+    if (!X || !X.list.length) return "";
+    let h = "";
+    X.list.forEach(C => {
+      const [x, y] = C.xy;
+      if (!C.gone) h += '<g transform="translate(' + x + " " + y + ')" class="mp-rc"><title>' + esc(C.name) + "</title>" +
+        '<path d="M-7 5V-3l2-3 2 3V-3l2-3 2 3V-3l2-3 2 3V5z" fill="' + (C.k === "raven" ? "#1a1a22" : PAPER) + '" stroke="' + (C.k === "raven" ? "#1a1a22" : "#7a2a1c") + '" stroke-width="1.2"/>' +
+        '<path d="M1 -6V-14l6 2-6 2" fill="#a3281c" stroke="#7a2a1c" stroke-width=".8"/>' + (C.k === "raven" ? '<text y="16" font-size="8" text-anchor="middle" class="mp-label">Ravenhold</text>' : "") + "</g>";
+      else if (C.gone === "burn") h += '<g transform="translate(' + x + " " + y + ')" opacity=".7"><title>' + esc(C.place) + ', burned</title><circle r="5" fill="none" stroke="#2a2016" stroke-width="2" stroke-dasharray="2 1.5"/></g>';
+      else if (C.gone === "give" || C.gone === "hold") h += '<g transform="translate(' + x + " " + y + ')"><title>' + esc(C.place) + (C.gone === "give" ? ", the town's now" : ", yours") + '</title><path d="M-5 4V-2l5-3 5 3V4z" fill="' + PAPER + '" stroke="#2f5a3a" stroke-width="1.2"/></g>';
+    });
+    return "<g>" + h + "</g>";
   }
   // ---------- the Wandering Board ----------
   // A board for one region on the roads back: squares in seven rows from a crossroads up to the region's
@@ -9540,6 +10497,11 @@ body.pv-open { overflow: hidden; }
   // A new chapter reads at least two choices from earlier chapters, and adds an entry here for each
   // choice of its own.
   const ECHOES = {
+    // Walls Worth Taking
+    rcRescue: { ch: "Walls Worth Taking", why: "You went over a compound's wall and brought a hostage home.", where: "the town they came from", on: () => !!(S.rc && S.rc.marks.rescued.length) },
+    rcFreed: { ch: "Walls Worth Taking", why: "You opened a crimp's pens and walked the pressed out through the gate.", where: "your holding, or the sellswords' hall", on: () => !!(S.rc && S.rc.marks.freed) },
+    rcLedger: { ch: "Walls Worth Taking", why: "You stole a book of debts back for a town.", where: "that town's market", on: () => !!(S.rc && S.rc.marks.ledger.length) },
+    rcSaved: { ch: "Walls Worth Taking", why: "You spoiled a compound's stores before it marched on a village.", where: "the inns of that country", on: () => !!(S.rc && S.rc.marks.saved.length) },
     // people who come back
     varroAlly: { ch: "The Hushfen", why: "You warned Varro Duskwane of the Gnawkin and held the tunnel beside him.", where: "Rahdaria, at the blockade", on: () => !!S.varroAlly },
     sable: { ch: "The Burning Sands", why: "You stood by Sable and the Hollow Hands in the vault.", where: "Raftmark", on: () => S.side === "crew" || (S.crew === "join" && S.side !== "magistrate") },
@@ -9615,7 +10577,7 @@ body.pv-open { overflow: hidden; }
     if (T.reg === "mere" && !S.kingFled) return 1.1;
     return 1;
   }
-  const echoInnFree = (T) => (T.reg === "corrach" && T.name === "Ashgate" && !!S.freed);
+  const echoInnFree = (T) => (T.reg === "corrach" && T.name === "Ashgate" && !!S.freed) || rcInnFree(T);
   const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
   // A town visit, after its intro.
   async function echoTown(T) {
@@ -10169,6 +11131,7 @@ body.pv-open { overflow: hidden; }
     if (T.reg === "reach" && T.kind === "town") await seaTownLine();
     await echoTown(T);
     await hmTownLine(T);
+    await rcTownLine(T);
     await f50Town(T);
     await hzTownIntro(T);
     if (T.kind === "town" || !(TOWNS[T.reg] || []).some(t => t.kind === "town")) await dryLine("town", { key: T.reg, chance: 45 });
@@ -10176,7 +11139,7 @@ body.pv-open { overflow: hidden; }
     if (!(await lrTownIn(T))) { light(back); return; }
     const has = (k) => T.has.includes(k) && !hzShut(T, k);
     let rested = false, drank = false, roofed = false;
-    const tm = townMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
+    const tm = townMul(T) * rcMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
     // The calendar: market day and the festivals change the stalls, the inn and the bar.
     const town = T.kind !== "sanctuary", fair = town ? calFair() : null;
     const MP = (n) => Math.max(1, Math.round(mp(n) * tm)), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
@@ -12047,7 +13010,7 @@ body.pv-open { overflow: hidden; }
   const sworn = (id) => co().sworn.includes(id);
   const bondOf = (id) => id === "tyra" ? (S.tyra ? S.tyra.aff : 0) : id === "burr" ? (co().burr ? co().burr.bond : 0) : id === "ishbel" ? (co().isb ? co().isb.bond : 0) : (co().loyal[id] || 0);
   const hearts = (n, of = 5) => "♥".repeat(Math.min(n, of)) + "♡".repeat(Math.max(0, of - n));
-  const hireFee = (id) => sworn(id) ? 0 : MERCS[id].fee + 2 * Math.max(0, chapterAt(S.part) - 3);
+  const hireFee = (id) => sworn(id) ? 0 : Math.max(1, MERCS[id].fee + 2 * Math.max(0, chapterAt(S.part) - 3) - Math.min(6, 2 * ((S.rc && S.rc.hands) || 0)));
 
   // Raise a friend's bond (or a sellsword's loyalty) and say why.
   async function coBond(id, n, why) {
@@ -17837,8 +18800,26 @@ body.pv-open { overflow: hidden; }
     hinge: { name: "Ostle Ford", style: "fen", deco: [[4, 0, "wheel"]], blurb: "The ford below the mill where the Ostle runs wide and shallow. The millrace is deep, the hedgebanks are thick, and the only dry way across is the line of the old ford.",
       grid: ["cc.~#hh", "...~.hh", "r......", "c.~~.c.", "..~..r.", "c.~...c"], you: [1, 5], foe: [5, 2] },
     unmapped: { name: "The Blank", style: "paper", blank: true, blurb: "Country that nobody has drawn back yet. The paper is there, and a little of it is inked in around you, but the rest is blank, and blank isn't the same as empty.",
-      grid: ["..#..~.", ".r...h.", "c..#.hh", "..~..c.", ".h..r.#", "...c..."], you: [1, 5], foe: [4, 0] }
+      grid: ["..#..~.", ".r...h.", "c..#.hh", "..~..c.", ".h..r.#", "...c..."], you: [1, 5], foe: [4, 0] },
+    // Walls Worth Taking: the yards of the compounds you raid, where the garrison turns out when the alarm goes up.
+    rc_stockade: { name: "The Stockade Yard", style: "camp", pal: "lastwell", rc: true, blurb: "Inside a bandit stockade: the log wall with its walkway, a cookfire pit, the woodpile, the loot-store, and mud everywhere.",
+      grid: ["#c.h.c#", "..c...c", "#..r..#", ".c...c.", "##...##", "...c..."], you: [3, 5], foe: [3, 0], deco: [[3, 4, "gate"]] },
+    rc_pressyard: { name: "The Muster Yard", style: "camp", pal: "camp", rc: true, blurb: "A crimp's yard: hurdles and chain, a trough, the pens along one side and a churned-up patch where they line people up to sell.",
+      grid: ["c.#.#.c", ".~..~..", "#.c.c.#", "..r.r..", "##...##", "c..c..c"], you: [3, 5], foe: [3, 0], deco: [[3, 4, "gate"]] },
+    rc_tollfort: { name: "The Wagon Yard", style: "stone", pal: "rahdaria", rc: true, blurb: "Behind a toll-baron's gate: carts waiting to be weighed, the bell-tower, the toll-house steps, and the brass scale on its post.",
+      grid: ["hh.#.hh", "c.....c", "..c.c..", "#.r.r.#", "##...##", "c.....c"], you: [3, 5], foe: [3, 0], deco: [[3, 4, "gate"]] },
+    rc_warren: { name: "The Long Cave", style: "scree", pal: "undermoon", rc: true, blurb: "Inside the smugglers' hill: a long cave with a cart-track down the middle, rock pillars, stacked kegs, and lamps on hooks.",
+      grid: ["#.c#c.#", "..r.r..", "#.....#", ".c.#.c.", "#r...r#", "..c.c.."], you: [3, 5], foe: [3, 0] },
+    rc_cutters: { name: "The Saw-Pit", style: "fen", pal: "roots", rc: true, blurb: "The root-cutters' camp: the great root rising out of the ground, the saw-pit at its foot, stacked slabs of heartwood, and sawdust ankle-deep.",
+      grid: ["c.#r#.c", ".rr.rr.", "c..~..c", ".#...#.", "..c.c..", "r.....r"], you: [3, 5], foe: [3, 0] },
+    rc_raven: { name: "The Mud Yard of Ravenhold", style: "fen", pal: "wetwood", rc: true, blurb: "Ravenhold's yard under the canopy walk: black mud, eel-baskets for cover, two leaning boles, pits under the leaf litter, and ravens on every stake.",
+      grid: ["#.h.h.#", ".c.~.c.", "r.#.#.r", "..c~c..", "#.....#", "c.r.r.c"], you: [3, 5], foe: [3, 0] }
   };
+  Object.assign(GEAR, {
+    rccloak: { name: "The Scout's Grey", icon: "cloak", desc: "A long grey cloak the colour of nothing, for somebody who's done every kind of work there is over a wall. The first time you scout any compound you get a clue for nothing, and +1 to going over its wall." },
+    rcribbon: { name: "A ribbon from a sleeve", icon: "tether", desc: "Given you by a family whose own you brought home over a compound's wall. +1 to Stealth at a compound's wall, going up to it and going over it." },
+    ravenwhistle: { name: "Ravendare's whistle", icon: "token", desc: "A bone whistle on a cord, taken off Tharen Ravendare's neck. Once a raid, blow it in a compound's yard and every patrol stops for a breath to look up at the trees. +1 to watching a compound from high ground." }
+  });
   // Wanderers: one per region, on nobody's side.
   const WANDERERS = {
     vell: { name: "A toll-bull", emb: "ox", home: "r", enter: "A bull comes through the hedge onto the field with a brass toll-token hung round its neck on a ribbon, which means it belongs to the bridge, which means nobody can touch it. It knows. It's very calm about it.", lash: "The toll-bull drops its head and charges", why: "It's like being run over by the law." },
@@ -19533,12 +20514,14 @@ body.pv-open { overflow: hidden; }
       if (st.rmPre) { st.rmPre = false; st.evade = false; continue; }
       // On a map it has to get to you first, even when it has a trick of its own.
       if (st.fd && !(await fdFoeTurn(F, st))) { st.evade = false; continue; }
-      // The Turning Gauge: the foe gets 0, 1 or 2 moves before your next one.
+      // The Turning Gauge: the foe gets 0, 1 or 2 moves before your next one. A second move in a row is
+      // always a plain swing (F.turn's specials and tells only on the first), so you always get a turn to
+      // answer a tell before it lands.
       const acts = st.g ? await gAfterYou(F, st, gMove || c) : [{}];
       for (let k = 0; k < acts.length && FOE.hp > 0 && !st.fled; k++) {
         const wind = acts[k].wind;
         if (k) await mech("It's quicker: it moves again before you can.", "hurt");
-        if (FOE.lg && FOE.lg.sil > 0) { FOE.lg.sil--; lgRenderFoe(); } else if (F.turn && (await F.turn(st)) === "done") continue;
+        if (FOE.lg && FOE.lg.sil > 0) { FOE.lg.sil--; lgRenderFoe(); } else if (!k && F.turn && (await F.turn(st)) === "done") continue;
         if (wind) await mech("It winds up and brings down a heavy blow (+1 damage die).", "hurt");
         const swings = F.heads ? Math.min(FOE.hp, 2) : 1;
         for (let i = 0; i < swings; i++) await foeSwing(F, st, wind ? { n: (F.n || 1) + 1 } : {});
@@ -39444,6 +40427,7 @@ body.pv-open { overflow: hidden; }
     if (bn().colours) out.push(["banner", bn().colours + " gang marks you cut from their banners"]);
     if (H.raids.won) out.push(["raids", H.raids.won + " raid" + (H.raids.won === 1 ? "" : "s") + " beaten, chalked on the beam"]);
     if (S.slain) out.push(["boss", "A leg of Ryytaa the Ender, over the door"]);
+    if (S.rc) Object.keys(S.rc.troph || {}).forEach(k => out.push(["raids", RC_KINDS[k].troph]));
     return out;
   }
   async function hmTrophyHall() {

@@ -1,15 +1,20 @@
 # Fight songs
 
-The two composed fight songs in `music/`, written as code (numpy only, no samples):
+The composed songs in `music/`, written as code (numpy only, no samples):
 
 - `rootbreaker.py`: **Rootbreaker**, boss fights. C Phrygian, 144 bpm.
 - `thorn-and-cudgel.py`: **Thorn and Cudgel**, every other fight. D minor, 132 bpm. Borrows the instruments from `rootbreaker.py`.
+- `walls-worth-taking.py`: **Walls Worth Taking**, the compound raids, in two halves on one theme (B minor). *Over the Wall* (84 bpm) plays while you scout and sneak; *The Bell in the Yard* (138 bpm) takes over when the alarm goes up. Modes are `sneak-intro`, `sneak-loop`, `raid-intro`, `raid-loop`. Tharen Ravendare's fight uses Rootbreaker.
 
 Each script renders `full` (the whole song with an ending, for previews), `intro`, or `loop` (seamless) to a wav:
 
     PK=2.3157630020208675 python3 rootbreaker.py intro intro.wav     # and loop loop.wav
     PK=1.53 python3 thorn-and-cudgel.py intro rintro.wav               # and loop rloop.wav
+    PK=0.75 python3 walls-worth-taking.py sneak-intro si.wav          # and sneak-loop sl.wav
+    PK=1.05 python3 walls-worth-taking.py raid-intro ri.wav           # and raid-loop rl.wav
 
 `PK` fixes the master level so every render of a song matches (Thorn and Cudgel sits a little under Rootbreaker on purpose).
 
 The game file for each song is the intro, then the loop, then the first 2 seconds of the loop again (so a browser's decoder padding can't land on a gap), encoded as `.ogg` (Vorbis q4) and `.mp4` (AAC 128k, `-f ipod -movflags +faststart`, for Safari). Rendered fresh from these scripts each time, never re-encoded from an older file. The intro and loop lengths in samples go in `REC` in index.html (`loopAt`, `loopLen`).
+
+The two raid halves are kept small on purpose: Vorbis q3 and AAC 112k.
