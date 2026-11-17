@@ -491,6 +491,9 @@ body.on-road .gate-film { display: none; }
 .hero-gal .hg-arrow { display: grid; place-items: center; letter-spacing: 0; text-indent: 0; min-width: 0; width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 1.3rem; line-height: 1; }
 .hero-gal .hg-cap { grid-column: 1 / -1; text-align: center; margin: 4px 0 0; font-size: .9rem; color: #e2cf9f; }
 .hero-gal .hg-cap .hg-n { color: var(--muted, #a99c84); font-size: .8rem; }
+.hero-gal .hg-cap .hg-perk { display: block; margin: 4px auto 0; max-width: 34em; font-size: .8rem; line-height: 1.35; color: #cdb98a; }
+.hero-gal .hg-cap .hg-perk b { color: #e2cf9f; }
+.hero-gal .hg-cap .hg-line { display: block; margin: 3px auto 0; max-width: 34em; font-style: italic; font-size: .82rem; line-height: 1.35; color: var(--muted, #a99c84); }
 .hero-gal .hg-dots { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; max-width: 220px; justify-self: center; }
 .hero-gal .hg-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(216,181,106,.3); }
 .hero-gal .hg-dots i.on { background: #d8b56a; }
@@ -3904,6 +3907,7 @@ body.pv-open { overflow: hidden; }
     if (rs && rs.pr !== undefined) h += '<section class="j-hero">' + drownFx(heroImg(rs, "j-hero-pic"), soakLevel(rs), "small") + "<div><h3>" + (rs.name ? esc(rs.name) : "The adventurer") + '</h3><p class="j-note">' + (PRONOUNS[rs.pr] || PRONOUNS.they).label + (rs.lv ? " · level " + rs.lv : "") + "</p>" +
       (soakLevel(rs) ? '<p class="j-note j-wet">' + (CHAPTERS[chapterAt(rs.part || 0)].slug === "sounding" ? (soakLevel(rs) > 1 ? "Under the water: the Sea-Sky is down round you." : "Soaked through: the Sea-Sky is sagging.") : (soakLevel(rs) > 1 ? "Under the water at " : "Soaked through from ") + esc(rs.wet.where) + ".") + "</p>"
         : rs.drowned && rs.drowned.length ? '<p class="j-note">Has gone under at ' + esc(rs.drowned.slice(-3).join(", ")) + ".</p>" : "") +
+      (rs.past && PASTS[rs.past] ? '<p class="j-note">Your past: <b>' + PASTS[rs.past].perk + ".</b> " + PASTS[rs.past].fx + (rs.pastDone ? " You've laid it down at " + PASTS[rs.past].town + "." : " It waits for you at " + PASTS[rs.past].town + ", on the roads back.") + "</p>" : "") +
       (started && HEROES.length > 1 ? '<p class="j-note"><button class="ghost" type="button" id="jHeroChange">Change your painting</button></p>' : "") + "</div></section>";
     if (rs && rs.part > 0) {
       h += '<section class="j-recap"><h3>The story so far · Slot ' + SLOT + "</h3>" + recapHTML(rs, true) +
@@ -3986,7 +3990,7 @@ body.pv-open { overflow: hidden; }
       sec.append(holder);
       const gal = heroGallery(holder, heroKey(S));
       sec.insertAdjacentHTML("beforeend", '<p class="j-note"><button class="primary" type="button" data-hero="keep">Keep this one</button> <button class="ghost" type="button" data-hero="back">Never mind</button></p>');
-      sec.querySelector('[data-hero="keep"]').onclick = () => { S.hero = gal.get(); save(); renderSheet(); jRender(); };
+      sec.querySelector('[data-hero="keep"]').onclick = () => { S.hero = gal.get(); pastFix(); save(); renderSheet(); jRender(); };
       sec.querySelector('[data-hero="back"]').onclick = () => jRender();
       gal.show();
     };
@@ -4139,6 +4143,10 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "136", name: "Twelve Faces, Twelve Pasts", date: "17 Nov 2026", items: [
+      "<b>Twelve new hero paintings by Adrian</b> on the name card: <b>The Trapper of the Long White</b>, <b>The Dune Spearwoman</b>, <b>The Gaol-Breaker</b>, <b>The Archivist's Widow</b>, <b>The Hushfen Bowman</b>, <b>The Net-Mender</b>, <b>The Hedge-Walker</b>, <b>The Letter-Runner</b>, <b>The Farrier</b>, <b>The Hedge-Healer</b>, <b>The Lost Surveyor</b>, <b>The Boar-Spear Huntress</b>.",
+      "<b>Each new face has a past.</b> Pick one and you get their story when you set out, and a perk: +1 to the two kinds of check they'd be good at (the Trapper also shrugs off a little Chill, and the Hedge-Healer's every heal restores 2 more). Your past is fixed the first time you pick one of these faces, even if you change the painting later.",
+      "<b>A personal errand on the roads back.</b> Each past waits for you in one town: the Trapper's trap at Weatherend, the Letter-Runner's undelivered letter on Sulmara's Kiln Stair, the Bowman's old fowling stand at the Glade, and nine more. Two ways to lay it down, for gold or for experience. Your journal shows where yours is waiting."] },
     { ver: "135", name: "The Unbelieved", date: "17 Nov 2026", items: [
       "<b>Five new detective cases</b> for the Vell, after the Counting House, from the list of detective premises Adrian sent. Once Seven Cities is done, a letter in green wax finds you in any Vell town: <b>Ninian Corse</b>, a coroner's clerk in Castellane, keeps a book of deaths nobody believes were crimes, and wants the Inquirer to look at them, one at a time.",
       "<b>The Man in the Margins</b> (Castellane): a man who exists only as sixpence a quarter in the alms ledger. Trace him through the chained library's borrowing book, if you'll break the Keeper's rule to read it, and pair what he borrowed with what he was paid. <b>A Debt and a Dish</b> (Thornwick): a drover pulls you out of the Vell, and next day he's the suspect in a poisoning. A retired watch-captain cook works out the board with you, plate by plate.",
@@ -6389,6 +6397,7 @@ body.pv-open { overflow: hidden; }
     const cob = coCheck(label);
     if (cob) { mod += cob[0]; label += " (+" + cob[0] + " from " + cob[1] + ")"; }
     if (!atk && lantern()) { mod += 1; label += " (+1 Lantern)"; }
+    if (!atk) { const px = pastCheck(label); if (px) { mod += px; label += " (+" + px + " " + past().perk + ")"; } }
     if (!atk) { const cx = clCheck(label); if (cx) { mod += cx; label += " (+" + cx + " " + CALLINGS[S.cl.k].name + ")"; } }
     if (!atk && stoneBoon()) { mod += 1; label += " (+1 Deafstones)"; }
     if (!atk && hasGear("grellpick") && /Sleight|lock/i.test(label)) { mod += 1; label += " (+1 Grell's lockpick)"; }
@@ -6933,6 +6942,18 @@ body.pv-open { overflow: hidden; }
     hero_nightcourier: "art/hero_nightcourier.webp",
     hero_elderwarden: "art/hero_elderwarden.webp",
     hero_duelist: "art/hero_duelist.webp",
+    hero_trapper: "art/hero_trapper.webp",
+    hero_spearwoman: "art/hero_spearwoman.webp",
+    hero_gaolbreaker: "art/hero_gaolbreaker.webp",
+    hero_archivist: "art/hero_archivist.webp",
+    hero_bowman: "art/hero_bowman.webp",
+    hero_netmender: "art/hero_netmender.webp",
+    hero_hedgewalker: "art/hero_hedgewalker.webp",
+    hero_runner: "art/hero_runner.webp",
+    hero_farrier: "art/hero_farrier.webp",
+    hero_healer: "art/hero_healer.webp",
+    hero_surveyor: "art/hero_surveyor.webp",
+    hero_huntress: "art/hero_huntress.webp",
     cl_axe: "art/cl_axe.webp",
     cl_bloom: "art/cl_bloom.webp", cl_bloom_colossus: "art/cl_bloom_colossus.webp", cl_bloom_wake: "art/cl_bloom_wake.webp", cl_bloom_ascend: "art/cl_bloom_ascend.webp", cl_bloom_siege: "art/cl_bloom_siege.webp",
     cl_clock: "art/cl_clock.webp", cl_clock_3: "art/cl_clock_3.webp", cl_clock_4: "art/cl_clock_4.webp", cl_clock_5: "art/cl_clock_5.webp", cl_clock_engine: "art/cl_clock_engine.webp",
@@ -7068,6 +7089,18 @@ body.pv-open { overflow: hidden; }
     hero_nightcourier: { looks: ["hero_nightcourier"], alt: ["A painting of the hero: a lean Black courier with a shaved head in a dark hooded riding cloak, a sealed letter with a red wax seal held at the belt."] },
     hero_elderwarden: { looks: ["hero_elderwarden"], alt: ["A painting of the hero: an old Black man with a full grey beard and kind, tired eyes, a heavy green-grey cloak over mail, a lantern in his hand."] },
     hero_duelist: { looks: ["hero_duelist"], alt: ["A painting of the hero: a young Black woman with a high puff of natural hair tied with red cloth, a quilted fencing jacket with one sleeve torn away, the axe up in guard."] },
+    hero_trapper: { looks: ["hero_trapper"], alt: ["A painting of the hero: a weathered man with sandy hair and a scarred brow in a heavy fur-collared coat, a hatchet held low."] },
+    hero_spearwoman: { looks: ["hero_spearwoman"], alt: ["A painting of the hero: a young Black woman with long braids, a sand-coloured scarf wrapped round her shoulders and a tall spear."] },
+    hero_gaolbreaker: { looks: ["hero_gaolbreaker"], alt: ["A painting of the hero: a lean dark-haired man in quilted leather bound with cord, a long knife at his hip."] },
+    hero_archivist: { looks: ["hero_archivist"], alt: ["A painting of the hero: a grey-haired woman in her sixties in plain black robes, an old leather-bound book held to her chest."] },
+    hero_bowman: { looks: ["hero_bowman"], alt: ["A painting of the hero: a dark-haired, bearded man looking back over his shoulder, a ragged fur mantle and a quiver of arrows and a longbow on his back."] },
+    hero_netmender: { looks: ["hero_netmender"], alt: ["A painting of the hero: a hard-faced woman with wet, tangled hair in a dark oilskin coat, a fishing net slung over one shoulder."] },
+    hero_hedgewalker: { looks: ["hero_hedgewalker"], alt: ["A painting of the hero: a grey-haired, grey-bearded man in a heavy travelling cloak, leaning on a knotted staff."] },
+    hero_runner: { looks: ["hero_runner"], alt: ["A painting of the hero: a young Black girl with long braids and a scarf at her throat, a canvas satchel over her shoulder."] },
+    hero_farrier: { looks: ["hero_farrier"], alt: ["A painting of the hero: a broad, unshaven man in a leather apron with his sleeves rolled up, a smith's hammer in his fist."] },
+    hero_healer: { looks: ["hero_healer"], alt: ["A painting of the hero: an older Black woman with a warm smile and a cloth wrap on her head, layered robes, a bundle of herbs in her hands."] },
+    hero_surveyor: { looks: ["hero_surveyor"], alt: ["A painting of the hero: a tired dark-haired man in a frost-flecked coat, studying a folded map marked with a compass star."] },
+    hero_huntress: { looks: ["hero_huntress"], alt: ["A painting of the hero: a young red-haired, freckled woman in a hooded mantle, a long boar spear at her side."] },
     port_wringer: { looks: ["p_wringer"], alt: ["A painting of the Wringer: a long pale arm with too many joints reaching out of the dark beside a village well, its bony fingers spread on the stones, one lit window behind."] },
     port_king: { looks: ["p_king"], alt: ["A painting of the drowned king of Carrowmere: a dead king in rusted plate on a tall throne under the water, a crown on his skull, his chained clerks kneeling round him over their ledgers."] },
     port_varro: { looks: ["p_varro"], alt: ["A painting of Varro Duskwane's room: his moth-eaten violet coat hung on a chair, a monocle and a jackal-head seal on the table, a candle burning, a jackal's portrait on the peeling wall."] },
@@ -12384,6 +12417,8 @@ body.pv-open { overflow: hidden; }
   const echoBarFree = (T) => (T.reg === "glass" && S.verdict === "free");
   // A town visit, after its intro.
   async function echoTown(T) {
+    await pastStory();
+    await pastErrand(T);
     await clEchoTown(T);
     if (T.reg === "rahdaria") await unEchoTown(T);
     if (T.reg === "rahdaria") await rmEchoTown(T);
@@ -14685,7 +14720,7 @@ body.pv-open { overflow: hidden; }
       const got = prWire(box, (v) => { goB.disabled = false; const first = pick.hidden; pick.hidden = false; if (first) gal.show(); gal.follow(v); });
       goB.onclick = () => {
         S.pr = got() || "they";
-        S.hero = gal.get();
+        S.hero = gal.get(); pastFix();
         box.querySelectorAll("button").forEach(x => x.disabled = true);
         box.remove();
         heroPortrait();
@@ -14705,7 +14740,7 @@ body.pv-open { overflow: hidden; }
         '<div class="hero-pick"></div><div class="actions"><button class="primary" type="button">Carry on</button></div>');
       const gal = heroGallery(box.querySelector(".hero-pick"), heroKey(S));
       box.querySelector(".primary").onclick = () => {
-        S.hero = gal.get();
+        S.hero = gal.get(); pastFix();
         box.querySelectorAll("button").forEach(x => x.disabled = true);
         box.remove();
         save(); renderSheet();
@@ -14734,7 +14769,7 @@ body.pv-open { overflow: hidden; }
       const finish = (name) => {
         if (asksPr && !pr()) { hint.hidden = false; return; }
         if (asksPr) S.pr = pr();
-        S.hero = gal.get();
+        S.hero = gal.get(); pastFix();
         { const m = mk(); S.marker = { kind: m.kind, col: m.col, img: m.img || "" }; }
         S.name = cleanName(name);
         box.querySelectorAll("button, input").forEach(x => x.disabled = true);
@@ -16690,6 +16725,7 @@ body.pv-open { overflow: hidden; }
     let total = 0;
     for (let i = 0; i < count; i++) total += d(sides);
     if (S.rh && S.rh.x && S.rh.x.pd.doctor) total += 2;
+    if (S.past === "healer") total += 2;
     if (S.lw && S.exh >= 5) { await mech(why + " But you're too far gone to heal.", "hurt"); return; }
     const before = S.hp;
     S.hp = Math.min(hpCap(), S.hp + total);
@@ -20900,6 +20936,19 @@ body.pv-open { overflow: hidden; }
     { id: "nightcourier", name: "The Night Courier" },
     { id: "elderwarden", name: "The Elder Warden" },
     { id: "duelist", name: "The Duelist's Apprentice" },
+    // Adrian's third sheet (17 Nov 2026), each with a line of who they were.
+    { id: "trapper", name: "The Trapper of the Long White", line: "Ran traplines north of Weatherend until the Cascade froze the passes shut. Knows how to wait, and how to skin what comes." },
+    { id: "spearwoman", name: "The Dune Spearwoman", line: "Walked the salt caravans across the Burning Sands with a spear and a scarf over her mouth. Every water-thief she caught is a notch on the haft." },
+    { id: "gaolbreaker", name: "The Gaol-Breaker", line: "Broke out of the Ashgate lock-up with a bent spoon and a borrowed knife. Won't say what he was in for. Won't go back." },
+    { id: "archivist", name: "The Archivist's Widow", line: "Her husband kept the ledgers of the Library of Roots. When he died she kept the one book he'd hidden, and went to find out why." },
+    { id: "bowman", name: "The Hushfen Bowman", line: "Shot wildfowl in the Hushfen for the Violet Baron's table, until the day he turned round and stopped." },
+    { id: "netmender", name: "The Net-Mender", line: "Mended nets on the Rahdaria quays for thirty years. The net over her shoulder has caught worse things than fish." },
+    { id: "hedgewalker", name: "The Hedge-Walker", line: "Walked every Blood-bought Road twice on that staff, sleeping under hedges. The third time round, the roads started walking back." },
+    { id: "runner", name: "The Letter-Runner", line: "Ran messages between Sulmara's glassworks for a copper a run. She still carries one letter she never delivered, and never opened." },
+    { id: "farrier", name: "The Farrier", line: "Shod cart-horses at a crossroads forge until the roots came up through the floor. Still hits things for a living. Different things." },
+    { id: "healer", name: "The Hedge-Healer", line: "Grew bitterleaf and sorrel behind a Lastwell cottage and sat up nights with the dying. There isn't much left that frightens her." },
+    { id: "surveyor", name: "The Lost Surveyor", line: "Pegged out roads for the old households, until the maps started changing under his pen. He went to find the country that wasn't on them." },
+    { id: "huntress", name: "The Boar-Spear Huntress", line: "Hunted boar in the Corrach foothills with her grandmother's spear. She's never yet met a thing it couldn't stop." },
   ];
   const heroDefault = (pr) => (HEROES.find(h => h.pr === (PRONOUNS[pr] ? pr : "they")) || HEROES[0]).id;
   const heroKey = (st) => { st = st || S || {}; return HEROES.some(h => h.id === st.hero) ? st.hero : heroDefault(st.pr); };
@@ -20916,6 +20965,110 @@ body.pv-open { overflow: hidden; }
     box.hidden = !on;
     box.parentNode.classList.toggle("has-pic", on);
     box.innerHTML = on ? drownFx(heroImg(S, "sheet-pic-img"), soakLevel(S), "small") : "";
+  }
+  // ---------- Pasts: the third sheet's faces each bring a story, a perk and an errand (17 Nov 2026) ----------
+  // S.past is fixed the first time the hero holds one of these faces (name card, Continue card or journal),
+  // and never changes after, even if the painting does. The perk is +1 to two kinds of check (like a
+  // background), and two of them carry one more small thing. The errand waits in a town of their home
+  // region on the roads back, once per run.
+  const PASTS = {
+    trapper: { town: "Weatherend", perk: "Cold-Hardened", re: /Survival|Constitution/, fx: "+1 to Survival and Constitution checks. Chill that would hit you for 2 or more hits for 1 less.", home: "rime",
+      story: ["You ran traplines north of Weatherend for nine winters, alone, with a hatchet and a lamp and a hut you built yourself. You learned the cold the way other people learn a language: what it wants, and what it'll take instead.",
+        "Then the Cascade came through the passes and froze them shut, with your lines on the far side, and your partner Tobin Morrow out checking them. You waited a month at the hut. Then you came south, because waiting is the one thing you're good at, and you were sick of it."],
+      q: { intro: "In the hearth-room at Weatherend there's a frost-blackened trap hanging over the fire, a big one, with a brass tag on the chain. You know the tag. You stamped it. It's one of yours, from the far side of the pass, and the man who hung it there says a stranger traded it for a night's fuel, a stranger who asked if anybody'd seen a trapper with a hatchet.",
+        a: { label: "Ask where the stranger went", tag: "Survival", out: "North, the man says, up the old line, two days ago. You find the camp where the line meets the ice, cold, and in the ashes a tally of days scratched on a flat stone: the way Hesk always counted. Under it, in his hand: <i>GONE SOUTH. LOOKING FOR YOU. DON'T WAIT.</i> You laugh, out there, by yourself, for the first time in a long time. You take the stone.", gold: 0, xp: 1 },
+        b: { label: "Buy back the trap", tag: "15 gold", out: "You pay. The man looks at you as if you're mad, and then he looks at your face and stops. The trap's spring is still good. You oil it at the fire, and somebody at the next bench tells you a trapper went through last week heading south, laughing at something.", gold: -15, xp: 1 } } },
+    spearwoman: { town: "The Hollow Hands' den", perk: "Caravan Guard", re: /Strength|Perception/, fx: "+1 to Strength and Perception checks.", home: "desert",
+      story: ["You walked beside the salt caravans across the Burning Sands from the age of fourteen, with a spear and a scarf over your mouth, watching the dunes for the dust that means riders. Every water-thief you ever caught is a notch on the haft.",
+        "There are thirty-one notches. The thirty-second is the one you didn't catch: the night your caravan's water was cut loose and nineteen people walked into the sand after it. You didn't come back with them. You came here."],
+      q: { intro: "In the Hollow Hands' den a woman is selling waterskins out of a crate, and one of them has a caravan brand burned into the leather: your caravan's, the one that went into the sand. She says she had it off a man who has a lot more where it came from.",
+        a: { label: "Find the man and take the notch", tag: "Strength", out: "He's in the back room, counting. He sees your spear and knows exactly who you are, and tries the window, and doesn't make it. You don't kill him. You take him to the water-court at the edge of the sands, and you watch them read out the nineteen names. Then you cut the thirty-second notch.", gold: 20, xp: 1 },
+        b: { label: "Buy the skin and walk away", tag: "8 gold", out: "You pay for it, and take it out to the edge of the sand at dusk, and fill it, and pour it out on the dune, slowly, nineteen times. Nobody sees. That's all right. It wasn't for anybody to see.", gold: -8, xp: 2 } } },
+    gaolbreaker: { town: "Ashgate", perk: "Light Fingers", re: /Sleight|lock|Deception/i, fx: "+1 to Sleight of Hand, lock and Deception checks.", home: "corrach",
+      story: ["You broke out of the Ashgate lock-up with a bent spoon and a borrowed knife, and you won't say what you were in for. People ask. You tell them something different every time.",
+        "The truth is short: you took the blame for somebody else's theft, because they had children and you didn't, and then the Reeve decided to make an example and hang the thief. So you left early. You've got the knife still. You meant to give it back."],
+      q: { intro: "There's a wanted notice on the board in Ashgate with your face on it, three years old and faded. Under it, newer, somebody's pinned a child's drawing: a figure with a spoon, climbing out of a window, and the words THANK YOU in big letters.",
+        a: { label: "Find the family and give back the knife", tag: "Persuasion", out: "They live over the cooper's. The children are bigger. Their mother opens the door and goes white, and then she pulls you in by the collar before anybody in the street can look. You give back the knife. She gives you supper and a purse she's been keeping for three years in case you ever came back.", gold: 25, xp: 1 },
+        b: { label: "Take the notice down and keep moving", tag: "Sleight of Hand", out: "You take the notice down at noon, in the middle of the market, and nobody sees you do it. You keep the drawing. You fold it very small and put it in the lining of your coat, where the knife used to go.", gold: 0, xp: 2 } } },
+    archivist: { town: "The Library of Roots", perk: "Shelf-Learned", re: /Investigation|Intelligence/, fx: "+1 to Investigation and Intelligence checks.", home: "roots",
+      story: ["Your husband kept the ledgers of the Library of Roots for forty years: every book in, every book out, every reader's name. When he died you went through his desk, and found the one book he never entered. It has no title. Half its pages are blank, and the other half are in his hand.",
+        "The last line he wrote in it is <i>The library is reading us back.</i> You want to know what he meant. You've wanted to know for two years. So you picked it up, and went down."],
+      q: { intro: "In the Library of Roots, on the reading desk where your husband sat, there's a candle burning and a book open. It's a ledger. The last entry is in his hand, dated the week after he died: <i>Lent: one book, no title. To: his wife. Due back: when she understands it.</i>",
+        a: { label: "Write in the ledger yourself", tag: "Investigation", out: "You dip his pen and write under it: <i>Returned: one book, no title. I understand it now. It was a love letter. It was always a love letter.</i> When you look up, the candle has gone out and there's another book on the desk that wasn't there before, with your name on the spine.", gold: 0, xp: 2 },
+        b: { label: "Keep the book", tag: "it's yours", out: "You close the ledger. The book stays in your pack. The library lets you go, and somewhere on a shelf you'll never find, something sighs and turns a page. In the morning there's a gold leaf pressed between the blank pages that wasn't there before.", gold: 30, xp: 1 } } },
+    bowman: { town: "The Glade", perk: "Fowler's Patience", re: /Stealth|Perception/, fx: "+1 to Stealth and Perception checks.", home: "fen",
+      story: ["You shot wildfowl in the Hushfen for the Violet Baron's table: heron, snipe, the big grey geese. Four hundred birds a winter, never a wasted arrow. You were the best he had, and he told you so, and paid you in his violet coin.",
+        "One morning, on the stand by the reed-bed, he asked you to shoot something that wasn't a bird. You turned round, and lowered the bow, and walked away across the mire with his men shouting behind you, and you didn't look back. You haven't drawn on anything that talks since."],
+      q: { intro: "At the Glade, an old fowler's stand is still up by the reed-bed, the one you used to shoot from. Somebody's been using it. There are fresh feathers, and an arrow in the post with violet fletching, the Baron's colour, and a note tied to it: <i>THE BEST HE HAD WALKED AWAY. COME AND SHOW ME WHY.</i>",
+        a: { label: "Go up on the stand and wait", tag: "Stealth", out: "She comes at dusk, a girl of sixteen with the Baron's violet on her quiver. She's good. She's as good as you were. You talk until it's dark. When she goes, she leaves the violet quiver on the stand, and walks off into the mire the other way.", gold: 0, xp: 2 },
+        b: { label: "Take the arrow and burn the stand", tag: "Perception", out: "You take the arrow down, and set a match to the old stand, and stand back and watch it go up. It burns for an hour. In the ashes, in the morning, there's a purse of violet coin somebody hid under the boards years ago. You think you know who.", gold: 30, xp: 1 } } },
+    netmender: { town: "Rahdaria", perk: "Quayside Ears", re: /Insight|Seamanship/, fx: "+1 to Insight and Seamanship checks.", home: "rahdaria",
+      story: ["You mended nets on the Rahdaria quays for thirty years, and in thirty years you heard every lie a fisherman can tell. You know when a man's lying by the way he stands. You know when a sea's lying by the colour of it.",
+        "Then the Bathyr came out of the western sea, and the fleet didn't come back, and your son was in it. The net over your shoulder is the last one he brought you to mend. It's got a hole in it the shape of something that isn't a fish."],
+      q: { intro: "On the Rahdaria quays an old woman is mending your old pitch, sitting where you used to sit, and when she sees the net over your shoulder she puts her needle down. \"That's the <i>Gannet</i>'s net,\" she says. \"I'd know that knot anywhere. A Bathyr brought one like it to the gate last week, folded up very neat, and asked for whoever mends them.\"",
+        a: { label: "Go down to the gate", tag: "Insight", out: "The Bathyr is very old, and has the net folded on its knees, and taps a long message on the gate-plate that the interpreter takes a long time to read. Your son went down with the <i>Gannet</i>. He wasn't afraid. He sang, it says, the whole way down. It gives you the net, and you give it yours, and it bows.", gold: 0, xp: 2 },
+        b: { label: "Sit down and mend with her", tag: "Seamanship", out: "You sit down beside her and mend all afternoon, and she tells you about the Bathyr, and you tell her about your son, and neither of you hurries. At dusk she won't let you leave without a share of the day's pay.", gold: 18, xp: 1 } } },
+    hedgewalker: { town: "Castellane", perk: "Road-Wise", re: /Wisdom|Survival/, fx: "+1 to Wisdom and Survival checks.", home: "vell",
+      story: ["You've walked every Blood-bought Road twice on that staff, sleeping under hedges, mending pots for a supper, telling fortunes you made up on the spot. You know every inn, every ford and every dog between the sea and the mountains.",
+        "The third time round, the roads started walking back. Milestones that weren't where they used to be. Inns with the wrong names. A ford that went the other way. You're old, and you're not daft, and you know when the ground's changing under you. You came to find out who was moving it."],
+      q: { intro: "Outside Castellane there's a milestone you've passed fifty times, and it's been moved: dragged a mile up the road and set down crooked, with the old mud still on its foot. Somebody's chalked a mark on it, a hedge-walker's mark, the old one that means <i>bad water here, walk on</i>. It's in your own hand. You never wrote it.",
+        a: { label: "Follow the old road to where it stood", tag: "Survival", out: "Where the milestone used to stand there's a hole in the road, and in the hole, a root as thick as your arm, turning very slowly, like a hand feeling for a door. You drop a stone on it and it stops. You put the milestone back yourself, with your staff for a lever, and it takes all day.", gold: 0, xp: 2 },
+        b: { label: "Ask at the inn who moved it", tag: "Wisdom", out: "The landlady laughs. \"You did, old man,\" she says. \"Last spring. You came in with mud to your knees and paid for a week's beer up front and said you'd be back for it.\" She pours. It's very good beer. You drink the week's worth, slowly, and she won't take a penny for the rest.", gold: 12, xp: 1 } } },
+    runner: { town: "Sulmara", perk: "Quick Feet", re: /Dexterity|Acrobatics/, fx: "+1 to Dexterity and Acrobatics checks.", home: "glass",
+      story: ["You ran messages between Sulmara's glassworks for a copper a run: orders, bills, love letters, threats. You never read a single one. That was the rule, and you were proud of it.",
+        "The last letter you ever took was addressed to a house on the Kiln Stair. When you got there the house was empty and the door was open and there was glass all over the floor. You've still got the letter. You've never opened it. One day you'll find who it's for."],
+      q: { intro: "In Sulmara there's a new name painted over the door of the house on the Kiln Stair, and a woman sweeping the step. She looks up as you pass, and looks at the satchel, and stops sweeping. \"You're the runner,\" she says. \"My mother waited for a letter. She said a runner would come.\"",
+        a: { label: "Give her the letter", tag: "it's hers", out: "She opens it on the step. She reads it twice. Then she sits down on the step and laughs and cries at once, and says it's from her father, who she never met, and it's three lines long, and it says everything. She makes you take a copper for the run. Then she makes you take a lot more than a copper.", gold: 22, xp: 1 },
+        b: { label: "Ask her to read it to you", tag: "you never read them", out: "She reads it out on the step, slowly. It's from her father, who left before she was born, and it says he's sorry and he's coming home, and he never did. When she's done, you both sit there a long time. It's the first letter you ever heard. You find you don't mind.", gold: 0, xp: 2 } } },
+    farrier: { town: "Carrowmere landing", perk: "Strong Arm", re: /Athletics|Intimidation/, fx: "+1 to Athletics and Intimidation checks.", home: "mere",
+      story: ["You shod cart-horses at a crossroads forge on the Carrowmere road for twenty years. Big hands, a slow temper, and the best ear for a lame horse between the lake and the hills.",
+        "Then the roots came up through your forge floor, one night, and took the anvil down into the ground with them, and the forge after it. You stood in the road in your nightshirt and watched it go. You still hit things for a living. Different things."],
+      q: { intro: "At Carrowmere landing, a carter's horse is standing on three legs with a root-thorn through its hoof, and the carter's crying, and nobody there knows what to do. The horse has your mark on its shoe: your forge's mark, the crossed hammers. You shod this horse, years ago, as a foal.",
+        a: { label: "Take the thorn out", tag: "Athletics", out: "It takes you an hour, and the carter's whole family holding the horse, and a pair of borrowed tongs. When the thorn comes out it's as long as your hand and still moving. You stamp it flat. The horse puts its foot down and stands square, and the carter won't let you go without paying a farrier's rate. Twice.", gold: 24, xp: 1 },
+        b: { label: "Find what's under the landing", tag: "Intimidation", out: "There's a root-knot under the landing, pushing up thorns like a hand pushing up through a sheet. You go down with a lamp and a hammer and you hit it until it stops. When you come up, black to the elbows, half the landing has come out to watch, and somebody's put your crossed hammers in chalk on the boards.", gold: 0, xp: 2 } } },
+    healer: { town: "Lastwell", perk: "Hedge Medicine", re: /Medicine|Wisdom/, fx: "+1 to Medicine and Wisdom checks. Every heal restores 2 more HP.", home: "lastwell",
+      story: ["You grew bitterleaf and sorrel and feverfew behind a cottage in Lastwell, and sat up nights with the dying, and sang to them when there was nothing else to do. There isn't much left that frightens you. You've held too many hands.",
+        "Then the Wringer came to Lastwell, and the village shuttered its doors, and the dying started dying alone. You couldn't stand it. You took your bundle of herbs and went out into the dark to find out what it was, and what it wanted, and what it would take to make it stop."],
+      q: { intro: "Behind your old cottage in Lastwell the herb bed has run wild, and in the middle of it somebody has set out a bowl, and a cup, and a chair, the way you used to for the people who came to sit with the dying. There's a girl sitting in the chair. She says her grandmother's dying, and she was told you'd come back.",
+        a: { label: "Go and sit with her grandmother", tag: "Medicine", out: "You sit up all night. It's a quiet one. Near dawn the old woman opens her eyes and knows you, and says, \"Oh, it's you,\" in a pleased voice, as if you'd come to tea, and goes. The girl walks you to the end of the lane, and asks if she can learn, and you say yes.", gold: 0, xp: 2 },
+        b: { label: "Teach the girl the herbs", tag: "Wisdom", out: "You take her through the bed, plant by plant: this for fever, this for sleep, this for when there's nothing else left. She writes it all down in a hand worse than yours. At the end of it she gives you every coin the village could find, and you can't make her take it back.", gold: 20, xp: 1 } } },
+    surveyor: { town: "Brindle Landing", perk: "True North", re: /Investigation|Survival/, fx: "+1 to Investigation and Survival checks.", home: "wetwood",
+      story: ["You pegged out roads for the old households: chain, stakes, a book of bearings, a straight line from one tower to the next. It was the best job in the world. You liked a thing that stayed where you put it.",
+        "Then the maps started changing under your pen. You'd draw a road and come back in a month and it would be somewhere else. You'd draw a village and it would be gone. Your employer said not to worry about it, very civilly, and paid you well to stop asking. You didn't stop. You went to find the country that wasn't on the maps."],
+      q: { intro: "At the edge of the Wetwood, where Gerrand's men were marking new ground, one of the survey stones has your mark on it: not his K, but your own, a bearing and an initial. You never surveyed this country. You've never been here. But it's your hand, and it's fresh.",
+        a: { label: "Follow the bearing", tag: "Survival", out: "The bearing takes you two miles into the trees, dead straight, to a second stone, and a third, and at the end of them a clearing with a surveyor's table in it, rotted, and on the table a book of bearings in your hand. The last entry is a straight line pointing home. You take the book. You feel very strange, and then you feel fine.", gold: 0, xp: 2 },
+        b: { label: "Pull the stone up", tag: "Investigation", out: "Under it, wrapped in oilcloth, there's a purse and a note in your own hand: <i>For when you get here. Don't ask. Keep walking.</i> You don't ask. You put the stone back the wrong way round, out of spite, and keep walking.", gold: 28, xp: 1 } } },
+    huntress: { town: "Vellum Rest", perk: "Boar-Spear", re: /Athletics|Perception/, fx: "+1 to Athletics and Perception checks.", home: "corrach",
+      story: ["You hunted boar in the Corrach foothills with your grandmother's spear, the one with the crossbar that stops a charging boar from running up the haft and killing you anyway. She taught you to stand still while a quarter-ton of tusk comes at you through the bracken. You've never met a thing yet that spear couldn't stop.",
+        "Then something came down out of the mountain that wasn't a boar, and took your grandmother's goats, and then your grandmother. You found the spear in the yard. You followed the tracks up into the dark."],
+      q: { intro: "On the road under Vellum Rest there's a boar-pit dug across the path, old and half fallen in, with your grandmother's mark cut on the stake at its edge. Somebody's been keeping it up. Fresh branches across the top, fresh stakes in the bottom. And fresh tracks round it, something that walks on two legs and has claws.",
+        a: { label: "Sit up over the pit", tag: "Perception", out: "It comes at moonrise, sniffing the branches, and it isn't the thing that took your grandmother: it's young, and thin, and hungry, and nearly as frightened as you are. You let it go. When it's gone you find the stake with her mark has been cleaned, very carefully, as if by claws. You take the stake.", gold: 0, xp: 2 },
+        b: { label: "Fill the pit in", tag: "Athletics", out: "It takes you till noon, with a borrowed shovel from the sanctuary. When it's done, the sisters give you bread and cheese and a purse from the box by the door for travellers who mend the road. You cut your grandmother's mark on a stone at the side of it, new.", gold: 16, xp: 1 } } }
+  };
+  const past = () => PASTS[S.past] || null;
+  function pastFix() { if (!S.past && PASTS[S.hero]) { S.past = S.hero; S.pastNew = 1; } }
+  function pastCheck(label) { const p = past(); return p && p.re.test(label) ? 1 : 0; }
+  async function pastStory() {
+    const p = past(); if (!p || !S.pastNew) return;
+    delete S.pastNew;
+    const h = HEROES.find(x => x.id === S.past);
+    for (const t of p.story) await say(t);
+    await mech("<b>" + (h ? h.name : "Your past") + ": " + p.perk + ".</b> " + p.fx + " On the roads back, at " + p.town + (p.town === REGIONS[p.home] ? "" : " in " + REGIONS[p.home]) + ", the past is waiting for you.", "loot");
+    save();
+  }
+  async function pastErrand(T) {
+    const p = past(); if (!p || S.pastDone || T.reg !== p.home || T.name !== p.town) return;
+    S.pastDone = 1; save();
+    await say(p.q.intro);
+    const c = await choose(["a", "b"].map(k => ({ key: k, label: p.q[k].label, tag: p.q[k].tag })));
+    const o = p.q[c];
+    if (o.gold < 0 && S.coins < -o.gold) { await say("You haven't got it. You stand there a moment too long, and then you walk on, and it stays with you all day."); return; }
+    await say(o.out);
+    if (o.gold) { S.coins = Math.max(0, S.coins + o.gold); renderSheet(); if (o.gold > 0) await mech("+" + o.gold + " gold.", "loot"); }
+    const xp = (40 + lv() * 4) * o.xp;
+    xpGain(xp); renderSheet();
+    await mech("Your past, put down: +" + xp + " XP.", "loot");
+    S.pastAns = c; save();
   }
   function heroPortrait() {
     const seen = S.portSeen = S.portSeen || {};
@@ -20977,7 +21130,8 @@ body.pv-open { overflow: hidden; }
       (n > 1 ? '<p class="hg-hint">Swipe for another painting. It\'s yours whatever people call you.</p>' : "") + "</div>";
     const strip = holder.querySelector(".hg-strip"), track = holder.querySelector(".hg-track"), cap = holder.querySelector(".hg-cap"), dots = [...holder.querySelectorAll(".hg-dots i")];
     const paint = () => {
-      cap.innerHTML = "<b>" + HEROES[i].name + "</b> <span class=\"hg-n\">· " + (i + 1) + " of " + n + "</span>";
+      cap.innerHTML = "<b>" + HEROES[i].name + "</b> <span class=\"hg-n\">· " + (i + 1) + " of " + n + "</span>" + (HEROES[i].line ? '<span class="hg-line">' + HEROES[i].line + "</span>" : "") +
+        (PASTS[HEROES[i].id] ? '<span class="hg-perk"><b>' + PASTS[HEROES[i].id].perk + ".</b> " + PASTS[HEROES[i].id].fx + (S && S.past && S.past !== HEROES[i].id ? " (Your past is already set: only the painting would change.)" : "") + "</span>" : "");
       dots.forEach((d, k) => d.classList.toggle("on", k === i));
       track.style.transform = "translateX(" + (-100 * i) + "%)";
     };
@@ -44888,6 +45042,7 @@ body.pv-open { overflow: hidden; }
   async function rmChill(n, why) {
     const M = rm();
     if (!M.on && !M.inLab) return;
+    if (S.past === "trapper" && n >= 2) n -= 1;
     if (FOE.on && M.wrap && !FOE.rmWrapped) { FOE.rmWrapped = true; await mech((why ? why + ". " : "") + "The Ember Wrap under your armour takes it: warm as a hand on your back.", "loot"); return; }
     if (M.ward > 0) { M.ward--; renderSheet(); await mech((why ? why + ". " : "") + "The Hearthsalt in your blood burns it off (" + M.ward + " more ward" + (M.ward === 1 ? "" : "s") + ").", "loot"); return; }
     const was = M.chill;
@@ -52806,7 +52961,8 @@ body.pv-open { overflow: hidden; }
     // A run on the roads back carries on there, unless new chapters have been written since.
     if (S.roam && !S.detour && (S.roamEnd ?? 0) < PARTS.length - 1) { S.roam = false; S.part = S.roamEnd + 1; }
     const go2 = () => S.roam ? roamHub().then(r => r === "north" ? play(S.part) : null) : resumeState && S.part > 0 && !recapOff() ? showRecap().then(() => play(S.part)) : play(S.part);
-    const go4 = () => S.tac === undefined ? askStyle(!resumeState || S.part === 0).then(go2) : go2();
+    const go2p = () => pastStory().then(go2);
+    const go4 = () => S.tac === undefined ? askStyle(!resumeState || S.part === 0).then(go2p) : go2p();
     const go35 = () => S.cl === undefined ? askCalling(!resumeState || S.part === 0).then(go4) : go4();
     const go3 = () => S.bg === undefined ? askBackground(!resumeState || S.part === 0).then(go35) : go35();
     const go1 = () => !resumeState && tipState.guide === undefined ? askGuide() : Promise.resolve();
