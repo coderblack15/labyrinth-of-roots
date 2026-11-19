@@ -149,10 +149,13 @@ if (require.main === module) {
     ["Knot-hound back home L30", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 30, "roots"],
     ["Knot-hound back home L39", 76, { hp: 18, ac: 12, atk: 4, s: 6 }, 39, "roots"],
     ["Brine-hound back L39", 76, { hp: 20, ac: 13, atk: 5, s: 6 }, 39, 62],
-    // The Mind's Eye (2026-11-17, Adrian: "make this a tough fight"): Haggith above Tharen Ravendare, Clauneck
+    // Balance sweep (2026-11-17): Tharen 64 -> 56 base HP; Haggith 72 -> 68 HP, AC 17, +8 2d10, and she swings on every
+  // stitch of the Soul Devour and on the turn she shows the Mind's Eye.
+  // These lines are plain trading only: use tools/fight-lab.js for the real signature-move fights.
+  // The Mind's Eye (2026-11-17, Adrian: "make this a tough fight"): Haggith above Tharen Ravendare, Clauneck
     // close to him, a Lens a step down. Plain trading only: their signature moves hurt more if you miss the tell.
-    ["Tharen Ravendare L30", 76, { hp: 64, ac: 16, atk: 7, n: 2, s: 8 }, 30],
-    ["Haggith L30", 76, { hp: 72, ac: 16, atk: 7, n: 2, s: 8 }, 30],
+    ["Tharen Ravendare L30", 76, { hp: 56, ac: 16, atk: 7, n: 2, s: 8 }, 30],
+    ["Haggith L30", 76, { hp: 68, ac: 17, atk: 8, n: 2, s: 10 }, 30],
     ["Clauneck L30", 76, { hp: 70, ac: 15, atk: 7, n: 2, s: 8 }, 30],
     ["A Lens L30", 76, { hp: 58, ac: 15, atk: 6, n: 2, s: 6 }, 30],
   ];

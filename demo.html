@@ -4143,6 +4143,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "138", name: "The Weighing", date: "17 Nov 2026", items: [
+      "<b>A balance sweep across the fights added since the last one</b>, measured by playing the game's own fight code a few thousand times over, with every calling, as a player who reads every tell and as one who just swings.",
+      "<b>Haggith is now the hardest fight in the Mind's Eye</b>, as she was meant to be. Read her well and she used to stand still and barely touch you: now her staff comes on every stitch of the Soul Devour and on the turn she shows the Mind's Eye, and it hits harder (+8, 2d10, AC 17), with a little less life (68).",
+      "<b>Tharen Ravendare</b> has a little less life (56), so his fight is long and dangerous rather than endless. <b>Compound chiefs</b> are lighter too (28 + 5 a size): a common chief shouldn't run you as close as Tharen does.",
+      "<b>Armoured foes</b>: the silver bar grows more slowly with level and tops out at 60% of a foe's life (it was 80%), so a late armoured beast is a hard road fight, not a nine-round one.",
+      "<b>The Inkbinder</b>: from Rank IV, Strike Through turns the next blow into a miss and halves the one after (it used to strike out both). It was by far the safest calling in every fight.",
+      "<b>The Clockrunner</b>: Echo Cut no longer adds your level bonus to the echo, and Clockwork Sight marks a weak point every fourth round (was every third). It was killing bosses in half the time of every other calling."] },
     { ver: "137", name: "Faces of the Foe", date: "17 Nov 2026", items: [
       "<b>Adrian's boss paintings</b>, each shown once a run as the fight or scene begins: <b>Haggith</b> twice (calm at the Seventh Opening, laughing in the Hall of Seeing), <b>the Curator</b> in the Relicsong Vault, <b>Corwen Lisk</b> rising, <b>the Wringer</b> in the lanes of Lastwell, <b>Varro Duskwane</b> the night the mire took him, <b>the Blind Fleet's</b> crews, <b>Tharen Ravendare</b> at Ravenhold and <b>Clauneck</b> in his coat of coins.",
       "<b>Hesper Coyle, the Glass Judge, is a man now</b>, grey-haired in his robe of cracked glass, to match Adrian's painting: his portrait at the Glass Assize, and every line about him, here and later on, in English, Spanish and Japanese."] },
@@ -9606,9 +9613,11 @@ body.pv-open { overflow: hidden; }
   function rcLeaderF(C) {
     const K = RC_KINDS[C.k], n = C.chief.n, raven = C.k === "raven";
     const lvl = Math.floor(flk() / 4);
-    if (C.k === "eye") return { name: n, hp: 72 + 8 * (C.size - 3), ac: 16, atk: 7, n: 2, s: 8, type: "bludgeoning", bloom: 0, hesk: false, road: true, lvl, C,
+    // Balance sweep (2026-11-17): Haggith 72 -> 68 HP, AC 17 and a harder staff (+8, 2d10): with her tells read she used
+    // to drag on for 20 rounds and barely scratch you; now she hits harder than Tharen.
+    if (C.k === "eye") return { name: n, hp: 68 + 8 * (C.size - 3), ac: 17, atk: 8, n: 2, s: 10, type: "bludgeoning", bloom: 0, hesk: false, road: true, lvl, C,
       who: n, whoShort: n, hitWhy: "Her iron-shod staff comes round, and she doesn't need to look.", miss: "The staff cracks on the boards where you were.", hitLine: "The red thread in her blindfold darkens." };
-    return { name: n, hp: raven ? 64 + 8 * (C.size - 3) : 34 + 6 * C.size, ac: raven ? 16 : 13 + Math.floor(C.size / 2), atk: raven ? 7 : 4 + C.size, n: raven ? 2 : 1, s: raven ? 8 : 10, type: "slashing", bloom: 0, hesk: false, road: true,
+    return { name: n, hp: raven ? 56 + 8 * (C.size - 3) : 28 + 5 * C.size, ac: raven ? 16 : 13 + Math.floor(C.size / 2), atk: raven ? 7 : 4 + C.size, n: raven ? 2 : 1, s: raven ? 8 : 10, type: "slashing", bloom: 0, hesk: false, road: true,
       who: n, whoShort: n.split(" ")[0], hitWhy: raven ? "The long curved blade comes round low and fast." : "A blow you see too late.", miss: raven ? "The blade bites the bole behind you." : "You get your own blade in the way.", hitLine: raven ? "Feathers come off his coat in a black spray." : n + " staggers.",
       lvl, C };
   }
@@ -10776,6 +10785,8 @@ body.pv-open { overflow: hidden; }
         D.left--;
         if (D.left > 0) {
           await say("Another red stitch in her blindfold snaps. <b>" + D.left + " left.</b> " + taunt());
+          // Balance sweep (2026-11-17): she doesn't stand still for it. The staff keeps coming while the stitches go.
+          await foeSwing(F, st, { label: "between the stitches", why: "Her staff comes round while the thread snaps." });
           return "done";
         }
         st0.dev = null;
@@ -10815,7 +10826,7 @@ body.pv-open { overflow: hidden; }
         st0.tell = "eye";
         const t = !M.confTrue && M.conf && !st0.lieDone ? (st0.lieDone = st0.lieNamed = true, M.conf) : T[d(T.length) - 1];
         await say("\"" + esc(t) + "\" She turns her bound face toward you, and the Hall goes so quiet you can hear the lamps.");
-        return "done";
+        return; // balance sweep (2026-11-17): and her staff still comes while she says it
       }
       if (d(2) === 1) await say(taunt());
       else if (d(3) === 1) await say(["The Seen sing the nice song, very softly, all round you.", "Somewhere in the dark a child asks if it's the Blink yet, and is hushed.", "The Eye-stone on its stand catches the lamplight and holds it."][d(3) - 1]);
@@ -14102,8 +14113,10 @@ body.pv-open { overflow: hidden; }
     const nm = (F.name || "") + " " + (F.who || "");
     let f = F.armour != null ? F.armour : F.bid && ARMOURED_BEASTS[F.bid] ? ARMOURED_BEASTS[F.bid] : F.person || F.plates || ARM_PEOPLE.test(nm) ? .3 : 0;
     if (!f) return 0;
-    f += (lgOn() ? 0 : (F.plates || 0) * .1) + flk() * .004 + (cascadeOn() ? .1 : 0);
-    return Math.max(3, Math.round(FOE.max * Math.min(.8, f)));
+    // Balance sweep (2026-11-17): +0.25% a foe level (was 0.4%) and a cap of 60% of its HP (was 80%), so a
+    // late armoured beast doesn't take 8-9 rounds.
+    f += (lgOn() ? 0 : (F.plates || 0) * .1) + flk() * .0025 + (cascadeOn() ? .1 : 0);
+    return Math.max(3, Math.round(FOE.max * Math.min(.6, f)));
   }
   // Called by hkFight once the meter is up.
   async function peStart(F) {
@@ -30075,7 +30088,7 @@ body.pv-open { overflow: hidden; }
     ink: { name: "Inkbinder", who: "the scholars of the old margins, who learned from the Quire's leavings", lean: "Investigation, History and Arcana", re: /Investigation|History|Arcana/,
       sig: "Strike Through", kit: "the Inkhorn (spare leaves of the Scroll of Acquisition turn up after fights)", gear: "inkhorn",
       blurb: "You were a copyist, until you read something in a margin you weren't meant to. Ink remembers. You make it remember what you want.",
-      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", write a line through what's coming: the next blow that lands on you is a miss instead" + (r >= 4 ? ", and so is the one after" : "") + (r >= 2 ? ", and it hits at −1 for the rest of the fight" : "") + (r >= 5 ? ". The struck-out blow lands on it" : "") + ". Costs your turn." },
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", write a line through what's coming: the next blow that lands on you is a miss instead" + (r >= 4 ? ", and the one after lands at half" : "") + (r >= 2 ? ", and it hits at −1 for the rest of the fight" : "") + (r >= 5 ? ". The struck-out blow lands on it" : "") + ". Costs your turn." },
     root: { name: "Rootgrafter", who: "the healers who bind living root into wounds", lean: "Medicine, Nature and Constitution", re: /Medicine|Nature|Constitution/,
       sig: "Graft", kit: "the Graft-Knife and 2 Draughts of Mending", gear: "graftknife",
       blurb: "You set bones with your hands and close cuts with a sliver of live root. The labyrinth's roots know your touch, a little. They lean toward you.",
@@ -30204,7 +30217,7 @@ body.pv-open { overflow: hidden; }
     if (c.k === "hush") return [{ key: "cls", label: "Go Quiet", tag: "its next " + (r >= 5 ? "2 blows" : "blow") + " at disadvantage · your next swing has advantage · costs your turn" + n, plain: true }];
     if (c.k === "song") return [{ key: "cls", label: "Hum the Tempering Note", tag: "next " + (r >= 4 ? 3 : 2) + " hits +" + (r >= 5 ? "2d6" : r >= 2 ? "1d8" : "1d6") + (F.hesk ? " · breaks the Hesk song" : "") + " · costs your turn" + n, plain: true }];
     if (c.k === "tide") return [{ key: "cls", label: "Read the Ebb", tag: "its next blow " + (r >= 4 ? "quartered" : "halved") + " · then +2 AC · costs your turn" + n, plain: true }];
-    if (c.k === "ink") return [{ key: "cls", label: "Strike Through", tag: (r >= 4 ? "the next 2 blows that land miss" : "the next blow that lands misses") + " · costs your turn" + n, plain: true }];
+    if (c.k === "ink") return [{ key: "cls", label: "Strike Through", tag: (r >= 4 ? "the next blow that lands misses, the one after lands at half" : "the next blow that lands misses") + " · costs your turn" + n, plain: true }];
     if (c.k === "bloom") return [{ key: "cls", label: "Black Briar Mantle", tag: "the next " + (r >= 4 ? 3 : 2) + " blows on you −" + (r >= 3 ? 3 : 2) + " · each leaves 1d" + (r >= 2 ? 8 : 6) + " Rot in it · costs your turn" + n, plain: true }];
     if (c.k === "clock") return [{ key: "cls", label: "Mark Flaw", tag: "your next " + (r >= 4 ? 3 : 2) + " hits +2" + (r >= 3 ? ", criticals" : ", +1d6") + (r >= 2 ? " · advantage on the next swing" : "") + " · costs your turn" + n, plain: true }];
     if (c.k === "root") return (S.hp < S.maxHp || bleeds().length) ? [{ key: "cls", label: "Graft", tag: (r >= 4 ? "2d8" : "1d8") + " + " + Math.floor(lv() / 5) + " HP · next blow −" + (r >= 5 ? 3 : 2) + " · costs your turn" + n, plain: true }] : [];
@@ -30238,9 +30251,9 @@ body.pv-open { overflow: hidden; }
       await say("You stop, and watch the way it breathes: the shoulders going up, the weight going back. It's a tide like any other. You wait for the turn.");
       await mech("Read the Ebb: its next blow that lands is " + (r >= 4 ? "quartered" : "halved") + ", and you'll have +2 AC after.", "loot");
     } else if (c.k === "ink") {
-      st.clInk = r >= 4 ? 2 : 1;
+      st.clInk = 1; st.clInkHalf = r >= 4 ? 1 : 0;
       await say("You see it coming before it comes, the way you see the end of a line you're copying. You draw a stroke through it in your head, clean, the way you'd strike out a wrong word.");
-      await mech("Strike Through: " + (st.clInk > 1 ? "the next two blows that land" : "the next blow that lands") + " will miss instead.", "loot");
+      await mech("Strike Through: the next blow that lands will miss instead" + (st.clInkHalf ? ", and the one after it lands at half" : "") + ".", "loot");
     } else if (c.k === "root") {
       const n = d(8) + (r >= 4 ? d(8) : 0) + Math.floor(lv() / 5), b = S.hp;
       S.hp = Math.min(hpCap(), S.hp + n); renderSheet();
@@ -30287,7 +30300,8 @@ body.pv-open { overflow: hidden; }
     const lost = hp0 - Math.max(0, S.hp);
     if (lost <= 0 || S.hp <= 0) return;
     let back = 0, why = "";
-    if (st.clEbb) { back = lost - Math.floor(lost / st.clEbb); why = "You rode the ebb: the blow is " + (st.clEbb > 2 ? "quartered" : "halved") + "."; st.clEbbAc = clRank() >= 2 ? 2 : 1; const q = st.clEbb; st.clEbb = 0; if (clRank() >= 5 && FOE.hp > 0 && !F.heads) { FOE.hp = Math.max(1, FOE.hp - back); renderFoe(); foePop("−" + back); why += " What it lost goes back into it: " + back + " damage."; } void q; }
+    if (st.clInkHalf && !(st.clInk > 0)) { st.clInkHalf = 0; back = lost - Math.floor(lost / 2); why = "The second stroke of your pen: the blow is halved."; }
+    else if (st.clEbb) { back = lost - Math.floor(lost / st.clEbb); why = "You rode the ebb: the blow is " + (st.clEbb > 2 ? "quartered" : "halved") + "."; st.clEbbAc = clRank() >= 2 ? 2 : 1; const q = st.clEbb; st.clEbb = 0; if (clRank() >= 5 && FOE.hp > 0 && !F.heads) { FOE.hp = Math.max(1, FOE.hp - back); renderFoe(); foePop("−" + back); why += " What it lost goes back into it: " + back + " damage."; } void q; }
     else if (st.clGraft > 0) { st.clGraft--; back = Math.min(st.clGraftN, lost); why = "The graft holds: " + back + " less."; }
     if (back > 0) { S.hp = Math.min(hpCap(), S.hp + back); renderSheet(); await mech(why, "loot"); }
   }
@@ -30504,7 +30518,8 @@ body.pv-open { overflow: hidden; }
       if (st.cxGrove && S.hp > 0 && S.hp < hpCap()) { S.hp = Math.min(hpCap(), S.hp + 2); renderSheet(); await mech("The grave-wood gives back: regain 2 HP.", "loot"); }
     } else {
       if (r >= 3) cxGain(st, 1);
-      if (r >= 3 && st.round % 3 === 0 && !(st.cxMark > 0)) { st.cxMark = 1; await mech("Clockwork Sight: bronze gears flicker over " + (F.heads ? "one of them" : F.who) + " for a breath. A weak point: your next hit on it is a critical.", "loot"); }
+      // Clockwork Sight every 4th round (was every 3rd): balance sweep 2026-11-17.
+      if (r >= 3 && st.round % 4 === 0 && !(st.cxMark > 0)) { st.cxMark = 1; await mech("Clockwork Sight: bronze gears flicker over " + (F.heads ? "one of them" : F.who) + " for a breath. A weak point: your next hit on it is a critical.", "loot"); }
     }
     st.cxHeads = FOE.hp;
     // Delayed Death: each Tick set on it counts down, and lands when its hand comes round.
@@ -30517,7 +30532,7 @@ body.pv-open { overflow: hidden; }
     }
     // Late wounds: the echo of a cut, or of a thorn-stroke.
     const ec = st.cxEcho || []; st.cxEcho = [];
-    for (const e of ec) { if (FOE.hp <= 0) break; if (F.heads) await cxLand(F, 10, e[2]); else await foeBurst(e[0], e[1], e[3] || 0, e[2]); }
+    for (const e of ec) { if (FOE.hp <= 0) break; if (F.heads) await cxLand(F, 10, e[2]); else await foeBurst(e[0], e[1], (e[3] || 0) - (e[4] ? Math.floor(dmgUp() / 2) : 0), e[2]); }
     // The second hand reaches twelve.
     if (st.cxClack > 0 && --st.cxClack === 0 && FOE.hp > 0) {
       SND.discord && SND.discord();
@@ -30560,7 +30575,7 @@ body.pv-open { overflow: hidden; }
       if (st.cxZero && FOE.hp > 0) { const m = d(10); st.cxDeath = (st.cxDeath || 0) + m; await mech("A Death Mark hangs where you struck: " + m + " more, when time comes back.", "loot"); }
       if (st.cxVerdict > 0 && dealt > 0) { st.cxVStore = (st.cxVStore || 0) + dealt; await mech("The future keeps a copy of that wound (" + st.cxVStore + " stored).", "loot"); }
       if (st.cxClack > 0) { const m = d(6) + (relic("cr_hair") ? d(6) : 0); st.cxStore += m; await mech("The silver clock writes it down: +" + m + " when it strikes twelve (" + st.cxStore + ").", "loot"); }
-      if (r >= 2 && dealt > 0 && FOE.hp > 0 && !F.heads) st.cxEcho.push([1, r >= 3 ? 8 : 6, "Echo Cut: the same cut lands again, a breath late"]);
+      if (r >= 2 && dealt > 0 && FOE.hp > 0 && !F.heads) st.cxEcho.push([1, r >= 3 ? 8 : 6, "Echo Cut: the same cut lands again, a breath late", 0, true]);
     }
   }
   // A blow landed on you: Smoulder, the briar's thorns, the Colossus' cover, the pendulum's memory.
@@ -30743,7 +30758,7 @@ body.pv-open { overflow: hidden; }
       if (r === 5) { if (PIC_SRC.cl_bloom_ascend) add(framedPic(picUrl("cl_bloom_ascend"), CL_PICS.bloom_ascend, "Ascendant")); await say("It stands up. Not in a fight: on an ordinary morning, on the road, while you're tying your boots. It stands up behind you, the whole of it, and looks at the world with its one ember eye, and then folds down again. It wanted you to see it once, before you need it."); await mech("<b>Ascendant.</b> <b>The Colossus Stands</b> is yours (6 Smoulder, once a fight).", "loot"); }
     } else {
       if (r === 2) { S.gear = S.gear || []; if (!S.gear.includes("protoeye")) S.gear.push("protoeye"); await mech("<b>Echo Cut.</b> Every hit you land now lands again a breath later, for 1d6. Wait: did you hit it twice? You did. And you've built yourself a lens: <b>" + GEAR.protoeye.name + ".</b> " + GEAR.protoeye.desc, "loot"); }
-      if (r === 3) { if (PIC_SRC.cl_clock_3) add(framedPic(picUrl("cl_clock_3"), CL_PICS.clock_3, "The Hourblade", "portrait")); await say("Somewhere between one fight and the next, the ticking you've always heard stops being a sound and starts being a map. You know where they're going before they move. You aren't a Clockrunner any more."); await mech("<b>The Hourblade.</b> Momentum becomes <b>Ticks</b> (up to 12, gaining twice as fast). Clockwork Sight marks a weak point every third round, marked hits are criticals, and <b>Second Hand</b> is yours (6 Ticks).", "loot"); }
+      if (r === 3) { if (PIC_SRC.cl_clock_3) add(framedPic(picUrl("cl_clock_3"), CL_PICS.clock_3, "The Hourblade", "portrait")); await say("Somewhere between one fight and the next, the ticking you've always heard stops being a sound and starts being a map. You know where they're going before they move. You aren't a Clockrunner any more."); await mech("<b>The Hourblade.</b> Momentum becomes <b>Ticks</b> (up to 12, gaining twice as fast). Clockwork Sight marks a weak point every fourth round, marked hits are criticals, and <b>Second Hand</b> is yours (6 Ticks).", "loot"); }
       if (r === 4) { if (PIC_SRC.cl_clock_4) add(framedPic(picUrl("cl_clock_4"), CL_PICS.clock_4, "The Fatewalker", "portrait")); await say("The brass has started to grow into you: a ring of it round one wrist, a hairline round your eye. In the dark, a dozen clocks you can't see are all keeping your time."); await mech("<b>The Fatewalker.</b> Tick Step becomes <b>Pendulum Step</b>, which takes back the last blow, and <b>Gear Lock</b> is yours (8 Ticks, once a fight).", "loot"); }
       if (r === 5) { if (PIC_SRC.cl_clock_5) { (S.cl.seen = S.cl.seen || []).push("mid"); add(framedPic(picUrl("cl_clock_5"), CL_PICS.clock_5, "The Grand Horologian")); } await say("They tell a story on the roads about a killer called the Grand Horologian, whose enemies died before the blade arrived. You've heard it all your life. One night you hear somebody tell it, and realise they mean you."); await mech("<b>The Grand Horologian.</b> <b>Stopped Midnight</b> is yours (12 Ticks, once a fight).", "loot"); }
     }
