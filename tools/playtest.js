@@ -103,7 +103,7 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
   await page.evaluate((from) => { const b = from ? document.querySelector("#slots .slot .primary") : document.getElementById("beginBtn"); b.click(); }, !!from);
   const log = fs.createWriteStream(path.join(out, "log.txt"));
   const counts = {};
-  let lastPart = -1, idle = 0, partSteps = 0;
+  let lastPart = -1, idle = 0, partSteps = 0, downSteps = 0;
   for (let step = 0; step < MAX; step++) {
     const r = await guard(page.evaluate((POOL) => {
       const pool = eval(POOL), g = window.__g, S = g.S, story = document.getElementById("story");
@@ -126,6 +126,10 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
     // Pronoun tokens ({he}, {g:a|b|c}) should never reach the page unresolved.
     const tok = /\{(g:[^{}]*|[Hh](?:e|im|is|ers|imself|e's|e'd|e'll))\}/.exec(r.tail + " " + r.labels.join(" "));
     if (tok) { console.log("UNRESOLVED TOKEN " + tok[0] + " at S.part " + r.part + ": " + r.tail.slice(-200)); errors.push("token " + tok[0]); }
+    // A foe left at 0 HP with the fight still on means the fight's ending threw: the page only offers
+    // the empty sheet buttons from then on, so it would loop for ever without tripping the idle check.
+    if (/ 0\/\d+$/.test(r.foe) && ++downSteps > 150) { console.log("SOFT-LOCK at S.part " + r.part + ": " + r.foe + " is down but the fight never ended."); log.write("SOFT-LOCK (foe down, fight still on)\n"); return finish(2); }
+    if (!/ 0\/\d+$/.test(r.foe)) downSteps = 0;
     if (!r.labels.length) {
       // 10 seconds: the Thrice-Seen Man's last round (7 swaps) runs just over 6 before you can strike.
       if (++idle > 100) { console.log("SOFT-LOCK at S.part " + r.part + ": nothing to press for 10 seconds.\n" + r.tail); log.write("SOFT-LOCK\n" + r.tail + "\n"); return finish(2); }
