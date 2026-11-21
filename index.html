@@ -2095,6 +2095,76 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .ff-gears svg { width: 12px; height: 12px; animation: fsGear 3s linear infinite; }
 .ff-gears span.now { border-color: #ffd27a; box-shadow: 0 0 6px rgba(255, 210, 122, .7); }
 @keyframes fsGear { to { transform: rotate(360deg); } }
+/* 2026-11-21 (Adrian: "use miniature representation of every player/enemies on the field"): the mat. A strip of
+   battle mat on the fight board with a painted miniature for everyone in the fight: you and whoever's with you on
+   the left, every foe on the right (each head of a pack, each captain). The ring round a mini's base is its life,
+   the pips over it are what's wrong with it, and the minis lunge when they strike, rock when they're hit and
+   topple when they fall. A companion's base stays brass until they've struck this fight, then goes dull. */
+.fs-mat { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: clamp(14px, 6vw, 64px); min-height: 96px; padding: 6px 10px 6px; border-radius: 8px; overflow: hidden; isolation: isolate;
+  background: radial-gradient(ellipse 70% 90% at 50% 100%, #2b3a2c, #18211a 70%, #111611); border: 1px solid #33402f; }
+.fs-mat::before { content: ""; position: absolute; left: -30%; right: -30%; top: 30%; bottom: -60%; z-index: -1; transform: perspective(160px) rotateX(48deg); transform-origin: 50% 0;
+  background-image: linear-gradient(#ffffff10 1px, transparent 1px), linear-gradient(90deg, #ffffff10 1px, transparent 1px); background-size: 22px 22px; }
+.fs-mat::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 60% 50% at 50% 110%, rgba(230, 170, 90, .10), transparent 70%); pointer-events: none; }
+/* Backdrops: the region's ground colour (from the battle-map palette) until a painting is set for it in MAT_ART;
+   then the painting, darkened toward the floor so the minis still read. */
+.fs-mat[data-bg] { background: radial-gradient(ellipse 70% 90% at 50% 100%, color-mix(in srgb, var(--mat-g, #2b3a2c) 55%, #000), color-mix(in srgb, var(--mat-g, #2b3a2c) 28%, #000) 75%); }
+.fs-mat.art { background: linear-gradient(180deg, rgba(8, 8, 6, .15), rgba(8, 8, 6, .35) 45%, rgba(8, 8, 6, .82)), var(--mat-img) center 35% / cover no-repeat, #111; }
+.fs-mat.art::before { opacity: .45; }
+.fm-side { display: flex; align-items: flex-end; gap: 4px 10px; flex-wrap: nowrap; min-width: 0; flex: 0 1 auto; }
+.fm-them { justify-content: flex-end; flex-wrap: wrap-reverse; }
+.fm-vs { flex: 0 0 auto; width: 1px; align-self: stretch; margin: 6px 0; background: linear-gradient(180deg, transparent, #6b4a2a88, transparent); }
+.fm-mini { --w: 46px; --hp: 1; --ring: #5fbf86; position: relative; width: var(--w); display: grid; justify-items: center; transition: opacity .4s, filter .4s; }
+.fm-mini.big { --w: 60px; }
+.fm-mini.boss { --w: 70px; }
+.fm-mini.small { --w: 34px; }
+.fm-mini.far { --w: 30px; opacity: .78; }
+.fm-fig { position: relative; z-index: 1; width: var(--w); height: calc(var(--w) * 1.28); margin-bottom: calc(var(--w) * -.2); transform-origin: 50% 100%;
+  border-radius: calc(var(--w) * .5) calc(var(--w) * .5) 6px 6px; overflow: hidden; background: #0e1210;
+  border: 2px solid #b08a3c; box-shadow: 0 0 0 1px #2a1d0c, 0 4px 6px rgba(0, 0, 0, .6), inset 0 0 8px rgba(0, 0, 0, .6); }
+.fm-fig img, .fm-fig svg { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
+.fm-fig::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255, 240, 210, .16), transparent 40%, rgba(0, 0, 0, .35)); pointer-events: none; }
+.fm-foe .fm-fig { border-color: #9a3b2c; box-shadow: 0 0 0 1px #2a0c08, 0 4px 6px rgba(0, 0, 0, .6), inset 0 0 8px rgba(0, 0, 0, .6); }
+.fm-you .fm-fig { border-color: #d6b35a; }
+.fm-base { position: relative; width: calc(var(--w) * 1.34); height: calc(var(--w) * .44); border-radius: 50%;
+  background: conic-gradient(from 270deg, var(--ring) calc(var(--hp) * 360deg), #2a2622 0); box-shadow: 0 3px 4px rgba(0, 0, 0, .7); }
+.fm-base::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #4a4238, #1c1915 80%); }
+.fm-mini.low { --ring: #e0573f; }
+.fm-mini.mid { --ring: #e0a64a; }
+.fm-mini.nohp .fm-base { background: radial-gradient(ellipse at 50% 30%, #d6b35a, #6d5320 85%); }
+.fm-mini.spent .fm-base { background: radial-gradient(ellipse at 50% 30%, #6b6358, #2c2822 85%); }
+.fm-nm { margin-top: 2px; max-width: calc(var(--w) + 18px); font: 700 9px/1.1 var(--label); letter-spacing: .06em; text-transform: uppercase; color: #cbbd9f; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fm-foe .fm-nm { color: #e3a593; }
+.fm-tags { position: absolute; z-index: 3; top: -4px; right: -6px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
+.fm-tags i { font-style: normal; display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 999px; font: 700 9px/1 var(--label); color: #fff; background: #3a2a24; border: 1px solid #000; box-shadow: 0 1px 2px #000; }
+.fm-tags .t-bleed { background: #8f2a22; } .fm-tags .t-burn { background: #b5521c; } .fm-tags .t-frost { background: #3d7aa8; } .fm-tags .t-ven { background: #4f7a2a; }
+.fm-tags .t-blind { background: #555; } .fm-tags .t-good { background: #2f6a4a; } .fm-tags .t-wind { background: #c23a22; animation: fmPulse 1s ease-in-out infinite; }
+.fm-tags .t-ready { background: #8a6a24; }
+.fm-pop { position: absolute; z-index: 4; top: 10%; left: 50%; transform: translateX(-50%); font: 700 13px/1 var(--label); color: #ffd6c8; text-shadow: 0 0 4px #c0281a, 0 1px 0 #000; pointer-events: none; animation: fmPop 1s ease-out forwards; }
+.fm-pop.heal { color: #c9f2d6; text-shadow: 0 0 4px #2f7a52, 0 1px 0 #000; }
+.fm-more { align-self: center; font: 700 12px/1 var(--label); color: #e3a593; padding: 4px 6px; border: 1px dashed #6b3328; border-radius: 999px; }
+.fm-mini.hit .fm-fig { animation: fmHit .45s ease; }
+.fm-us .fm-mini.lunge .fm-fig { animation: fmLungeR .42s cubic-bezier(.3, 1.4, .5, 1); }
+.fm-them .fm-mini.lunge .fm-fig { animation: fmLungeL .42s cubic-bezier(.3, 1.4, .5, 1); }
+.fm-mini.down { filter: grayscale(.9) brightness(.55); }
+.fm-mini.down .fm-fig { transform: translateY(calc(var(--w) * .42)) scaleY(.34) skewX(-28deg); transition: transform .55s cubic-bezier(.6, 0, .8, 1.3); }
+.fm-us .fm-mini.down .fm-fig { transform: translateY(calc(var(--w) * .42)) scaleY(.34) skewX(28deg); }
+.fm-mini.down .fm-tags { display: none; }
+body.in-fight.blinded .fm-foe .fm-fig img { filter: blur(3px) brightness(.6); }
+body.in-fight.blinded .fm-foe .fm-base { background: #2a2622; }
+@keyframes fmHit { 0%, 100% { transform: none; } 20% { transform: rotate(-9deg) translateX(-3px); filter: brightness(1.8) sepia(1) hue-rotate(-40deg) saturate(4); } 45% { transform: rotate(7deg) translateX(2px); } 70% { transform: rotate(-3deg); } }
+@keyframes fmLungeR { 0%, 100% { transform: none; } 45% { transform: translateX(16px) rotate(8deg) scale(1.06); } }
+@keyframes fmLungeL { 0%, 100% { transform: none; } 45% { transform: translateX(-16px) rotate(-8deg) scale(1.06); } }
+@keyframes fmPop { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -22px); } }
+@keyframes fmPulse { 50% { box-shadow: 0 0 6px 2px rgba(240, 80, 40, .8); } }
+@media (prefers-reduced-motion: reduce) { .fm-mini .fm-fig { animation: none !important; transition: none !important; } .fm-pop { animation-duration: 1.6s; } }
+@media (max-width: 860px) {
+  .fs-mat { min-height: 66px; padding: 4px 8px 4px; gap: 6px; }
+  .fm-mini { --w: 32px; } .fm-mini.big { --w: 40px; } .fm-mini.boss { --w: 46px; } .fm-mini.small { --w: 26px; } .fm-mini.far { --w: 22px; }
+  .fm-side { gap: 2px 5px; }
+  .fm-nm { display: none; }
+  .fm-tags { right: -7px; top: -5px; } .fm-tags i { min-width: 13px; height: 13px; font-size: 8px; padding: 0 2px; }
+  .fm-tags i:nth-child(n+3) { display: none; }
+}
 /* Moves, sorted. */
 .choices.grouped { display: grid; gap: 10px; }
 .fc-grp { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
@@ -2508,6 +2578,7 @@ body.pv-open { overflow: hidden; }
         </div>
       </div>
     </div>
+    <div class="fs-mat" id="fsMat" aria-hidden="true"><div class="fm-side fm-us" id="fmUs"></div><div class="fm-vs"></div><div class="fm-side fm-them" id="fmThem"></div></div>
     <div class="fs-scene" id="fsScene" hidden></div>
   </section>
   <article class="story" id="story" aria-live="polite"></article>
@@ -4161,11 +4232,16 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
-    { ver: "142", name: "Things Worth Finding", date: "21 Nov 2026", items: [
+    { ver: "143", name: "Things Worth Finding", date: "21 Nov 2026", items: [
       "<b>Eight new weapons</b>, each where it belongs: the <b>Tallyblade</b> (+1 damage for every Vell case you named rightly), the <b>Kettledrop Glasscutter</b> (quick jabs land full, but it chips after 40 fights until Sulmara's glassworkers reforge it), the <b>Crimp's Hook</b> (heavy blows drag a foe a square closer, and it can't run), the <b>Stockade Maul</b> (every heavy blow staggers), the <b>Haverly Sickle</b> (each hit takes 1 off its blows, up to 3), the <b>Bellwether Flail</b> (the third ring stuns), the <b>Rootbound Longbow</b> (finish three Long Dig tunnels) and the <b>Undertow Trident</b> (double damage on anything in water or on a deck).",
       "<b>Six pieces of kit</b>: the <b>Inquirer's Coat</b> (+1 to Investigation, Insight and Perception, and a free hint when you lay out a case), the <b>Dust Men's Veil</b>, the cursed <b>Saint's Pearl Rosary</b> (+15% gold, but every town charges more), <b>Tapper's Gum Lantern</b> (compound lanterns sweep slower), the <b>Watchman's Bell-Clasp</b> (no night ambush surprises you) and the <b>Unshored Timber Charm</b> (a cave-in misses you).",
       "<b>Ten caches</b>: the Juror's Strongbox with seven keyholes, the last tunneller's pack and map, a smugglers' floor-cache, the Blind Fleet's tithe chest (with a ship upgrade), toll-fort coffers that pay back your tolls, the Mirage Well, the Saint's second ledger, Brannoc Vane's coffin-chest, <b>wayside shrines</b> on the Blood-bought Roads (give, or rob, and the road remembers) and the Toll-heron's purse of bridge tokens.",
       "The paintings are placeholders for now. Six feats in a new set, Things Worth Finding."
+    ] },
+    { ver: "142", name: "The Mat", date: "21 Nov 2026", items: [
+      "<b>Miniatures on the fight board.</b> Every fight now has a strip of battle mat with a painted mini for everyone in it: you and your company on the left, every foe on the right. Packs get one mini a head, company battles get each captain and the ranks, and Mind's Eye agents who help from afar stand small at the back.",
+      "<b>Read the field at a glance.</b> The ring around each mini's base is its life, and the pips above it show bleeding, blindness, poison, fire, frost, your combo and a foe winding up a heavy blow. A companion's base stays brass until they've struck that fight.",
+      "<b>Minis move.</b> They lunge when they strike, rock when they're hit, and fall flat when they're beaten. The mat takes on the colour of the ground in each region, ready for painted backdrops."
     ] },
     { ver: "141", name: "Ebba Quenn's Twelve", date: "21 Nov 2026", items: [
       "<b>Twelve new named weapons</b>, from Adrian's weapon sheet. Ebba Quenn quenched every blade in something other than water, and her cart went over the edge of the Blood-bought Roads with all twelve on it. From level 8, about one won fight in twenty turns one up (never more than thirty fights apart) until you have them all. Each one has its own painting in the Bag.",
@@ -14838,6 +14914,7 @@ body.pv-open { overflow: hidden; }
     $("fsRow").insertBefore(box, $("fsYou"));
     st.hidden = false;
     fsScene("");
+    fm = { yhp: null, fhp: null, by: null }; if ($("fsMat")) delete $("fsMat").dataset.bg; ["fmUs", "fmThem"].forEach(k => { const b = $(k); if (b) { b.dataset.k = ""; b.innerHTML = ""; } });
     $("fsIntroNm").textContent = String(name || "").replace(/<[^>]*>/g, "");
     $("fsIntroMn").textContent = menace ? "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns" : "";
     st.classList.remove("intro"); void st.offsetWidth; st.classList.add("intro");
@@ -14884,7 +14961,7 @@ body.pv-open { overflow: hidden; }
     if (st && st.htRoot > 0) bits.push('<span class="bad">Rooted</span>');
     $("fsYStat").innerHTML = bits.join("");
     const h = $("fsHint"); if (h) h.textContent = S.hp <= Math.max(1, max * 0.3) ? "You're badly hurt" : "";
-    const t = $("fsTurn"); if (t) t.textContent = FOE.turn ? "Turn " + FOE.turn : "";
+    const t = $("fsTurn"); if (t) t.textContent = FOE.turn ? "Turn " + FOE.turn : "";    fmRender();
   }
   // Wounds that land later, as gears on the foe's painting: [turns, what]. Each scene can add its own.
   function fsGears() {
@@ -14898,6 +14975,117 @@ body.pv-open { overflow: hidden; }
     if (st.snt && st.snt.aim != null) g.push([1, "The Sentinel's blow"]);
     return g;
   }
+  // ---------- the mat (2026-11-21) ----------
+  // A miniature for everyone in the fight, on a strip of battle mat on the board: you and your company on the
+  // left (Mind's Eye agents who work from afar stand small at the back), every foe on the right: one for a single
+  // foe, one per head of a pack (up to six), each captain and a few of the ranks in a company battle. Rebuilt only
+  // when who's on the field changes, so the lunge/rock/topple animations aren't cut off by every redraw.
+  // fmBy(id) before a companion's blow lands makes their mini the one that lunges.
+  const FM_PIC = { burr: "p_burr", tyra: "p_tyra", odran: "p_odran", wenna: "p_wenna", caddock: "p_caddock" };
+  const FM_FAR = { haggith: "sc_me_haggith_calm", tharen: "sc_raven", clauneck: "sc_me_clauneck", aulden: "sc_me_aulden" };
+  const FM_DOG = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 54l2-14c-3-4-3-10 1-14l4-12 4 8h10l4-8 4 12c4 4 4 10 1 14l2 14z" fill="#2a2620" stroke="#8a7a5a" stroke-width="1.4"/><circle cx="26" cy="32" r="2" fill="#e8c46a"/><circle cx="38" cy="32" r="2" fill="#e8c46a"/></svg>';
+  let fm = { yhp: null, fhp: null, by: null };
+  const fmBy = (id) => { fm.by = id; };
+  const fmImg = (src, alt) => src ? '<img alt="" src="' + src + '" decoding="async">' : "";
+  function fmRoster() {
+    const us = [], them = [], max = S.maxHp || 1;
+    const youSrc = S.pr !== undefined && typeof ITEM_PICS !== "undefined" && ITEM_PICS[heroFam(S)] ? picUrl(heroFam(S)) : (typeof markerSrc === "function" ? markerSrc() : "");
+    const yt = [];
+    if (bleeds().length) yt.push(["t-bleed", "🩸", "Bleeding"]);
+    if (FOE.pblind > 0) yt.push(["t-blind", "◌" + FOE.pblind, "Blinded"]);
+    if (lgVen()) yt.push(["t-ven", "☠", "Poisoned"]);
+    if (FOE.chain > 0) yt.push(["t-good", "★" + FOE.chain, "Combo"]);
+    if (FOE.dig) yt.push(["t-good", "⛨", "Dug in"]);
+    us.push({ k: "you", nm: S.name || "You", pic: fmImg(youSrc) || FACE_SVG.person, hp: Math.max(0, S.hp) / max, cls: "fm-you big", tags: yt });
+    if (!FOE.duel) {
+      company().forEach(id => {
+        const src = id === "ishbel" ? ISHBEL_PIC : FM_PIC[id] ? picUrl(FM_PIC[id]) : "";
+        const done = FOE.co && (FOE.co[id] || FOE.co["mob-" + id]);
+        us.push({ k: id, nm: coName(id).split(" ")[0], pic: fmImg(src) || (id === "burr" ? FM_DOG : FACE_SVG.person), cls: "fm-ally" + (id === "burr" ? " small" : "") + (done ? " spent" : " nohp"), tags: done ? [] : [["t-ready", "⚔", "Ready to strike"]], title: coName(id) + (done ? ": has struck this fight" : ": ready to strike") });
+      });
+      try { if (meCmd()) Object.keys(FM_FAR).filter(cmdOn).forEach(id => us.push({ k: "me-" + id, nm: CMD_AG[id].n.split(" ")[0], pic: fmImg(picUrl(FM_FAR[id])) || FACE_SVG.person, cls: "fm-ally far nohp", tags: [], title: CMD_AG[id].n + ", from afar: " + CMD_AG[id].trick })); } catch (e) {}
+    }
+    const f = FOE.face || { src: "", kind: ARM_PEOPLE.test(FOE.name || "") ? "person" : "beast" };
+    const fpic = fmImg(f.src) || (f.kind === "person" ? FACE_SVG.person : FACE_SVG.beast);
+    const ft = [], g = FOE.g;
+    const b = fxOn("burn"), fr = fxOn("frost"), v = FOE.fx && FOE.fx.ven ? FOE.fx.ven : FOE.lg && FOE.lg.ven ? FOE.lg.ven : 0;
+    try { if (g && ((gWindNext(g) && tellKnown(g, "wind")) || (gHowlNext(g) && tellKnown(g, "howl")))) ft.push(["t-wind", "!", gHowlNext(g) ? "About to howl" : "Winding up a heavy blow"]); } catch (e) {}
+    if (b) ft.push(["t-burn", "🔥", "Burning"]); if (fr) ft.push(["t-frost", "❄", "Chilled"]); if (v) ft.push(["t-ven", "☠", "Poisoned"]);
+    const gs = fsGears(); if (gs.length) ft.push(["t-good", "⚙" + gs[0][0], gs.map(x => x[1] + " in " + x[0]).join(", ")]);
+    const blind = FOE.pblind > 0, nm = String(FOE.name || "").replace(/<[^>]*>/g, "");
+    const caps = FOE.armF && FOE.armF.company && FOE.armF.caps;
+    if (caps) {
+      caps.forEach((c, i) => them.push({ k: "cap" + i, nm: c.name.split(" ").pop(), pic: FACE_SVG.person, hp: blind ? 1 : c.hp / c.max, cls: "fm-foe big", tags: i ? [] : ft, title: c.name }));
+      const all = Math.max(0, FOE.max - caps.length), up = Math.max(0, FOE.hp - caps.filter(c => c.hp > 0).length), n = Math.min(all, 4), live = all ? Math.ceil(up / all * n) : 0;
+      for (let i = 0; i < n; i++) them.push({ k: "s" + i, nm: "", pic: FACE_SVG.person, hp: 1, cls: "fm-foe small" + (i >= live ? " down" : ""), tags: [], title: "The ranks" });
+      if (all) them.push({ more: up + " standing" });
+    } else if (FOE.unit) {
+      const all = FOE.max, n = Math.min(all, all > 6 ? 5 : 6), live = all > 6 ? Math.ceil(FOE.hp / all * n) : FOE.hp;
+      for (let i = 0; i < n; i++) them.push({ k: "h" + i, nm: "", pic: fpic, hp: 1, cls: "fm-foe" + (n > 3 ? " small" : "") + (i >= live ? " down" : ""), tags: i === 0 ? ft : [], title: nm });
+      if (all > 6) them.push({ more: FOE.hp + " left" });
+    } else them.push({ k: "foe", nm: nm.split(/[,(]/)[0].replace(/^The /, ""), pic: fpic, hp: blind ? 1 : Math.max(0, FOE.hp) / (FOE.max || 1), cls: "fm-foe " + (FOE.boss ? "boss" : "big") + (FOE.hp <= 0 ? " down" : ""), tags: ft, title: nm });
+    return { us, them };
+  }
+  function fmHtml(m, i) {
+    if (m.more) return '<span class="fm-more" data-i="' + i + '">' + esc(m.more) + "</span>";
+    return '<div class="fm-mini ' + m.cls + '" data-i="' + i + '"><div class="fm-tags"></div><div class="fm-fig">' + m.pic + '</div><div class="fm-base"></div><div class="fm-nm"></div></div>';
+  }
+  function fmSide(box, list) {
+    const key = list.map(m => m.more ? "+" : m.k + "|" + m.pic.length).join(",");
+    if (box.dataset.k !== key) { box.dataset.k = key; box.innerHTML = list.map(fmHtml).join(""); }
+    list.forEach((m, i) => {
+      const e = box.querySelector('[data-i="' + i + '"]'); if (!e) return;
+      if (m.more) { e.textContent = m.more; return; }
+      const keep = ["hit", "lunge"].filter(c => e.classList.contains(c));
+      e.className = "fm-mini " + m.cls + (m.hp != null && m.hp <= 0 ? " down" : "") + (m.hp != null && m.hp > 0 && m.hp <= .3 ? " low" : m.hp != null && m.hp <= .6 ? " mid" : "") + (keep.length ? " " + keep.join(" ") : "");
+      if (m.hp != null) e.style.setProperty("--hp", Math.max(0, Math.min(1, m.hp)).toFixed(3));
+      e.title = m.title || m.nm;
+      e.querySelector(".fm-nm").textContent = m.nm;
+      e.querySelector(".fm-tags").innerHTML = m.tags.map(t => '<i class="' + t[0] + '" title="' + esc(t[2]) + '">' + t[1] + "</i>").join("");
+    });
+  }
+  function fmAnim(e, cls) {
+    if (!e) return;
+    e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls);
+    setTimeout(() => e.classList.remove(cls), 480);
+  }
+  function fmPop(e, txt, heal) {
+    if (!e) return;
+    const p = document.createElement("span"); p.className = "fm-pop" + (heal ? " heal" : ""); p.textContent = txt;
+    e.appendChild(p); setTimeout(() => p.remove(), 1000);
+  }
+  // Backdrops behind the mat (2026-11-21). The mat takes the region's ground colour from FD_PAL, and a painting
+  // once one is listed here: a region key, or a fight type (duel, company, nightmare), which wins over the region.
+  // Paintings: art/mat_<key>.webp, 1600 x 500 (phones crop the middle 900 x 500). See art/mat-backdrops.md.
+  const MAT_ART = {};
+  function fmBackdrop(mat) {
+    const F = FOE.armF || {}, reg = FOE.reg || F.reg || (typeof regAt === "function" ? regAt(chapterAt(S.part)) : "") || "roots";
+    const type = FOE.duel ? "duel" : F.company ? "company" : FOE.lvd && cascadeOn() ? "nightmare" : "";
+    const key = type && MAT_ART[type] ? type : reg, pal = (typeof FD_PAL !== "undefined" && FD_PAL[reg]) || null;
+    if (mat.dataset.bg === key) return;
+    mat.dataset.bg = key;
+    mat.style.setProperty("--mat-g", pal ? pal.gd : "#2b3a2c");
+    const art = MAT_ART[key];
+    mat.classList.toggle("art", !!art);
+    if (art) mat.style.setProperty("--mat-img", 'url("' + art + '")'); else mat.style.removeProperty("--mat-img");
+  }
+  function fmRender() {
+    const mat = $("fsMat"); if (!mat || !FOE.on) return;
+    fmBackdrop(mat);
+    const R = fmRoster(), us = $("fmUs"), them = $("fmThem");
+    fmSide(us, R.us); fmSide(them, R.them);
+    const live = [...them.querySelectorAll(".fm-mini:not(.down)")], foeEl = live[0] || them.querySelector(".fm-mini");
+    if (fm.fhp != null && FOE.hp !== fm.fhp) {
+      const n = fm.fhp - FOE.hp, tgt = FOE.unit ? (them.querySelectorAll(".fm-mini.down")[0] || live[live.length - 1]) : foeEl;
+      if (n > 0) { fmAnim(us.querySelector('[data-i="' + Math.max(0, R.us.findIndex(m => m.k === (fm.by || "you"))) + '"]'), "lunge"); fmAnim(tgt, "hit"); if (!FOE.unit && FOE.pblind <= 0) fmPop(tgt, "−" + n); }
+      else if (!FOE.unit) fmPop(foeEl, "+" + -n, true);
+    }
+    if (fm.yhp != null && S.hp !== fm.yhp) {
+      const n = fm.yhp - S.hp, you = us.querySelector('[data-i="0"]');
+      if (n > 0) { fmAnim(foeEl, "lunge"); fmAnim(you, "hit"); fmPop(you, "−" + n); } else fmPop(you, "+" + -n, true);
+    }
+    fm.fhp = FOE.hp; fm.yhp = S.hp; fm.by = null;
+  }
   const GEAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ffd27a" d="M10.3 2h3.4l.5 2.6 1.9.8 2.2-1.5 2.4 2.4-1.5 2.2.8 1.9 2.6.5v3.4l-2.6.5-.8 1.9 1.5 2.2-2.4 2.4-2.2-1.5-1.9.8-.5 2.6h-3.4l-.5-2.6-1.9-.8-2.2 1.5-2.4-2.4 1.5-2.2-.8-1.9L2 13.7v-3.4l2.6-.5.8-1.9-1.5-2.2 2.4-2.4 2.2 1.5 1.9-.8zM12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/></svg>';
   function bfxHit() {
     if (!FOE.on) return;
@@ -14910,7 +15098,7 @@ body.pv-open { overflow: hidden; }
   function foeIsBoss(name, base, unit) { return BOSS_NAMES.test(name || "") || (!unit && base >= 40); }
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
-    FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); nextReg = null;
+    FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); FOE.reg = nextReg; nextReg = null;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
@@ -15930,7 +16118,7 @@ body.pv-open { overflow: hidden; }
       let total = bonus; const rolls = [];
       for (let i = 0; i < count; i++) { const r = d(sides); rolls.push(r); total += r; }
       const dealt = Math.min(total, FOE.hp - 1);
-      FOE.hp -= dealt; renderFoe(); foePop("−" + dealt);
+      FOE.hp -= dealt; fmBy(id); renderFoe(); foePop("−" + dealt);
       tip("company");
       await say(line + ".");
       await mech(label + ": " + count + "d" + sides + (bonus ? " + " + bonus : "") + " → " + rolls.join(" + ") + (bonus ? " + " + bonus : "") + " = " + total + "." + (dealt < total ? " " + coName(id) + " leaves the last of it to you." : "") + " " + FOE.name + ": " + FOE.hp + " HP left.", "loot");
@@ -15945,7 +16133,7 @@ body.pv-open { overflow: hidden; }
       if (FOE.co["mob-" + id] || FOE.hp <= 1) continue;
       const ok = id === "burr" ? bondOf("burr") >= 1 : id === "ishbel" ? bondOf("ishbel") >= 1 : id === "tyra" ? bondOf("tyra") >= 2 && !/^Hesper Coyle/.test(FOE.name) : ["wenna", "odran", "talia", "harrow", "stone"].includes(id);
       if (!ok) continue;
-      FOE.co["mob-" + id] = true; foeHit(1);
+      FOE.co["mob-" + id] = true; fmBy(id); foeHit(1);
       await say({ burr: "Burr takes one of them down by the leg and worries it until it stops.", ishbel: "Ishbel goes into the press with a knife in each hand, and comes out of it with one of them on the ground behind her.", tyra: "Tyra's knife finds one of them, quietly, from behind.", wenna: "A bolt from Wenna drops one of them where it stands.", odran: "Odran Vey puts his shield into one of them and walks over it.", talia: "Talia Ash is suddenly among them, and then one fewer of them.", harrow: "Harrow cuts one of them down with a garrison sword.", stone: "Captain Stone's shield-rim takes one of them across the throat." }[id]);
       await mech(coName(id) + " takes one. " + FOE.name + ": " + FOE.hp + " left.", "loot");
     }
@@ -30392,7 +30580,7 @@ body.pv-open { overflow: hidden; }
     const alive = () => caps.filter(c => c.hp > 0);
     const soldiers = () => Math.max(0, FOE.hp - alive().length);
     const F = BATHYR(Object.assign({ heads: o.soldiers + caps.length, unit: "standing" }, o.F));
-    const baseAc = F.ac; F.company = true;
+    const baseAc = F.ac; F.company = true; F.caps = caps;
     // order: this round's order; last: the one before; drill: the company's combo links;
     // stagger: soldiers lose this round's swings; reach: only this many soldiers can reach you; braced: the coming charge is broken.
     const G = { order: null, last: null, drill: 0, stagger: false, reach: 0, braced: false, cal: 0, calN: 0, mines: [], rot: 0, stance: null, hunt: null, out: {}, coverT: 0, coverHp: 3 + (o.wagon ? 2 : 0), panic: 0, smoke: 0, burnN: 0, conc: false };
