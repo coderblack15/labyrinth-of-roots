@@ -14,6 +14,9 @@
 //   --stop     stop when it reaches this part (0-based, as S.part counts)
 //   --prefer   always pick a choice whose label matches, e.g. "Climb the bell rope|Leave the rafters"
 //   --phone    play on a phone-sized touch screen (390 x 844) instead of a 1200 x 900 desktop
+//   --setup    a .js file run once inside the game's own scope as the run starts (it can read and change S
+//              and call the game's functions), to set up a system the dice rarely reach, e.g.
+//              tools/playtest-setups/eye-command.js on a save from the roads back
 //
 // Output (in --out, default ./playtest-<seed>): log.txt (every click, with HP and the foe),
 // save-partN.json at the start of each part, errors.txt, hang.txt, and final.json.
@@ -26,7 +29,7 @@ const { chromium } = require("playwright");
 
 const arg = (k, def) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : def; };
 const seed = +arg("seed", 1), MAX = +arg("steps", 40000), stopPart = +arg("stop", 9999);
-const from = arg("from", null), prefer = arg("prefer", null) ? new RegExp(arg("prefer")) : null;
+const from = arg("from", null), setup = arg("setup", null) ? fs.readFileSync(arg("setup"), "utf8") : null, prefer = arg("prefer", null) ? new RegExp(arg("prefer")) : null;
 const SRC = path.resolve(arg("file", path.join(__dirname, "..", "index.html")));
 const out = path.resolve(arg("out", "playtest-" + seed));
 fs.mkdirSync(out, { recursive: true });
@@ -34,7 +37,7 @@ fs.mkdirSync(out, { recursive: true });
 // Expose the game's state to the bot (the game keeps it inside a closure).
 // The copy lives in --out, so point relative paths (art/*.webp, title-film.mp4) back at the game's own folder.
 const baseTag = '<base href="' + require("url").pathToFileURL(path.dirname(SRC) + path.sep).href + '">';
-const html = fs.readFileSync(SRC, "utf8").replace("let S = fresh();", "let S = fresh(); window.__g = { get S() { return S; }, get FOE() { return FOE; }, get J() { return J; } };").replace(/<head>/i, (h) => h + baseTag);
+const html = fs.readFileSync(SRC, "utf8").replace("let S = fresh();", "let S = fresh(); window.__g = { get S() { return S; }, get FOE() { return FOE; }, get J() { return J; }, ev: (s) => eval(s) };").replace(/<head>/i, (h) => h + baseTag);
 if (!html.includes("window.__g")) { console.error("Couldn't find `let S = fresh();` in " + SRC); process.exit(1); }
 const gamePath = path.join(out, "game.html");
 fs.writeFileSync(gamePath, html);
@@ -109,6 +112,10 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
       return { labels: pool.map(b => (b.innerText || b.value || "").trim().replace(/\s+/g, " ").slice(0, 90)), part: S.part, hp: S.hp, max: S.maxHp, lv: S.lv, coins: S.coins,
         foe: g.FOE.on ? g.FOE.name + " " + g.FOE.hp + "/" + g.FOE.max : "", tail: (story.lastElementChild ? story.lastElementChild.innerText : "").slice(-400) };
     }, POOL), "a look at the page");
+    if (setup && step === 0) {
+      const res = await page.evaluate((c) => { try { return String(window.__g.ev(c)); } catch (e) { return "SETUP ERROR " + (e.stack || e); } }, setup);
+      console.log("Setup: " + res.slice(0, 400)); if (/^SETUP ERROR/.test(res)) errors.push(res);
+    }
     if (r.part !== lastPart) {
       fs.writeFileSync(path.join(out, "save-part" + r.part + ".json"), await page.evaluate(() => JSON.stringify(window.__g.S)));
       console.log("Part " + (r.part + 1) + " (S.part " + r.part + ") at step " + step + " · HP " + r.hp + "/" + r.max + " · Lv " + r.lv + " · " + r.coins + " gold");
