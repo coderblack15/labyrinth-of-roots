@@ -2146,7 +2146,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fm-tags .t-blind { background: #555; } .fm-tags .t-good { background: #2f6a4a; } .fm-tags .t-wind { background: #c23a22; animation: fmPulse 1s ease-in-out infinite; }
 .fm-tags .t-ready { background: #8a6a24; }
 .fm-pop { position: absolute; z-index: 4; top: 10%; left: 50%; transform: translateX(-50%); font: 700 13px/1 var(--label); color: #ffd6c8; text-shadow: 0 0 4px #c0281a, 0 1px 0 #000; pointer-events: none; animation: fmPop 1s ease-out forwards; }
-.fm-pop.heal { color: #c9f2d6; text-shadow: 0 0 4px #2f7a52, 0 1px 0 #000; }
+.fm-pop.heal { color: #b8ffd0; font-size: 15px; text-shadow: 0 0 6px #1f9a52, 0 1px 0 #000; }
 .fm-more { align-self: center; font: 700 12px/1 var(--label); color: #e3a593; padding: 4px 6px; border: 1px dashed #6b3328; border-radius: 999px; }
 .fm-mini.hit .fm-fig { animation: fmHit .45s ease; }
 .fm-us .fm-mini.lunge .fm-fig { animation: fmLungeR .42s cubic-bezier(.3, 1.4, .5, 1); }
@@ -2161,8 +2161,64 @@ body.in-fight.blinded .fm-foe .fm-base { background: #2a2622; }
 @keyframes fmLungeR { 0%, 100% { transform: none; } 45% { transform: translateX(16px) rotate(8deg) scale(1.06); } }
 @keyframes fmLungeL { 0%, 100% { transform: none; } 45% { transform: translateX(-16px) rotate(-8deg) scale(1.06); } }
 @keyframes fmPop { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -22px); } }
+/* A bandage (2026-11-21): a strip winds up round your mini, the bleed pip goes, a green glow. Under a second. */
+.fm-wrap { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .95;
+  background: repeating-linear-gradient(-14deg, transparent 0 7px, rgba(239, 230, 210, .9) 7px 11px, rgba(190, 170, 130, .9) 11px 12px, transparent 12px 18px);
+  -webkit-mask: linear-gradient(0deg, #000 0, #000 var(--wr, 0%), transparent var(--wr, 0%)); mask: linear-gradient(0deg, #000 0, #000 var(--wr, 0%), transparent var(--wr, 0%));
+  animation: fmWrap .85s ease-out forwards; }
+.fm-mini.mended .fm-fig { box-shadow: 0 0 0 1px #2a1d0c, 0 0 14px 3px rgba(110, 220, 150, .75); transition: box-shadow .3s; }
+/* A volley (2026-11-21): arrows rain down over one side of the mat and stand in the ground a moment. Stopped by cover,
+   they stick in the ground short of the minis. Never waits on the story. */
+.fm-rain { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.fm-arrow { position: absolute; left: var(--x); top: var(--y); width: 2px; height: 24px; margin: -24px 0 0 -1px; transform-origin: 50% 100%;
+  background: linear-gradient(180deg, #d8d2c4 0 5px, #8a6a3a 5px 100%); transform: rotate(var(--r)); animation: fmFall .42s cubic-bezier(.5, 0, 1, 1) var(--dl) both, fmGone .3s ease-in calc(var(--dl) + 1.05s) forwards; }
+.fm-arrow::before { content: ""; position: absolute; left: -3px; top: 0; width: 8px; height: 6px; background: linear-gradient(90deg, #b8b0a0 0 3px, transparent 3px 5px, #b8b0a0 5px); clip-path: polygon(0 0, 100% 0, 75% 100%, 25% 100%); }
+.fm-arrow::after { content: ""; position: absolute; left: -2px; bottom: -4px; border: 3px solid transparent; border-top: 5px solid #cfd3d6; }
+.fm-them .fm-mini.shot .fm-fig, .fm-us .fm-mini.shot .fm-fig { animation: fmHit .45s ease .35s; }
+@keyframes fmFall { from { transform: translate(calc(var(--dx) * -1), -140px) rotate(var(--r)); opacity: 0; } 15% { opacity: 1; } to { transform: rotate(var(--r)); opacity: 1; } }
+@keyframes fmGone { to { opacity: 0; } }
+.ipic-mark { position: absolute; right: 4%; bottom: 4%; z-index: 2; font-size: clamp(11px, 22%, 22px); pointer-events: none; display: flex; gap: 2px; }
+.ipic-mark.m-frost { bottom: auto; top: 4%; }
+.ipic-mark .tri { width: 1.5em; height: 1.5em; }
+.foe-face .ipic-mark { display: none; }
+.ff-badges .tri { font-size: 12px; margin: 0 1px 0 0; }
+.fm-tags i.t-mk { background: none; border: 0; box-shadow: none; padding: 0; min-width: 0; font-size: 11px; height: auto; }
+.fm-tags i.t-mk .tri { margin: 0; }
+/* Enchant marks: a small painted mark in a dark coin, rimmed and softly lit in the trait's colour. */
+.tri { display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; margin: 0 1px; vertical-align: -.3em; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #2a2420, #0e0c0a 80%); border: 1.5px solid var(--c); box-shadow: 0 0 0 1px #000, 0 0 5px color-mix(in srgb, var(--c) 55%, transparent), inset 0 0 4px color-mix(in srgb, var(--c) 35%, transparent); }
+.tri svg { width: 86%; height: 86%; overflow: visible; filter: drop-shadow(0 0 .6px #000); }
+.tri-row { display: inline-flex; gap: 2px; margin-left: 6px; vertical-align: middle; }
+.fm-ench { position: absolute; z-index: 3; left: -6px; bottom: 2px; display: flex; flex-direction: column-reverse; gap: 2px; font-size: 11px; pointer-events: none; }
+@media (max-width: 860px) { .fm-ench { font-size: 9px; left: -5px; } .fm-ench .tri:nth-child(n+3) { display: none; } }
+/* Elements on a foe's mini: the same painted marks, standing at its feet (fire), frost along its edge, a drip from above. */
+.fm-elm { position: absolute; z-index: 3; left: 50%; bottom: 4px; transform: translateX(-50%); display: none; gap: 1px; font-size: 10px; pointer-events: none; }
+.fm-mini.el-burn .fm-elm.b, .fm-mini.el-frost .fm-elm.f, .fm-mini.el-ven .fm-elm.v { display: flex; }
+.fm-mini.small .fm-elm { font-size: 8px; }
+.fm-elm.b .tri { animation: fmFlick .55s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.fm-elm.f { bottom: auto; top: 30%; left: auto; right: 2px; transform: none; flex-direction: column; }
+.fm-elm.v { bottom: auto; top: 4px; animation: fmDrop 1.4s ease-in infinite; }
+.fm-mini.el-frost .fm-fig { box-shadow: 0 0 0 1px #2a0c08, 0 4px 6px rgba(0, 0, 0, .6), inset 0 -10px 12px rgba(160, 215, 255, .45); }
+.fm-mini.el-burn .fm-fig { box-shadow: 0 0 0 1px #2a0c08, 0 4px 6px rgba(0, 0, 0, .6), inset 0 -10px 12px rgba(240, 120, 40, .45); }
+@keyframes fmFlick { from { transform: scaleY(.9); } to { transform: scaleY(1.12) translateY(-1px); } }
+@keyframes fmDrop { 0% { transform: translate(-50%, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, 26px); opacity: 0; } }
+/* Stagger (2026-11-21): a heavy blow breaks its wind-up, so the mini cracks and wobbles. */
+.fm-crack { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; }
+.fm-crack svg { width: 100%; height: 100%; }
+.fm-mini.stag .fm-crack { animation: fmCrack .9s ease-out; }
+.fm-mini.stag .fm-fig { animation: fmWobble .7s ease-out; }
+@keyframes fmCrack { 0% { opacity: 0; } 12% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fmWobble { 0%, 100% { transform: none; } 15% { transform: rotate(-12deg) translateX(-4px); filter: brightness(1.6); } 35% { transform: rotate(9deg); } 55% { transform: rotate(-6deg); } 75% { transform: rotate(3deg); } }
+/* A weapon tumbles out of the fallen foe onto the mat, glowing in its quality's colour. */
+.fm-drop { position: absolute; z-index: 6; width: 34px; height: 34px; margin: -34px 0 0 -17px; left: var(--x); top: var(--y); pointer-events: none; color: var(--q, #b98a55);
+  filter: drop-shadow(0 0 6px var(--q, #b98a55)) drop-shadow(0 0 2px #000); animation: fmTumble .75s cubic-bezier(.3, 1.3, .6, 1) both, fmGlow 1s ease-in-out .75s infinite alternate; }
+.fm-drop svg { width: 100%; height: 100%; }
+@keyframes fmTumble { from { transform: translate(0, -60px) rotate(-260deg) scale(.6); opacity: 0; } 20% { opacity: 1; } to { transform: rotate(-35deg); opacity: 1; } }
+@keyframes fmGlow { from { filter: drop-shadow(0 0 4px var(--q)) drop-shadow(0 0 2px #000); } to { filter: drop-shadow(0 0 12px var(--q)) drop-shadow(0 0 2px #000); } }
+@property --wr { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+@keyframes fmWrap { 0% { --wr: 0%; } 55% { --wr: 100%; opacity: .95; } 100% { --wr: 100%; opacity: 0; } }
 @keyframes fmPulse { 50% { box-shadow: 0 0 6px 2px rgba(240, 80, 40, .8); } }
-@media (prefers-reduced-motion: reduce) { .fm-mini .fm-fig { animation: none !important; transition: none !important; } .fm-pop { animation-duration: 1.6s; } }
+@media (prefers-reduced-motion: reduce) { .fm-mini .fm-fig, .fm-elm, .fm-elm .tri, .fm-drop { animation: none !important; transition: none !important; } .fm-pop { animation-duration: 1.6s; } }
 @media (max-width: 860px) {
   .fs-mat { min-height: 66px; padding: 4px 8px 4px; gap: 6px; }
   .fm-mini { --w: 32px; } .fm-mini.big { --w: 40px; } .fm-mini.boss { --w: 46px; } .fm-mini.small { --w: 26px; } .fm-mini.far { --w: 22px; }
@@ -2812,6 +2868,15 @@ body.pv-open { overflow: hidden; }
   const $ = (id) => document.getElementById(id);
   const story = $("story");
   const wait = (ms) => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+  // Instant fights (2026-11-21, Adrian: "make the attack selections instant"): in a fight, the move you pick lands at
+  // once. Your rolls and the foe's roll themselves (no second tap on Roll), the dice show their number without
+  // spinning, and the story lines don't pause between them. The minis on the mat still lunge and rock alongside.
+  // Settings can bring the dice back ("Roll the dice yourself"). Per browser. Quick hands on an attack card keep their
+  // Roll button while an item is ready, since the timing catch needs the pause.
+  const INST_KEY = "labyrinth-of-roots-instant";
+  const instPref = () => { try { return localStorage.getItem(INST_KEY) !== "0"; } catch (e) { return true; } };
+  let instOn = instPref();
+  const instNow = () => { try { return instOn && FOE.on && !FOE.duel; } catch (e) { return false; } };
   const d = (n) => 1 + Math.floor(Math.random() * n);
 
   // ---------- spiral ornament ----------
@@ -4238,6 +4303,13 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "145", name: "Straight to the Blow", date: "21 Nov 2026", items: [
+      "<b>Instant fights.</b> Tap a move and it lands. No second tap on Strike or Brace: your rolls and the foe's roll themselves, the dice show their number at once, and the story doesn't pause between lines. Like tapping the dice? <b>Settings → Fight rolls → Roll the dice yourself</b>. Duels keep their timing, and an attack with a quick-hands item ready still waits for you.",
+      "<b>Bandages on the mat.</b> Bind a wound or bandage the bleeding and a strip winds round your mini, the bleeding pip goes, and it glows green as the health comes back.",
+      "<b>Volleys on the mat.</b> When the bowmen loose, or you fan three arrows off the bow, arrows rain down over that side of the mat and stand in the ground. Behind cover or a pavise, they stick short of you.",
+      "<b>More on the mat.</b> A heavy blow that breaks a wind-up cracks the foe's mini and sets it wobbling. A burning foe has a flame at its feet, a chilled one frost along its edge, a poisoned one a green drip. And when a foe drops a weapon, it tumbles out onto the mat, glowing in its quality's colour, before the board folds away.",
+      "<b>Enchant marks.</b> Every weapon trait has its own small painted mark in a lit coin: Searing, Frostbitten, Venomed, Lifedrinker, Thirsting, Withering, Moonlit, Reach, Crushing, Keen, Tallied, Glass-quick, Hooked, Staggering, Blighting, Ringing, Tangling and Undertow. They show on your attack button, beside your mini and by each weapon in the Bag. The animated flames and rime on weapon paintings are now the same painted marks, and so are the burn, frost and poison counts on a foe's face."
+    ] },
     { ver: "144", name: "The Long Walk Through", date: "21 Nov 2026", items: [
       "<b>A fight that froze is fixed.</b> When one fight turned up two new weapons at once (a find and one of Ebba Quenn's Twelve), the spoils broke and the fight never ended, with the foe on 0 HP and nothing left to press. Now both weapons show and the road goes on.",
       "<b>The Welling has its wayside moments</b>, like every other chapter: a few dry lines on the coast road while the sea comes up.",
@@ -4882,6 +4954,7 @@ body.pv-open { overflow: hidden; }
     h += row("Music", "Slow, quiet night music under the sound, written fresh each time it plays. Each chapter has its own theme, carried by its two pieces and by its fights, Nightmares and towns. It plays when Sound is on.", '<div class="set-opts">' + [["0", "Off"], ["1", "Faint"], ["2", "Soft"], ["3", "Fuller"]].map(([k, l]) => '<button class="ghost" type="button" data-mus="' + k + '">' + l + "</button>").join("") + '</div><p class="mus-now"></p><p class="mus-heard j-sub"></p><div class="set-opts"><button class="ghost mus-skip" type="button">Next piece</button></div>');
     h += row("Text size", "Makes the story, the sheet and the menus bigger or smaller.", opt("ts", TEXT_SIZES.map(z => [z[0], z[1]]), textSize()));
     h += row("First-time notes", "A short note the first time each part of the game turns up. <b>Guide me</b> adds notes on the basics too. Every note you've seen is in the journal's Field guide.", opt("guide", [["guide", "Guide me"], ["some", "Only new systems"], ["know", "Off"]], tipState.off ? "know" : tipState.guide === "guide" ? "guide" : "some"));
+    h += row("Fight rolls", "<b>Instant</b>: the move you pick lands at once, and the dice roll themselves. <b>Roll the dice yourself</b>: tap Roll for every swing and every blow at you, and watch them spin.", opt("inst", [["1", "Instant"], ["0", "Roll the dice yourself"]], instOn ? "1" : "0"));
     h += row("Story so far", "A short recap when you continue a save.", opt("recap", [["1", "Show it"], ["0", "Skip it"]], recapOff() ? "0" : "1"));
     if (started) {
       h += row("Battle style · Slot " + SLOT, "How company battles, boardings and raids are fought." + (FOE.on ? " You can change this once this fight is over." : ""), opt("stac", [["classic", "Classic"], ["tactics", "On the grid"], ["ask", "Ask each fight"]], S.tac || "classic"));
@@ -4895,6 +4968,7 @@ body.pv-open { overflow: hidden; }
     SND.paint();
     body.querySelectorAll("[data-ts]").forEach(b => b.onclick = () => { try { localStorage.setItem(TEXT_KEY, b.dataset.ts); } catch (e) {} textApply(b.dataset.ts); setRender(); });
     body.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { const v = b.dataset.guide; tipState.off = v === "know"; tipState.guide = v === "some" ? "some" : v; tipSave(); setRender(); });
+    body.querySelectorAll("[data-inst]").forEach(b => b.onclick = () => { instOn = b.dataset.inst === "1"; try { localStorage.setItem(INST_KEY, instOn ? "1" : "0"); } catch (e) {} setRender(); });
     body.querySelectorAll("[data-recap]").forEach(b => b.onclick = () => { setRecapOff(b.dataset.recap === "0"); setRender(); });
     body.querySelectorAll("[data-stac]").forEach(b => b.onclick = () => { if (FOE.on) return; S.tac = b.dataset.stac; save(); setRender(); });
     body.querySelectorAll("[data-stide]").forEach(b => b.onclick = () => { S.slowTide = b.dataset.stide === "1"; save(); setRender(); });
@@ -6276,14 +6350,14 @@ body.pv-open { overflow: hidden; }
     return node;
   }
   function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = prn(html); return n; }
-  async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); await wait(220); }
+  async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); if (!instNow()) await wait(220); }
   const voice = (html) => say(html, "voice spirit");
   // A rules line. The line is a flex row (rune, then text), so mixed text and <b> are gathered into one span
   // first; otherwise each bold word became its own column.
   async function mech(html, kind) {
     const p = el("p", "mech" + (kind ? " " + kind : ""), wpnTxt(html));
     if (p.childNodes.length > 1) { const sp = document.createElement("span"); while (p.firstChild) sp.appendChild(p.firstChild); p.appendChild(sp); }
-    add(p); await wait(220);
+    add(p); if (!instNow()) await wait(220);
   }
   function heading(num, title) {
     const h = el("div", "part-head", '<span class="num">Part ' + num + '</span><h2>' + title + "</h2>");
@@ -6546,7 +6620,7 @@ body.pv-open { overflow: hidden; }
     die.classList.add("spin");
     const span = die.querySelector("span");
     const t0 = performance.now();
-    if (!reduced) while (performance.now() - t0 < 650) { span.textContent = d(20); await new Promise(r => setTimeout(r, 50)); }
+    if (!reduced && !instNow()) while (performance.now() - t0 < 650) { span.textContent = d(20); await new Promise(r => setTimeout(r, 50)); }
     span.textContent = final;
     die.classList.remove("spin");
     if (final === 20) die.classList.add("crit");
@@ -6625,7 +6699,7 @@ body.pv-open { overflow: hidden; }
         if (atk && FOE.lost) {
           FOE.lost = false;
           out.innerHTML = "<b class='bad'>No swing</b> · you're still dragging it out of your pack.";
-          scrollNext = true; await wait(450);
+          scrollNext = true; if (!instNow()) await wait(450);
           resolve({ ok: false, kept: 2, total: 0 }); return;
         }
         const vals = dies.map(() => d(20));
@@ -6644,11 +6718,12 @@ body.pv-open { overflow: hidden; }
           ctrl.append(re, acc);
         } else {
           scrollNext = true;
-          await wait(350);
+          if (!instNow()) await wait(350);
           resolve({ ok, kept, total });
         }
       }
       rollBtn.onclick = doRoll;
+      if (instNow() && !ctrl.querySelector(".belt-btn:not([disabled])")) doRoll();
     });
   }
 
@@ -6677,9 +6752,10 @@ body.pv-open { overflow: hidden; }
           re.onclick = () => { S.blessing = false; renderSheet(); doRoll(); };
           acc.onclick = () => { ctrl.innerHTML = ""; scrollNext = true; resolve(ok); };
           ctrl.append(re, acc);
-        } else { scrollNext = true; await wait(350); resolve(ok); }
+        } else { scrollNext = true; if (!instNow()) await wait(350); resolve(ok); }
       }
       b.onclick = doRoll;
+      if (instNow()) doRoll();
     });
   }
 
@@ -6735,7 +6811,7 @@ body.pv-open { overflow: hidden; }
       scrollNext = true;
       if (FOE.on) card.classList.add("fr");
       add(card);
-      b.onclick = async () => {
+      const go = b.onclick = async () => {
         ctrl.innerHTML = "";
         const vals = dies.map(() => d(20));
         await Promise.all(dies.map((x, i) => spin(x, vals[i])));
@@ -6747,10 +6823,11 @@ body.pv-open { overflow: hidden; }
         out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
         if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
         scrollNext = true;
-        await wait(350);
+        if (!instNow()) await wait(350);
         if (hit && FOE.on && S.adapt && FOE.adapt < 2) { FOE.adapt++; await mech("Adaptive Reasoning: you've felt how it moves now. +1 AC against " + FOE.name + " for the rest of this fight (+" + FOE.adapt + " so far).", "loot"); }
         resolve(hit);
       };
+      if (instNow()) go();
     });
   }
 
@@ -7408,8 +7485,10 @@ body.pv-open { overflow: hidden; }
     const F = ITEM_PICS[fam], img = F.vary && !L.spec && L.t !== "heartfire" ? F.vary[L.id % F.vary.length] : null;
     return { fam, img, glow: frost ? "frost" : L.spec ? "spectral" : L.t, fire: !frost && !L.spec && (L.t === "heartfire" || (L.tr || []).includes("fire")), frost };
   }
-  const RIME = '<span class="ipic-frost" aria-hidden="true"><i></i><i></i><i></i><b></b><b></b><b></b><b></b></span>';
-  const FLAMES = '<span class="ipic-fire" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b><b></b><b></b></span>';
+  // Fire and frost on a weapon's painting (2026-11-21, Adrian: the animated flame "looked generic"): a painted mark in
+  // a lit coin in the corner, the same marks as the enchant icons (TR_ICO), instead of animated flames and rime.
+  const RIME = '<span class="ipic-mark m-frost" aria-hidden="true"><span class="tri" style="--c:#8fd0f5"><svg viewBox="0 0 16 16"><g stroke="#d8f1ff" stroke-width="1.3" stroke-linecap="round"><path d="M8 1.5v13M2.4 4.8l11.2 6.4M2.4 11.2l11.2-6.4"/><path d="M6.4 2.6 8 4.1l1.6-1.5M6.4 13.4 8 11.9l1.6 1.5M2.6 7.1l2.1.4-.6 2M13.4 8.9l-2.1-.4.6-2" stroke-width=".9"/></g></svg></span></span>';
+  const FLAMES = '<span class="ipic-mark m-fire" aria-hidden="true"><span class="tri" style="--c:#f08a2c"><svg viewBox="0 0 16 16"><path d="M8.2 1.2c.9 2.6 3.9 3.9 3.9 7.6a4.1 4.1 0 0 1-8.2.2c0-2.1 1.1-3.3 2.2-4.2-.1 1.9.7 3 1.8 3.3-.8-2.6-.2-4.9.3-6.9z" fill="#e0612a" stroke="#4a1a08" stroke-width=".7"/><path d="M8.1 7.6c1.2 1 2.1 2 2.1 3.3a2.1 2.1 0 0 1-4.2.1c0-1.2.9-2.2 2.1-3.4z" fill="#ffd25e"/></svg></span></span>';
   function picHTML(p, cls, asBtn) {
     const F = ITEM_PICS[p.fam], i = picLook(p.fam), tag = asBtn ? "button" : "span";
     return "<" + tag + (asBtn ? ' type="button" aria-label="Look closer at the painting"' : "") + ' class="ipic g-' + p.glow + (p.fire ? " fire" : "") + (p.frost ? " frost" : "") + " " + (cls || "") + '">' +
@@ -7667,6 +7746,32 @@ body.pv-open { overflow: hidden; }
     tangle: "Tangling: the first hit roots its feet, and it can't break away and run.",
     undertow: "Undertow: double damage against anything in the water or on a ship's deck."
   };
+  // Enchant icons (2026-11-21, Adrian: "just add a flame icon on weapon enchants", then the rest, highlighted).
+  // One small painted mark per weapon trait, in a dark coin with a rim in the trait's colour. Shown on the attack
+  // button, on your mini on the mat and by the weapon in the Bag. The same marks sit on a foe's mini while it burns,
+  // freezes or is poisoned. [colour, svg body (viewBox 0 0 16 16), name]
+  const TR_ICO = {
+    fire: ["#f08a2c", '<path d="M8.2 1.2c.9 2.6 3.9 3.9 3.9 7.6a4.1 4.1 0 0 1-8.2.2c0-2.1 1.1-3.3 2.2-4.2-.1 1.9.7 3 1.8 3.3-.8-2.6-.2-4.9.3-6.9z" fill="#e0612a" stroke="#4a1a08" stroke-width=".7"/><path d="M8.1 7.6c1.2 1 2.1 2 2.1 3.3a2.1 2.1 0 0 1-4.2.1c0-1.2.9-2.2 2.1-3.4z" fill="#ffd25e"/>', "Searing"],
+    frost: ["#8fd0f5", '<g stroke="#d8f1ff" stroke-width="1.3" stroke-linecap="round"><path d="M8 1.5v13M2.4 4.8l11.2 6.4M2.4 11.2l11.2-6.4"/><path d="M6.4 2.6 8 4.1l1.6-1.5M6.4 13.4 8 11.9l1.6 1.5M2.6 7.1l2.1.4-.6 2M13.4 8.9l-2.1-.4.6-2" stroke-width=".9"/></g>', "Frostbitten"],
+    venom: ["#7ccf3c", '<path d="M8 1.3c1.6 3.2 4.6 5.3 4.6 8.4a4.6 4.6 0 0 1-9.2 0C3.4 6.6 6.4 4.5 8 1.3z" fill="#5aa62a" stroke="#1d3a0c" stroke-width=".7"/><path d="M6 9.2c0-1.1.7-2 1.3-2.7" stroke="#c9f59a" stroke-width=".9" fill="none" stroke-linecap="round"/>', "Venomed"],
+    leech: ["#c8343a", '<path d="M8 1.3c1.6 3.2 4.6 5.3 4.6 8.4a4.6 4.6 0 0 1-9.2 0C3.4 6.6 6.4 4.5 8 1.3z" fill="#8f141c" stroke="#2a0406" stroke-width=".7"/><path d="M5.6 9.4c.5-.8 1.6-.9 2.4 0 .8-.9 1.9-.8 2.4 0 .4 1-1 2.1-2.4 3-1.4-.9-2.8-2-2.4-3z" fill="#f0a0a0"/>', "Lifedrinker"],
+    drink: ["#d0505a", '<path d="M3.6 2.2h8.8c0 3.7-1.8 5.6-3.6 6v3.5l2.2 1.6H4.9l2.2-1.6V8.2c-1.8-.4-3.5-2.3-3.5-6z" fill="#b8a27a" stroke="#3a2a12" stroke-width=".7"/><path d="M4.4 3.4h7.2c-.3 2.1-1.6 3.4-3.6 3.4s-3.3-1.3-3.6-3.4z" fill="#9a1c24"/>', "Thirsting"],
+    wither: ["#9a86b8", '<path d="M8 1.8c3.1 0 5.2 2.1 5.2 4.9 0 1.7-.8 2.9-1.9 3.6v2.4H4.7v-2.4C3.6 9.6 2.8 8.4 2.8 6.7c0-2.8 2.1-4.9 5.2-4.9z" fill="#8c84a0" stroke="#22182e" stroke-width=".7"/><circle cx="6" cy="7" r="1.3" fill="#1a1222"/><circle cx="10" cy="7" r="1.3" fill="#1a1222"/><path d="M6.8 12.7v1.5M9.2 12.7v1.5" stroke="#22182e" stroke-width=".8"/>', "Withering"],
+    lunar: ["#d6dbe6", '<path d="M10.8 1.8a6.3 6.3 0 1 0 3.4 10.8A5.3 5.3 0 0 1 10.8 1.8z" fill="#dfe4ee" stroke="#3a4050" stroke-width=".7"/><circle cx="6.2" cy="9.6" r=".9" fill="#a8b0c2"/><circle cx="8.6" cy="12" r=".6" fill="#a8b0c2"/>', "Moonlit"],
+    first: ["#d8c08a", '<path d="M1.8 8h10.4M9 4.6 12.6 8 9 11.4" fill="none" stroke="#e8d6a8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.8 6.4 3.4 8 1.8 9.6" fill="none" stroke="#a8946a" stroke-width="1"/>', "Reach"],
+    crush: ["#c9a26a", '<path d="M3 3.4h7.6v3.4H3z" fill="#8a8a86" stroke="#2a2a26" stroke-width=".7"/><path d="M6 6.8h1.6v7.4H6z" fill="#7a5a32" stroke="#2a1a0c" stroke-width=".6"/><path d="M11.6 9.6l1.6-.8M12 12l1.8.2M10.8 11.6l.8 1.6" stroke="#f0d08a" stroke-width=".9" stroke-linecap="round"/>', "Crushing"],
+    keen: ["#e8eef2", '<path d="M2.6 13.4 12.4 3.6l1 1-9.8 9.8z" fill="#cfd6dc" stroke="#2a3036" stroke-width=".6"/><path d="M12.6 9.4l.6-1.8.6 1.8 1.8.6-1.8.6-.6 1.8-.6-1.8-1.8-.6z" fill="#fff"/>', "Keen"],
+    tally: ["#d8b86a", '<path d="M3.4 3v10M5.8 3v10M8.2 3v10M10.6 3v10M2.2 11.6 12.4 4.4" stroke="#e8d09a" stroke-width="1.2" stroke-linecap="round"/>', "Tallied"],
+    glass: ["#a8e0e8", '<path d="M8 1.4 12.6 6 8 14.6 3.4 6z" fill="#bfeaf0" fill-opacity=".55" stroke="#e8fbff" stroke-width=".8"/><path d="M3.4 6h9.2M8 1.4 6.4 6 8 14.6 9.6 6z" stroke="#e8fbff" stroke-width=".6" fill="none"/>', "Glass-quick"],
+    hook: ["#b8a890", '<path d="M10.4 1.8v7.4a3.6 3.6 0 0 1-7.2 0V8l2 1.6" fill="none" stroke="#c8c0b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.4" cy="2.2" r="1.2" fill="none" stroke="#c8c0b0" stroke-width="1"/>', "Hooked"],
+    stagger: ["#f0c040", '<path d="M8 1.4l1.4 4.2 4.4-1-3 3.4 3 3.4-4.4-1L8 14.6l-1.4-4.2-4.4 1 3-3.4-3-3.4 4.4 1z" fill="#f0c040" stroke="#4a3208" stroke-width=".6"/><circle cx="8" cy="8" r="1.6" fill="#fff4c8"/>', "Staggering"],
+    blight: ["#9aa63a", '<path d="M3 12.6c0-5.4 3.8-9.4 10-10-.3 6.4-4.4 10.2-10 10z" fill="#6f7a26" stroke="#232808" stroke-width=".7"/><path d="M3 12.6 9.4 6.2" stroke="#c8d27a" stroke-width=".8"/><circle cx="9.6" cy="9.2" r="1" fill="#3a3008"/><circle cx="7" cy="6.6" r=".7" fill="#3a3008"/>', "Blighting"],
+    bell: ["#e0b84a", '<path d="M8 1.8c2.6 0 4 2 4 4.6v3.2l1.4 2H2.6l1.4-2V6.4c0-2.6 1.4-4.6 4-4.6z" fill="#d6a83a" stroke="#3a2808" stroke-width=".7"/><circle cx="8" cy="13.2" r="1.3" fill="#8a6a1a"/><path d="M1.4 5.4c.4-1.2 1-2 1.8-2.6M14.6 5.4c-.4-1.2-1-2-1.8-2.6" stroke="#f0d890" stroke-width=".8" fill="none" stroke-linecap="round"/>', "Ringing"],
+    tangle: ["#8aa862", '<path d="M2.4 13.4c2-1 2.4-3 4.4-3.6 2.4-.7 2.6 2 1 2.2-1.6.2-1.4-2.6.6-3.8 2.2-1.3 4.2-.4 5.2-3" fill="none" stroke="#9ab86a" stroke-width="1.4" stroke-linecap="round"/><path d="M10.6 4.6c.2-1.4 1.4-2.4 2.8-2.4-.1 1.4-1.2 2.4-2.8 2.4z" fill="#9ab86a"/>', "Tangling"],
+    undertow: ["#4a9ac8", '<path d="M1.6 9.6c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0M1.6 12.8c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0" fill="none" stroke="#7cc4ec" stroke-width="1.3" stroke-linecap="round"/><path d="M3.6 6.4c.4-2.6 2.6-4.4 5.4-4.2-1.8.8-2.6 2-2.2 3.4.4 1.2 1.8 1.4 2.6.6" fill="none" stroke="#bfe6fa" stroke-width="1.1" stroke-linecap="round"/>', "Undertow"]
+  };
+  const trIco = (t, cls) => { const I = TR_ICO[t]; return I ? '<span class="tri' + (cls ? " " + cls : "") + '" style="--c:' + I[0] + '" title="' + I[2] + '"><svg viewBox="0 0 16 16" aria-hidden="true">' + I[1] + '</svg></span>' : ""; };
+  const trIcos = (k, cls) => (wDef(k).tr || []).map(t => trIco(t, cls)).join("");
   const ARM_AC = {
     phase: { name: "Phase Strike", fx: "once a fight, the blade slips through armour and flesh alike for 34 damage" },
     ether: { name: "Become Ethereal", fx: "once a fight, the next two blows at you pass straight through" },
@@ -7816,8 +7921,8 @@ body.pv-open { overflow: hidden; }
   function weaponItems(items) {
     if (!S.axe || !hasArms()) return;
     const cur = wpnKey(), all = arms().concat(armLoot().map(x => "L" + x.id));
-    if (cur !== "axe") items.push(["wpn", wDef(cur).icon, "Main hand: " + armName(cur), wTier(cur) + wDef(cur).fx]);
-    all.filter(k => k !== cur).forEach(k => items.push(["arm-" + k, wDef(k).icon, armName(k), wTier(k) + (harness().includes(k) ? "On your harness (" + harness().length + " of " + harnCap() + "). " : "In your pack. ") + wDef(k).fx]));
+    if (cur !== "axe") items.push(["wpn", wDef(cur).icon, "Main hand: " + armName(cur), wTier(cur) + (trIcos(cur) ? '<span class="tri-row">' + trIcos(cur) + "</span> " : "") + wDef(cur).fx]);
+    all.filter(k => k !== cur).forEach(k => items.push(["arm-" + k, wDef(k).icon, armName(k), wTier(k) + (trIcos(k) ? '<span class="tri-row">' + trIcos(k) + "</span> " : "") + (harness().includes(k) ? "On your harness (" + harness().length + " of " + harnCap() + "). " : "In your pack. ") + wDef(k).fx]));
   }
   // A weapon's worth for the carry limit: quality first, then its average blow.
   const wScore = (k) => { const W = wDef(k); return (W.t ? ARM_TIERS[W.t].rank : 1) * 100 + W.die[0] * (W.die[1] + 1) / 2 + W.die[2] + W.hit * 2 + W.tr.length * 3; };
@@ -7864,6 +7969,7 @@ body.pv-open { overflow: hidden; }
     const k = "L" + L.id;
     if (weaponPic(k)) lootNew.push(k);
     if (ARM_TIERS[t].rank >= 3) SND.cheers && SND.cheers(0.6);
+    if (FOE.on) fm.drop = t;
     return (ARM_TIERS[t].rank >= 3 ? "something catches the light in the wreck: " : "there's a weapon in the mess: ") + wTier(k) + "<b>" + armName(k) + "</b> (" + wDef(k).fx + " Wield it from the Bag.)" +
       (sold.length ? " Your pack won't take more than " + LOOT_MAX + " found weapons, so you sell off " + sold.join(", ") + " to the next peddler on the road" : "");
   }
@@ -8398,6 +8504,7 @@ body.pv-open { overflow: hidden; }
     } else if (a === "mend") {
       await beltMend(Math.max(1, Math.floor((d(6) + d(6) + 2) * mult)), "Warm sap seeps out of the grip and into the cuts on your hand, and spreads.");
     } else if (a === "onslaught") {
+      fmVolley("them");
       await say("You pull three arrows from the quiver in one grab, nock them fanned across the string, and let them all go at once.");
       if (FOE.F && FOE.F.volley) await FOE.F.volley(t, main);
       else if (FOE.unit) {
@@ -14936,7 +15043,7 @@ body.pv-open { overflow: hidden; }
     $("fsRow").insertBefore(box, $("fsYou"));
     st.hidden = false;
     fsScene("");
-    fm = { yhp: null, fhp: null, by: null }; if ($("fsMat")) delete $("fsMat").dataset.bg; ["fmUs", "fmThem"].forEach(k => { const b = $(k); if (b) { b.dataset.k = ""; b.innerHTML = ""; } });
+    fm = { yhp: null, fhp: null, by: null, drop: null }; clearTimeout(fsShut); fsShut = 0; if ($("fsMat")) { delete $("fsMat").dataset.bg; $("fsMat").querySelectorAll(".fm-drop, .fm-rain").forEach(x => x.remove()); } ["fmUs", "fmThem"].forEach(k => { const b = $(k); if (b) { b.dataset.k = ""; b.innerHTML = ""; } });
     $("fsIntroNm").textContent = String(name || "").replace(/<[^>]*>/g, "");
     $("fsIntroMn").textContent = menace ? "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns" : "";
     st.classList.remove("intro"); void st.offsetWidth; st.classList.add("intro");
@@ -14944,9 +15051,12 @@ body.pv-open { overflow: hidden; }
     if (!fsRO && typeof ResizeObserver === "function") { fsRO = new ResizeObserver(fsSize); fsRO.observe(st); }
     fsYou(); fsSize();
   }
+  let fsShut = 0;
   function fsClose() {
     const st = $("fightStage"), box = $("foeBox");
     if (!st || !box) return;
+    // A weapon just dropped: let it tumble onto the mat before the board folds away.
+    if (!st.hidden && fmDropShow()) { clearTimeout(fsShut); fsShut = setTimeout(() => { fsShut = 0; if (!FOE.on) fsClose(); }, 1400); return; }
     if (fsHome && box.parentNode !== fsHome.parent) fsHome.parent.insertBefore(box, fsHome.next && fsHome.next.parentNode === fsHome.parent ? fsHome.next : null);
     st.hidden = true; st.classList.remove("intro");
     fsScene(""); fsSize();
@@ -15006,7 +15116,7 @@ body.pv-open { overflow: hidden; }
   const FM_PIC = { burr: "p_burr", tyra: "p_tyra", odran: "p_odran", wenna: "p_wenna", caddock: "p_caddock" };
   const FM_FAR = { haggith: "sc_me_haggith_calm", tharen: "sc_raven", clauneck: "sc_me_clauneck", aulden: "sc_me_aulden" };
   const FM_DOG = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 54l2-14c-3-4-3-10 1-14l4-12 4 8h10l4-8 4 12c4 4 4 10 1 14l2 14z" fill="#2a2620" stroke="#8a7a5a" stroke-width="1.4"/><circle cx="26" cy="32" r="2" fill="#e8c46a"/><circle cx="38" cy="32" r="2" fill="#e8c46a"/></svg>';
-  let fm = { yhp: null, fhp: null, by: null };
+  let fm = { yhp: null, fhp: null, by: null, drop: null };
   const fmBy = (id) => { fm.by = id; };
   const fmImg = (src, alt) => src ? '<img alt="" src="' + src + '" decoding="async">' : "";
   function fmRoster() {
@@ -15015,7 +15125,7 @@ body.pv-open { overflow: hidden; }
     const yt = [];
     if (bleeds().length) yt.push(["t-bleed", "🩸", "Bleeding"]);
     if (FOE.pblind > 0) yt.push(["t-blind", "◌" + FOE.pblind, "Blinded"]);
-    if (lgVen()) yt.push(["t-ven", "☠", "Poisoned"]);
+    if (lgVen()) yt.push(["t-mk", trIco("venom"), "Poisoned"]);
     if (FOE.chain > 0) yt.push(["t-good", "★" + FOE.chain, "Combo"]);
     if (FOE.dig) yt.push(["t-good", "⛨", "Dug in"]);
     us.push({ k: "you", nm: S.name || "You", pic: fmImg(youSrc) || FACE_SVG.person, hp: Math.max(0, S.hp) / max, cls: "fm-you big", tags: yt });
@@ -15032,25 +15142,26 @@ body.pv-open { overflow: hidden; }
     const ft = [], g = FOE.g;
     const b = fxOn("burn"), fr = fxOn("frost"), v = FOE.fx && FOE.fx.ven ? FOE.fx.ven : FOE.lg && FOE.lg.ven ? FOE.lg.ven : 0;
     try { if (g && ((gWindNext(g) && tellKnown(g, "wind")) || (gHowlNext(g) && tellKnown(g, "howl")))) ft.push(["t-wind", "!", gHowlNext(g) ? "About to howl" : "Winding up a heavy blow"]); } catch (e) {}
-    if (b) ft.push(["t-burn", "🔥", "Burning"]); if (fr) ft.push(["t-frost", "❄", "Chilled"]); if (v) ft.push(["t-ven", "☠", "Poisoned"]);
+    // Fire, frost and poison show on the mini itself (.fm-elm), not as pips.
     const gs = fsGears(); if (gs.length) ft.push(["t-good", "⚙" + gs[0][0], gs.map(x => x[1] + " in " + x[0]).join(", ")]);
     const blind = FOE.pblind > 0, nm = String(FOE.name || "").replace(/<[^>]*>/g, "");
+    const elc = (b ? " el-burn" : "") + (fr ? " el-frost" : "") + (v ? " el-ven" : "");
     const caps = FOE.armF && FOE.armF.company && FOE.armF.caps;
     if (caps) {
-      caps.forEach((c, i) => them.push({ k: "cap" + i, nm: c.name.split(" ").pop(), pic: FACE_SVG.person, hp: blind ? 1 : c.hp / c.max, cls: "fm-foe big", tags: i ? [] : ft, title: c.name }));
+      caps.forEach((c, i) => them.push({ k: "cap" + i, nm: c.name.split(" ").pop(), pic: FACE_SVG.person, hp: blind ? 1 : c.hp / c.max, cls: "fm-foe big" + elc, tags: i ? [] : ft, title: c.name }));
       const all = Math.max(0, FOE.max - caps.length), up = Math.max(0, FOE.hp - caps.filter(c => c.hp > 0).length), n = Math.min(all, 4), live = all ? Math.ceil(up / all * n) : 0;
       for (let i = 0; i < n; i++) them.push({ k: "s" + i, nm: "", pic: FACE_SVG.person, hp: 1, cls: "fm-foe small" + (i >= live ? " down" : ""), tags: [], title: "The ranks" });
       if (all) them.push({ more: up + " standing" });
     } else if (FOE.unit) {
       const all = FOE.max, n = Math.min(all, all > 6 ? 5 : 6), live = all > 6 ? Math.ceil(FOE.hp / all * n) : FOE.hp;
-      for (let i = 0; i < n; i++) them.push({ k: "h" + i, nm: "", pic: fpic, hp: 1, cls: "fm-foe" + (n > 3 ? " small" : "") + (i >= live ? " down" : ""), tags: i === 0 ? ft : [], title: nm });
+      for (let i = 0; i < n; i++) them.push({ k: "h" + i, nm: "", pic: fpic, hp: 1, cls: "fm-foe" + elc + (n > 3 ? " small" : "") + (i >= live ? " down" : ""), tags: i === 0 ? ft : [], title: nm });
       if (all > 6) them.push({ more: FOE.hp + " left" });
-    } else them.push({ k: "foe", nm: nm.split(/[,(]/)[0].replace(/^The /, ""), pic: fpic, hp: blind ? 1 : Math.max(0, FOE.hp) / (FOE.max || 1), cls: "fm-foe " + (FOE.boss ? "boss" : "big") + (FOE.hp <= 0 ? " down" : ""), tags: ft, title: nm });
+    } else them.push({ k: "foe", nm: nm.split(/[,(]/)[0].replace(/^The /, ""), pic: fpic, hp: blind ? 1 : Math.max(0, FOE.hp) / (FOE.max || 1), cls: "fm-foe " + (FOE.boss ? "boss" : "big") + elc + (FOE.hp <= 0 ? " down" : ""), tags: ft, title: nm });
     return { us, them };
   }
   function fmHtml(m, i) {
     if (m.more) return '<span class="fm-more" data-i="' + i + '">' + esc(m.more) + "</span>";
-    return '<div class="fm-mini ' + m.cls + '" data-i="' + i + '"><div class="fm-tags"></div><div class="fm-fig">' + m.pic + '</div><div class="fm-base"></div><div class="fm-nm"></div></div>';
+    return '<div class="fm-mini ' + m.cls + '" data-i="' + i + '"><div class="fm-tags"></div><div class="fm-fig">' + m.pic + (/fm-foe/.test(m.cls) ? '<span class="fm-elm b">' + trIco("fire") + '</span><span class="fm-elm f">' + trIco("frost") + '</span><span class="fm-elm v">' + trIco("venom") + '</span><span class="fm-crack">' + FM_CRACK + "</span>" : "") + '</div>' + (m.k === "you" ? '<span class="fm-ench"></span>' : "") + '<div class="fm-base"></div><div class="fm-nm"></div></div>';
   }
   function fmSide(box, list) {
     const key = list.map(m => m.more ? "+" : m.k + "|" + m.pic.length).join(",");
@@ -15058,18 +15169,19 @@ body.pv-open { overflow: hidden; }
     list.forEach((m, i) => {
       const e = box.querySelector('[data-i="' + i + '"]'); if (!e) return;
       if (m.more) { e.textContent = m.more; return; }
-      const keep = ["hit", "lunge"].filter(c => e.classList.contains(c));
+      const keep = ["hit", "lunge", "mended", "shot", "stag"].filter(c => e.classList.contains(c));
       e.className = "fm-mini " + m.cls + (m.hp != null && m.hp <= 0 ? " down" : "") + (m.hp != null && m.hp > 0 && m.hp <= .3 ? " low" : m.hp != null && m.hp <= .6 ? " mid" : "") + (keep.length ? " " + keep.join(" ") : "");
       if (m.hp != null) e.style.setProperty("--hp", Math.max(0, Math.min(1, m.hp)).toFixed(3));
       e.title = m.title || m.nm;
       e.querySelector(".fm-nm").textContent = m.nm;
+      const en = e.querySelector(".fm-ench"); if (en) { const h = S.axe ? trIcos(wpnKey()) : ""; if (en.dataset.h !== h) { en.dataset.h = h; en.innerHTML = h; } }
       e.querySelector(".fm-tags").innerHTML = m.tags.map(t => '<i class="' + t[0] + '" title="' + esc(t[2]) + '">' + t[1] + "</i>").join("");
     });
   }
-  function fmAnim(e, cls) {
+  function fmAnim(e, cls, ms = 480) {
     if (!e) return;
     e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls);
-    setTimeout(() => e.classList.remove(cls), 480);
+    setTimeout(() => e.classList.remove(cls), ms);
   }
   function fmPop(e, txt, heal) {
     if (!e) return;
@@ -15090,6 +15202,55 @@ body.pv-open { overflow: hidden; }
     const art = MAT_ART[key];
     mat.classList.toggle("art", !!art);
     if (art) mat.style.setProperty("--mat-img", 'url("' + art + '")'); else mat.style.removeProperty("--mat-img");
+  }
+  // The bandage: a strip winds round a mini (you by default, or a companion by id) and it glows green a moment.
+  function fmWrap(k) {
+    const box = $("fmUs"); if (!box || !FOE.on) return;
+    const i = k ? [...box.querySelectorAll(".fm-mini")].findIndex(e => (e.title || "").startsWith(coName(k))) : 0;
+    const m = box.querySelector('[data-i="' + Math.max(0, i) + '"]'), f = m && m.querySelector(".fm-fig");
+    if (!f) return;
+    f.querySelectorAll(".fm-wrap").forEach(x => x.remove());
+    const w = document.createElement("i"); w.className = "fm-wrap"; f.appendChild(w);
+    m.classList.add("mended");
+    setTimeout(() => { w.remove(); m.classList.remove("mended"); }, 900);
+  }
+  const FM_CRACK = '<svg viewBox="0 0 40 52" aria-hidden="true"><path d="M21 0l-3 11 5 6-6 9 4 7-5 10 2 9M18 11l-7 4M23 17l8-3M17 26l-9 1M21 33l7 5" fill="none" stroke="#fff3d6" stroke-width="1.6" stroke-linecap="round" opacity=".9"/><path d="M21 0l-3 11 5 6-6 9 4 7-5 10 2 9" fill="none" stroke="#ffb347" stroke-width="3.5" opacity=".35"/></svg>';
+  // Stagger: every standing foe mini cracks and wobbles.
+  function fmStagger() {
+    const box = $("fmThem"); if (!box || !FOE.on) return;
+    box.querySelectorAll(".fm-mini:not(.down)").forEach(e => fmAnim(e, "stag", 950));
+  }
+  // A dropped weapon: noted when the spoils are rolled, shown as the board closes (which waits a moment for it).
+  const FM_Q = { ashen: "#9a9a94", tempered: "#b98a55", rootbound: "#79ab92", gloaming: "#b9a3e3", heartfire: "#f0b43c" };
+  const FM_BLADE = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M26 3l3 3-15 15-3-3z" fill="currentColor" stroke="#000" stroke-width=".8"/><path d="M8 17l7 7-2 2-7-7z" fill="#6b5a3a" stroke="#000" stroke-width=".8"/><path d="M8 24l-4 4" stroke="#4a3a22" stroke-width="3" stroke-linecap="round"/><circle cx="4" cy="28" r="2" fill="#c9a24a"/></svg>';
+  function fmDropShow() {
+    const t = fm.drop; fm.drop = null;
+    const mat = $("fsMat"), box = $("fmThem");
+    if (!t || !mat || !box || mat.offsetParent === null) return false;
+    const m = mat.getBoundingClientRect(), last = [...box.querySelectorAll(".fm-mini")].pop(), r = (last || box).getBoundingClientRect();
+    const e = document.createElement("i"); e.className = "fm-drop"; e.innerHTML = FM_BLADE;
+    e.style.cssText = "--x:" + (r.left - m.left + r.width / 2).toFixed(0) + "px;--y:" + (m.height - 8).toFixed(0) + "px;--q:" + (FM_Q[t] || FM_Q.tempered);
+    mat.appendChild(e);
+    return true;
+  }
+  // A volley onto one side of the mat ("us" or "them"). stopped: the arrows stand in the ground short of the minis.
+  function fmVolley(side, stopped) {
+    const mat = $("fsMat"), box = $(side === "us" ? "fmUs" : "fmThem");
+    if (!mat || !box || !FOE.on || mat.offsetParent === null) return;
+    const m = mat.getBoundingClientRect(), b = box.getBoundingClientRect(), from = side === "us" ? 1 : -1;
+    const rain = document.createElement("div"); rain.className = "fm-rain"; rain.setAttribute("aria-hidden", "true");
+    const n = reduced ? 5 : 14, left = b.left - m.left, w = Math.max(40, b.width);
+    for (let i = 0; i < n; i++) {
+      const a = document.createElement("i"); a.className = "fm-arrow";
+      let x = left + Math.random() * w;
+      if (stopped) x = side === "us" ? b.right - m.left + 6 + Math.random() * 26 : left - 6 - Math.random() * 26;
+      const y = m.height - 6 - Math.random() * 22, r = from * (14 + Math.random() * 16);
+      a.style.cssText = "--x:" + x.toFixed(0) + "px;--y:" + y.toFixed(0) + "px;--r:" + r.toFixed(0) + "deg;--dx:" + (from * -60) + "px;--dl:" + (Math.random() * .35).toFixed(2) + "s";
+      rain.appendChild(a);
+    }
+    mat.appendChild(rain);
+    if (!stopped) box.querySelectorAll(".fm-mini:not(.down)").forEach(e => fmAnim(e, "shot", 850));
+    setTimeout(() => rain.remove(), 1800);
   }
   function fmRender() {
     const mat = $("fsMat"); if (!mat || !FOE.on) return;
@@ -15457,14 +15618,15 @@ body.pv-open { overflow: hidden; }
       box.dataset.k = key;
       const pic = f.src ? '<img alt="' + (f.alt || FOE.name).replace(/"/g, "&quot;") + '" src="' + f.src + '" decoding="async">' : FACE_SVG[f.kind] || FACE_SVG.beast;
       box.innerHTML = (f.bid ? '<button type="button" class="bpic-btn" data-beast="' + f.bid + '" aria-label="Look at the painting">' + pic + "</button>" : pic) +
-        '<i class="ff-tint fr"></i><i class="ff-tint vn"></i>' + FLAMES + RIME + '<span class="ff-ven" aria-hidden="true"><b></b><b></b><b></b></span><span class="ff-badges"></span><span class="ff-gears"></span>';
+        '<i class="ff-tint fr"></i><i class="ff-tint vn"></i><span class="ff-badges"></span><span class="ff-gears"></span>';
     }
     const b = fxOn("burn"), fr = fxOn("frost"), v = FOE.fx && FOE.fx.ven ? FOE.fx.ven : FOE.lg && FOE.lg.ven ? FOE.lg.ven : 0;
     box.classList.toggle("burn", b > 0); box.classList.toggle("frost", fr > 0); box.classList.toggle("ven", v > 0); box.classList.toggle("sund", !!FOE.sund);
     const bd = box.querySelector(".ff-badges"); bd.classList.toggle("n3", !!(b && fr && v));
     const gz = box.querySelector(".ff-gears");
     if (gz) { const gs = fsGears(); gz.innerHTML = gs.slice(0, 4).map(x => '<span class="' + (x[0] <= 1 ? "now" : "") + '" title="' + x[1] + ": lands in " + x[0] + (x[0] === 1 ? " turn" : " turns") + '">' + GEAR_SVG + x[0] + "</span>").join(""); }
-    bd.innerHTML = (b ? '<span class="b-burn" title="Burning">🔥<i>' + b + "</i></span>" : "") + (fr ? '<span class="b-frost" title="Chilled">❄<i>' + fr + "</i></span>" : "") + (v ? '<span class="b-ven" title="Poisoned">☠<i>' + v + "</i></span>" : "");
+    const bh = (b ? '<span class="b-burn" title="Burning">' + trIco("fire") + "<i>" + b + "</i></span>" : "") + (fr ? '<span class="b-frost" title="Chilled">' + trIco("frost") + "<i>" + fr + "</i></span>" : "") + (v ? '<span class="b-ven" title="Poisoned">' + trIco("venom") + "<i>" + v + "</i></span>" : "");
+    if (bd.dataset.h !== bh) { bd.dataset.h = bh; bd.innerHTML = bh; }
     const row = $("foeArmRow");
     if (row) {
       row.hidden = !FOE.arMax;
@@ -15595,7 +15757,7 @@ body.pv-open { overflow: hidden; }
     const b = bleeds();
     if (!b.length) return false;
     if (all) b.length = 0; else b.shift();
-    renderBleed();
+    renderBleed(); fmWrap(); renderFoe();
     J.staunch = (J.staunch || 0) + 1; jSave();
     await mech(why + (b.length ? " One wound is closed; still bleeding: " + bleedTxt() + " a round." : " The bleeding stops."), "loot");
     if (J.staunch >= 10) grant("staunch");
@@ -15890,6 +16052,7 @@ body.pv-open { overflow: hidden; }
     const lt = down ? (lootDrop() || (FOE.unbound ? lootDrop() : "")) : "";
     if (lt) add(el("p", "mech loot find", "<span>Found: " + lt + ".</span>"));
     const qf = down ? qtDrop() : "";
+    if (qf) fm.drop = "heartfire";
     if (qf) add(el("p", "mech loot find q-heartfire", "<span>Found: " + qf + ".</span>"));
     lootNew.splice(0).forEach(k => picCard(k));
   }
@@ -23599,7 +23762,7 @@ body.pv-open { overflow: hidden; }
       if (F.before) { await F.before(st); if (FOE.hp <= 0 || st.fled) break; }
       if (FOE.ln) await wrnHeal();
       if (st.tellBlow || st.counter) { await counterBlow(F, st); if (FOE.hp <= 0) break; }
-      const opts = (F.noAtk && F.noAtk(st)) || st.rmNoAtk ? [] : [{ key: "atk", label: glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with " + wThe(wDef(wpnKey()).name), tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
+      const opts = (F.noAtk && F.noAtk(st)) || st.rmNoAtk ? [] : [{ key: "atk", label: (glaive ? "Swing the Moltglaive" : wpnKey() === "axe" ? "Swing the axe" : "Strike with " + wThe(wDef(wpnKey()).name)) + (glaive ? "" : '<span class="tri-row">' + trIcos(wpnKey()) + "</span>"), tag: glaive ? "1d10 + 3, +1d6 vs Hesk" : "" }];
       if (st.g && !F.heads && opts.some(o => o.key === "atk")) {
         opts.push({ key: "g-jab", label: "Quick jab", tag: "+2 to hit · half damage · your gauge stays half full", plain: true });
         opts.push({ key: "g-heavy", label: "Heavy blow", tag: "−2 to hit · half again as much damage · a longer wait after" + (gWindNext(st.g) && tellKnown(st.g, "wind") ? " · ✓ breaks its wind-up" : gHowlNext(st.g) && tellKnown(st.g, "howl") ? " · ✓ stops its howl" : ""), plain: true });
@@ -23704,6 +23867,7 @@ body.pv-open { overflow: hidden; }
         st.used.mend = (st.used.mend || 0) + 1;
         const n = d(8) + 2, before = S.hp;
         S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
+        fmWrap();
         await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
         await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
         if (bleeds().length) await bleedStop("And the binding holds the bleeding shut.");
@@ -23926,6 +24090,7 @@ body.pv-open { overflow: hidden; }
       if ((gWindNext(g) || howl) && (FOE.gRb || FOE.gHit)) {
         if (g.boss) g.n++; else g.next = "swing";
         g.foe = 0;
+        fmStagger();
         await mech(howl ? "Staggered! You hit it as it draws breath, and the howl dies in its throat. Its gauge empties." : "Staggered! You catch it mid wind-up. The heavy blow is lost and its gauge empties.", "combo");
       }
       else if (FOE.gRb) { g.foe = Math.max(0, g.foe - 30); await mech("The Rootbreaker rocks it back: its gauge drops.", "combo"); }
@@ -30785,6 +30950,7 @@ body.pv-open { overflow: hidden; }
       if (k === "smoke") G.smoke = 3; if (k === "conc") G.conc = true; if (k === "fire") G.burnN = 3;
       const broke = G.order === "drum" || G.order === "charge" || (k === "smoke" && G.order === "volley"); if (broke) G.order = null;
       await say(k === "smoke" ? "The shell lands in front of the line and splits into a grey wall, and the whole company walks backwards out of it, coughing, shouting for each other." : "The shell comes down on the front rank and bursts, and the whole line goes back: a step, then three, the front of it thrown into the ones behind.");
+      fmStagger();
       await mech("Mini-mortar (" + SHELLS[k].name + "): " + (n ? n + " down, and the" : "the") + " line is knocked back. They lose their swings this round, their Drill is gone" + (broke ? ", and so is the order they were following" : "") + ", and they panic: −2 to hit next round" + (k === "smoke" ? "; in the smoke, −4 more for 2 rounds, no volleys, and the way out is DC 7" : k === "conc" ? "; the concussion takes their swings next round too" : k === "fire" ? "; one will burn on each of their next 3 turns" : "") + ".", "loot");
       if (soldiers() > 0 && d(2) === 1) { foeHit(1); await say("One of the back rank has had enough and is off down the road."); }
       if (r.cap && alive().length) { const c = alive()[0]; await capHit(c, d(6), "The blast catches " + c.name + ": 1d6", true); }
@@ -30892,6 +31058,7 @@ body.pv-open { overflow: hidden; }
       if (soldiers() <= 0) { st.evade = false; G.coverT = Math.max(0, G.coverT - 1); return "done"; }
       if (G.order === "volley") {
         G.order = null;
+        fmVolley("us", G.coverT > 0 || st.pavise > 0);
         await say("The bowmen at the back draw together, and the air goes thick with it.");
         if (G.coverT > 0) {
           G.coverHp--;
@@ -33556,6 +33723,7 @@ body.pv-open { overflow: hidden; }
   }
   async function rxVolley(st) {
     const X = rx();
+    fmVolley("them");
     if (!reduced) { const v = el("div", "volley"); v.setAttribute("aria-hidden", "true"); for (let i = 0; i < 40; i++) { const a = el("i"); a.style.left = d(100) + "%"; a.style.animationDelay = (d(60) / 100) + "s"; v.appendChild(a); } document.body.appendChild(v); setTimeout(() => v.remove(), 2200); }
     SND.volley && SND.volley();
     await say("<b>The volley.</b> A sound like wind through dry reeds, and then the sky goes dark: a black rain of arrows, lead-headed, heavy as hail, coming down over the walls.");
@@ -41837,7 +42005,7 @@ body.pv-open { overflow: hidden; }
     p.hidden = !(L && L.max);
     if (!p.hidden) p.innerHTML = '<span class="stat-label">Plates</span><span class="ppips">' + Array.from({ length: L.max }, (x, i) => "<i" + (i < L.plates ? ' class="on"' : "") + "></i>").join("") + '</span><span class="combo-note">' + (L.plates ? "your blows land 2 lighter" : "all knocked off") + "</span>";
     const tags = L ? [["chill", "Chilled"], ["burn", "Burning"], ["ven", "Envenomed"], ["sil", "Silenced"], ["root", "Rooted"]].filter(([k]) => L[k] > 0).map(([k, n]) => n + " " + L[k]) : [];
-    if (FOE.on && FOE.fx) [["burn", "🔥 Burning", " rounds"], ["frost", "❄ Chilled", " rounds"], ["ven", "☠ Poisoned", ""]].forEach(([k, n, u]) => { if (FOE.fx[k] > 0) tags.push(n + " " + FOE.fx[k] + (u && FOE.fx[k] === 1 ? " round" : u)); });
+    if (FOE.on && FOE.fx) [["burn", "Burning", " rounds"], ["frost", "Chilled", " rounds"], ["ven", "Poisoned", ""]].forEach(([k, n, u]) => { if (FOE.fx[k] > 0) tags.push(n + " " + FOE.fx[k] + (u && FOE.fx[k] === 1 ? " round" : u)); });
     s.hidden = !tags.length;
     if (tags.length) s.textContent = tags.join(" · ");
   }
