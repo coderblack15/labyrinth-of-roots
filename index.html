@@ -1867,6 +1867,7 @@ body.in-fight.in-lab.blinded .story > *:not(:nth-last-child(-n+4)) { opacity: 1;
 .dc-card small { color: var(--muted); font-size: .78em; line-height: 1.3; }
 .dc-card.on { background: #3a3020; box-shadow: inset 0 0 0 2px var(--gold); }
 .dc-card.bad { box-shadow: inset 0 0 0 2px #d9503a; }
+.dc-card.hint { outline: 2px dashed var(--gold); outline-offset: 2px; }
 .dc-none { color: var(--muted); font-style: italic; margin: 4px 0; }
 .dc-clues { margin: 4px 0 8px; padding-left: 1.4em; font-size: .9em; color: var(--muted); line-height: 1.4; }
 .dc-grid { display: grid; grid-template-columns: minmax(70px, auto) repeat(var(--c), minmax(0, 1fr)); gap: 3px; max-width: 520px; margin: 4px auto 8px; align-items: center; }
@@ -3982,6 +3983,7 @@ body.pv-open { overflow: hidden; }
     h += lhSection(rs);
     h += htSection(rs);
     h += dcSection(rs);
+    h += rfSection(rs);
     h += pvSection();
     if (J.past.length) {
       h += '<section><h3>Earlier journeys</h3><table><thead><tr><th>Begun</th><th>Furthest</th><th>Time</th><th class="opt">Deaths</th></tr></thead><tbody>' +
@@ -4159,6 +4161,12 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "142", name: "Things Worth Finding", date: "21 Nov 2026", items: [
+      "<b>Eight new weapons</b>, each where it belongs: the <b>Tallyblade</b> (+1 damage for every Vell case you named rightly), the <b>Kettledrop Glasscutter</b> (quick jabs land full, but it chips after 40 fights until Sulmara's glassworkers reforge it), the <b>Crimp's Hook</b> (heavy blows drag a foe a square closer, and it can't run), the <b>Stockade Maul</b> (every heavy blow staggers), the <b>Haverly Sickle</b> (each hit takes 1 off its blows, up to 3), the <b>Bellwether Flail</b> (the third ring stuns), the <b>Rootbound Longbow</b> (finish three Long Dig tunnels) and the <b>Undertow Trident</b> (double damage on anything in water or on a deck).",
+      "<b>Six pieces of kit</b>: the <b>Inquirer's Coat</b> (+1 to Investigation, Insight and Perception, and a free hint when you lay out a case), the <b>Dust Men's Veil</b>, the cursed <b>Saint's Pearl Rosary</b> (+15% gold, but every town charges more), <b>Tapper's Gum Lantern</b> (compound lanterns sweep slower), the <b>Watchman's Bell-Clasp</b> (no night ambush surprises you) and the <b>Unshored Timber Charm</b> (a cave-in misses you).",
+      "<b>Ten caches</b>: the Juror's Strongbox with seven keyholes, the last tunneller's pack and map, a smugglers' floor-cache, the Blind Fleet's tithe chest (with a ship upgrade), toll-fort coffers that pay back your tolls, the Mirage Well, the Saint's second ledger, Brannoc Vane's coffin-chest, <b>wayside shrines</b> on the Blood-bought Roads (give, or rob, and the road remembers) and the Toll-heron's purse of bridge tokens.",
+      "The paintings are placeholders for now. Six feats in a new set, Things Worth Finding."
+    ] },
     { ver: "141", name: "Ebba Quenn's Twelve", date: "21 Nov 2026", items: [
       "<b>Twelve new named weapons</b>, from Adrian's weapon sheet. Ebba Quenn quenched every blade in something other than water, and her cart went over the edge of the Blood-bought Roads with all twelve on it. From level 8, about one won fight in twenty turns one up (never more than thirty fights apart) until you have them all. Each one has its own painting in the Bag.",
       "<b>Four new kinds of hurt.</b> <b>Lifedrinker</b>: every hit gives you back a fifth of what it did. <b>Venomed</b>: hits leave poison in the wound, up to 3 stacks. <b>Withering</b>: +1d6 grave-cold on every hit that no armour stops. <b>Moonlit</b>: +1d4 lunar on every hit, +1d8 at night.",
@@ -5574,6 +5582,12 @@ body.pv-open { overflow: hidden; }
     { id: "qtall", name: "All Twelve", desc: "Find all twelve of Ebba Quenn's weapons.", test: () => false },
     { id: "qtmoon", name: "Moonfall at Midnight", desc: "Bring Moonfall down by night.", test: () => false },
     { id: "qtrot", name: "Let It Bloom", desc: "Use Rot Bloom in a fight.", test: () => false },
+    { id: "rfkeys", name: "Seven Keyholes", desc: "Open the Juror's Strongbox.", test: () => false },
+    { id: "rfbell", name: "Third Ring", desc: "Stun a foe with the Bellwether Flail's third ring.", test: () => false },
+    { id: "rfgrave", name: "Grave-Goods", desc: "Dig up Brannoc Vane's coffin-chest in Rimehold.", test: () => false },
+    { id: "rfshrine", name: "Something Left", desc: "Leave an offering at a wayside shrine.", test: () => false },
+    { id: "rfmirage", name: "Water at Noon", desc: "Drink from the Mirage Well.", test: () => false },
+    { id: "rfarms", name: "Off the List", desc: "Find all eight wishlist weapons.", test: () => false },
     { id: "nmflame", name: "Flame Strike", desc: "Take the Flame Strike Nightmare Bow from a Nightmare on the roads back.", test: () => false },
     { id: "nmflamed", name: "Fire Up the Thread", desc: "Loose a Flame Strike.", test: () => false },
     { id: "nmeye", name: "The Eye in the Blade", desc: "Take the Nightmare Haunt Scythe from a Nightmare.", test: () => false },
@@ -5781,6 +5795,8 @@ body.pv-open { overflow: hidden; }
       ids: ["mecmd", "cmtithe", "cmdoor", "cmread", "cmraven", "cmladder", "cmquiet", "cmopen"] },
     { id: "quenched", name: "Ebba Quenn's Twelve", ver: "57", desc: "Twelve named weapons scattered on the roads: life steal, poison, withering and lunar damage.",
       ids: ["qtfirst", "qtall", "qtmoon", "qtrot"] },
+    { id: "finds", name: "Things Worth Finding", ver: "58", desc: "Eight weapons, six pieces of kit and ten caches from Adrian's wishlist, each hidden where it belongs.",
+      ids: ["rfkeys", "rfbell", "rfgrave", "rfshrine", "rfmirage", "rfarms"] },
   ];
   const pursuitOf = (a) => (PURSUITS.find(P => P.ids && P.ids.includes(a.id)) || PURSUITS[0]).id;
   const pursuitFeats = (P) => ACH.filter(a => pursuitOf(a) === P.id);
@@ -5974,6 +5990,7 @@ body.pv-open { overflow: hidden; }
     chestItems(items);
     fitItems(items);
     lgItems(items);
+    rfItems(items);
     lcItems(items);
     hmItems(items);
     mnItems(items);
@@ -6106,7 +6123,7 @@ body.pv-open { overflow: hidden; }
           li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(sb); li.lastElementChild.appendChild(xb);
         }
       }
-      lgBtns(key).concat(nmaBtns(key)).forEach(([lb, tg, fn]) => { const b = el("button", "use", lb + '<span class="tag">' + tg + "</span>"); b.type = "button"; b.onclick = fn; li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b); });
+      lgBtns(key).concat(nmaBtns(key), rfBtns(key)).forEach(([lb, tg, fn]) => { const b = el("button", "use", lb + '<span class="tag">' + tg + "</span>"); b.type = "button"; b.onclick = fn; li.lastElementChild.appendChild(el("br")); li.lastElementChild.appendChild(b); });
       const cb = chestBtn(key);
       if (cb) {
         const b = el("button", "use", cb[0] + '<span class="tag">' + cb[1] + "</span>");
@@ -6471,6 +6488,8 @@ body.pv-open { overflow: hidden; }
     if (!atk) { const ex = cmdCheck(label); if (ex) { mod += ex[0]; label += " (+" + ex[0] + " " + ex[1] + ")"; } }
     if (!atk && hasGear("grellpick") && /Sleight|lock/i.test(label)) { mod += 1; label += " (+1 Grell's lockpick)"; }
     if (!atk && hasGear("joinedtally") && /Investigation|Insight/i.test(label)) { mod += 1; label += " (+1 the Joined Tally)"; }
+    if (!atk && hasGear("w4coat") && /Investigation|Insight|Perception/i.test(label)) { mod += 1; label += " (+1 the Inquirer's Coat)"; }
+    if (atk && rfClear()) { mod += 1; label += " (Clear Eyes, +1)"; }
     if (!atk && hasGear("collectorkeys") && /lock|Intimidation/i.test(label)) { mod += 1; label += " (+1 the Collector's Keys)"; }
     if (!atk && hasGear("kingsknot") && /^Stealth/.test(label)) { mod += 1; label += " (+1 the King's Knot)"; }
     if (!atk && hasGear("princethorn") && /^Insight/.test(label)) { mod += 1; label += " (+1 the Prince's Thorn)"; }
@@ -6612,6 +6631,7 @@ body.pv-open { overflow: hidden; }
     if (FOE.on && (S.arRank || 0) >= 2) { bonus -= 1; label += " (predicted)"; }
     if (FOE.on && rxFoeUp()) { bonus += rxFoeUp(); label += " (Cascade-touched)"; }
     if (FOE.on && FOE.sick > 0) { FOE.sick--; bonus -= 2; label += " (sickened, −2)"; }
+    if (FOE.on && FOE.rf && FOE.rf.blight) { bonus -= FOE.rf.blight; label += " (blighted, −" + FOE.rf.blight + ")"; }
     if (FOE.on && FOE.chill > 0) { FOE.chill--; bonus -= 2; label += " (frostbitten, −2)"; }
     if (adv && dis) adv = dis = false;
     return new Promise(resolve => {
@@ -7102,6 +7122,31 @@ body.pv-open { overflow: hidden; }
     qt_arbalest: "art/qt_arbalest.webp",
     qt_moonsplitter: "art/qt_moonsplitter.webp",
     qt_eclipse: "art/qt_eclipse.webp",
+    // Things Worth Finding (art wishlist 4, items 79–102): placeholders until Adrian's paintings land at the same paths.
+    w4_79: "art/w4_79.webp",
+    w4_80: "art/w4_80.webp",
+    w4_81: "art/w4_81.webp",
+    w4_82: "art/w4_82.webp",
+    w4_83: "art/w4_83.webp",
+    w4_84: "art/w4_84.webp",
+    w4_85: "art/w4_85.webp",
+    w4_86: "art/w4_86.webp",
+    w4_87: "art/w4_87.webp",
+    w4_88: "art/w4_88.webp",
+    w4_89: "art/w4_89.webp",
+    w4_90: "art/w4_90.webp",
+    w4_91: "art/w4_91.webp",
+    w4_92: "art/w4_92.webp",
+    w4_93: "art/w4_93.webp",
+    w4_94: "art/w4_94.webp",
+    w4_95: "art/w4_95.webp",
+    w4_96: "art/w4_96.webp",
+    w4_97: "art/w4_97.webp",
+    w4_98: "art/w4_98.webp",
+    w4_99: "art/w4_99.webp",
+    w4_100: "art/w4_100.webp",
+    w4_101: "art/w4_101.webp",
+    w4_102: "art/w4_102.webp",
   };
   const ITEM_PICS = {
     bow: { looks: ["bow", "bow2"], names: ["Longbow", "Recurve"], alt: ["A long dark-wood bow strung tight, with a leather quiver of grey-fletched arrows beside it.", "A shorter recurve bow with a cloth-wrapped grip and a tassel, beside a riveted leather quiver of broadheads."] },
@@ -7141,6 +7186,30 @@ body.pv-open { overflow: hidden; }
     qt_arbalest: { looks: ["qt_arbalest"], alt: ["A heavy crossbow of gilded wood and brass, spiked at the limbs, a broad-headed bolt loaded."] },
     qt_moonsplitter: { looks: ["qt_moonsplitter"], alt: ["A double-bitted axe of etched steel, a round blue moon-rune glowing beside the haft, pale light crawling over it."] },
     qt_eclipse: { looks: ["qt_eclipse"], alt: ["A gilded sceptre with a crown of sun-spikes round a glowing amber orb, rings of golden light turning about it."] },
+    w4_79: { looks: ["w4_79"], alt: ["A short broadsword notched along one edge like a split tally stick, with a red wax seal pressed into the pommel."] },
+    w4_80: { looks: ["w4_80"], alt: ["A curved knife of smoky glass bound in camel leather."] },
+    w4_81: { looks: ["w4_81"], alt: ["A long iron boat-hook with a barbed tip and a coil of chain at the haft."] },
+    w4_82: { looks: ["w4_82"], alt: ["A two-handed maul made from a gate's iron hinge on an oak post."] },
+    w4_83: { looks: ["w4_83"], alt: ["A blackened rye sickle with a sprig of dried rye tied to the grip."] },
+    w4_84: { looks: ["w4_84"], alt: ["A flail whose head is a small cracked bronze bell on a chain."] },
+    w4_85: { looks: ["w4_85"], alt: ["A tall bow grown from one living root, small leaves sprouting at the tips."] },
+    w4_86: { looks: ["w4_86"], alt: ["A three-pronged fishing spear crusted with barnacles, a lead weight hung under the head."] },
+    w4_87: { looks: ["w4_87"], alt: ["A long dark-green coat with many small pockets, each stitched with a town's mark, and a lens on a chain."] },
+    w4_88: { looks: ["w4_88"], alt: ["A sand-coloured riding veil with bronze rings sewn in a spiral."] },
+    w4_89: { looks: ["w4_89"], alt: ["A string of black pearls with a tiny ledger-shaped locket."] },
+    w4_90: { looks: ["w4_90"], alt: ["A wicker-caged lantern burning a lump of red amber gum."] },
+    w4_91: { looks: ["w4_91"], alt: ["A cloak clasp shaped like a small worn bronze hand-bell."] },
+    w4_92: { looks: ["w4_92"], alt: ["A splinter of tunnel timber wrapped in red thread, on a leather cord."] },
+    w4_93: { looks: ["w4_93"], alt: ["A small iron box with seven keyholes, each a different shape, wax dripped on the lid."] },
+    w4_94: { looks: ["w4_94"], alt: ["A rotted canvas pack half-buried in clay, a rusty pick and a tin cup spilling out."] },
+    w4_95: { looks: ["w4_95"], alt: ["A lifted cave flagstone, lantern light on coins, bottles and silk hidden underneath."] },
+    w4_96: { looks: ["w4_96"], alt: ["An iron-bound sea chest with an eye in a wheel painted on the lid, salt on the hinges."] },
+    w4_97: { looks: ["w4_97"], alt: ["A squat coffer of mismatched coins with a toll board's broken chain on top."] },
+    w4_98: { looks: ["w4_98"], alt: ["A ring of white stones in the salt desert round a well, a bucket on a rope."] },
+    w4_99: { looks: ["w4_99"], alt: ["A slim black ledger with silver corners inside a hollowed-out prayer book."] },
+    w4_100: { looks: ["w4_100"], alt: ["A frost-caked coffin used as a treasure chest, flag scraps nailed to its lid."] },
+    w4_101: { looks: ["w4_101"], alt: ["A small root-wrapped roadside shrine with coins, candles and a little carved hand."] },
+    w4_102: { looks: ["w4_102"], alt: ["A waterlogged leather purse in a heron's nest of reeds and toll tokens."] },
     chest: { looks: ["chest1"], alt: ["A heavy wooden chest bound in iron, with a hasp and a side handle."] },
     cache: { looks: ["chest2", "chest3"], alt: ["An old iron-banded chest, its boards cross-braced.", "An old iron-banded chest with a heavy hasp."] },
     mace: { looks: ["mace"], alt: ["A spiked iron head on a dark wooden haft, hammered and heavy."] },
@@ -7500,7 +7569,16 @@ body.pv-open { overflow: hidden; }
     leech: "Lifedrinker: every hit gives you back a fifth of the damage it did (1 to 5 HP).",
     venom: "Venomed: every other hit or so leaves poison in the wound (a stack, up to 3, an HP a stack a round past armour).",
     wither: "Withering: every hit lands +1d6 grave-cold that no armour stops.",
-    lunar: "Moonlit: every hit lands +1d4 lunar, +1d8 at night."
+    lunar: "Moonlit: every hit lands +1d4 lunar, +1d8 at night.",
+    // Things Worth Finding (2026-11-21): one trait each on the wishlist weapons. Named weapons only.
+    tally: "Tallied: +1 damage for each of the seven Vell cases you named rightly (up to +7).",
+    glass: "Glass-quick: a quick jab with it lands full damage, not half. It chips after 40 fights (−2 damage) until a Sulmara glassworker reforges it.",
+    hook: "Hooked: a heavy blow that lands drags it a square closer on a battle map, and a hooked foe can't break away and run.",
+    stagger: "Staggering: every heavy blow that lands staggers it, and it loses its next move.",
+    blight: "Blighting: every hit sickens it: its blows come at −1 for the rest of the fight, up to −3.",
+    bell: "Ringing: every hit rings the bell, and the third ring in a fight stuns it for a turn.",
+    tangle: "Tangling: the first hit roots its feet, and it can't break away and run.",
+    undertow: "Undertow: double damage against anything in the water or on a ship's deck."
   };
   const ARM_AC = {
     phase: { name: "Phase Strike", fx: "once a fight, the blade slips through armour and flesh alike for 34 damage" },
@@ -7524,7 +7602,7 @@ body.pv-open { overflow: hidden; }
     gaze: { name: "The Thorn Watches", fx: "once a fight, the ember eye in the spearhead finds the gap: 2d10, its next 2 attacks have disadvantage, and a Nightmare's Cascade thread is pinned and cut" }
   };
   // Actives that only come on named weapons, never on a random field drop.
-  const TR_NAMED = ["frost", "leech", "venom", "wither", "lunar"];
+  const TR_NAMED = ["frost", "leech", "venom", "wither", "lunar", "tally", "glass", "hook", "stagger", "blight", "bell", "tangle", "undertow"];
   const AC_NAMED = ["rotbloom", "bloodlet", "moonfall", "reap", "onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze", "undercut"];
   const NM_TAG = { rotbloom: () => (FOE.unit ? "drops one" : "2d6, Poisoned 3"), bloodlet: () => (FOE.unit ? "drops one" : "2d8, you drink back half"), moonfall: () => (FOE.unit ? "drops one" : calNight() ? "4d8 lunar, it's night" : "2d8 lunar · 4d8 at night"), reap: () => (FOE.unit ? "drops one" : "2d10, no armour, heals on a kill"), flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage"), undercut: () => (FOE.unit ? "drops one" : "2d6, no armour, its next blow −2") };
   const ARM_NAMES = {
@@ -7760,6 +7838,451 @@ body.pv-open { overflow: hidden; }
     lootNew.push(k);
     SND.cheers && SND.cheers(0.7);
     return "one of Ebba Quenn's Twelve, lost off her cart years ago and carried about the roads ever since: " + wTier(k) + "<b>" + armName(k) + "</b> (" + Q.got.length + " of 12). " + wDef(k).fx + " Wield it from the Bag";
+  }
+  // ---------- Things Worth Finding (Adrian's art wishlist part two, items 79–102, 2026-11-21) ----------
+  // Twenty-four new things from the second half of art/art-wishlist-4.md, each built where its line on
+  // the list says it belongs, with placeholder paintings until Adrian's arrive. The paintings are
+  // named by list number: art/w4_79.webp … art/w4_102.webp. Drop a painting in over the placeholder
+  // (600px on the long side, WebP) and nothing else needs to change. 87 is tall, 95 and 98 are wide.
+  //  Weapons (all keepsakes, each with its own trait, balanced in tools/finds-sim.js against the Nightmare Armoury):
+  //   79 the Tallyblade (in the Juror's Strongbox): +1 damage for each Vell case named rightly, up to +7.
+  //   80 the Kettledrop Glasscutter (Kettledrop's reward): quick jabs land full; chips after 40 fights
+  //      until a Sulmara glassworker reforges it.
+  //   81 the Crimp's Hook (a press-yard's crimp-master): a heavy blow drags it a square closer on a
+  //      battle map, and a hooked foe can't break away and run.
+  //   82 the Stockade Maul (a gang stockade's chief): slow, but every heavy blow that lands staggers.
+  //   83 the Haverly Sickle (Haverly Mill, the case named rightly): −1 to its hits each time it lands, up to −3.
+  //   84 the Bellwether Flail (Orlenford, the case named rightly): the third ring in a fight stuns.
+  //   85 the Rootbound Longbow (three Long Dig tunnels finished): its arrows root a foe's feet.
+  //   86 the Undertow Trident (the Salt King's hoard): double damage on anything in water or on deck.
+  //  Kit (worn, always on you once you have it; the rosary you choose to put on):
+  //   87 the Inquirer's Coat (after the first case of the Unbelieved): +1 Investigation, Insight and
+  //      Perception, and one free hint whenever you lay out a case.
+  //   88 the Dust Men's Veil (prove the Dust Men innocent at Kettledrop): Blinded shrugged off once a
+  //      fight, and the sandstorm costs one less water.
+  //   89 the Saint's Pearl Rosary (the Counting House): +15% gold you find after fights, but every town
+  //      you pass charges one gold more than the last, until you take it off.
+  //   90 Tapper's Gum Lantern (Amberlow's tappers): a compound's tower lantern sweeps every third breath, not every other.
+  //   91 the Watchman's Bell-Clasp (your first night ambush won): you always see a night ambush coming.
+  //   92 the Unshored Timber Charm (bury the last tunneller on a Long Dig): once a tunnel, a cave-in misses you.
+  //  Caches:
+  //   93 the Juror's Strongbox (the Counting House): seven keys, one from each case you didn't name
+  //      wrongly; buy the others back from the wronged in the Vell towns. 400 gold, the Tallyblade, a feat.
+  //   94 the Last Tunneller's Pack (spare the last tunneller's bones): a map to a hidden tunnel and its cache.
+  //   95 the Smugglers' Floor-Cache (a scouting clue at a warren): a hidden room after the raid.
+  //   96 the Blind Fleet's Tithe Chest (the third ship sunk): cult gold, the Seen's confessions, a ship upgrade.
+  //   97 the Toll-Fort Coffer (every toll-fort taken): the tolls you paid on roads through its region, plus a fifth.
+  //   98 the Mirage Well (from Kettledrop, once a month, by day): full HP and Clear Eyes for three fights.
+  //   99 the Saint's Second Ledger (the Counting House, if you got in unseen or won the jury): read it and
+  //      Vell prices drop for good, or sell it to her lawyers for 600.
+  //  100 the Gravedigger's Chest (beat Brannoc Vane in Rimehold): a spade puzzle, three grave-goods weapons.
+  //  101 wayside shrines (on the Blood-bought Roads): leave something for a blessing, or rob it, and the
+  //      road remembers (tolls cost more, and the next shrine has nothing for you).
+  //  102 the Heron's Toll-Purse (the Toll-heron beaten): free tolls on roads through the Vell.
+  // State: S.rf = { arms: [n], tolls: {stretch: gold}, tokens, heron, box: null|"pack"|"open", bought: [case],
+  //   ledger: null|"read"|"sold", rosary, rosN, clear, well, packs: [{place, reg, town, done}], grave:
+  //   null|"pack"|"open", fleet, pages: [], shrine: {given, robbed, shut}, bless, said: {} }.
+  const RF_ARMS = {
+    79: { b: "sword", t: "gloaming", n: "The Tallyblade", noun: "broadsword", die: [1, 8, 3], hit: 1, tr: ["tally"], lore: "A short broadsword notched along one edge like a split tally stick, with the Inquirer's seal pressed into the wax in its pommel. Every notch is a case." },
+    80: { b: "dagger", t: "gloaming", n: "The Kettledrop Glasscutter", noun: "glass knife", die: [1, 6, 3], hit: 2, tr: ["glass", "keen"], lore: "A curved knife of smoky glass from the Waste, bound in camel leather. It's as sharp as glass, and it lasts about as long." },
+    81: { b: "spear", t: "gloaming", n: "The Crimp's Hook", noun: "hook", die: [1, 10, 4], hit: 1, tr: ["hook", "first"], lore: "A long iron boat-hook with a barbed tip and a coil of chain at the haft. The crimp-master used it to pull people off the road." },
+    82: { b: "maul", t: "gloaming", n: "The Stockade Maul", noun: "maul", die: [2, 6, 3], hit: -1, tr: ["stagger", "crush"], lore: "A gate's iron hinge on an oak post. It was the stockade's gate until the chief wanted something to hold." },
+    83: { b: "hatchet", t: "gloaming", n: "The Haverly Sickle", noun: "sickle", die: [1, 8, 3], hit: 2, tr: ["blight", "keen"], lore: "A rye sickle from Haverly Mill, the blade gone black, with a sprig of the bad rye tied to the grip so nobody forgets." },
+    84: { b: "maul", t: "gloaming", n: "The Bellwether Flail", noun: "flail", die: [2, 4, 4], hit: 0, tr: ["bell"], lore: "A cracked bronze bell from Orlenford's bell-loft on a length of chain. It rings every hour it hits something." },
+    85: { b: "bow", t: "heartfire", n: "The Rootbound Longbow", die: [1, 10, 3], hit: 2, tr: ["tangle", "first"], ac: ["onslaught"], lore: "Grown, not made, from one living root in the roof of your third tunnel. Leaves still come out at the tips in spring." },
+    86: { b: "spear", t: "heartfire", n: "The Undertow Trident", noun: "trident", die: [1, 10, 4], hit: 1, tr: ["undertow"], lore: "A three-pronged fishing spear crusted with barnacles, with a lead weight hung under the head. The Salt King's own, they say, before he had a crown." }
+  };
+  const RF_ARM_ORDER = [79, 80, 81, 82, 83, 84, 85, 86];
+  const RF_GRAVE = [
+    { town: "Wenhope", b: "sword", n: "The Wenhope Grave-Sword", lore: "Laid on a reeve's coffin in Wenhope the winter the Rimehand burned it. Brannoc dug it up." },
+    { town: "Cold Ashby", b: "hatchet", n: "The Cold Ashby Grave-Axe", lore: "A woodsman's axe from a grave at Cold Ashby, which the Rimehand burned to the snowline." },
+    { town: "Tarnmouth", b: "spear", n: "The Tarnmouth Grave-Spear", lore: "A fisherman's spear from the drowned churchyard at Tarnmouth, after the Rimehand had been." }
+  ];
+  const RF_CONFESS = [
+    "“I was Seen in the second year. I gave them my mother's ring for it. I'd give it again, that's what frightens me.”",
+    "“They told me the tithe was what the eye costs. I paid it for my children too. Their eyes are bound in the hold below me now.”",
+    "“I kept the lamp on the Unblinking for nine years and never once looked at what it showed. You aren't supposed to look. That's what being Seen means.”",
+    "“If anybody reads this: Haggith's song isn't nice. You only think it is because everybody's singing it.”"
+  ];
+  const rf = () => (S.rf = S.rf || { arms: [], tolls: {}, tokens: 0, heron: false, box: null, bought: [], ledger: null, rosary: false, rosN: 0, clear: 0, well: -99, packs: [], grave: null, fleet: false, pages: [], shrine: { given: 0, robbed: 0, shut: false }, bless: null, said: {} });
+  const rfHas = (n) => !!(S.rf && S.rf.arms.includes(n));
+  // Vell cases named rightly, for the Tallyblade.
+  const rfTally = () => S.dc ? DC_ORDER.filter(k => S.dc.cases[k] && S.dc.cases[k].out === "right").length : 0;
+  const rfHeld = () => !!(FOE.on && FOE.rf && FOE.rf.held);
+  const rfClear = () => !!(S.rf && S.rf.clear > 0);
+  const rfMul = (T) => S.rf && S.rf.ledger === "read" && T.reg === "vell" ? 0.85 : 1;
+  const rfDebt = () => S.rf ? Math.min(10, 2 * S.rf.shrine.robbed) : 0;
+  // In the water or on a deck: boarding fights, sea and river things, a foe standing in water on a battle map.
+  const RF_WET = /pirate|skerra|mutineer|boarder|crew|sailor|keeper|wrecker|eel|gar\b|lamprey|ray\b|shark|crab|kraken|leviathan|drowned|tide|reef|gull|heron|pike|brine|bathyr|moored/i;
+  function rfWetNow() {
+    if (!FOE.on) return false;
+    const st = FOE.F && FOE.F.st;
+    if (st && st.fd && FOE.hp > 0 && /[~w]/.test(fdTile(st.fd, st.fd.foe.x, st.fd.foe.y) || "")) return true;
+    return !!FOE.rfWet;
+  }
+  // Gain one of the eight weapons, with its card, once a run.
+  async function rfArm(n, how) {
+    if (!S.axe || rfHas(n)) return;
+    const R = rf(), D = RF_ARMS[n];
+    S.lootN = (S.lootN || 0) + 1;
+    const L = Object.assign({ id: S.lootN, uid: newUid(), w4: n, icon: ARM_BASES[D.b].icon, pic: "w4_" + n, keep: true }, D, { tr: D.tr.slice(), ac: (D.ac || []).slice(), die: D.die.slice() });
+    const sold = gainLoot(L); R.arms.push(n);
+    const k = "L" + L.id;
+    if (how) await say(how);
+    SND.cheers && SND.cheers(0.6);
+    picCard(k);
+    await mech("<span>" + wTier(k) + "Gain <b>" + armName(k) + "</b>. " + wDef(k).fx + (sold.length ? " (You sell off " + sold.join(", ") + " to make room.)" : "") + "</span>", "loot find q-" + D.t);
+    if (RF_ARM_ORDER.every(rfHas)) grant("rfarms");
+    const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep what you're holding", plain: true }]);
+    if (c === "y") wield(k);
+    save();
+  }
+  // A worn piece of kit (a GEAR key), with its card.
+  async function rfKit(k, n, how) {
+    S.gear = S.gear || [];
+    if (hasGear(k)) return;
+    S.gear.push(k); renderSheet();
+    if (how) await say(how);
+    rfCard(n, GEAR[k].name);
+    await mech("<b>" + GEAR[k].name + ".</b> " + GEAR[k].desc, "loot");
+    save();
+  }
+  // The placeholder painting (or Adrian's, once it's in) for a list number.
+  function rfCard(n, cap) {
+    const id = "w4_" + n, F = ITEM_PICS[id];
+    if (!F) return;
+    if (n === 95 || n === 98 || n === 87) add(framedPic(picUrl(id), F.alt[0], cap, n === 87 ? "portrait" : ""));
+    else picCard(null, { fam: id, glow: "gloaming" }, cap);
+  }
+
+  // ----- in a fight -----
+  // Called from foeStrike with the weapon in hand: what the new traits add. Returns [extra, notes].
+  function rfOnHit(w, total) {
+    const tr = (w && w.tr) || [], add = [];
+    let x = 0;
+    if (!FOE.rf) FOE.rf = { blight: 0, rings: 0, held: false, veil: false, rung: false };
+    const R = FOE.rf, st = FOE.F && FOE.F.st;
+    if (tr.includes("tally")) { const n = rfTally(); if (n) { x += n; add.push("+" + n + " for the cases"); } }
+    if (tr.includes("blight") && R.blight < 3) { R.blight++; add.push("blighted: its blows −" + R.blight); }
+    if (tr.includes("bell")) {
+      R.rings++;
+      if (R.rings === 3 && !R.rung && st) { R.rung = true; st.stilled = true; add.push("the third ring: it's stunned, and loses its next move"); grant("rfbell"); }
+      else if (!R.rung) add.push("the bell rings (" + R.rings + " of 3)");
+    }
+    if (tr.includes("stagger") && FOE.gMul > 1 && st) { st.stilled = true; add.push("it staggers, and loses its next move"); }
+    if (tr.includes("hook") && FOE.gMul > 1) {
+      R.held = true; add.push("hooked: it can't break away");
+      if (st && st.fd && FOE.hp > 0) {
+        const fd = st.fd, dx = Math.sign(fd.you.x - fd.foe.x), dy = Math.sign(fd.you.y - fd.foe.y), nx = fd.foe.x + dx, ny = fd.foe.y + dy;
+        if ((dx || dy) && !(nx === fd.you.x && ny === fd.you.y) && fdTile(fd, nx, ny) && !/[#w]/.test(fdTile(fd, nx, ny)) && !fdAt(fd, nx, ny)) { fd.foe.x = nx; fd.foe.y = ny; add.push("and the hook drags it a square closer"); try { fdDraw(st); } catch (e) {} }
+      }
+    }
+    if (tr.includes("tangle") && !R.held) { R.held = true; add.push("roots: its feet are tangled, and it can't run"); }
+    if (tr.includes("undertow") && rfWetNow()) { x += total; add.push("the undertow: double, in the water"); }
+    return [x, add];
+  }
+  // A foe trying to bolt that's hooked or rooted stays.
+  async function rfNoRun() {
+    if (!rfHeld()) return false;
+    if (!FOE.rf.said) { FOE.rf.said = true; await say("It turns to run, and can't: " + (wpnKey() !== "axe" && wDef(wpnKey()).tr.includes("tangle") ? "the roots off your arrows have its feet." : "the barb is still in it, and you've got the haft.")); }
+    return true;
+  }
+  // Blinded? The veil shrugs it off once a fight, and Clear Eyes always.
+  async function rfNoBlind() {
+    if (rfClear()) { await mech("Grit and blood fly, and your eyes stay clear: the Mirage Well's water.", "loot"); return true; }
+    if (hasGear("w4veil") && FOE.rf && !FOE.rf.veil) { FOE.rf.veil = true; await mech("It comes at your eyes, and the Dust Men's veil takes it. You blink, and you can still see.", "loot"); return true; }
+    return false;
+  }
+  // Every fight that ends: the Glasscutter wears, Clear Eyes wears off.
+  function rfFightEnd(lost) {
+    if (!S.rf) return;
+    const R = S.rf;
+    if (R.clear > 0) { R.clear--; if (!R.clear) toastNote("Clear Eyes has worn off."); }
+    const L = lootOf(wpnKey());
+    if (!lost && L && L.w4 === 80 && !L.chipped) {
+      L.uses = (L.uses || 0) + 1;
+      if (L.uses >= 40) { L.chipped = true; L.die[2] -= 2; toastNote("The Glasscutter has chipped: −2 damage until a Sulmara glassworker reforges it."); }
+    }
+  }
+  // Gold found after a fight, with the rosary on: +15%, rounded up.
+  const rfGold = (n) => S.rf && S.rf.rosary && n > 0 ? Math.ceil(n * 0.15) : 0;
+
+  // ----- the hooks into the rest of the game -----
+  // Vell cases: the Sickle at Haverly, the Flail at Orlenford, when you name the right one.
+  async function rfCaseRight(k) {
+    if (k === "haverly") await rfArm(83, "Before you go, Mother Elswith comes down the lane with something in a sack. It's the rye sickle from Haskin's mill, gone black. “It cut the bad rye,” she says. “Let it cut something that deserves it.”");
+    if (k === "orlenford") await rfArm(84, "At the gate, Brother Wulfram puts a flail in your hands: the cracked bell from the loft, on a chain. He signs: a bell, broken; a brother, carried; then points at you, and at the road.");
+  }
+  // The Counting House: the strongbox, the rosary, and (got in unseen, or won the jury) her second ledger.
+  async function rfCounting() {
+    const D = dcs(), R = rf();
+    if (D.tally === "won") {
+      rfCard(89, "The Saint's Pearl Rosary");
+      await say("On her desk, under the lamp, a string of black pearls with a tiny locket shaped like a ledger. Somebody in the counting room says not to touch it. Somebody always says that.");
+      const c = await choose([{ key: "take", label: "Take the rosary", tag: "+15% gold after fights · a curse on the towns" }, { key: "no", label: "Leave it on her desk", plain: true }]);
+      if (c === "take") { R.rosaryHave = true; await mech("<b>The Saint's Pearl Rosary.</b> Put it on from the Bag: +15% on the gold you find after fights, but every town you pass while you wear it charges you one gold more than the last, until you take it off.", "loot"); }
+      if (D.inside === "quiet" || D.jury === "won") {
+        rfCard(99, "The Saint's Second Ledger");
+        await say("And on the shelf behind it, among the prayer books, one that's too heavy. It's hollow. Inside: a slim black ledger with silver corners, in her own hand. Not the debts. The prices: what every guild in seven cities pays her, every month, to keep the price of bread where it is.");
+        const l = await choose([{ key: "read", label: "Read it out in the Guildhall", tag: "prices in the Vell towns drop for good" }, { key: "sell", label: "Sell it back to her lawyers", tag: "600 gold · the prices stay", plain: true }]);
+        R.ledger = l === "read" ? "read" : "sold";
+        if (l === "read") await say("You read it out in the Guildhall, every line, and the guild-masters sit very still. By the end of the week bread in Vellmarch costs what bread costs. <b>Prices in the Vell towns are lower for good.</b>");
+        else { S.coins += 600; renderSheet(); await say("Two quiet men from Castellane meet you at the inn and count out six hundred gold without being asked twice. They don't ask where you found it. They know."); await mech("+600 gold.", "loot"); }
+      }
+    }
+    // the box with seven keyholes
+    R.box = "pack";
+    rfCard(93, "The Juror's Strongbox");
+    const keys = rfKeys();
+    await say("The coroner sends a box round to your inn the next morning, from under the jury bench: a small iron strongbox with seven keyholes, each a different shape, wax dripped on the lid. With it, a note in the widow's hand: <i>For whoever names my debtors. A key from each court, if they named the right one.</i>");
+    await say(keys === 7 ? "You turn out your pockets. Every court's clerk gave you a little odd-shaped key when you were done, and you've kept them all." : "You turn out your pockets: " + keys + " of the little odd-shaped keys the clerks gave you. Where you named the wrong one, the clerk gave the key to the family you wronged instead.");
+    if (keys === 7) await rfBoxOpen();
+    else await mech("<b>The Juror's Strongbox</b> goes in your pack. The other keys are with the families you wronged, in the Vell towns. They might sell.", "loot");
+    save();
+  }
+  const rfMissing = () => S.dc ? DC_ORDER.filter(k => S.dc.cases[k] && S.dc.cases[k].out === "wrong" && !rf().bought.includes(k)) : [];
+  const rfKeys = () => 7 - rfMissing().length;
+  async function rfBoxOpen() {
+    const R = rf();
+    R.box = "open";
+    await say("Seven keys, seven locks. The lid comes up stiff, the wax cracking along it.");
+    S.coins += 400; renderSheet();
+    await mech("Inside the strongbox: 400 gold, in the old Vell coin.", "loot");
+    grant("rfkeys");
+    await rfArm(79, "And under the coin, wrapped in a juror's gown: a short broadsword, notched along one edge like a tally stick. There's a notch for every case.");
+  }
+  // Compound raids: the crimp's hook, the stockade's maul, the toll-fort's coffer, the warren's floor-cache.
+  async function rfAfterRaid(C, B, jobs) {
+    const R = rf(), chief = jobs.includes("kill") || C.chiefDead;
+    if (C.k === "pressyard" && chief) await rfArm(81, "On the crimp-master's peg, over his bed: a long iron boat-hook, barbed, with a coil of chain at the haft. You've seen what he used it for.");
+    if (C.k === "stockade" && chief) await rfArm(82, "By the gate, where " + esc(C.chief.n) + " always stood: a maul made from the stockade gate's own iron hinge, on an oak post.");
+    if (C.k === "tollfort" && (chief || B.broken || jobs.includes("plunder"))) {
+      const regs = Object.keys(R.tolls).filter(s => s.split("-").includes(C.reg)), paid = regs.reduce((a, s) => a + R.tolls[s], 0);
+      rfCard(97, "The Toll-Fort Coffer");
+      if (paid) {
+        const g = Math.round(paid * 1.2); regs.forEach(s => delete R.tolls[s]);
+        S.coins += g; renderSheet();
+        await say("In the counting cellar, a squat coffer stuffed with mismatched coin from twenty towns, and the toll-baron's broken chain on top. Somebody's kept a book of it. Your name's in the book, more than once.");
+        await mech("<b>The Toll-Fort Coffer:</b> every toll you paid on the roads through " + REGIONS[C.reg] + " (" + paid + " gold), and a fifth on top for the trouble: +" + g + " gold.", "loot");
+      } else {
+        const g = 20 + 2 * lv(); S.coins += g; renderSheet();
+        await say("In the counting cellar, a squat coffer of other people's tolls. You never paid this road a penny. You take it anyway, on their behalf.");
+        await mech("<b>The Toll-Fort Coffer:</b> +" + g + " gold.", "loot");
+      }
+    }
+    if (C.k === "warren" && C.know.floor && !C.floorDone) {
+      C.floorDone = true;
+      rfCard(95, "The Smugglers' Floor-Cache");
+      await say("On the way out you go back for the flagstone the clue told you about, in the floor of the long cave. It lifts on a bar, and underneath, by the light of your candle: coins, bottles, and bolts of silk, and a room nobody in the warren but the boss knew about.");
+      const g = 60 + 5 * lv(); S.coins += g; S.potions = (S.potions || 0) + 2; renderSheet();
+      await mech("The floor-cache: +" + g + " gold, and two Draughts of Mending in the bottles.", "loot");
+      const w = rcWeapon(C, false); if (w) await mech("<span>Wrapped in silk: " + w + "</span>", "loot find");
+    }
+  }
+  // Scouting a warren: a clue to the floor-cache, sometimes.
+  async function rfScoutClue(C, c) {
+    if (C.k !== "warren" || C.know.floor || !(c === "spy" || c === "rider" || d(2) === 1)) return;
+    C.know.floor = true;
+    await say("And one more thing: a carter's boy says the boss always sends everybody out of the long cave before he goes to bed, and you can hear a flagstone grating in there after. <b>There's a hidden room under the long cave.</b>");
+  }
+  // The Long Dig: the charm off the bones you bury, the pack off the bones you spare, and the third tunnel's bow.
+  function rfBones(C, D, how) {
+    const R = rf();
+    if (how !== "robbed" && !R.packs.some(p => p.place === C.place)) R.packs.push({ place: C.place, reg: C.reg, town: C.giver, done: false });
+    if (how === "buried" && !hasGear("w4charm")) { S.gear = S.gear || []; S.gear.push("w4charm"); renderSheet(); return " In their hand, under the spade, is a splinter of tunnel timber wrapped in red thread: somebody's charm against the roof. You keep it. <b>The Unshored Timber Charm</b>: once a tunnel, a cave-in misses you. And by their knee, a rotted canvas pack with a tin cup and a map in it."; }
+    return how === "robbed" ? "" : " By their knee there's a rotted canvas pack, half in the clay, a rusty pick and a tin cup spilling out of it, and a map folded small. You take the map.";
+  }
+  async function rfDigDone(X) {
+    if (X.done >= 3) await rfArm(85, "At the top of your third tunnel, a root as thick as your wrist has come down through the roof and bent itself into a curve, like something that wants to be a bow. You cut it free, and it is one: strung with its own fibre, leaves at the tips.");
+  }
+  // The Blind Fleet, all three sunk.
+  async function rfFleet() {
+    const R = rf();
+    if (R.fleet) return;
+    R.fleet = true;
+    rfCard(96, "The Blind Fleet's Tithe Chest");
+    await say("In the last ship's hold, chained to the keel: a sea chest bound in iron, with an eye in a wheel painted on the lid, and salt crusted on the hinges. It's the tithe of all three ships, and a bundle of the confessions the Seen write when they're taken aboard.");
+    const g = 150 + 6 * lv(); S.coins += g; renderSheet();
+    R.pages = RF_CONFESS.slice();
+    await mech("The Tithe Chest: +" + g + " gold, and <b>the Seen's confessions</b> (in your journal).", "loot");
+    const X = sea();
+    if (X && X.ship && !X.ship.up.includes("blindeye")) { X.ship.up.push("blindeye"); SEA_UPS.blindeye.on(X.ship); renderSheet(); await mech("And the fleet's lamp-glass, a great lens they hung at the masthead: fitted to " + esc(X.ship.name) + ". <b>" + SEA_UPS.blindeye.name + "</b>: " + SEA_UPS.blindeye.fx + ".", "loot"); }
+    save();
+  }
+  // Rimehold: Brannoc's coffin-chest, opened with a spade puzzle (again from the rime towns if you miss).
+  const RF_GRAVE_MAP = { name: "Brannoc's graveyard", rows: ["..C...", ".T..C.", "C.....", "...B.C", ".C....", "...T.."], at: 21 };
+  async function rfGrave(again) {
+    const R = rf();
+    if (R.grave === "open") return;
+    if (!again) {
+      R.grave = "pack";
+      rfCard(100, "The Gravedigger's Chest");
+      await say("Behind his brazier, Brannoc has buried his hoard the way he'd bury anyone: in a coffin, frost-caked, with flags of the towns the Rimehand burned nailed to the lid. And then he's buried the coffin. Somewhere in the little yard of cairns he's made, there's a spade's worth of new snow over old.");
+    } else await say("The cairns in Brannoc's yard are where you left them, and the snow hasn't been touched.");
+    const r = await digPuzzle(RF_GRAVE_MAP, { digs: 5, riddle: "A gravedigger buries his own a step from the stone he likes, and he likes the stone with nothing beside it: the cairn by the boulder." });
+    if (!r.ok) { await say("Nothing but frozen ground. You'll have to come back to it, from the settlements of the Long White."); save(); return; }
+    R.grave = "open"; grant("rfgrave");
+    await say("The spade hits wood. Inside the coffin, laid out like the dead: three weapons, each from a grave in a town the Rimehand burned, each with the town's name scratched on it.");
+    for (const G of RF_GRAVE) {
+      const L = makeLoot("gloaming"); L.b = G.b; L.n = G.n; L.lore = G.lore; L.frost = true; L.keep = true;
+      const sold = gainLoot(L), k = "L" + L.id;
+      await mech("<span>" + wTier(k) + "<b>" + armName(k) + "</b>. " + wDef(k).fx + (sold.length ? " (You sell off " + sold.join(", ") + ".)" : "") + "</span>", "loot find q-gloaming");
+    }
+    save();
+  }
+  // Beasts on the road: the Toll-heron's purse.
+  async function rfBeastWon(B) {
+    if (B.id !== "tollheron") return;
+    const R = rf();
+    if (!R.heron) {
+      R.heron = true; R.tokens += 5;
+      rfCard(102, "The Heron's Toll-Purse");
+      await say("Its nest is in the reeds under the bridge pier: sticks, fish bones, and a waterlogged leather purse full of the brass tokens the Vell bridgemen take for a crossing. It's been collecting them for years.");
+      await mech("<b>The Heron's Toll-Purse:</b> 5 toll-tokens. Any toll on a road through the Vell takes one instead of gold.", "loot");
+    } else { R.tokens++; await mech("Another toll-token in its crop: " + R.tokens + " in your purse.", "loot"); }
+    save();
+  }
+  // Tolls you pay on a road (for the Toll-Fort Coffer), and the Heron's tokens.
+  function rfPaid(regs, n) { const R = rf(), k = regs.join("-"); R.tolls[k] = (R.tolls[k] || 0) + n; }
+  const rfTokenOk = (regs) => !!(S.rf && S.rf.tokens > 0 && regs.includes("vell"));
+  function rfToken() { S.rf.tokens--; renderSheet(); }
+  // Wayside shrines on the Blood-bought Roads.
+  async function rfShrine(regs, label) {
+    const R = rf(), Sh = R.shrine;
+    evHead(label, "A wayside shrine");
+    rfCard(101, "A wayside shrine");
+    if (Sh.shut) {
+      Sh.shut = false;
+      await say("A little root-wrapped shrine at the roadside. Somebody's nailed a board across the front of it, and written on the board: <i>NOT FOR YOU.</i> The road remembers the last one.");
+      save(); return;
+    }
+    await say("A little shrine at the roadside, wrapped in old root like a hand round a cup: coins on it, the stubs of candles, a carved wooden hand somebody left for luck. Nobody has taken anything from it. Nobody does.");
+    const c = await choose([
+      { key: "coin", label: "Leave a few coins", tag: "5 gold · ask for a blessing", show: S.coins >= 5 },
+      { key: "pot", label: "Leave a Draught of Mending", tag: "ask for a blessing", show: (S.potions || 0) > 0, plain: true },
+      { key: "rob", label: "Take what's on it", tag: "about " + (8 + lv()) + " gold · the road remembers", plain: true },
+      { key: "go", label: "Walk on", plain: true }
+    ]);
+    if (c === "go") { await say("You touch the carved hand as you pass. It's warm, for wood."); return; }
+    if (c === "rob") {
+      const g = 8 + lv() + d(6); S.coins += g; Sh.robbed++; Sh.shut = true; renderSheet();
+      await say("You sweep the coins into your purse and pocket the carved hand. Nothing happens. A crow on the hedge watches you do it, and then flies off down the road ahead of you, the way you're going.");
+      await mech("+" + g + " gold. <b>The road remembers:</b> gang tolls cost " + rfDebt() + " gold more from now on, and the next shrine won't have anything for you.", "hurt");
+      save(); return;
+    }
+    if (c === "coin") S.coins -= 5; else S.potions--;
+    Sh.given++; renderSheet(); grant("rfshrine");
+    const b = d(3);
+    if (b === 1) { const was = S.hp; S.hp = hpCap(); renderSheet(); await say("You put it down among the others and stand a moment. When you go on, your feet hurt less, and so does everything else."); await mech("The shrine's blessing: +" + (S.hp - was) + " HP.", "loot"); }
+    else { R.bless = "ward"; await say("You put it down among the others. The root round the shrine creaks, very quietly, like a door being shut behind you."); await mech("<b>The Root's Ward:</b> in your next fight, its first attack has disadvantage.", "loot"); }
+    if (Sh.robbed && Sh.given >= 3 * Sh.robbed) { Sh.robbed--; await mech("You've given back three times what you took. The road forgives a little: tolls are " + rfDebt() + " gold over, now.", "loot"); }
+    save();
+  }
+  // A blessing at the start of the next fight.
+  function rfFightStart() {
+    FOE.rf = { blight: 0, rings: 0, held: false, veil: false, rung: false };
+    if (S.rf && S.rf.bless === "ward") { S.rf.bless = null; FOE.blind = Math.max(FOE.blind || 0, 1); }
+  }
+  // The night ambush you win first: the clasp.
+  async function rfNightWon() {
+    if (hasGear("w4clasp")) return;
+    await rfKit("w4clasp", 91, "Among their take, still on a torn watch-coat: a cloak clasp shaped like a small hand-bell, worn smooth. Somebody on the night watch wore it, once, and heard them coming.");
+  }
+
+  // ----- towns -----
+  async function rfTown(T) {
+    const R = S.rf;
+    if (!R) return;
+    if (R.rosary && T.kind === "town") {
+      R.rosN++;
+      const n = Math.min(S.coins, R.rosN); S.coins -= n; renderSheet();
+      await mech("The Saint's pearls: " + T.name + " finds a reason to charge you " + n + " gold at the gate. The next town will want " + (R.rosN + 1) + ".", "hurt");
+    }
+    if (R.shrine.robbed && !R.said.robbed && T.kind === "town") { R.said.robbed = true; save(); await say("In " + T.name + " an old woman at a doorstep spits when you go by, and says something about a carved hand. Word travels on the Blood-bought Roads faster than people do."); }
+  }
+  function rfTownOpts(T) {
+    const R = S.rf || {}, o = [], town = T.kind === "town";
+    const L = lootOf(wpnKey()) && lootOf(wpnKey()).w4 === 80 ? lootOf(wpnKey()) : armLoot().find(x => x.w4 === 80);
+    if (L && T.reg === "glass" && town && (L.chipped || (L.uses || 0) >= 20)) o.push({ key: "rf:glass", label: "Have the Glasscutter reforged on Glaziers' Row", tag: "25 gold · " + (L.chipped ? "it's chipped" : (L.uses || 0) + " of 40 fights worn"), show: S.coins >= 25, plain: true });
+    if (T.name === "Amberlow" && !hasGear("w4lantern")) o.push({ key: "rf:lantern", label: "Ask the tappers for a gum lantern", tag: "30 gold · a light raiders' lanterns miss", show: S.coins >= 30, plain: true });
+    if (T.name === "Kettledrop" && S.dc && dk8().done) o.push({ key: "rf:well", label: "Ride out to the ring of white stones", tag: calDay() - (R.well || -99) < 30 ? "the well's dry till next month" : calNight() ? "the well only shows its water by day" : "the Mirage Well · once a month", show: calDay() - (R.well || -99) >= 30 && !calNight(), plain: true });
+    if (T.reg === "vell" && town && R.box === "pack" && rfMissing().length) o.push({ key: "rf:key", label: "Find the family with a key to the Juror's Strongbox", tag: "40 gold · " + rfMissing().length + " key" + (rfMissing().length === 1 ? "" : "s") + " missing", show: S.coins >= 40, plain: true });
+    if (T.reg === "vell" && R.box === "pack" && !rfMissing().length) o.push({ key: "rf:box", label: "Open the Juror's Strongbox", tag: "all seven keys", plain: true });
+    (R.packs || []).filter(p => !p.done && p.town === T.name).slice(0, 1).forEach(() => o.push({ key: "rf:pack", label: "Follow the last tunneller's map out of town", tag: "a hidden tunnel, and what's at the end of it", plain: true }));
+    if (T.reg === "rime" && R.grave === "pack") o.push({ key: "rf:grave", label: "Go back up to Brannoc's yard with a spade", tag: "the Gravedigger's Chest", plain: true });
+    if (R.rosaryHave && !R.rosary && T.kind === "sanctuary" && R.rosN) o.push({ key: "rf:pray", label: "Ask the keepers to bless the rosary clean", tag: "free · it forgets what the towns owed", plain: true });
+    return o;
+  }
+  async function rfTownDo(c, T) {
+    const R = rf();
+    if (c === "rf:glass") {
+      const L = armLoot().find(x => x.w4 === 80); if (!L) return;
+      S.coins -= 25; if (L.chipped) { L.chipped = false; L.die[2] += 2; } L.uses = 0; renderSheet();
+      await say("A glassworker on Glaziers' Row holds it up to her furnace and whistles. She takes the edge back to new in the heat, the way they do in the Waste, and gives it back to you hot. “Forty fights,” she says. “Then it's mine again.”");
+      await mech("The Glasscutter is reforged: good for another 40 fights.", "loot");
+    } else if (c === "rf:lantern") {
+      S.coins -= 30; renderSheet();
+      await rfKit("w4lantern", 90, "The tappers of Amberlow light their sheds with lumps of red amber gum in wicker cages. It burns low and warm and doesn't throw a beam. “Raiders' lanterns look for light,” the headwoman says. “This isn't the kind they find.”");
+    } else if (c === "rf:well") {
+      R.well = calDay(); calPass(2);
+      rfCard(98, "The Mirage Well");
+      await say("Half a day out from Kettledrop on the salt, a ring of white stones round a well with a bucket on a rope. At dawn it's dry. You sit in the stones' shadow until the sun's straight up, and look again, and the water's there, just under the rim, clear as glass.");
+      const was = S.hp; S.hp = hpCap(); R.clear = 3; renderSheet(); grant("rfmirage");
+      await mech("You drink, and fill every skin: +" + (S.hp - was) + " HP. And there's a taste in it like cold metal: <b>Clear Eyes</b> for your next 3 fights (nothing blinds you, and +1 to hit).", "loot");
+    } else if (c === "rf:key") {
+      const k = rfMissing()[0]; S.coins -= 40; R.bought.push(k); renderSheet();
+      await say("In " + T.name + " you find the family the court gave " + DC_CITY[k].name + "'s key to: the family of the one you named wrongly there. They sell it to you for forty gold, and don't shake your hand, and don't say anything you don't deserve.");
+      await mech("A key for the Juror's Strongbox (" + rfKeys() + " of 7).", "loot");
+      if (!rfMissing().length) await rfBoxOpen();
+    } else if (c === "rf:box") await rfBoxOpen();
+    else if (c === "rf:pack") await rfPack(R.packs.find(p => !p.done && p.town === T.name));
+    else if (c === "rf:grave") await rfGrave(true);
+    else if (c === "rf:pray") { R.rosN = 0; await say("The keepers pass the pearls through the smoke of something bitter, and give them back. They feel lighter. They'll get heavier again."); }
+    save();
+  }
+  // The last tunneller's map: the second tunnel, and its cache.
+  const RF_PACK_MAP = { name: "The last tunneller's map", rows: ["T....B", "..C...", "....T.", ".B....", "...C..", "~~...."], at: 15 };
+  async function rfPack(P) {
+    if (!P) return;
+    rfCard(94, "The Last Tunneller's Pack");
+    await say("You follow the map out of " + esc(P.town) + " to a hollow in a bank near " + esc(P.place) + ", where a second tunnel goes into the hill: the one they dug first, and never told anyone about. At the end of it they've buried what they were saving for after.");
+    const r = await digPuzzle(RF_PACK_MAP, { digs: 4, riddle: "They wrote on the back: “Between the two trees, a stone's throw from the cairn that isn't by the water.”" });
+    if (!r.ok) { await say("Nothing. The map's old, and so's the ground. You can come back."); return; }
+    P.done = true;
+    const g = 80 + 5 * lv(); S.coins += g; S.potions = (S.potions || 0) + 1; S.dress = (S.dress || 0) + 2; renderSheet();
+    await say("A tin box, sealed with wax, and inside it everything a tunneller would want at the top of a tunnel: coin, a Draught of Mending, linen for bandages, and a note: <i>For whoever finishes it.</i>");
+    await mech("+" + g + " gold, a Draught of Mending and two bandages.", "loot");
+    const w = makeLoot("rootbound"), sold = gainLoot(w), k = "L" + w.id;
+    await mech("<span>And a blade wrapped in oilcloth: " + wTier(k) + "<b>" + armName(k) + "</b>. " + wDef(k).fx + (sold.length ? " (You sell off " + sold.join(", ") + ".)" : "") + "</span>", "loot find");
+  }
+
+  // ----- the Bag and the journal -----
+  function rfItems(items) {
+    const R = S.rf;
+    if (!R) return;
+    if (R.rosaryHave) items.push(["rf-rosary", "ring", "The Saint's Pearl Rosary", "+15% on the gold you find after fights. The catch: every town you pass charges one gold more than the last (" + (R.rosary ? "the next wants " + (R.rosN + 1) : "it forgets when you take it off") + "). " + (R.rosary ? "Worn." : "In your pack.")]);
+    if (R.tokens) items.push(["rf-tokens", "coin", "The Heron's Toll-Purse", R.tokens + " toll-token" + (R.tokens === 1 ? "" : "s") + ". Any toll on a road through the Vell takes one instead of gold."]);
+    if (R.box === "pack") items.push(["rf-box", "chest", "The Juror's Strongbox", "Seven keyholes. You have " + rfKeys() + " of the keys; the others are with the families you wronged, in the Vell towns."]);
+    if (R.grave === "pack") items.push(["rf-grave", "map", "Brannoc's yard", "His coffin-chest is still buried among the cairns. Go back from the settlements of the Long White."]);
+    R.packs.filter(p => !p.done).forEach((p, i) => items.push(["rf-pack" + i, "map", "The last tunneller's map", "A hidden tunnel near " + esc(p.place) + ". Follow it from " + esc(p.town) + "."]));
+  }
+  function rfBtns(key) {
+    if (FOE.on || !S.rf || key !== "rf-rosary") return [];
+    const R = S.rf;
+    return R.rosary ? [["Take it off", "the towns forget what they were owed", () => { R.rosary = false; R.rosN = 0; renderSheet(); if (started) save(); }]] : [["Put it on", "+15% gold after fights · the towns charge", () => { R.rosary = true; renderSheet(); if (started) save(); toastNote("The Saint's pearls are cold against your neck."); }]];
+  }
+  function rfSection(rs) {
+    const R = (rs || S).rf;
+    if (!R || !started) return "";
+    const kit = ["w4coat", "w4veil", "w4lantern", "w4clasp", "w4charm"].filter(k => ((rs || S).gear || []).includes(k)).map(k => GEAR[k].name);
+    if (R.rosaryHave) kit.push("the Saint's Pearl Rosary");
+    let h = "<section><h3>Things Worth Finding</h3>" +
+      "<p>Weapons: " + (R.arms.length ? R.arms.map(n => RF_ARMS[n].n.replace(/^The /, "the ")).join(", ") : "none yet") + " · " + R.arms.length + " of 8</p>" +
+      "<p>Kit: " + (kit.length ? kit.join(", ") : "none yet") + "</p>" +
+      "<p>Caches: " + [R.box === "open" ? "the Juror's Strongbox" : "", R.fleet ? "the Blind Fleet's chest" : "", R.grave === "open" ? "the Gravedigger's Chest" : "", R.packs.filter(p => p.done).length ? R.packs.filter(p => p.done).length + " tunneller's cache" + (R.packs.filter(p => p.done).length > 1 ? "s" : "") : "", R.ledger ? "the Saint's Second Ledger (" + R.ledger + ")" : "", R.heron ? "the Heron's Toll-Purse" : ""].filter(Boolean).join(", ") + "</p>" +
+      "<p>Wayside shrines: " + R.shrine.given + " given to, " + R.shrine.robbed + " robbed</p>";
+    if (R.pages.length) h += "<details><summary>The Seen's confessions</summary><ul>" + R.pages.map(x => "<li>" + x + "</li>").join("") + "</ul></details>";
+    return h + "</section>";
   }
   // The actives on your main hand that you haven't used this fight, for quick hands.
   function wpnActives(o) {
@@ -9067,6 +9590,7 @@ body.pv-open { overflow: hidden; }
       await say(t || "Nothing you didn't already know.");
       if (c === "night") await mech("You count " + C.heads + " of them.", "loot");
     }
+    await rfScoutClue(C, c);
     save();
     return "again";
   }
@@ -9188,13 +9712,13 @@ body.pv-open { overflow: hidden; }
   function rcBoard(C, B) {
     const T = C.t;
     return new Promise(resolve => {
-      const P = puzzleBox(esc(C.name) + " by night", "Tap a room next to you to go there, or wait. Every move is a breath, and the patrols (red) take a step every breath" + (B.slack ? " (every other breath tonight: they're slack)" : "") + ". If one ends in your room or meets you on a path, you're seen, unless you waited in a room with walls (not the yard or the gate): then they walk past you." + (B.cut ? "" : " The lantern on " + rcRoomS(C, "tower") + " sweeps the yard every other breath (gold).") + " Five marks of noise and the alarm goes up. At dawn it goes up anyway.");
+      const P = puzzleBox(esc(C.name) + " by night", "Tap a room next to you to go there, or wait. Every move is a breath, and the patrols (red) take a step every breath" + (B.slack ? " (every other breath tonight: they're slack)" : "") + ". If one ends in your room or meets you on a path, you're seen, unless you waited in a room with walls (not the yard or the gate): then they walk past you." + (B.cut ? "" : " The lantern on " + rcRoomS(C, "tower") + " sweeps the yard every " + (hasGear("w4lantern") ? "third breath (your gum lantern throws no light for it to find)" : "other breath") + " (gold).") + " Five marks of noise and the alarm goes up. At dawn it goes up anyway.");
       P.box.classList.add("rc-board");
       const top = el("div", "rc-meters"), wrap = el("div", "rc-wrap"), acts = el("div", "rc-acts");
       P.body.append(top, wrap, acts);
       let over = false;
       const patAt = (Q) => Q.r[Q.i % Q.r.length];
-      const sweep = (t) => !B.cut && t % 2 === 0;
+      const sweep = (t) => !B.cut && t % (hasGear("w4lantern") ? 3 : 2) === 0;
       const fin = (r) => { if (over) return; over = true; P.end(); acts.innerHTML = ""; resolve(r); };
       const say2 = (t) => { P.status.innerHTML = t; };
       const noise = (n, t) => { B.noise = Math.min(5, B.noise + n); B.quiet = false; say2(t); };
@@ -9461,6 +9985,7 @@ body.pv-open { overflow: hidden; }
       // a stretch falls in: back a bit, a bruise, the collapse
       function fall(where) {
         SND.collapse ? SND.collapse() : SND.quake && SND.quake();
+        if (hasGear("w4charm") && !D.charmed) { D.charmed = true; D.fallen++; return "The roof comes down " + where + ", timbers and all, in a roar of dirt, and every bit of it misses you. You're standing in a hollow of clean air with the red-thread charm swinging at your neck, and the tunnel ahead still open."; }
         const back = Math.min(D.ms, 50000 + d(40) * 1000);
         D.ms -= back; D.fallen++; digStats().fallen++;
         const n = d(4); S.hp = Math.max(1, S.hp - n); renderSheet();
@@ -9546,9 +10071,9 @@ body.pv-open { overflow: hidden; }
       function evBones() {
         D.bones = "met";
         pend = { html: "Your spade goes through into a hollow, and the hollow is somebody else's tunnel, very old, going the same way as yours. At the end of it is somebody: bones in a coat gone to lace, a spade still in the hands, and scratched in the clay beside them with the corner of it: <b>" + esc(D.who).toUpperCase() + ". THIRTY-THREE MINUTES. NEARLY.</b>", opts: [
-          { label: "Bury " + esc(D.who) + " properly", tag: "a minute, and some words", fn: () => { D.bones = "buried"; D.root++; busy = { end: D.real + 60000 / DIG_FAST, label: "Burying " + D.who, then: () => note("You say what you can remember of the words. It isn't much. It'll do.") }; const X = digStats(); X.buried.push({ n: D.who, place: C.place, town: C.giver, met: false }); grant("digbury"); return "You make a grave in the side of their tunnel and lay them in it, spade and all."; } },
+          { label: "Bury " + esc(D.who) + " properly", tag: "a minute, and some words", fn: () => { D.bones = "buried"; D.root++; busy = { end: D.real + 60000 / DIG_FAST, label: "Burying " + D.who, then: () => note("You say what you can remember of the words. It isn't much. It'll do.") }; const X = digStats(); X.buried.push({ n: D.who, place: C.place, town: C.giver, met: false }); grant("digbury"); return "You make a grave in the side of their tunnel and lay them in it, spade and all." + rfBones(C, D, "buried"); } },
           { label: "Take the purse at their belt", tag: "they won't need it", fn: () => { D.bones = "robbed"; D.root--; const g = 10 + lv(); S.coins += g; renderSheet(); digStats().robbed.push({ n: D.who, place: C.place, town: C.giver }); return "You take the purse. " + g + " gold, old coin. The tunnel is very quiet afterwards."; } },
-          { label: "Leave them be, and dig round", cls: "ghost", fn: () => { D.bones = "left"; return "You dig round them, carefully, and say sorry about the elbow."; } }
+          { label: "Leave them be, and dig round", cls: "ghost", fn: () => { D.bones = "left"; return "You dig round them, carefully, and say sorry about the elbow." + rfBones(C, D, "left"); } }
         ] };
       }
       function evListen() {
@@ -9644,6 +10169,7 @@ body.pv-open { overflow: hidden; }
       if (!D.stands) await say("Behind you, the tunnel sighs. Then it comes down, all of it, from the mouth to your heels, in one long rolling thump you feel in your teeth. There's no going back that way. Up, then.");
       if (!D.stands) { SND.collapse ? SND.collapse() : SND.quake && SND.quake(); }
       await digBlade(D);
+      await rfDigDone(X);
       save();
     } else await say("Your tunnel's still there under the hurdle and the bracken, propped and dry, all " + DIG_FT + " feet of it. You go up it on your elbows in a few minutes, which is a very strange feeling after the first time.");
     const w = await choose([0, 1, 2].map(i => ({ key: "" + i, label: "Break through at " + RC_WATCH[i].toLowerCase(), tag: i === 1 ? "most of them asleep" : i === 0 ? "the yard still busy" : "the night nearly over: less time inside", plain: i !== 1 })).concat([{ key: "back", label: "Not tonight", tag: "the tunnel's dug, and it'll keep", plain: true }]));
@@ -9930,6 +10456,7 @@ body.pv-open { overflow: hidden; }
     }
     if (jobs.includes("ledger") && C.k !== "eye") { M.ledger.push({ town: C.giver, reg: C.reg, what: C.ledger }); await say("You hand " + C.ledger + " to the reeve of " + esc(C.giver) + ", who reads it in silence and then burns half of it and locks the other half up. Prices in " + esc(C.giver) + " come down, and they stay down."); await echoMarkSafe("rcLedger"); }
     if (jobs.includes("sabotage")) { M.saved.push({ v: C.village, reg: C.reg }); S.potions = (S.potions || 0) + 2; S.dress = (S.dress || 0) + 2; renderSheet(); await say("The march on " + C.village + " never happens. " + C.village + " sends you what they can spare: two Draughts of Mending, bandages, and a cheese the size of a cartwheel."); await echoMarkSafe("rcSaved"); }
+    await rfAfterRaid(C, B, jobs);
     if (C.k === "eye") await meAfterRaid(C, B, jobs);
     if (jobs.includes("kill") && C.chiefDead && C.k === "stockade" && C.gang) { const B2 = bn(); B2.beat[C.gang] = (B2.beat[C.gang] || 0) + 1; if (hmOwn()) hmFacAdd(C.gang, "fear", 3); }
     if (B.chiefBound) { const b = 20 + 2 * lv(); S.coins += b; renderSheet(); await mech("The watch pays " + b + " gold for " + esc(C.chief.n) + ", alive.", "loot"); }
@@ -11516,7 +12043,7 @@ body.pv-open { overflow: hidden; }
     if (c === "mercy" && !M.proofs.hoard) { M.proofs.hoard = true; await say("In the tithe-ship's strongroom, with the coin, are the deeds she was carrying to Castellane: a fine house with a walled garden, bought with the tithe in a name that isn't Haggith's but is in her hand. <b>Proof: Haggith's hoard.</b>"); }
     if (c !== "mercy") { const t = mePupilClue(c === "unblinking" ? "On Brother Cadoc's chart-table is a course pricked out from the coast to an inland landing, and a note:" : "Her master's log has the landings in it:"); if (t) await say(t); }
     xpGain(50 + 5 * lv()); meLog("took " + F.ship + " of the Blind Fleet");
-    if (!meFleetLive()) { grant("mefleet"); const C = mePupil(); if (C) C.heads = Math.max(6, C.heads - 2); await mech("<b>The Blind Fleet is gone.</b> For the first time in years, nothing with an eye on its sail is on the sea.", "loot"); }
+    if (!meFleetLive()) { grant("mefleet"); const C = mePupil(); if (C) C.heads = Math.max(6, C.heads - 2); await mech("<b>The Blind Fleet is gone.</b> For the first time in years, nothing with an eye on its sail is on the sea.", "loot"); await rfFleet(); }
     save();
   }
   // At the Pupil, Clauneck sleeps on the tithe: if he's still at large, the vault is his to defend.
@@ -13468,6 +13995,7 @@ body.pv-open { overflow: hidden; }
     await echoTown(T);
     await hmTownLine(T);
     await rcTownLine(T);
+    await rfTown(T);
     await meTownLine(T);
     await f50Town(T);
     await hzTownIntro(T);
@@ -13476,7 +14004,7 @@ body.pv-open { overflow: hidden; }
     if (!(await lrTownIn(T))) { light(back); return; }
     const has = (k) => T.has.includes(k) && !hzShut(T, k);
     let rested = false, drank = false, roofed = false;
-    const tm = townMul(T) * rcMul(T) * meMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
+    const tm = townMul(T) * rcMul(T) * meMul(T) * rfMul(T), free = ctRank() >= 3, P = (n) => Math.max(1, Math.round(cp(n) * tm)), cOff = ctOff() ? " (Contender)" : "";
     // The calendar: market day and the festivals change the stalls, the inn and the bar.
     const town = T.kind !== "sanctuary", fair = town ? calFair() : null;
     const MP = (n) => Math.max(1, Math.round(mp(n) * tm)), mOff = (calShopOff() ? (calFairOn("barns") ? " (half price at the fair)" : " (market day)") : "") || cOff;
@@ -13509,6 +14037,7 @@ body.pv-open { overflow: hidden; }
         ...hzTownOpts(T),
         ...lrTownOpts(T),
         ...meTownOpts(T),
+        ...rfTownOpts(T),
         { key: "salle", label: "Climb the stairs to the salle", tag: (S.duel && S.duel.salle[T.reg + ":" + T.name] >= 3 ? "you've beaten the master here" : "duels with blunted blades · Forms and a school"), show: T.kind === "town", plain: true },
         { key: "bench", label: "The mine-maker's bench", tag: REGION_MINES[T.reg].name + " mines and caltrops", show: !!REGION_MINES[T.reg] && (TOWNS[T.reg] || [])[0]?.name === T.name, plain: true },
         { key: "leave", label: T.leave || "Back to the road", plain: true }
@@ -13520,6 +14049,7 @@ body.pv-open { overflow: hidden; }
       if (c.startsWith("hz:")) await hzTownDo(c, T);
       if (c.startsWith("lr:")) await lrTownDo(c, T);
       if (c.startsWith("me:")) await meTownDo(c, T);
+      if (c.startsWith("rf:")) await rfTownDo(c, T);
       if (c.startsWith("once:")) await calOnce(CAL_ONCE.find(O => "once:" + O.id === c));
       if (c === "almanac") {
         const p = mp(3); S.coins -= p; cal().almanac = true; calBuy(); renderSheet(); grant("calalmanac");
@@ -14270,6 +14800,7 @@ body.pv-open { overflow: hidden; }
   async function blindMaybe(type) {
     if (!FOE.on || FOE.pblind > 0 || S.hp <= 0) return;
     if (d(100) > (FOE.lvd && cascadeOn() ? BLIND_NM_PCT : BLIND_PCT)) return;
+    if (await rfNoBlind()) return;
     const why = /fire|radiant|lightning/.test(type) ? "The flash of it burns white across your eyes" : /slash|pierc/.test(type) ? "Blood runs down into your eyes" : "Grit and dirt come up off the blow into your eyes";
     blindSet(BLIND_TURNS);
     tip("blind");
@@ -14386,8 +14917,9 @@ body.pv-open { overflow: hidden; }
     Object.assign(FOE, { soft: 0, hard: false, ln: null, base, lvd, read: S.adapt ? reads(name) : 0, adapt: 0, blow: null, mimic: null, printUsed: false, sick: 0, chill: 0, burn: 0, rtWard: false });
     Object.assign(FOE, { on: true, boss: foeIsBoss(name, base, unit), name, max, hp, unit, felt: false, chain: 0, dig: 0, dug: false, digAdv: false, grained: false, burnt: false, reach: false, ether: 0, wUsed: [], swapT: -1, lost: false, flub: false, turn: 0, beltAt: null, swung: false, rounds: false, menu: false, blind: 0, salt: false, shade: false, F: null, co: null, pitted: 0, prone: false, coldDone: false, dread: 0, dreadOn: false, ward: false, threads: 0, threadsMax: 0, unbound: false, burrFroze: false, tyraSteady: false, crit: false, bleedPct: 0, bledAt: -1, hang: 0, drop: false, hzYou: "", hzFoe: "", swallowed: false });
     FOE.lg = null; FOE.ar = 0; FOE.arMax = 0; FOE.sund = false; FOE.fx = null; FOE.face = null; FOE.armF = null;
-    FOE.g = null; FOE.gRb = false; FOE.gMul = 0;
+    FOE.g = null; FOE.gRb = false; FOE.gMul = 0; FOE.rfWet = false;
     if (relic("bell")) FOE.blind = 1;
+    rfFightStart();
     if (relic("verdict")) FOE.chain = 1;
     FOE.menace = menaceFor(FOE.lk); FOE.pblind = 0; document.body.classList.remove("blinded");
     bfxOpen(name, FOE.menace);
@@ -14396,7 +14928,7 @@ body.pv-open { overflow: hidden; }
     if (!unit) tip("fight");
     cmdFightStart(unit);
   }
-  function foeEnd(lost) { if (!lost && mountedNow()) horseXp(10); if (!lost && FOE.on) rmGrow(); if (!lost) { spoilsWon(); fightWon(); coWon(); cmdFightWon(); } FOE.lk = null; FOE.menace = 0; bfxClose(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
+  function foeEnd(lost) { rfFightEnd(lost); if (!lost && mountedNow()) horseXp(10); if (!lost && FOE.on) rmGrow(); if (!lost) { spoilsWon(); fightWon(); coWon(); cmdFightWon(); } FOE.lk = null; FOE.menace = 0; bfxClose(); FOE.on = false; FOE.chain = 0; FOE.dig = 0; FOE.digAdv = false; FOE.F = null; beltHook = null; renderFoe(); renderSheet(); const a = $("acVal"); if (a) a.textContent = acNow(); }
   function renderFoe(instant) {
     const box = $("foeBox");
     if (!box) return;
@@ -14494,6 +15026,7 @@ body.pv-open { overflow: hidden; }
       if (tr.includes("drink") && S.hp > 0) { const r = Math.min(d(3), hpCap() - S.hp); if (r > 0) { S.hp += r; renderSheet(); add.push("you drink back " + r + " HP"); } }
       if (tr.includes("frost")) { FOE.chill = Math.min(3, (FOE.chill || 0) + 1); add.push("frost on it, its next blow −2"); }
       if (tr.includes("lunar")) { const nt = calNight(), r = nt ? d(8) : d(4); total += r; add.push("+" + r + " lunar" + (nt ? ", by night" : "")); }
+      const rfx = rfOnHit(w, total); total += rfx[0]; add.push(...rfx[1]);
       if (add.length) txt += " (" + add.join(", ") + ": " + total + " in all.)";
     }
     // Flame Strike leaves fire in the wound: your next few blows land +1d6.
@@ -14511,7 +15044,8 @@ body.pv-open { overflow: hidden; }
     }
     if (w || blow0 || slam0) { const lb = lgBlow(total, rb, slam0 || (w && (w.tr || []).includes("crush")) || lgCrushing()); if (lb[1]) { total = lb[0]; txt += lb[1].replace(/\.\)$/, ": " + total + " in all.)"); } }
     // The Turning Gauge: a quick jab lands half, a heavy blow half again.
-    if (FOE.gMul && (w || blow0)) { total = FOE.gMul < 1 ? Math.max(1, Math.floor(total / 2)) : Math.round(total * 1.5); txt += " (" + (FOE.gMul < 1 ? "Quick jab, half" : "Heavy blow, half again") + ": " + total + " in all.)"; }
+    if (FOE.gMul && FOE.gMul < 1 && w && (w.tr || []).includes("glass")) txt += " (Quick jab, and the glass doesn't care: full damage.)";
+    else if (FOE.gMul && (w || blow0)) { total = FOE.gMul < 1 ? Math.max(1, Math.floor(total / 2)) : Math.round(total * 1.5); txt += " (" + (FOE.gMul < 1 ? "Quick jab, half" : "Heavy blow, half again") + ": " + total + " in all.)"; }
     // Plate and Element: an armoured foe's silver bar takes the blow first.
     let broke = false, armTook = 0;
     if (FOE.ar > 0) { const a = armSoak(total, rb, slam0 || (w && (w.tr || []).includes("crush")) || lgCrushing() || /maul|mace|hammer|club|cudgel|flail/i.test(label)); if (a[1]) { total = a[0]; txt += a[1]; broke = !!a[2]; armTook = a[3] || 0; } }
@@ -17231,9 +17765,9 @@ body.pv-open { overflow: hidden; }
   async function gold(count, sides, why) {
     let total = 0;
     for (let i = 0; i < count; i++) total += d(sides);
-    const ub = S.unbal && S.roam ? Math.ceil(total / 4) : 0;
-    S.coins += total + ub; renderSheet();
-    await mech(why + " Gain " + count + "d" + sides + " gold: " + total + (ub ? ", and " + ub + " more in the Visceral Realm" : "") + ".", "loot");
+    const ub = S.unbal && S.roam ? Math.ceil(total / 4) : 0, pr = rfGold(total);
+    S.coins += total + ub + pr; renderSheet();
+    await mech(why + " Gain " + count + "d" + sides + " gold: " + total + (ub ? ", and " + ub + " more in the Visceral Realm" : "") + (pr ? ", and " + pr + " more for the Saint's pearls" : "") + ".", "loot");
   }
 
   async function partSands() {
@@ -20873,6 +21407,12 @@ body.pv-open { overflow: hidden; }
     "Vaelric's roots can't reach you, healing is halved, and the rot costs 1d4 HP every morning and at the start of every part."
   ];
   const GEAR = {
+    // Things Worth Finding (2026-11-21): the wishlist kit, worn once you have it.
+    w4coat: { name: "The Inquirer's Coat", icon: "cloak", desc: "A long dark-green coat with a pocket for every town on the Vell, each stitched with its mark, and a lens on a chain. Ninian's spare. +1 to Investigation, Insight and Perception checks, and one free hint whenever you lay out a case." },
+    w4veil: { name: "The Dust Men's Veil", icon: "cloak", desc: "A sand-coloured riding veil with bronze rings sewn in a spiral, from Sabra Ul. Once a fight it shrugs off Blinded, and in a sandstorm you lose one less water." },
+    w4lantern: { name: "Tapper's Gum Lantern", icon: "lantern", desc: "A wicker cage round a lump of red amber gum, from Amberlow. It burns low and warm and throws no beam. In a compound raid the tower lantern sweeps the yard every third breath, not every other." },
+    w4clasp: { name: "The Watchman's Bell-Clasp", icon: "ring", desc: "A cloak clasp like a small worn hand-bell. It tinks a breath before anyone moves in the dark: you always see a night ambush on the Blood-bought Roads coming." },
+    w4charm: { name: "The Unshored Timber Charm", icon: "herb", desc: "A splinter of tunnel timber wrapped in red thread, on a cord. Once a tunnel, when the roof comes down on the Long Dig, it misses you." },
     quirenib: { name: "The Quire's nib", icon: "scroll", desc: "A steel nib on a bone handle, from the clean desk in the paper house. Your hand knows how to draw a straight line without a rule. +1 to Investigation, Survival and Perception checks, and +5 max HP." },
     firstsheet: { name: "The First Sheet", icon: "map", desc: "The Quire's map of everything, rolled up, warm, and lighter than it should be. Somewhere inside the roll a nib is still drawing a coast at its edge. +1 to Survival and Investigation checks. Hollin Marrisk will want it back." },
     soullantern: { name: "Corvane's lantern", icon: "lantern", desc: "Black glass, cracked, warm in your hand, full of quiet light: the dead Mardek Corvane took, and you kept. +8 max HP, for good. Dogs won't come near you." },
@@ -22810,6 +23350,7 @@ body.pv-open { overflow: hidden; }
     S.gemsSpent = !!(S.hn && S.hn.vael === "taken"); renderSheet();
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
+    FOE.rfWet = !!F.sea || RF_WET.test((F.name || "") + " " + (F.who || ""));
     kinStart(st); cxStart(st);
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
@@ -23599,7 +24140,7 @@ body.pv-open { overflow: hidden; }
       }
     },
     skirmish: {
-      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2) { F.fled = true; FOE.hp = 0; renderFoe(); await say("It's had enough. It flips, hits the sand on its belly and skates away over the dune faster than you could ever run, shedding bright things as it goes."); } }
+      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2 && !(await rfNoRun())) { F.fled = true; FOE.hp = 0; renderFoe(); await say("It's had enough. It flips, hits the sand on its belly and skates away over the dune faster than you could ever run, shedding bright things as it goes."); } }
     },
     thief: {
       turn: async (F, st) => {
@@ -23607,7 +24148,7 @@ body.pv-open { overflow: hidden; }
           const n = Math.min(S.coins, d(4) + 1);
           S.coins -= n; F.stolen += n; renderSheet();
           await mech("The sandpicker's other hand was in your purse the whole time: " + n + " gold gone (" + F.stolen + " so far).", "hurt");
-          if (F.stolen >= 6) { F.fled = "thief"; FOE.hp = 0; renderFoe(); await say("It feels the weight of the sack, decides that's plenty, and runs. By the time you've got your feet under you it's three dunes away."); }
+          if (F.stolen >= 6 && !(await rfNoRun())) { F.fled = "thief"; FOE.hp = 0; renderFoe(); await say("It feels the weight of the sack, decides that's plenty, and runs. By the time you've got your feet under you it's three dunes away."); }
         }
         st.evade = false; return "done";
       }
@@ -23643,7 +24184,7 @@ body.pv-open { overflow: hidden; }
       }
     },
     scatter: {
-      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2) { F.fled = true; FOE.hp = 0; renderFoe(); await say("The rest of the murder lifts all at once, screaming, and scatters over the rooftops. Crows remember faces. They'll remember yours."); } }
+      before: async (F) => { if (FOE.hp > 0 && FOE.hp <= FOE.max / 2 && !(await rfNoRun())) { F.fled = true; FOE.hp = 0; renderFoe(); await say("The rest of the murder lifts all at once, screaming, and scatters over the rooftops. Crows remember faces. They'll remember yours."); } }
     },
     caller: {
       before: async (F, st) => {
@@ -23979,6 +24520,7 @@ body.pv-open { overflow: hidden; }
     if (F.took && S.nk && S.nk.on) await shadeGain(F.took, "You take back what it cut from you, and it settles back at your heels.");
     if (F.tugged && umOn()) await stones(F.tugged, "You cut the stones it swallowed out of its belly.");
     beastLog(B, true);
+    await rfBeastWon(B);
     if (B.quirk === "skirmish") await gold(2, 6, "Its nest of shiny things is buried in the next dune over.");
     else await gold(1, 6 + tier, "You search what's left.");
     if (hasMark("measure")) await gold(1, 6, "You know where its kind hide what they carry.");
@@ -34953,7 +35495,7 @@ body.pv-open { overflow: hidden; }
     });
   }
 
-  const SKERRA = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Skerra", whoShort: "Skerra",
+  const SKERRA = (o) => Object.assign({ sea: true, ac: 14, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Skerra", whoShort: "Skerra",
     hitWhy: "A Skerran boarding-axe bites into you.", miss: "The axe buries itself in the rail beside you.",
     hitLine: "A Skerran goes over the rail into the sea, without a sound, the way they all go." }, o);
   const HUNTERS = (o) => Object.assign({ ac: 15, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, who: "the Saltwrit", whoShort: "Saltwrit",
@@ -37911,7 +38453,9 @@ body.pv-open { overflow: hidden; }
     guns: { name: "Two more guns", cost: 80, fx: "+2 guns: your broadsides hit harder", on: (s) => { s.guns += 2; } },
     locker: { name: "A full shot-locker", cost: 40, fx: "chain and grape: 4 of each a fight, not 2" },
     glass: { name: "A long glass", cost: 35, fx: "read the enemy's intent once more a duel" },
-    bell: { name: "A count-bell at the bow", cost: 25, fx: "the crew's temper never falls below 3" }
+    bell: { name: "A count-bell at the bow", cost: 25, fx: "the crew's temper never falls below 3" },
+    // From the Blind Fleet's Tithe Chest (Things Worth Finding); never for sale.
+    blindeye: { name: "The Blind Fleet's lamp-glass", cost: 0, gift: true, fx: "+1 gun and +2 hull, and her lookout sees by night", on: (s) => { s.guns += 1; s.max += 2; s.hull += 2; } }
   };
   const SEA_HANDS = {
     hawl: "Hawl Ostrey, bosun (storms: one throw to spare)", gannet: "Gannet, powder-boy (+1 to every broadside)", dace: "Dace Mallory (Bones: a look at a bone)",
@@ -38032,7 +38576,7 @@ body.pv-open { overflow: hidden; }
       const c = await choose([
         { key: "fix", label: "Mend her", tag: fix + " gold · hull " + s.hull + " → " + s.max, show: dmg > 0 && S.coins >= fix },
         { key: "patch", label: "Patch what you can afford", tag: Math.floor(S.coins / 4) + " of " + dmg + " · 4 gold each", show: dmg > 0 && S.coins >= 4 && S.coins < fix, plain: true },
-        ...Object.keys(SEA_UPS).map(k => ({ key: "up:" + k, label: SEA_UPS[k].name, tag: SEA_UPS[k].cost + " gold · " + SEA_UPS[k].fx, show: !s.up.includes(k) && S.coins >= SEA_UPS[k].cost, plain: true })),
+        ...Object.keys(SEA_UPS).map(k => ({ key: "up:" + k, label: SEA_UPS[k].name, tag: SEA_UPS[k].cost + " gold · " + SEA_UPS[k].fx, show: !SEA_UPS[k].gift && !s.up.includes(k) && S.coins >= SEA_UPS[k].cost, plain: true })),
         ...shYardOpts(),
         { key: "no", label: "That's all", plain: true }
       ]);
@@ -38141,7 +38685,7 @@ body.pv-open { overflow: hidden; }
     await say("When it's over the rest of them come back to their duty very quietly. You put Kett ashore on the first rock you pass.");
     X.ship.temper = Math.max(X.ship.temper, 5); renderSheet();
   }
-  const PIRATES = (o) => Object.assign({ ac: 14, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "the pirates", whoShort: "Pirates",
+  const PIRATES = (o) => Object.assign({ sea: true, ac: 14, atk: 5, n: 1, s: 8, type: "slashing", bloom: 0, hesk: false, road: true, who: "the pirates", whoShort: "Pirates",
     hitWhy: "A cutlass opens your arm.", miss: "The cutlass rings off the rail.", hitLine: "A pirate goes over the side with a yell." }, o);
 
   // ---------- a rival under sail ----------
@@ -39061,6 +39605,7 @@ body.pv-open { overflow: hidden; }
         { key: "sea", label: "Give it to the sea: the sea's tenth", tag: "keep only the cup", plain: true }
       ]);
       X.hoard = c; grant("seahoard");
+      await rfArm(86, "Apart from the rest, stood up in the shingle by the door where the tide comes in: a three-pronged fishing spear, crusted with barnacles, a lead weight hung under the head. The first thing the Salt King ever owned, the count-rope says, knot by knot.");
       if (c === "return") {
         S.hh.hear += 2; await seaGold(40 + lv(), "Your share, which they make you take.");
         await say("It takes three voyages to bring it all back. At Raftmark they lay it out on the tally-stone and read the count-rope knot by knot, and the families come from all round the Reach, and some from further, to take back a tenth of what was taken from them. It isn't enough. They say it is, which isn't the same.");
@@ -44492,7 +45037,8 @@ body.pv-open { overflow: hidden; }
     // A night ambush: see them in the dark, or they're on you before you can talk, pay or walk away.
     if (night) {
       tip("calendar");
-      const r = await check({ label: "Perception check (in the dark)", mod: 2 + (hasMark("roadwise") ? 2 : 0) + (S.lantern || S.torch ? 2 : 0), dc: 14, cta: "Look" });
+      if (hasGear("w4clasp")) await say("The bell-clasp at your throat gives one small tink, a breath before anything moves.");
+      const r = hasGear("w4clasp") ? { ok: true } : await check({ label: "Perception check (in the dark)", mod: 2 + (hasMark("roadwise") ? 2 : 0) + (S.lantern || S.torch ? 2 : 0), dc: 14, cta: "Look" });
       if (!r.ok) {
         await say("You don't see them until they're already moving: four shapes off the verge at once, and " + bnName(G, "shot") + " already drawing.");
         await mech("A night ambush. No talking, no toll and no way round: they strike first. Win, and the night's take is a quarter fatter.", "hurt");
@@ -44504,17 +45050,19 @@ body.pv-open { overflow: hidden; }
       }
       await say("You see them first, a glint of steel at the edge of the road, and they know you have. Nobody's ambushing anybody now.");
     }
-    const tier = bnTier(), callDc = 17 - 2 * tier + (grudge ? 3 : 0) - hmRoadDc(G), toll = calToll(Math.max(3, Math.floor(S.coins / 10)));
+    const tier = bnTier(), callDc = 17 - 2 * tier + (grudge ? 3 : 0) - hmRoadDc(G), toll = calToll(Math.max(3, Math.floor(S.coins / 10))) + rfDebt();
     const c = await choose([
       { key: "fight", label: "Fight them", tag: "four of them · Lv " + lv() + (grudge ? " · with a grudge" : "") },
       { key: "call", label: "Call them out by name", tag: "Intimidation DC " + callDc + " · " + bnTitle(), plain: true, show: tier >= 1 },
       { key: "duel", label: "Challenge " + bnName(G, "knife") + " to single combat", tag: "a duel · win and they yield the cart · lose and the four of them set on you" + (duel().foes["gang:" + G.id] && duel().foes["gang:" + G.id].met ? " · " + bnName(G, "knife") + " has fought you before" : ""), plain: true },
-      { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : ""), plain: true, show: S.coins >= toll },
+      { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : "") + (rfDebt() ? " · the road remembers the shrine" : ""), plain: true, show: S.coins >= toll },
+      { key: "token", label: "Pay with a Vell toll-token", tag: "the Heron's purse · " + (S.rf ? S.rf.tokens : 0) + " left", plain: true, show: rfTokenOk(regs) },
       { key: "slip", label: "Slip off the road and round them", tag: "Stealth DC 14", plain: true, show: story },
       { key: "leave", label: "Turn back the way you came", plain: true, show: !story }
     ]);
     if (c === "leave") { await say("You turn round and take the long way. They jeer you all the way out of sight."); light(back); return; }
-    if (c === "toll") { S.coins -= toll; renderSheet(); await say(bnName(G, "wall") + " takes the coins, bites one, and waves you through."); await mech("You pay " + toll + " gold to pass.", "hurt"); light(back); return; }
+    if (c === "toll") { S.coins -= toll; rfPaid(regs, toll); renderSheet(); await say(bnName(G, "wall") + " takes the coins, bites one, and waves you through."); await mech("You pay " + toll + " gold to pass.", "hurt"); light(back); return; }
+    if (c === "token") { rfToken(); await say(bnName(G, "wall") + " turns the brass token over, sees the bridgemen's mark, and swears, and waves you through. Nobody on the Vell turns down a bridge token."); light(back); return; }
     let spotted = false;
     if (c === "duel") {
       await say("You step out into the road and call for " + bnName(G, "knife") + ". The others laugh, but they draw back, and make a ring. The road has its own rules, and this is one of them.");
@@ -44564,6 +45112,7 @@ body.pv-open { overflow: hidden; }
     if (grudge) B.beat[G.id + ":grudge"] = 1;
     bnLog(G, true);
     if (night) cal().night = (cal().night || 0) + 1;
+    if (night) await rfNightWon();
     await bnHaul(G, H, (grudge ? 1.5 : 1) * (night ? 1.25 : 1));
     const arms = 1 + (H.arms ? 1 : 0) + (grudge ? 1 : 0);
     for (let i = 0; i < arms; i++) { const w = bnWeapon(G, H.better || grudge); if (w) await mech("<span>Found on them: " + w + "</span>", "loot find"); }
@@ -44655,7 +45204,7 @@ body.pv-open { overflow: hidden; }
       else if (roll <= 10) await evGangWar([a, b], label);
       else if (roll <= 15) { const k = T.kind[d(T.kind.length) - 1]; await ({ monsters: evMonsters, mercs: evEscort, conquered: evReclaim, tolls: evToll, chase: evChase }[k])([a, b], label); }
       else if (roll === 16) await evChase([a, b], label);
-      else if (roll === 17) await evCart([a, b], label);
+      else if (roll === 17) await (d(2) === 1 ? rfShrine([a, b], label) : evCart([a, b], label));
       else if (roll === 18) await evPeddler([a, b], label);
       else await meetBeast(d(2) === 1 ? a : b, { roam: true });
     } finally { roamFight = false; }
@@ -44760,12 +45309,14 @@ body.pv-open { overflow: hidden; }
     if (wint) await say("There's a second sign under the first, newer: <i>WINTER RATES.</i>");
     const c = await choose([
       { key: "coin", label: "Pay in coin", tag: coin + " gold" + (wint ? " · the winter rate" : ""), show: S.coins >= coin },
+      { key: "token", label: "Pay with a Vell toll-token", tag: "the Heron's purse · " + (S.rf ? S.rf.tokens : 0) + " left", plain: true, show: rfTokenOk(regs) },
       { key: "blood", label: "Pay in blood", tag: "a cut across the palm, and then some · " + (wint ? "about a third of your HP, at the winter rate" : "about a quarter of your HP"), plain: true },
       { key: "duel", label: "Challenge " + bnName(G, "wall") + " to a duel for the bridge", tag: "one on one · win, and the toll-box is yours", plain: true },
       { key: "ropes", label: S.grapple ? "Put Threadfang's line on the far side and cut the bridge out from under them" : "Get round and cut the bridge ropes", tag: S.grapple ? "half of them go into the gorge" : "Athletics DC 15 · half of them go into the gorge", plain: true },
       { key: "fight", label: "Fight all four of them for it", plain: true }
     ]);
-    if (c === "coin") { S.coins -= coin; renderSheet(); await say(bnName(G, "wall") + " writes your name in the ledger, wrong, and waves you over."); return; }
+    if (c === "coin") { S.coins -= coin; rfPaid(regs, coin); renderSheet(); await say(bnName(G, "wall") + " writes your name in the ledger, wrong, and waves you over."); return; }
+    if (c === "token") { rfToken(); await say(bnName(G, "wall") + " looks at the bridgemen's token for a long time, and writes it in the ledger as paid."); return; }
     if (c === "blood") {
       const n = calToll(Math.max(2, Math.floor(S.hp / 4))); S.hp = Math.max(1, S.hp - n); renderSheet();
       await say(bnName(G, "wall") + " draws the cleaver across your palm, and holds your hand over a bowl until the bowl is as full as the toll says it has to be. \"Paid,\" says " + bnName(G, "wall") + ". \"The road remembers.\"");
@@ -46666,6 +47217,7 @@ body.pv-open { overflow: hidden; }
       await say("His raiders pick him up between them, the flags trailing, and carry him back the way they came, out toward the gate and the north. They don't look at you. One of them is crying.");
     }
     grant("rmbrannoc");
+    await rfGrave();
   }
 
   // ---------- the rings ----------
@@ -50525,6 +51077,12 @@ body.pv-open { overflow: hidden; }
       P.body.appendChild(grid);
       const give = pbtn("Say what you think and hope");
       P.ctrl.append(go, give);
+      // The Inquirer's Coat: one free hint each time you lay out a case.
+      if (hasGear("w4coat") && have.some(c => need.includes(c))) {
+        const hb = pbtn("Check your coat's pockets (a hint)");
+        hb.onclick = () => { if (over) return; hb.remove(); const c = have.find(x => need.includes(x)), i = have.indexOf(c); bs[i].classList.add("hint"); P.status.textContent = "In the coat's pockets, your own notes, and one of them underlined twice: " + DC_CLUES[c][0] + ". That one holds up."; };
+        P.ctrl.append(hb);
+      }
       go.onclick = () => {
         if (over) return;
         const good = [...sel].filter(c => need.includes(c)).length;
@@ -50567,6 +51125,7 @@ body.pv-open { overflow: hidden; }
     if (r.tries === 1) grant("dcclean");
     xpGain(120);
     await dcRep(k, 3, "You named the right one, and proved it.");
+    await rfCaseRight(k);
     return true;
   }
   // A logic grid: rows × columns, each cell cycles through its column's values. Check up to three times.
@@ -51990,6 +52549,7 @@ body.pv-open { overflow: hidden; }
       await mech("Seven cities, seven crimes, and never once the wrong name. Your title is <b>Truthfinder</b>.", "loot");
       await threeCheers("The whole Guildhall of Vellmarch, on its feet");
     } else await mech("You solved " + dcSolved() + " of the seven" + (D.wrong ? ", and named the wrong one " + (D.wrong === 1 ? "once" : D.wrong + " times") : "") + ". The Vell won't forget either.");
+    await rfCounting();
     D.done = true; xpGain(250); save();
     await endCard();
   }
@@ -52268,6 +52828,7 @@ body.pv-open { overflow: hidden; }
       else ok = (await check({ label: "Persuasion check (thirsty, not murderers)", mod: 3 + Math.floor(lv() / 8) + (dcSolved() >= 5 ? 2 : 0), dc: 15, cta: "Talk them down" })).ok;
       if (ok) {
         K.dust = "allies"; save();
+        await rfKit("w4veil", 88, "Sabra Ul unwinds the veil from her own face, sand-coloured, with bronze rings sewn in a spiral, and puts it over yours. “For the storm,” she says. “Everybody rides into the storm, sooner or later.”");
         await say("The riders get down off their horses, grumbling. And you ride out alone with two skins of the town's water, to the dune where the Dust Men are sitting, and give it to them, and tell them who sent you.");
         await say("Their headwoman is called Sabra Ul, and she has a face like a knife that's been used a lot. She drinks first, then hands the skin to the child behind her. “The well-keeper was a fair man,” she says. “Who killed him wore spurs. We'll remember you.”");
         await dcRep(k, 1, "You stopped a killing.");
@@ -52366,14 +52927,15 @@ body.pv-open { overflow: hidden; }
     await say("A brown wall comes in from the west, as high as the sky, and swallows the sun. Then you're in it, and there's nothing in the world but sand going sideways.");
     document.body.classList.add("dc-storm");
     const s3 = await choose([{ key: "shelter", label: "Shelter behind the rocks", tag: "Gap +1 · no water" },
-      { key: "push", label: "Push through", tag: "Gap −2 · Water −" + (K.horse === "grey" ? 2 : K.horse === "pony" ? 0 : 1) + (K.kit.includes("cloth") ? "" : " · no eye cloth: the horse may panic") },
+      { key: "push", label: "Push through", tag: "Gap −2 · Water −" + Math.max(0, (K.horse === "grey" ? 2 : K.horse === "pony" ? 0 : 1) - (hasGear("w4veil") ? 1 : 0)) + (K.kit.includes("cloth") ? "" : " · no eye cloth: the horse may panic") },
       { key: "dust", label: "Follow the Dust Men", tag: "they know the stone markers under the sand · Gap −2 · no water", show: K.dust === "allies" }]);
     if (s3 === "shelter") { K.gap += 1; save(); dk8Bar(); await mech("You crouch behind a rock with the horse's head under your cloak while the world blows past. Gap +1.", "hurt"); }
     else if (s3 === "dust") { await say("Out of the brown, a camel, and a rider wrapped to the eyes: Sabra Ul's son. He rides ahead of you from buried marker to buried marker, as if it were a street."); await dk8Good(-2, "Through the storm on the Dust Men's road."); }
     else {
       await dk8Good(-2, "Head down, through the worst of it.");
-      const w = K.horse === "grey" ? 2 : K.horse === "pony" ? 0 : 1;
+      const w = Math.max(0, (K.horse === "grey" ? 2 : K.horse === "pony" ? 0 : 1) - (hasGear("w4veil") ? 1 : 0));
       if (w) await dk8Bad(0, w, "The wind sucks the water out of you and the horse both.");
+      else if (hasGear("w4veil")) await say("The Dust Men's veil over your mouth, wet, the way Sabra Ul showed you. The wind gets nothing.");
       if (!K.kit.includes("cloth")) {
         const q = await dcQuick({ title: "The gust", hint: "No cloth for the horse's eyes. A gust hits like a wall, and the horse wants to bolt. Hold the bridle and keep holding until the bar is full.", label: "Hold the bridle", kind: "hold", win: 1400 });
         if (!q.ok) await dk8Bad(1, 0, "The horse bolts the wrong way with you, and it's a long while before you find her line again.");
@@ -52452,6 +53014,7 @@ body.pv-open { overflow: hidden; }
     const g = 150 + 8 * lv();
     S.coins += g; renderSheet();
     await mech("Kettledrop pays the Inquirer: " + g + " gold, and a share of the well for life. You'll drink free here.", "loot");
+    await rfArm(80, "Yara Brisby rides out to the gate to see you off, and gives you a knife across her saddle: a curved blade of smoky Waste glass in camel leather. “Glass cuts better than steel,” she says. “For a while.”");
     xpGain(150);
     return dk8Close();
   }
@@ -52753,6 +53316,7 @@ body.pv-open { overflow: hidden; }
     await say("Ninian says there are four more in the book.");
     await ubPay(60 + 4 * lv(), "The coroner's fee, out of Ninian's own purse:"); xpGain(60);
     ubNext(k);
+    await rfKit("w4coat", 87, "Ninian walks you to the inn afterwards and stops at the door, and takes off the long green coat Ninian always wears in the rain, and holds it out. “My spare,” Ninian says. “A pocket for every town on the Vell. You'll need them all. Everybody I partner with gets one.”");
   }
 
   // ---------- 2. A Debt and a Dish (Thornwick) ----------
