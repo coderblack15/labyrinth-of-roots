@@ -76,7 +76,8 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
   const page = await ctx.newPage();
   const errors = [];
   page.on("pageerror", e => { errors.push(String(e.stack || e)); console.log("PAGE ERROR", String(e.stack || e).slice(0, 600)); });
-  page.on("console", m => { if (m.type() === "error") { errors.push("console: " + m.text()); console.log("CONSOLE ERROR", m.text().slice(0, 300)); } });
+  // The music fetches can't load over file:// (they do on the web build): not the game's fault.
+  page.on("console", m => { if (m.type() === "error" && !/URL scheme "file" is not supported/.test(m.text())) { errors.push("console: " + m.text()); console.log("CONSOLE ERROR", m.text().slice(0, 300)); } });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Debugger.enable");
   const finish = async (code) => {
