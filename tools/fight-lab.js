@@ -97,6 +97,12 @@ window.__lab = (() => {
       if (has("book")) return "book";
       if (has("shard")) return "shard";
       if (window.__heavy && has("g-heavy")) return "g-heavy";
+      // Read the foe (2026-11-20): a wind-up or howl it can see gets a heavy blow (which staggers it), else a Brace.
+      if (FOE.g && ev("typeof tellKnown") === "function") {
+        const g = FOE.g, w = ev("gWindNext")(g) && ev("tellKnown")(g, "wind"), hw = ev("gHowlNext")(g) && ev("tellKnown")(g, "howl");
+        if ((w || hw) && has("g-heavy")) return "g-heavy";
+        if (w && has("hbrace")) return "hbrace";
+      }
     }
     if (has("atk")) return "atk";
     const a = opts.find(o => !/^(escape|evade|flee)/.test(String(o.key)));
