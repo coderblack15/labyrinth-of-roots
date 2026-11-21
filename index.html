@@ -2104,6 +2104,11 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fs-mat::before { content: ""; position: absolute; left: -30%; right: -30%; top: 30%; bottom: -60%; z-index: -1; transform: perspective(160px) rotateX(48deg); transform-origin: 50% 0;
   background-image: linear-gradient(#ffffff10 1px, transparent 1px), linear-gradient(90deg, #ffffff10 1px, transparent 1px); background-size: 22px 22px; }
 .fs-mat::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 60% 50% at 50% 110%, rgba(230, 170, 90, .10), transparent 70%); pointer-events: none; }
+/* Backdrops: the region's ground colour (from the battle-map palette) until a painting is set for it in MAT_ART;
+   then the painting, darkened toward the floor so the minis still read. */
+.fs-mat[data-bg] { background: radial-gradient(ellipse 70% 90% at 50% 100%, color-mix(in srgb, var(--mat-g, #2b3a2c) 55%, #000), color-mix(in srgb, var(--mat-g, #2b3a2c) 28%, #000) 75%); }
+.fs-mat.art { background: linear-gradient(180deg, rgba(8, 8, 6, .15), rgba(8, 8, 6, .35) 45%, rgba(8, 8, 6, .82)), var(--mat-img) center 35% / cover no-repeat, #111; }
+.fs-mat.art::before { opacity: .45; }
 .fm-side { display: flex; align-items: flex-end; gap: 4px 10px; flex-wrap: nowrap; min-width: 0; flex: 0 1 auto; }
 .fm-them { justify-content: flex-end; flex-wrap: wrap-reverse; }
 .fm-vs { flex: 0 0 auto; width: 1px; align-self: stretch; margin: 6px 0; background: linear-gradient(180deg, transparent, #6b4a2a88, transparent); }
@@ -4225,6 +4230,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "142", name: "The Mat", date: "21 Nov 2026", items: [
+      "<b>Miniatures on the fight board.</b> Every fight now has a strip of battle mat with a painted mini for everyone in it: you and your company on the left, every foe on the right. Packs get one mini a head, company battles get each captain and the ranks, and Mind's Eye agents who help from afar stand small at the back.",
+      "<b>Read the field at a glance.</b> The ring around each mini's base is its life, and the pips above it show bleeding, blindness, poison, fire, frost, your combo and a foe winding up a heavy blow. A companion's base stays brass until they've struck that fight.",
+      "<b>Minis move.</b> They lunge when they strike, rock when they're hit, and fall flat when they're beaten. The mat takes on the colour of the ground in each region, ready for painted backdrops."
+    ] },
     { ver: "141", name: "Ebba Quenn's Twelve", date: "21 Nov 2026", items: [
       "<b>Twelve new named weapons</b>, from Adrian's weapon sheet. Ebba Quenn quenched every blade in something other than water, and her cart went over the edge of the Blood-bought Roads with all twelve on it. From level 8, about one won fight in twenty turns one up (never more than thirty fights apart) until you have them all. Each one has its own painting in the Bag.",
       "<b>Four new kinds of hurt.</b> <b>Lifedrinker</b>: every hit gives you back a fifth of what it did. <b>Venomed</b>: hits leave poison in the wound, up to 3 stacks. <b>Withering</b>: +1d6 grave-cold on every hit that no armour stops. <b>Moonlit</b>: +1d4 lunar on every hit, +1d8 at night.",
@@ -14373,7 +14383,7 @@ body.pv-open { overflow: hidden; }
     $("fsRow").insertBefore(box, $("fsYou"));
     st.hidden = false;
     fsScene("");
-    fm = { yhp: null, fhp: null, by: null }; ["fmUs", "fmThem"].forEach(k => { const b = $(k); if (b) { b.dataset.k = ""; b.innerHTML = ""; } });
+    fm = { yhp: null, fhp: null, by: null }; if ($("fsMat")) delete $("fsMat").dataset.bg; ["fmUs", "fmThem"].forEach(k => { const b = $(k); if (b) { b.dataset.k = ""; b.innerHTML = ""; } });
     $("fsIntroNm").textContent = String(name || "").replace(/<[^>]*>/g, "");
     $("fsIntroMn").textContent = menace ? "Your Menace · −" + menace + " to its attacks for " + MENACE_TURNS + " turns" : "";
     st.classList.remove("intro"); void st.offsetWidth; st.classList.add("intro");
@@ -14464,7 +14474,7 @@ body.pv-open { overflow: hidden; }
       });
       try { if (meCmd()) Object.keys(FM_FAR).filter(cmdOn).forEach(id => us.push({ k: "me-" + id, nm: CMD_AG[id].n.split(" ")[0], pic: fmImg(picUrl(FM_FAR[id])) || FACE_SVG.person, cls: "fm-ally far nohp", tags: [], title: CMD_AG[id].n + ", from afar: " + CMD_AG[id].trick })); } catch (e) {}
     }
-    const f = FOE.face || { src: "", kind: FOE.unit ? "pack" : "beast" };
+    const f = FOE.face || { src: "", kind: ARM_PEOPLE.test(FOE.name || "") ? "person" : "beast" };
     const fpic = fmImg(f.src) || (f.kind === "person" ? FACE_SVG.person : FACE_SVG.beast);
     const ft = [], g = FOE.g;
     const b = fxOn("burn"), fr = fxOn("frost"), v = FOE.fx && FOE.fx.ven ? FOE.fx.ven : FOE.lg && FOE.lg.ven ? FOE.lg.ven : 0;
@@ -14513,8 +14523,24 @@ body.pv-open { overflow: hidden; }
     const p = document.createElement("span"); p.className = "fm-pop" + (heal ? " heal" : ""); p.textContent = txt;
     e.appendChild(p); setTimeout(() => p.remove(), 1000);
   }
+  // Backdrops behind the mat (2026-11-21). The mat takes the region's ground colour from FD_PAL, and a painting
+  // once one is listed here: a region key, or a fight type (duel, company, nightmare), which wins over the region.
+  // Paintings: art/mat_<key>.webp, 1600 x 500 (phones crop the middle 900 x 500). See art/mat-backdrops.md.
+  const MAT_ART = {};
+  function fmBackdrop(mat) {
+    const F = FOE.armF || {}, reg = FOE.reg || F.reg || (typeof regAt === "function" ? regAt(chapterAt(S.part)) : "") || "roots";
+    const type = FOE.duel ? "duel" : F.company ? "company" : FOE.lvd && cascadeOn() ? "nightmare" : "";
+    const key = type && MAT_ART[type] ? type : reg, pal = (typeof FD_PAL !== "undefined" && FD_PAL[reg]) || null;
+    if (mat.dataset.bg === key) return;
+    mat.dataset.bg = key;
+    mat.style.setProperty("--mat-g", pal ? pal.gd : "#2b3a2c");
+    const art = MAT_ART[key];
+    mat.classList.toggle("art", !!art);
+    if (art) mat.style.setProperty("--mat-img", 'url("' + art + '")'); else mat.style.removeProperty("--mat-img");
+  }
   function fmRender() {
     const mat = $("fsMat"); if (!mat || !FOE.on) return;
+    fmBackdrop(mat);
     const R = fmRoster(), us = $("fmUs"), them = $("fmThem");
     fmSide(us, R.us); fmSide(them, R.them);
     const live = [...them.querySelectorAll(".fm-mini:not(.down)")], foeEl = live[0] || them.querySelector(".fm-mini");
@@ -14541,7 +14567,7 @@ body.pv-open { overflow: hidden; }
   function foeIsBoss(name, base, unit) { return BOSS_NAMES.test(name || "") || (!unit && base >= 40); }
   function foeStart(name, max, { hp, unit = "", scale = true } = {}) {
     const base = max, lvd = scale, grow = scale && !unit;
-    FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); nextReg = null;
+    FOE.lk = scale ? foeLvkFor(nextReg) : lvk(); FOE.reg = nextReg; nextReg = null;
     if (grow) max = Math.max(1, Math.round(max * foeMult()));
     hp = hp === undefined ? max : Math.min(hp, max);
     if (grow && relic("noon") && hp === max) hp = Math.max(1, Math.round(hp * 0.9));
