@@ -5,6 +5,7 @@
 //     --prefer "^(The Mind's Eye|Open the tithe chest|Gather the tithe|Open a white door|Have a compound Seen|Send the ravens|Hold a Ladder|Send the Quiet|Send |Nobody's free|Not yet)"
 if (!S.me) S.me = meNew();
 const M = S.me;
+M.st = Math.max(M.st, 3); // the Eye on the roads-back menu needs it found
 Object.keys(M.lens).forEach(k => { M.lens[k] = "spared"; });
 rc().raven = "spared";
 const ok = meCmdN() === ME_CMD_NEED.length;
