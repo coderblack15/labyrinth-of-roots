@@ -4239,6 +4239,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "144", name: "The Long Walk Through", date: "21 Nov 2026", items: [
+      "<b>A fight that froze is fixed.</b> When one fight turned up two new weapons at once (a find and one of Ebba Quenn's Twelve), the spoils broke and the fight never ended, with the foe on 0 HP and nothing left to press. Now both weapons show and the road goes on.",
+      "<b>The Welling has its wayside moments</b>, like every other chapter: a few dry lines on the coast road while the sea comes up.",
+      "<b>The Mind's Eye tithes are trimmed.</b> Only one agent can be out gathering the tithe at a time, a tithe brings in about half what it did, Ladder nights and raven raids pay less, and the chest fills more slowly between visits. Missions also raise Devotion a little more slowly, so the Lenses take longer to come to your table."
+    ] },
     { ver: "143", name: "Things Worth Finding", date: "21 Nov 2026", items: [
       "<b>Eight new weapons</b>, each where it belongs: the <b>Tallyblade</b> (+1 damage for every Vell case you named rightly), the <b>Kettledrop Glasscutter</b> (quick jabs land full, but it chips after 40 fights until Sulmara's glassworkers reforge it), the <b>Crimp's Hook</b> (heavy blows drag a foe a square closer, and it can't run), the <b>Stockade Maul</b> (every heavy blow staggers), the <b>Haverly Sickle</b> (each hit takes 1 off its blows, up to 3), the <b>Bellwether Flail</b> (the third ring stuns), the <b>Rootbound Longbow</b> (finish three Long Dig tunnels) and the <b>Undertow Trident</b> (double damage on anything in water or on a deck).",
       "<b>Six pieces of kit</b>: the <b>Inquirer's Coat</b> (+1 to Investigation, Insight and Perception, and a free hint when you lay out a case), the <b>Dust Men's Veil</b>, the cursed <b>Saint's Pearl Rosary</b> (+15% gold, but every town charges more), <b>Tapper's Gum Lantern</b> (compound lanterns sweep slower), the <b>Watchman's Bell-Clasp</b> (no night ambush surprises you) and the <b>Unshored Timber Charm</b> (a cave-in misses you).",
@@ -11730,13 +11735,16 @@ body.pv-open { overflow: hidden; }
   // A trick works while its agent is home (not away on an errand) and has risen to Sworn.
   const cmdOn = (id) => meCmd() && cmdAgOk(id) && !S.me.cmd.ag[id].away && cmdRank(id) >= 1;
   const CMD_MIS = {
-    tithe: { name: "Gather the tithe", days: 3, dev: 3, at: 0, feat: "cmtithe", relic: "ringcoat", tgt: null, fx: "gold for the tithe chest" },
-    door: { name: "Open a white door in a town", days: 4, dev: 5, at: 0, feat: "cmdoor", relic: "seerveil", tgt: "door", fx: "a town of yours: its market is cheaper, and the chest fills faster" },
-    read: { name: "Have a compound Seen", days: 2, dev: 3, at: 0, feat: "cmread", relic: "quill", tgt: "rc", fx: "its numbers, a way in, and fewer of them" },
-    ravens: { name: "Send the ravens against a compound", days: 4, dev: 4, at: 0, feat: "cmraven", relic: "ravenmantle", tgt: "rc", fx: "they take it for you, and the plunder comes to the chest" },
-    ladder: { name: "Hold a Ladder night", days: 3, dev: 6, at: 25, feat: "cmladder", relic: "gentlehand", tgt: "town", fx: "new Seen, by name, and their tithe" },
-    quiet: { name: "Send the Quiet to your enemies", days: 3, dev: 4, at: 50, feat: "cmquiet", relic: "hushcord", tgt: "foe", fx: "a rival or a gang learns to fear you, or a compound loses its watch" }
+    tithe: { name: "Gather the tithe", days: 3, dev: 2, at: 0, feat: "cmtithe", relic: "ringcoat", tgt: null, fx: "gold for the tithe chest" },
+    door: { name: "Open a white door in a town", days: 4, dev: 4, at: 0, feat: "cmdoor", relic: "seerveil", tgt: "door", fx: "a town of yours: its market is cheaper, and the chest fills faster" },
+    read: { name: "Have a compound Seen", days: 2, dev: 2, at: 0, feat: "cmread", relic: "quill", tgt: "rc", fx: "its numbers, a way in, and fewer of them" },
+    ravens: { name: "Send the ravens against a compound", days: 4, dev: 3, at: 0, feat: "cmraven", relic: "ravenmantle", tgt: "rc", fx: "they take it for you, and the plunder comes to the chest" },
+    ladder: { name: "Hold a Ladder night", days: 3, dev: 4, at: 25, feat: "cmladder", relic: "gentlehand", tgt: "town", fx: "new Seen, by name, and their tithe" },
+    quiet: { name: "Send the Quiet to your enemies", days: 3, dev: 3, at: 50, feat: "cmquiet", relic: "hushcord", tgt: "foe", fx: "a rival or a gang learns to fear you, or a compound loses its watch" }
   };
+  // Trimmed 21 Nov 2026 (Adrian, after the playthrough check): one tithe-gathering out at a time, so the
+  // tithe can't be run by all six agents at once.
+  const cmdTitheOut = () => Object.values(S.me.cmd.ag).some(A => A.away && A.away.m === "tithe");
   const CMD_RELICS = ["ringcoat", "seerveil", "quill", "ravenmantle", "gentlehand", "hushcord"];
   const cmdOpenEye = () => !!(S.me && S.me.cmd && CMD_RELICS.every(k => S.me.cmd.relics.includes(k)));
   const cmdLog = (t) => { const M = S.me.cmd; M.log.unshift(calDate() + ": " + t); M.log = M.log.slice(0, 20); meLog(t); };
@@ -11764,7 +11772,7 @@ body.pv-open { overflow: hidden; }
   function cmdTithe() {
     const M = S.me.cmd, days = Math.min(30, calDay() - M.tAt);
     if (days <= 0) return;
-    const doors = Object.keys(M.doors).length, per = (3 + meHoldSum() + 2 * doors) * (1 + (cmdOn("mabry") ? 0.2 * cmdRank("mabry") : 0));
+    const doors = Object.keys(M.doors).length, per = (2 + meHoldSum() + doors) * (1 + (cmdOn("mabry") ? 0.2 * cmdRank("mabry") : 0));
     M.chest.g += Math.round(days * per);
     for (let i = 0; i < Math.floor((days + (M.tAt % 4)) / 4); i++) { const k = ["cloth", "metal", "spore"][d(3) - 1]; M.chest[k]++; }
     M.tAt = calDay();
@@ -11812,7 +11820,7 @@ body.pv-open { overflow: hidden; }
     const M = S.me.cmd, G = CMD_AG[id], he = G.pr === "she" ? "she" : "he", his = G.pr === "she" ? "her" : "his";
     if (W.m === "tithe") {
       if (!ok) { const t = meHoldList()[0]; if (t) meHold(t, -1); return [G.n + " comes back with a light purse and a bruise. Somebody in " + esc(t || "a market town") + " wouldn't pay, and said so in the square, and people listened.", t ? "The Eye's roots in " + esc(t) + " loosen." : ""]; }
-      const g = 50 + 5 * lv() + 10 * cmdRank(id) * (id === "clauneck" ? 2 : 1); M.chest.g += g;
+      const g = 25 + 2 * lv() + 5 * cmdRank(id) * (id === "clauneck" ? 2 : 1); M.chest.g += g;
       return [{ clauneck: "Clauneck comes back ringing louder than he left, and pours it out on your table, and for once he counts it, out loud, for you.", mabry: "Mabry Voss comes back with the tithe and a page for every coin, in her small neat hand.", haggith: "Haggith comes back with the tithe. People give her money without being asked. She says it's very tiring." }[id] || G.n + " comes back with the tithe, and puts it in the chest.", "+" + g + " gold in the tithe chest."];
     }
     if (W.m === "door" || W.m === "ladder") {
@@ -11821,7 +11829,7 @@ body.pv-open { overflow: hidden; }
       if (W.m === "door") { M.doors[t] = 1; meHold(t, 1); return [G.n + " opens a white door in " + esc(t) + ", with your sign on it. By the end of the week there's a bench outside it, and people on the bench, and a slate inside with their names.", esc(t) + " is yours: its market is a little cheaper for you, and its tithe comes to the chest."]; }
       const used = S.me.rec.map(R => R.n), pool = ME_FOLK.filter(x => !used.includes(x[0])), n = Math.min(pool.length, 1 + (cmdRank(id) >= 2 ? 1 : 0)), got = [];
       for (let i = 0; i < n; i++) { const f = pool.splice(d(pool.length) - 1, 1)[0]; S.me.rec.push({ id: ++S.me.seq, n: f[0], pr: f[1], who: f[2], v: Object.keys(ME_VULN)[d(5) - 1], town: t, reg: (townsOpen().find(T => T.name === t) || {}).reg, day: calDay(), grip: 6, trust: 0, clues: [], soft: "", last: -1, tries: 0, state: "lost" }); got.push(f); M.seen.push(f[0]); }
-      const g = 15 + 2 * lv(); M.chest.g += g; meHold(t, 1);
+      const g = 8 + lv(); M.chest.g += g; meHold(t, 1);
       return [G.n + " holds a Ladder night in " + esc(t) + ", in a borrowed barn with every lamp lit and then every lamp put out. " + (got.length ? got.map(f => esc(f[0]) + ", " + f[2]).join(", and ") + (got.length > 1 ? ", come" : ", comes") + " up out of the dark with a white thread round the wrist." : "Nobody new, but the faithful come back twice as faithful."), (got.length ? "New Seen: " + got.map(f => esc(f[0])).join(", ") + ". " : "") + "+" + g + " gold of their tithe in the chest."];
     }
     if (W.m === "read" || W.m === "ravens") {
@@ -11833,7 +11841,7 @@ body.pv-open { overflow: hidden; }
         return [G.n + " comes back from " + esc(C.place) + " and sits at the end of your table and tells you, without notes, how many of them there are, who sleeps where, who drinks, and which two of them were so frightened of what " + he + " said to them that they've walked off into the hills.", "At " + esc(C.place) + ": you know their numbers (" + C.heads + "), the way in under the carts is open, and they've stopped watching for you."];
       }
       if (!ok) return [G.n + " comes back from " + esc(C.place) + " with " + his + " arm in a sling and fewer ravens than " + he + " went with.", ""];
-      C.gone = "left"; C.goneAt = calDay(); const g = 60 + 6 * lv(); M.chest.g += g; rcLog(G.n + " took " + C.place + " for the Mind's Eye");
+      C.gone = "left"; C.goneAt = calDay(); const g = 30 + 3 * lv(); M.chest.g += g; rcLog(G.n + " took " + C.place + " for the Mind's Eye");
       return [(id === "tharen" ? "The ravens go up over " + esc(C.place) + " at dawn, a black rope of them, and Tharen Ravendare goes in under them. By noon there's a white eye painted on the gate under a raven." : G.n + " goes into " + esc(C.place) + " with the hardest of the Seen behind " + (G.pr === "she" ? "her" : "him") + ", and by morning there's a white eye painted on the gate."), esc(C.place) + " is off your map. +" + g + " gold of its plunder in the tithe chest."];
     }
     if (W.m === "quiet") {
@@ -11869,7 +11877,7 @@ body.pv-open { overflow: hidden; }
       const free = Object.keys(CMD_AG).filter(cmdFree), ch = M.chest, hasChest = ch.g > 0 || ch.cloth + ch.metal + ch.spore > 0;
       const c = await choose([
         { key: "chest", label: "Open the tithe chest", tag: ch.g + " gold" + (ch.cloth + ch.metal + ch.spore ? " · " + (ch.cloth + ch.metal + ch.spore) + " salvage" : ""), show: hasChest },
-        ...Object.keys(CMD_MIS).map(k => { const K = CMD_MIS[k]; return { key: "m:" + k, label: K.name, tag: K.days + " days · " + K.fx + " · " + (M.done[k] || 0) + " done" + (M.relics.includes(K.relic) ? "" : ", 3 bring " + GEAR[K.relic].name), show: M.dev >= K.at && free.length > 0 && cmdTargets(k) !== null, plain: hasChest || k !== "tithe" }; }),
+        ...Object.keys(CMD_MIS).map(k => { const K = CMD_MIS[k]; return { key: "m:" + k, label: K.name, tag: K.days + " days · " + K.fx + " · " + (M.done[k] || 0) + " done" + (M.relics.includes(K.relic) ? "" : ", 3 bring " + GEAR[K.relic].name), show: M.dev >= K.at && free.length > 0 && cmdTargets(k) !== null && !(k === "tithe" && cmdTitheOut()), plain: hasChest || k !== "tithe" }; }),
         { key: "wait", label: "Nobody's free to send", tag: "they come back while you travel", show: !free.length, plain: true },
         { key: "talk", label: "Sit and listen to Haggith a while", tag: "what the Eye hears", plain: true },
         { key: "unpick", label: "Unpick the thread: send the Seen home", tag: "the Mind's Eye ends · your agents go their own ways · can't be undone", plain: true },
@@ -13867,6 +13875,14 @@ body.pv-open { overflow: hidden; }
         "A gull lands on the rail, looks you in the eye and takes your biscuit. Nobody on deck reacts. Aboard this ship, the gull outranks you.",
         "A sailor teaching you knots says there are a hundred and twelve. He shows you two, says the rest are much the same, and goes to his dinner.",
         "There's a rule aboard: no whistling, it calls the wind. You ask what's wrong with wind, on a sailing ship. Nobody can quite remember."
+      ],
+      // The Welling (Parts C–CIV): the sea coming up the coast a step a night. Added by the playthrough check.
+      welling: [
+        "A man is carrying his front door up the hill on his back. He says the house can look after itself, but the door was his mother's.",
+        "Somebody has nailed a board to a post on the shore: HIGH WATER MARK. It's been moved up the post four times this week, and the nails are getting bigger.",
+        "A woman on the coast road is selling sandbags. You ask how much. She looks at the sea, and then at you, and doubles it.",
+        "Two fishermen are arguing about whether the water is higher than yesterday. The water is up to their knees. Neither of them moves.",
+        "A dog sits on a roof, perfectly dry, looking down at the people wading past it. It doesn't help. You get the feeling it was always going to be the dog."
       ]
     },
     // Townsfolk on the roads back, by region. A function can return "" when the town isn't there any more.
@@ -15876,7 +15892,7 @@ body.pv-open { overflow: hidden; }
     if (lt) add(el("p", "mech loot find", "<span>Found: " + lt + ".</span>"));
     const qf = down ? qtDrop() : "";
     if (qf) add(el("p", "mech loot find q-heartfire", "<span>Found: " + qf + ".</span>"));
-    lootNew.splice(0).forEach(picCard);
+    lootNew.splice(0).forEach(k => picCard(k));
   }
   async function spoilsTurnIn() {
     if ((S.leaves || 0) > 0 || salvWorth() > 0) tip("spoils");
