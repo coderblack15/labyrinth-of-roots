@@ -2140,7 +2140,7 @@ body.fight-hit .story { animation: quake .35s cubic-bezier(.36, .07, .19, .97) b
 .fm-tags .t-blind { background: #555; } .fm-tags .t-good { background: #2f6a4a; } .fm-tags .t-wind { background: #c23a22; animation: fmPulse 1s ease-in-out infinite; }
 .fm-tags .t-ready { background: #8a6a24; }
 .fm-pop { position: absolute; z-index: 4; top: 10%; left: 50%; transform: translateX(-50%); font: 700 13px/1 var(--label); color: #ffd6c8; text-shadow: 0 0 4px #c0281a, 0 1px 0 #000; pointer-events: none; animation: fmPop 1s ease-out forwards; }
-.fm-pop.heal { color: #c9f2d6; text-shadow: 0 0 4px #2f7a52, 0 1px 0 #000; }
+.fm-pop.heal { color: #b8ffd0; font-size: 15px; text-shadow: 0 0 6px #1f9a52, 0 1px 0 #000; }
 .fm-more { align-self: center; font: 700 12px/1 var(--label); color: #e3a593; padding: 4px 6px; border: 1px dashed #6b3328; border-radius: 999px; }
 .fm-mini.hit .fm-fig { animation: fmHit .45s ease; }
 .fm-us .fm-mini.lunge .fm-fig { animation: fmLungeR .42s cubic-bezier(.3, 1.4, .5, 1); }
@@ -2155,6 +2155,24 @@ body.in-fight.blinded .fm-foe .fm-base { background: #2a2622; }
 @keyframes fmLungeR { 0%, 100% { transform: none; } 45% { transform: translateX(16px) rotate(8deg) scale(1.06); } }
 @keyframes fmLungeL { 0%, 100% { transform: none; } 45% { transform: translateX(-16px) rotate(-8deg) scale(1.06); } }
 @keyframes fmPop { 0% { opacity: 0; transform: translate(-50%, 4px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -22px); } }
+/* A bandage (2026-11-21): a strip winds up round your mini, the bleed pip goes, a green glow. Under a second. */
+.fm-wrap { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .95;
+  background: repeating-linear-gradient(-14deg, transparent 0 7px, rgba(239, 230, 210, .9) 7px 11px, rgba(190, 170, 130, .9) 11px 12px, transparent 12px 18px);
+  -webkit-mask: linear-gradient(0deg, #000 0, #000 var(--wr, 0%), transparent var(--wr, 0%)); mask: linear-gradient(0deg, #000 0, #000 var(--wr, 0%), transparent var(--wr, 0%));
+  animation: fmWrap .85s ease-out forwards; }
+.fm-mini.mended .fm-fig { box-shadow: 0 0 0 1px #2a1d0c, 0 0 14px 3px rgba(110, 220, 150, .75); transition: box-shadow .3s; }
+/* A volley (2026-11-21): arrows rain down over one side of the mat and stand in the ground a moment. Stopped by cover,
+   they stick in the ground short of the minis. Never waits on the story. */
+.fm-rain { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.fm-arrow { position: absolute; left: var(--x); top: var(--y); width: 2px; height: 24px; margin: -24px 0 0 -1px; transform-origin: 50% 100%;
+  background: linear-gradient(180deg, #d8d2c4 0 5px, #8a6a3a 5px 100%); transform: rotate(var(--r)); animation: fmFall .42s cubic-bezier(.5, 0, 1, 1) var(--dl) both, fmGone .3s ease-in calc(var(--dl) + 1.05s) forwards; }
+.fm-arrow::before { content: ""; position: absolute; left: -3px; top: 0; width: 8px; height: 6px; background: linear-gradient(90deg, #b8b0a0 0 3px, transparent 3px 5px, #b8b0a0 5px); clip-path: polygon(0 0, 100% 0, 75% 100%, 25% 100%); }
+.fm-arrow::after { content: ""; position: absolute; left: -2px; bottom: -4px; border: 3px solid transparent; border-top: 5px solid #cfd3d6; }
+.fm-them .fm-mini.shot .fm-fig, .fm-us .fm-mini.shot .fm-fig { animation: fmHit .45s ease .35s; }
+@keyframes fmFall { from { transform: translate(calc(var(--dx) * -1), -140px) rotate(var(--r)); opacity: 0; } 15% { opacity: 1; } to { transform: rotate(var(--r)); opacity: 1; } }
+@keyframes fmGone { to { opacity: 0; } }
+@property --wr { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+@keyframes fmWrap { 0% { --wr: 0%; } 55% { --wr: 100%; opacity: .95; } 100% { --wr: 100%; opacity: 0; } }
 @keyframes fmPulse { 50% { box-shadow: 0 0 6px 2px rgba(240, 80, 40, .8); } }
 @media (prefers-reduced-motion: reduce) { .fm-mini .fm-fig { animation: none !important; transition: none !important; } .fm-pop { animation-duration: 1.6s; } }
 @media (max-width: 860px) {
@@ -2806,6 +2824,15 @@ body.pv-open { overflow: hidden; }
   const $ = (id) => document.getElementById(id);
   const story = $("story");
   const wait = (ms) => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+  // Instant fights (2026-11-21, Adrian: "make the attack selections instant"): in a fight, the move you pick lands at
+  // once. Your rolls and the foe's roll themselves (no second tap on Roll), the dice show their number without
+  // spinning, and the story lines don't pause between them. The minis on the mat still lunge and rock alongside.
+  // Settings can bring the dice back ("Roll the dice yourself"). Per browser. Quick hands on an attack card keep their
+  // Roll button while an item is ready, since the timing catch needs the pause.
+  const INST_KEY = "labyrinth-of-roots-instant";
+  const instPref = () => { try { return localStorage.getItem(INST_KEY) !== "0"; } catch (e) { return true; } };
+  let instOn = instPref();
+  const instNow = () => { try { return instOn && FOE.on && !FOE.duel; } catch (e) { return false; } };
   const d = (n) => 1 + Math.floor(Math.random() * n);
 
   // ---------- spiral ornament ----------
@@ -4232,6 +4259,11 @@ body.pv-open { overflow: hidden; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "144", name: "Straight to the Blow", date: "21 Nov 2026", items: [
+      "<b>Instant fights.</b> Tap a move and it lands. No second tap on Strike or Brace: your rolls and the foe's roll themselves, the dice show their number at once, and the story doesn't pause between lines. Like tapping the dice? <b>Settings → Fight rolls → Roll the dice yourself</b>. Duels keep their timing, and an attack with a quick-hands item ready still waits for you.",
+      "<b>Bandages on the mat.</b> Bind a wound or bandage the bleeding and a strip winds round your mini, the bleeding pip goes, and it glows green as the health comes back.",
+      "<b>Volleys on the mat.</b> When the bowmen loose, or you fan three arrows off the bow, arrows rain down over that side of the mat and stand in the ground. Behind cover or a pavise, they stick short of you."
+    ] },
     { ver: "143", name: "Things Worth Finding", date: "21 Nov 2026", items: [
       "<b>Eight new weapons</b>, each where it belongs: the <b>Tallyblade</b> (+1 damage for every Vell case you named rightly), the <b>Kettledrop Glasscutter</b> (quick jabs land full, but it chips after 40 fights until Sulmara's glassworkers reforge it), the <b>Crimp's Hook</b> (heavy blows drag a foe a square closer, and it can't run), the <b>Stockade Maul</b> (every heavy blow staggers), the <b>Haverly Sickle</b> (each hit takes 1 off its blows, up to 3), the <b>Bellwether Flail</b> (the third ring stuns), the <b>Rootbound Longbow</b> (finish three Long Dig tunnels) and the <b>Undertow Trident</b> (double damage on anything in water or on a deck).",
       "<b>Six pieces of kit</b>: the <b>Inquirer's Coat</b> (+1 to Investigation, Insight and Perception, and a free hint when you lay out a case), the <b>Dust Men's Veil</b>, the cursed <b>Saint's Pearl Rosary</b> (+15% gold, but every town charges more), <b>Tapper's Gum Lantern</b> (compound lanterns sweep slower), the <b>Watchman's Bell-Clasp</b> (no night ambush surprises you) and the <b>Unshored Timber Charm</b> (a cave-in misses you).",
@@ -4871,6 +4903,7 @@ body.pv-open { overflow: hidden; }
     h += row("Music", "Slow, quiet night music under the sound, written fresh each time it plays. Each chapter has its own theme, carried by its two pieces and by its fights, Nightmares and towns. It plays when Sound is on.", '<div class="set-opts">' + [["0", "Off"], ["1", "Faint"], ["2", "Soft"], ["3", "Fuller"]].map(([k, l]) => '<button class="ghost" type="button" data-mus="' + k + '">' + l + "</button>").join("") + '</div><p class="mus-now"></p><p class="mus-heard j-sub"></p><div class="set-opts"><button class="ghost mus-skip" type="button">Next piece</button></div>');
     h += row("Text size", "Makes the story, the sheet and the menus bigger or smaller.", opt("ts", TEXT_SIZES.map(z => [z[0], z[1]]), textSize()));
     h += row("First-time notes", "A short note the first time each part of the game turns up. <b>Guide me</b> adds notes on the basics too. Every note you've seen is in the journal's Field guide.", opt("guide", [["guide", "Guide me"], ["some", "Only new systems"], ["know", "Off"]], tipState.off ? "know" : tipState.guide === "guide" ? "guide" : "some"));
+    h += row("Fight rolls", "<b>Instant</b>: the move you pick lands at once, and the dice roll themselves. <b>Roll the dice yourself</b>: tap Roll for every swing and every blow at you, and watch them spin.", opt("inst", [["1", "Instant"], ["0", "Roll the dice yourself"]], instOn ? "1" : "0"));
     h += row("Story so far", "A short recap when you continue a save.", opt("recap", [["1", "Show it"], ["0", "Skip it"]], recapOff() ? "0" : "1"));
     if (started) {
       h += row("Battle style · Slot " + SLOT, "How company battles, boardings and raids are fought." + (FOE.on ? " You can change this once this fight is over." : ""), opt("stac", [["classic", "Classic"], ["tactics", "On the grid"], ["ask", "Ask each fight"]], S.tac || "classic"));
@@ -4884,6 +4917,7 @@ body.pv-open { overflow: hidden; }
     SND.paint();
     body.querySelectorAll("[data-ts]").forEach(b => b.onclick = () => { try { localStorage.setItem(TEXT_KEY, b.dataset.ts); } catch (e) {} textApply(b.dataset.ts); setRender(); });
     body.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { const v = b.dataset.guide; tipState.off = v === "know"; tipState.guide = v === "some" ? "some" : v; tipSave(); setRender(); });
+    body.querySelectorAll("[data-inst]").forEach(b => b.onclick = () => { instOn = b.dataset.inst === "1"; try { localStorage.setItem(INST_KEY, instOn ? "1" : "0"); } catch (e) {} setRender(); });
     body.querySelectorAll("[data-recap]").forEach(b => b.onclick = () => { setRecapOff(b.dataset.recap === "0"); setRender(); });
     body.querySelectorAll("[data-stac]").forEach(b => b.onclick = () => { if (FOE.on) return; S.tac = b.dataset.stac; save(); setRender(); });
     body.querySelectorAll("[data-stide]").forEach(b => b.onclick = () => { S.slowTide = b.dataset.stide === "1"; save(); setRender(); });
@@ -6265,14 +6299,14 @@ body.pv-open { overflow: hidden; }
     return node;
   }
   function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = prn(html); return n; }
-  async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); await wait(220); }
+  async function say(html, cls) { add(el("p", cls || "", wpnTxt(html))); if (!instNow()) await wait(220); }
   const voice = (html) => say(html, "voice spirit");
   // A rules line. The line is a flex row (rune, then text), so mixed text and <b> are gathered into one span
   // first; otherwise each bold word became its own column.
   async function mech(html, kind) {
     const p = el("p", "mech" + (kind ? " " + kind : ""), wpnTxt(html));
     if (p.childNodes.length > 1) { const sp = document.createElement("span"); while (p.firstChild) sp.appendChild(p.firstChild); p.appendChild(sp); }
-    add(p); await wait(220);
+    add(p); if (!instNow()) await wait(220);
   }
   function heading(num, title) {
     const h = el("div", "part-head", '<span class="num">Part ' + num + '</span><h2>' + title + "</h2>");
@@ -6535,7 +6569,7 @@ body.pv-open { overflow: hidden; }
     die.classList.add("spin");
     const span = die.querySelector("span");
     const t0 = performance.now();
-    if (!reduced) while (performance.now() - t0 < 650) { span.textContent = d(20); await new Promise(r => setTimeout(r, 50)); }
+    if (!reduced && !instNow()) while (performance.now() - t0 < 650) { span.textContent = d(20); await new Promise(r => setTimeout(r, 50)); }
     span.textContent = final;
     die.classList.remove("spin");
     if (final === 20) die.classList.add("crit");
@@ -6614,7 +6648,7 @@ body.pv-open { overflow: hidden; }
         if (atk && FOE.lost) {
           FOE.lost = false;
           out.innerHTML = "<b class='bad'>No swing</b> · you're still dragging it out of your pack.";
-          scrollNext = true; await wait(450);
+          scrollNext = true; if (!instNow()) await wait(450);
           resolve({ ok: false, kept: 2, total: 0 }); return;
         }
         const vals = dies.map(() => d(20));
@@ -6633,11 +6667,12 @@ body.pv-open { overflow: hidden; }
           ctrl.append(re, acc);
         } else {
           scrollNext = true;
-          await wait(350);
+          if (!instNow()) await wait(350);
           resolve({ ok, kept, total });
         }
       }
       rollBtn.onclick = doRoll;
+      if (instNow() && !ctrl.querySelector(".belt-btn:not([disabled])")) doRoll();
     });
   }
 
@@ -6666,9 +6701,10 @@ body.pv-open { overflow: hidden; }
           re.onclick = () => { S.blessing = false; renderSheet(); doRoll(); };
           acc.onclick = () => { ctrl.innerHTML = ""; scrollNext = true; resolve(ok); };
           ctrl.append(re, acc);
-        } else { scrollNext = true; await wait(350); resolve(ok); }
+        } else { scrollNext = true; if (!instNow()) await wait(350); resolve(ok); }
       }
       b.onclick = doRoll;
+      if (instNow()) doRoll();
     });
   }
 
@@ -6724,7 +6760,7 @@ body.pv-open { overflow: hidden; }
       scrollNext = true;
       if (FOE.on) card.classList.add("fr");
       add(card);
-      b.onclick = async () => {
+      const go = b.onclick = async () => {
         ctrl.innerHTML = "";
         const vals = dies.map(() => d(20));
         await Promise.all(dies.map((x, i) => spin(x, vals[i])));
@@ -6736,10 +6772,11 @@ body.pv-open { overflow: hidden; }
         out.innerHTML = kept + " " + sign(bonus) + " = <b>" + (kept + bonus) + "</b> vs AC " + ac + " · <b class='" + (hit ? "bad" : "ok") + "'>" + (hit ? "It hits" : "It misses") + "</b>";
         if (FOE.on && !FOE.rounds) { if (!FOE.swung) fightTurn(); FOE.swung = false; }
         scrollNext = true;
-        await wait(350);
+        if (!instNow()) await wait(350);
         if (hit && FOE.on && S.adapt && FOE.adapt < 2) { FOE.adapt++; await mech("Adaptive Reasoning: you've felt how it moves now. +1 AC against " + FOE.name + " for the rest of this fight (+" + FOE.adapt + " so far).", "loot"); }
         resolve(hit);
       };
+      if (instNow()) go();
     });
   }
 
@@ -8387,6 +8424,7 @@ body.pv-open { overflow: hidden; }
     } else if (a === "mend") {
       await beltMend(Math.max(1, Math.floor((d(6) + d(6) + 2) * mult)), "Warm sap seeps out of the grip and into the cuts on your hand, and spreads.");
     } else if (a === "onslaught") {
+      fmVolley("them");
       await say("You pull three arrows from the quiver in one grab, nock them fanned across the string, and let them all go at once.");
       if (FOE.F && FOE.F.volley) await FOE.F.volley(t, main);
       else if (FOE.unit) {
@@ -15036,7 +15074,7 @@ body.pv-open { overflow: hidden; }
     list.forEach((m, i) => {
       const e = box.querySelector('[data-i="' + i + '"]'); if (!e) return;
       if (m.more) { e.textContent = m.more; return; }
-      const keep = ["hit", "lunge"].filter(c => e.classList.contains(c));
+      const keep = ["hit", "lunge", "mended", "shot"].filter(c => e.classList.contains(c));
       e.className = "fm-mini " + m.cls + (m.hp != null && m.hp <= 0 ? " down" : "") + (m.hp != null && m.hp > 0 && m.hp <= .3 ? " low" : m.hp != null && m.hp <= .6 ? " mid" : "") + (keep.length ? " " + keep.join(" ") : "");
       if (m.hp != null) e.style.setProperty("--hp", Math.max(0, Math.min(1, m.hp)).toFixed(3));
       e.title = m.title || m.nm;
@@ -15044,10 +15082,10 @@ body.pv-open { overflow: hidden; }
       e.querySelector(".fm-tags").innerHTML = m.tags.map(t => '<i class="' + t[0] + '" title="' + esc(t[2]) + '">' + t[1] + "</i>").join("");
     });
   }
-  function fmAnim(e, cls) {
+  function fmAnim(e, cls, ms = 480) {
     if (!e) return;
     e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls);
-    setTimeout(() => e.classList.remove(cls), 480);
+    setTimeout(() => e.classList.remove(cls), ms);
   }
   function fmPop(e, txt, heal) {
     if (!e) return;
@@ -15068,6 +15106,36 @@ body.pv-open { overflow: hidden; }
     const art = MAT_ART[key];
     mat.classList.toggle("art", !!art);
     if (art) mat.style.setProperty("--mat-img", 'url("' + art + '")'); else mat.style.removeProperty("--mat-img");
+  }
+  // The bandage: a strip winds round a mini (you by default, or a companion by id) and it glows green a moment.
+  function fmWrap(k) {
+    const box = $("fmUs"); if (!box || !FOE.on) return;
+    const i = k ? [...box.querySelectorAll(".fm-mini")].findIndex(e => (e.title || "").startsWith(coName(k))) : 0;
+    const m = box.querySelector('[data-i="' + Math.max(0, i) + '"]'), f = m && m.querySelector(".fm-fig");
+    if (!f) return;
+    f.querySelectorAll(".fm-wrap").forEach(x => x.remove());
+    const w = document.createElement("i"); w.className = "fm-wrap"; f.appendChild(w);
+    m.classList.add("mended");
+    setTimeout(() => { w.remove(); m.classList.remove("mended"); }, 900);
+  }
+  // A volley onto one side of the mat ("us" or "them"). stopped: the arrows stand in the ground short of the minis.
+  function fmVolley(side, stopped) {
+    const mat = $("fsMat"), box = $(side === "us" ? "fmUs" : "fmThem");
+    if (!mat || !box || !FOE.on || mat.offsetParent === null) return;
+    const m = mat.getBoundingClientRect(), b = box.getBoundingClientRect(), from = side === "us" ? 1 : -1;
+    const rain = document.createElement("div"); rain.className = "fm-rain"; rain.setAttribute("aria-hidden", "true");
+    const n = reduced ? 5 : 14, left = b.left - m.left, w = Math.max(40, b.width);
+    for (let i = 0; i < n; i++) {
+      const a = document.createElement("i"); a.className = "fm-arrow";
+      let x = left + Math.random() * w;
+      if (stopped) x = side === "us" ? b.right - m.left + 6 + Math.random() * 26 : left - 6 - Math.random() * 26;
+      const y = m.height - 6 - Math.random() * 22, r = from * (14 + Math.random() * 16);
+      a.style.cssText = "--x:" + x.toFixed(0) + "px;--y:" + y.toFixed(0) + "px;--r:" + r.toFixed(0) + "deg;--dx:" + (from * -60) + "px;--dl:" + (Math.random() * .35).toFixed(2) + "s";
+      rain.appendChild(a);
+    }
+    mat.appendChild(rain);
+    if (!stopped) box.querySelectorAll(".fm-mini:not(.down)").forEach(e => fmAnim(e, "shot", 850));
+    setTimeout(() => rain.remove(), 1800);
   }
   function fmRender() {
     const mat = $("fsMat"); if (!mat || !FOE.on) return;
@@ -15573,7 +15641,7 @@ body.pv-open { overflow: hidden; }
     const b = bleeds();
     if (!b.length) return false;
     if (all) b.length = 0; else b.shift();
-    renderBleed();
+    renderBleed(); fmWrap(); renderFoe();
     J.staunch = (J.staunch || 0) + 1; jSave();
     await mech(why + (b.length ? " One wound is closed; still bleeding: " + bleedTxt() + " a round." : " The bleeding stops."), "loot");
     if (J.staunch >= 10) grant("staunch");
@@ -23682,6 +23750,7 @@ body.pv-open { overflow: hidden; }
         st.used.mend = (st.used.mend || 0) + 1;
         const n = d(8) + 2, before = S.hp;
         S.hp = Math.min(S.maxHp, S.hp + n); renderSheet();
+        fmWrap();
         await say("You drop back a step, tear a strip off your shirt and bind the worst of it tight, the way Wren showed you: pressure first, then the knot.");
         await mech("Field Mending: regain " + (S.hp - before) + " HP.", "loot");
         if (bleeds().length) await bleedStop("And the binding holds the bleeding shut.");
@@ -30870,6 +30939,7 @@ body.pv-open { overflow: hidden; }
       if (soldiers() <= 0) { st.evade = false; G.coverT = Math.max(0, G.coverT - 1); return "done"; }
       if (G.order === "volley") {
         G.order = null;
+        fmVolley("us", G.coverT > 0 || st.pavise > 0);
         await say("The bowmen at the back draw together, and the air goes thick with it.");
         if (G.coverT > 0) {
           G.coverHp--;
@@ -33534,6 +33604,7 @@ body.pv-open { overflow: hidden; }
   }
   async function rxVolley(st) {
     const X = rx();
+    fmVolley("them");
     if (!reduced) { const v = el("div", "volley"); v.setAttribute("aria-hidden", "true"); for (let i = 0; i < 40; i++) { const a = el("i"); a.style.left = d(100) + "%"; a.style.animationDelay = (d(60) / 100) + "s"; v.appendChild(a); } document.body.appendChild(v); setTimeout(() => v.remove(), 2200); }
     SND.volley && SND.volley();
     await say("<b>The volley.</b> A sound like wind through dry reeds, and then the sky goes dark: a black rain of arrows, lead-headed, heavy as hail, coming down over the walls.");
