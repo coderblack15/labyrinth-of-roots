@@ -2239,6 +2239,32 @@ body.in-fight.blinded .fm-foe .fm-base { background: #2a2622; }
 .choices.spent .fc-grp { display: contents; }
 .choices.spent .fc-grp::before { content: none; }
 .choices.spent .fc-grp > :not(.chosen) { display: none; }
+/* Retreat: a small button at the top of the fight menu that opens the retreat pop-up. */
+.choices.grouped > .fc-rt { justify-self: end; padding: 6px 14px; font-size: .9rem; border-style: dashed; }
+.choices.grouped > .fc-rt .tag { font-size: .68rem; }
+.choices.spent > .fc-rt:not(.chosen) { display: none; }
+dialog.rt-pop { width: min(400px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 20px 20px 18px; border: 1px solid #6b5a2c; border-radius: 14px; background: var(--panel); color: var(--ink, #e8e0cc); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); text-align: center; }
+dialog.rt-pop::backdrop { background: rgba(6, 8, 7, .72); }
+dialog.rt-pop[open] { animation: rtin .22s ease-out both; }
+@keyframes rtin { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+@media (prefers-reduced-motion: reduce) { dialog.rt-pop[open] { animation: none; } }
+.rt-pop h2 { margin: 0 0 10px; font-size: 1.3rem; }
+.rt-pop .rt-low { margin: 0 0 4px; color: #e07a62; font-family: var(--label); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+.rt-pop .rt-odds { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+.rt-pop .rt-odds b { font-size: 2.4rem; line-height: 1; color: var(--gold); }
+.rt-pop.good .rt-odds b { color: #9fbf7a; }
+.rt-pop.poor .rt-odds b { color: #e07a62; }
+.rt-pop .rt-odds span { color: var(--muted); }
+.rt-pop .rt-bar { height: 6px; margin: 10px auto 0; max-width: 260px; border-radius: 3px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.rt-pop .rt-bar i { display: block; height: 100%; background: currentColor; color: var(--gold); }
+.rt-pop.good .rt-bar i { color: #9fbf7a; }
+.rt-pop.poor .rt-bar i { color: #e07a62; }
+.rt-pop .rt-roll { margin: 10px 0 12px; font-size: .85rem; color: var(--muted); line-height: 1.5; }
+.rt-pop .rt-cost { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; text-align: left; font-size: .92rem; line-height: 1.4; }
+.rt-pop .rt-cost li { padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, .04); border-left: 3px solid #9fbf7a; }
+.rt-pop .rt-cost li.bad { border-left-color: #e07a62; }
+.rt-pop .rt-go { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.rt-pop .rt-go button { flex: 1 1 140px; }
 /* A round mark in the log. */
 .fs-rd { display: flex; align-items: center; gap: 10px; margin: 14px 0 6px; font-family: var(--label); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: #8a6a5a; }
 .fs-rd::before, .fs-rd::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #4a2a24, transparent); }
@@ -4316,6 +4342,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "146", name: "Live to Fight Again", date: "22 Nov 2026", items: [
+      "<b>Retreat is a pop-up now.</b> In any fight you can leave, a <b>Retreat</b> button sits at the top of your moves. Tap it and a card shows your chance to get clear, the roll behind it, and what it costs: get clear and the fight ends with no XP or spoils, fail and it swings at your back with advantage. Then you choose <b>Run for it</b> or <b>Keep fighting</b>, and keeping on costs you nothing.",
+      "<b>It offers itself when you're hurting.</b> Drop to under a third of your HP in a fight you can leave and the card comes up on its own, once. It won't come up again until you've climbed back over half.",
+    ] },
     { ver: "145", name: "Straight to the Blow", date: "21 Nov 2026", items: [
       "<b>Instant fights.</b> Tap a move and it lands. No second tap on Strike or Brace: your rolls and the foe's roll themselves, the dice show their number at once, and the story doesn't pause between lines. Like tapping the dice? <b>Settings → Fight rolls → Roll the dice yourself</b>. Duels keep their timing, and an attack with a quick-hands item ready still waits for you.",
       "<b>Bandages on the mat.</b> Bind a wound or bandage the bleeding and a strip winds round your mini, the bleeding pip goes, and it glows green as the health comes back.",
@@ -6559,14 +6589,17 @@ body.in-fight.in-lab #bfx { background: none !important; }
         const txt = wpnTxt(o.label) + (o.tag ? '<span class="tag">' + wpnTxt(o.tag) + "</span>" : "");
         const b = el("button", (i === 0 && !o.plain ? "primary" : "") + (o.pic ? " has-pic" : ""), o.pic ? picHTML(o.pic, "ipic-sm") + '<span class="pic-txt">' + txt + "</span>" : txt);
         b.type = "button";
-        b.onclick = () => {
+        const rt = o.key === "escape" && FOE.on && FOE.rtAsk;
+        if (rt) { b.classList.add("fc-rt"); b.setAttribute("aria-haspopup", "dialog"); }
+        b.onclick = async () => {
+          if (rt) { if (box.dataset.asking) return; box.dataset.asking = "1"; const go = await rt(); delete box.dataset.asking; if (!go) { b.focus(); return; } }
           box.querySelectorAll("button").forEach(x => x.disabled = true);
           b.classList.add("chosen");
           if (detach) detach();
           scrollNext = true;
           resolve(o.key);
         };
-        (grouped ? grp[fcGroup(o, i)] : box).appendChild(b);
+        if (rt && grouped) box.prepend(b); else (grouped ? grp[fcGroup(o, i)] : box).appendChild(b);
       });
       // In a fight, every prompt carries the quick-hands item button.
       const hands = grouped ? grp.hands : box;
@@ -15027,6 +15060,39 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
   // Breaking away from a road fight is an Agility check: DC 11, +1 per 6 of the foe's levels, +2 for a Nightmare, +1 for each failed try.
   const escapeDc = (F, st) => 11 + Math.floor(flk() / 6) + (cascadeOn() ? 2 : 0) + ((st && st.tries) || 0);
+  // What the break-away roll is: Agility, better on horseback, worse in plate (the Warden's harness).
+  const escRoll = (F) => { const plate = lgBody() === "warden", horse = horseOk(F && F.reg); return { mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), plate, horse, adv: horse && !plate, dis: plate && !horse }; };
+  // The chance of a d20 + mod meeting dc (a natural 20 always does, a natural 1 never), with advantage or disadvantage.
+  const rtOdds = (mod, dc, adv, dis) => { const p = Math.min(0.95, Math.max(0.05, (21 - dc + mod) / 20)); return Math.round(100 * (adv ? 1 - (1 - p) * (1 - p) : dis ? p * p : p)); };
+  // Retreat, as a pop-up (Adrian's ask): the odds and the cost before you commit, then run or keep fighting.
+  // It opens from the Retreat button on the fight menu, and offers itself once when your HP runs low
+  // (again only after you've climbed back over half). Resolves true to run.
+  function retreatAsk(F, st, low) {
+    return new Promise(resolve => {
+      const R = escRoll(F), dc = escapeDc(F, st), pc = rtOdds(R.mod, dc, R.adv, R.dis), ride = R.horse && !R.plate;
+      const why = [];
+      if (ride) why.push("on " + esc(horseName()) + ": advantage");
+      if (R.plate && !R.horse) why.push("in plate: disadvantage");
+      if (R.plate && R.horse) why.push("in plate, but in the saddle");
+      if (st && st.tries) why.push("+" + st.tries + " for the " + (st.tries > 1 ? st.tries + " failed tries" : "failed try"));
+      const dlg = document.createElement("dialog");
+      dlg.className = "rt-pop" + (pc >= 60 ? " good" : pc < 35 ? " poor" : "");
+      dlg.setAttribute("aria-labelledby", "rtTitle");
+      dlg.innerHTML = '<form method="dialog">' +
+        (low ? '<p class="rt-low">You\'re down to ' + S.hp + " of " + hpCap() + " HP.</p>" : "") +
+        '<h2 id="rtTitle">' + (low ? "Get out while you can?" : "Retreat?") + "</h2>" +
+        '<div class="rt-odds" aria-label="' + pc + ' percent to get clear"><b>' + pc + '%</b><span>to get clear</span></div>' +
+        '<div class="rt-bar" aria-hidden="true"><i style="width:' + pc + '%"></i></div>' +
+        '<p class="rt-roll">Agility check: d20 ' + fmt(R.mod) + " against DC " + dc + (why.length ? "<br>" + why.join(" · ") : "") + "</p>" +
+        '<ul class="rt-cost"><li class="ok"><b>Get clear:</b> the fight ends. You keep everything you carry, but earn no XP and no spoils from it.</li>' +
+        '<li class="bad"><b>Fail:</b> it cuts you off. Its next swing has advantage, and the next try is DC ' + (dc + 1) + ".</li></ul>" +
+        '<div class="rt-go"><button type="submit" value="run" class="primary">' + (ride ? "Ride for it" : "Run for it") + '</button><button type="submit" value="stay">Keep fighting</button></div></form>';
+      document.body.appendChild(dlg);
+      dlg.addEventListener("close", () => { const run = dlg.returnValue === "run"; dlg.remove(); scrollNext = true; resolve(run); });
+      try { dlg.showModal(); } catch (e) { dlg.setAttribute("open", ""); }
+      setTimeout(() => { const b = dlg.querySelector(low ? "[value=stay]" : "[value=run]"); if (b) b.focus(); }, 30);
+    });
+  }
   const menaceFor = (fk) => { if (cascadeOn()) return 1; const gap = lvk() - fk; return 1 + (gap >= 5 ? 1 : 0) + (gap >= 10 ? 1 : 0); };
   const menaceNow = () => FOE.on && FOE.menace && FOE.turn <= MENACE_TURNS ? FOE.menace : 0;
   let bfxTimer = 0, bfxBeat = 0;
@@ -23799,7 +23865,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn · slip one and you counter next turn" + (windShown ? " · ✓ answers its wind-up" : ""), plain: true });
       if (!F.heads) opts.push({ key: "hbrace", label: "Brace", tag: "costs your turn · what lands this round does half · your combo holds · if it swings, you counter next turn" + (windShown ? " · ✓ answers its wind-up" : ""), plain: true });
       if (blindNow()) opts.push({ key: "wipe", label: "Wipe your eyes", tag: "costs your turn · ends Blinded", plain: true });
-      if (F.escapable) opts.push({ key: "escape", label: "Break away", tag: "Agility check DC " + escapeDc(F, st) + " · fail and it swings at your back with advantage · no XP or spoils", plain: true });
+      if (F.escapable) { const R = escRoll(F); opts.push({ key: "escape", label: "Retreat", tag: rtOdds(R.mod, escapeDc(F, st), R.adv, R.dis) + "% to get clear · see the odds first", plain: true }); }
       tcFightOpts(F, st).forEach(o => opts.push(o));
       lgFightOpts(F, st).forEach(o => opts.push(o));
       hzFightOpts(F, st).forEach(o => opts.push(o));
@@ -23811,8 +23877,17 @@ body.in-fight.in-lab #bfx { background: none !important; }
       if (F.filter) F.filter(opts, st);
       if (opts.some(o => /^mun-/.test(o.key))) tip("mines");
       if (!F.company) tip("menu");
-      FOE.menu = true;
-      let c = st.fd ? await fdChoose(opts, F, st) : await choose(opts);
+      // Low on HP in a fight you can leave: the retreat pop-up offers itself, once until you're back over half.
+      let c = null;
+      if (F.escapable) {
+        if (S.hp > hpCap() / 2) st.rtArm = true;
+        else if (st.rtArm !== false && S.hp <= Math.ceil(hpCap() * 0.3)) { st.rtArm = false; if (bleedPending()) await bleedSettle(); if (await retreatAsk(F, st, true)) c = "escape"; }
+      }
+      if (c === null) {
+        FOE.menu = true; FOE.rtAsk = F.escapable ? () => retreatAsk(F, st, false) : null;
+        c = st.fd ? await fdChoose(opts, F, st) : await choose(opts);
+        FOE.rtAsk = null;
+      }
       if (c === BELT_WON) break;
       const gMove = c === "g-jab" || c === "g-heavy" ? c : null;
       if (gMove) { c = "atk"; FOE.gMul = gMove === "g-jab" ? 0.5 : 1.5; }
@@ -23909,7 +23984,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
         blindSet(0);
         await say("You give ground and drag a sleeve across your eyes until the world comes back, swimming, then sharp.");
       } else if (c === "escape") {
-        const r = await check({ label: "Agility check (breaking away)" + (lgBody() === "warden" ? " (in plate)" : ""), mod: 2 + Math.floor(lvk() / 8) + (S.shadow ? 1 : 0) + (hasGear("hushcloth") ? 2 : 0), dc: escapeDc(F, st), dis: lgBody() === "warden" && !horseOk(F.reg), adv: horseOk(F.reg) && lgBody() !== "warden", cta: horseOk(F.reg) ? "Ride" : "Run" });
+        const R = escRoll(F);
+        const r = await check({ label: "Agility check (breaking away)" + (R.plate ? " (in plate)" : ""), mod: R.mod, dc: escapeDc(F, st), dis: R.dis, adv: R.adv, cta: R.horse ? "Ride" : "Run" });
         if (r.ok) { st.fled = "you"; await say(horseOk(F.reg) ? "You get a foot in the stirrup and " + horseName() + " is moving before you're up. It doesn't follow far." : "You feint high, drop low, and you're past it and running. It doesn't follow far."); }
         else { st.tries = (st.tries || 0) + 1; st.winded = true; await say("It sees you go and cuts you off. You're still in this."); await mech("Locked in: its next swing has advantage, and the next try is 1 harder.", "hurt"); }
       } else if (c === "cls") {
@@ -55153,6 +55229,12 @@ body.in-fight.in-lab #bfx { background: none !important; }
 
   // English | Español | Français | Deutsch | Português | 日本語
   const TABLE = [
+    // ---- the retreat pop-up ----
+    ["Retreat", "Retirada", "Retraite", "Rückzug", "Recuar", "撤退"],
+    ["Retreat?", "¿Retirarse?", "Battre en retraite ?", "Rückzug?", "Recuar?", "撤退する？"],
+    ["Get out while you can?", "¿Salir mientras puedes?", "Partir tant que tu le peux ?", "Raus, solange du noch kannst?", "Sair enquanto pode?", "今のうちに逃げるか？"],
+    ["to get clear", "de escapar", "de t'en sortir", "zu entkommen", "de escapar", "で逃げ切れる"],
+    ["Ride for it", "Huir a caballo", "Fuir au galop", "Davonreiten", "Fugir a cavalo", "馬で逃げる"],
     // ---- the bank's amount picker ----
     ["Deposit gold", "Depositar oro", "Déposer de l'or", "Gold einzahlen", "Depositar ouro", "金を預ける"],
     ["Withdraw gold", "Retirar oro", "Retirer de l'or", "Gold abheben", "Sacar ouro", "金を引き出す"],
