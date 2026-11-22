@@ -678,6 +678,15 @@ button.has-pic .pic-txt { flex: 1; min-width: 0; }
 .story .mech.hurt::before { content: "✕"; color: var(--ember); }
 .story .mech.loot { color: var(--gold); }
 .story .mech.loot::before { content: "✦"; }
+.story .mech.has-lootic { align-items: center; }
+.story .mech.has-lootic::before { content: none; }
+.story .mech .loot-ic { width: 30px; height: 30px; flex: none; border-radius: 6px; box-shadow: 0 0 0 1px rgba(207, 168, 80, .3), 0 0 8px rgba(255, 210, 122, .12); }
+.bag-art.bag-pic { border-radius: 8px; object-fit: cover; box-shadow: 0 0 0 1px rgba(207, 168, 80, .3), 0 0 10px rgba(255, 210, 122, .18); }
+#blastFx { position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: 0; mix-blend-mode: screen; }
+#blastFx img { width: 100%; height: 100%; object-fit: cover; }
+#blastFx.go { animation: blast-fx 1.1s ease-out; }
+@keyframes blast-fx { 0% { opacity: 0; transform: scale(1.12); } 12% { opacity: calc(.75 * var(--blast, 1)); } 100% { opacity: 0; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { #blastFx.go { animation: blast-fx-still .8s ease-out; } @keyframes blast-fx-still { 0% { opacity: 0; } 20% { opacity: calc(.45 * var(--blast, 1)); } 100% { opacity: 0; } } }
 .story .mech.echo { color: var(--ink); font-style: italic; }
 .story .mech.echo::before { content: "↺"; color: var(--gold); font-style: normal; }
 .story .mech .echo-k { font-style: normal; color: var(--gold); margin-right: 6px; }
@@ -4342,6 +4351,15 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "149", name: "The Trove", date: "22 Nov 2026", items: [
+      "<b>Eighty-four new painted icons</b> from seven sheets: treasure, chests and crates, tools, a crafting kit, magic bags, plain bags and elemental weapons.",
+      "<b>Your purse fills up.</b> The purse by your gold starts as an empty pouch and grows into piles, gold bars and, past 2,000 gold, a chest that won't shut.",
+      "<b>The Bottomless Bag stops pretending.</b> It looks like a worn leather pack at first. As you level it turns into a basket of living vine, a pack wrapped in wind, a purse full of stars, a clockwork pack and more, up to a chest of burning runes at level 48.",
+      "<b>Chests and gold in the story.</b> When you open a strongbox, a coffer, a cache, a hoard or a coffin, its chest shows beside the line. A big handful of gold shows its pile.",
+      "<b>Elemental weapons.</b> Found weapons with the right traits get their own look: a venom axe, twin storm axes, a fire blade, a crimson blade, a lion sword, a storm hammer, a blood mace, a sun sceptre, a green scythe, a frost scythe, a skull staff and a thorned crossbow.",
+      "<b>Tools and kit in the Bag.</b> The miner's pick, the gadgets, schematics, the mini-mortar, lockpicks, the Burning Lens, the Almanac, the case files, evidence, salvage, your bank account, your ship and dozens more have painted icons now.",
+      "<b>Things blow up properly.</b> When a mine, a blasting charge, a mortar shell or a wall-gun shot goes off, a burst of fire flashes behind the screen. With reduced motion on it's a soft glow instead."
+    ] },
     { ver: "148", name: "New Paintings", date: "22 Nov 2026", items: [
       "<b>Thirty-one new paintings.</b> Every one is fresh, in looser oil brushstrokes, replacing the older pictures in the same places.",
       "<b>The six Callings.</b> New portraits for the Axe-Sworn, Hushwalker, Songwright, Tidereader, Inkbinder and Rootgrafter.",
@@ -6359,6 +6377,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     });
     $("sheet").classList.toggle("belt-live", usable.size > 0);
     $("bagCount").textContent = items.length;
+    troveLooks();
     const gained = started && items.some(([key]) => !lastItems.has(key));
     lastItems = now;
     $("invCount").textContent = items.length;
@@ -6414,6 +6433,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
   async function mech(html, kind) {
     const p = el("p", "mech" + (kind ? " " + kind : ""), wpnTxt(html));
     if (p.childNodes.length > 1) { const sp = document.createElement("span"); while (p.firstChild) sp.appendChild(p.firstChild); p.appendChild(sp); }
+    const li = kind && /^loot\b/.test(kind) && typeof lootIc === "function" ? lootIc(html) : null;
+    if (li) { p.classList.add("has-lootic"); p.insertAdjacentHTML("afterbegin", '<img class="loot-ic" alt="" src="' + picUrl("i:" + li) + '" decoding="async">'); }
     add(p); if (!instNow()) await wait(220);
   }
   function heading(num, title) {
@@ -7541,7 +7562,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
   // The same for a weapon lying in the Warden's Weapon Chest.
   function chestPic(L) {
-    const fam = L.pic || (L.rmGrow != null ? "refuser" : (L.ac || []).includes("wrath") ? "wrathbrand" : (ARM_BASES[L.b] || {}).pic);
+    const fam = L.pic || (L.rmGrow != null ? "refuser" : (L.ac || []).includes("wrath") ? "wrathbrand" : elemFam(L) || (ARM_BASES[L.b] || {}).pic);
     if (!fam || !ITEM_PICS[fam]) return null;
     const frost = !!(L.frost || L.rmGrow != null);
     const F = ITEM_PICS[fam], img = F.vary && !L.spec && L.t !== "heartfire" ? F.vary[L.id % F.vary.length] : null;
@@ -7769,6 +7790,88 @@ body.in-fight.in-lab #bfx { background: none !important; }
   const ICON_PIC_KEY = { dress: "tools", honey: "food", cal: "caltrop", iron: "caltrop", powder: "bomb", rhpowder: "bomb", rmines: "runemine", scrolls: "runemine", stones: "runedisk", umstones: "runedisk",
     "hk-compass": "k_compass",
     ...Object.fromEntries(["crown", "fang", "lens", "gauntlet", "bell", "verdict", "shell", "noon", "kinring", "inqring", "knuckle", "firstknot", "thousandth", "weircrown"].map(r => ["relic-" + r, "r_" + r])) };
+  // ---------- the trove sheets (2026-11-22) ----------
+  // Adrian's seven icon sheets: treasure, chests, tools, crafting kit, magic bags, plain bags and
+  // elemental weapons. The icons live as files (art/ic_<sheet><n>.webp, 128px; the weapons as
+  // art/ew_<name>.webp, 256px). Bag rows take them by key; the purse and the Bottomless Bag change
+  // with what you carry and how far you've come; loot lines show a chest or a pile; found weapons
+  // with the right traits wear an elemental look.
+  ["treasure", "chests", "tools", "craft", "magic", "bags"].forEach(s => { for (let i = 1; i <= 12; i++) ICON_PIC_SRC["ic_" + s + i] = "art/ic_" + s + i + ".webp"; });
+  Object.assign(ICON_PIC_KEY, {
+    // treasure
+    bank: "ic_treasure9", curios: "ic_treasure6", "rf-rosary": "ic_treasure2", salv: "ic_treasure7", seaship: "ic_treasure8", plunder: "ic_treasure12",
+    // chests and crates
+    "rf-box": "ic_chests3", cart: "ic_chests4", shyard: "ic_chests8",
+    // tools
+    "lcg-decoy": "ic_tools1", "mn-pick": "ic_tools2", shbuild: "ic_tools3", roadlore: "ic_tools4", "lcg-ratchet": "ic_tools5", flasks: "ic_tools6",
+    "lcg-alarm": "ic_tools7", schem: "ic_tools8", mortar: "ic_tools9", unplaces: "ic_tools10", "lg-pocket": "ic_tools11", "hk-grellpick": "ic_tools11", dig: "ic_tools12",
+    // the crafting and bookkeeping kit
+    f50chart: "ic_craft1", ink: "ic_craft2", "rf-tokens": "ic_craft3", "cw-list": "ic_craft4", detective: "ic_craft5", hobb: "ic_craft6",
+    bwcase: "ic_craft7", almanac: "ic_craft8", "mn-ore": "ic_craft9", lens: "ic_craft10", bundles: "ic_craft12",
+    // plain bags
+    hnmap: "ic_bags2", salt: "ic_bags4", cullet: "ic_bags5", rmsatchel: "ic_bags6", colours: "ic_bags9", powder: "ic_bags10", hides: "ic_bags11"
+  });
+  // Rows whose key carries an id: evidence (tagged and bagged), the tunnellers' packs.
+  const ICON_PIC_PRE = [["ev-", "ic_craft11"], ["rf-pack", "ic_bags7"]];
+  // The purse fills up: an empty pouch, a purse, then piles, bars, and a chest that won't shut.
+  const PURSE_LOOKS = [[0, "ic_bags8"], [25, "ic_bags3"], [100, "ic_treasure1"], [200, "ic_treasure4"], [400, "ic_treasure3"], [700, "ic_treasure11"], [1000, "ic_treasure10"], [2000, "ic_treasure5"]];
+  // The Bottomless Bag looks like an ordinary pack at first, and stops pretending as you level.
+  const BAG_LOOKS = [[0, "ic_bags1", "a worn leather pack"], [6, "ic_magic10", "a basket of living vine"], [9, "ic_magic4", "a pack wrapped in wind"],
+    [12, "ic_magic2", "a pouch stitched with runes"], [15, "ic_magic5", "a pouch of shadow"], [18, "ic_magic9", "a purse full of stars"],
+    [22, "ic_magic1", "a satchel spilling light"], [26, "ic_magic8", "a clockwork pack"], [30, "ic_magic7", "an alchemist's case"],
+    [34, "ic_magic11", "a book with room inside"], [38, "ic_magic6", "an emerald-set chest"], [43, "ic_magic3", "a crystal-set chest"], [48, "ic_magic12", "a chest of burning runes"]];
+  const tierOf = (T, n) => T.reduce((a, t) => n >= t[0] ? t : a, T[0]);
+  function troveLooks() {
+    const p = $("purseIco"); if (p) { const s = picUrl("i:" + tierOf(PURSE_LOOKS, S.coins || 0)[1]); if (p.getAttribute("src") !== s) p.src = s; p.hidden = false; }
+    const b = tierOf(BAG_LOOKS, S.axe ? lv() : 0), src = picUrl("i:" + b[1]);
+    document.querySelectorAll(".bag-title, .inv-toggle").forEach(btn => {
+      const sv = btn.querySelector("svg.bag-art");
+      let im = btn.querySelector("img.bag-art");
+      if (!im) {
+        im = document.createElement("img"); im.className = "bag-art bag-pic" + (btn.classList.contains("inv-toggle") ? " sm" : ""); im.alt = ""; im.decoding = "async";
+        im.onload = () => { if (sv) sv.style.display = "none"; };
+        im.onerror = () => { im.remove(); if (sv) sv.style.display = ""; };
+        btn.insertBefore(im, sv || btn.firstChild);
+      }
+      if (im.getAttribute("src") !== src) im.src = src;
+      im.title = "Today the Bottomless Bag looks like " + b[2] + ".";
+    });
+  }
+  // A chest or a pile beside a loot line: by what it names, or by how much gold it gives you.
+  const LOOT_CHESTS = [[/weapon chest/i, "ic_chests2"], [/strongbox/i, "ic_chests6"], [/coffer/i, "ic_chests9"], [/tithe chest/i, "ic_chests12"], [/pay-chest/i, "ic_chests10"],
+    [/coffin/i, "ic_chests11"], [/hoard/i, "ic_chests7"], [/cache/i, "ic_chests1"], [/crate/i, "ic_chests4"], [/chest/i, "ic_chests5"]];
+  function lootIc(html) {
+    const t = String(html).replace(/<[^>]*>/g, "");
+    const c = LOOT_CHESTS.find(([re]) => re.test(t)); if (c) return c[1];
+    let g = 0; t.replace(/(^|[^−\-–(\d])(?:\+\s*)?(\d[\d,]*)\s+gold/g, (m, pre, n) => { g = Math.max(g, +n.replace(/,/g, "")); return m; });
+    return g >= 25 ? tierOf(PURSE_LOOKS, g)[1] : null;
+  }
+  // Elemental looks for found weapons, by base and trait (Rootbound and up carry traits).
+  const EW_ALT = { venomaxe: "a black axe dripping green venom", twinaxes: "two crossed gold-veined axes crackling with light", firebrand: "a curved blade wreathed in fire",
+    crimsonblade: "a jagged blade glowing blood-red", lionsword: "a broad sword with a golden lion's head at the guard", stormhammer: "a stone war hammer wrapped in blue lightning",
+    bloodmace: "a spiked mace dripping blood", sunsceptre: "a gold sceptre holding a burning sun", greenscythe: "a thorned scythe trailing green light",
+    bluescythe: "a scythe of frozen blue light", skullstaff: "a staff crowned with a purple-lit skull", crossbow: "a thorned brass crossbow" };
+  PIC_SRC.fx_blast = "art/fx_blast.webp";
+  Object.keys(EW_ALT).forEach(k => { PIC_SRC["ew_" + k] = "art/ew_" + k + ".webp"; ITEM_PICS["ew_" + k] = { looks: ["ew_" + k], alt: ["A painted icon of " + EW_ALT[k] + "."] }; });
+  function elemFam(L) {
+    if (!L || L.pic || L.spec || L.qt || L.rmGrow != null || (L.ac || []).includes("wrath")) return null;
+    const has = (...a) => a.some(x => (L.tr || []).includes(x));
+    const f = { hatchet: has("keen", "drink") ? "venomaxe" : has("first", "crush") ? "twinaxes" : null,
+      sword: has("fire") ? "firebrand" : has("drink") ? "crimsonblade" : has("first", "keen", "crush") ? "lionsword" : null,
+      maul: has("crush") ? "stormhammer" : has("drink") ? "bloodmace" : has("first", "keen", "fire") ? "sunsceptre" : null,
+      glaive: L.frost || has("frost") ? "bluescythe" : has("keen", "drink", "crush") ? "greenscythe" : null,
+      spear: has("drink") ? "skullstaff" : null,
+      bow: has("crush", "keen", "first") ? "crossbow" : null }[L.b];
+    return f ? "ew_" + f : null;
+  }
+  // The explosion (Adrian's painting): a burst behind everything when something blows up.
+  function blastFx(strength) {
+    if (instNow && instNow()) return;
+    let f = $("blastFx");
+    if (!f) { f = document.createElement("div"); f.id = "blastFx"; f.setAttribute("aria-hidden", "true"); f.innerHTML = '<img alt="" src="' + picUrl("fx_blast") + '" decoding="async">'; document.body.appendChild(f); }
+    f.style.setProperty("--blast", strength || 1);
+    f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  }
   // The company's faces in the Bag (Adrian's portraits); tap one to see the whole painting.
   const CO_PIC = { "co-burr": "burr", tyra: "tyra", "co-odran": "odran", "co-wenna": "wenna", "co-caddock": "caddock" };
   // Mines and rune mines glow by what they do: fire flickers, cold frosts over, poison seeps green,
@@ -7779,12 +7882,13 @@ body.in-fight.in-lab #bfx { background: none !important; }
   const icoFx = (k, fx, cls, title) => '<span class="ico-fx fx-' + fx + (cls ? " " + cls : "") + '"' + (title ? ' title="' + title + '"' : "") + '><img class="ico-pic" alt="" src="' + picUrl("i:" + k) + '" decoding="async"></span>';
   function iconPicFor(key, icon) {
     if (key === "wpn" || key.startsWith("arm-")) { const L = lootOf(key === "wpn" ? wpnKey() : key.slice(4)); if (L && L.b === "hatchet") return "hatchet"; }
-    const k = key.startsWith("fit-") ? "f_" + key.slice(4) : ICON_PIC_KEY[key] || ICON_PIC[icon];
+    const pre = ICON_PIC_PRE.find(([p]) => key.startsWith(p));
+    const k = key.startsWith("fit-") ? "f_" + key.slice(4) : ICON_PIC_KEY[key] || (pre && pre[1]) || ICON_PIC[icon];
     return k && ICON_PIC_SRC[k] ? k : null;
   }
   // Adrian's title painting behind the landing page's hero.
   { const h = document.querySelector(".l-hero"); if (h && PIC_SRC.title) { h.insertAdjacentHTML("afterbegin", '<img class="title-pic" alt="" src="' + picUrl("title") + '" decoding="async">'); h.classList.add("has-title-pic"); } }
-  { const p = $("purseIco"); if (p) { p.src = picUrl("i:coinpile"); p.hidden = false; } }
+  troveLooks();
   const iconPicHTML = (k, alt) => '<img class="ico-pic" alt="' + (alt || "") + '" src="' + picUrl("i:" + k) + '" decoding="async">';
   const ARM_TR = {
     first: "Reach: your first blow each fight lands +1d4.",
@@ -7950,7 +8054,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const hit = L.hit != null ? L.hit : B.hit + T.hit;
     const fx = die[0] + "d" + die[1] + (die[2] ? " + " + die[2] : "") + (hit ? ", " + fmt(hit) + " to hit" : "") + "." +
       (L.tr || []).map(t => " " + ARM_TR[t]).join("") + (L.ac || []).map(a => " <b>" + ARM_AC[a].name + "</b>: " + ARM_AC[a].fx + ".").join("") + (L.lore ? " " + L.lore : "");
-    return { name: L.n, icon: L.icon || B.icon, pic: L.pic || (L.rmGrow != null ? "refuser" : (L.ac || []).includes("wrath") ? "wrathbrand" : B.pic), glow: L.spec ? "spectral" : L.t, frost: !!(L.frost || L.rmGrow != null), vid: L.id, die, hit, tr: L.tr || [], ac: L.ac || [], t: L.t, fx, found: true };
+    return { name: L.n, icon: L.icon || B.icon, pic: L.pic || (L.rmGrow != null ? "refuser" : (L.ac || []).includes("wrath") ? "wrathbrand" : elemFam(L) || B.pic), glow: L.spec ? "spectral" : L.t, frost: !!(L.frost || L.rmGrow != null), vid: L.id, die, hit, tr: L.tr || [], ac: L.ac || [], t: L.t, fx, found: true };
   }
   // Selling and scrapping from the Bag (not mid-fight, not your main hand, not keepsakes).
   // Sell: a found weapon at its quality's price, a bought one at half what it cost. Scrap: metal
@@ -17825,6 +17929,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const M = REGION_MINES[k];
     let [n, sd] = M.dice;
     if (M.fx === "shade" && F.shade) n *= 2;
+    if (!["cold", "poison", "psychic", "necrotic"].includes(M.type)) blastFx(M.type === "fire" ? 1 : .7);
     await say("The " + M.name + " goes off under " + (F.heads ? "them" : "it") + ".");
     if (F.heads) { const h = Math.min(FOE.hp, d(2) + (n >= 3 ? 1 : 0)); foeHit(h); await mech(M.name + ": " + h + " down.", "loot"); }
     else await foeBurst(n, sd, 0, M.name);
@@ -26921,7 +27026,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
           if (S.powder) o2.push({ key: "blast", label: "Blow the door", tag: "1 blasting charge · the drum climbs 2" });
           o2.push({ key: "pry", label: "Get your fingers in the crack and heave", tag: "Athletics DC 15", plain: true });
           const f = await choose(o2);
-          if (f === "blast") { S.powder--; S.drum = Math.min(10, S.drum + 2); renderSheet(); await say("The charge goes off with a crack that comes back off every peak in the range. When the dust settles, the door is in three pieces and the drone inside the mountain has risen to a roar."); await mech("The Waking Drum climbs to " + S.drum + ".", "hurt"); }
+          if (f === "blast") { S.powder--; blastFx(1); S.drum = Math.min(10, S.drum + 2); renderSheet(); await say("The charge goes off with a crack that comes back off every peak in the range. When the dust settles, the door is in three pieces and the drone inside the mountain has risen to a roar."); await mech("The Waking Drum climbs to " + S.drum + ".", "hurt"); }
           else {
             for (;;) {
               const a = await check({ label: "Athletics check", mod: 3, dc: 15, cta: "Heave" });
@@ -30412,7 +30517,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
           const dl = Math.round(range - D), ds = Math.round(side - lat);
           const call = (Math.abs(dl) <= 2 ? "dead on the range" : Math.abs(dl) + " paces " + (dl > 0 ? "long" : "short")) + ", " + (Math.abs(ds) <= 1 ? "dead on the line" : Math.abs(ds) + " paces " + (ds > 0 ? "right" : "left"));
           let res = "miss";
-          if (Math.abs(dl) <= 10 && Math.abs(ds) <= 6) { res = "direct"; out.direct++; }
+          if (Math.abs(dl) <= 10 && Math.abs(ds) <= 6) { res = "direct"; out.direct++; blastFx(1); }
           else if (Math.abs(dl) <= 30 && Math.abs(ds) <= 14) { res = "near"; out.near++; }
           // What to change: past 45° more elevation shortens the shot, so the spotter says which way to go.
           const hi = +elev.value > 45, fix = [];
@@ -30871,6 +30976,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await say("You drive the mortar's foot into the ground, tip " + shellA(k) + SHELLS[k].name + " down the tube and put the slow-match to it, and step back with your fingers in your ears.");
     const r = await check({ label: "Dexterity check (laying the mortar on " + label + ")", mod: 3 + Math.floor(lvk() / 10), dc: 12, cta: "Touch it off" });
     if (!r.ok) { await say("It goes up with a cough, and comes down long, behind them, where it makes a hole in nothing at all."); return null; }
+    if (k !== "smoke") blastFx(.9);
     return { k, cap: r.total >= 18 && k !== "smoke" };
   }
   async function mortarFlat() {
@@ -31071,6 +31177,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
         if (k.startsWith("r:")) {
           const M = REGION_MINES[k.slice(2)], n = Math.min(soldiers(), d(3) + (M.dice[0] >= 3 ? 1 : 0));
           foeHit(n);
+          blastFx(.8);
           await say("The front rank comes over the " + M.name + ", and it goes off under them.");
           if (M.fx === "still") freeze = true;
           if (M.fx === "blind" || M.fx === "soft") G.rot = Math.min(2, G.rot + 1);
@@ -31412,6 +31519,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (b === "fire") {
       await rhWx("wind");
       await say("At dusk, " + (step >= 2 ? "you come up out of the menagerie tunnels a hundred yards from the salt kilns, with twenty of the garrison carrying lamp-oil" : "you come at the kilns the long way round, and get there late") + ". The old kilns are long brick vaults, and they're stacked to the roof with Bathyr crates: rope and bars and bell-helms and blasting-salt and food.");
+      blastFx(1);
       await say("You light it. The sea wind takes it, and blows it east, through the vaults and out of their far ends and on across the camp, away from the city. The blasting-salt goes up in the third vault with a sound like the sky splitting, and the brick roofs come down, and the fire runs on into the wagon park.");
       await say("From the walls, the whole city watches the Bathyr camp burn, and somebody starts to cheer, and then everyone does.");
     }
