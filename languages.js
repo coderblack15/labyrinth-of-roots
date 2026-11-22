@@ -74,6 +74,12 @@
 
   // English | Español | Français | Deutsch | Português | 日本語
   const TABLE = [
+    // ---- the retreat pop-up ----
+    ["Retreat", "Retirada", "Retraite", "Rückzug", "Recuar", "撤退"],
+    ["Retreat?", "¿Retirarse?", "Battre en retraite ?", "Rückzug?", "Recuar?", "撤退する？"],
+    ["Get out while you can?", "¿Salir mientras puedes?", "Partir tant que tu le peux ?", "Raus, solange du noch kannst?", "Sair enquanto pode?", "今のうちに逃げるか？"],
+    ["to get clear", "de escapar", "de t'en sortir", "zu entkommen", "de escapar", "で逃げ切れる"],
+    ["Ride for it", "Huir a caballo", "Fuir au galop", "Davonreiten", "Fugir a cavalo", "馬で逃げる"],
     // ---- the bank's amount picker ----
     ["Deposit gold", "Depositar oro", "Déposer de l'or", "Gold einzahlen", "Depositar ouro", "金を預ける"],
     ["Withdraw gold", "Retirar oro", "Retirer de l'or", "Gold abheben", "Sacar ouro", "金を引き出す"],
