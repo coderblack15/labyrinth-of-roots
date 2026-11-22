@@ -26,9 +26,18 @@ also walk you to the glowing ring. Tap the story panel to hurry the text.
 | `scripts/ui.gd` | Story panel, stat bar, foe meter, dice cards, title and end cards. Lays out for phones (story at the bottom) and desktops (story on the right) |
 | `scripts/main.gd` | Wires it together and scales the UI to the screen |
 
-Models are placeholders made from Godot primitives. Blender models can replace them
-one at a time: each builder in `models.gd` returns a `Node3D`, so a function can load
-a `.glb` instead and the rest of the game doesn't change.
+The figures and props (hero, strangers, vine horror, spiders, Ryytaa, the dead, axe,
+shield, torch, knife, egg sacs) are Blender models in `models/*.glb`, built by
+`../tools/blender/build_models.py`. That script makes every model from code, so to change
+one, edit the script and run it again:
+
+```
+blender --background --python ../tools/blender/build_models.py -- models
+# or, with the bpy module from pip:  python ../tools/blender/build_models.py models
+```
+
+`models.gd` loads each `.glb` and falls back to simple shapes built from primitives if a
+file is missing. `tools/lineup.gd` renders all the models side by side for a quick look.
 
 Renderer: Compatibility (OpenGL / WebGL 2), so it runs on phones and in browsers.
 

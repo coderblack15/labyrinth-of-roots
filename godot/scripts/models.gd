@@ -12,6 +12,30 @@ const C_BARK2 := Color("3a2c20")
 const C_STONE := Color("5d5a55")
 const C_STONE2 := Color("47443f")
 
+# Blender-made models (tools/blender/build_models.py) live in res://models/.
+# Each builder below uses its .glb when present and falls back to primitives.
+static func glb(name: String) -> Node3D:
+	var path := "res://models/%s.glb" % name
+	if not ResourceLoader.exists(path):
+		return null
+	var ps = load(path)
+	if not ps is PackedScene:
+		return null
+	# The .glb's own top node wraps the Blender root empty; hand back that empty.
+	var wrap: Node3D = ps.instantiate()
+	if wrap.get_child_count() != 1:
+		return wrap
+	var inner: Node3D = wrap.get_child(0)
+	_unown(inner)
+	wrap.remove_child(inner)
+	wrap.free()
+	return inner
+
+static func _unown(n: Node) -> void:
+	n.owner = null
+	for c in n.get_children():
+		_unown(c)
+
 static func mat(c: Color, rough := 0.85, emit := Color(0, 0, 0, 0), emit_e := 1.0, alpha := 1.0, metal := 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(c.r, c.g, c.b, alpha)
@@ -96,6 +120,10 @@ static func base_disc(parent: Node3D, r := 0.44) -> void:
 # ---------- the hero ----------
 # Returns a Node3D with children "arm_r"/"arm_l" (shoulder pivots) holding "hand_r"/"hand_l".
 static func hero(pal := {}) -> Node3D:
+	if pal.is_empty():
+		var g := glb("hero")
+		if g:
+			return g
 	var tunic: Color = pal.get("tunic", Color("3b5a3a"))
 	var cloak: Color = pal.get("cloak", Color("5a2a22"))
 	var skin: Color = pal.get("skin", C_SKIN)
@@ -133,12 +161,18 @@ static func hero(pal := {}) -> Node3D:
 	return root
 
 static func knife() -> Node3D:
+	var g := glb("knife")
+	if g:
+		return g
 	var r := Node3D.new()
 	part(r, box(0.04, 0.12, 0.04), mat(Color("3a2616")), Vector3(0, 0, 0))
 	part(r, box(0.025, 0.06, 0.28), mat(C_STEEL, 0.3, Color(0, 0, 0, 0), 1.0, 1.0, 0.8), Vector3(0, -0.02, -0.16))
 	return r
 
 static func torch() -> Node3D:
+	var g := glb("torch")
+	if g:
+		return g
 	var r := Node3D.new()
 	part(r, cyl(0.03, 0.025, 0.6), mat(Color("5a3c22")), Vector3(0, 0.15, -0.05), Vector3(-20, 0, 0))
 	part(r, cyl(0.05, 0.04, 0.1), mat(Color("8a7a5a")), Vector3(0, 0.44, -0.15), Vector3(-20, 0, 0))
@@ -148,6 +182,9 @@ static func torch() -> Node3D:
 
 # The gem-set two-handed axe. Gems: ruby, sapphire, emerald.
 static func axe() -> Node3D:
+	var g := glb("axe")
+	if g:
+		return g
 	var r := Node3D.new()
 	r.name = "Axe"
 	part(r, cyl(0.035, 0.04, 1.35), mat(Color("4a3020"), 0.7), Vector3(0, 0.45, 0))
@@ -159,11 +196,14 @@ static func axe() -> Node3D:
 	part(head, box(0.05, 0.14, 0.1), mat(C_STEEL, 0.35, Color(0, 0, 0, 0), 1.0, 1.0, 0.85), Vector3(0, 0, 0.08))
 	var gems := [Color("e0243a"), Color("2a5ae0"), Color("20c060")]
 	for i in 3:
-		var g := part(r, sph(0.045, 8), glow(gems[i], 1.6), Vector3(0, 0.75 - i * 0.16, -0.035))
-		g.name = "Gem%d" % i
+		var gm := part(r, sph(0.045, 8), glow(gems[i], 1.6), Vector3(0, 0.75 - i * 0.16, -0.035))
+		gm.name = "Gem%d" % i
 	return r
 
 static func shield() -> Node3D:
+	var g := glb("shield")
+	if g:
+		return g
 	var r := Node3D.new()
 	r.name = "Shield"
 	part(r, cyl(0.32, 0.32, 0.06, 16), mat(C_STEEL, 0.45, Color(0, 0, 0, 0), 1.0, 1.0, 0.7), Vector3.ZERO, Vector3(90, 0, 0), Vector3(1, 1, 1.25))
@@ -172,6 +212,9 @@ static func shield() -> Node3D:
 
 # ---------- people and things on the road ----------
 static func stranger(tint := Color("3a332c")) -> Node3D:
+	var g := glb("stranger_a" if tint.r > 0.2 else "stranger_b")
+	if g:
+		return g
 	var r := Node3D.new()
 	base_disc(r, 0.42)
 	part(r, cyl(0.16, 0.44, 1.6), mat(tint, 0.95), Vector3(0, 0.88, 0))
@@ -182,6 +225,9 @@ static func stranger(tint := Color("3a332c")) -> Node3D:
 
 # The vine horror: a knot of thorned vines nearly eight feet tall.
 static func vine_horror() -> Node3D:
+	var g := glb("vine_horror")
+	if g:
+		return g
 	var r := Node3D.new()
 	var mv := mat(Color("2d3b1f"), 0.9)
 	var mv2 := mat(Color("3e4a26"), 0.9)
@@ -218,6 +264,9 @@ static func vine_horror() -> Node3D:
 
 # A giant spider. Ryytaa is the same build, much bigger and pale.
 static func spider(pale := false) -> Node3D:
+	var g := glb("ryytaa" if pale else "spider")
+	if g:
+		return g
 	var r := Node3D.new()
 	var body_c := Color("d8d0c0") if pale else Color("2a2320")
 	var leg_c := Color("bfb6a4") if pale else Color("1e1916")
@@ -257,6 +306,9 @@ static func spider(pale := false) -> Node3D:
 	return r
 
 static func skeleton(armored := true, sitting := true) -> Node3D:
+	var g := glb("skeleton_sit" if sitting else ("skeleton_hang_armor" if armored else "skeleton_hang_bare"))
+	if g:
+		return g
 	var r := Node3D.new()
 	var mb := mat(C_BONE, 0.8)
 	var ma := mat(Color("6b6e70"), 0.55, Color(0, 0, 0, 0), 1.0, 1.0, 0.6)
@@ -285,13 +337,34 @@ static func skeleton(armored := true, sitting := true) -> Node3D:
 	return r
 
 static func ghost() -> Node3D:
+	var gg := glb("hero")
+	if gg:
+		var gm := mat(Color("9fd8d0"), 0.6, Color("7fe0d0"), 0.9, 0.42)
+		gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_paint(gg, gm)
+		var b := gg.find_child("Base", true, false)
+		if b:
+			b.visible = false
+		var em2 := glow(Color("ff3a2a"), 4.0)
+		part(gg, sph(0.03, 6), em2, Vector3(-0.05, 1.75, -0.14))
+		part(gg, sph(0.03, 6), em2, Vector3(0.05, 1.75, -0.14))
+		return gg
 	var g := hero({"tunic": Color("9fd8d0"), "cloak": Color("6fa8a0"), "skin": Color("cfeee8"), "hair": Color("8fc0b8"), "legs": Color("7fb8b0"), "alpha": 0.42, "emit": Color("7fe0d0"), "no_base": true})
 	var em := glow(Color("ff3a2a"), 4.0)
 	part(g, sph(0.03, 6), em, Vector3(-0.06, 1.72, -0.15))
 	part(g, sph(0.03, 6), em, Vector3(0.06, 1.72, -0.15))
 	return g
 
+static func _paint(n: Node, m: Material) -> void:
+	if n is MeshInstance3D:
+		n.material_override = m
+	for c in n.get_children():
+		_paint(c, m)
+
 static func egg_sac() -> Node3D:
+	var g := glb("egg_sac")
+	if g:
+		return g
 	var r := Node3D.new()
 	var m := mat(Color("e6e0cc"), 0.4, Color("a09a70"), 0.25, 0.82)
 	part(r, sph(0.5, 12), m, Vector3(0, 0.45, 0), Vector3.ZERO, Vector3(1, 0.9, 1))
