@@ -4351,6 +4351,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "151", name: "Before It Had a Name", date: "23 Nov 2026", items: [
+      "<b>Signs of the Mind's Eye in the story.</b> Long before the cult reaches the roads back, you can see it coming: a chalk eye on the milestones of the desert road on the way to the Undermoon, a kind man with a soup-pot on Rahdaria's bottom terrace, and a hungry girl called <b>Ninnet Quale</b>. Take her up to the Low Lantern, or let her go with him. Aulden remembers what you did when the Mind's Eye arrives, Haggith brings it up in the Hall of Seeing, and if Ninnet went with him, hers is a name you can call to the Congregation.",
+      "<b>Five new paintings</b> by Adrian for it: the chalked milestone, Ninnet Quale, the soup-pot on the bottom terrace, the white door, and Ninnet's slate."
+    ] },
     { ver: "150", name: "The Drowned Arches", date: "23 Nov 2026", items: [
       "<b>Dunvaar's fight backdrop.</b> Fights in Dunvaar now stand on wet, cracked flagstones in front of the sea-green arches of the drowned city. That was the last region still on a plain coloured mat, so every region has its own painting now."
     ] },
@@ -7115,7 +7119,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     // the bosses (Adrian's paintings, 17 Nov 2026), shown as each fight begins
     sc_me_haggith_calm: "art/sc_me_haggith_calm.webp", sc_me_haggith: "art/sc_me_haggith.webp", sc_curator: "art/sc_curator.webp", sc_tidecaller: "art/sc_tidecaller.webp", sc_wr_alley: "art/sc_wr_alley.webp", sc_varro_mire: "art/sc_varro_mire.webp", sc_me_crew: "art/sc_me_crew.webp", sc_raven: "art/sc_raven.webp", sc_me_clauneck_b: "art/sc_me_clauneck_b.webp",
     // the Mind's Eye (Adrian's paintings, 17 Nov 2026)
-    sc_me_sigil: "art/sc_me_sigil.webp", sc_me_aulden: "art/sc_me_aulden.webp", sc_me_corse: "art/sc_me_corse.webp", sc_me_clauneck: "art/sc_me_clauneck.webp",
+    sc_me_sigil: "art/sc_me_sigil.webp", sc_me_mile: "art/sc_me_mile.webp", sc_me_ninnet: "art/sc_me_ninnet.webp", sc_me_soup: "art/sc_me_soup.webp", sc_me_door: "art/sc_me_door.webp", sc_me_slate: "art/sc_me_slate.webp", sc_me_aulden: "art/sc_me_aulden.webp", sc_me_corse: "art/sc_me_corse.webp", sc_me_clauneck: "art/sc_me_clauneck.webp",
     sc_me_ottery: "art/sc_me_ottery.webp", sc_me_circle: "art/sc_me_circle.webp", sc_me_shields: "art/sc_me_shields.webp", sc_me_fleet: "art/sc_me_fleet.webp",
     sc_me_dock: "art/sc_me_dock.webp", sc_me_ship: "art/sc_me_ship.webp", sc_me_storm: "art/sc_me_storm.webp", sc_me_broadside: "art/sc_me_broadside.webp",
     fh_salt: "art/fh_salt.webp",
@@ -11111,6 +11115,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (S.rc && S.rc.marks && S.rc.marks.killed.length) L.push("\"You've killed " + S.rc.marks.killed.length + " people in their own yards. You call it work. So do I.\"");
     if (S.coins > 100) L.push("\"You're carrying " + S.coins + " gold into a holy place. You never once put any in the box.\"");
     if (M.harmed) L.push("\"That one you just cut down was a weaver from the coast. She sang well. Keep going.\"");
+    if (S.mec && S.mec.ninnet === "went") L.push("\"Ninnet Quale scrubs the floor of my hall. She was fourteen and hungry in Rahdaria, and you walked past her. She doesn't remember you. I made sure.\"");
+    if (S.mec && S.mec.ninnet === "kept") L.push("\"You took one girl off Aulden in Rahdaria. One. Ninnet still has that slate, you know. She looks at it.\"");
     L.push("\"When the world blinks, nobody will remember your name. I've seen it. It's very quiet.\"");
     return L;
   }
@@ -11203,6 +11209,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     add(el("div", "part-head sub", '<span class="num">Word on the roads</span><h2>An eye on a milestone</h2>'));
     scenePic("me_sigil", "The sign of the Mind's Eye: a crimson oval, a square, light from the middle and a step going down", "The Mind's Eye");
     await say("Somebody has chalked an eye on a milestone: an oval, a square inside it, lines coming out of the middle like light, and a mark under it like a step going down. At the inn that night a kind man in white called Aulden Crake buys supper for everyone who looks as if they need it, and asks the names of their children, and remembers them.");
+    await meCrumbKnown();
     await say("He talks about a woman called <b>Haggith</b>, who wears a band of linen over her eyes, sewn shut with red thread, and sees anyway. She found the Eye-stone under the roots at Orrin's Cut, he says, a ball of old glass with a dark iris in it, and it showed her the end of things. The world is tired, and soon it will <b>blink</b>, and for the length of that blink nothing will be watched, and what isn't watched won't be there when the eye opens. Only what's held in the Mind's Eye will be kept.");
     await say("\"The song is nice,\" says the landlord, afterward, wiping the tables. \"That's what everybody says. The song is nice.\"");
     const M = S.me, roots = meHoldList();
@@ -11211,6 +11218,70 @@ body.in-fight.in-lab #bfx { background: none !important; }
     tip("meeye");
     meLog("heard about Haggith and the Mind's Eye");
   }
+  // ----- Before it had a name (Adrian, 23 Nov 2026: "I love me some breadcrumbs!") -----
+  // The Mind's Eye only spreads on the roads back, long after Rahdaria, so the story leaves three signs of
+  // it first: a chalk eye on the milestones of the desert road (the Undermoon, Part XLIX), Aulden Crake's
+  // soup-pot on Rahdaria's bottom terrace and the hungry girl Ninnet Quale (Part LVII), and a white door,
+  // or Ninnet's scrubbed slate, on the last morning (Part LXII). State in S.mec = { mile: rub | leave,
+  // soup: feed | ask | walk, ninnet: kept | went, door }. Aulden remembers it when the cult arrives
+  // (meCrumbKnown), Haggith taunts you with it, and if Ninnet went, her name is one you can call to the
+  // Congregation. Saves that are past these parts simply have no S.mec and see none of it.
+  const mec = () => (S.mec = S.mec || {});
+  async function meCrumbMile() {
+    const C = mec(); if (C.mile) return;
+    scenePic("me_mile", "A weathered milestone on a desert road with a chalk eye drawn on it, sand drifting up off the dunes behind", "A milestone on the desert road");
+    await say("On the second morning you pass a milestone somebody has chalked a sign on: an oval, a square inside it, lines coming out of the middle like light, and a short mark under it like a step going down. The chalk is fresh. Nobody on this road has any reason to be drawing anything.");
+    const c = await choose([
+      { key: "rub", label: "Rub it off with your sleeve", tag: "it's only chalk" },
+      { key: "leave", label: "Leave it be", tag: "somebody else's business", plain: true }
+    ]);
+    C.mile = c;
+    await say(c === "rub" ? "It comes off easily, and leaves your sleeve white. A mile on, the next milestone has the same eye on it, drawn just as carefully. You leave that one." : "You walk on. The next milestone has the same eye on it, and so does the one after that, all on the west face, as if whoever drew them were going the same way you are.");
+  }
+  async function meCrumbSoup() {
+    const C = mec(); if (C.soup) return;
+    add(el("div", "part-head sub", '<span class="num">The bottom terrace</span><h2>A kind man with a soup-pot</h2>'));
+    scenePic("me_soup", "A kind man in a white coat ladling soup from an iron pot with an eye on it, his hand on a girl's shoulder, the hungry asleep under dead vines", "The bottom terrace, Rahdaria");
+    await say("On the bottom terrace, where the hungriest people sleep under the dead vines, a man in a white coat has set a soup-pot on a brazier. Nobody knows how he got into a city under siege, and nobody asks. The soup is thick and hot, and there's enough of it. He ladles it out himself, and asks everybody their name and their children's names, and remembers them when they come back for more.");
+    await say("There's an eye chalked on the side of his pot: an oval, a square, lines like light." + (C.mile ? " You've seen it before, on the milestones of the desert road." : ""));
+    scenePic("me_ninnet", "A thin, hungry girl in a patched smock holding a wooden bowl in both hands, looking up", "Ninnet Quale", "portrait");
+    await say("Closest to the brazier sits a girl of about fourteen called <b>Ninnet Quale</b>. Her mother kept the bean-rows on the Third Terrace until the grey came. The man in white has a hand on her shoulder, and he's telling her, very gently, about a woman who sees with her eyes sewn shut, and a place up in the hill villages where nobody is ever hungry, and how tired the world is.");
+    const c = await choose([
+      { key: "feed", label: "Take Ninnet up to the Low Lantern and feed her yourself", tag: "3 gold · Talia Ash will find her work", show: S.coins >= 3 },
+      { key: "ask", label: "Ask the man who he is", tag: "and let him get on with it", plain: true },
+      { key: "walk", label: "Leave them to it", tag: "it's soup, in a starving city", plain: true }
+    ]);
+    C.soup = c;
+    if (c === "feed") {
+      C.ninnet = "kept"; S.coins -= 3; renderSheet();
+      await say("Ninnet looks at the man in white, and then at you. He smiles, and takes his hand off her shoulder. \"Of course,\" he says. \"Go on, Ninnet. I'll remember you.\"");
+      await say("At the Low Lantern, Talia Ash gives her a bowl, a broom and a corner by the kitchen fire, and doesn't ask her anything.");
+      await standing(2, "The bottom terrace saw you take one of its own up the Stair.");
+      return;
+    }
+    C.ninnet = "went";
+    if (c === "ask") await say("\"Aulden,\" he says. \"Just Aulden. I go where people are hungry.\" He hums while he ladles, a slow little tune that goes round and round, and by the time you leave, half the terrace is humming it.");
+    await say("When you come back that way in the evening, the pot is gone, and so is Ninnet.");
+  }
+  async function meCrumbDoor() {
+    const C = mec(); if (!C.soup || C.door) return;
+    C.door = true;
+    if (C.ninnet === "kept") {
+      scenePic("me_slate", "A broken piece of slate with an eye on it, held in two cupped hands", "Ninnet's slate", "portrait");
+      await say("Ninnet Quale finds you at the gate on the last morning, floury to the elbows. She has a piece of slate with a chalk eye on it. \"Somebody drew this on the Lantern's back door in the night,\" she says. \"Talia said scrub it off, so I did. Was that right?\" You tell her it was. She doesn't look sure. She keeps the slate.");
+    }
+    else {
+      scenePic("me_door", "A woman with a broom on the step of a door freshly painted white, an eye on it, candles inside, and the city and the sea below", "A white door on the bottom terrace");
+      await say("On the last morning there's a door on the bottom terrace that has been painted white, with an eye chalked on it, and behind it people are singing, slowly, a tune that goes round and round. A woman sweeping the step tells you Ninnet Quale went out at first light with the kind man in white, the morning the gates opened, up into the hills. \"She'll be fed, anyhow,\" the woman says. \"And the song is nice.\"");
+    }
+  }
+  async function meCrumbKnown() {
+    const C = S.mec; if (!C) return;
+    if (C.soup) await say(C.ninnet === "kept" ? "You know him. He's the man with the soup-pot on Rahdaria's bottom terrace, and he knows you. \"You took Ninnet Quale up to the Lantern,\" he says, pleasantly. \"I remember. She wrote to us once, to say no. Hardly anybody writes to say no.\"" : "You know him. He's the man with the soup-pot on Rahdaria's bottom terrace" + (C.soup === "ask" ? ", who told you his name was just Aulden" : "") + ". \"Ninnet Quale sends her love,\" he says. \"She's very happy. She's on the Third Opening now. You remember Ninnet.\"");
+    else if (C.mile) await say("You've seen that eye before, chalked on the milestones of the desert road, the year the labyrinth came up out of the sand." + (C.mile === "rub" ? " You rubbed one off with your sleeve, and it was back on the next stone." : ""));
+    if (C.ninnet === "went") meLog("learned Ninnet Quale is one of the Seen");
+  }
+  const meCrumbNote = (C) => !C || !(C.mile || C.soup) ? "" : "<p>Before you knew its name: " + [C.mile ? "a chalk eye on the desert milestones" + (C.mile === "rub" ? " (you rubbed one off)" : "") : "", C.soup ? "Aulden's soup-pot in Rahdaria, where " + (C.ninnet === "kept" ? "you took Ninnet Quale up to the Lantern" : "Ninnet Quale went with him") : ""].filter(Boolean).join("; ") + ".</p>";
   // The day the Sighthouses empty: everyone to the Pupil, and a date for the Blink.
   async function meWithdraw() {
     const M = S.me, now = calDay();
@@ -11745,7 +11816,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     { odd: "her face turns to follow your axe as it moves", norm: "her face doesn't move when your axe does", why: "Blind people don't follow a blade with their face." },
     { odd: "her blindfold is just knotted at the back", norm: "the blindfold is sewn shut with red thread", why: "The Seen sew their bands shut at the Sixth Opening. She only ties hers." }
   ];
-  const meNames = () => { const M = S.me; return M.rec.filter(R => R.state === "lost").map(R => R.n).concat(M.ringNames || []).concat(M.rec.filter(R => R.state === "saved").map(R => R.n)); };
+  const meNames = () => { const M = S.me; return (S.mec && S.mec.ninnet === "went" ? ["Ninnet Quale"] : []).concat(M.rec.filter(R => R.state === "lost").map(R => R.n)).concat(M.ringNames || []).concat(M.rec.filter(R => R.state === "saved").map(R => R.n)); };
   async function meHaggith(C, B, inside) {
     const M = S.me, n = "Haggith";
     add(el("div", "part-head sub", '<span class="num">' + esc(C.place) + " · the Hall of Seeing</span><h2>Haggith</h2>"));
@@ -12343,6 +12414,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     return "<section><h3>The Mind's Eye · " + ME_STAGE[M.end ? 4 : M.st] + "</h3>" +
       '<p class="j-sub">Sighthouses: ' + (M.houses.length ? M.houses.map(H => esc(H.town) + (H.shut ? " (" + (H.shut === "gone" ? "empty" : "shut") + ")" : "")).join(", ") : "none yet") + ". Proof against Haggith: " + (Object.keys(ME_PROOF).filter(k => M.proofs[k]).map(k => ME_PROOF[k]).join(", ") || "none") + ".</p>" +
       (M.hold && Object.keys(M.hold).length ? "<p>Rooted in: " + Object.keys(M.hold).map(t => esc(t) + " (" + ME_HOLD[M.hold[t]] + ")").join(", ") + ".</p>" : M.roots ? "<p>You dug its last roots out of the towns.</p>" : "") +
+      meCrumbNote(rs.mec) +
       (M.fleet ? "<p>The Blind Fleet: " + Object.keys(ME_FLEET).filter(k => M.fleet[k]).length + " of 3 sunk.</p>" : "") +
       (sv.length ? "<p>Came home: " + sv.map(R => esc(R.n)).join(", ") + ".</p>" : "") + (lo.length ? "<p>Still Seen: " + lo.map(R => esc(R.n)).join(", ") + ".</p>" : "") +
       (M.rung ? "<p>The Ladder: " + M.rung + " of 7 Openings, as " + esc(M.alias[0]) + (M.cover === "blown" ? ", until they found you out" : "") + (M.brand ? ". You took the brand." : ".") + "</p>" : "") +
@@ -28525,6 +28597,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await say("You part with the Magistrate in Sulmara, at the foot of his own palace stairs. He's still thin and grey, but he's standing very straight. He tears a page out of the back of the ledger and folds it into your hand. \"The last page,\" he says. \"I won't need it. I don't think anyone will, if you get there in time.\"");
     if (U.tyra) await say("Tyra looks at the ledger page over your shoulder, and then at the road west. \"Home,\" she says. \"Your home, I mean. I haven't got one. I've got forty-three keys and no doors.\" She falls in beside you anyway.");
     await say("The road west goes back the way you came, a long time ago: the desert, the dunes, the old ceremonial road. It isn't the same road.");
+    await meCrumbMile();
     await say("On the third night, camped in the lee of a dune, you wake to find the sand falling <i>up</i>. Thin grey streams of it, rising off the crest of the dune in the still air like smoke off a candle, and drifting away into the dark. Your blanket has lifted an inch off the ground. So have you.");
     await say("By day it's worse the further west you go. Pebbles roll uphill. Water poured from a skin wobbles in a fat silver ball before it falls. Twice you pass roots as thick as a man, black and wet, that have broken up out of the desert floor and stand in the sun, reaching for nothing.");
     if (vaelricSpeaks()) await voice("\"I know this,\" Vaelric says. He hasn't spoken in days. \"I know this feeling. I felt it once, when I was young, on the night the great tree fell. Everything weighed less. My old teacher locked the doors and wouldn't say why.\"");
@@ -30272,6 +30345,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     R.phase = "inv";
     if (R.day > 2) return;
     await echoRah();
+    await meCrumbSoup();
     await rhWx("heat");
     await rhDays(2);
   }
@@ -31701,6 +31775,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     S.coins += 30; renderSheet();
     await mech("The Council of Terraces pays its Inquirer: 30 gold.", "loot");
     await rxEnding();
+    await meCrumbDoor();
     await say("On the last night, the Speaker for the Deep comes up to the top terrace and stands beside you, leaning on his stick, looking out at the sea. It's very calm. Two miles out, where the sea is deeper than any line, there's a faint light under the water. You'd never notice it if you weren't looking. It's flickering.");
     await say("\"The Drowned Light,\" he says. \"Our people are still down there. Most of them. Under it, waiting. And it's going out.\" He doesn't look at you. \"You put one Light to bed. I don't suppose you'd come down and look at ours.\"", "voice");
     if (vaelricSpeaks()) await voice("\"Well,\" Vaelric says softly. \"We did say the sea was our business now.\"");
