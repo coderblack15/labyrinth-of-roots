@@ -492,6 +492,9 @@ body.on-road .gate-film { display: none; }
 .story .scene-pic.framed figcaption::before { left: -5px; }
 .story .scene-pic.framed figcaption::after { right: -5px; }
 .story .scene-pic.portrait { max-width: 340px; margin-left: auto; margin-right: auto; }
+.story .cap-pair { display: flex; gap: 14px; max-width: 560px; margin: 6px auto 1.4em; }
+.story .cap-pair .scene-pic.portrait { flex: 1 1 0; min-width: 0; max-width: none; margin: 0; }
+.story .cap-pair figcaption { font-size: .74rem; }
 .namecard .hero-pick { display: flex; justify-content: center; margin: 4px 0 10px; }
 .namecard .hero-pick .hero-port { width: min(180px, 46%); height: auto; border-radius: 4px; border: 1px solid rgba(216,181,106,.5); box-shadow: 0 0 0 3px #120e0a, 0 8px 22px rgba(0,0,0,.6); animation: rise .5s ease both; }
 .hero-gal { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px 10px; margin: 4px auto 12px; max-width: 330px; animation: rise .5s ease both; }
@@ -4351,6 +4354,9 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "153", name: "Faces of the Captains", date: "23 Nov 2026", items: [
+      "<b>The armoured Captains have faces.</b> Adrian painted the officers who stand behind the soldiers in company battles: the Shield-Captains of the sea wall, the Saltwrit commodore and his lieutenant, the Skerran captains of the Fleet, the merchant-master and his mate, the Hinge's chain-master, tower-warden and remnant-captain, the Saltwrit sergeant on the tax roads and old Gervase on his barge. Each painting shows once a run as the company forms up, two side by side when a company has two captains."
+    ] },
     { ver: "152", name: "A Name of Our Own", date: "23 Nov 2026", items: [
       "<b>Bloodmending.</b> The weapon trait that gives you back a fifth of every hit has a new name of its own: Bloodmending. It works exactly as before, its red mark is the same, and weapons you already carry keep it."
     ] },
@@ -7120,7 +7126,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     sc_dig_mouth: "art/sc_dig_mouth.webp", sc_dig_face: "art/sc_dig_face.webp", sc_dig_shift: "art/sc_dig_shift.webp", sc_dig_kneel: "art/sc_dig_kneel.webp", sc_dig_spade: "art/sc_dig_spade.webp",
     spadeblade: "art/spadeblade.webp",
     // the bosses (Adrian's paintings, 17 Nov 2026), shown as each fight begins
-    sc_me_haggith_calm: "art/sc_me_haggith_calm.webp", sc_me_haggith: "art/sc_me_haggith.webp", sc_curator: "art/sc_curator.webp", sc_tidecaller: "art/sc_tidecaller.webp", sc_wr_alley: "art/sc_wr_alley.webp", sc_varro_mire: "art/sc_varro_mire.webp", sc_me_crew: "art/sc_me_crew.webp", sc_raven: "art/sc_raven.webp", sc_me_clauneck_b: "art/sc_me_clauneck_b.webp",
+    sc_me_haggith_calm: "art/sc_me_haggith_calm.webp", sc_me_haggith: "art/sc_me_haggith.webp", sc_curator: "art/sc_curator.webp", sc_tidecaller: "art/sc_tidecaller.webp", cap_velle: "art/cap_velle.webp", cap_coombe: "art/cap_coombe.webp", cap_malloway: "art/cap_malloway.webp", cap_crane: "art/cap_crane.webp", cap_tey: "art/cap_tey.webp", cap_harr: "art/cap_harr.webp", cap_ivery: "art/cap_ivery.webp", cap_breck: "art/cap_breck.webp", cap_saltsgt: "art/cap_saltsgt.webp", cap_gervase: "art/cap_gervase.webp", cap_remnant: "art/cap_remnant.webp", cap_towerwarden: "art/cap_towerwarden.webp", cap_chainmaster: "art/cap_chainmaster.webp", sc_wr_alley: "art/sc_wr_alley.webp", sc_varro_mire: "art/sc_varro_mire.webp", sc_me_crew: "art/sc_me_crew.webp", sc_raven: "art/sc_raven.webp", sc_me_clauneck_b: "art/sc_me_clauneck_b.webp",
     // the Mind's Eye (Adrian's paintings, 17 Nov 2026)
     sc_me_sigil: "art/sc_me_sigil.webp", sc_me_mile: "art/sc_me_mile.webp", sc_me_ninnet: "art/sc_me_ninnet.webp", sc_me_soup: "art/sc_me_soup.webp", sc_me_door: "art/sc_me_door.webp", sc_me_slate: "art/sc_me_slate.webp", sc_me_aulden: "art/sc_me_aulden.webp", sc_me_corse: "art/sc_me_corse.webp", sc_me_clauneck: "art/sc_me_clauneck.webp",
     sc_me_ottery: "art/sc_me_ottery.webp", sc_me_circle: "art/sc_me_circle.webp", sc_me_shields: "art/sc_me_shields.webp", sc_me_fleet: "art/sc_me_fleet.webp",
@@ -22670,6 +22676,37 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
   // A boss's painting (tall), once per run, as the fight begins.
   const bossPic = (id, cap) => scenePic(id, PIC_ALT["sc_" + id], cap, "portrait");
+  // ---------- the Captains' paintings ----------
+  // Adrian's armoured Captains (23 Nov 2026), numbered as in the project's art/captain-paintings.md.
+  // Keyed by the exact name a company fight passes in captains: [...]; each is shown once per run, as
+  // the company forms up, two side by side when both captains are painted. Add one: art/cap_<id>.webp
+  // (400px WebP) in PIC_SRC and a line here.
+  const CAP_PICS = {
+    "Shield-Captain Orrun Velle": ["velle", "Orrun Velle: a heavy, grey-bearded captain in green-bronze plate beaten from drowned bells, a tall shield grounded at his side and a brass horn on a red cord raised in his hand."],
+    "Shield-Captain Ysra Coombe": ["coombe", "Ysra Coombe: a lean woman with a shaved, tide-tattooed scalp in bell-bronze plate, pointing a driftwood baton, a lit slow-match coiled at her belt."],
+    "Commodore Idris Malloway": ["malloway", "Commodore Malloway: a tall old officer with a white moustache, a blue-black longcoat over a steel cuirass stamped with a tax seal, a brass speaking-trumpet in his hand."],
+    "Lieutenant Sabeth Crane": ["crane", "Lieutenant Crane: a young Black marine officer in a steel half-cuirass and helm with a red cockade, a boarding pike held upright with a torn pennant below the blade."],
+    "Master Absalom Tey": ["tey", "Master Tey: a portly bald merchant in a gilded breastplate over quilted silk, rings on every finger, blowing a whistle, a ledger under his arm and an amber lantern at his belt."],
+    "Mate Wenlock Harr": ["harr", "Mate Harr: a squat, weathered mate in a red knitted cap and an iron-ringed leather jerkin, a bosun's whistle on a cord and a belaying hook in his fist."],
+    "Captain Mord Ivery of the Fleet": ["ivery", "Mord Ivery: a broad Skerran captain with long grey-streaked locs, in scale armour of salt-green coins, a knotted count-rope at his belt and a lit pipe in his teeth."],
+    "Captain Sallow Breck of the Fleet": ["breck", "Sallow Breck: a gaunt, pale Skerran woman with a scar through her lips, in a brigandine sewn with sharks' teeth, holding a boat-hook hung with a strip of red sail."],
+    "The Saltwrit sergeant": ["saltsgt", "The Saltwrit sergeant: a stocky grey-haired sergeant in a steel breastplate with the tax office's crest, a brass-capped baton in one hand and a chained, red-sealed ledger box in the other."],
+    "Gervase": ["gervase", "Gervase: an old, stooped barge-master with a white beard, in rusted scale over an oilskin coat, leaning on a punt-pole, a brass bell on his chest and a brazier-pot burning at his feet."],
+    "The chain-master": ["chainmaster", "The chain-master: a narrow, bespectacled surveyor-captain in riveted brass Hinge plate, a surveyor's chain over one shoulder, a long brass measuring rod held like a staff, a small lamp at his belt."],
+    "The tower-warden": ["towerwarden", "The tower-warden: a big, grey-braided woman in a brass Hinge breastplate scratched with old tally marks, a ring of heavy keys at her hip and a bell-rope in her fist, a torch burning on the wall behind her."],
+    "The remnant-captain": ["remnant", "The remnant-captain: a grey-bearded veteran with a bandaged jaw, in a dented, patched Hinge breastplate under a torn banner worn as a cloak, a cracked baton in one hand and a pierced brass censer glowing at his belt."]
+  };
+  function capPics(names) {
+    const seen = S.portSeen = S.portSeen || {};
+    const got = (names || []).map(n => CAP_PICS[n] && !seen["cap_" + CAP_PICS[n][0]] ? [n, CAP_PICS[n]] : null).filter(Boolean);
+    if (!got.length) return;
+    got.forEach(([, c]) => { seen["cap_" + c[0]] = 1; });
+    const figs = got.map(([n, c]) => framedPic(picUrl("cap_" + c[0]), c[1].replace(/"/g, "&quot;"), n, "portrait"));
+    if (figs.length === 1) { add(figs[0]); return; }
+    const row = el("div", "cap-pair", "");
+    figs.forEach(f => row.appendChild(f));
+    add(row);
+  }
   // ---------- the hero's painting ----------
   // Picked on the name card from a swipeable gallery, separately from how people speak of you.
   // S.hero is a HEROES id, per slot; unset, it's the painting that matches S.pr (an older save is
@@ -31120,6 +31157,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     volley: { call: "Loose!", what: "their bowmen loose a volley at you this round: four arrows", ans: "Take cover (or plant a pavise)", tag: "" }
   };
   async function companyFight(o) {
+    capPics(o.captains);
     const caps = o.captains.map(n => { const m = Math.max(1, Math.round(o.capHp * (1 + (foeMult() - 1) / 2))); return { name: n, hp: m, max: m }; });
     const alive = () => caps.filter(c => c.hp > 0);
     const soldiers = () => Math.max(0, FOE.hp - alive().length);
@@ -38716,6 +38754,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
 
   async function tacCompany(o, map, reg) {
+    capPics(o.captains);
     const key = map === "deck" ? "reach" : (fdEastKey(reg) || (reg && FIELDS[reg] ? reg : "roots"));
     nextReg = map === "deck" ? "reach" : FIELDS[reg] && TIER[reg] !== undefined ? reg : key;
     const f = FIELDS[key], fd = { key, f, G: f.grid.map(r => r.split("")) };
