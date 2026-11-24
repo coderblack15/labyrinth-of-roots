@@ -16,6 +16,7 @@
 //             and bandages. Run both: the gap between them is what reading the fight is worth.
 //   --from    a save (a playtest save-partN.json) to build the hero from; its level/HP are then rescaled
 //   --file    another copy of the game (e.g. main's index.html, to compare before and after a change)
+//   --isak    put Isak Corrow in the company at this trust (0-5), optionally with a stance: --isak 3,anvil
 //   LABDBG=1  print every choice and each fight's story (use with --n 1)
 //
 // It runs ~1 fight a second; split long runs over a few processes (--only) to use every core.
@@ -31,7 +32,7 @@ const { chromium } = require("playwright");
 const arg = (k, def) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : def; };
 const N = +arg("n", 60), ONLY = arg("only", null) ? new RegExp(arg("only"), "i") : null, LV = arg("lv", null);
 const CLS = (arg("cl", "axe,hush,song,tide,ink,root,bloom,clock,kith")).split(",");
-const POLICY = arg("policy", "reader"), SEED = +arg("seed", 1), FROM = arg("from", null);
+const POLICY = arg("policy", "reader"), SEED = +arg("seed", 1), FROM = arg("from", null), ISAK = arg("isak", null);
 const SRC = path.resolve(arg("file", path.join(__dirname, "..", "index.html")));
 
 // Patches for the lab copy only: reach into the game's closure, let the bot see tells, and tell the Blink apart.
@@ -142,6 +143,7 @@ window.__lab = (() => {
     if (k) S.cl = { k, b: {}, rk: 5, wake1: true, path: Math.random() < 0.5 ? "edge" : "mend", uses: 40 };
     // A Kithcaller by then has a kith: two beasts from the middle of the road, bonded, one at heel.
     if (k === "kith") Object.assign(S.cl, { kith: [{ u: "k1", id: "mastiff", nm: "Coker", bond: Math.min(10, Math.floor(L / 5)), wins: 20 }, { u: "k2", id: "crab", nm: "Wick", bond: Math.min(10, Math.floor(L / 6)), wins: 12 }], heel: "k1", kinds: ["mastiff", "crab", "hound", "skimmer"] });
+    if (window.__isak) { const [tr, lock] = window.__isak.split(","); S.co = { burr: null, merc: "", loyal: {}, sworn: [], post: "", seen: false, isak: { tr: +tr, how: "show", q: {}, gift: {}, gave: 0, seen: null, sty: { hit: 0, guard: 0, kit: 0 }, st: lock || "wall", lock: lock || "", reads: {}, took: 0, turned: 0, campAt: 1e9 } }; }
     S.hp = S.maxHp; S.gemsSpent = false; S.bleed = [];
     ev("renderSheet()");
     return S;
@@ -216,10 +218,11 @@ const SCEN = [
   await page.evaluate(PAGE);
   await page.evaluate(() => window.__lab.install());
   if (process.env.LABDBG) await page.evaluate(() => { window.__dbg = true; });
+  if (ISAK) await page.evaluate((v) => { window.__isak = v; }, ISAK);
   await page.evaluate(fs_lab_chief());
   const base = FROM ? JSON.parse(fs.readFileSync(FROM, "utf8")) : null;
   const results = [];
-  console.log("policy: " + POLICY + ", " + N + " fights each" + (FROM ? ", hero from " + FROM : ""));
+  console.log("policy: " + POLICY + ", " + N + " fights each" + (FROM ? ", hero from " + FROM : "") + (ISAK ? ", Isak at trust " + ISAK : ""));
   for (const [name, L0, sc] of SCEN) {
     if (ONLY && !ONLY.test(name)) continue;
     const L = LV ? +LV : L0;
