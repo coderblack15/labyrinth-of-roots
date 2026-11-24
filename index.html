@@ -2884,6 +2884,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       <div class="belt" id="beltBox" hidden><span class="stat-label">Item</span><span class="belt-note" id="beltNote"></span></div>
       <div class="belt kin" id="kinBox" hidden><span class="stat-label" id="kinLbl">Path</span><span class="belt-note" id="kinNote"></span></div>
       <div class="belt kin" id="cxBox" hidden><span class="stat-label" id="cxLbl">Smoulder</span><span class="belt-note" id="cxNote"></span></div>
+      <div class="belt kin" id="kcBox" hidden><span class="stat-label" id="kcLbl">Rapport</span><span class="belt-note" id="kcNote"></span></div>
       </div>
     </div>
     <div class="abilities">
@@ -4361,6 +4362,13 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "155", name: "The Kithcaller", date: "24 Nov 2026", items: [
+      "<b>A ninth calling: the Kithcaller.</b> Bring one of the road's creatures low, then hold out your hand instead of the axe. If it takes it, it joins your <b>kith</b>: you name it, it walks at your heel, and it fights beside you with its own health and its own bite from the bestiary. Burr is the first of your kith. (It's called a Kithcaller and not a beast master because \"beast master\" belongs to other games. <i>Kith</i> is the old word for the people you count as your own.)",
+      "<b>Rapport</b> fills when your beast's bite lands, and your beast goes in wherever you've just opened the foe up. Spend it to <b>Harry</b> the foe, have your beast <b>Guard</b> you, or send it <b>for the throat</b>. Later come <b>Two as One</b>, <b>The Kith Answers</b> (every one of your kith out of the dark at once) and <b>The Old Accord</b>, where every kind you've ever tamed answers.",
+      "<b>Bond</b> grows as you win together. At bond 3 your beast learns its kind's trick, and there are twenty-five of them: a Kiln-mastiff breathes its furnace, a Rustcoat's shell halves blows, Sandpickers come back with gold, Gibbet crows harry. At 6 it's <b>steadfast</b>: tougher and harder to hit. At 10 it's <b>kith-sworn</b>. Beasts never die: a beast that goes down limps off and rests until tomorrow.",
+      "<b>Six scenes of its own on the road in:</b> a glass foal in a smashed nest, the drowned king's kennels, a mastiff on trial in the Glass Assize, a Hesk herd lost in a dead gallery, the gull-post of besieged Rahdaria, and the Kith-Knot at the edge of the white. Each choice comes back on the roads back. Tame a Nightmare by cutting all its threads first, and it keeps a thread of silver in its eyes.",
+      "<b>A new creature of the Hushfen: the Amalgamation</b> (Adrian's painting), a giant of bark and root with an amber heart, standing in the black water. It gathers itself back together every round until the bark over its heart splits. Tame it and it gathers itself for you.",
+      "Two paths (<b>the Fang-Path</b> and <b>the Den-Path</b>), twelve new feats, and a bestiary that now counts what you've tamed. Old saves can still pick a calling on Continue."] },
     { ver: "154", name: "The Gangboss", date: "24 Nov 2026", items: [
       "<b>Break all forty-nine road gangs and you're the Gangboss.</b> The chiefs call a moot at the Hanging Oak and crown you, with Adrian's golden plaque to prove it. You can take the title <b>Gangboss</b>, and your road name becomes Gangboss of the Blood-bought Roads. Already broken them all? You're crowned the next time you go home or take the roads.",
       "<b>3,000 gold</b> from the moot's chest, and <b>Adder's Poison Spit</b>, the gangboss's bow (Adrian's painting): Heartfire, 1d10 + 5, +2 to hit. Every hit leaves venom (up to five stacks, not three), poisoned foes take more from every arrow, and <b>Poison Spit</b> does 3d8 past any armour, poisons five deep and blinds it for two attacks. It's the hardest-hitting bow in the game.",
@@ -5795,6 +5803,18 @@ body.in-fight.in-lab #bfx { background: none !important; }
     { id: "cl_bloom_use", name: "Briar-Clad", desc: "Raise the Black Briar Mantle thirty times on one journey.", test: () => clIs("bloom") && (S.cl.uses || 0) >= 30, prog: () => [clIs("bloom") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
     { id: "cl_clock_all", name: "Every Second Counted", desc: "As a Clockrunner, meet all six of your calling's scenes on one journey.", test: () => clIs("clock") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("clock") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
     { id: "cl_clock_use", name: "Flaw Found", desc: "Use Mark Flaw thirty times on one journey.", test: () => clIs("clock") && (S.cl.uses || 0) >= 30, prog: () => [clIs("clock") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "cl_kith_all", name: "Every Road a Den", desc: "As a Kithcaller, meet all six of your calling's scenes on one journey.", test: () => clIs("kith") && CL_SLUGS.every(x => clB(x)), prog: () => [clIs("kith") ? CL_SLUGS.filter(x => clB(x)).length : 0, 6] },
+    { id: "cl_kith_use", name: "Heard Across the Road", desc: "Kithcall thirty times on one journey.", test: () => clIs("kith") && (S.cl.uses || 0) >= 30, prog: () => [clIs("kith") ? Math.min(30, S.cl.uses || 0) : 0, 30] },
+    { id: "kith_first", name: "An Open Hand", desc: "As a Kithcaller, bring a wild thing into your kith.", test: () => false },
+    { id: "kith_five", name: "Five Kinds Answer", desc: "Tame five different kinds of creature on one journey.", test: () => clIs("kith") && (S.cl.kinds || []).length >= 5, prog: () => [clIs("kith") ? Math.min(5, (S.cl.kinds || []).length) : 0, 5] },
+    { id: "kith_ten", name: "The Long Leash", desc: "Tame ten different kinds of creature on one journey.", test: () => clIs("kith") && (S.cl.kinds || []).length >= 10, prog: () => [clIs("kith") ? Math.min(10, (S.cl.kinds || []).length) : 0, 10] },
+    { id: "kith_together", name: "Together", desc: "Land a hit, and have your kith go straight in after it.", test: () => false },
+    { id: "kith_bond", name: "Kith-Sworn", desc: "Bring one of your kith to bond 10.", test: () => false },
+    { id: "kith_answer", name: "The Kith Answers", desc: "Whistle the long whistle, and have every one of your kith come out of the dark at once.", test: () => false },
+    { id: "kith_accord", name: "The Old Accord", desc: "Call on every kind you've ever tamed, and have the road answer.", test: () => false },
+    { id: "kith_dream", name: "Woken Gently", desc: "Cut every Cascade thread off a Nightmare creature, then tame it.", test: () => false },
+    { id: "kith_free", name: "Go On, Then", desc: "Let one of your kith go back to the wild.", test: () => false },
+    { id: "kith_burr", name: "Sergeant Burr", desc: "As a Kithcaller, win twenty fights with Burr at your heel.", test: () => false },
     { id: "cl_colossus", name: "It Stands Up", desc: "As a Dreadbloom Warden, wake the Withered Colossus in a fight.", test: () => false },
     { id: "cl_midnight", name: "Zero Time", desc: "As the Grand Horologian, call Stopped Midnight in a fight.", test: () => false },
     { id: "cl_wake1", name: "First Awakening", desc: "As a Dreadbloom Warden or a Clockrunner, see what you're becoming, years too early.", test: () => false },
@@ -6079,6 +6099,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
       ids: ["qtfirst", "qtall", "qtmoon", "qtrot"] },
     { id: "gangboss", name: "The Gangboss", ver: "59", desc: "Break every gang on the Blood-bought Roads and take the roads for your own: the bow, the bracer, the Knot House and the pretenders.",
       ids: ["gangboss", "gbfree", "gbpress", "gbspit", "gbfive", "gbslough", "gbheel", "gbpret", "gbrun", "gbclean", "gbracket", "gbhide"] },
+    { id: "kith", name: "The Kithcaller", ver: "60", desc: "The ninth calling: tame the road's creatures, keep a kith of them, and fight with one at your heel.",
+      ids: ["cl_kith_all", "cl_kith_use", "kith_first", "kith_five", "kith_ten", "kith_together", "kith_bond", "kith_answer", "kith_accord", "kith_dream", "kith_free", "kith_burr"] },
     { id: "finds", name: "Things Worth Finding", ver: "58", desc: "Eight weapons, six pieces of kit and ten caches from Adrian's wishlist, each hidden where it belongs.",
       ids: ["rfkeys", "rfbell", "rfgrave", "rfshrine", "rfmirage", "rfarms"] },
   ];
@@ -6534,6 +6556,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     dcjury: ["The inquest jury", "Twelve on the jury, and half of them owe her money. Each piece of evidence you bring from the cities can turn some of them. You need seven."],
     mine: ["Reading the grain", "Each deposit has <b>three layers</b>, and the line under each one tells you its grain. Long straight lines, threads end to end, smooth one way: <b>along</b>. Bands, rings, steps, parallel cracks: <b>across</b>. One knot at the bottom, a seam at the base, loose up top: <b>at the root</b>. <b>Look closer</b> once a deposit to rule one out."],
     smoulder: ["Smoulder", "The <b>Smoulder</b> meter in the foe box is the Dreadbloom Warden's: it fills by 1 each time a blow <b>lands on you</b>, and each foe that falls in a fight against many. Its cap grows the longer the fight runs. Spend it on the moves marked <b>Smoulder</b> in the menu."],
+    kith: ["Your kith", "The beast at your heel fights beside you: it goes in at the start of a fight and after every round your own hit lands (it goes where you opened it up), with its own HP (beside <b>Rapport</b> in the foe box). The foe will sometimes turn on it instead of you. It never dies: if it goes down it limps off and rests until tomorrow. Win fights together and its bond grows: at 3 it learns its kind's trick. <b>Whistle up</b> another of your kith in a fight to swap who's at heel."],
+    rapport: ["Rapport", "The <b>Rapport</b> meter fills by one each time your beast's strike lands. Spend it on <b>Harry it</b>, <b>Guard me</b> and <b>Go for the throat</b>, and later Two as One, The Kith Answers and The Old Accord. When a road creature is down to two-fifths of its HP (the last of a pack), <b>Offer your hand</b> instead of finishing it, and it can join you."],
     momentum: ["Momentum and Ticks", "The <b>Momentum</b> meter in the foe box is the Clockrunner's: it fills when your hits land and when a blow <b>misses you</b>. Spend it on Tick Step and Precision Strike. At level 20 it becomes <b>Ticks</b>, up to 12."],
     foearm: ["Armoured foes", "The <b>silver bar</b> under a foe's health is its armour. Your blows go into it first; only what gets through reaches its HP. <b>Crushing</b> weapons (maces, mauls), a <b>Shield Slam</b> and a <b>Rootbreaker</b> break it twice as fast, and a <b>chilled</b> foe's armour is brittle (twice again). Burning, poison, spells, the gems and mines go round it. Break it and it's <b>Sundered</b>: −2 AC."],
     foefx: ["Fire, frost and poison", "What you put on a foe shows on its face. 🔥 <b>Burning</b>: 1d4 a round past its armour, for the rounds shown, and the heat softens the armour. ❄ <b>Chilled</b>: −2 to its attacks and brittle armour, for the swings shown. ☠ <b>Poisoned</b>: an HP a round for each stack (up to 3), until the fight ends. Fire and frost weapons catch on 1 hit in 3, and fire, cold and poison mines leave them behind."],
@@ -6701,8 +6725,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const k = String(o.key), t = String(o.tag || "");
     if (i === 0 && !o.plain) return "atk";
     if (/^(escape|flee|run|yield|leave|retreat)/.test(k)) return "leave";
-    if (/^(evade|wipe|mend|band|breath|pavise|quick|ground|cx-step|ht-hold|ht-tear|dig|heal|guard|brace)/.test(k) || /regain|\bHP\b|bandage/i.test(t) && !/damage/i.test(t)) return "guard";
-    if (/^(atk|cls|kin|low|feint|gems|book|shard|cx-s-|cx-grasp|cx-hand|cx-tick|cx-mid|cx-verd|tk-|snt-)/.test(k) || /\d+d\d+|swing|strike|damage|no roll/i.test(t)) return "atk";
+    if (/^(evade|wipe|mend|band|breath|pavise|quick|ground|cx-step|kc-guard|kc-tame|ht-hold|ht-tear|dig|heal|guard|brace)/.test(k) || /regain|\bHP\b|bandage/i.test(t) && !/damage/i.test(t)) return "guard";
+    if (/^(atk|cls|kin|low|feint|gems|book|shard|cx-s-|kc-s-|kc-rend|kc-harry|kc-all|kc-accord|cx-grasp|cx-hand|cx-tick|cx-mid|cx-verd|tk-|snt-)/.test(k) || /\d+d\d+|swing|strike|damage|no roll/i.test(t)) return "atk";
     return "more";
   }
   const go = (label) => choose([{ key: 1, label }]);
@@ -7198,6 +7222,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     b_cutshade: "art/b_cutshade.webp",
     b_wader: "art/b_wader.webp",
     b_hulk: "art/b_hulk.webp",
+    b_amalgam: "art/b_amalgam.webp",
     b_thawlings: "art/b_thawlings.webp",
     b_wallgar: "art/b_wallgar.webp",
     b_picker: "art/b_picker.webp",
@@ -22608,7 +22633,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       grid: ["#.c.#..", "..~~~.#", "#.r...c", ".c..#..", "#..r..#", "..c...."], you: [1, 5], foe: [5, 0],
       deco: [[6, 5, "bcity"]] }
   });
-  const BEAST_EMB = { ticks: "tick", hound: "canine", skimmer: "lizard", picker: "hood", hulk: "mound", wader: "wader", crab: "crab", lamprey: "eel", crows: "crow", reeve: "horn",
+  const BEAST_EMB = { ticks: "tick", hound: "canine", skimmer: "lizard", picker: "hood", hulk: "mound", amalgam: "mound", wader: "wader", crab: "crab", lamprey: "eel", crows: "crow", reeve: "horn",
     cutter: "shards", mastiff: "flamehound", lurker: "rockeye", mites: "mites", shearer: "shears", cutshade: "shade", kiteeel: "kite", plumbmaw: "maw", brinehound: "canine",
     rotwreath: "wreath", wallgar: "gar", quietings: "hush", brackray: "ray", wreckgulls: "gull", hoarback: "ox", rimeshrikes: "hawk", thawlings: "mites", icepike: "gar", needlewings: "hawk", stiltcat: "canine", chaffwasps: "mites", tollheron: "heron" };
   // Beasts that fly or swim over the ground: every square costs them 1, and sinking ground doesn't hold them.
@@ -24003,7 +24028,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       if (dist > 6) return "It's too far for the bow, " + dist + " squares off. Get within 6 on the map.";
       return dist === 1 || fdLos(fd, fd.you, fd.foe) ? null : "There's rock in the way. Move to where you can see it.";
     }
-    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit()) || String(c).startsWith("cx-s-")) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
+    if (c === "atk" || c === "fd-shove" || (c === "cls" && clIs("axe")) || (c === "kin" && kinCrit()) || String(c).startsWith("cx-s-") || String(c).startsWith("kc-s-")) return (await closeIn(fd.foe)) ? null : "It's out of reach, " + cheb(fd.you, fd.foe) + " squares off. Move closer on the map, or do something else this round.";
     if (c === "fd-wd") { const W = fdWd(fd); return W && (await closeIn(W)) ? null : "The " + (W ? W.name : "beast") + " is out of reach."; }
     if (String(c).startsWith("fd-act-")) { const q = fdSpot(fd, c.slice(7)); if (!q) return "There's nothing left there to do."; return cheb(fd.you, q) <= 1 || (await closeIn(q)) ? null : "It's too far off, " + cheb(fd.you, q) + " squares. Move next to it on the map first."; }
     if ((c === "gems" || c === "book" || c === "shard") && !fdLos(fd, fd.you, fd.foe)) return "There's rock between you, and it has to be in sight for that. Move to where you can see it.";
@@ -24227,7 +24252,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const st = { round: 0, split: 0, stilled: false, used: {}, adv: hasGear("compass") };
     FOE.rounds = true; FOE.F = { hesk: !!F.hesk, st }; FOE.shade = !!F.shade; FOE.bleedPct = F.bleed || 0;
     FOE.rfWet = !!F.sea || RF_WET.test((F.name || "") + " " + (F.who || ""));
-    kinStart(st); cxStart(st);
+    kinStart(st); cxStart(st); kcStart(F, st);
     if (S.tyra && S.tyra.errand === "with") S.tyra.helped = false;
     const glaive = hasGear("glaive") && F.hesk;
     if (hasGear("bow")) {
@@ -24254,6 +24279,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       await bleedTick();
       await kinRound(st); if (FOE.hp <= 0) break;
       await cxRound(F, st); if (FOE.hp <= 0) break;
+      await kcRound(F, st); if (FOE.hp <= 0) break;
       await lgRound(F, st); if (FOE.hp <= 0) break;
       await peRound(F, st); if (FOE.hp <= 0) break;
       await wxRound(F, st); if (FOE.hp <= 0) break;
@@ -24283,6 +24309,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       clFightOpts(F, st).forEach(o => opts.push(o));
       kinOpts(F, st).forEach(o => opts.push(o));
       cxOpts(F, st).forEach(o => opts.push(o));
+      kcOpts(F, st).forEach(o => opts.push(o));
       if (!st.used.breath && S.hp < S.maxHp) opts.push({ key: "breath", label: "Catch your breath", tag: "once a fight · 1d6 + " + Math.floor(lv() / 5) + " HP · costs your turn", plain: true });
       const windShown = st.g && gWindNext(st.g) && tellKnown(st.g, "wind");
       opts.push({ key: "evade", label: "Evade", tag: evadeChance() + "% to slip every attack this round · costs your turn · slip one and you counter next turn" + (windShown ? " · ✓ answers its wind-up" : ""), plain: true });
@@ -24430,6 +24457,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       else if (String(c).startsWith("fd-")) await fdDo(c, F, st);
       else if (String(c).startsWith("rm-")) await rmFightDo(c, F, st);
       else if (String(c).startsWith("cx-")) await cxDo(c, F, st);
+      else if (String(c).startsWith("kc-")) await kcDo(c, F, st);
       else if (F.onExtra) await F.onExtra(c, st);
       FOE.gMul = 0;
       if (c === "atk" && !F.heads) await rmEchoStrike(st, rmHpB - FOE.hp);
@@ -24479,6 +24507,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await lgEnd(F, st);
     light(back);
     await cxAfterFight(F, st);
+    await kcAfterFight(F, st);
     if (F.sgWon === 3 && !hasGear("porctower")) await porcGive();
     if (hasSkill("mend") && S.hp < S.maxHp) {
       const n = d(6), before = S.hp;
@@ -24507,7 +24536,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   //   before it falls staggers it (the blow is lost, its gauge empties). Any Rootbreaker knocks it back 30.
   // State: st.g = FOE.g = { you, foe, sy, sf, comp, n (foe moves so far), run (your moves in a row), boss }. FOE.gMul: 0.5 jab, 1.5 heavy, 0 none.
   const G_FAST = /hound|crow|gull|shrike|wing|rat\b|rats\b|tick|mite|cat\b|eel|skimmer|picker|lamprey|jackal|wasp|kite|needle|cutshade|shearer|knife|duellist|duelist|courier|thief|cutpurse|wolf|wolves|hare|ray\b/i;
-  const G_SLOW = /hulk|golem|crab|hoarback|grind|maw\b|plumbmaw|sentinel|giant|colossus|tower|thawling|ice-?pike|wallgar|warden|ogre|statue|bull|boar|brute|knight|armou?red|plate/i;
+  const G_SLOW = /hulk|amalgam|golem|crab|hoarback|grind|maw\b|plumbmaw|sentinel|giant|colossus|tower|thawling|ice-?pike|wallgar|warden|ogre|statue|bull|boar|brute|knight|armou?red|plate/i;
   const G_KEEP = { "g-jab": 45, "g-heavy": -30, breath: 25, mend: 25, band: 25, wipe: 25, pavise: 25 };
   const G_WIND = 4;
   // Read the foe (2026-11-20, Adrian picked from the Read the Blow preview): every lone foe, not only bosses,
@@ -24652,7 +24681,9 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const clm = clSwingMod(st); bonus += clm.bonus;
     const lgm = lgSwingMod(F, st); bonus += lgm.bonus;
     const peChill = peSwingMod(); bonus += peChill;
+    bonus += kcSwingMod(st);
     if (F.hesk && clIs("song") && clB("corrach") === "trade") bonus -= 1;
+    if (await kcTakes(F, st, n, s, bonus)) { st.winded = false; return false; }
     const hit0 = await enemyAttack({ label: (o.label || F.who + " attacks") + (F.hesk && S.song >= 1 ? " (you hear the call)" : "") + (lgm.bonus || peChill ? " (chilled)" : "") + (lgm.dis ? " (the muffled bell)" : ""), foe: F.whoShort || F.who, bonus, dis: !!o.dis || pzDis || clm.dis || lgm.dis, adv: !!st.winded, cta: "Brace" });
     st.winded = false;
     const hit = hit0 && !(await clStrike(F, st));
@@ -24807,6 +24838,13 @@ body.in-fight.in-lab #bfx { background: none !important; }
       lore: "A heap of wet peat that stands up in the shape of a man when something warm walks past. Cut one open and you'll find a cart wheel or a boot in the middle of it.",
       intro: "The bank beside the path stands up. It's peat, black and dripping, heaped in the shape of a man twice your size, with reeds growing out of its shoulders.",
       who: "the peat-hulk", hitWhy: "Both peat fists come down on you like a falling wall.", miss: "Its fists sink into the bog beside you up to the elbow." },
+    // Adrian's painting (24 Nov 2026), the first beast painted for the Kithcaller.
+    { id: "amalgam", name: "The Amalgamation", region: "fen", quirk: "accrete", hp: 30, ac: 13, atk: 5, n: 2, s: 6, type: "bludgeoning", notice: 14,
+      ability: ["Gathers itself", "Every round it drags more of the fen into itself: 3 HP back, and its blows grow heavier the longer the fight runs. Once it's below half, the bark over its heart splits open: your next swing has advantage, and it stops gathering while the heart is bare."],
+      tactic: "Don't trade blows slowly. Hit it hard early, and when the bark splits over the amber heart, swing straight for it.",
+      lore: "Nobody knows what it was first. A tree, a drowned man, a bog-cart, a heron: it's all of them now, and more every year, bark plated over bark, with a light in its chest that the fen-folk say is the last thing it swallowed that was still burning.",
+      intro: "The black water ahead of you stands up. It's taller than two men, a tangle of bark and root and branches poured into the shape of something with arms, water running off it in strings. In the middle of its chest, behind the bark, an amber light is beating.",
+      who: "the Amalgamation", hitWhy: "A fist of plated bark and root comes down on you like a falling tree.", miss: "It reaches for you, and its root-fingers close on black water.", hitLine: "Bark splinters off it, and the fen water rushes in to fill the gap." },
     { id: "wader", name: "Siltwader", region: "fen", quirk: "drain", hp: 18, ac: 13, atk: 4, n: 1, s: 8, type: "piercing", notice: 13,
       ability: ["Drink", "Whatever damage it does to you, it heals."],
       tactic: "Don't trade blows when it's ahead. Evade its strikes and finish it with a no-roll blast.",
@@ -24994,6 +25032,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     skimmer: "A painting of a Duneskimmer: a long flat lizard of grey glass scales lying low on a patch of sand.",
     picker: "A painting of a Sandpicker: a hooded old scavenger in rags with a red scarf, a hooked pole in one hand and a heavy sack on his back.",
     hulk: "A painting of a Peat-hulk: a heap of wet dark peat standing in the shape of a man, a cart wheel showing in its chest.",
+    amalgam: "A painting of the Amalgamation: a towering shape of plated bark, roots and branches standing in black water, dripping, a bird-like skull of bark with one amber eye, and a glowing amber heart in its chest.",
     thawlings: "A painting of a Thawling: a small pale thing of drowned wood with a doll's blank face and long twig fingers, roots for hair.",
     wallgar: "A painting of a Wall-gar's head: a huge grey armoured fish with a round staring eye and a mouth full of long teeth, rising out of the water.",
     rotwreath: "A painting of a Rotwreath: grey salted vine and dead branches dragged up into the shape of a woman, twigs for hair, two dim eyes."
@@ -25006,7 +25045,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     return '<div class="beast' + (BEAST_PICS[B.id] ? " has-bpic" : "") + '">' + beastPic(B) + '<div class="bh"><span class="bn">' + B.name + '</span><span class="bs">' + REGIONS[B.region] + " · " + stats + "</span></div>" +
       "<p><b>" + B.ability[0] + ".</b> " + B.ability[1] + "</p>" + (B.bleed ? "<p><b>Bleeder.</b> Its hits open a bleeding wound 1 time in 2. Carry bandages.</p>" : "") + "<p><b>Tactic.</b> " + B.tactic + '</p><p class="bl">' + B.lore + "</p>" +
       (tally && tally.fear && FEARS[B.id] ? "<p><b>Feared shape.</b> As a Nightmare it fears the " + beastById(FEARS[B.id]).name + ", and at half health it turns into one, keeping its own trick.</p>" : "") +
-      (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + "</p>" : "") + "</div>";
+      (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + (tally.tamed ? " · tamed " + tally.tamed : "") + "</p>" : "") + "</div>";
   }
   function beastLog(B, beaten) {
     J.beasts = J.beasts || {};
@@ -25039,6 +25078,19 @@ body.in-fight.in-lab #bfx { background: none !important; }
           if (F.stolen >= 6 && !(await rfNoRun())) { F.fled = "thief"; FOE.hp = 0; renderFoe(); await say("It feels the weight of the sack, decides that's plenty, and runs. By the time you've got your feet under you it's three dunes away."); }
         }
         st.evade = false; return "done";
+      }
+    },
+    accrete: {
+      before: async (F, st) => {
+        if (FOE.hp <= 0) return;
+        if (!F.heartOpen && FOE.hp <= FOE.max / 2) { F.heartOpen = true; st.adv = true; await say("The bark across its chest splits with a sound like a branch in frost, and there it is: the heart, amber, beating, bare."); await mech("The heart is open: your next swing has advantage, and it stops gathering itself.", "loot"); return; }
+        if (F.heartOpen || st.round < 2 || FOE.hp >= FOE.max) return;
+        const n = Math.min(3, FOE.max - FOE.hp); FOE.hp += n; renderFoe();
+        await mech("It drags a sunken branch up out of the water and into itself: +" + n + " HP (" + FOE.hp + " / " + FOE.max + ").", "hurt");
+      },
+      turn: async (F, st) => {
+        const heavy = Math.min(3, Math.floor((st.round - 1) / 2));
+        await foeSwing(F, st, heavy ? { label: "The Amalgamation swings, heavier than before", n: (F.n || 2) + (heavy >= 2 ? 1 : 0), atk: F.atk + (heavy >= 3 ? 1 : 0) } : {}); st.evade = false; return "done";
       }
     },
     brute: {
@@ -25193,7 +25245,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // what it fears, keeping its own trick and taking on the other's. Packs and head-count fights skip
   // fears that heal (they'd raise the dead). Duneskimmers and gibbet crows don't flee as Nightmares:
   // they're more afraid of what they're turning into than of you.
-  const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
+  const FEARS = { ticks: "plumbmaw", hound: "mastiff", skimmer: "rotwreath", picker: "brinehound", hulk: "cutter", amalgam: "mastiff", wader: "lamprey", crab: "picker", lamprey: "mastiff", crows: "cutshade", reeve: "hound",
     cutter: "hulk", mastiff: "wader", lurker: "crab", mites: "lamprey", shearer: "mastiff", cutshade: "cutter", kiteeel: "rotwreath", plumbmaw: "hound", brinehound: "picker", rotwreath: "crab",
     wallgar: "kiteeel", quietings: "cutshade", brackray: "wallgar", wreckgulls: "mastiff", hoarback: "mastiff", rimeshrikes: "wreckgulls", thawlings: "wreckgulls", icepike: "lamprey", brimwater: "mastiff", needlewings: "crows", stiltcat: "hound", chaffwasps: "needlewings", tollheron: "stiltcat" };
   const FEAR_HEALS = ["regrow", "drain", "choke"], NM_NOFLEE = ["skirmish", "scatter"];
@@ -25399,6 +25451,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       await mech("<b>Overtaken.</b> You lose this fight and its spoils" + (lost ? ", and half the gold you were carrying (" + lost + ") is gone from your purse when you wake; banked gold is safe" : "") + ". It's waiting for you on the roads of " + REGIONS[reg] + " with " + S.haunt.hp + (F.heads ? " " + F.unit.split("|").slice(S.haunt.hp === 1 ? 0 : -1)[0] : " HP") + " left, and you'll meet it there next.", "hurt");
       renderSheet(); return;
     }
+    if (F.tamed) { beastLog(B, true); light(back); await kithJoin(B, { dream: !!nm }); return; }
     if (await hzAfter(F, reg)) { beastLog(B, true); return; }
     const tier = TIER[reg];
     if (F.fled === "you") { await mech("You broke away. No XP and no spoils, but you're out."); return; }
@@ -32090,7 +32143,11 @@ body.in-fight.in-lab #bfx { background: none !important; }
     clock: { get name() { return clockForm(); }, who: "the Escapement Guild, the clockmakers who train killers on the side", lean: "Acrobatics, Perception and Investigation", re: /Acrobatics|Perception|Investigation/,
       sig: "Mark Flaw", kit: "the Pocket Chronometer (+5% Evade) and 10 gold", gear: "chronometer",
       blurb: "A street killer of the Escapement Guild: twin blades, a pocket chronometer, a lens in one eye. Every machine has a rhythm, and so does everything that fights. Start as a Clockrunner; become the Hourblade, the Fatewalker, the Grand Horologian.",
-      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", find the flaw: your next " + (r >= 4 ? "three" : "two") + " hits on it are at +2" + (r >= 3 ? " and certain criticals" : " and +1d6") + (r >= 2 ? ", and your next swing has advantage" : "") + ", and each one gives you an extra " + (r >= 3 ? "2 Ticks" : "Momentum") + ". Costs your turn." }
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", find the flaw: your next " + (r >= 4 ? "three" : "two") + " hits on it are at +2" + (r >= 3 ? " and certain criticals" : " and +1d6") + (r >= 2 ? ", and your next swing has advantage" : "") + ", and each one gives you an extra " + (r >= 3 ? "2 Ticks" : "Momentum") + ". Costs your turn." },
+    kith: { name: "Kithcaller", who: "the drovers and kennel-wives of the old roads, who could talk a wild thing into walking home beside them", lean: "Nature, Insight and Survival", re: /Nature|Insight|Survival/,
+      sig: "Kithcall", kit: "the Kith-Whistle (+2 to tame) and 2 bandages", gear: "kithwhistle",
+      blurb: "Every wild thing on the road was somebody's once, or could be. Bring one low, then hold out your hand instead of the axe: if it takes it, it joins your kith, walks at your heel, fights beside you and learns. Burr will be the first of them.",
+      sigTxt: (r) => (r >= 3 ? "Twice a fight" : "Once a fight") + ", call the one at your heel in: it strikes with advantage" + (r >= 4 ? ", +2d6" : r >= 2 ? ", +1d6" : "") + ", and you gain 1 Rapport" + (r >= 5 ? ", and then it guards your next blow" : "") + ". With nobody at heel, Burr comes, or something wild of this road answers. Costs your turn." }
   };
   const CL_PICS = {
     axe: "A painting of the calling: a broad, weathered Black fighter in battered half-plate, holding the axe low and patient in both hands.",
@@ -32101,6 +32158,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     root: "A painting of the calling: a calm figure in a brown work-robe, living roots wound round one forearm, a sprig of green growing from the axe's haft.",
     bloom: "A painting of the calling: a knight in armour of black thorn and twisted branches, a crown of spikes for a helm, a glowing ember-heart in the chest, a long blade held low.",
     clock: "A painting of the calling: a hooded killer in a ragged dark cloak, a bronze lens over one eye, a curved blade in a mechanical gauntlet, rune-cards circling in the dark.",
+    kith: "A painting of the calling: a weathered drover in a patched oilskin, a bone whistle on a cord at the throat, kneeling with one open hand held out to the wild things in the dark: a hound of roots, a glass-scaled lizard, a kiln-mastiff with a glowing belly.",
     bloom_colossus: "A painting of the Withered Colossus: a towering figure of grey rotted wood and black root, its chest full of brass gears round a dead clock-face, one ember eye.",
     bloom_wake: "A painting of a Warden's colossus of root and thorn with a burning heart, standing before a fortress under a waterfall as an army fills the field.",
     bloom_ascend: "A painting of a thorn knight with an ember heart walking a muddy battlefield, a giant of root and gear with one ember eye striding behind him toward the enemy.",
@@ -32134,7 +32192,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
     protoeye: { name: "The Prototype Eye", icon: "ring", desc: "A crude mechanical monocle of brass and ground glass. It shows you where things are weak, and now and then where they're going to be. You start each fight with 1 Momentum." },
     cl_keep_bloom: { name: "The Ash-Seed", icon: "herb", desc: "A seed from the last root before the white, warm as a coal. It grew into your ember. +5 max HP, and the Black Briar Mantle comes back once more each fight." },
     cl_keep_clock: { name: "The Stopped Second", icon: "ring", desc: "A chronometer hand from the half milestone, stopped between two ticks. +5% Evade, and Mark Flaw comes back once more each fight." },
-    cl_keep_root: { name: "The Living Graft", icon: "herb", desc: "A sliver of root you laid in your own arm at the half milestone. It took. +6 max HP, and Graft comes back once more each fight." }
+    cl_keep_root: { name: "The Living Graft", icon: "herb", desc: "A sliver of root you laid in your own arm at the half milestone. It took. +6 max HP, and Graft comes back once more each fight." },
+    kithwhistle: { name: "The Kith-Whistle", icon: "ring", desc: "A drover's whistle of yellowed bone, worn smooth by somebody's thumb before yours. Wild things stop and listen to it. +2 when you offer your hand." },
+    drownwhistle: { name: "The Kennel-Master's Whistle", icon: "ring", desc: "The drowned king's kennel-master's whistle, silver gone black. Blow it and something answers from very far down. +2 when you offer your hand, and every beast that joins you starts at bond 1." },
+    cl_keep_kith: { name: "The Kith-Knot", icon: "ring", desc: "A collar of plaited root from the half milestone, with a knot in it for every beast that ever walked with you. Room for one more of your kith, and Kithcall comes back once more each fight." }
   });
   const clKeep = () => S.cl && hasGear("cl_keep_" + S.cl.k);
   const clUsesNow = () => clUses() + (clKeep() && !clIs("axe") ? 1 : 0);
@@ -32165,6 +32226,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
         if (pick === "root") S.potions = (S.potions || 0) + 2;
         if (pick === "bloom") { S.maxHp += 4; S.hp += 4; S.dress = (S.dress || 0) + 1; }
         if (pick === "clock") S.coins += 10;
+        if (pick === "kith") S.dress = (S.dress || 0) + 2;
         box.querySelectorAll("button").forEach(x => x.disabled = true);
         box.remove();
         save(); renderSheet();
@@ -32182,6 +32244,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     items.push(["calling", "token", "Calling: " + C.name + ", Rank " + CL_RANKS[r], "+" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + (r < 5 ? " Next rank at level " + [0, 10, 20, 30, 40][r] + "." : "")]);
     if (clPath()) items.push(["calling-path", "token", "Path: " + clPath().name, kinTxt(c.k, c.path, r)]);
     if (cxOn()) items.push(["calling-power", "token", clIs("bloom") ? "The Withered Colossus: " + bloomState(r) : "The " + cxName() + " of the " + clockForm(r), cxTxt()]);
+    if (clIs("kith")) items.push(["calling-kith", "token", "Your kith", kithTxt()]);
   }
   // A rank comes every ten levels; the story says so at the start of the next part.
   async function clRankNews() {
@@ -32210,6 +32273,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (c.k === "ink") return [{ key: "cls", label: "Strike Through", tag: (r >= 4 ? "the next blow that lands misses, the one after lands at half" : "the next blow that lands misses") + " · costs your turn" + n, plain: true }];
     if (c.k === "bloom") return [{ key: "cls", label: "Black Briar Mantle", tag: "the next " + (r >= 4 ? 3 : 2) + " blows on you −" + (r >= 3 ? 3 : 2) + " · each leaves 1d" + (r >= 2 ? 8 : 6) + " Rot in it · costs your turn" + n, plain: true }];
     if (c.k === "clock") return [{ key: "cls", label: "Mark Flaw", tag: "your next " + (r >= 4 ? 3 : 2) + " hits +2" + (r >= 3 ? ", criticals" : ", +1d6") + (r >= 2 ? " · advantage on the next swing" : "") + " · costs your turn" + n, plain: true }];
+    if (c.k === "kith") return [{ key: "cls", label: "Kithcall", tag: (st.kb && !st.kbDown ? st.kb.nm + " strikes with advantage" : co().burr && company().includes("burr") ? "Burr bites" : "something wild of this road answers") + (r >= 4 ? " · +2d6" : r >= 2 ? " · +1d6" : "") + " · +1 Rapport" + (r >= 5 ? " · then it guards your next blow" : "") + " · costs your turn" + n, plain: true }];
     if (c.k === "root") return (S.hp < S.maxHp || bleeds().length) ? [{ key: "cls", label: "Graft", tag: (r >= 4 ? "2d8" : "1d8") + " + " + Math.floor(lv() / 5) + " HP · next blow −" + (r >= 5 ? 3 : 2) + " · costs your turn" + n, plain: true }] : [];
     return [];
   }
@@ -32251,6 +32315,20 @@ body.in-fight.in-lab #bfx { background: none !important; }
       await say("You give ground, cut a live sliver from the root-knot at your belt, and lay it in the worst of it. It takes hold, the way roots do, and pulls the edges together.");
       await mech("Graft: regain " + (S.hp - b) + " HP, and the next blow on you is −" + st.clGraftN + ".", "loot");
       if (r >= 2 && bleeds().length) await bleedStop("The graft closes the bleeding.");
+    } else if (c.k === "kith") {
+      const extra = r >= 4 ? 2 : r >= 2 ? 1 : 0;
+      if (st.kb && !st.kbDown) {
+        await say("You call it the way only you call it, the sound only it answers, and " + st.kb.nm + " goes in as if it's been let off a chain.");
+        await kcBite(F, st, { adv: true });
+        if (r >= 5 && !st.kbDown) st.kcGuard = Math.max(st.kcGuard || 0, 1);
+      } else {
+        const wild = !(co().burr && company().includes("burr"));
+        await say(wild ? "You call into the dark, the old drovers' call, not knowing what will answer. Something does: a wild thing of this road comes in once out of nowhere, and is gone." : "You call, and Burr comes like a thrown stone.");
+        if (F.heads) { foeHit(1); comboKeep(); await mech((wild ? "It" : "Burr") + " takes one of them.", "loot"); } else await foeBurst(1, 8, Math.floor(lv() / 4), wild ? "Something wild" : "Burr");
+      }
+      if (extra && FOE.hp > 0 && !F.heads) await kcDeal(extra, 6, -Math.floor(dmgUp() / 2), "Kithcall");
+      if (clB("carrowmere") === "loose" && FOE.hp > 0 && !F.heads) { await say("Behind it, very faint, a grey hound runs in too, and out the other side."); await foeBurst(1, 4, -Math.floor(dmgUp() / 2), "The King's hound"); }
+      kcGain(st, 1);
     }
   }
   // Called on a hit, before the damage: Heartcleave's extra combo step.
@@ -32262,6 +32340,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
   // After your hit lands: the tempering note and the quiet strike.
   async function clAfterHit(st) {
+    if (st.kc != null) st.kcYou = true;
     if (FOE.hp <= 0) return;
     if (st.clTemper > 0) { st.clTemper--; await foeBurst(st.clTemperDie[0], st.clTemperDie[1], 0, "The tempered edge sings"); }
     if (FOE.hp > 0 && st.clQuietDmg) { const n = st.clQuietDmg; st.clQuietDmg = 0; await foeBurst(n, 6, 0, "Out of the quiet"); }
@@ -32341,7 +32420,12 @@ body.in-fight.in-lab #bfx { background: none !important; }
       edge: { name: "The Hourglass", style: "for those who end it in one stroke", mv: "Six Seconds Ago", kind: "crit", hit: 1, adv: true,
         say: "You're not there. You were never there. It died six seconds ago, and you're only now showing it where." },
       mend: { name: "The Pendulum", style: "for those who are never quite where the blow lands", mv: "Swing Back", kind: "heal", copy: true,
-        say: "You let the fight swing back, like a pendulum, to a moment when you were less hurt, and step out of it there." } }
+        say: "You let the fight swing back, like a pendulum, to a moment when you were less hurt, and step out of it there." } },
+    kith: {
+      edge: { name: "The Fang-Path", style: "for those who hunt as a pair", mv: "Run It Down", kind: "crit", hit: 1, adv: true, kith: true,
+        say: "You and your kith go in from two sides at once, the way the wild packs do it, and it can only watch one of you." },
+      mend: { name: "The Den-Path", style: "for those who lick their wounds together", mv: "Den-Warmth", kind: "heal", guard: 2, kith: true,
+        say: "You go down on one knee and your kith comes in against you, warm, and for a breath the two of you are a den, and nothing outside it matters." } }
   };
   const clPath = () => { const c = cl(); return c && c.path && CL_PATHS[c.k] ? CL_PATHS[c.k][c.path] : null; };
   const kinNeed = () => clRank() >= 4 ? 3 : 4;
@@ -32351,9 +32435,9 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const P = CL_PATHS[k][path], need = r >= 4 ? 3 : 4, ex = r >= 3 ? " +1d6" : "", hb = Math.floor(lv() / 4);
     const rc = "Kindles in a fight: a spark every round, and one more each time " + (P.kind === "crit" ? "a hit of yours lands" : "a blow lands on you") + "; ready at " + need + (r >= 5 ? ", and you start each fight with 1" : "") + ". It kindles again after you use it.";
     let t = "";
-    if (P.kind === "crit") t = "A swing" + (P.hit ? " at +" + P.hit : "") + (P.adv ? " with advantage" : "") + (P.sure ? " that hits on anything but a natural 1" : "") + ". If it lands, it's a critical: the damage dice are doubled" + ex + (P.hesk ? ", and against the Hesk it breaks their song" : "") + (P.thorn ? ", and the thorns stay in it: 1d6 more at the end of the next round" : "") + ".";
+    if (P.kind === "crit") t = "A swing" + (P.hit ? " at +" + P.hit : "") + (P.adv ? " with advantage" : "") + (P.sure ? " that hits on anything but a natural 1" : "") + ". If it lands, it's a critical: the damage dice are doubled" + ex + (P.hesk ? ", and against the Hesk it breaks their song" : "") + (P.thorn ? ", and the thorns stay in it: 1d6 more at the end of the next round" : "") + (P.kith ? ", and the one at your heel goes in with you, with advantage" : "") + ".";
     else if (P.copy) t = "Get back half the HP you've lost this fight (at least 2d6), and stop any bleeding. Costs your turn.";
-    else t = "Regain " + (P.big ? "3d8" : "2d8") + " + " + (P.big ? Math.floor(lv() / 3) : hb) + " HP" + (P.big || P.clean ? ", stop any bleeding" : "") + (P.clean ? ", clear your eyes" : "") + (P.guard ? ", and its next blow is −" + P.guard : "") + (P.dis ? ", and its next blow is at disadvantage" : "") + (P.ac ? ", and +2 AC against its next two blows" : "") + ". Costs your turn.";
+    else t = "Regain " + (P.big ? "3d8" : "2d8") + " + " + (P.big ? Math.floor(lv() / 3) : hb) + " HP" + (P.big || P.clean ? ", stop any bleeding" : "") + (P.clean ? ", clear your eyes" : "") + (P.guard ? ", and its next blow is −" + P.guard : "") + (P.dis ? ", and its next blow is at disadvantage" : "") + (P.ac ? ", and +2 AC against its next two blows" : "") + (P.kith ? ", and the one at your heel is healed too, or gets back up if it's down" : "") + ". Costs your turn.";
     return "<b>" + P.mv + "</b>: " + t + " " + rc;
   }
   function askPath() {
@@ -32387,7 +32471,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   }
   // The meter in the foe box.
   function renderKin() {
-    renderCx();
+    renderCx(); renderKc();
     const b = $("kinBox"); if (!b) return;
     const p = clPath(), st = FOE.on && FOE.F ? FOE.F.st : null;
     b.hidden = !p || !st;
@@ -32421,6 +32505,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (clRank() >= 3 && FOE.hp > 0) await foeBurst(1, 6, 0, p.mv);
     if (p.hesk && F.hesk && !st.clean) { st.clean = true; await mech("The note breaks their song: their blows no longer carry the Bloom this fight.", "loot"); }
     if (p.thorn && FOE.hp > 0 && !F.heads) st.kThorn = 1;
+    if (p.kith && FOE.hp > 0) await kcBite(F, st, { adv: true });
   }
   async function kinDo(F, st) {
     const p = clPath(); kinUse(st);
@@ -32437,6 +32522,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if ((p.big || p.clean || p.copy) && bleeds().length) await bleedStop("And the bleeding stops.");
     if (p.clean && blindNow()) { blindSet(0); await mech("Your eyes clear.", "loot"); }
     if (p.big && typeof lgVen === "function" && lgVen()) await lgCure(1, "The heartwood draws the poison out.");
+    if (p.kith) await kcDen(st);
   }
   // After a blow lands on you: the Mend paths spark, and Hold the Line blunts it.
   async function kinAfterBlow(st, hp0) {
@@ -32830,6 +32916,353 @@ body.in-fight.in-lab #bfx { background: none !important; }
     return "<b>" + cxName() + "</b>: +" + cxT(1) + " for each hit and each blow that misses you" + (r >= 3 ? ", +1 a round" : "") + ". Spend it on <b>" + (r >= 4 ? "Pendulum" : "Tick") + " Step</b> (" + cxT(1) + "), <b>Precision Strike</b> (" + (cxT(3) - (r >= 3 ? 1 : 0)) + ")" + (r >= 3 ? ", <b>Second Hand</b> (6)" : "") + (r >= 4 ? ", <b>Gear Lock</b> (8)" : "") + (r >= 5 ? ", <b>Stopped Midnight</b> (12)" : "") + (cxAsc() ? ", <b>The Verdict at Midnight</b> (10)" : "") + "." + (r >= 2 ? " Echo Cut: your hits land again a breath later." : "");
   }
 
+
+  // ---- the ninth calling: the Kithcaller ----
+  // Adrian's ask (24 Nov 2026): a beast master, "make it memorable". The name is the realm's own:
+  // "beast master" belongs to other games, and kith is the old word for the people you count as yours.
+  // Bring a road creature low and offer your hand instead of the axe: if it takes it, it joins your
+  // kith (S.cl.kith). One of them walks at your heel in a fight (S.cl.heel), with its own HP, its own
+  // dice from the bestiary, and the trick of its kind once your bond reaches 3. Burr, once you've met
+  // him, is the first of your kith and doesn't take a place. The heel beast goes in in round 1, and after every round your hit lands, at the top of the
+  // round, and the foe will sometimes turn on it instead of you. It never dies: a beast that falls
+  // limps off and rests until tomorrow. The meter in the foe box is Rapport (st.kc, max 8): +1 when
+  // your beast lands. Spend it on commands.
+  // Bond (0-10) grows one a win at your heel up to 3, then one for every two: 3 its trick, 6 steadfast (more HP and
+  // +2 AC), 10 kith-sworn (it starts every fight with 1 Rapport).
+  const KITH_MAX = 8;
+  const KITH_NAMES = ["Sorrel", "Wick", "Thistle", "Moss", "Cinder", "Patch", "Hob", "Nettle", "Brindle", "Rook", "Tansy", "Pebble", "Mallow", "Fennel", "Smudge", "Bramble", "Tolly", "Quill", "Dunny", "Pip", "Clove", "Gristle", "Muddle", "Lantern", "Sloe", "Corrie", "Dapple", "Tuck", "Hazel", "Grume", "Ember", "Saltbox", "Nib", "Furrow", "Kettle", "Ragwort"];
+  // The trick each kind brings, keyed by its bestiary quirk. It wakes at bond 3.
+  const KITH_TRICKS = {
+    burr: { name: "Old Friend", txt: "When Burr's bite lands, its next blow is −1, and he's never once been the one it turns on first.", foeMinus: 1, dodge: true },
+    latch: { name: "Hangs On", txt: "A bite that lands stays in: 1d4 more at the top of the next round.", echo: 4 },
+    regrow: { name: "Knits", txt: "It knits 3 HP back together every round.", regen: 3 },
+    skirmish: { name: "Hit and Run", txt: "Its glass scales: +3 AC, and the foe seldom bothers to turn on it.", acUp: 3, dodge: true },
+    thief: { name: "Light Fingers", txt: "When it lands on anything with a purse, it comes back with 1d4 gold.", gold: 4 },
+    brute: { name: "Heavy", txt: "It hits like a falling cart: +1d6 damage.", die: 6 },
+    accrete: { name: "Gathers Itself", txt: "It drags the road into itself as it fights: 3 HP back every round, and +1d4 on its blows.", regen: 3, die: 4 },
+    drain: { name: "Draws It Off", txt: "When its bite lands, it gives some of what it drank to you: regain 2 HP.", heal: 2 },
+    harden: { name: "Shell", txt: "Blows on it are halved.", half: true },
+    undertow: { name: "Undertow", txt: "When it lands, it drags: the foe's next blow is −2.", foeMinus: 2 },
+    scatter: { name: "Harry", txt: "It's always in the way: while it's up, the foe swings at −1.", harry: 1 },
+    caller: { name: "Calls Its Kind", txt: "Once a fight, at the top of round 2, another of its kind comes in for one bite.", call: true },
+    mirror: { name: "Many Faces", txt: "One blow in three aimed at it strikes a face that isn't there.", copy: true },
+    breath: { name: "Furnace", txt: "Every third round it breathes out its kiln: 2d6, no roll.", breath: true },
+    ambush: { name: "From Under", txt: "Its first bite each fight has advantage and double dice.", first: true },
+    shear: { name: "Shears", txt: "A bite that lands leaves a deep cut: 1d6 more at the top of the next round.", echo: 6 },
+    fade: { name: "Shadow", txt: "Its bites have advantage.", adv: true },
+    tug: { name: "Tug", txt: "Once a fight, a bite that lands pulls the foe's guard down: its next blow is at disadvantage.", dis: true },
+    plunge: { name: "Drop", txt: "Its first bite each fight has advantage and double dice.", first: true },
+    brine: { name: "Salt Sting", txt: "When it lands, salt gets in its eyes: the foe's next blow is −1.", foeMinus: 1 },
+    choke: { name: "Strangle", txt: "Once a fight, a bite that lands on a single foe holds it: it loses its next turn, 1 time in 3.", stun: 3 },
+    lunge: { name: "Reach", txt: "It strikes from further off than it looks: +2 to hit.", hitUp: 2 },
+    jolt: { name: "Jolt", txt: "Once a fight, a bite that lands stuns the foe 1 time in 4: it loses its next turn.", stun: 4 },
+    mob: { name: "Flock", txt: "Against many, it takes two of them at once.", heads2: true },
+    mute: { name: "Hush", txt: "Once a fight, a bite that lands takes the foe's voice: its next blow is at disadvantage.", dis: true },
+    hatch: { name: "Brood", txt: "Every fourth round its brood bites too: 1d4, no roll.", brood: true }
+  };
+  const KITH_LINES = {
+    hit: ["{N} goes in low and fast and gets its teeth into {F}", "{N} comes round your legs and into {F} before {F} has seen it", "{N} hits {F} from the side, and hangs on, and lets go only when it's ready", "{N} goes for {F} the way its kind always has, and its kind has always been good at it"],
+    miss: ["{N} goes in and finds nothing to hold", "{N} snaps at {F}, and gets air", "{N} circles, looking for a way in, and doesn't find one yet"]
+  };
+  const kithOn = () => clIs("kith");
+  const kithList = () => (S.cl.kith = S.cl.kith || []);
+  const kithCap = () => 1 + clRank() + (hasGear("cl_keep_kith") ? 1 : 0);
+  const kithBurrE = () => (S.cl.burr = S.cl.burr || { u: "burr", id: "burr", nm: "Burr", wins: 0 });
+  function kithAll() {
+    if (!kithOn() || rmIn()) return [];
+    const L = kithList().slice();
+    if (co().burr && !coSolo()) L.unshift(kithBurrE());
+    return L;
+  }
+  const kResting = (k) => (k.out || 0) > calDay();
+  function kStat(k) {
+    if (k.id === "burr") return { kind: "your dog", ac: 13, atk: 4, n: 1, s: 6, base: 20, quirk: "burr" };
+    const B = beastById(k.id) || {};
+    return { kind: B.name || "creature", ac: B.ac || 12, atk: B.atk || 4, n: B.n || 1, s: B.s || 6, base: B.hp || 6 * (B.heads || 2), quirk: B.quirk };
+  }
+  const kBond = (k) => k.id === "burr" ? Math.min(10, bondOf("burr") * 2) : (k.bond || 0);
+  const kMax = (k) => kStat(k).base + Math.floor(lv() / 2) + 2 * kBond(k) + (kBond(k) >= 6 ? 6 : 0);
+  const kTrick = (k) => kBond(k) >= 3 ? KITH_TRICKS[kStat(k).quirk] || null : null;
+  // About a third of your own blow (balance pass, fight-lab 24 Nov): it hits like its kind, a little better
+  // as you level and bond, and without foeBurst's level bonus (it's a beast, not your blade).
+  const kAtk = (k, F) => kStat(k).atk + Math.floor(lvHit() / 2) + Math.floor(kBond(k) / 4) + (k.dream ? 1 : 0) +
+    (k.id !== "burr" && co().burr && bondOf("burr") >= 5 && !coSolo() ? 1 : 0) + (F && F.hesk && clB("corrach") === "sing" ? 2 : 0);
+  const kDmg = (k) => Math.floor(kBond(k) / 4) + (k.dream ? 2 : 0) - (FOE.on ? Math.floor(dmgUp() / 2) : 0);
+  // A bite lands: into the silver bar first, like your own blows (foeBurst would go round it).
+  async function kcDeal(c, s, b, label) {
+    if (!(FOE.ar > 0)) return foeBurst(c, s, b, label);
+    b += Math.floor(dmgUp() / 2);
+    let t = b; const rolls = [];
+    for (let i = 0; i < c; i++) { const r = d(s); rolls.push(r); t += r; }
+    t = Math.max(1, t);
+    const soak = Math.min(FOE.ar, t), thru = t - soak;
+    FOE.ar -= soak; FOE.hp = Math.max(0, FOE.hp - thru); comboKeep(); renderFoe(); foePop("−" + t);
+    await mech(label + ": " + c + "d" + s + (b ? " " + sign(b) : "") + " → " + rolls.join(" + ") + (b ? " " + sign(b) : "") + " = " + t + " (" + soak + " into its armour" + (thru ? ", " + thru + " through" : "") + "). " + FOE.name + (FOE.hp ? ": " + FOE.hp + " HP left." : " is down."), "loot");
+    return t;
+  }
+  const kName = (k) => k.id === "burr" ? "Burr" : k.nm + " the " + kStat(k).kind.replace(/s$/, "");
+  const kLine = (set, k, F) => KITH_LINES[set][d(KITH_LINES[set].length) - 1].split("{N}").join(k.nm).split("{F}").join(F.heads ? "them" : F.who);
+  function kithHeel() {
+    const A = kithAll().filter(k => !kResting(k));
+    return A.find(k => k.u === S.cl.heel) || A.find(k => k.id !== "burr") || A[0] || null;
+  }
+  // The meter in the foe box: Rapport, and who's at your heel.
+  function renderKc() {
+    const b = $("kcBox"); if (!b) return;
+    const st = FOE.on && FOE.F ? FOE.F.st : null;
+    b.hidden = !kithOn() || !st || st.kc == null;
+    if (b.hidden) return;
+    const n = Math.min(KITH_MAX, st.kc), k = st.kb;
+    $("kcLbl").textContent = "Rapport";
+    $("kcNote").textContent = "●".repeat(n) + "○".repeat(KITH_MAX - n) + (k ? " · " + k.nm + (st.kbDown ? " (down)" : " " + Math.max(0, st.kbHp) + "/" + st.kbMax) : " · nobody at heel");
+  }
+  function kcGain(st, n) { if (st.kc == null || n <= 0) return; st.kc = Math.min(KITH_MAX, st.kc + n); renderKc(); tip("rapport"); }
+  function kcPay(st, n) { st.kc = Math.max(0, st.kc - n); renderKc(); }
+  function kcStart(F, st) {
+    if (!kithOn()) return;
+    st.kc = (clRank() >= 5 ? 1 : 0); st.kcOnce = {}; st.kcF = F;
+    st.kb = kithHeel();
+    if (st.kb) { st.kbMax = kMax(st.kb); st.kbHp = st.kbMax; if (kBond(st.kb) >= 10) st.kc++; tip("kith"); }
+    renderKc();
+  }
+  // Its own strike. o: { adv, big (double dice), hit, k (another of your kith, for The Kith Answers) }.
+  async function kcBite(F, st, o = {}) {
+    const k = o.k || st.kb; if (!k || (!o.k && st.kbDown) || FOE.hp <= 0) return false;
+    const T = kStat(k), tr = kTrick(k), first = !!(tr && tr.first && !st.kbFirst && !o.k);
+    const adv = !!o.adv || !!(tr && tr.adv) || first;
+    let r = d(20); if (adv) r = Math.max(r, d(20));
+    const tot = r + kAtk(k, F) + (o.hit || 0) + (tr && tr.hitUp || 0);
+    if (r === 1 || (r !== 20 && tot < F.ac)) { await say(kLine("miss", k, F) + "."); return false; }
+    if (!o.k) st.kbFirst = true;
+    await say(kLine("hit", k, F) + ".");
+    if (F.heads) {
+      const n = Math.min(FOE.hp, 1 + (tr && tr.heads2 ? 1 : 0) + (o.big ? 1 : 0));
+      foeHit(n); comboKeep();
+      await mech(k.nm + " takes " + (n > 1 ? n + " of them" : "one of them") + " down. " + FOE.name + ": " + FOE.hp + " left.", "loot");
+    } else {
+      const mul = (o.big ? 2 : 1) * (first ? 2 : 1);
+      await kcDeal(T.n * mul, T.s, kDmg(k) + (r === 20 ? T.s : 0), k.nm + (r === 20 ? " (a perfect bite)" : "") + (first ? " (" + tr.name + ")" : ""));
+      if (tr && tr.die && FOE.hp > 0) await kcDeal(1, tr.die, -Math.floor(dmgUp() / 2), k.nm + " (" + tr.name + ")");
+    }
+    if (o.k) return true;
+    kcGain(st, 1);
+    if (st.kcYou && !st.kcTog) { st.kcTog = true; await mech("Together: you opened it up, and " + k.nm + " went straight in where you did.", "combo"); grant("kith_together"); }
+    if (FOE.hp <= 0 || !tr) return true;
+    if (tr.echo && !F.heads) st.kcEcho = [tr.echo, tr.name];
+    if (tr.heal && S.hp < hpCap()) { const b = S.hp; S.hp = Math.min(hpCap(), S.hp + tr.heal); renderSheet(); await mech(tr.name + ": " + k.nm + " gives you some of it. Regain " + (S.hp - b) + " HP.", "loot"); }
+    if (tr.foeMinus) st.kcMinus = Math.max(st.kcMinus || 0, tr.foeMinus);
+    if (tr.gold && (F.person || /men|guard|watch|raider|pirate|hand|bandit|gang/i.test(F.name || ""))) { const g = d(tr.gold); S.coins += g; renderSheet(); await mech(tr.name + ": " + k.nm + " comes back with " + g + " gold in its mouth.", "loot"); }
+    if (tr.dis && !st.kcOnce.dis) { st.kcOnce.dis = true; st.clDis = (st.clDis || 0) + 1; await mech(tr.name + ": its next blow is at disadvantage.", "loot"); }
+    if (tr.stun && !st.kcOnce.stun && !F.heads && d(tr.stun) === 1) { st.kcOnce.stun = true; st.stilled = true; await mech(tr.name + ": " + k.nm + " holds it. It loses its next turn.", "loot"); }
+    return true;
+  }
+  // The top of every round: the brood, the breath, a bite that stayed in, then your beast goes in.
+  async function kcRound(F, st) {
+    if (st.kc == null) return;
+    const k = st.kb, tr = k && !st.kbDown ? kTrick(k) : null;
+    if (st.kcEcho && FOE.hp > 0) { const e = st.kcEcho; st.kcEcho = null; await foeBurst(1, e[0], -Math.floor(dmgUp() / 2), e[1] + ": it's still in there"); if (FOE.hp <= 0) return; }
+    if (!k || st.kbDown) { st.kcYou = false; return; }
+    if (tr && tr.regen && st.kbHp < st.kbMax) { st.kbHp = Math.min(st.kbMax, st.kbHp + tr.regen); renderKc(); }
+    if (tr && tr.breath && st.round % 3 === 0 && FOE.hp > 0) { await say(k.nm + " opens its mouth, and the kiln inside it opens too."); if (F.heads) { foeHit(1); comboKeep(); await mech("The breath takes one of them.", "loot"); } else await foeBurst(2, 6, -Math.floor(dmgUp() / 2), k.nm + "'s furnace"); if (FOE.hp <= 0) return; }
+    if (tr && tr.brood && st.round % 4 === 0 && FOE.hp > 0) { await foeBurst(1, 4, -Math.floor(dmgUp() / 2), k.nm + "'s brood"); if (FOE.hp <= 0) return; }
+    if (tr && tr.call && st.round === 2 && FOE.hp > 0) { await say("Something answers " + k.nm + " out of the dark: another of its kind, wild, that comes in for one bite and is gone."); await kcBite(F, st, { k: { id: k.id, nm: "Its wild cousin", bond: 0 } }); if (FOE.hp <= 0) return; }
+    // It goes in where you opened it: the first round, and after any round your own hit landed. Otherwise it circles.
+    if (st.round === 1 || st.kcYou) await kcBite(F, st);
+    else if (FOE.hp > 0) await say(k.nm + " circles, low, waiting for you to open " + (F.heads ? "them" : F.who) + " up.");
+    st.kcYou = false;
+  }
+  // Before its blow: harried, dragged, salted.
+  function kcSwingMod(st) {
+    let bonus = 0;
+    if (st.kcHarry > 0) { st.kcHarry--; bonus -= 2; }
+    if (st.kcMinus) { bonus -= st.kcMinus; st.kcMinus = 0; }
+    const tr = st.kb && !st.kbDown ? kTrick(st.kb) : null;
+    if (tr && tr.harry) bonus -= tr.harry;
+    return bonus;
+  }
+  // Sometimes it goes for your beast instead (always, while it's guarding you). True if the blow went there.
+  async function kcTakes(F, st, n, s, bonus) {
+    const k = st.kb; if (st.kc == null || !k || st.kbDown || FOE.hp <= 0) return false;
+    const tr = kTrick(k), guard = st.kcGuard > 0;
+    if (!guard && !(d(6) === 1 && !(tr && tr.dodge))) return false;
+    if (guard) st.kcGuard--;
+    const what = (F.heads ? "One of them" : F.who[0].toUpperCase() + F.who.slice(1));
+    if (tr && tr.copy && d(3) === 1) { await say(what + " goes for " + k.nm + ", and hits a face that isn't there."); return true; }
+    const r = d(20), ac = kStat(k).ac + (guard ? 2 : 0) + (kBond(k) >= 6 ? 2 : 0) + (tr && tr.acUp || 0);
+    await say(guard ? k.nm + " plants itself between you and the blow." : what + " turns on " + k.nm + ".");
+    if (r === 1 || (r !== 20 && r + bonus < ac)) { await mech("It misses " + k.nm + " (" + (r + bonus) + " against AC " + ac + ").", "loot"); return true; }
+    let dmg = roll(n, s) + (FOE.on && FOE.lvd ? foeDmgUp() : 0);
+    if (tr && tr.half) dmg = Math.max(1, Math.floor(dmg / 2));
+    st.kbHp -= dmg; renderKc();
+    if (st.kbHp > 0) { await mech(k.nm + " takes it: " + dmg + " damage (" + st.kbHp + " of " + st.kbMax + " left)" + (tr && tr.half ? ", halved by its shell" : "") + ".", "hurt"); return true; }
+    st.kbDown = true; st.kcGuard = 0; k.out = calDay() + 1; renderKc();
+    await say(k.nm + " goes down, and gets up, and limps off the field with its head low. It'll live. It always lives. But it's done for today.");
+    await mech(k.nm + " is out of this fight, and rests until tomorrow.", "hurt");
+    return true;
+  }
+  // The Mend path's heal reaches your beast too, and gets it back up.
+  async function kcDen(st) {
+    const k = st.kb; if (!k) return;
+    if (st.kbDown) { st.kbDown = false; k.out = 0; st.kbHp = Math.ceil(st.kbMax / 2); renderKc(); await mech(k.nm + " limps back to you, and lies against you, and gets up again: back in the fight at half its HP.", "loot"); return; }
+    if (st.kbHp < st.kbMax) { const b = st.kbHp; st.kbHp = Math.min(st.kbMax, st.kbHp + roll(2, 8) + Math.floor(lv() / 4)); renderKc(); await mech(k.nm + " regains " + (st.kbHp - b) + " HP.", "loot"); }
+  }
+  // Can you offer your hand? A road creature, low enough, and not a Nightmare still on its threads.
+  function kcTameable(F) {
+    if (!kithOn() || !F.bid || F.tamed) return false;
+    const B = beastById(F.bid); if (!B || B.unique) return false;
+    if (FOE.dreadOn && FOE.threads > 0) return false;
+    return F.heads ? FOE.hp <= 1 : FOE.hp <= Math.ceil(FOE.max * 0.4);
+  }
+  const kcTameDc = (F, st) => { const B = beastById(F.bid); return B.notice + Math.floor((TIER[B.region] || 0) / 3) + (FOE.dreadOn ? 2 : 0) + 2 * (st.kcTry || 0); };
+  const kcTameMod = (F) => 2 + Math.floor(lv() / 6) + (hasGear("kithwhistle") ? 2 : 0) + (hasGear("drownwhistle") ? 2 : 0) + (co().burr && company().includes("burr") ? 1 : 0) + (!F.heads && FOE.hp <= Math.ceil(FOE.max * 0.2) ? 2 : 0);
+  function kcOpts(F, st) {
+    if (st.kc == null) return [];
+    const r = clRank(), n = st.kc, o = [], k = st.kb, up = k && !st.kbDown, noAtk = (F.noAtk && F.noAtk(st)) || st.rmNoAtk;
+    const add = (key, cost, label, tag, show = true) => { if (show && n >= cost) o.push({ key, label, tag: cost + " Rapport · " + tag, plain: true }); };
+    if (kcTameable(F)) o.push({ key: "kc-tame", label: "Offer your hand", tag: "Nature · DC " + kcTameDc(F, st) + " · it joins your kith instead of dying" + (kithList().length >= kithCap() ? " · your kith is full: you'd let one go" : "") + " · costs your turn", plain: true });
+    if (up) {
+      add("kc-harry", 2, "Harry it", k.nm + " worries at it · its next 2 blows are −2 · " + k.nm + " bites with advantage · costs your turn");
+      add("kc-guard", 3, "Guard me", "the next 2 blows aimed at you go for " + k.nm + " instead, at +2 AC · costs your turn", !(st.kcGuard > 0));
+      add("kc-rend", 3, "Go for the throat", k.nm + " strikes with advantage and double dice · costs your turn");
+      if (r >= 3) add("kc-s-two", 4, "Two as One", "a swing at +2 with advantage · if it lands, " + k.nm + " goes in too, and it counts twice toward your combo", !noAtk);
+    }
+    const others = kithAll().filter(x => x !== k && !kResting(x));
+    if (r >= 4) add("kc-all", 6, "The Kith Answers", "once a fight · every one of your kith who isn't resting comes out of the dark and strikes once, with advantage (" + (others.length + (up ? 1 : 0)) + ") · costs your turn", !st.kcOnce.all && others.length + (up ? 1 : 0) > 0);
+    if (r >= 5) add("kc-accord", 8, "The Old Accord", "once a fight · every kind you've ever tamed answers: 1d8 for each (" + Math.max(1, (S.cl.kinds || []).length) + ") · it loses its next turn · costs your turn", !st.kcOnce.accord);
+    others.slice(0, 2).forEach(x => o.push({ key: "kc-swap-" + x.u, label: "Whistle up " + x.nm, tag: kStat(x).kind + " · bond " + kBond(x) + (kTrick(x) ? " · " + kTrick(x).name : "") + " · " + (up ? k.nm + " drops back · " : "") + "costs your turn", plain: true }));
+    return o;
+  }
+  async function kcDo(c, F, st) {
+    const r = clRank(), k = st.kb;
+    if (c === "kc-tame") {
+      const B = beastById(F.bid);
+      await say(["You let the axe hang, and go down on your heels, and hold out your hand, open, the way the old drovers did. It's the hardest thing you've done all day.", "You lower the axe. You don't drop it: you're not a fool. But you hold out your other hand, palm up, and make the sound the kennel-wives made, low in your throat."][d(2) - 1]);
+      const a = await check({ label: "Nature check (offering your hand to " + (F.heads ? "the last of them" : F.who) + ")", mod: kcTameMod(F), dc: kcTameDc(F, st), cta: "Offer" });
+      if (!a.ok) {
+        st.kcTry = (st.kcTry || 0) + 1; st.winded = true;
+        await say("It looks at your hand, and then it goes for it.");
+        await mech("Not yet: its next swing has advantage, and the next try is 2 harder.", "hurt");
+        return;
+      }
+      F.tamed = B.id; FOE.hp = 0; renderFoe();
+      await say(F.heads ? "The last of them stops. It looks round at the others, lying still, and then at your hand. Then it comes, slowly, and pushes its head under your fingers." : "It stops. It stands there breathing, hurt, with its head low, and looks at your hand for a long time. Then it comes the last step on its own.");
+      return;
+    }
+    if (c === "kc-harry") {
+      kcPay(st, 2); st.kcHarry = 2;
+      await say("You whistle, two notes, and " + k.nm + " starts to work: in and out, at the heels, at the eyes, never where it's looking.");
+      await kcBite(F, st, { adv: true });
+      if (FOE.hp > 0) await mech("Harried: its next 2 blows are −2.", "loot");
+      return;
+    }
+    if (c === "kc-guard") {
+      kcPay(st, 3); st.kcGuard = 2;
+      await say("\"Guard,\" you say, and " + k.nm + " comes round in front of you and stands there, low, looking at " + (F.heads ? "them" : F.who) + ".");
+      await mech("Guard me: the next 2 blows aimed at you go for " + k.nm + " instead, at +2 AC.", "loot");
+      return;
+    }
+    if (c === "kc-rend") {
+      kcPay(st, 3);
+      await say("You point. That's all. " + k.nm + " has been waiting all fight for you to point.");
+      await kcBite(F, st, { adv: true, big: true });
+      return;
+    }
+    if (c === "kc-s-two") {
+      kcPay(st, 4);
+      await say("You and " + k.nm + " go in together, from two sides, the way you've done it a hundred times, and it can only watch one of you.");
+      const a = await check({ label: "Two as One (" + (wpnKey() === "axe" ? "axe" : wDef(wpnKey()).name) + ")" + fdHitTxt(st), mod: (S.dull ? 4 : 5) + rxHit() + fdHit(st) + 2, dc: F.ac - lgAcCut(), target: "AC", adv: true, cta: "Strike" });
+      st.adv = false; st.dis = false;
+      if (!a.ok) { await say("It turns from both of you at once, somehow. Missed."); return; }
+      kinSpark(st);
+      if (F.heads) { foeHit(Math.min(FOE.hp, await comboHeads(FOE.hp - 1))); await say(F.hitLine || "One of them goes down and stays down."); }
+      else { FOE.chain = Math.min(3, FOE.chain + 1); renderFoe(); await foeStrike(1, 8, (S.dull ? 2 : 3) + (S.whet ? 1 : 0) + rxDmg() + fdDmg(st), "Axe damage (Two as One)"); }
+      await clAfterHit(st);
+      if (FOE.hp > 0) await kcBite(F, st, { adv: true });
+      return;
+    }
+    if (c === "kc-all") {
+      kcPay(st, 6); st.kcOnce.all = true; S.cl.answer = (S.cl.answer || 0) + 1; grant("kith_answer");
+      const all = kithAll().filter(x => !kResting(x) && (x !== k || !st.kbDown));
+      await say("You put two fingers in your mouth and whistle the long whistle, the one you've never used, and out of the dark on every side your kith come: " + all.map(x => x.nm).join(", ") + ". Every one of them.");
+      for (const x of all) { if (FOE.hp <= 0) break; await kcBite(F, st, { adv: true, k: x }); }
+      if (FOE.hp > 0) await say("And they're gone again, back into the dark, all but " + (k && !st.kbDown ? k.nm : "the echo of them") + ".");
+      return;
+    }
+    if (c === "kc-accord") {
+      kcPay(st, 8); st.kcOnce.accord = true; grant("kith_accord");
+      const n = Math.max(1, (S.cl.kinds || []).length);
+      await say("You don't whistle. You just stand still and remember them: every wild thing that ever looked at your open hand and chose it. The road remembers too. The ground shakes with hooves and claws and wings that aren't there, and they go through " + (F.heads ? "them" : F.who) + " like weather.");
+      if (F.heads) { const m = Math.min(FOE.hp, 1 + Math.floor(n / 3)); foeHit(m); comboKeep(); await mech("The Old Accord: " + m + " of them go down.", "loot"); }
+      else await foeBurst(n, 8, Math.floor(lv() / 4), "The Old Accord (" + n + " kind" + (n > 1 ? "s" : "") + ")");
+      if (FOE.hp > 0) { st.stilled = true; await mech("It stands in the wake of them, shaken: it loses its next turn.", "loot"); }
+      return;
+    }
+    if (c.startsWith("kc-swap-")) {
+      const x = kithAll().find(y => y.u === c.slice(8)); if (!x) return;
+      S.cl.heel = x.u;
+      if (k && !st.kbDown) await say(k.nm + " drops back to the edge of the fight, panting, and " + x.nm + " comes up past it.");
+      else await say("You whistle " + x.nm + "'s whistle, and " + x.nm + " comes.");
+      st.kb = x; st.kbDown = false; st.kbMax = kMax(x); st.kbHp = st.kbMax; st.kbFirst = false; st.kcGuard = 0;
+      renderKc();
+      await mech(kName(x) + " is at your heel: " + st.kbHp + " HP, bond " + kBond(x) + (kTrick(x) ? ", " + kTrick(x).name + " (" + kTrick(x).txt + ")" : "") + ".", "loot");
+    }
+  }
+  // After the fight: the bond grows with the wins you've had together.
+  async function kcAfterFight(F, st) {
+    if (!st || st.kc == null) return;
+    const k = st.kb, won = FOE.hp <= 0 && !st.fled && !F.tamed;
+    if (!k || st.kbDown || !won) return;
+    k.wins = (k.wins || 0) + 1;
+    if (k.id === "burr") { if (k.wins >= 20) grant("kith_burr"); return; }
+    // A bond a win to start with (the trick comes after three), then one for every two.
+    if ((k.bond || 0) >= 10 || ((k.bond || 0) >= 3 && k.wins % 2)) return;
+    k.bond = (k.bond || 0) + 1;
+    const T = KITH_TRICKS[kStat(k).quirk];
+    await mech(k.nm + "'s bond +1, to " + k.bond + " of 10." + (k.bond === 3 && T ? " It has learned to trust you with its trick: <b>" + T.name + "</b>. " + T.txt : k.bond === 6 ? " <b>Steadfast</b>: more HP, and +2 AC." : k.bond === 10 ? " <b>Kith-sworn.</b> It starts every fight with you with 1 Rapport." : ""), "loot");
+    if (k.bond === 10) { grant("kith_bond"); await say(k.nm + " lies down across your feet at camp that night, the whole weight of it, and won't move, and you don't make it."); }
+  }
+  // A new one joins: name it, and make room. o: { nm, dream, why }.
+  async function kithJoin(B, o = {}) {
+    const L = kithList();
+    let nm = o.nm;
+    if (!nm) {
+      const pool = KITH_NAMES.filter(x => !L.some(k => k.nm === x)), pick = [];
+      while (pick.length < 3 && pool.length) pick.push(pool.splice(d(pool.length) - 1, 1)[0]);
+      await say("It needs a name. It's never had one.");
+      const c = await choose(pick.map(x => ({ key: x, label: x })).concat([{ key: "-", label: "Just call it " + B.name.replace(/s$/, ""), plain: true }]));
+      nm = c === "-" ? B.name.replace(/s$/, "") : c;
+    }
+    if (L.length >= kithCap()) {
+      await say("Your kith is as big as you can keep. One of them has to go back to the road.");
+      const c = await choose(L.map(k => ({ key: k.u, label: "Let " + k.nm + " go", tag: kStat(k).kind + " · bond " + kBond(k), plain: true })).concat([{ key: "new", label: "Let " + nm + " go instead", tag: "it goes back to the wild, owing you" }]));
+      if (c === "new") { await say("You take your hand away. It looks at you a while, and then it goes, and looks back once, from the edge of the road."); (S.cl.freed = S.cl.freed || []).push(B.id); grant("kith_free"); kithKind(B, o.dream); save(); return; }
+      const g = L.find(k => k.u === c);
+      L.splice(L.indexOf(g), 1);
+      (S.cl.freed = S.cl.freed || []).push(g.id); grant("kith_free");
+      await say("You take " + g.nm + "'s collar off, if it has one, or just put your hand on its head a last time if it doesn't. " + g.nm + " goes a little way, and stops, and looks back at you. Then it goes. Somewhere on the road, for the rest of your life, there'll be one wild thing that knows your name.");
+    }
+    const k = { u: "k" + Date.now().toString(36) + d(999), id: B.id, nm, bond: hasGear("drownwhistle") ? 1 : 0, wins: 0, day: calDay(), dream: !!o.dream };
+    L.push(k); S.cl.heel = k.u;
+    kithKind(B, o.dream);
+    renderSheet(); save();
+    await mech("<b>" + kName(k) + "</b> joins your kith (" + L.length + " of " + kithCap() + "), and walks at your heel. " + kMax(k) + " HP, hits for " + kStat(k).n + "d" + kStat(k).s + ". At bond 3 it learns its kind's trick: <b>" + (KITH_TRICKS[kStat(k).quirk] || { name: "its own" }).name + "</b>." + (k.dream ? " A thread of Cascade-silver stays in its eyes: it hits harder for it." : ""), "loot");
+  }
+  function kithKind(B, dream) {
+    S.cl.kinds = S.cl.kinds || [];
+    if (!S.cl.kinds.includes(B.id)) S.cl.kinds.push(B.id);
+    J.beasts = J.beasts || {}; const e = J.beasts[B.id] || (J.beasts[B.id] = { met: 1, beaten: 0 }); e.tamed = (e.tamed || 0) + 1; jSave();
+    grant("kith_first");
+    if (S.cl.kinds.length >= 5) grant("kith_five");
+    if (S.cl.kinds.length >= 10) grant("kith_ten");
+    if (dream) grant("kith_dream");
+  }
+  // On the bag and the journal.
+  function kithTxt() {
+    const all = kithAll(), L = kithList();
+    if (!all.length) return "Nobody yet. Bring a road creature below two-fifths of its HP (the last of a pack) and <b>Offer your hand</b>.";
+    return all.map(k => "<b>" + kName(k) + "</b>" + (k.u === (kithHeel() || {}).u ? " (at heel)" : "") + (kResting(k) ? " (resting)" : "") + ": bond " + kBond(k) + (k.id === "burr" ? " (Burr's bond × 2)" : " of 10") + ", " + kMax(k) + " HP, " + kStat(k).n + "d" + kStat(k).s + (kTrick(k) ? ", " + kTrick(k).name + " (" + kTrick(k).txt + ")" : "")).join("; ") + ". Room for " + kithCap() + " beside Burr (" + L.length + " now). Kinds tamed this journey: " + (S.cl.kinds || []).length + ".";
+  }
+
   // ---- the road into six chapters ----
   const clHead = (t) => { const C = CALLINGS[S.cl.k]; const h = el("div", "part-head sub", '<span class="num">' + C.name + "</span><h2>" + t + "</h2>"); scrollNext = true; add(h); };
   const sayV = (t) => say(t, "voice");
@@ -33127,6 +33560,54 @@ body.in-fight.in-lab #bfx { background: none !important; }
         else { S.coins += 30; renderSheet(); await say("The smuggler pays in good silver and runs three boats of brandy through the gap before the city knows there is one."); await mech("Gain 30 gold.", "loot"); }
         return c; } },
       unmapped: { t: "The Last Tick", run: async () => clLast("clock") }
+    },
+    kith: {
+      desert: { t: "The Glass Foal", run: async () => {
+        await say("In the lee of a dune somebody has dug out a duneskimmer's nest and smashed it: a caravan's work, by the boot-prints, after the shiny things duneskimmers hoard. One egg came through it, cracked. What came out is a glass-scaled lizard no longer than your forearm, skating in little circles round its dead brood-mates, looking for something to keep.");
+        await say("It finds your belt buckle, and lies down on your boot to guard it.");
+        const c = await choose([{ key: "take", label: "Take it with you", tag: "it'll grow · your first kith after Burr" }, { key: "dune", label: "Carry it out to the deep dunes and let it go", tag: "an afternoon's walk", plain: true }, { key: "sell", label: "Sell it to the caravan master", tag: "he collects them · 2d6 + gold", plain: true }]);
+        if (c === "take") { await say("It rides in your pack with its head out, all the way to the caravanserai, and bites the first driver who looks in."); await kithJoin(beastById("skimmer")); }
+        if (c === "dune") { xpGain(35); await say("You walk it out past the last caravan track, to where the dunes are tall and nobody digs, and put it down. It skates off, stops, skates back, drops a bright pebble on your boot, and goes."); }
+        if (c === "sell") await gold(2, 6, "The caravan master turns it over in his hands, and smiles, and pays. He has a cage of them behind the stables, it turns out. They sell well in the cities, for their scales.");
+        return c; } },
+      carrowmere: { t: "The Drowned Kennels", run: async () => {
+        await say("Under the drowned castle's outer wall the king's kennels are still standing, knee-deep in black water. His hounds were chained in them the night the floodgates opened, and they're still there: grey water-shapes of dogs, lying in their stalls, lifting their heads as you wade in.");
+        await say("Nobody ever came to let them off. At the back, the kennel-master's whistle hangs on its nail, the silver gone black.");
+        const c = await choose([{ key: "loose", label: "Unchain them, one by one", tag: "an hour in cold water · they've waited long enough" }, { key: "whistle", label: "Take the kennel-master's whistle", tag: "+2 to tame · every new beast starts at bond 1", plain: true }]);
+        if (c === "loose") { xpGain(45); await say("Every chain you lift, a shape stands up and shakes itself, and the water goes out of it, and it's gone, running, out across the lake toward the far shore, baying like the first morning of a hunt. The last one waits for you at the door, and licks your hand, cold as the lake, and goes."); await mech("The King's hounds run with you: from now on, when you Kithcall, a grey hound runs in too (1d4).", "loot"); }
+        if (c === "whistle") { S.gear = S.gear || []; S.gear.push("drownwhistle"); renderSheet(); await say("When you lift it off the nail, every grey head in the kennels turns to watch you, and then, one by one, they lie back down. They know whose it was. They'll wait for him a while longer."); await mech("<b>" + GEAR.drownwhistle.name + ".</b> " + GEAR.drownwhistle.desc, "loot"); }
+        return c; } },
+      assize: { t: "The Mastiff on Trial", run: async () => {
+        await say("Sulmara tries its animals the way it tries its people: with a jury, a glass-robed judge and a sentence. In the fourth court a kiln-mastiff called Coker is in the dock, chained to a ring, his belly glowing like a banked furnace. He bit a glass-lord's son. The sentence for biting a glass-lord is glassing.");
+        await say("A kiln-girl of about twelve, Nan Forrow, is sitting in the front row with her fists in her lap. Coker is hers. You look at the glass-lord's son, at the burn-scars on his hands, at the hot iron poker his man is still carrying, and at the brand-marks on the mastiff's flank.");
+        const c = await choose([{ key: "defend", label: "Stand up and speak for the dog", tag: "Insight · DC 14 · show the court what you see" }, { key: "buy", label: "Pay the court's blood-price and take the dog", tag: S.coins >= 20 ? "20 gold" : "you don't have it", show: S.coins >= 20, plain: true }, { key: "leave", label: "It isn't your court", plain: true }]);
+        if (c === "defend") {
+          const r = await check({ label: "Insight check (reading the glass-lord's son)", mod: 2, dc: 14, cta: "Speak" });
+          if (r.ok) {
+            await say("You ask the son to show the court his hands. He won't. You ask his man why he carries a hot poker in a court of law. He can't say. The jury goes out for the time it takes to drink a cup of water, and comes back, and Coker is not guilty.");
+            await say("Nan Forrow can't keep him: the glass-lord's family would have him poisoned inside a week, and everybody knows it. She puts his chain in your hand herself. \"He likes the warm side of the fire,\" she says, \"and he's afraid of geese.\"");
+            xpGain(30); await kithJoin(beastById("mastiff"), { nm: "Coker" }); return "won";
+          }
+          await say("You say what you see. The court hears a stranger from the roads insulting a glass-lord's son. The judge doesn't even send the jury out. They glass Coker that afternoon, in the Hall of Verdicts, and he's there still, mid-bark, with the light coming through him.");
+          return "lost";
+        }
+        if (c === "buy") { S.coins -= 20; renderSheet(); await say("The clerk counts your coins twice and writes Coker out of the rolls as property of the roads. Nan Forrow cries, and then puts his chain in your hand. \"He likes the warm side of the fire,\" she says, \"and he's afraid of geese.\""); await kithJoin(beastById("mastiff"), { nm: "Coker" }); }
+        if (c === "leave") await say("You go out into the street. Behind you, in the fourth court, a dog starts barking, and then, all at once, stops.");
+        return c; } },
+      corrach: { t: "The Singing Herd", run: async () => {
+        await say("The Hesk keep husk-mites the way the hill-farms keep sheep: they sing them along the galleries to graze the fungus, a herd at a time, with a herding-song that goes up and down like a dog on a hillside. On the Corrach road a young Hesk herder has lost hers. Something frightened them, and the whole herd has poured down a dead gallery toward the old collapse.");
+        await say("She taps at you, fast and frightened: <i>help, help, the roof.</i>");
+        const c = await choose([{ key: "sing", label: "Help her sing them back", tag: "learn the herding-song" }, { key: "drive", label: "Go down after them and drive them out by hand", tag: "1d8 damage · something to show for it", plain: true }]);
+        if (c === "sing") { xpGain(30); await say("You can't make the Hesk sounds, but you can hold the low note under hers, and the herd hears both, and turns, and comes up out of the dark in one long pale stream round your boots. She taps you a word you've never heard. The miners tell you later it means <i>herd-kin</i>."); await mech("Your kith have heard the herding-song: they strike the Hesk at +2.", "loot"); }
+        if (c === "drive") { await hurt(1, 8, "bludgeoning", "The gallery roof gives way behind the last of them, and a slab of it catches your shoulder."); await say("You come up out of the dust with the whole herd in front of you and one stray clinging to your sleeve, a whole little brood of husk-mites in a shed husk, and it won't let go. The herder looks at it, and at you, and taps: <i>yours now.</i>"); await kithJoin(beastById("mites")); }
+        return c; } },
+      rahdaria: { t: "The Gull Post", run: async () => {
+        await say("Rahdaria's pigeons are all dead: the Bathyr shoot anything that flies over their lines. On the sea-wall an old post-keeper, Hobb Tarrant, has a roost of wreck-gulls that nobody can train, because nobody can train a wreck-gull. They're loud, they're rude, they steal, and they fly anywhere they like, and the Bathyr don't shoot at gulls.");
+        const c = await choose([{ key: "train", label: "Spend the night teaching the gulls to carry", tag: "the blockade starts better" }, { key: "smuggle", label: "Train them for a smuggler's letters instead", tag: "30 gold", plain: true }]);
+        if (c === "train") { await say("It takes all night, and a sack of fish, and the end of your left ear. By dawn the biggest of them flies a letter out to the forts at the harbour mouth and comes back with an answer and a herring. Hobb Tarrant weeps."); await mech("When the blockade begins, the Bathyr hold 5% less of the field.", "loot"); }
+        else { S.coins += 30; renderSheet(); await say("The smuggler pays in good silver, and for the rest of the siege his letters fly over the Bathyr lines while the city's don't."); await mech("Gain 30 gold.", "loot"); }
+        return c; } },
+      unmapped: { t: "The Kith-Knot", run: async () => clLast("kith") }
     }
   };
   // What each choice was, as the world remembers it, and what you find there on the roads back.
@@ -33170,7 +33651,12 @@ body.in-fight.in-lab #bfx { background: none !important; }
       carrowmere: { take: "You took Pell Tansey's eye.", lost: "Pell Tansey got away from you with his eye.", let: "You let Pell Tansey go." },
       assize: { expose: "You exposed the fast hourglass in the Glass Assize.", sell: "You sold your silence about the fast hourglass." },
       corrach: { teach: "You taught a Hesk elder the seconds.", learn: "You learned the Hesk slow time." },
-      rahdaria: { hour: "You gave Rahdaria the hour of the Bathyr watch.", sell: "You sold the hour of the Bathyr watch to a smuggler." } }
+      rahdaria: { hour: "You gave Rahdaria the hour of the Bathyr watch.", sell: "You sold the hour of the Bathyr watch to a smuggler." } },
+    kith: { desert: { take: "You raised the glass foal from the smashed nest.", dune: "You carried the glass foal out to the deep dunes.", sell: "You sold the glass foal to the caravan master." },
+      carrowmere: { loose: "You unchained the drowned king's hounds.", whistle: "You took the drowned kennel-master's whistle." },
+      assize: { won: "You spoke for Coker the mastiff, and won.", lost: "You spoke for Coker the mastiff, and they glassed him anyway.", buy: "You paid Coker the mastiff's blood-price.", leave: "You left Coker the mastiff to the fourth court." },
+      corrach: { sing: "You sang a Hesk herd home.", drive: "You drove a Hesk herd out of a dead gallery." },
+      rahdaria: { train: "You taught Rahdaria's wreck-gulls to carry the post.", smuggle: "You trained Rahdaria's wreck-gulls for a smuggler." } }
   };
   const CL_REG = { desert: "desert", carrowmere: "mere", assize: "glass", corrach: "corrach", rahdaria: "rahdaria" };
   const CL_WHERE = { desert: "The Burning Sands, on the roads back", carrowmere: "Carrowmere, on the roads back", assize: "Sulmara, on the roads back", corrach: "Ashgate, on the roads back", rahdaria: "Rahdaria, on the roads back" };
@@ -33228,12 +33714,20 @@ body.in-fight.in-lab #bfx { background: none !important; }
       corrach: { teach: "The Hesk on the Corrach road have started to tap the seconds at each other, fast, for fun. It's spread through the whole colony. The elders pretend to disapprove.",
         learn: "Passing the Corrach galleries you hear the year-note, very low, and your heart slows to it without asking you, and for a mile the road seems very short." },
       rahdaria: { hour: "The watch-captain at the Lion Gate keeps your paper with the Bathyr hour on it in a frame in the gatehouse. She salutes you, which she doesn't do for anybody.",
-        sell: "The smuggler who bought the Bathyr hour has a tavern on Rahdaria's quay now. He pours you a brandy and won't take payment. He never asks what else you know." } }
+        sell: "The smuggler who bought the Bathyr hour has a tavern on Rahdaria's quay now. He pours you a brandy and won't take payment. He never asks what else you know." } },
+    kith: { desert: { take: "At the caravanserai the children crowd round to see the duneskimmer that came back from the smashed nest. The caravan master goes red, and admits it was his drivers dug it out, and pays you for your trouble without being asked.",
+        dune: "Far out in the deep dunes, at dusk, a duneskimmer as long as a boat skates up beside you, close enough to touch, and drops something heavy and shiny at your feet, and skates away.", sell: "The caravan master has a whole row of cages behind the stables now, glass foals in every one, for the city markets. He shakes your hand. They watch you go." },
+      carrowmere: { loose: "On the Carrowmere shore at dawn the fishers hear hounds out over the water, a whole pack, running, and nobody's afraid of it any more. They call it the King's Hunt, and they say it means good fishing.", whistle: "When you blow the black whistle on the Carrowmere shore, something answers from under the lake, a long way down, a whole kennel of somethings. You put the whistle away and don't do it again." },
+      assize: { won: "In the kilnyards there's a chalk mastiff drawn on every third door, for luck. Nan Forrow sees you and waves both arms, and her mother sends you off with a pie the size of a cartwheel.", lost: "In the Hall of Verdicts Coker is still there in his glass, mid-bark, with the light coming through him. Somebody leaves a bone at the foot of it every day. You add one.",
+        buy: "The glass-lord's son crosses to the other side of the street when he sees you, and the mastiff, coming.", leave: "The court records say a kiln-mastiff was glassed in the fourth court. They don't give his name. Nan Forrow does, to anybody who asks, and to a lot of people who don't." },
+      corrach: { sing: "On the Corrach road a Hesk herder is singing her husk-mites along the gallery, and when she sees you she changes the song, just for a bar, into the one you sang together.", drive: "The Hesk herder you helped has the biggest herd on the Corrach road. She taps a word to you that the miners say means <i>herd-kin</i>, or possibly <i>idiot</i>." },
+      rahdaria: { train: "Rahdaria still uses gull-post for the outer forts. The gulls are rude, loud and never late, and Hobb Tarrant has named the oldest of them after you, which you'd rather he hadn't.", smuggle: "The smuggler who used your gulls has a fleet of his own now. The gulls still find you on the quay and steal your lunch, as if you owed them." } }
   };
   // Some echoes pay: a ✓ gives gold, an ✗ costs it.
   const CL_PAY = { "axe.desert.names": 15, "axe.carrowmere.home": 10, "axe.corrach.drill": 12, "hush.desert.mark": 20, "hush.assize.roofs": 30, "song.assize.glaze": 15, "song.corrach.trade": 15,
     "tide.assize.sell": 20, "tide.corrach.cart": 12, "ink.desert.copy": 20, "ink.carrowmere.keep": -2, "root.rahdaria.bathyr": 40, "root.corrach.cut": 10, "root.assize.treat": 6,
-    "bloom.carrowmere.free": 12, "bloom.corrach.wake": 15, "clock.desert.fix": 10, "clock.desert.tell": 8, "clock.carrowmere.let": 10, "clock.assize.expose": -5 };
+    "bloom.carrowmere.free": 12, "bloom.corrach.wake": 15, "clock.desert.fix": 10, "clock.desert.tell": 8, "clock.carrowmere.let": 10, "clock.assize.expose": -5,
+    "kith.desert.take": 12, "kith.desert.dune": 20, "kith.assize.won": 8, "kith.rahdaria.train": 15 };
   Object.keys(CL_WHY).forEach(k => Object.keys(CL_REG).forEach(slug => {
     ECHOES["cl_" + k + "_" + slug] = { ch: CL_CH[slug], get why() { return (CL_WHY[k][slug] || {})[clB(slug)] || ""; }, where: CL_WHERE[slug], on: () => clIs(k) && !!clB(slug) && !!(CL_WHY[k][slug] || {})[clB(slug)] };
   }));
@@ -33261,7 +33755,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     ink: { open: "The white is a page with nothing on it. You've spent your life adding to the margins of things. Here there isn't anything to add a margin to. At the half milestone there's a strip of old vellum in the grass, a ruled margin with nothing beside it, in the Quire's hand.", keep: "Sew the margin into your sleeve", leave: "Write your own name in it, and leave it at the milestone" },
     bloom: { open: "Nothing grows in the white, and the Colossus in your armour hates it: you feel it pull away from the edge like a dog from a cliff. At the half milestone the last root before the white has burned down to a seed, warm as a coal. Your ember wants it.", keep: "Let the ember take the seed", leave: "Plant it at the milestone, facing the white" },
     clock: { open: "There's no time in the white. Your chronometer goes on ticking at the half milestone, and then, a step further on, it doesn't. At the milestone itself, in the grass, there's a chronometer hand, stopped exactly between one tick and the next.", keep: "Keep the stopped second", leave: "Set it on the milestone, pointing into the white" },
-    root: { open: "Nothing grows in the white. At the half milestone, the last root before it pushes out of the ground and stops in mid-air, as if it hit a wall nobody can see. It's alive. It's straining. It wants to go on.", keep: "Graft a sliver of it into your own arm", leave: "Graft it to the milestone, so it can go on without you" }
+    root: { open: "Nothing grows in the white. At the half milestone, the last root before it pushes out of the ground and stops in mid-air, as if it hit a wall nobody can see. It's alive. It's straining. It wants to go on.", keep: "Graft a sliver of it into your own arm", leave: "Graft it to the milestone, so it can go on without you" },
+    kith: { open: "Your kith won't go into the white. Not one of them. They stand at the half milestone in a row with their hackles up, and Burr whines, which he never does. At the foot of the milestone somebody has left a collar of plaited root, worn soft, with a knot in it for every beast that ever walked with whoever wore it. There are a great many knots.", keep: "Tie a knot in it for each of yours, and wear it", leave: "Tie your knots in it and leave it at the milestone, for the next one who comes this way with a pack at their heels" }
   };
   async function clLast(k) {
     const L = CL_LAST[k];
@@ -33302,7 +33797,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     ink: { tyra: "Tyra reads your notes over your shoulder and corrects your spelling of her own name.", burr: "Burr has eaten a page of your notes. It was an important page. He's not sorry.", ishbel: "\"Write my name down somewhere,\" Ishbel says. \"Somewhere it'll stay.\" You do.", odran: "Odran can't read. You teach him his name, and the word <i>shield</i>, and he practises them in the dirt for an hour.", wenna: "\"Keep a ledger of what I'm owed,\" Wenna says. \"No. Better. Keep a ledger of what you owe me.\"", caddock: "Mother Caddock dictates a recipe for a poultice and you write it down. It takes a long time because she keeps stopping to argue with it." },
     bloom: { tyra: "\"You crackle,\" Tyra says, at camp. \"When you sleep. Like a fire. It's nice, actually. Don't tell anyone I said that.\"", burr: "Burr sleeps against your back every night, for the warmth of the ember, and growls at the thorns when they move in your sleep.", ishbel: "\"There's something behind you,\" Ishbel says, very quietly, at dusk. You know. It's been there a long time. She doesn't turn her back on you all evening.", odran: "Odran knocks on your breastplate like a door, and listens. \"Something knocked back,\" he says, and won't say any more about it.", wenna: "\"If that big thing ever comes out,\" Wenna says, \"I want to be told first. In writing.\"", caddock: "Mother Caddock looks at the thorns grown into your shoulder and doesn't try to cut them. \"Don't let it take more than it gives,\" she says. \"That's all. Roots are greedy.\"" },
     clock: { tyra: "\"You count,\" Tyra says. \"Under your breath, all the time. It's like sleeping next to a clock that thinks it's funny.\"", burr: "Burr has learned that when you go very still and your eye goes round, somebody's about to fall over. He sits down to watch.", ishbel: "\"Guild-trained,\" Ishbel says, watching you strip the chronometer. \"The Escapement lot. Sable tried to hire one of you once. She said it finished the job before she'd finished the sentence.\"", odran: "Odran asks you what time it is, every hour, for a whole day, to see if you're ever wrong. You never are. He's furious.", wenna: "\"How long till the next one comes over that ridge?\" Wenna asks. \"Forty breaths,\" you say. It's thirty-nine. She brings it up for a week.", caddock: "Mother Caddock takes your pulse and frowns. \"It's perfectly regular,\" she says. \"Nobody's is perfectly regular. Stop it.\"" },
-    root: { tyra: "Tyra holds out a cut finger, sheepishly, and you graft it, and she watches the root go in with her mouth open.", burr: "Burr brings you a root he's dug up, and lays it at your feet, and waits to see what you'll mend with it.", ishbel: "Ishbel lets you look at her scarred hands. \"Could you,\" she starts, and stops. \"No. Leave them. They're mine.\"", odran: "Odran shows you a knee that hasn't bent right in ten years. In the morning it bends.", wenna: "\"Can you graft a thumb?\" Wenna asks. \"Asking for a friend. The friend is me, in the future.\"", caddock: "Mother Caddock watches you graft a cut with her pipe going out in her hand. \"Well,\" she says. \"I'll be damned. Show me that again.\"" }
+    root: { tyra: "Tyra holds out a cut finger, sheepishly, and you graft it, and she watches the root go in with her mouth open.", burr: "Burr brings you a root he's dug up, and lays it at your feet, and waits to see what you'll mend with it.", ishbel: "Ishbel lets you look at her scarred hands. \"Could you,\" she starts, and stops. \"No. Leave them. They're mine.\"", odran: "Odran shows you a knee that hasn't bent right in ten years. In the morning it bends.", wenna: "\"Can you graft a thumb?\" Wenna asks. \"Asking for a friend. The friend is me, in the future.\"", caddock: "Mother Caddock watches you graft a cut with her pipe going out in her hand. \"Well,\" she says. \"I'll be damned. Show me that again.\"" },
+    kith: { tyra: "\"How many is it now?\" Tyra says, counting eyes round the fire. \"I'm not sleeping next to the one with the teeth. They've all got teeth. Fine.\"", burr: "Burr has made himself sergeant of your kith. Every night he walks the line of them before he lies down, and even the big ones let him.", ishbel: "\"Sable kept a hawk,\" Ishbel says, scratching one of yours behind the ear. \"She said it was the only one of us she trusted. I think she was joking. I think.\"", odran: "Odran shares his supper with your kith, a bite at a time, and pretends he isn't, and has to borrow some of yours.", wenna: "\"If any of that lot eats my bolts,\" Wenna says, \"it's going on your bill.\"", caddock: "Mother Caddock looks over your kith's scars with a professional eye. \"You lot get bitten more than any company I've known,\" she says. \"And you're all the happier for it. Odd.\"" }
   };
   async function clCamp(k) {
     const c = cl(); if (!c) return;
@@ -33326,7 +33822,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // The blockade: what your calling did on the road in.
   function clMom() {
     const k = S.cl && S.cl.k, b = clB("rahdaria");
-    return (k === "axe" && b === "oath") || (k === "hush" && b === "chart") || (k === "song" && b === "wall") || (k === "tide" && b === "tell") || (k === "root" && b === "ward") || (k === "bloom" && b === "hold") || (k === "clock" && b === "hour") ? 5 : 0;
+    return (k === "axe" && b === "oath") || (k === "hush" && b === "chart") || (k === "song" && b === "wall") || (k === "tide" && b === "tell") || (k === "root" && b === "ward") || (k === "bloom" && b === "hold") || (k === "clock" && b === "hour") || (k === "kith" && b === "train") ? 5 : 0;
   }
   // The Assize: jurors who start out leaning your way, and what you know.
   function clAssize() {
@@ -33339,6 +33835,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (k === "ink" && b === "read" && !S.know.includes("rolls")) S.know.push("rolls");
     if (k === "hush" && b === "roofs") S.clRoofs = 3;
     if (k === "axe" && b === "salute") S.clDaunt = true;
+    if (k === "kith" && b === "won") S.jury.D = Math.min(3, S.jury.D + 1);
   }
   function clSection(rs) {
     if (!rs || !rs.cl || !CALLINGS[rs.cl.k]) return "";
@@ -33349,7 +33846,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
         "<dt>The half milestone</dt><dd>" + (clB("unmapped") ? (clB("unmapped") === "keep" ? "You kept " + GEAR["cl_keep_" + S.cl.k].name + "." : "You left it for whoever comes next.") : "<i>Not yet.</i>") + "</dd>";
       return "<section><h3>Your calling · " + C.name + ", Rank " + CL_RANKS[r] + "</h3>" + (PIC_SRC["cl_" + S.cl.k] ? '<img class="cl-jpic" alt="' + CL_PICS[S.cl.k] + '" src="' + picUrl("cl_" + S.cl.k) + '" decoding="async">' : "") +
         '<p class="j-sub">Taught by ' + C.who + ". +" + clLean() + " to " + C.lean + " checks. <b>" + C.sig + "</b>: " + C.sigTxt(r) + " Used " + (S.cl.uses || 0) + " time" + ((S.cl.uses || 0) === 1 ? "" : "s") + " on this journey.</p>" +
-        '<dl class="tips">' + rows + "</dl></section>";
+        '<dl class="tips">' + rows + "</dl>" + (S.cl.k === "kith" ? '<p class="j-sub"><b>Your kith.</b> ' + kithTxt() + "</p>" : "") + "</section>";
     } finally { S = keep; }
   }
 
@@ -45668,7 +46165,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     return '<div class="gang"><div class="gh">' + gangSvg(G, 46) + '<div><span class="bn">' + G.n + '</span><span class="bs">' + (G.r === "high" ? "The high places" : REGIONS[G.r]) + " · “" + G.motto + "”</span></div></div>" +
       '<ul class="crew">' + BN_ORDER.map(k => "<li><b>" + BN_ROLES[k].name + "</b> <i>(" + BN_ROLES[k].kind + ")</i> " + G.crew[k] + "</li>").join("") + "</ul>" +
       "<p><b>" + T[0] + ".</b> " + T[1] + "</p>" +
-      (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + "</p>" : "") + "</div>";
+      (tally ? '<p class="bs">Met ' + tally.met + (tally.met === 1 ? " time" : " times") + " · beaten " + tally.beaten + (tally.tamed ? " · tamed " + tally.tamed : "") + "</p>" : "") + "</div>";
   }
 
   // ---------- reputation on the roads, and the Contender ----------
