@@ -4385,6 +4385,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
   const NEWS = [
     { ver: "158", name: "The 3D Board", date: "24 Nov 2026", items: [
       "<b>Fight it in 3D.</b> When a fight starts, you can choose to play it on a 3D tactics board instead. The story fight stays the default: pick <b>Fight it on the 3D board</b> and that chapter's board opens over the page, with your piece, Burr and the foes as chess pieces crowned with their painted emblems.",
+      "If you're a Kithcaller, the beast at your heel comes onto the board beside you and Burr, with its own painting where it has one.",
+      "The boards come alive: fog in the fens and drowned places, heat haze in the sands, snow in the rime, embers and drifting spores elsewhere. Pieces rock when they're hit, slide back from a heavy blow and topple over when they're beaten. The camera sweeps round a boss's board, pushes in on a critical hit and slows down for the final blow. Footsteps, blows and a crit's ring echo like a cave, and the music swells as the foes fall.",
       "Win on the board and the fight is won here, with the HP you finished on. Lose and the last blow lands in the story, where the usual rules for falling apply.",
       "Don't want the question? <b>Settings → 3D fights → Never ask</b>. The question comes up on the public web version, where the 3D board lives; the twenty 3D dungeons are on their own page there too, at godot/play/."] },
     { ver: "157", name: "The First Shepherd", date: "24 Nov 2026", items: [
@@ -24698,7 +24700,14 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (d3Here === null) { try { d3Here = (await fetch("godot/play/index.html", { method: "HEAD" })).ok; } catch (e) { d3Here = false; } }
     return d3Here;
   }
-  async function d3Offer(F) {
+  // The Kithcaller's beast at your heel comes onto the 3D board too (Burr is always there already).
+  function d3Kith(F, st) {
+    const k = st && st.kb; if (!k || k.id === "burr" || st.kbDown) return "";
+    const T = kStat(k), pic = PIC_SRC["b_" + k.id] === "art/b_" + k.id + ".webp";
+    return "&kith=" + encodeURIComponent(k.id) + "&kn=" + encodeURIComponent(k.nm || "Your kith") + "&khf=" + Math.max(0.05, (st.kbHp || 1) / (st.kbMax || 1)).toFixed(3) +
+      "&kac=" + T.ac + "&katk=" + kAtk(k, F) + "&kd=" + T.n + "d" + T.s + (pic ? "&kpic=1" : "");
+  }
+  async function d3Offer(F, st) {
     if (d3Pref() === "never" || F.company || !FOE.on || FOE.hp <= 0 || S.hp <= 0 || !(await d3Avail())) return;
     const key = D3_KEYS[chapterAt(S.part || 0)] || "roots";
     const c = await choose([
@@ -24706,7 +24715,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       { key: "3d", label: "Fight it on the 3D board", tag: "tactics in 3D · takes a moment to load", plain: true }]);
     if (c !== "3d") return;
     const cap = hpCap();
-    const q = "d=" + key + "&f=" + (F.big ? "boss" : String(d(2) - 1)) + "&hpf=" + Math.max(0.05, S.hp / cap).toFixed(3) + "&pr=" + encodeURIComponent(S.pr || "they");
+    const q = "d=" + key + "&f=" + (F.big ? "boss" : String(d(2) - 1)) + "&hpf=" + Math.max(0.05, S.hp / cap).toFixed(3) + "&pr=" + encodeURIComponent(S.pr || "they") + d3Kith(F, st);
     const r = await d3Play(q);
     if (!r) { await say("You put the board away. The fight is still here, waiting."); return; }
     if (r.result === "victory") {
@@ -24748,7 +24757,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await lgStart(F, st);
     if (F.setup) await F.setup(st);
     if (F.reg) await hzStart(F, st);
-    await d3Offer(F);
+    await d3Offer(F, st);
     if (FOE.hp > 0 && (F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
     gStart(F, st);
     while (FOE.hp > 0 && !st.fled) {
