@@ -325,6 +325,14 @@ body.on-road .gate-film { display: none; }
 @keyframes drip { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .bleed-row .drop { animation: none; } }
 .venom-row { color: #8fc46a; }
+/* the Gangboss plaque (Adrian's painting, 2026-11-24): an achievement unlock, not just a picture */
+.gb-plaque { max-width: 420px; margin-left: auto; margin-right: auto; }
+.gb-plaque img { animation: gbUnlock 1.4s cubic-bezier(.2,.9,.3,1.2) both, gbGlow 2.6s ease-in-out 1.4s 3; }
+@keyframes gbUnlock { 0% { transform: scale(.55) rotate(-4deg); opacity: 0; filter: brightness(2.4) drop-shadow(0 0 0 #f0b43c); } 60% { transform: scale(1.06) rotate(1deg); opacity: 1; } 100% { transform: scale(1) rotate(0); filter: brightness(1) drop-shadow(0 0 14px rgba(240,180,60,.55)); } }
+@keyframes gbGlow { 50% { filter: brightness(1.12) drop-shadow(0 0 26px rgba(240,180,60,.85)); } }
+@media (prefers-reduced-motion: reduce) { .gb-plaque img { animation: none; } }
+.gb-sec { display: flex; gap: 12px; align-items: center; }
+.gb-sec .gb-badge { width: 72px; height: 72px; border-radius: 8px; flex: none; box-shadow: 0 0 12px rgba(240,180,60,.45); }
 .venom-row .vdrop { width: 9px; height: 9px; background: #6f9d3c; border-radius: 50%; box-shadow: 0 0 6px #6f9d3c; flex: none; }
 .foe-plates { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .foe-plates[hidden], .foe-stat[hidden] { display: none; }
@@ -4354,6 +4362,14 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "154", name: "The Gangboss", date: "24 Nov 2026", items: [
+      "<b>Break all forty-nine road gangs and you're the Gangboss.</b> The chiefs call a moot at the Hanging Oak and crown you, with Adrian's golden plaque to prove it. You can take the title <b>Gangboss</b>, and your road name becomes Gangboss of the Blood-bought Roads. Already broken them all? You're crowned the next time you go home or take the roads.",
+      "<b>3,000 gold</b> from the moot's chest, and <b>Adder's Poison Spit</b>, the gangboss's bow (Adrian's painting): Heartfire, 1d10 + 5, +2 to hit. Every hit leaves venom (up to five stacks, not three), poisoned foes take more from every arrow, and <b>Poison Spit</b> does 3d8 past any armour, poisons five deep and blinds it for two attacks. It's the hardest-hitting bow in the game.",
+      "<b>The Sloughskin Bracer</b> (Adrian's painting). Once a fight, a blow that would leave you at a quarter of your health or less slides off it. Poison can't take in you, every poison on a foe bites one harder each round, and any road gang will yield to it and pay you dues.",
+      "<b>Free one gang, or press one into service.</b> A freed gang goes straight: they keep their old road clean, warn you of night ambushes there, and leave Draughts of Mending at your door. A pressed gang crews your headquarters and backs you against pretenders, but they want their cut. Let their loyalty run out and they turn, empty the till, and come for your holding.",
+      "<b>The Knot House</b>, your gang headquarters behind your holding: smuggling runs (four cargoes, two routes), a fence that pays double for spare weapons, rackets that make a region's towns pay you every day, and heat. Let heat reach 8 and the watch raids the house.",
+      "<b>Pretenders.</b> Once you're Gangboss, one gang meeting in three is a new crew under an old mark, a fifth harder, out for your title. Twelve new feats."
+    ] },
     { ver: "153", name: "Faces of the Captains", date: "23 Nov 2026", items: [
       "<b>The armoured Captains have faces.</b> Adrian painted all thirty-three Captains who stand behind the soldiers in company battles, from the Shield-Captains of the sea wall and the Skerran captains of the Fleet to the Hinge, the Rimehand, the Lost Hand's yards, Vell, the raided compounds and the six drowned Cascade-Captains. Each painting shows once a run as the company forms up, two side by side when a company has two captains.",
       "<b>Seven spare faces.</b> A captain the game names on the spot, such as a rival ship's captain on the Open Reach or the second at a raided compound, now gets one of seven spare paintings, always the same one for the same name, and never the same face twice in one company.",
@@ -5557,6 +5573,18 @@ body.in-fight.in-lab #bfx { background: none !important; }
     { id: "bnfirst", name: "First Fire Out", desc: "Break a bandit gang on the road between kingdoms.", test: () => false },
     { id: "bnten", name: "Ten Marks", desc: "Break ten different gangs on one journey.", test: () => !!S.bn && bnBroken() >= 10, prog: () => [Math.min(10, S.bn ? bnBroken() : 0), 10] },
     { id: "bnall", name: "Every Colour on the Roads", desc: "Break all forty-nine road gangs, across every journey.", test: () => ROAD_GANGS.every(G => J.gangs && J.gangs[G.id] && J.gangs[G.id].beaten), prog: () => [ROAD_GANGS.filter(G => J.gangs && J.gangs[G.id] && J.gangs[G.id].beaten).length, ROAD_GANGS.length] },
+    { id: "gangboss", name: "Gangboss", desc: "Break all forty-nine road gangs on one journey, and be named at the Hanging Oak.", test: () => !!(S.bn && S.bn.boss) },
+    { id: "gbfree", name: "Struck Off the Roll", desc: "As Gangboss, set a gang free.", test: () => false },
+    { id: "gbpress", name: "Pressed Into Service", desc: "As Gangboss, press a gang into your service.", test: () => false },
+    { id: "gbspit", name: "Poison Spit", desc: "Loose Poison Spit from Adder's Poison Spit.", test: () => false },
+    { id: "gbfive", name: "Five Drops Deep", desc: "Poison a foe five times over.", test: () => false },
+    { id: "gbslough", name: "Shed Skin", desc: "Let the Sloughskin Bracer take a blow that would have left you near dead.", test: () => false },
+    { id: "gbheel", name: "Heel", desc: "Make ten gangs yield to the Sloughskin Bracer.", test: () => false, prog: () => [Math.min(10, (S.bn && S.bn.boss && S.bn.boss.heeled) || 0), 10] },
+    { id: "gbpret", name: "Hold the Title", desc: "Put down five pretender crews.", test: () => false, prog: () => [Math.min(5, (S.bn && S.bn.boss && S.bn.boss.pret) || 0), 5] },
+    { id: "gbrun", name: "Contraband", desc: "Bring a smuggling run home from the Knot House.", test: () => false },
+    { id: "gbclean", name: "Ten Clean Runs", desc: "Ten smuggling runs in a row without losing a cart.", test: () => false },
+    { id: "gbracket", name: "Three Towns Paying", desc: "Put three regions' towns under your protection.", test: () => false },
+    { id: "gbhide", name: "Just Wool", desc: "Clear the Knot House cellar before the watch gets the door in.", test: () => false },
     { id: "bnyield", name: "Called by Name", desc: "Make a gang yield to you without a fight.", test: () => false },
     { id: "bnwarden", name: "Roadwarden", desc: "Lean Roadwarden: hand gangs to the watch.", test: () => !!S.bn && bnLean() === "Roadwarden" },
     { id: "bnking", name: "Road-king", desc: "Lean Road-king: let gangs go for a cut.", test: () => !!S.bn && bnLean() === "Road-king" },
@@ -6050,6 +6078,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
       ids: ["mecmd", "cmtithe", "cmdoor", "cmread", "cmraven", "cmladder", "cmquiet", "cmopen"] },
     { id: "quenched", name: "Ebba Quenn's Twelve", ver: "57", desc: "Twelve named weapons scattered on the roads: life steal, poison, withering and lunar damage.",
       ids: ["qtfirst", "qtall", "qtmoon", "qtrot"] },
+    { id: "gangboss", name: "The Gangboss", ver: "59", desc: "Break every gang on the Blood-bought Roads and take the roads for your own: the bow, the bracer, the Knot House and the pretenders.",
+      ids: ["gangboss", "gbfree", "gbpress", "gbspit", "gbfive", "gbslough", "gbheel", "gbpret", "gbrun", "gbclean", "gbracket", "gbhide"] },
     { id: "finds", name: "Things Worth Finding", ver: "58", desc: "Eight weapons, six pieces of kit and ten caches from Adrian's wishlist, each hidden where it belongs.",
       ids: ["rfkeys", "rfbell", "rfgrave", "rfshrine", "rfmirage", "rfarms"] },
   ];
@@ -6955,11 +6985,16 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (FOE.on && FOE.brace && total > 1) { braceCut = Math.floor(total / 2); total -= braceCut; }
     const onHorse = horseTakes(total, type);
     if (onHorse) total = 0;
+    // The Sloughskin Bracer (the Gangboss's reward): once a fight, a blow that would leave you at a quarter of
+    // your HP or less slides off it like a shed skin.
+    let sloughed = false;
+    if (FOE.on && !FOE.slough && hasGear("gbcoil") && total > 0 && S.hp - total <= Math.floor(hpCap() / 4)) { FOE.slough = true; sloughed = total; total = 0; }
     S.hp -= total;
     const armTxt = onHorse || armWear(rolled, type);
     let txt = why + " Take " + count + "d" + sides + " " + type + " damage: " + (count > 1 ? rolls.join(" + ") + " = " : "") + rolled + (halved < rolled ? ", halved by the Weathercloak to " + halved : "") + (lvx ? ", +" + lvx + (cascadeOn() ? " from a Nightmare at your level" : " from its level") + " = " + (halved + lvx) : "") + (slowed ? ", and the heartgrain slows it by " + slowed + (caught ? "" : " to " + total) : "") + (caught ? ". " + caught.line + ", and it takes " + caught.cut + " off: you take " + total : "") + ".";
     if (armTxt) txt += armTxt;
     if (braceCut) txt += " Braced: " + braceCut + " less.";
+    if (sloughed) { txt += " <b>Slough.</b> The blow slides off the scales of your Sloughskin Bracer like a shed skin, and the green gem flares: none of it lands."; grant("gbslough"); }
     let saved = false;
     if (S.hp <= 0 && rmCold()) { S.hp = 0; renderSheet(); await mech(txt, "hurt"); throw RM_FALL; }
     if (S.hp <= 0) {
@@ -7124,6 +7159,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (t.classList.contains("title-pic") && t.parentElement) t.parentElement.classList.remove("has-title-pic");
   }, true);
   const PIC_SRC = {
+    // the Gangboss rewards (Adrian's paintings, 24 Nov 2026)
+    adderbow: "art/adderbow.webp", gbcoil: "art/gbcoil.webp", gangboss: "art/gangboss.webp",
     // The Long Dig (Adrian's paintings, 17 Nov 2026)
     sc_dig_mouth: "art/sc_dig_mouth.webp", sc_dig_face: "art/sc_dig_face.webp", sc_dig_shift: "art/sc_dig_shift.webp", sc_dig_kneel: "art/sc_dig_kneel.webp", sc_dig_spade: "art/sc_dig_spade.webp",
     spadeblade: "art/spadeblade.webp",
@@ -7441,6 +7478,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     reckoning: { looks: ["reckoning"], alt: ["A heavy dark-oak crossbow with a brass winding crank and a bolt loaded."] },
     wrathbrand: { looks: ["wrathbrand"], alt: ["A broad dark sword with red-hot cracks glowing through the blade."] },
     // Ebba Quenn's Twelve (2026-11-21).
+    adderbow: { looks: ["adderbow"], alt: ["A spiked black-and-bronze recurve bow with green gems in its limbs, a venom-green arrow on the string, green poison dripping off it."] },
+    gbcoil: { looks: ["gbcoil"], alt: ["A buckled leather bracer bound in steel, a green gem set in a steel diamond on its back, bright green venom dripping off it."] },
     qt_rotwake: { looks: ["qt_rotwake"], alt: ["A jagged cleaver-blade on a spiked bone haft, green venom dripping from its edge."] },
     qt_embertithe: { looks: ["qt_embertithe"], alt: ["A curved blade wrapped in flame, a red stone set in its gilded guard and a little crowned coin hanging from the grip."] },
     qt_tidebreaker: { looks: ["qt_tidebreaker"], alt: ["A square-headed war hammer of grey stone, a pale blue rune glowing in its face and cold light crackling round it."] },
@@ -7739,6 +7778,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // Adrian's small painted icons (two sheets, cropped to 96px WebP), standing in for the drawn icons in
   // the Bag. By the drawn icon's name, with a few Bag rows matched by key instead. Paintings win over these.
   const ICON_PIC_SRC = {
+    gbcoil: "art/i_gbcoil.webp", adderbow: "art/i_adderbow.webp",
     sword: "data:image/webp;base64,UklGRggCAABXRUJQVlA4IPwBAACQDACdASpgAGAAPm0ylkgkIqIhJzYJuIANiWkA1fxC+yHzgY0S0QMjVhjOfG/9IEK7E6IbvdEbJcqsRX5bLbbWrk8hFCs6hxgA734jOYsAypIFSYydGzLckzVhnsGJwKgjS3WsFIaU+s4ntN+AAP78rRFDHcWpYCrQUHiR5TvEevenGb/fiP/Gd/TBLu7Da1SqJDu94Ea3vE/ua2p3oSdJgIX4hPruFL8leXGKAm0oyiTybGVO4cOmGN4ZBgPi6AMsL4XtdyOORQENVnsiq2HxhXeMIx/EoGUDTUb/IOJRKkxHUj1FI8+irpbFLJ9QViHhPcQfj3Pef+oJaJ89GdtI505kBjKV9gGkNGnEx9Tb3HcsuMQEmZSRmdVnY+GlQOK7JIPwNjE9mshAWNkDBwbv5AcV4j8FzZJ8wVAe67d4SIQgOFqY90KCRlfgy5H6AoOVLjrFkgyWEtRjVwWx3qoTyjzLUJbz06o+wx83esumRAlr3FfxX1tlZphdJj4aDheHr47GFNOUlxanBtGF4kw5eGTGgGXHQhjhMcRLCE+mQIEcjktv5t9/odDFffgwZW90dYSXojNNM0xuyXd6Wsm/2NzPvFkRFDQXAj2U1zW9v/NUUNwctSnLTac6vpciOJqrWvBwXax/zrQHChcTr0UMmi7o+X1YQryJQAAA",
     dagger: "data:image/webp;base64,UklGRkICAABXRUJQVlA4IDYCAABQDACdASpgAGAAPm02lkikIyIhIrVaMIANiWkA06G0catb/LA0gU0rx9ofDv3vfI6Rvx+WkHJII86RGsomQuMiqaqo+joC1uPMroS1yDbT8OAJxrLBTfkMtbPn4Cc1Tu+Bl1ATOhMr12sHYAD+/K0RhBqe++HysM314FD+Gmnv85EzMQNqDtycFDKRltNI39pt8GlgW/ZQeUMZ0MH+W+aFrQbiS1qJta0CVojPjcvIQBF78vpdgCQmngDgoPrOszx6DvQopK3WbTFzEy9zYyd86k17Iv/2qptQtPsiByQ3EQqjpR68o7Y5NN+UMqv2DNqbSCPvDhHV1+Pn/cw/8LJOjuWx9ObUjEW4B5XRgWHNv+Q9BI+tQK5E+4JhU894TfzKdSqRjILVXy2zgqtDDWQd39VY1AAzvi1ckvwS9UdbfFcVZiSpqckaWqCN/IZKMkbAbcD03f5hPH99+bkGaZhSf2ri2jVPvrkpaxVWUDFIe2U3joesG27mijJwEPPVRGoCbiqdGxWc5P7HR2Ep5onsJwNTu9wfl+eA0FQhmCDP/Gt4G1KTkKu9cA8S2enSMhCYxhug8JiwzaBHepyIbpwkz1p0lRrRtat9qVXt+/UMWdD2Bw1SjdVEs00Et43ARcGKTmO+7G5VmHjxf1OsOKMIkEdHV3I4C6BM0P96wsw01Fd/G27ISz1fbzwChb/+I+abiLMOoV1uBxx1//5OIfc8a2M3r+8g8JvTXTo4sg/xGgOBQAAAAA==",
     mace: "data:image/webp;base64,UklGRk4CAABXRUJQVlA4IEICAACwDQCdASpgAGAAPm0ylUgkIqIhJzQKSIANiWkA1YNsCvS3+5Xpy70BCZ2FvfoQwFX2qb0mQpnTkP60/bLZTnbrQYI6FmC+R70RlLJ+Uop6i2rAEfXyEmjoGURqt3keCmZpuJIAcJOnoGKezYvr4WXOnJ/ZFJWAAP78+FOuPkkMsskv/j7gbfzHao9HkFvOFTjADKM3t1hPl3V/NWYkd8U4qCJq3z0e9kBwRLJ1vN0mT47Yv29fQVD0C6kOMXwIbNvA7t+IvD98Y2NAS5VzBxXegKsQ42j5GHsx6r2GIyMQ/Mux+/rkUupkpPRs0hg9SwW1pADULNIq90jrZkFD30K90rvkXT0PeEGSlvg715SjjRzLV/cgX9IzzWxZE1VJGz3OCrocNCAg1DRNbz53jxo6Wh8N9epjHvccva0PVPTXGYeh/2E0bPknbPnFyXbAwWei6qv6OtpGjVqweDrlwIFIYQpnQ7U4DAt1H+DrRyRxDrU0vWlQv1AVBhHwfrlEEvaIScCWXAl+2XyEUv1i9vXA2Yj0AiCAdJRea89tG/Ua5fJ7UdgK+2wC6ELW2zxDqUEVb2Nar7/mYmvkO7DA65hgVEJZx2rabiukWmIU/pvcBJ8Yj8uwAc6mquMNNokSHmG8Fy0JMlnrH2SDTAF1J+eHglm+OpnicjvxonCXdDGwgps6FN7T1p5hQ3rnTK5MDNqH2Zi5Jr6PoxIt85RPeUwrSLzL3+HDqkgAOeJLic2I/GHk/vrAStO+vFUDcSFajLhAAA==",
@@ -7807,7 +7847,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     shield: "treeshield", merc: "roundshield", vial: "potion", jar: "k_goldjar", key: "key", coin: "purse", scroll: "scroll", writ: "oldscroll",
     token: "pendant", ring: "amulet", torch: "torch",
     book: "k_tome", herb: "k_herbs", map: "k_map", lantern: "k_lamp", snare: "k_snare", drum: "k_drum", mask: "k_mask", milk: "k_milk" };
-  const ICON_PIC_KEY = { dress: "tools", honey: "food", cal: "caltrop", iron: "caltrop", powder: "bomb", rhpowder: "bomb", rmines: "runemine", scrolls: "runemine", stones: "runedisk", umstones: "runedisk",
+  const ICON_PIC_KEY = { "hk-gbcoil": "gbcoil", dress: "tools", honey: "food", cal: "caltrop", iron: "caltrop", powder: "bomb", rhpowder: "bomb", rmines: "runemine", scrolls: "runemine", stones: "runedisk", umstones: "runedisk",
     "hk-compass": "k_compass",
     ...Object.fromEntries(["crown", "fang", "lens", "gauntlet", "bell", "verdict", "shell", "noon", "kinring", "inqring", "knuckle", "firstknot", "thousandth", "weircrown"].map(r => ["relic-" + r, "r_" + r])) };
   // ---------- the trove sheets (2026-11-22) ----------
@@ -7930,7 +7970,9 @@ body.in-fight.in-lab #bfx { background: none !important; }
     blight: "Blighting: every hit sickens it: its blows come at −1 for the rest of the fight, up to −3.",
     bell: "Ringing: every hit rings the bell, and the third ring in a fight stuns it for a turn.",
     tangle: "Tangling: the first hit roots its feet, and it can't break away and run.",
-    undertow: "Undertow: double damage against anything in the water or on a ship's deck."
+    undertow: "Undertow: double damage against anything in the water or on a ship's deck.",
+    // The Gangboss's bow (2026-11-24). Named weapon only.
+    adder: "Adder's Bite: every hit leaves venom in the wound (a stack every time, up to 5, not 3), and a hit on anything Poisoned 3 or more lands +1d4."
   };
   // Enchant icons (2026-11-21, Adrian: "just add a flame icon on weapon enchants", then the rest, highlighted).
   // One small painted mark per weapon trait, in a dark coin with a rim in the trait's colour. Shown on the attack
@@ -7954,7 +7996,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     blight: ["#9aa63a", '<path d="M3 12.6c0-5.4 3.8-9.4 10-10-.3 6.4-4.4 10.2-10 10z" fill="#6f7a26" stroke="#232808" stroke-width=".7"/><path d="M3 12.6 9.4 6.2" stroke="#c8d27a" stroke-width=".8"/><circle cx="9.6" cy="9.2" r="1" fill="#3a3008"/><circle cx="7" cy="6.6" r=".7" fill="#3a3008"/>', "Blighting"],
     bell: ["#e0b84a", '<path d="M8 1.8c2.6 0 4 2 4 4.6v3.2l1.4 2H2.6l1.4-2V6.4c0-2.6 1.4-4.6 4-4.6z" fill="#d6a83a" stroke="#3a2808" stroke-width=".7"/><circle cx="8" cy="13.2" r="1.3" fill="#8a6a1a"/><path d="M1.4 5.4c.4-1.2 1-2 1.8-2.6M14.6 5.4c-.4-1.2-1-2-1.8-2.6" stroke="#f0d890" stroke-width=".8" fill="none" stroke-linecap="round"/>', "Ringing"],
     tangle: ["#8aa862", '<path d="M2.4 13.4c2-1 2.4-3 4.4-3.6 2.4-.7 2.6 2 1 2.2-1.6.2-1.4-2.6.6-3.8 2.2-1.3 4.2-.4 5.2-3" fill="none" stroke="#9ab86a" stroke-width="1.4" stroke-linecap="round"/><path d="M10.6 4.6c.2-1.4 1.4-2.4 2.8-2.4-.1 1.4-1.2 2.4-2.8 2.4z" fill="#9ab86a"/>', "Tangling"],
-    undertow: ["#4a9ac8", '<path d="M1.6 9.6c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0M1.6 12.8c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0" fill="none" stroke="#7cc4ec" stroke-width="1.3" stroke-linecap="round"/><path d="M3.6 6.4c.4-2.6 2.6-4.4 5.4-4.2-1.8.8-2.6 2-2.2 3.4.4 1.2 1.8 1.4 2.6.6" fill="none" stroke="#bfe6fa" stroke-width="1.1" stroke-linecap="round"/>', "Undertow"]
+    undertow: ["#4a9ac8", '<path d="M1.6 9.6c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0M1.6 12.8c1.6-1.6 3-1.6 4.4 0s2.8 1.6 4.4 0 2.8-1.6 4 0" fill="none" stroke="#7cc4ec" stroke-width="1.3" stroke-linecap="round"/><path d="M3.6 6.4c.4-2.6 2.6-4.4 5.4-4.2-1.8.8-2.6 2-2.2 3.4.4 1.2 1.8 1.4 2.6.6" fill="none" stroke="#bfe6fa" stroke-width="1.1" stroke-linecap="round"/>', "Undertow"],
+    adder: ["#9be03a", '<path d="M3.2 12.8c1.6.6 3.4-.2 3.6-2 .2-1.6-1.8-2.2-1.6-3.8.2-1.8 2.6-2.6 4.6-2.2" fill="none" stroke="#b8f070" stroke-width="1.5" stroke-linecap="round"/><path d="M9.6 4.8c1.4-1.6 3.4-1.8 4.6-.8-.8 1.4-2.6 2.2-4.6.8z" fill="#5aa62a" stroke="#1d3a0c" stroke-width=".6"/><circle cx="12.6" cy="4.4" r=".5" fill="#1d3a0c"/><path d="M11.4 9.6c.7 1.4 1.4 2 1.4 2.8a1.4 1.4 0 0 1-2.8 0c0-.8.7-1.4 1.4-2.8z" fill="#7ccf3c"/>', "Adder's Bite"],
   };
   const trIco = (t, cls) => { const I = TR_ICO[t]; return I ? '<span class="tri' + (cls ? " " + cls : "") + '" style="--c:' + I[0] + '" title="' + I[2] + '"><svg viewBox="0 0 16 16" aria-hidden="true">' + I[1] + '</svg></span>' : ""; };
   const trIcos = (k, cls) => (wDef(k).tr || []).map(t => trIco(t, cls)).join("");
@@ -7977,12 +8020,13 @@ body.in-fight.in-lab #bfx { background: none !important; }
     bloodlet: { name: "Bloodlet", fx: "once a fight, 2d8, and you drink back half of it" },
     moonfall: { name: "Moonfall", fx: "once a fight, the moon comes down the blade: 2d8 lunar, 4d8 at night" },
     reap: { name: "Reap", fx: "once a fight, 2d10 grave-cold that no armour stops; if it drops the foe, you drink back 2d6 HP" },
+    spit: { name: "Poison Spit", fx: "once a fight, the bow coughs a gout of venom down the arrow: 3d8 that no armour stops, Poisoned 5, and the venom in its eyes gives its next 2 attacks disadvantage" },
     gaze: { name: "The Thorn Watches", fx: "once a fight, the ember eye in the spearhead finds the gap: 2d10, its next 2 attacks have disadvantage, and a Nightmare's Cascade thread is pinned and cut" }
   };
   // Actives that only come on named weapons, never on a random field drop.
-  const TR_NAMED = ["frost", "leech", "venom", "wither", "lunar", "tally", "glass", "hook", "stagger", "blight", "bell", "tangle", "undertow"];
-  const AC_NAMED = ["rotbloom", "bloodlet", "moonfall", "reap", "onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze", "undercut"];
-  const NM_TAG = { rotbloom: () => (FOE.unit ? "drops one" : "2d6, Poisoned 3"), bloodlet: () => (FOE.unit ? "drops one" : "2d8, you drink back half"), moonfall: () => (FOE.unit ? "drops one" : calNight() ? "4d8 lunar, it's night" : "2d8 lunar · 4d8 at night"), reap: () => (FOE.unit ? "drops one" : "2d10, no armour, heals on a kill"), flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage"), undercut: () => (FOE.unit ? "drops one" : "2d6, no armour, its next blow −2") };
+  const TR_NAMED = ["frost", "leech", "venom", "wither", "lunar", "tally", "glass", "hook", "stagger", "blight", "bell", "tangle", "undertow", "adder"];
+  const AC_NAMED = ["rotbloom", "bloodlet", "moonfall", "reap", "onslaught", "grapple", "flame", "eye", "rime", "wheel", "gaze", "undercut", "spit"];
+  const NM_TAG = { rotbloom: () => (FOE.unit ? "drops one" : "2d6, Poisoned 3"), bloodlet: () => (FOE.unit ? "drops one" : "2d8, you drink back half"), moonfall: () => (FOE.unit ? "drops one" : calNight() ? "4d8 lunar, it's night" : "2d8 lunar · 4d8 at night"), reap: () => (FOE.unit ? "drops one" : "2d10, no armour, heals on a kill"), flame: () => (FOE.unit ? "up to 3 targets" : "3d8 fire, then it burns"), eye: () => (FOE.unit ? "drops one" : "2d10, no armour, −2 Dread"), rime: () => "2d8 cold, its next 3 blows −2", wheel: () => (FOE.unit ? "drops one" : "4d6 fire"), gaze: () => (FOE.unit ? "drops one" : "2d10, its next 2 attacks at disadvantage"), undercut: () => (FOE.unit ? "drops one" : "2d6, no armour, its next blow −2"), spit: () => (FOE.unit ? "drops two" : "3d8, no armour, Poisoned 5, it's half-blind") };
   const ARM_NAMES = {
     ashen: ["Pitted", "Notched", "Rust-flecked", "Bent", "Scorched"],
     tempered: ["Sound", "Well-kept", "Drover's", "Watchman's", "Plain"],
@@ -8751,6 +8795,17 @@ body.in-fight.in-lab #bfx { background: none !important; }
       await say("You drop low, the way you went in under the wall, and Patience goes in under " + (FOE.unit ? "a guard" : nmaWho() + "'s guard") + " before anybody has thought about the floor.");
       await beltHurt(2, 6, mult, "Undercut", main);
       if (FOE.hp > 0 && t !== "fumble") { FOE.chill = Math.max(FOE.chill || 0, 1); await mech("It's still looking for you somewhere higher up: its next blow comes at −2.", "loot"); }
+    } else if (a === "spit") {
+      await say("You draw, and the green gem in the riser wakes, and the arrow comes off the string spitting: a gout of venom runs down the shaft and goes in with the head, hissing.");
+      if (FOE.unit) {
+        const n = Math.min(FOE.hp, t === "fumble" ? 1 : 2), keep = main ? n : Math.min(n, FOE.hp - 1);
+        if (keep > 0) foeHit(keep);
+        await mech("Poison Spit: " + (keep > 1 ? keep + " of them go down choking." : keep === 1 ? "one goes down choking." : "they scatter from the spray.") , "loot");
+      } else {
+        await beltHurt(3, 8, mult, "Poison Spit (venom, past any armour)", main);
+        if (FOE.hp > 0 && t !== "fumble") { await foeFx("ven", 5, ""); FOE.blind = Math.max(FOE.blind || 0, 2); await mech("Venom in its eyes: its next 2 attacks have disadvantage.", "loot"); }
+      }
+      grant("gbspit");
     } else if (a === "rotbloom") {
       await say("You twist the blade in the cut, and the green in it blooms: it runs out along " + (FOE.unit ? "their" : "its") + " veins like roots finding water.");
       await beltHurt(2, 6, mult, "Rot Bloom", main);
@@ -14456,6 +14511,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (T.reg === "reach" && T.kind === "town") await seaTownLine();
     await echoTown(T);
     await hmTownLine(T);
+    await gbTownLine(T);
     await rcTownLine(T);
     await rfTown(T);
     await meTownLine(T);
@@ -15688,6 +15744,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       if (tr.includes("drink") && S.hp > 0) { const r = Math.min(d(3), hpCap() - S.hp); if (r > 0) { S.hp += r; renderSheet(); add.push("you drink back " + r + " HP"); } }
       if (tr.includes("frost")) { FOE.chill = Math.min(3, (FOE.chill || 0) + 1); add.push("frost on it, its next blow −2"); }
       if (tr.includes("lunar")) { const nt = calNight(), r = nt ? d(8) : d(4); total += r; add.push("+" + r + " lunar" + (nt ? ", by night" : "")); }
+      if (tr.includes("adder") && FOE.fx && FOE.fx.ven >= 3) { const r = d(4); total += r; add.push("+" + r + " adder's bite"); }
       const rfx = rfOnHit(w, total); total += rfx[0]; add.push(...rfx[1]);
       if (add.length) txt += " (" + add.join(", ") + ": " + total + " in all.)";
     }
@@ -15824,6 +15881,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     renderFoe();
     await mech("<b>Sundered.</b> " + peCap((F && F.who) || FOE.name) + "'s armour hangs off in pieces: −2 AC for the rest of the fight.", "loot");
   }
+  // Poison on a foe stacks to 3, or to 5 with Adder's Poison Spit in your hand.
+  const venCap = () => S.axe && (wDef(wpnKey()).tr || []).includes("adder") ? 5 : 3;
   // Put fire, frost or poison on the foe.
   async function foeFx(k, n, why) {
     if (!FOE.on || FOE.hp <= 0 || !n) return false;
@@ -15834,7 +15893,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (k === "ven" && (lgImmune(F) || /\b(golem|stone|construct|glass|husk|shade|ghost|spirit|reflection|sketch)\b/i.test(nm))) { await mech((why ? why + " " : "") + "The poison does nothing to it: there's no blood to take it.", "hurt"); return false; }
     FOE.fx = FOE.fx || { burn: 0, frost: 0, ven: 0 };
     const was = FOE.fx[k];
-    FOE.fx[k] = k === "ven" ? Math.min(3, was + n) : Math.max(was, n);
+    FOE.fx[k] = k === "ven" ? Math.min(venCap(), was + n) : Math.max(was, n);
+    if (k === "ven" && FOE.fx.ven >= 5) grant("gbfive");
     renderFoe();
     const txt = k === "burn" ? "<b>Burning</b> " + FOE.fx.burn + ": 1d" + (FX_NOFROST.test(nm) ? 6 : 4) + " a round, past any armour" + (FOE.ar > 0 ? ", and the heat softens its armour" : "") :
       k === "frost" ? "<b>Chilled</b> " + FOE.fx.frost + ": −2 to its attacks" + (FOE.ar > 0 ? ", and its armour's brittle (your blows break it twice as fast)" : "") :
@@ -15863,8 +15923,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
       }
     }
     if (X.ven > 0 && FOE.hp > 0 && !F.heads) {
-      const n = X.ven; FOE.hp = Math.max(0, FOE.hp - n); foePop("−" + n); renderFoe();
-      await mech("The poison works in " + (F.who || FOE.name) + ": −" + n + "." + (FOE.hp ? "" : " " + FOE.name + " is down."), "loot");
+      const n = X.ven + (hasGear("gbcoil") ? 1 : 0); FOE.hp = Math.max(0, FOE.hp - n); foePop("−" + n); renderFoe();
+      await mech("The poison works in " + (F.who || FOE.name) + ": −" + n + "." + (hasGear("gbcoil") ? " (The Sloughskin Bracer's gem burns green: +1.)" : "") + (FOE.hp ? "" : " " + FOE.name + " is down."), "loot");
     }
     renderFoe();
   }
@@ -15882,6 +15942,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if ((w.tr || []).includes("fire") && d(3) === 1) await foeFx("burn", 2, "The " + W.name + " catches it.");
     if (W.frost && !(w.tr || []).includes("frost") && FOE.hp > 0 && d(3) === 1) await foeFx("frost", 2, "Rime runs off the " + W.name + " into the wound.");
     if ((w.tr || []).includes("venom") && FOE.hp > 0 && d(2) === 1 && !(FOE.fx && FOE.fx.ven >= 3)) await foeFx("ven", 1, wCap(W.name) + " leaves its venom in the wound.");
+    if ((w.tr || []).includes("adder") && FOE.hp > 0 && !(FOE.fx && FOE.fx.ven >= 5)) await foeFx("ven", 1, wCap(W.name) + " leaves its venom in the wound.");
   }
   // Mines by damage type (see mineHits).
   async function peMine(type, n) {
@@ -22072,6 +22133,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     "Vaelric's roots can't reach you, healing is halved, and the rot costs 1d4 HP every morning and at the start of every part."
   ];
   const GEAR = {
+    // The Gangboss's reward (2026-11-24, Adrian's painting).
+    gbcoil: { name: "The Sloughskin Bracer", icon: "shield", desc: "Black adder-hide in buckled leather and steel, with a green gem that weeps venom. The forty-nine chiefs of the Blood-bought Roads each scratched their mark inside it. <b>Slough</b>: once a fight, a blow that would leave you at a quarter of your HP or less slides off it and doesn't land. <b>Green blood</b>: poison can't take in you, and every poison on a foe bites 1 harder each round. <b>Called to heel</b>: any road gang you meet will yield to it, and pay dues." },
     // Things Worth Finding (2026-11-21): the wishlist kit, worn once you have it.
     w4coat: { name: "The Inquirer's Coat", icon: "cloak", desc: "A long dark-green coat with a pocket for every town on the Vell, each stitched with its mark, and a lens on a chain. Ninian's spare. +1 to Investigation, Insight and Perception checks, and one free hint whenever you lay out a case." },
     w4veil: { name: "The Dust Men's Veil", icon: "cloak", desc: "A sand-coloured riding veil with bronze rings sewn in a spiral, from Sabra Ul. Once a fight it shrugs off Blinded, and in a sandstorm you lose one less water." },
@@ -42433,6 +42496,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (!FOE.on || !lgOn() || S.hp <= 0) return;
     const G = lg();
     n += lgWorn("snakeknot") ? 1 : 0;
+    if (hasGear("gbcoil")) { await mech("The green gem on your Sloughskin Bracer drinks the poison before it reaches your blood.", "loot"); return; }
     if (G.bb >= 5) { await mech("Your Bitterblood shrugs the poison off. Nothing takes in you any more.", "loot"); return; }
     if (FOE.lg && !FOE.lg.shrug && (lgWorn("gallnut") || fitN("gallnut"))) { FOE.lg.shrug = true; n--; await mech("The " + (lgWorn("gallnut") ? "Gallnut Ring" : "gallnut lining") + " takes the first of it.", "loot"); if (n <= 0) return; }
     const cap = S.cloak && S.cloak.poison ? 1 : 3, was = G.ven || 0;
@@ -43682,7 +43746,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   const bnLet = () => ROAD_GANGS.filter(G => S.bn && S.bn.fate[G.id] === "cut" && !(S.hm && S.hm.gone[G.id]));
   function hmHostile() {
     const B = bn(), gone = hm().gone, out = [];
-    ROAD_GANGS.forEach(G => { if (gone[G.id]) return; const f = B.fate[G.id], m = hm().fac && hm().fac[G.id] ? hmMood(G.id) : "angry"; if (m === "feared" || m === "respectful") return; const w = (m === "vengeful" ? 4 : 0) + Math.min(4, (hm().fac && hm().fac[G.id] ? hm().fac[G.id].hate : 0)); if (f === "cut") out.push([G, 3 + (hm().again[G.id] || 0) + w]); else if (f === "colours") out.push([G, 1 + w]); });
+    ROAD_GANGS.forEach(G => { if (gone[G.id] || gbOff(G.id)) return; const f = B.fate[G.id], m = hm().fac && hm().fac[G.id] ? hmMood(G.id) : "angry"; if (m === "feared" || m === "respectful") return; const w = (m === "vengeful" ? 4 : 0) + Math.min(4, (hm().fac && hm().fac[G.id] ? hm().fac[G.id].hate : 0)); if (f === "cut") out.push([G, 3 + (hm().again[G.id] || 0) + w]); else if (f === "colours") out.push([G, 1 + w]); });
     return out;
   }
 
@@ -44082,6 +44146,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     }
   }
   async function hmHome() {
+    await gbCheck();
     const H = hm();
     const h = el("div", "part-head sub", '<span class="num">The roads back · home</span><h2>' + esc(hmName()) + "</h2>");
     scrollNext = true; add(h);
@@ -44091,6 +44156,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     add(el("div", "", hmCard()));
     await say(hmGreeting());
     await hmMissionsBack();
+    await gbHome();
     await hmEvent();
     for (;;) {
       const R = H.raid, raidNow = R && calDay() >= R.eta;
@@ -44103,6 +44169,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
         { key: "bed", label: "Sleep in your own bed", tag: "free · full HP and footholds", show: !H.burnt.hall && (S.hp < S.maxHp || digsLeft() < DIG_MAX), plain: true },
         { key: "far", label: "Look at Pennock's far holds", tag: Object.keys(fhAll()).length ? Object.keys(fhAll()).map(id => FAR_HOLDS[id].name).join(", ") : "strongholds out on the old roads · for a householder of standing", show: H.hall >= 2, plain: true },
         { key: "eye", label: "Go down to the chair of the Mind's Eye", tag: "your command center · Devotion " + (meCmd() ? S.me.cmd.dev : 0) + (meCmd() && Object.values(S.me.cmd.ag).some(A => A.away && calDay() >= A.away.back) ? " · an agent is back" : "") + (meCmd() && S.me.cmd.chest.g ? " · tithe chest " + S.me.cmd.chest.g + " gold" : ""), show: meCmd(), plain: true },
+        { key: "hq", label: "Go round to the Knot House", tag: gbHQTag(), show: gbHQOn(), plain: true },
         { key: "war", label: "Go up to the war room", tag: "rivals, missions, patrols" + (Object.values(H.rival || {}).some(x => !x.razed) ? " · a rival holding" : ""), show: hmHas("war"), plain: true },
         { key: "stable", label: "Go out to your stable", tag: "horses, barding, the cart, breeding", show: hmHas("stable"), plain: true },
         { key: "trophy", label: "Walk round the trophy hall", tag: hmTrophies().length + " things on the walls", show: hmHas("trophy"), plain: true },
@@ -44118,6 +44185,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       else if (c === "wait") { if (!R.plan) await hmSetDefence(); R.eta = calDay(); }
       else if (c === "broker") await hmBroker();
       else if (c === "war") await hmWarRoom();
+      else if (c === "hq") await gbHQ();
       else if (c === "eye") await meChair();
       else if (c === "far") await fhHub();
       else if (c === "stable") await stableVisit(null, (n) => n);
@@ -45616,9 +45684,11 @@ body.in-fight.in-lab #bfx { background: none !important; }
   const bn = () => (S.bn = S.bn || { met: {}, beat: {}, fate: {}, inf: 0, lean: 0, cw: Math.max(0, (J.run && J.run.fights) || 0), purse: {}, weave: 0, colours: 0, yielded: 0, story: -1 });
   const BN_TIERS = [[0, "Unknown on the roads"], [3, "A name at the fires"], [8, "Gang-breaker"], [15, "The one they warn about"], [25, "Terror of the Blood-bought Roads"]];
   const bnTier = () => { const v = bn().inf; let t = 0; BN_TIERS.forEach(([n], i) => { if (v >= n) t = i; }); return t; };
-  const bnTitle = () => bn().weave >= 2 ? "Breaker of the High Weave" : BN_TIERS[bnTier()][1];
+  const bnTitle = () => bn().boss ? "Gangboss of the Blood-bought Roads" : bn().weave >= 2 ? "Breaker of the High Weave" : BN_TIERS[bnTier()][1];
   const bnLean = () => bn().lean >= 3 ? "Roadwarden" : bn().lean <= -3 ? "Road-king" : "Free Blade";
-  const bnBroken = () => Object.keys(bn().beat).filter(k => k !== "highweave").length;
+  // A gang counts as broken once you've beaten it, or once it's been judged at your gate (hanged, sent to
+  // the watch or sworn). (Before 2026-11-24 this counted keys, so a grudge rematch counted twice.)
+  const bnBroken = () => ROAD_GANGS.filter(G => bn().beat[G.id] || (S.hm && S.hm.gone && S.hm.gone[G.id])).length;
   const CT_RANKS = [1, 10, 25, 50, 100, 200];
   const CT_NAMES = ["", "I", "II", "III", "IV", "V", "VI"];
   const ctRank = () => CT_RANKS.filter(n => (S.bn ? S.bn.cw : 0) >= n).length;
@@ -45838,7 +45908,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // Which gang: one from either end of the road, one you haven't broken if there is one, and a gang
   // you let go now and then comes back with a grudge.
   function bnPick(regs) {
-    const B = bn(), pool = ROAD_GANGS.filter(G => regs.includes(G.r) && !(S.hm && S.hm.gone[G.id]) && !(S.hm && S.hm.fac && S.hm.fac[G.id] && hmMood(G.id) === "feared"));
+    const B = bn(), pool = ROAD_GANGS.filter(G => regs.includes(G.r) && !gbOff(G.id) && !(S.hm && S.hm.gone[G.id]) && !(S.hm && S.hm.fac && S.hm.fac[G.id] && hmMood(G.id) === "feared"));
     const grudges = pool.filter(G => B.fate[G.id] === "cut" && !B.beat[G.id + ":grudge"]);
     if (grudges.length && d(10) <= 3) return { G: grudges[d(grudges.length) - 1], grudge: true };
     const fresh = pool.filter(G => !B.beat[G.id]), from = fresh.length && d(4) > 1 ? fresh : pool;
@@ -45855,6 +45925,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (!S.axe) return;
     const B = bn(), { G, grudge } = bnPick(regs);
     if (!G) return;  // no gang works these regions (Dunvaar, the Wetwood)
+    // After you're Gangboss, one meeting in three is a pretender crew under an old mark, out for your title.
+    const pret = !!(B.boss && !grudge && !story && d(3) === 1);
     const H = HAULS[d(HAULS.length) - 1];
     B.met[G.id] = (B.met[G.id] || 0) + 1;
     const isNew = !(J.gangs && J.gangs[G.id]);
@@ -45867,7 +45939,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (grudge) await say("You know that mark. You let them go, last time, for a cut of what they had. They've spent it on better steel, and they've been asking after you on every road since.");
     else await say(BN_INTROS[d(BN_INTROS.length) - 1]);
     await say(G.how);
-    if (!grudge) await dryLine("gang", { G, chance: 45 });
+    if (pret) await gbPretender(G);
+    if (!grudge && !pret) await dryLine("gang", { G, chance: 45 });
     await hmRoadLine(G);
     add(el("div", "", gangCard(G)));
     if (isNew) await mech("New mark in your gang ledger: " + G.n + ". Your journal keeps it.", "loot");
@@ -45876,29 +45949,32 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (night) {
       tip("calendar");
       if (hasGear("w4clasp")) await say("The bell-clasp at your throat gives one small tink, a breath before anything moves.");
-      const r = hasGear("w4clasp") ? { ok: true } : await check({ label: "Perception check (in the dark)", mod: 2 + (hasMark("roadwise") ? 2 : 0) + (S.lantern || S.torch ? 2 : 0), dc: 14, cta: "Look" });
+      else if (gbWarn(regs)) await say(gbWarnLine());
+      const r = hasGear("w4clasp") || gbWarn(regs) ? { ok: true } : await check({ label: "Perception check (in the dark)", mod: 2 + (hasMark("roadwise") ? 2 : 0) + (S.lantern || S.torch ? 2 : 0), dc: 14, cta: "Look" });
       if (!r.ok) {
         await say("You don't see them until they're already moving: four shapes off the verge at once, and " + bnName(G, "shot") + " already drawing.");
         await mech("A night ambush. No talking, no toll and no way round: they strike first. Win, and the night's take is a quarter fatter.", "hurt");
         const F = await bnFight(G, { grudge, night: true, spotted: true });
         light(back);
         if (F.fled || F.overtaken) { await say("You get clear of them in the dark, somehow. They keep the cart, and the road."); return; }
-        await bnWon(G, H, { grudge, night: true });
+        await bnWon(G, H, { grudge, night: true, pret });
         return;
       }
       await say("You see them first, a glint of steel at the edge of the road, and they know you have. Nobody's ambushing anybody now.");
     }
     const tier = bnTier(), callDc = 17 - 2 * tier + (grudge ? 3 : 0) - hmRoadDc(G), toll = calToll(Math.max(3, Math.floor(S.coins / 10))) + rfDebt();
     const c = await choose([
-      { key: "fight", label: "Fight them", tag: "four of them · Lv " + lv() + (grudge ? " · with a grudge" : "") },
-      { key: "call", label: "Call them out by name", tag: "Intimidation DC " + callDc + " · " + bnTitle(), plain: true, show: tier >= 1 },
-      { key: "duel", label: "Challenge " + bnName(G, "knife") + " to single combat", tag: "a duel · win and they yield the cart · lose and the four of them set on you" + (duel().foes["gang:" + G.id] && duel().foes["gang:" + G.id].met ? " · " + bnName(G, "knife") + " has fought you before" : ""), plain: true },
-      { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : "") + (rfDebt() ? " · the road remembers the shrine" : ""), plain: true, show: S.coins >= toll },
-      { key: "token", label: "Pay with a Vell toll-token", tag: "the Heron's purse · " + (S.rf ? S.rf.tokens : 0) + " left", plain: true, show: rfTokenOk(regs) },
+      { key: "fight", label: pret ? "Defend your title" : "Fight them", tag: "four of them · Lv " + lv() + (grudge ? " · with a grudge" : "") + (pret ? " · pretenders, a fifth harder" + (gbCrewOn() ? " · " + gbPressName() + " at your back" : "") : "") },
+      { key: "heel", label: "Raise the Sloughskin Bracer", tag: "they know it · they yield and pay their dues", show: !pret && !!B.boss && hasGear("gbcoil") },
+      { key: "call", label: "Call them out by name", tag: "Intimidation DC " + callDc + " · " + bnTitle(), plain: true, show: tier >= 1 && !pret },
+      { key: "duel", label: "Challenge " + bnName(G, "knife") + " to single combat", tag: "a duel · win and they yield the cart · lose and the four of them set on you" + (duel().foes["gang:" + G.id] && duel().foes["gang:" + G.id].met ? " · " + bnName(G, "knife") + " has fought you before" : ""), plain: true, show: !pret },
+      { key: "toll", label: "Pay their toll", tag: toll + " gold" + (calWinter() ? " · the winter rate" : "") + (rfDebt() ? " · the road remembers the shrine" : ""), plain: true, show: S.coins >= toll && !pret },
+      { key: "token", label: "Pay with a Vell toll-token", tag: "the Heron's purse · " + (S.rf ? S.rf.tokens : 0) + " left", plain: true, show: rfTokenOk(regs) && !pret },
       { key: "slip", label: "Slip off the road and round them", tag: "Stealth DC 14", plain: true, show: story },
       { key: "leave", label: "Turn back the way you came", plain: true, show: !story }
     ]);
-    if (c === "leave") { await say("You turn round and take the long way. They jeer you all the way out of sight."); light(back); return; }
+    if (c === "leave") { await say("You turn round and take the long way. They jeer you all the way out of sight."); if (pret) await gbPretenderWalk(G); light(back); return; }
+    if (c === "heel") { await gbHeel(G, H); light(back); return; }
     if (c === "toll") { S.coins -= toll; rfPaid(regs, toll); renderSheet(); await say(bnName(G, "wall") + " takes the coins, bites one, and waves you through."); await mech("You pay " + toll + " gold to pass.", "hurt"); light(back); return; }
     if (c === "token") { rfToken(); await say(bnName(G, "wall") + " turns the brass token over, sees the bridgemen's mark, and swears, and waves you through. Nobody on the Vell turns down a bridge token."); light(back); return; }
     let spotted = false;
@@ -45909,7 +45985,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       if (r.won) {
         duel().knives++; grant("duknife");
         await say(bnName(G, "knife") + " ends up on their back in the dust, and stays there. " + bnName(G, "hexer") + " spits, and steps back from the cart. A deal's a deal, even on the Blood-bought Roads.");
-        await bnWon(G, H, { grudge, night }); light(back); return;
+        await bnWon(G, H, { grudge, night, pret }); light(back); return;
       }
       await say(bnName(G, "knife") + " stands over you and laughs, and then the other three come on while you're still getting up.");
     }
@@ -45938,12 +46014,12 @@ body.in-fight.in-lab #bfx { background: none !important; }
     }
     let den = false;
     if (B.map && !B.beat[G.id] && !story) { B.map = false; den = true; await say("The Red-Coin Peddler's map was right. You find their den before they find you, and you're in among them while they're still eating."); }
-    const F = await bnFight(G, { grudge, spotted: spotted || den, frac: den ? 0.75 : 1, edge: den });
+    const F = await bnFight(G, { grudge, spotted: spotted || den, frac: (den ? 0.75 : 1) * (pret ? gbPretFrac() : 1), edge: den });
     light(back);
-    if (F.fled || F.overtaken) { await say("You get clear of them, somehow. They let you go, laughing, and keep the cart."); return; }
-    await bnWon(G, H, { grudge, night });
+    if (F.fled || F.overtaken) { await say("You get clear of them, somehow. They let you go, laughing, and keep the cart."); if (pret) await gbPretenderWalk(G); return; }
+    await bnWon(G, H, { grudge, night, pret });
   }
-  async function bnWon(G, H, { grudge = false, night = false } = {}) {
+  async function bnWon(G, H, { grudge = false, night = false, pret = false } = {}) {
     bnLast = "won";
     const B = bn(), first = !B.beat[G.id];
     B.beat[G.id] = (B.beat[G.id] || 0) + 1;
@@ -45976,6 +46052,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     grant("bnfirst");
     achCheck();
     if (B.weave === 0 && bnBroken() >= WEAVE_AT) await weaveCard();
+    if (pret) await gbPretenderWon(G);
+    await gbCheck();
     if (bnTier() >= 3 && d(3) === 1) {
       const t = 8 + d(8) + Math.floor(lv() / 2); S.coins += t; renderSheet();
       await mech("Word travels ahead of you. Next morning there's a purse on your pack from a gang you've never met: " + t + " gold, to stay off their road.", "loot");
@@ -46023,6 +46101,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     tip("bloodroads");
   }
   async function bnRoads() {
+    await gbCheck();
     const regs = roamRegions(), pairs = [];
     for (let i = 1; i < regs.length; i++) pairs.push([regs[i - 1], regs[i]]);
     const B = bn();
@@ -46383,6 +46462,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const g = J.gangs || {}, metN = GANGS.filter(G => g[G.id]).length, beatN = GANGS.filter(G => g[G.id] && g[G.id].beaten).length;
     let h = "<section><h3>Gangs of the Blood-bought Roads · " + metN + " of " + GANGS.length + " met</h3>" +
       '<p class="j-sub">Gangs work the roads between the kingdoms: between chapters, and on the roads back. Each one has its mark, its four, and its trick. ' + beatN + " broken across every journey.</p>";
+    if (S.bn && started && S.bn.boss) h += gbSection();
     if (S.bn && started) h += "<p>Your road name: <b>" + bnTitle() + "</b> · Infamy " + S.bn.inf + " · " + bnLean() + (ctRank() ? " · Contender " + CT_NAMES[ctRank()] + " (" + S.bn.cw + " wins)" : "") + (S.bn.weave === 1 ? " · the High Weave has sent for you" : "") + ".</p>";
     if (S.bn && started && S.bn.walked) h += '<p class="j-sub">Stretches walked: ' + Object.keys(STRETCHES).map(k => S.bn.walked[k] ? "<b>" + STRETCHES[k].name + "</b>" : '<span style="opacity:.45">' + STRETCHES[k].name + "</span>").join(" · ") + "</p>";
     h += '<div class="gang-grid">' + GANGS.map(G => g[G.id] ? '<div class="gmark" title="' + G.n + '">' + gangSvg(G, 40) + "<span>" + G.n.replace(/^The /, "") + "</span><i>" + (g[G.id].beaten ? "broken " + g[G.id].beaten + "×" : "met") + "</i></div>"
@@ -46390,6 +46470,375 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const met = GANGS.filter(G => g[G.id]);
     if (met.length) h += '<details><summary>Their fours and their tricks</summary><div class="beasts">' + met.map(G => gangCard(G, g[G.id])).join("") + "</div></details>";
     return h + "</section>";
+  }
+
+  // ---------- the Gangboss (2026-11-24, Adrian) ----------
+  // Adrian: once every one of the forty-nine road gangs is broken there's nobody left to compete with, so
+  // finishing the job should crown you. Break them all (beaten on the road, or judged at your gate) and the
+  // chiefs call a moot at the Hanging Oak and name you Gangboss of the Blood-bought Roads. You get:
+  //  - the title Gangboss (if you take it), and "Gangboss of the Blood-bought Roads" as your road name;
+  //  - 3,000 gold from the moot's chest;
+  //  - Adder's Poison Spit (Adrian's painting): a Heartfire bow, 1d10 + 5, +2 to hit, Adder's Bite (a venom
+  //    stack on every hit, up to 5, and +1d4 on anything Poisoned 3+), Onslaught and Poison Spit (3d8 past
+  //    armour, Poisoned 5, half-blind). The fastest bow in the game by a nose: see tools/gangboss-sim.js;
+  //  - the Sloughskin Bracer (Adrian's painting; name and effect ours): Slough (once a fight, a blow that
+  //    would leave you at a quarter HP or less doesn't land), Green blood (poison can't take in you, your
+  //    poisons bite +1 a round), Called to heel (a road gang yields to it and pays dues);
+  //  - one choice, made once: FREE a gang or PRESS one into service. Both leave the roads for good.
+  //    Freed: you lean Roadwarden; they keep their old road clean (a night ambush there never surprises you),
+  //    their region can't be put under a racket, they leave Draughts of Mending in your strongbox every
+  //    fortnight, and the towns there talk about it. Pressed: you lean Road-king; they crew the Knot House
+  //    (+2 on its jobs, they can run cargo for you) and come out against pretenders with you. They have
+  //    loyalty: pay them their cut and they stay; starve them, or lose their cargo, and at 0 they turn,
+  //    take the till, go back on the road with a grudge and raid your holding.
+  //  - the Knot House: a gang headquarters at your holding (Pennock builds it once you own one). Smuggling
+  //    runs (4 cargoes, 2 routes, you or the crew), the fence (spare weapons at double), rackets (a region's
+  //    towns pay you every day; the watch there notices), heat (the watch raids at 8: bribe, hide it, or lose
+  //    the till and the house for six days), paying off the watch, and the books.
+  //  - after the crown, one road meeting in three is a pretender crew under an old mark, a fifth harder,
+  //    out to take your title. Beat them for a purse; walk away and the roads talk (−1 Infamy).
+  // State: S.bn.boss = { at, free, press, loy, paid, turned, gift, pret, walked, heeled, hq: { heat, till, at,
+  //   cool, runAt, runs, clean, lost, fenced, rackets{reg: day}, shut, raids, earned } }.
+  const ADDER = { b: "bow", t: "heartfire", n: "Adder's Poison Spit", noun: "bow", die: [1, 10, 5], hit: 2, tr: ["adder", "first"], ac: ["onslaught", "spit"],
+    lore: "The gangboss's bow, older than any gang on the roads: black horn and bronze, with spikes along the limbs and green gems where the venom gathers. Every chief who ever held the Blood-bought Roads has drawn it once. The string never quite dries." };
+  const GB_CARGO = {
+    salt: { name: "Untaxed salt", cost: 40, pay: 110, dc: 12, heat: 1, sk: "Stealth", how: "Twenty sacks of salt from the flats, under a load of turnips." },
+    oil: { name: "Lamp-oil with no duty paid", cost: 70, pay: 190, dc: 13, heat: 1, sk: "Deception", how: "Forty jars of lamp-oil, labelled as vinegar, which they nearly are." },
+    resin: { name: "Hesk song-resin", cost: 110, pay: 320, dc: 15, heat: 2, sk: "Stealth", how: "Three crates of the amber resin the Hesk sing into blades, which nobody is meant to sell." },
+    bronze: { name: "Stolen bell-bronze", cost: 150, pay: 460, dc: 16, heat: 3, sk: "Deception", how: "A broken chapel bell in eleven pieces, wrapped in sacking, that a founder in another town will melt and ask no questions about." }
+  };
+  const gbX = () => S.bn && S.bn.boss;
+  const gbAll = () => ROAD_GANGS.every(G => bn().beat[G.id] || (S.hm && S.hm.gone && S.hm.gone[G.id]));
+  const gbOff = (id) => { const X = gbX(); return !!(X && (X.free === id || (X.press === id && !X.turned))); };
+  const gbCrewOn = () => { const X = gbX(); return !!(X && X.press && !X.turned && X.loy >= 3); };
+  const gbPressName = () => { const X = gbX(), G = X && X.press && gangById(X.press); return G ? G.n.replace(/^The /, "the ") : ""; };
+  const gbPretFrac = () => gbCrewOn() ? 1.05 : 1.2;
+  const gbWarn = (regs) => { const X = gbX(), G = X && X.free && gangById(X.free); return !!(G && regs.includes(G.r)); };
+  const gbWarnLine = () => { const G = gangById(gbX().free); return "A low whistle from the hedge, twice. It's " + bnName(G, "shot") + ", who used to ride with " + G.n.replace(/^The /, "the ") + " and keeps this road clean now, because you set them free. \"Four of them, Boss,\" " + bnName(G, "shot") + " says out of the dark. \"On your left. Thought you'd want to know.\""; };
+  const gbHQOn = () => !!(gbX() && hmOwn());
+  const gbHQ0 = () => ({ heat: 0, till: 0, at: calDay(), cool: calDay(), runAt: -9, runs: 0, clean: 0, lost: 0, fenced: 0, rackets: {}, shut: -1, raids: 0, earned: 0 });
+  const gbHQs = () => { const X = gbX(); return X.hq || (X.hq = gbHQ0()); };
+  const gbRate = () => 4 + Math.floor(lv() / 8);
+  function gbHQTag() {
+    if (!gbX()) return "";
+    const Q = gbHQs(); gbAccrue();
+    return "smuggling, the fence, rackets · heat " + Q.heat + " of 10" + (Q.till ? " · " + Q.till + " gold in the till" : "") + (calDay() < Q.shut ? " · shut by the watch" : "");
+  }
+  function gbLog(t) { const X = gbX(); X.log = X.log || []; X.log.unshift(calDate() + ": " + t); X.log = X.log.slice(0, 20); }
+
+  async function gbCheck() {
+    if (!S.axe || !S.bn || S.bn.boss || !gbAll()) return false;
+    await gbCrown();
+    return true;
+  }
+  async function gbCrown() {
+    const B = bn();
+    B.boss = { at: calDay(), free: null, press: null, loy: 6, paid: calDay(), turned: false, gift: calDay(), pret: 0, walked: 0, heeled: 0, hq: null };
+    const back = document.body.dataset.light;
+    add(el("div", "part-head sub", '<span class="num">The Blood-bought Roads · the moot</span><h2>The Hanging Oak</h2>'));
+    scrollNext = true; light("dusk");
+    await say("A boy on a mule catches you up on the road with a red cord in his fist, knotted forty-nine times, and won't say who sent him. He only says: the Hanging Oak, at dusk, and come alone, because nobody else will.");
+    await say("The Hanging Oak stands where four of the Blood-bought Roads cross, and it hasn't hanged anybody in a hundred years. Tonight every branch of it has a gang's mark nailed on: forty-nine of them, every colour you've cut down, in a ring round the trunk. Under them, sitting on saddles and barrels and the roots, are what's left of the gangs: the Hexers, the Shots, the Walls and the Knives, some with arms in slings, some who still won't look at you.");
+    await say("Nobody draws. An old Wall with one ear gets up and says it the way the road has always said it: a gang that's broken pays the one who broke it, and when every gang on the roads is broken by the same hand, the roads have a boss. It hasn't happened in living memory. It's happened now.");
+    await say("One by one they come up, the forty-nine Knives, and each of them scratches their gang's mark into the inside of a black leather bracer with a green stone in it, and hands it on.");
+    const fig = framedPic(picUrl("gangboss"), "A golden plaque crowned with a skull, crossed blades and torn red banners: Congratulations! You're now a Gangboss!", "", "gb-plaque");
+    add(fig);
+    SND.cheers && SND.cheers(1);
+    SND.drum && SND.drum(6);
+    await mech("<b>You're the Gangboss of the Blood-bought Roads.</b> All " + ROAD_GANGS.length + " road gangs broken. Your road name is Gangboss of the Blood-bought Roads from now on.", "loot");
+    grant("gangboss");
+    if (S.title !== "Gangboss") {
+      const t = await choose([{ key: "take", label: "Take the title Gangboss", tag: "it goes after your name" }, { key: "no", label: "Keep the title you have", plain: true }]);
+      if (t === "take") { S.title = "Gangboss"; renderSheet(); }
+    }
+    // the coin
+    S.coins += 3000; renderSheet();
+    await say("They bring out the moot's chest, which every gang on the roads has paid into since before the roads had names, and open it at your feet.");
+    await mech("Gain <b>3,000 gold</b>.", "loot");
+    // the bow
+    await say("Then the one-eared Wall unwraps a long thing in oilcloth. It's a bow: black horn and bronze, spikes along the limbs, green gems where the venom gathers, and a string that's wet. \"Adder's Poison Spit,\" he says. \"The gangboss's bow. Every boss there's ever been has drawn it once. You'll draw it more than that, I think.\"");
+    S.lootN = (S.lootN || 0) + 1;
+    const L = Object.assign({ id: S.lootN, uid: newUid(), gb: true, icon: "bow", pic: "adderbow", keep: true }, ADDER, { tr: ADDER.tr.slice(), ac: ADDER.ac.slice(), die: ADDER.die.slice() });
+    gainLoot(L);
+    const k = "L" + L.id;
+    picCard(k);
+    await mech("<span>" + wTier(k) + "Gain <b>" + armName(k) + "</b>. " + wDef(k).fx + "</span>", "loot find q-heartfire");
+    const c = await choose([{ key: "y", label: "Take it in hand now", tag: "swap any time from the Bag" }, { key: "n", label: "Keep what you're holding", plain: true }]);
+    if (c === "y") wield(k);
+    // the bracer
+    S.gear = S.gear || [];
+    if (!hasGear("gbcoil")) S.gear.push("gbcoil");
+    renderSheet();
+    await say("Last, the bracer, with forty-nine marks scratched inside it. The green stone weeps when you buckle it on, and the venom runs down your wrist and doesn't burn. It's warm, like something alive.");
+    picCard(null, { fam: "gbcoil", glow: "heartfire" }, GEAR.gbcoil.name);
+    await mech("<b>" + GEAR.gbcoil.name + ".</b> " + GEAR.gbcoil.desc, "loot");
+    // free one, or press one
+    await gbChoose();
+    // the Knot House
+    if (hmOwn()) await say("\"And you'll want somewhere to do business,\" the Wall says. \"Not the front room.\" By the time you're home, " + HM_BROKER + " has had a long low house put up behind " + esc(hmName()) + ", with a cellar under it and no windows on the road side. The gangs call it the Knot House. It's yours.");
+    else await say("\"And you'll want somewhere to do business,\" the Wall says. \"Get yourself a holding, Boss. The day you do, the gangs'll build you a house behind it.\" (Buy a holding from " + HM_BROKER + " and the Knot House, your gang headquarters, is waiting there.)");
+    gbHQs();
+    gbLog("named Gangboss at the Hanging Oak");
+    achCheck(); light(back); save();
+  }
+  async function gbChoose() {
+    const B = bn(), X = B.boss;
+    const can = ROAD_GANGS.filter(G => !(S.hm && S.hm.gone && S.hm.gone[G.id]));
+    if (!can.length) return;
+    await say("\"One more thing,\" the old Wall says. \"A new boss sets one gang loose or takes one on. That's the custom. Whichever you pick, they're off the road for good after tonight.\"");
+    const how = await choose([
+      { key: "free", label: "Free one gang", tag: "they leave the road and go straight · their road stays clean for you · leaning Roadwarden" },
+      { key: "press", label: "Press one gang into service", tag: "they crew your Knot House and fight for you · keep them loyal · leaning Road-king", plain: true }
+    ]);
+    const regs = [...new Set(can.map(G => G.r))];
+    const r = regs.length === 1 ? regs[0] : await choose(regs.map((x, i) => ({ key: x, label: "A gang from " + REGIONS[x], tag: can.filter(G => G.r === x).map(G => G.n.replace(/^The /, "")).join(", "), plain: i > 0 })));
+    const pool = can.filter(G => G.r === r);
+    const FATE = { turned: "you gave them to the watch", cut: "you let them go for a cut", colours: "you took their colours" };
+    const id = await choose(pool.map((G, i) => ({ key: G.id, label: G.n, tag: "“" + G.motto + "”" + (B.fate[G.id] ? " · " + FATE[B.fate[G.id]] : ""), plain: i > 0 })));
+    const G = gangById(id);
+    add(el("div", "", gangCard(G)));
+    if (how === "free") {
+      X.free = id; B.lean += 3;
+      await say("You call " + G.n + " up to the oak. " + bnName(G, "knife") + " comes up slowly, expecting the worst, and you take their mark down off the branch and hand it back. \"Go home,\" you tell them. \"Wherever that is. And keep your old road clean.\" " + bnName(G, "hexer") + " starts to cry, and is furious about it.");
+      await mech(G.n + " are struck off the roll of the roads. They won't be back on them: they'll be keeping their old road in " + REGIONS[G.r] + " clean instead, and you'll hear from them. Leaning Roadwarden (+3).", "loot");
+      if (typeof lrOn === "function" && lrOn() && lr().w[G.r]) await lrCrime(G.r, -1, "The watch in " + REGIONS[G.r] + " hears what you did.");
+      grant("gbfree"); gbLog("freed " + G.n.replace(/^The /, "the "));
+    } else {
+      X.press = id; X.loy = 6; X.paid = calDay(); B.lean -= 3;
+      await say("You call " + G.n + " up to the oak and put their mark in your pack. " + bnName(G, "knife") + " looks at it there for a long moment, and then kneels, because everybody's watching. \"We're yours, Boss,\" they say. \"For as long as you're worth it.\" They mean the last part.");
+      await mech(G.n + " are pressed into your service. They crew your Knot House and back you against pretenders. Loyalty " + X.loy + " of 10: pay them their cut and they stay; let it fall to nothing and they'll turn. Leaning Road-king (−3).", "loot");
+      grant("gbpress"); gbLog("pressed " + G.n.replace(/^The /, "the ") + " into service");
+    }
+    renderSheet();
+  }
+
+  // ----- on the roads, after the crown -----
+  async function gbPretender(G) {
+    await say("But these aren't " + G.n + " as you broke them. New faces under the old mark, younger and hungrier, and the one in front has a crown cut out of a tin plate on " + ["his", "her", "their"][d(3) - 1] + " head. \"So you're the Gangboss,\" the pretender says. \"The roads want a new one.\"");
+    if (gbCrewOn()) await say(bnName(gangById(gbX().press), "shot") + " of " + gbPressName() + " steps out of the trees behind you with an arrow on the string. \"We'll take the one on the left, Boss.\"");
+    await mech("Pretenders: no tolls, no names, no duels. They're a fifth harder than the gang they copy" + (gbCrewOn() ? ", less with your pressed crew at your back" : "") + ". Walk away and the roads will talk.", "hurt");
+  }
+  async function gbPretenderWon(G) {
+    const X = gbX(); if (!X) return;
+    X.pret = (X.pret || 0) + 1;
+    const g = 40 + 2 * lv(); S.coins += g; renderSheet();
+    await say("The pretender's tin crown ends up in the ditch. You leave it there. Somebody will tell the story at a fire tonight, and it'll have you in it.");
+    await mech("Title held. The pretenders' purse: " + g + " gold. Pretenders put down: " + X.pret + ".", "loot");
+    if (X.press && !X.turned) { X.loy = Math.min(10, X.loy + 1); await mech(gbPressName().replace(/^\w/, x => x.toUpperCase()) + " like a boss who wins. Loyalty " + X.loy + ".", "loot"); }
+    if (X.pret >= 5) grant("gbpret");
+    gbLog("put down pretenders under " + G.n + "'s mark");
+  }
+  async function gbPretenderWalk(G) {
+    const X = gbX(); if (!X) return;
+    X.walked = (X.walked || 0) + 1; bn().inf = Math.max(0, bn().inf - 1);
+    let t = "By the next town everybody's heard the Gangboss walked away from a tin crown. Infamy −1.";
+    if (X.press && !X.turned) { X.loy = Math.max(0, X.loy - 1); t += " " + gbPressName().replace(/^\w/, x => x.toUpperCase()) + " heard too. Loyalty " + X.loy + "."; }
+    await mech(t, "hurt");
+  }
+  async function gbHeel(G, H) {
+    const B = bn(), X = gbX();
+    await say("You don't say anything. You just push back your sleeve. " + bnName(G, "knife") + " sees the green stone, and the marks scratched round it, and their own mark among them, and the whole four of them step back off the road like it's hot.");
+    await bnHaul(G, H, 0.8);
+    const dues = 15 + Math.floor(lv() / 2); S.coins += dues;
+    B.yielded++; B.inf += 1; X.heeled = (X.heeled || 0) + 1;
+    renderSheet();
+    await mech("Called to heel. They pay their dues: " + dues + " gold. Infamy +1 (" + bnRepLine() + ").", "loot");
+    grant("bnyield"); if (X.heeled >= 10) grant("gbheel");
+    achCheck();
+  }
+  async function gbTownLine(T) {
+    const X = gbX();
+    if (!X || d(3) > 1) return;
+    const L = [];
+    const F = X.free && gangById(X.free);
+    if (F && F.r === T.reg) L.push("There's a new hand on the town gate, and it's " + bnName(F, "wall") + " of " + F.n.replace(/^The /, "the ") + ", in a watchman's coat that doesn't fit. \"Honest work, Boss,\" " + bnName(F, "wall") + " says. \"Terrible pay. I like it.\"");
+    if (X.hq && X.hq.rackets && X.hq.rackets[T.reg]) L.push("The baker sees you come in and puts the week's money on the counter before you've said a word, and doesn't look at you while you don't pick it up. The racket's yours. Everybody here knows it.");
+    const P = X.press && gangById(X.press);
+    if (P && X.turned) L.push("A carter tells you " + P.n.replace(/^The /, "the ") + " are back on the roads, and telling anybody who'll listen that the Gangboss doesn't pay.");
+    if (L.length) await say(L[d(L.length) - 1]);
+    else if (d(2) === 1) await say(["Somebody at the inn says the roads are quieter since there's a Gangboss. Somebody else says the roads are quieter because everybody's scared of the Gangboss. They look at you to settle it.", "Two children are playing gangs in the square. One of them is wearing a bracer made of a sock, and everybody has to do what that one says."][d(2) - 1]);
+  }
+
+  // ----- at your holding -----
+  async function gbHome() {
+    const X = gbX();
+    if (!X || !hmOwn()) return;
+    const H = hm();
+    if (X.free && calDay() >= (X.gift || 0) + 15) {
+      X.gift = calDay(); H.potions = (H.potions || 0) + 2;
+      const F = gangById(X.free);
+      await say("There's a basket on your step with a cloth over it: two Draughts of Mending and a note in a terrible hand. <i>The road's clean. Thank you. " + F.n + ".</i>");
+      await mech("Two Draughts of Mending go into the strongbox.", "loot");
+    }
+    if (X.press && !X.turned) {
+      const due = Math.floor((calDay() - (X.paid || 0)) / 12);
+      if (due > (X.dueSeen || 0)) { X.loy = Math.max(0, X.loy - (due - (X.dueSeen || 0))); X.dueSeen = due; await mech(gbPressName().replace(/^\w/, x => x.toUpperCase()) + " haven't had their cut in " + (calDay() - X.paid) + " days. Loyalty " + X.loy + ".", "hurt"); }
+      if (X.loy <= 0) await gbTurn();
+    }
+  }
+  async function gbTurn() {
+    const X = gbX(), B = bn(), G = gangById(X.press), Q = gbHQs();
+    X.turned = true;
+    const took = Q.till; Q.till = 0;
+    B.fate[G.id] = "cut"; delete B.beat[G.id + ":grudge"];
+    if (hmOwn()) hmFacAdd(G.id, "hate", 4);
+    await say("The Knot House is empty when you get there. Not tidy-empty: empty the way a house is after people who know where everything is have left in a hurry. The till's gone" + (took ? ", with " + took + " gold in it" : "") + ". " + G.n + "'s mark has been cut off the wall and your name scratched under it, crossed out.");
+    await mech(G.n + " have turned. They're back on the Blood-bought Roads with a grudge, and they know exactly where you live.", "hurt");
+    gbLog(G.n + " turned on you");
+  }
+  function gbAccrue() {
+    const Q = gbHQs(), now = calDay(), n = Object.keys(Q.rackets).length;
+    const days = Math.max(0, Math.min(40, now - Q.at));
+    if (n && days) { const g = days * n * gbRate(); Q.till += g; Q.earned += g; }
+    Q.at = now;
+    const cools = Math.floor((now - Q.cool) / 6);
+    if (cools > 0) { Q.heat = Math.max(0, Q.heat - cools); Q.cool += cools * 6; }
+  }
+  const gbReg = () => (typeof lrHere === "function" ? lrHere() : roamRegions()[roamRegions().length - 1]);
+  async function gbHeat(n, why) {
+    const Q = gbHQs(); Q.heat = Math.max(0, Math.min(10, Q.heat + n));
+    if (n > 0) await mech((why ? why + " " : "") + "Heat " + Q.heat + " of 10" + (Q.heat >= 8 ? ": <b>the watch is coming for the Knot House</b>." : Q.heat >= 6 ? ": the watch is asking questions." : "."), "hurt");
+  }
+  async function gbWatchRaid() {
+    const Q = gbHQs();
+    Q.raids++;
+    await say("There are watchmen at the end of the lane, a whole company of them, with a writ and a battering ram they've plainly been looking forward to using. Somebody has talked.");
+    const bribe = 150 + 25 * Q.heat;
+    const c = await choose([
+      { key: "bribe", label: "Pay their captain to have the wrong house", tag: bribe + " gold · heat down to 3", show: S.coins >= bribe },
+      { key: "hide", label: "Clear the cellar before the door goes", tag: "Sleight of Hand DC 15 · fail and they find it all", plain: true },
+      { key: "let", label: "Let them search", tag: "they take the till · the house is shut 6 days · heat down to 2", plain: true }
+    ]);
+    if (c === "bribe") { S.coins -= bribe; Q.heat = 3; renderSheet(); await say("The captain counts it twice, and then remembers that this is a wool store and always has been."); await mech("Paid " + bribe + " gold. Heat 3.", "hurt"); return true; }
+    if (c === "hide") {
+      const r = await check({ label: "Sleight of Hand check (clearing the cellar)", mod: 3 + Math.floor(lvk() / 10) + (gbCrewOn() ? 2 : 0), dc: 15, cta: "Clear it" });
+      if (r.ok) { Q.heat = 4; await say("By the time the door comes in, the cellar is full of wool and a very surprised cat. They search it for an hour and go away with nothing."); await mech("Nothing found. Heat 4.", "loot"); grant("gbhide"); return true; }
+      await say("You're halfway through when the door goes in.");
+    }
+    const took = Q.till; Q.till = 0; Q.heat = 2; Q.shut = calDay() + 6;
+    if (typeof lrOn === "function" && lrOn()) await lrCrime(gbReg(), 1, "The watch has your name from the Knot House.");
+    await say("They take everything that isn't nailed down, and then the nails.");
+    await mech("The watch takes the till (" + took + " gold) and shuts the Knot House for six days. Heat 2.", "hurt");
+    gbLog("raided by the watch");
+    return false;
+  }
+  async function gbHQ() {
+    const X = gbX(), Q = gbHQs();
+    add(el("div", "part-head sub", '<span class="num">' + esc(hmName()) + " · your gang headquarters</span><h2>The Knot House</h2>"));
+    scrollNext = true;
+    gbAccrue();
+    if (X.press && !X.turned && X.loy <= 0) { await gbTurn(); return; }
+    if (calDay() < Q.shut) { await say("The watch's seal is still on the door, and a bored watchman is still sitting under it. Come back on " + calDate(Q.shut) + "."); return; }
+    if (Q.heat >= 8 && !(await gbWatchRaid())) return;
+    await say(X.press && !X.turned ? gbPressName().replace(/^\w/, x => x.toUpperCase()) + " are playing dice on a barrel when you come in, and get up, mostly. The cellar smells of salt, lamp-oil and secrets." : "The Knot House is a long low room with a cellar under it and no windows on the road side. Forty-nine marks are painted round the walls. The cellar smells of salt, lamp-oil and secrets.");
+    for (;;) {
+      gbAccrue();
+      if (Q.heat >= 8 && !(await gbWatchRaid())) return;
+      const nR = Object.keys(Q.rackets).length, crew = gbCrewOn();
+      const spare = armLoot().filter(x => !x.keep && "L" + x.id !== wpnKey());
+      const cutCost = 30 + lv();
+      const c = await choose([
+        { key: "run", label: "Send a smuggling run", tag: "4 cargoes · " + Q.runs + " runs, " + Q.clean + " clean in a row", show: calDay() >= Q.runAt + 2 },
+        { key: "wait", label: "The next cart goes out on " + calDate(Q.runAt + 2), tag: "a run goes out every other day", show: calDay() < Q.runAt + 2, plain: true },
+        { key: "fence", label: "Fence what you've picked up", tag: spare.length + " spare weapon" + (spare.length === 1 ? "" : "s") + " · double what a market pays · heat", show: spare.length > 0, plain: true },
+        { key: "racket", label: "Put a town under your protection", tag: nR + " racket" + (nR === 1 ? "" : "s") + " · " + gbRate() + " gold a day each · the watch there notices · one try a day", show: (Q.rkAt ?? -9) < calDay(), plain: true },
+        { key: "till", label: "Empty the till", tag: Q.till + " gold", show: Q.till > 0, plain: true },
+        { key: "watch", label: "Pay off the watch", tag: (40 + 20 * Q.heat) + " gold · heat " + Q.heat + " → " + Math.max(0, Q.heat - 3), show: Q.heat > 0 && S.coins >= 40 + 20 * Q.heat, plain: true },
+        { key: "cut", label: "Pay " + gbPressName() + " their cut", tag: cutCost + " gold · loyalty " + (X.loy || 0) + " of 10", show: !!X.press && !X.turned && S.coins >= cutCost && calDay() >= (X.paid || 0) + 6, plain: true },
+        { key: "books", label: "Read the books", plain: true },
+        { key: "leave", label: "Back up to the house", plain: true }
+      ]);
+      if (c === "leave") break;
+      if (c === "run") await gbRun();
+      else if (c === "wait") await say("Nothing's ready to go out yet. The carts come in every other day.");
+      else if (c === "fence") await gbFence(spare);
+      else if (c === "racket") await gbRacket();
+      else if (c === "till") { S.coins += Q.till; await mech("You take " + Q.till + " gold out of the till.", "loot"); Q.till = 0; renderSheet(); }
+      else if (c === "watch") { const g = 40 + 20 * Q.heat; S.coins -= g; Q.heat = Math.max(0, Q.heat - 3); renderSheet(); await say("A purse goes to a sergeant's widow, a cask to the watch-house, and a word to the right ear."); await mech("Paid " + g + " gold. Heat " + Q.heat + ".", "loot"); }
+      else if (c === "cut") { S.coins -= cutCost; X.paid = calDay(); X.dueSeen = 0; X.loy = Math.min(10, X.loy + 2); renderSheet(); await say(bnName(gangById(X.press), "knife") + " counts it out in front of everybody, so they all see it's fair, and then buys the first round with it."); await mech("Paid " + cutCost + " gold. Loyalty " + X.loy + " of 10.", "loot"); }
+      else if (c === "books") await mech("<b>The Knot House books.</b> Runs: " + Q.runs + " (" + Q.lost + " lost, " + Q.clean + " clean in a row). Fenced: " + Q.fenced + " weapons. Rackets: " + (nR ? Object.keys(Q.rackets).map(r => REGIONS[r]).join(", ") + ", " + nR * gbRate() + " gold a day" : "none") + ". Taken from the rackets in all: " + Q.earned + " gold. Heat " + Q.heat + " of 10 (it cools by one every six days). Watch raids: " + Q.raids + "." + (X.press ? " " + gangById(X.press).n + ": " + (X.turned ? "turned on you" : "loyalty " + X.loy + " of 10") + "." : "") + (X.free ? " " + gangById(X.free).n + ": freed, keeping their road clean." : ""));
+      save();
+    }
+  }
+  async function gbRun() {
+    const X = gbX(), Q = gbHQs(), crew = gbCrewOn();
+    const ck = await choose(Object.keys(GB_CARGO).map((k, i) => { const C = GB_CARGO[k]; return { key: k, label: C.name, tag: C.cost + " gold to buy · sells for about " + Math.round(C.pay * (1 + lv() / 40)) + " · " + C.sk + " DC " + C.dc, show: S.coins >= C.cost, plain: i > 0 }; }).concat([{ key: "no", label: "Not today", plain: true }]));
+    if (ck === "no") return;
+    const C = GB_CARGO[ck];
+    await say(C.how);
+    const rt = await choose([
+      { key: "back", label: "The back roads", tag: "slower and safer · DC −2 · pays three quarters" },
+      { key: "toll", label: "Straight through the toll-forts", tag: "quick and bold · DC +2 · pays a third more", plain: true }
+    ]);
+    const who = crew ? await choose([{ key: "me", label: "Drive it yourself", tag: "your own " + C.sk + " check" }, { key: "crew", label: "Send " + gbPressName(), tag: "they roll it · if it's lost, their loyalty drops", plain: true }]) : "me";
+    S.coins -= C.cost; renderSheet(); Q.runAt = calDay();
+    const dc = C.dc + (rt === "back" ? -2 : 2), pay = Math.round(C.pay * (1 + lv() / 40) * (rt === "back" ? 0.75 : 1.35));
+    let ok;
+    if (who === "crew") { const r = d(20), m = 4 + Math.floor(lvk() / 10); ok = r + m >= dc; await mech(gbPressName().replace(/^\w/, x => x.toUpperCase()) + " take the cart out: d20 " + r + " + " + m + " = " + (r + m) + " vs DC " + dc + ".", ok ? "loot" : "hurt"); }
+    else ok = (await check({ label: C.sk + " check (" + C.name.toLowerCase() + ", " + (rt === "back" ? "the back roads" : "through the toll-forts") + ")", mod: 3 + Math.floor(lvk() / 10) + (crew ? 2 : 0), dc, cta: "Drive" })).ok;
+    Q.runs++;
+    if (ok) {
+      S.coins += pay; Q.clean++; renderSheet();
+      await say(rt === "back" ? "Three days of cart-tracks and sheep, and a buyer in a barn who doesn't want to know your name." : "The toll-fort sergeant lifts one sack, looks at you, looks at the bracer, and waves you through.");
+      await mech("The run comes in clean: " + pay + " gold.", "loot");
+      await gbHeat(C.heat, "The watch hears a little.");
+      grant("gbrun"); if (Q.clean >= 10) grant("gbclean");
+      gbLog("ran " + C.name.toLowerCase() + " for " + pay + " gold");
+    } else {
+      Q.clean = 0; Q.lost++;
+      await say("At the third milestone there's a chain across the road and six of the watch behind it, and somebody has told them exactly which cart to look at.");
+      await mech("The cargo's impounded. You're out the " + C.cost + " gold.", "hurt");
+      await gbHeat(C.heat + 2, "");
+      if (typeof lrOn === "function" && lrOn()) await lrCrime(gbReg(), 1, "Your name's on the impound docket.");
+      if (who === "crew" && X.press && !X.turned) { X.loy = Math.max(0, X.loy - 1); await mech(gbPressName().replace(/^\w/, x => x.toUpperCase()) + " lost the cart, and blame you for the route. Loyalty " + X.loy + ".", "hurt"); }
+      gbLog("lost a cart of " + C.name.toLowerCase());
+    }
+  }
+  async function gbFence(spare) {
+    const Q = gbHQs();
+    const low = spare.filter(x => ARM_TIERS[x.t].rank <= 2);
+    const val = (a) => a.reduce((t, x) => t + 2 * ARM_TIERS[x.t].sell, 0);
+    const c = await choose([
+      { key: "low", label: "Fence everything below Gloaming", tag: low.length + " weapons · " + val(low) + " gold", show: low.length > 0 && low.length < spare.length },
+      { key: "all", label: "Fence every spare weapon", tag: spare.length + " weapons · " + val(spare) + " gold", plain: low.length > 0 && low.length < spare.length },
+      { key: "no", label: "Keep them", plain: true }
+    ]);
+    if (c === "no") return;
+    const go = c === "low" ? low : spare, ids = new Set(go.map(x => x.id)), g = val(go);
+    S.armLoot = armLoot().filter(x => !ids.has(x.id));
+    S.coins += g; Q.fenced += go.length; renderSheet();
+    await say("The fence is a small woman with a jeweller's glass who never says a number out loud, only writes it on a slate and turns it round.");
+    await mech("Fenced " + go.length + " weapon" + (go.length === 1 ? "" : "s") + " for " + g + " gold.", "loot");
+    await gbHeat(Math.ceil(go.length / 4), "");
+  }
+  async function gbRacket() {
+    const X = gbX(), Q = gbHQs(), F = X.free && gangById(X.free);
+    const regs = roamRegions().filter(r => TOWNS[r] && !Q.rackets[r] && !(F && F.r === r));
+    if (F && TOWNS[F.r] && roamRegions().includes(F.r)) await say("Not " + REGIONS[F.r] + ": " + F.n + " keep that road clean now, and you set them to it.");
+    if (!regs.length) { await say("Every town you can reach is already paying you, or under somebody you promised."); return; }
+    const n = Object.keys(Q.rackets).length;
+    const r = await choose(regs.map((x, i) => ({ key: x, label: REGIONS[x], tag: TOWNS[x].map(T => T.name).join(", ") + " · Intimidation DC " + (12 + 2 * n), plain: i > 0 })).concat([{ key: "no", label: "Not now", plain: true }]));
+    if (r === "no") return;
+    Q.rkAt = calDay();
+    const k = await check({ label: "Intimidation check (a word with " + REGIONS[r] + "'s shopkeepers)", mod: 3 + Math.floor(lvk() / 10) + (gbCrewOn() ? 2 : 0), dc: 12 + 2 * n, cta: "Have a word" });
+    if (!k.ok) { await say("The guild-masters of " + REGIONS[r] + " listen politely, and then send for the watch."); await gbHeat(1, ""); return; }
+    Q.rackets[r] = calDay();
+    await say("You walk the streets of " + REGIONS[r] + " with the bracer on and say very little. By evening every shop has decided it would like protecting.");
+    await mech(REGIONS[r] + " pays you now: " + gbRate() + " gold a day into the Knot House till. The towns there won't forget who collects.", "loot");
+    await gbHeat(1, "");
+    if (typeof lrOn === "function" && lrOn()) await lrCrime(r, 1, "The watch in " + REGIONS[r] + " knows who's collecting.");
+    if (X.press && !X.turned && gangById(X.press).r === r) { X.loy = Math.min(10, X.loy + 2); await mech(gbPressName().replace(/^\w/, x => x.toUpperCase()) + " grew up on that road. They're pleased. Loyalty " + X.loy + ".", "loot"); }
+    if (Object.keys(Q.rackets).length >= 3) grant("gbracket");
+    gbLog("put " + REGIONS[r] + " under your protection");
+  }
+  function gbSection() {
+    const X = gbX(); if (!X) return "";
+    const Q = X.hq, F = X.free && gangById(X.free), P = X.press && gangById(X.press);
+    return '<div class="gb-sec"><img class="gb-badge" alt="" src="' + picUrl("gangboss") + '" decoding="async"><p><b>Gangboss of the Blood-bought Roads</b> since ' + calDate(X.at) + "." +
+      (F ? " Freed: " + F.n + ", keeping their road in " + REGIONS[F.r] + " clean." : "") +
+      (P ? " Pressed: " + P.n + (X.turned ? ", who turned on you." : ", loyalty " + X.loy + " of 10.") : "") +
+      " Pretenders put down: " + (X.pret || 0) + ". Gangs called to heel: " + (X.heeled || 0) + "." +
+      (Q ? " The Knot House: " + Q.runs + " runs, " + Object.keys(Q.rackets).length + " rackets, heat " + Q.heat + " of 10." : "") + "</p></div>";
   }
 
   Object.assign(ICONS, {
