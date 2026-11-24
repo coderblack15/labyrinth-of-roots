@@ -10,7 +10,7 @@
 //   --n       fights per scenario and calling (default 60)
 //   --only    run the scenarios whose name matches
 //   --lv      override every scenario's level
-//   --cl      callings to try (default all eight: axe hush song tide ink root bloom clock)
+//   --cl      callings to try (default all nine: axe hush song tide ink root bloom clock kith)
 //   --policy  reader: picks the right counter to every tell, breaks the Soul Devour, uses its calling's
 //             move when it's offered, bandages and catches its breath when low. careless: just swings,
 //             and bandages. Run both: the gap between them is what reading the fight is worth.
@@ -30,7 +30,7 @@ const { chromium } = require("playwright");
 
 const arg = (k, def) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : def; };
 const N = +arg("n", 60), ONLY = arg("only", null) ? new RegExp(arg("only"), "i") : null, LV = arg("lv", null);
-const CLS = (arg("cl", "axe,hush,song,tide,ink,root,bloom,clock")).split(",");
+const CLS = (arg("cl", "axe,hush,song,tide,ink,root,bloom,clock,kith")).split(",");
 const POLICY = arg("policy", "reader"), SEED = +arg("seed", 1), FROM = arg("from", null);
 const SRC = path.resolve(arg("file", path.join(__dirname, "..", "index.html")));
 
@@ -92,7 +92,9 @@ window.__lab = (() => {
       const ck = S.cl && S.cl.k;
       if (has("cls") && (ck === "root" ? hpF < 0.6 : true)) return "cls";
       if (has("kin")) return "kin";
-      for (const k of ["cx-mid", "cx-verd", "cx-guard", "cx-lock", "cx-hand", "cx-grove", "cx-grasp", "cx-s-prec", "cx-s-rend"]) if (has(k)) return k;
+      for (const k of ["cx-mid", "cx-verd", "cx-guard", "cx-lock", "cx-hand", "cx-grove", "cx-grasp", "cx-s-prec", "cx-s-rend", "kc-accord", "kc-all", "kc-s-two", "kc-rend"]) if (has(k)) return k;
+      if (has("kc-guard") && hpF < 0.5) return "kc-guard";
+      if (has("kc-tame")) return "kc-tame";
       if (has("gems")) return "gems";
       if (has("book")) return "book";
       if (has("shard")) return "shard";
@@ -138,6 +140,8 @@ window.__lab = (() => {
     // 3d8 + lv/4 the Warden and the Clockrunner get once, that would otherwise land in every lab fight),
     // and a path (Edge or Mend, half each), so the kindled move is in play.
     if (k) S.cl = { k, b: {}, rk: 5, wake1: true, path: Math.random() < 0.5 ? "edge" : "mend", uses: 40 };
+    // A Kithcaller by then has a kith: two beasts from the middle of the road, bonded, one at heel.
+    if (k === "kith") Object.assign(S.cl, { kith: [{ u: "k1", id: "mastiff", nm: "Coker", bond: Math.min(10, Math.floor(L / 5)), wins: 20 }, { u: "k2", id: "crab", nm: "Wick", bond: Math.min(10, Math.floor(L / 6)), wins: 12 }], heel: "k1", kinds: ["mastiff", "crab", "hound", "skimmer"] });
     S.hp = S.maxHp; S.gemsSpent = false; S.bleed = [];
     ev("renderSheet()");
     return S;
@@ -191,6 +195,8 @@ const SCEN = [
   ["Compound chief (size 3)", 38, { make: "() => ({})", go: "async () => labChief('stockade', 3)" }],
   ["Tharen Ravendare", 40, { make: "() => ({})", go: "async () => labChief('raven', 3)" }],
   ["Haggith", 40, { make: "() => ({})", go: "async () => labChief('eye', 3)" }],
+  // A real road creature through meetBeast (for the Kithcaller, the taming: did it join?)
+  ["Tame a road creature", 20, { make: "() => ({})", go: "async () => { const n0 = (S.cl && S.cl.kith || []).length; await meetBeast('glass', { forced: true }); return !S.cl || S.cl.k !== 'kith' || (S.cl.kith || []).length > n0 || FOE.hp <= 0; }" }],
 ];
 
 (async () => {
