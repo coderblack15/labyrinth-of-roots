@@ -195,6 +195,8 @@ const SCEN = [
   ["Compound chief (size 3)", 38, { make: "() => ({})", go: "async () => labChief('stockade', 3)" }],
   ["Tharen Ravendare", 40, { make: "() => ({})", go: "async () => labChief('raven', 3)" }],
   ["Haggith", 40, { make: "() => ({})", go: "async () => labChief('eye', 3)" }],
+  // The Amalgamation (Adrian's painting, 24 Nov): the fen's own, through meetBeast (the others already met, so it's the one)
+  ["The Amalgamation", 20, { make: "() => ({})", go: "async () => { S.met = ['hulk', 'wader']; await meetBeast('fen', { forced: true }); return FOE.hp <= 0; }" }],
   // A real road creature through meetBeast (for the Kithcaller, the taming: did it join?)
   ["Tame a road creature", 20, { make: "() => ({})", go: "async () => { const n0 = (S.cl && S.cl.kith || []).length; await meetBeast('glass', { forced: true }); return !S.cl || S.cl.k !== 'kith' || (S.cl.kith || []).length > n0 || FOE.hp <= 0; }" }],
 ];
