@@ -4452,6 +4452,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
       "<b>Tessary and the Seed-Hall:</b> a geared ring lock, the water channels that keep the mother stock alive, and the rowscript, a language you have to work out from the lines you found. What you read decides what you know when you choose what to do with the mother seed.",
       "Talk Corisande Wrayburn down, wet her powder, deal with her or fight her, then the <b>Eldest Pruner</b>, who shows you every cut before it comes. Then down before the rains: what you did in the hall decides whether the rows hold the flood.",
       "Your Lost Hand choices come back (Gerrand, the deeds, Iddo's boat), and so do the Heart's ending, the Quire's First Sheet and Burr. 20 new feats, three new beasts, and the Table on the roads back (Fosk's Steps, Tessary, a battle map, a hidden thing)."] },
+    { ver: "159", name: "A Way Off the Road", date: "26 Nov 2026", items: [
+      "<b>Backing out of the Blood-bought Roads is free.</b> \"Not now\" on the list of roads (and \"Not yet\" under the Needle) takes you straight back to the roads-back menu: no time passes, so no cart ambush, sea hunters or watch patrol can catch you on the way out.",
+      "<b>More ways to turn back on the roads.</b> At the blood-toll bridge you can walk round to another crossing, you can leave a gang war to itself, and you can turn back from the land-takers, all without a fight."
+    ] },
     { ver: "158", name: "Blades in View", date: "26 Nov 2026", items: [
       "<b>The fencing screen pops up.</b> When a duel starts (a salle bout, a captain, a Knife, any sword duel), the stroke pad opens as a window in the middle of the screen, over the fight header and the side panel, so you never have to scroll to find it. It shows both of you at a glance (their HP and yours) and the pad shrinks to fit a short screen. When the duel ends it goes back into the story, so you can read it again.",
     ] },
@@ -9875,7 +9879,6 @@ body.in-fight.in-lab #bfx { background: none !important; }
         }
         // Time on the roads back: an errand takes a watch, a long road two, a rest runs on to morning.
         let took = { spoor: 2, home: 1, bw: 1, walk: 1, roads: 2, weave: 2, raid: 2, town: 1, stones: 1, cw: 1, seek: 1, head: 2, sea: 4, crack: 1, f50: 1, mine: 1, rc: 1, me: 1 }[c] || 0;
-        if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (c === "wait") {
           if (calNight()) { const g = Math.min(S.maxHp - S.hp, d(4) + 1); S.hp += g; calTo(0); await say("You sleep with your back to a milestone and your axe across your knees, and wake stiff, with dew on everything."); await mech("Dawn" + (g ? ". Regain " + g + " HP." : "."), "loot"); }
           else { calTo(3); await say("You make a small fire off the road and wait while the light goes. Somewhere along the Blood-bought Roads, people with knives are doing the same."); await mech("Night falls, " + calDate() + "."); }
@@ -9885,8 +9888,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
         else if (c === "sea") await seaHub();
         else if (c === "bw") await bwHub();
         else if (c === "summons") await rsRoad();
-        else if (c === "roads") await bnRoads();
-        else if (c === "weave") await weaveClimb();
+        // Backing out of the Blood-bought Roads or the Needle ("Not now", "Not yet") costs no time, so
+        // no watches pass, and no cart ambush or hunters can follow you back to this menu.
+        else if (c === "roads") { if ((await bnRoads()) === false) took = 0; }
+        else if (c === "weave") { if ((await weaveClimb()) === false) took = 0; }
         else if (c === "town") await townPick();
         else if (c === "mine") await mnHub();
         else if (c === "rc") { await rcHub(); SND.musPlace("roads"); }
@@ -9912,6 +9917,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
           await armRest();
           await mech("Rested: full HP, and footholds " + S.digs + " of " + DIG_MAX + ". " + (ic ? "Spent " + ic + " gold." : ctRank() >= 3 ? "On the house, for a Contender." : "The landlord won't take your money: the navvies' wages are paid."), "loot");
         } else if (c === "journal") jOpen();
+        if (took === 2 && hasHorse() && !horseLame() && c !== "head") { const up = horseXp(3); if (!cartOn()) took = 1; if (up) await mech(up.trim(), "loot"); }
         if (took) calPass(took);
         if (took) await cartRoad(took);
         if (took && c !== "sea" && seaHuntChance()) await seaHunted();
@@ -47789,8 +47795,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     for (let i = 1; i < regs.length; i++) pairs.push([regs[i - 1], regs[i]]);
     const B = bn();
     B.walked = B.walked || {};
-    const r = await choose(pairs.map(([a, b], i) => { const T = stretchOf(a, b); return { key: String(i), label: T.name, tag: REGIONS[a] + " to " + REGIONS[b] + " · " + ROAD_GANGS.filter(G => G.r === a || G.r === b).filter(G => !B.beat[G.id]).length + " gangs not yet broken" + (B.walked[a + "-" + b] ? "" : " · not yet walked"), plain: i > 0 }; }).concat([{ key: "back", label: "Not now", plain: true }]));
-    if (r === "back") return;
+    const r = await choose(pairs.map(([a, b], i) => { const T = stretchOf(a, b); return { key: String(i), label: T.name, tag: REGIONS[a] + " to " + REGIONS[b] + " · " + ROAD_GANGS.filter(G => G.r === a || G.r === b).filter(G => !B.beat[G.id]).length + " gangs not yet broken" + (B.walked[a + "-" + b] ? "" : " · not yet walked"), plain: i > 0 }; }).concat([{ key: "back", label: "Not now", tag: "back to the roads · no time passes", plain: true }]));
+    if (r === "back") return false;
     const [a, b] = pairs[+r], T = stretchOf(a, b), label = T.name + " · " + REGIONS[a] + " to " + REGIONS[b];
     await roadsLore();
     if (!B.walked[a + "-" + b]) { B.walked[a + "-" + b] = 1; if (T.lore) { add(el("div", "part-head sub", '<span class="num">The Blood-bought Roads</span><h2>' + T.name + "</h2>")); await say(T.lore); } }
@@ -47876,8 +47882,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const c = await choose([
       { key: "talk", label: "Hear her out, and ask what they want", tag: "Persuasion DC " + (bnLean() === "Roadwarden" ? 11 : 13) },
       { key: "pay", label: "Pay the land-price", tag: land + " gold", plain: true, show: S.coins >= land },
-      { key: "fight", label: "Force the road", tag: "a crowd of them", plain: true }
+      { key: "fight", label: "Force the road", tag: "a crowd of them", plain: true },
+      { key: "leave", label: "Turn back", tag: "no fight · find another way round", plain: true }
     ]);
+    if (c === "leave") { await say("You nod to her, and turn round. She watches you all the way back over the rise, and doesn't lower the flail."); return; }
     if (c === "pay") { S.coins -= land; renderSheet(); await say("She takes it without thanks and steps out of the road. \"Mind the ditch,\" she says. \"My son's in it.\""); return; }
     if (c === "talk") {
       const k = await check({ label: "Persuasion check (the old woman)", mod: 3 + (S.bg === "historian" ? 2 : 0), dc: bnLean() === "Roadwarden" ? 11 : 13, cta: "Listen" });
@@ -47913,8 +47921,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
       { key: "blood", label: "Pay in blood", tag: "a cut across the palm, and then some · " + (wint ? "about a third of your HP, at the winter rate" : "about a quarter of your HP"), plain: true },
       { key: "duel", label: "Challenge " + bnName(G, "wall") + " to a duel for the bridge", tag: "one on one · win, and the toll-box is yours", plain: true },
       { key: "ropes", label: S.grapple ? "Put Threadfang's line on the far side and cut the bridge out from under them" : "Get round and cut the bridge ropes", tag: S.grapple ? "half of them go into the gorge" : "Athletics DC 15 · half of them go into the gorge", plain: true },
-      { key: "fight", label: "Fight all four of them for it", plain: true }
+      { key: "fight", label: "Fight all four of them for it", plain: true },
+      { key: "leave", label: "Turn back and find another crossing", tag: "a day's walk round · no toll, no fight", plain: true }
     ]);
+    if (c === "leave") { await say("You turn round and walk the long way, up the gorge to where it narrows and a fallen tree does the job of a bridge for nothing. Behind you, " + bnName(G, "wall") + " writes something in the ledger anyway."); return; }
     if (c === "coin") { S.coins -= coin; rfPaid(regs, coin); renderSheet(); await say(bnName(G, "wall") + " writes your name in the ledger, wrong, and waves you over."); return; }
     if (c === "token") { rfToken(); await say(bnName(G, "wall") + " looks at the bridgemen's token for a long time, and writes it in the ledger as paid."); return; }
     if (c === "blood") {
@@ -47958,8 +47968,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
       { key: "a", label: "Side with " + A.n, tag: "fight " + Bg.n + " while they're already hurt" },
       { key: "b", label: "Side with " + Bg.n, tag: "fight " + A.n + " while they're already hurt", plain: true },
       { key: "wait", label: "Wait in the trees, and take on whoever wins", tag: "one gang, badly hurt · but they'll have the spoils", plain: true },
-      { key: "loot", label: "Let them kill each other, and pick over what's left", tag: "Stealth DC 13", plain: true }
+      { key: "loot", label: "Let them kill each other, and pick over what's left", tag: "Stealth DC 13", plain: true },
+      { key: "leave", label: "Leave them to it and go round", tag: "no fight · no spoils", plain: true }
     ]);
+    if (c === "leave") { await say("You go back the way you came and round by the fields. For a mile behind you, you can still hear them at it."); return; }
     const H = HAULS[d(HAULS.length) - 1];
     if (c === "loot") {
       const k = await check({ label: "Stealth check (in among the dead)", mod: 3 + (S.shadow ? 2 : 0), dc: 13, cta: "Creep" });
@@ -48072,7 +48084,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       await say("The thread from the silver coin leads to the Needle: a spire of bare rock between kingdoms, a thousand feet high, with no path up it. At the top, against the sky, there's something glittering, like frost on a hedge. The Weave.");
     } else await say("The Needle stands over the road like a finger raised for quiet. At the top, the Weave glitters.");
     const c = await choose([{ key: "climb", label: "Climb the Needle", tag: "three hard pitches · then the Weave" }, { key: "no", label: "Not yet", plain: true }]);
-    if (c === "no") { light(back); return; }
+    if (c === "no") { light(back); return false; }
     checkpoint();
     const pitches = [
       ["Athletics check (the first pitch: the chimney)", "You wedge yourself into a crack in the rock and work your way up it with your back and your boots, a hand's width at a time.", "Your boot skids and you drop a man's height before the crack catches you again."],
