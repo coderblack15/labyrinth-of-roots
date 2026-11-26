@@ -702,8 +702,8 @@ button.has-pic .pic-txt { flex: 1; min-width: 0; }
 .story .mech.echo::before { content: "↺"; color: var(--gold); font-style: normal; }
 .story .mech .echo-k { font-style: normal; color: var(--gold); margin-right: 6px; }
 .story p.dry { font-style: italic; color: var(--muted); }
-.story .tipcard { margin: 0 0 1em; padding: 9px 12px; border: 1px dashed #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: rgba(207,168,80,.06); font-family: var(--label); font-size: .86rem; letter-spacing: .02em; line-height: 1.5; color: var(--ink); }
-.story .tipcard .tip-k { display: block; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: 2px; }
+.story .tipcard, dialog.du-dlg .tipcard { margin: 0 0 1em; padding: 9px 12px; border: 1px dashed #5c4d27; border-left: 3px solid var(--gold); border-radius: 6px; background: rgba(207,168,80,.06); font-family: var(--label); font-size: .86rem; letter-spacing: .02em; line-height: 1.5; color: var(--ink); }
+.story .tipcard .tip-k, dialog.du-dlg .tipcard .tip-k { display: block; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: 2px; }
 .journal dl.tips { margin: 0; display: grid; gap: 6px; }
 .journal dl.tips dt { font-weight: 700; color: var(--gold); }
 .journal dl.tips dd { margin: 0 0 4px; color: var(--muted); font-size: .9rem; }
@@ -1037,6 +1037,13 @@ svg.cant .ch .f { fill: #ece6d6; }
 .tac-how { margin-top: 8px; font-size: .82rem; color: var(--muted); } .tac-how summary { cursor: pointer; color: var(--gold); }
 .tac-done .tac-map { pointer-events: none; opacity: .75; }
 .duel { margin: 0 0 1em; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-family: var(--label); max-width: 460px; }
+dialog.du-dlg { width: min(480px, calc(100vw - 16px)); max-width: none; max-height: calc(100dvh - 16px); overflow: auto; overscroll-behavior: contain; padding: 0; border: 0; background: transparent; color: var(--ink); }
+dialog.du-dlg::backdrop { background: rgba(6, 8, 7, .8); }
+dialog.du-dlg .duel { margin: 0; max-width: none; border-color: #6b5a2c; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+dialog.du-dlg .tipcard { margin: 8px 0 0; background: var(--panel); }
+dialog.du-dlg .du-pad { max-width: min(440px, calc(100dvh - 400px)); min-width: 220px; margin: 0 auto; }
+.duel .du-hp { display: flex; justify-content: space-between; gap: 8px; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.duel .du-hp .du-hpf { color: var(--ember); }
 .duel .du-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .duel .du-ph { font-family: var(--display); font-size: 1.25rem; color: var(--ink); }
 .duel .du-tag { font-size: .8rem; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
@@ -4380,6 +4387,9 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "158", name: "Blades in View", date: "26 Nov 2026", items: [
+      "<b>The fencing screen pops up.</b> When a duel starts (a salle bout, a captain, a Knife, any sword duel), the stroke pad opens as a window in the middle of the screen, over the fight header and the side panel, so you never have to scroll to find it. It shows both of you at a glance (their HP and yours) and the pad shrinks to fit a short screen. When the duel ends it goes back into the story, so you can read it again.",
+    ] },
     { ver: "157", name: "The First Shepherd", date: "24 Nov 2026", items: [
       "<b>Isak Corrow, the first of Haggith's Shepherds, walks out of the Pupil with you.</b> However your fight with Haggith ends, the big shield-bearer at the foot of the Lightless Stair has seen enough: she stood her own people in front of her, and the Quiet Rooms held nobody, only names on a wall, his mother's among them. Tell him what he is now: a shield for somebody worth it, or a man going home to dig her out of his village. Already beaten her? He catches up with you on the roads back.",
       "<b>A companion who stands in front.</b> From his first fight his shield catches a share of every blow you take, out of a guard that runs down as he spends it. Later he gets in a blow with the shield-rim, lets you step <b>Behind the shield</b> for a round, and every third round <b>Draws their eye</b> onto himself. He never takes the kill, and outside those two moments he only ever takes a share of a blow, never the whole of it.",
@@ -46584,8 +46594,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
     if (o.reg) nextReg = o.reg;
     foeStart(o.name, Math.round(o.hp * DU_HPX * H.hp));
     FOE.duel = true;
+    const tip0 = $("story").children.length;
     tip("duel");
     if (eyeR) tip("eye");
+    const tipNew = [...$("story").children].slice(tip0).filter(n => n.classList.contains("tipcard"));
     let me = S.hp;
     const yieldAt = Math.max(0, me - Math.round(S.maxHp * DU_STAKE));
     const st = { pr: sch === "thorn" ? 2 : 0, broken: false, guard: [], unguard: false, chain: [], recent: [], tells: [], ti: 0, tell: null, phase: "wait",
@@ -46594,6 +46606,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     const eyePoint = () => { const D0 = duel(), r0 = eyeRank(); D0.eye = (D0.eye || 0) + 1; const r1 = eyeRank(); if (r1 > r0) st.rankUp = r1; };
     const box = add(el("div", "duel",
       '<div class="du-top"><span class="du-ph">En garde</span><span class="du-tag"></span></div>' +
+      '<div class="du-hp"><span class="du-hpf"></span><span class="du-hpy"></span></div>' +
       '<div class="du-prof"></div>' +
       '<div class="du-pr"><span>Pressure</span><span class="du-pips"></span><span class="du-note"></span><span class="du-yield"></span></div>' +
       '<div class="du-timer"><i></i></div>' +
@@ -46606,6 +46619,15 @@ body.in-fight.in-lab #bfx { background: none !important; }
       [[3, "↖"], [2, "↑"], [1, "↗"], [4, "←"], ["t", "•"], [0, "→"], [5, "↙"], [6, "↓"], [7, "↘"]].map(([k, l]) => '<button type="button" data-d="' + k + '" aria-label="' + (k === "t" ? "Thrust" : "Stroke " + l) + '">' + l + "</button>").join("") +
       '</div><div class="du-kx"><button type="button" class="du-hk" aria-pressed="false">Hook: off</button><button type="button" class="du-bd">Bind ◯</button></div></details>' +
       '<div class="du-log" aria-live="polite"></div>'));
+    // The duel opens as a pop-up over everything (the fight header, the side panel), so it's in view at
+    // once on any screen. It goes back into the story, spent, when the duel ends.
+    const duHome = document.createElement("span"), dlg = document.createElement("dialog");
+    dlg.className = "du-dlg"; dlg.setAttribute("aria-label", "Duel with " + o.name);
+    box.replaceWith(duHome);
+    dlg.appendChild(box); tipNew.forEach(t => dlg.appendChild(t.cloneNode(true)));
+    document.body.appendChild(dlg);
+    dlg.addEventListener("cancel", (e) => e.preventDefault());
+    try { dlg.showModal(); } catch (e) { dlg.setAttribute("open", ""); }
     const q = (s) => box.querySelector(s);
     const cv = q("canvas"), cx = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
     const C = { ink: css.getPropertyValue("--ink").trim() || "#e7dec9", gold: css.getPropertyValue("--gold").trim() || "#cfa850", ember: css.getPropertyValue("--ember").trim() || "#d9503a",
@@ -46622,6 +46644,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
       q(".du-pips").innerHTML = Array.from({ length: DU_MAXP }, (_, i) => '<i class="' + (i < st.pr ? "on" : "") + '"></i>').join("");
       q(".du-pips").classList.toggle("full", st.broken);
       q(".du-yield").textContent = "You yield in " + Math.max(0, me - yieldAt) + " HP";
+      q(".du-hpf").textContent = o.name + " " + Math.max(0, FOE.hp) + " / " + FOE.max + " HP";
+      q(".du-hpy").textContent = "You " + Math.max(0, me) + " / " + S.maxHp + " HP";
       q(".du-note").textContent = st.broken ? "Guard broken: your next blow lands double" : st.bleed ? "Bleeding, " + st.bleed + " more" : "";
       q(".du-chain").innerHTML = st.chain.map(c => '<span class="' + c.cls + '">' + c.lab + "</span>").join("");
       q(".du-end").disabled = st.phase !== "press";
@@ -46891,6 +46915,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
       document.removeEventListener("keydown", onKey); window.removeEventListener("resize", size);
       phase(won ? "Won" : how.fled ? "Broken away" : "Lost", ""); draw();
       box.classList.add("spent");
+      duHome.replaceWith(box); try { dlg.close(); } catch (e) {} dlg.remove();
       if (mem) { mem.met++; if (won) mem.won++; else if (!how.fled) mem.lost++; }
       D.n = (D.n || 0) + 1;
       if (!spar && !how.fled) { if (won) D.won++; else D.lost++; }
@@ -46903,7 +46928,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     }
     return new Promise(res => {
       resolveRun = res;
-      requestAnimationFrame(() => { size(); draw(); if (window.innerWidth < 700) { box.style.scrollMarginTop = "calc(var(--sheet-h, 0px) + 28px)"; box.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); } else cv.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); log("Draw on the pad, use the keys, or open the button pad. Your " + noun + " is in your hand.", "s"); if (H.h >= 3) log("Word of your blade has gone ahead of you: " + H.h + (H.h >= 20 ? " duels and more" : " duels") + " fought this journey. They come at you sharper for it.", "f"); raf = requestAnimationFrame(frame); setTimeout(foeTurn, 900); });
+      requestAnimationFrame(() => { size(); draw(); dlg.scrollTop = 0; log("Draw on the pad, use the keys, or open the button pad. Your " + noun + " is in your hand.", "s"); if (H.h >= 3) log("Word of your blade has gone ahead of you: " + H.h + (H.h >= 20 ? " duels and more" : " duels") + " fought this journey. They come at you sharper for it.", "f"); raf = requestAnimationFrame(frame); setTimeout(foeTurn, 900); });
     });
   }
 
