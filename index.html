@@ -2574,6 +2574,10 @@ body.in-fight.in-lab #bfx { background: none !important; }
    The fight board's soft drop shadow also spilled over the moves as they scrolled under it, so it is a clean edge. */
 #bfx { display: none !important; }
 .fstage { box-shadow: none !important; }
+  /* The 3D board, over the page */
+  .d3-over { position: fixed; inset: 0; z-index: 9000; background: #050403; display: flex; flex-direction: column; }
+  .d3-over iframe { flex: 1; width: 100%; border: 0; }
+  .d3-over .d3-back { position: absolute; top: max(8px, env(safe-area-inset-top, 0px)); right: 8px; font-size: .8rem; padding: 4px 10px; background: rgba(10, 8, 6, .8); }
 </style>
 </head>
 <body>
@@ -4444,6 +4448,13 @@ body.in-fight.in-lab #bfx { background: none !important; }
   // ---------- what's new: the update log, inside the game ----------
   // Newest first. A release adds an entry at the top.
   const NEWS = [
+    { ver: "161", name: "The 3D Board", date: "28 Nov 2026", items: [
+      "<b>Fight it in 3D.</b> When a fight starts, you can choose to play it on a 3D tactics board instead. The story fight stays the default: pick <b>Fight it on the 3D board</b> and that chapter's board opens over the page, with your piece, Burr and the foes as chess pieces crowned with their painted emblems.",
+      "If you're a Kithcaller, the beast at your heel comes onto the board beside you and Burr, with its own painting where it has one.",
+      "The boards come alive: fog in the fens and drowned places, heat haze in the sands, snow in the rime, embers and drifting spores elsewhere. Pieces rock when they're hit, slide back from a heavy blow and topple over when they're beaten. The camera sweeps round a boss's board, pushes in on a critical hit and slows down for the final blow. The ground answers too, on screen only: ice and glass crack under a heavy blow, water ripples, moss smoulders where a critical hit lands. Footsteps, blows and a crit's ring echo like a cave, and the music swells as the foes fall.",
+      "Win on the board and the fight is won here, with the HP you finished on. Lose and the last blow lands in the story, where the usual rules for falling apply.",
+      "The 3D game also plays on its own now, starting with <b>Chapter I: The Labyrinth of Roots</b>: the pathway, the webs, the Hollow Chamber and the Nest, told between three fights on the board, with a short how-to before the first and Ryytaa the Ender at the end. Play it in your browser at godot/play, or download it for Windows.",
+      "Don't want the question? <b>Settings → 3D fights → Never ask</b>. The question comes up on the public web version, where the 3D board lives; the twenty 3D dungeons are on their own page there too, at godot/play/."] },
     { ver: "160", name: "The Sowers' Table", date: "26 Nov 2026", items: [
       "A new chapter after the Vell, back on the new continent: <b>The Sowers' Table</b> (Parts CXXXIV–CXL). An old tapper comes back to Amberlow with a seed alive in a bead of gum, from a flat-topped mountain in the middle of Selvaine that nobody has ever climbed. Forty years ago a survey went up it and never came down. The Brindle Concern, who paid for Gerrand's holdings, is already on its way.",
       "<b>An expedition.</b> Hire porters and pack under a weight limit: every trouble later asks what you brought (rope, bitterbark, salt, lamp oil, a sounding pole, a billhook, trade goods, a net). Food runs by the day.",
@@ -5186,6 +5197,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     h += row("Text size", "Makes the story, the sheet and the menus bigger or smaller.", opt("ts", TEXT_SIZES.map(z => [z[0], z[1]]), textSize()));
     h += row("First-time notes", "A short note the first time each part of the game turns up. <b>Guide me</b> adds notes on the basics too. Every note you've seen is in the journal's Field guide.", opt("guide", [["guide", "Guide me"], ["some", "Only new systems"], ["know", "Off"]], tipState.off ? "know" : tipState.guide === "guide" ? "guide" : "some"));
     h += row("Fight rolls", "<b>Instant</b>: the move you pick lands at once, and the dice roll themselves. <b>Roll the dice yourself</b>: tap Roll for every swing and every blow at you, and watch them spin.", opt("inst", [["1", "Instant"], ["0", "Roll the dice yourself"]], instOn ? "1" : "0"));
+    h += row("3D fights", "Offer each fight on a 3D tactics board as well. The story fight stays the default.", opt("d3", [["ask", "Ask each fight"], ["never", "Never ask"]], d3Pref()));
     h += row("Story so far", "A short recap when you continue a save.", opt("recap", [["1", "Show it"], ["0", "Skip it"]], recapOff() ? "0" : "1"));
     if (started) {
       h += row("Battle style · Slot " + SLOT, "How company battles, boardings and raids are fought." + (FOE.on ? " You can change this once this fight is over." : ""), opt("stac", [["classic", "Classic"], ["tactics", "On the grid"], ["ask", "Ask each fight"]], S.tac || "classic"));
@@ -5200,6 +5212,7 @@ body.in-fight.in-lab #bfx { background: none !important; }
     body.querySelectorAll("[data-ts]").forEach(b => b.onclick = () => { try { localStorage.setItem(TEXT_KEY, b.dataset.ts); } catch (e) {} textApply(b.dataset.ts); setRender(); });
     body.querySelectorAll("[data-guide]").forEach(b => b.onclick = () => { const v = b.dataset.guide; tipState.off = v === "know"; tipState.guide = v === "some" ? "some" : v; tipSave(); setRender(); });
     body.querySelectorAll("[data-inst]").forEach(b => b.onclick = () => { instOn = b.dataset.inst === "1"; try { localStorage.setItem(INST_KEY, instOn ? "1" : "0"); } catch (e) {} setRender(); });
+    body.querySelectorAll("[data-d3]").forEach(b => b.onclick = () => { try { localStorage.setItem(D3_PREF, b.dataset.d3); } catch (e) {} setRender(); });
     body.querySelectorAll("[data-recap]").forEach(b => b.onclick = () => { setRecapOff(b.dataset.recap === "0"); setRender(); });
     body.querySelectorAll("[data-stac]").forEach(b => b.onclick = () => { if (FOE.on) return; S.tac = b.dataset.stac; save(); setRender(); });
     body.querySelectorAll("[data-stide]").forEach(b => b.onclick = () => { S.slowTide = b.dataset.stide === "1"; save(); setRender(); });
@@ -24810,6 +24823,65 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await mech("<b>The Porcelain Tower.</b> " + GEAR.porctower.desc, "loot");
     grant("sgporc");
   }
+  // The 3D board (Adrian's ask): any story fight can be played instead on that chapter's 3D tactics
+  // board (godot/play/, the Godot build). It opens in a frame over the page and sends back
+  // {lor3d, result, hpf}: a win ends this fight with the HP share you finished on; a loss lands as one
+  // last blow here, so the usual falling rules (the axe, the ring, the Bloom) still decide. The story
+  // fight is the default; Settings can stop the question.
+  const D3_PREF = "labyrinth-of-roots-3d-fights";
+  const D3_KEYS = ["roots", "sands", "fen", "mere", "lastwell", "assize", "corrach", "noon", "undermoon", "rahdaria", "sounding", "tithe", "hinge", "unmapped", "rime", "welling", "summons", "hand", "heart", "cases"];
+  const d3Pref = () => { try { return localStorage.getItem(D3_PREF) || "ask"; } catch (e) { return "ask"; } };
+  function d3Play(q) {
+    return new Promise(resolve => {
+      const o = el("div", "d3-over");
+      const fr = document.createElement("iframe");
+      fr.src = "godot/play/index.html?" + q + (window.D3_AUTO ? "&auto=1" : "");
+      fr.title = "The 3D board";
+      fr.allow = "fullscreen; autoplay";
+      const x = el("button", "ghost d3-back", "Back to the story fight");
+      x.type = "button";
+      o.appendChild(fr); o.appendChild(x);
+      document.body.appendChild(o);
+      const done = (v) => { window.removeEventListener("message", on); o.remove(); resolve(v); };
+      const on = (e) => { const m = e.data; if (m && m.lor3d) done({ result: String(m.result), hpf: +m.hpf || 0 }); };
+      window.addEventListener("message", on);
+      x.onclick = () => done(null);
+    });
+  }
+  // Only where the 3D build sits beside the game (the public web version): not in the zips or on file://.
+  let d3Here = null;
+  async function d3Avail() {
+    if (d3Here === null) { try { d3Here = (await fetch("godot/play/index.html", { method: "HEAD" })).ok; } catch (e) { d3Here = false; } }
+    return d3Here;
+  }
+  // The Kithcaller's beast at your heel comes onto the 3D board too (Burr is always there already).
+  function d3Kith(F, st) {
+    const k = st && st.kb; if (!k || k.id === "burr" || st.kbDown) return "";
+    const T = kStat(k), pic = PIC_SRC["b_" + k.id] === "art/b_" + k.id + ".webp";
+    return "&kith=" + encodeURIComponent(k.id) + "&kn=" + encodeURIComponent(k.nm || "Your kith") + "&khf=" + Math.max(0.05, (st.kbHp || 1) / (st.kbMax || 1)).toFixed(3) +
+      "&kac=" + T.ac + "&katk=" + kAtk(k, F) + "&kd=" + T.n + "d" + T.s + (pic ? "&kpic=1" : "");
+  }
+  async function d3Offer(F, st) {
+    if (d3Pref() === "never" || F.company || !FOE.on || FOE.hp <= 0 || S.hp <= 0 || !(await d3Avail())) return;
+    const key = D3_KEYS[chapterAt(S.part || 0)] || "roots";
+    const c = await choose([
+      { key: "2d", label: "Fight it here", tag: "the story fight" },
+      { key: "3d", label: "Fight it on the 3D board", tag: "tactics in 3D · takes a moment to load", plain: true }]);
+    if (c !== "3d") return;
+    const cap = hpCap();
+    const q = "d=" + key + "&f=" + (F.big ? "boss" : String(d(2) - 1)) + "&hpf=" + Math.max(0.05, S.hp / cap).toFixed(3) + "&pr=" + encodeURIComponent(S.pr || "they") + d3Kith(F, st);
+    const r = await d3Play(q);
+    if (!r) { await say("You put the board away. The fight is still here, waiting."); return; }
+    if (r.result === "victory") {
+      FOE.hp = 0; renderFoe();
+      S.hp = Math.max(1, Math.min(cap, Math.round(cap * r.hpf))); renderSheet();
+      await mech("Won on the 3D board. You come out of it at " + S.hp + "/" + cap + " HP.", "loot");
+    } else {
+      S.hp = 1; renderSheet();
+      await hurt(1, 1, "bludgeoning", "On the 3D board the fight went against you, and the last blow lands here.");
+      if (S.hp > 0) await say("Still standing, just. The fight goes on here.");
+    }
+  }
   async function hkFight(F) {
     const back = document.body.dataset.light;
     const left = F.hpLeft ? { hp: F.hpLeft } : {};
@@ -24839,7 +24911,8 @@ body.in-fight.in-lab #bfx { background: none !important; }
     await lgStart(F, st);
     if (F.setup) await F.setup(st);
     if (F.reg) await hzStart(F, st);
-    if ((F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
+    await d3Offer(F, st);
+    if (FOE.hp > 0 && (F.fdB || F.field) && fdOn(F)) await fdStart(F, st, F.fdB);
     gStart(F, st);
     while (FOE.hp > 0 && !st.fled) {
       st.round++; fightTurn();
