@@ -41,6 +41,7 @@ function labHtml() {
   const rep = (a, b, all) => { if (!h.includes(a)) throw new Error("fight-lab: can't find " + a.slice(0, 60)); h = all ? h.split(a).join(b) : h.replace(a, b); };
   rep("let S = fresh();", "let S = fresh(); window.__ev = (s) => eval(s);");
   rep("st0.tell = ", "st0.tell = window.__tell = ", true);
+  if (h.includes("st.cut = TB_CUTS[d(3) - 1];")) rep("st.cut = TB_CUTS[d(3) - 1];", "st.cut = window.__cut = TB_CUTS[d(3) - 1];");
   rep("other = ME_FIGK.filter(k => k !== K)[d(3) - 1], real = d(4) - 1;", "other = ME_FIGK.filter(k => k !== K)[d(3) - 1], real = d(4) - 1; window.__real = real;");
   const base = '<base href="' + require("url").pathToFileURL(path.dirname(SRC) + path.sep).href + '">';
   return h.replace(/<head>/i, (x) => x + base);
@@ -79,6 +80,8 @@ window.__lab = (() => {
       if (!o && typeof t === "object") o = find(/^brace-/);
       if (o) return o.key;
     }
+    // The Eldest Pruner's cuts (the Sowers' Table): answer the one it showed
+    if (reader && window.__cut) { const o = find(new RegExp("^tb-" + window.__cut.ans + "$")); window.__cut = null; if (o) return o.key; }
     if (reader) {
       const o = find(/^me-dev-proof$/) || find(/^me-expose$/) || find(/^me-names$/) || find(/^rc-whistle$/) || find(/^me-kerchief$/) || find(/^wipe$/);
       if (o) return o.key;
@@ -154,7 +157,7 @@ window.__lab = (() => {
     for (let i = 0; i < n; i++) {
       const S = hero(L, k, base);
       document.getElementById("story").innerHTML = "";
-      window.__tell = null; window.__real = null; window.__rounds = 0; window.__F = null;
+      window.__tell = null; window.__real = null; window.__cut = null; window.__rounds = 0; window.__F = null;
       const st = P.stat = { choices: 0, low: 1, saves: 0 };
       const max = S.maxHp;
       let F;
@@ -199,6 +202,13 @@ const SCEN = [
   ["Haggith", 40, { make: "() => ({})", go: "async () => labChief('eye', 3)" }],
   // The Amalgamation (Adrian's painting, 24 Nov): the fen's own, through meetBeast (the others already met, so it's the one)
   ["The Amalgamation", 20, { make: "() => ({})", go: "async () => { S.met = ['hulk', 'wader']; await meetBeast('fen', { forced: true }); return FOE.hp <= 0; }" }],
+  // The Sowers' Table (Parts CXXXIV–CXL, NEWS v160): every fight in the chapter, as the chapter calls it
+  ["Table: the Mudsire", 38, { make: "() => ({})", go: "async () => { S.tb = null; tb(); const real = hkFight; hkFight = async (F) => { window.__F = F; const b = F.before; F.before = async (st) => { window.__rounds = st.round; if (b) return b(st); }; try { return await real(F); } finally { hkFight = real; } }; await tbBeastFight('mudsire', { name: 'The Mudsire', hp: 34, reg: 'wetwood' }); return FOE.hp <= 0; }" }],
+  ["Table: stair guard", 39, { make: "() => CONCERN({ name: \"The Concern's stair guard\", heads: 2, unit: 'guard|guards', reg: 'table' })", go: "async (F) => { " + ROUNDS + " await hkFight(F); }" }],
+  ["Table: row-pruner", 39, { make: "() => ({})", go: "async () => { S.tb = null; tb(); const real = hkFight; hkFight = async (F) => { window.__F = F; const b = F.before; F.before = async (st) => { window.__rounds = st.round; if (b) return b(st); }; try { return await real(F); } finally { hkFight = real; } }; await tbBeastFight('rowpruner', { reg: 'table', hp: 26 }); return FOE.hp <= 0; }" }],
+  ["Table: Concern in the hall", 40, { make: "() => CONCERN({ name: 'The Brindle Concern', heads: 3, unit: 'man|men', boss: false })", go: "async (F) => { " + ROUNDS + " await hkFight(F); }" }],
+  ["Table: Wrayburn", 40, { make: "() => CONCERN({ name: 'Corisande Wrayburn', hp: 36, ac: 15, atk: 7, n: 1, s: 10, type: 'piercing', who: 'Wrayburn', whoShort: 'Wrayburn', person: true })", go: "async (F) => { " + ROUNDS + " await hkFight(F); }" }],
+  ["Table: the Eldest Pruner", 40, { make: "() => ({})", go: "async () => { S.tb = null; tb(); const real = hkFight; hkFight = async (F) => { window.__F = F; const b = F.before; F.before = async (st) => { window.__rounds = st.round; if (b) return b(st); }; try { return await real(F); } finally { hkFight = real; } }; await tbEldest(); return FOE.hp <= 0; }" }],
   // A real road creature through meetBeast (for the Kithcaller, the taming: did it join?)
   ["Tame a road creature", 20, { make: "() => ({})", go: "async () => { const n0 = (S.cl && S.cl.kith || []).length; await meetBeast('glass', { forced: true }); return !S.cl || S.cl.k !== 'kith' || (S.cl.kith || []).length > n0 || FOE.hp <= 0; }" }],
 ];
