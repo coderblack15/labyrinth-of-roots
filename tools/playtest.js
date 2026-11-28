@@ -77,7 +77,9 @@ const EXIT = /leave|move on|carry on|go on|onward|continue|set out|press on|head
   const errors = [];
   page.on("pageerror", e => { errors.push(String(e.stack || e)); console.log("PAGE ERROR", String(e.stack || e).slice(0, 600)); });
   // The music fetches can't load over file:// (they do on the web build): not the game's fault.
-  page.on("console", m => { if (m.type() === "error" && !/URL scheme "file" is not supported/.test(m.text())) { errors.push("console: " + m.text()); console.log("CONSOLE ERROR", m.text().slice(0, 300)); } });
+  // "Failed to load resource" is a painting not made yet: the game looks for every slot on the painting
+  // list (ART_PENDING) as it loads, and a missing file just isn't shown.
+  page.on("console", m => { if (m.type() === "error" && !/URL scheme "file" is not supported|Failed to load resource/.test(m.text())) { errors.push("console: " + m.text()); console.log("CONSOLE ERROR", m.text().slice(0, 300)); } });
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Debugger.enable");
   const finish = async (code) => {
